@@ -1,0 +1,8 @@
+{
+  "type": "call",
+  "id": 1,
+  "func": "show_order",
+  "args": {
+      "order_id": 1
+  }
+}

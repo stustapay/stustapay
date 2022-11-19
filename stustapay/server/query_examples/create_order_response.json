@@ -1,0 +1,12 @@
+{
+  "type": "call-result",
+  "id": 1,
+  "columns": [
+    "create_order"
+  ],
+  "data": [
+    [
+      5
+    ]
+  ]
+}

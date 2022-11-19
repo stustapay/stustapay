@@ -1,0 +1,17 @@
+# python
+__pycache__
+*.pyc
+*.pyo
+~*
+.*.swp
+\#*
+.#*
+
+# building
+MANIFEST
+dist/
+
+# testing
+/*.conf
+/test
+/build

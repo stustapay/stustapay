@@ -1,0 +1,6 @@
+{
+  "type": "call-error",
+  "id": 1,
+  "error-id": "UniqueViolationError",
+  "error": "duplicate key value violates unique constraint \"account_sban_key\"\nDETAIL:  Key (sban)=(new_account) already exists."
+}

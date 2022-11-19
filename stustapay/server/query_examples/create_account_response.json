@@ -1,0 +1,10 @@
+{
+  "type": "call-result",
+  "id": 1,
+  "columns": [
+    "create_account"
+  ],
+  "data": {
+    "account_id": 29
+  }
+}

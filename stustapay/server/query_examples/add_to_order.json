@@ -1,0 +1,10 @@
+{
+  "type": "call",
+  "id": 1,
+  "func": "add_to_order",
+  "args": {
+      "order_id": 1,
+      "product_id": 1,
+      "quantity": 2
+  }
+}

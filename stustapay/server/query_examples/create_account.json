@@ -1,0 +1,8 @@
+{
+  "type": "call",
+  "id": 1,
+  "func": "create_account",
+  "args": {
+      "sban": "new_account"
+  }
+}
