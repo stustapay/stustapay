@@ -1,7 +1,6 @@
-# Central Server
+# Core Server
 
 ## Setup
-
 - Copy `etc/server.conf` to `server.conf` and edit accordingly
 - Create a postgres database and load the initial schema:
   ```sql
@@ -13,7 +12,7 @@
 
 ## Operation
 
-- Start the websocket server: `python -m stustapay.server websocket`
+- Start the websocket server: `python -m stustapay.core websocket`
 
 
 ## Payment Procedure
