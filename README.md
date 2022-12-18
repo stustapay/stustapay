@@ -23,14 +23,13 @@ Electronic Payment System for StuStaCulum
 
 
 ## Documentation
-- [Server](doc/server.md)
+- [Core](doc/core.md)
 - [Cash desk](doc/cashdesk.md)
 
 
 ## Components
 - PostgreSQL database [schema](stustapay/server/schema/)
-- Central [server](stustapay/server)
-- Qt Cash desk [client](stustapay/client)
+- Central [core server](stustapay/server)
 
 
 ### Database
