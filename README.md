@@ -81,4 +81,4 @@ optional:
 ## License
 
 Released under the **GNU Affero General Public License** version 3 or later,
-see [COPYING](COPYING) and [LICENSE](LICENSE) for details.
+see [authors](authors.md) and [license](LICENSE) for details.
