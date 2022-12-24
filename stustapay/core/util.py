@@ -82,9 +82,7 @@ async def run_as_fg_process(args, **kwargs):
 
     try:
         # fork the child
-        child = await asyncio.create_subprocess_exec(
-            *args, preexec_fn=new_pgid, **kwargs
-        )
+        child = await asyncio.create_subprocess_exec(*args, preexec_fn=new_pgid, **kwargs)
 
         # we can't set the process group id from the parent since the child
         # will already have exec'd. and we can't SIGSTOP it before exec,

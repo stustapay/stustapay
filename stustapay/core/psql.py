@@ -4,21 +4,18 @@ PSQL command.
 Runs the 'psql' tool with the appropriate parameters.
 """
 
-import os
-import shlex
-import signal
-import subprocess
-import tempfile
-import termios
-import shutil
 import contextlib
+import os
+import shutil
+import tempfile
 
 from . import subcommand
 from . import util
+from .config import Config
 
 
 class PSQL(subcommand.SubCommand):
-    def __init__(self, config, **args):
+    def __init__(self, config: Config, **args):
         self.config = config
         self.action = args["action"]
 
@@ -30,12 +27,12 @@ class PSQL(subcommand.SubCommand):
 
         with contextlib.ExitStack() as exitstack:
             env = dict(os.environ)
-            env["PGDATABASE"] = self.config["database"]["dbname"]
+            env["PGDATABASE"] = self.config.database.dbname
 
-            if self.config["database"]["user"] is None:
-                if self.config["database"]["host"] is not None:
+            if self.config.database.user is None:
+                if self.config.database.host is not None:
                     raise ValueError("database user is None, but host is set")
-                if self.config["database"]["password"] is not None:
+                if self.config.database.password is not None:
                     raise ValueError("database user is None, " "but password is set")
             else:
 
@@ -48,19 +45,19 @@ class PSQL(subcommand.SubCommand):
                 passfile.write(
                     ":".join(
                         [
-                            escape_colon(self.config["database"]["host"]),
+                            escape_colon(self.config.database.host),
                             "*",
-                            escape_colon(self.config["database"]["dbname"]),
-                            escape_colon(self.config["database"]["user"]),
-                            escape_colon(self.config["database"]["password"]),
+                            escape_colon(self.config.database.dbname),
+                            escape_colon(self.config.database.user),
+                            escape_colon(self.config.database.password),
                         ]
                     )
                 )
                 passfile.write("\n")
                 passfile.flush()
 
-                env["PGHOST"] = self.config["database"]["host"]
-                env["PGUSER"] = self.config["database"]["user"]
+                env["PGHOST"] = self.config.database.host
+                env["PGUSER"] = self.config.database.user
                 env["PGPASSFILE"] = passfile.name
 
             command = ["psql", "--variable", "ON_ERROR_STOP=1"]

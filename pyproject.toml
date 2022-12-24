@@ -1,13 +1,17 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
 [project]
 name = "stustapay"
 authors = [
-    {name = "Michael Loipführer", email = "milo á sft.lol"},
-    {name = "Jonas Jelten", email = "jj á sft.lol"},
-    {name = "Leo Fahrbach", email = "leo.fahrbach á stusta.de"},
-    {name = "Lars Frederick Peiss", email = "lf.peiss á tum.de"},
-    {name = "Michael Enßlin", email = "mic á sft.lol"}
+    { name = "Michael Loipführer", email = "milo á sft.lol" },
+    { name = "Jonas Jelten", email = "jj á sft.lol" },
+    { name = "Leo Fahrbach", email = "leo.fahrbach á stusta.de" },
+    { name = "Lars Frederick Peiss", email = "lf.peiss á tum.de" },
+    { name = "Michael Enßlin", email = "mic á sft.lol" }
 ]
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 dynamic = ["version", "description"]
 readme = "README.md"
 classifiers = [
@@ -35,9 +39,6 @@ dev = [
 [project.urls]
 Source = "https://github.com/stustanet/stustapay"
 
-[project.scripts]
-stustapay = "stustapay.__main__:main"
-
 [tool.pylint.format]
 max-line-length = 120
 
@@ -48,6 +49,10 @@ disable = [
     "fixme",
     "logging-fstring-interpolation"
 ]
+
+[tool.black]
+line-length = 120
+target-version = ["py39"]
 
 [tool.mypy]
 ignore_missing_imports = true

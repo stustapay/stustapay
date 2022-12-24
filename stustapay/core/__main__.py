@@ -1,10 +1,9 @@
 import argparse
 import asyncio
 
-import yaml
-
 from . import psql
 from . import terminal
+from .config import read_config
 from .util import log_setup
 
 
@@ -18,15 +17,9 @@ def main():
 
     cli.add_argument("-c", "--config-path", default="server.conf")
 
-    cli.add_argument(
-        "-d", "--debug", action="store_true", help="enable asyncio debugging"
-    )
-    cli.add_argument(
-        "-v", "--verbose", action="count", default=0, help="increase program verbosity"
-    )
-    cli.add_argument(
-        "-q", "--quiet", action="count", default=0, help="decrease program verbosity"
-    )
+    cli.add_argument("-d", "--debug", action="store_true", help="enable asyncio debugging")
+    cli.add_argument("-v", "--verbose", action="count", default=0, help="increase program verbosity")
+    cli.add_argument("-q", "--quiet", action="count", default=0, help="decrease program verbosity")
 
     subparsers = cli.add_subparsers()
 
@@ -50,8 +43,7 @@ def main():
     loop.set_debug(args["debug"])
 
     config_path = args.pop("config_path")
-    with open(config_path) as config_file:
-        config = yaml.safe_load(config_file)
+    config = read_config(config_path)
 
     try:
         subcommand_class = args.pop("subcommand_class")

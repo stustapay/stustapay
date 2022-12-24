@@ -1,7 +1,7 @@
 import argparse
+import asyncio
 
-import yaml
-
+from stustapay.core.config import read_config
 from stustapay.core.util import log_setup
 
 
@@ -15,15 +15,9 @@ def main():
 
     cli.add_argument("-c", "--config-path", default="server.conf")
 
-    cli.add_argument(
-        "-d", "--debug", action="store_true", help="enable asyncio debugging"
-    )
-    cli.add_argument(
-        "-v", "--verbose", action="count", default=0, help="increase program verbosity"
-    )
-    cli.add_argument(
-        "-q", "--quiet", action="count", default=0, help="decrease program verbosity"
-    )
+    cli.add_argument("-d", "--debug", action="store_true", help="enable asyncio debugging")
+    cli.add_argument("-v", "--verbose", action="count", default=0, help="increase program verbosity")
+    cli.add_argument("-q", "--quiet", action="count", default=0, help="decrease program verbosity")
 
     subparsers = cli.add_subparsers()
 
@@ -42,10 +36,11 @@ def main():
     log_setup(args["verbose"] - args["quiet"])
 
     # enable asyncio debugging
+    loop = asyncio.new_event_loop()
+    loop.set_debug(args["debug"])
 
     config_path = args.pop("config_path")
-    with open(config_path) as config_file:
-        config = yaml.safe_load(config_file)
+    config = read_config(config_path)
 
     try:
         subcommand_class = args.pop("subcommand_class")
@@ -53,7 +48,7 @@ def main():
         cli.error("no subcommand was given")
     subcommand_class.argparse_validate(args, cli.error)
     subcommand_object = subcommand_class(config=config, **args)
-    subcommand_object.run()
+    loop.run_until_complete(subcommand_object.run())
 
 
 if __name__ == "__main__":
