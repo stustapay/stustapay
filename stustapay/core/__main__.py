@@ -3,6 +3,8 @@ import asyncio
 
 import yaml
 
+from . import psql
+from . import terminal
 from .util import log_setup
 
 
@@ -15,7 +17,6 @@ def main():
     cli = argparse.ArgumentParser()
 
     cli.add_argument('-c', '--config-path', default='server.conf')
-
 
     cli.add_argument("-d", "--debug", action="store_true",
                      help="enable asyncio debugging")
@@ -30,13 +31,10 @@ def main():
         subparser.set_defaults(subcommand_class=subcommand_class)
         subcommand_class.argparse_register(subparser)
 
-
-    from . import sftpgws
-    add_subcommand('websocket', sftpgws.SFTPGWS)
-
-    from . import psql
+    ### module registration
     add_subcommand('psql', psql.PSQL)
-
+    add_subcommand('terminalserver', terminal.TerminalServer)
+    ### / module registration
 
     args = vars(cli.parse_args())
 
@@ -56,6 +54,7 @@ def main():
     except KeyError:
         cli.error('no subcommand was given')
     subcommand_class.argparse_validate(args, cli.error)
+
     subcommand_object = subcommand_class(config=config, **args)
     loop.run_until_complete(subcommand_object.run())
 

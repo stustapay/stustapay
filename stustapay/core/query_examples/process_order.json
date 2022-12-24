@@ -1,9 +1,0 @@
-{
-  "type": "call",
-  "id": 1,
-  "func": "process_order",
-  "args": {
-      "order_id": 3,
-      "sban": "lol"
-  }
-}

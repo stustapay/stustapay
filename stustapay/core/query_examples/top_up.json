@@ -1,9 +1,0 @@
-{
-  "type": "call",
-  "id": 1,
-  "func": "top_up",
-  "args": {
-      "sban": "lol",
-      "add_funds": "20"
-  }
-}

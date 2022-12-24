@@ -1,6 +1,0 @@
-{
-  "type": "call",
-  "id": 1,
-  "func": "create_order",
-  "args": {}
-}

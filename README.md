@@ -65,13 +65,16 @@ Configuration of products, cash desks, accounts, ...
 - Python
 - PostgreSQL DB
 - asyncpg
-- aiohttp
+- FastAPI
+- uvicorn
 
-optional:
-- TSE module
+### TSE integration
+- TSE hardware module
 
-### Point of Sales
+### Ordering Terminal
 - Android telephone with NFC reader
+- Kotlin
+- jetpack compose
 
 ### Webapps for Management and User Self-Service
 - react

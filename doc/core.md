@@ -12,10 +12,5 @@
 
 ## Operation
 
-- Start the websocket server: `python -m stustapay.core websocket`
-
-
-## Payment Procedure
-- `create_order`: Start a new order in the database
-- `add_to_order`: select items which will be boughg in this order and show the current order
-- `process_order`: specify an account to book the order to and check if the order can be finished
+- To get a database shell: `python -m stustapay.core psql`
+- Start the websocket server: `python -m stustapay.core terminalserver`
