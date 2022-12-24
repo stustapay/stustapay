@@ -92,9 +92,6 @@ jobs:
 
   lint-web:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./web
     steps:
       - uses: actions/checkout@v2
       - name: Set up Nodejs
@@ -102,17 +99,16 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: web/package-lock.json
       - name: Install dependencies
         run: npm ci
+        working-directory: ./web
       - name: Lint
         run: npx nx lint
+        working-directory: ./web
 
   build-web:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./web
     steps:
       - uses: actions/checkout@v2
       - name: Set up Nodejs
@@ -120,17 +116,16 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: web/package-lock.json
       - name: Install dependencies
         run: npm ci
+        working-directory: ./web
       - name: Build
         run: npx nx build
+        working-directory: ./web
   
   test-web:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./web
     steps:
       - uses: actions/checkout@v2
       - name: Set up Nodejs
@@ -138,8 +133,10 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: web/package-lock.json
       - name: Install dependencies
         run: npm ci
+        working-directory: ./web
       - name: Build
         run: npx nx test
+        working-directory: ./web
