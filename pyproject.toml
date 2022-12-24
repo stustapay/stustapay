@@ -1,0 +1,59 @@
+[project]
+name = "stustapay"
+authors = [
+    {name = "Michael Loipführer", email = "milo á sft.lol"},
+    {name = "Jonas Jelten", email = "jj á sft.lol"},
+    {name = "Leo Fahrbach", email = "leo.fahrbach á stusta.de"},
+    {name = "Lars Frederick Peiss", email = "lf.peiss á tum.de"},
+    {name = "Michael Enßlin", email = "mic á sft.lol"}
+]
+license = {file = "LICENSE"}
+dynamic = ["version", "description"]
+readme = "README.md"
+classifiers = [
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi",
+    "asyncpg"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+dev = [
+    "black",
+    "mypy",
+    "pylint",
+]
+
+[project.urls]
+Source = "https://github.com/stustanet/stustapay"
+
+[project.scripts]
+stustapay = "stustapay.__main__:main"
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.messages_control]
+disable = [
+    "C",
+    "R",
+    "fixme",
+    "logging-fstring-interpolation"
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+pretty = true
+
+[tool.coverage.run]
+source = [
+    "stustapay"
+]

@@ -20,11 +20,11 @@ from . import util
 class PSQL(subcommand.SubCommand):
     def __init__(self, config, **args):
         self.config = config
-        self.action = args['action']
+        self.action = args["action"]
 
     @staticmethod
     def argparse_register(subparser):
-        subparser.add_argument('action', choices=['attach'])
+        subparser.add_argument("action", choices=["attach"])
 
     async def _attach(self):
 
@@ -38,6 +38,7 @@ class PSQL(subcommand.SubCommand):
                 if self.config["database"]["password"] is not None:
                     raise ValueError("database user is None, " "but password is set")
             else:
+
                 def escape_colon(str):
                     return str.replace("\\", "\\\\").replace(":", "\\:")
 

@@ -36,10 +36,10 @@ async def db_connect(cfg):
     """
 
     return await asyncpg.create_pool(
-        user=cfg['database']['user'],
-        password=cfg['database']['password'],
-        database=cfg['database']['dbname'],
-        host=cfg['database']['host']
+        user=cfg["database"]["user"],
+        password=cfg["database"]["password"],
+        database=cfg["database"]["dbname"],
+        host=cfg["database"]["host"],
     )
 
 
@@ -60,9 +60,11 @@ class TerminalServer(SubCommand):
             request.state.server = self
             return await call_next(request)
 
-        self.srvconfig = uvicorn.Config(self.api,
-                                        port=config['terminalserver']['port'],
-                                        log_level=logging.root.level)
+        self.srvconfig = uvicorn.Config(
+            self.api,
+            port=config["terminalserver"]["port"],
+            log_level=logging.root.level,
+        )
         self.dbpool = None
 
     async def run(self):
@@ -74,5 +76,5 @@ class TerminalServer(SubCommand):
         webserver = uvicorn.Server(self.srvconfig)
 
         async with self.dbpool.acquire() as conn:
-            self.logger.info('Connected to database, serving now...')
+            self.logger.info("Connected to database, serving now...")
             await webserver.serve()

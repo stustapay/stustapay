@@ -18,8 +18,13 @@ def log_setup(setting, default=1):
     else: setting + default is used.
     """
 
-    levels = (logging.ERROR, logging.WARNING, logging.INFO,
-              logging.DEBUG, logging.NOTSET)
+    levels = (
+        logging.ERROR,
+        logging.WARNING,
+        logging.INFO,
+        logging.DEBUG,
+        logging.NOTSET,
+    )
 
     factor = clamp(default + setting, 0, len(levels) - 1)
     level = levels[factor]
@@ -29,7 +34,7 @@ def log_setup(setting, default=1):
 
 
 def clamp(number, smallest, largest):
-    """ return number but limit it to the inclusive given value range """
+    """return number but limit it to the inclusive given value range"""
     return max(smallest, min(number, largest))
 
 

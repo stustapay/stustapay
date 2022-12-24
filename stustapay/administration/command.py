@@ -1,7 +1,7 @@
 import logging
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 
 from stustapay.core.subcommand import SubCommand
 from stustapay.core.http.middleware import add_context_middleware
@@ -25,13 +25,19 @@ class Api(SubCommand):
 
         add_context_middleware(self.api, self.cfg)
 
-        self.srvconfig = uvicorn.Config(self.api, host=config['administration']['host'],
-                                        port=int(config['administration']['port']), log_level="info")
+        self.srvconfig = uvicorn.Config(
+            self.api,
+            host=config["administration"]["host"],
+            port=int(config["administration"]["port"]),
+            log_level="info",
+        )
 
     def run(self):
         """
         run the http server
         """
-        logging.warning("This is a development api server, please do not run this in production")
+        logging.warning(
+            "This is a development api server, please do not run this in production"
+        )
         server = uvicorn.Server(self.srvconfig)
         server.run()
