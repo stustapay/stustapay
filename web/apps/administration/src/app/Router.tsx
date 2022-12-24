@@ -1,10 +1,13 @@
 import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
-import { PointOfSales } from "./routes/PointOfSales";
-import { ProductDetail } from "./routes/ProductDetail";
-import { Products } from "./routes/Products";
+import { PointOfSaleList } from "./routes/point-of-sales/PointOfSaleList";
+import { PointOfSaleDetail } from "./routes/point-of-sales/PointOfSaleDetail";
+import { ProductDetail } from "./routes/products/ProductDetail";
+import { ProductList } from "./routes/products/ProductList";
 import { Root } from "./routes/Root";
+import { CashierList } from "./routes/cashiers/CashierList";
+import { CashierDetail } from "./routes/cashiers/CashierDetail";
 
 const router = createBrowserRouter([
   {
@@ -14,7 +17,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "products",
-        element: <Products />,
+        element: <ProductList />,
       },
       {
         path: "products/:productId",
@@ -22,7 +25,19 @@ const router = createBrowserRouter([
       },
       {
         path: "point-of-sales",
-        element: <PointOfSales />,
+        element: <PointOfSaleList />,
+      },
+      {
+        path: "point-of-sales/:pointOfSaleId",
+        element: <PointOfSaleDetail />,
+      },
+      {
+        path: "cashiers",
+        element: <CashierList />,
+      },
+      {
+        path: "cashiers/:cashierId",
+        element: <CashierDetail />,
       },
     ],
   },
