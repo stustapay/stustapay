@@ -1,0 +1,142 @@
+name: Tests
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+
+jobs:
+  # pylint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Set up Python 3.9
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.9
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip flit
+  #         flit install --symlink --deps develop
+  #     - name: Analysing the code with pylint
+  #       run: make pylint
+
+  # mypy:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Set up Python 3.9
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.9
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip flit
+  #         flit install --symlink --deps develop
+  #     - name: Analysing the code with mypy
+  #       run: make mypy
+
+  # test:
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       python-version:
+  #       - "3.9"
+  #       - "3.10"
+  #       os: [ubuntu-latest]
+  #   services:
+  #     postgres:
+  #       image: postgres
+  #       env:
+  #         POSTGRES_PASSWORD: "password"
+  #         POSTGRES_USER: "abrechnung"
+  #         POSTGRES_DB: "abrechnung"
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
+  #       ports:
+  #         - 5432:5432
+  #   env:
+  #     TEST_DB_USER: "abrechnung"
+  #     TEST_DB_HOST: "localhost"
+  #     TEST_DB_DATABASE: "abrechnung"
+  #     TEST_DB_PASSWORD: "password"
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip flit
+  #         flit install --symlink --deps develop
+  #     - name: Run all tests
+  #       run: pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+
+  # format:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Set up Python 3.9
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.9
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip flit
+  #         flit install --symlink --deps develop
+  #     - name: Check formatting
+  #       run: make check-format
+
+  lint-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Nodejs
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./web
+      - name: Lint
+        run: npx nx lint
+        working-directory: ./web
+
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Nodejs
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./web
+      - name: Build
+        run: npx nx build
+        working-directory: ./web
+  
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Nodejs
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./web
+      - name: Build
+        run: npx nx test
+        working-directory: ./web

@@ -15,3 +15,6 @@ dist/
 /*.conf
 /test
 /build
+
+# ides
+.idea

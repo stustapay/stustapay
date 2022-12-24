@@ -1,7 +1,7 @@
 import { Card, CircularProgress, Typography } from "@mui/material";
 import * as React from "react";
 import { useParams } from "react-router-dom";
-import { useGetProductByIdQuery } from "../../api";
+import { useGetProductByIdQuery } from "../../../api";
 
 export const ProductDetail: React.FC = () => {
   const { productId } = useParams();
