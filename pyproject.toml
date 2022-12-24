@@ -4,13 +4,13 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "stustapay"
-authors = [
-    { name = "Michael Loipführer", email = "milo á sft.lol" },
-    { name = "Jonas Jelten", email = "jj á sft.lol" },
-    { name = "Leo Fahrbach", email = "leo.fahrbach á stusta.de" },
-    { name = "Lars Frederick Peiss", email = "lf.peiss á tum.de" },
-    { name = "Michael Enßlin", email = "mic á sft.lol" }
-]
+#authors = [
+#    { name = "Michael Loipführer", email = "milo á sft.lol" },
+#    { name = "Jonas Jelten", email = "jj á sft.lol" },
+#    { name = "Leo Fahrbach", email = "leo.fahrbach á stusta.de" },
+#    { name = "Lars Frederick Peiss", email = "lf.peiss á tum.de" },
+#    { name = "Michael Enßlin", email = "mic á sft.lol" }
+#]
 license = { file = "LICENSE" }
 dynamic = ["version", "description"]
 readme = "README.md"
