@@ -9,7 +9,7 @@ from fastapi import FastAPI, APIRouter, Request, Depends
 
 from .database import create_db_pool
 from .http.dependencies import get_db_conn
-from .http.middleware import add_context_middleware
+from .http.middleware import ContextMiddleware
 from .subcommand import SubCommand
 
 router = APIRouter(
@@ -56,6 +56,6 @@ class TerminalServer(SubCommand):
         connect to database and run the web server.
         """
         self.dbpool = await create_db_pool(self.cfg)
-        add_context_middleware(self.api, self.cfg, self.dbpool)
+        self.api.add_middleware(ContextMiddleware, config=self.cfg, db_pool=self.dbpool)
         webserver = uvicorn.Server(self.srvconfig)
         await webserver.serve()

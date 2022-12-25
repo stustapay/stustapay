@@ -6,9 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from stustapay.core.config import Config
 from stustapay.core.database import create_db_pool
-from stustapay.core.http.middleware import add_context_middleware
+from stustapay.core.http.middleware import ContextMiddleware
 from stustapay.core.subcommand import SubCommand
-from .routers import products, cashiers, common
+from .routers import products, cashiers, common, tax_rates
 
 
 class Api(SubCommand):
@@ -26,6 +26,7 @@ class Api(SubCommand):
         self.api.include_router(products.router)
         self.api.include_router(cashiers.router)
         self.api.include_router(common.router)
+        self.api.include_router(tax_rates.router)
         self.api.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -46,6 +47,6 @@ class Api(SubCommand):
         connect to database and run the web server.
         """
         self.dbpool = await create_db_pool(self.cfg)
-        add_context_middleware(self.api, self.cfg, self.dbpool)
+        self.api.add_middleware(ContextMiddleware, config=self.cfg, db_pool=self.dbpool)
         webserver = uvicorn.Server(self.srvconfig)
         await webserver.serve()
