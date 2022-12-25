@@ -8,10 +8,14 @@ import contextlib
 import os
 import shutil
 import tempfile
+from pathlib import Path
 
+from . import database
 from . import subcommand
 from . import util
 from .config import Config
+
+REVISION_DIR = Path(__file__).parent / "schema"
 
 
 class PSQL(subcommand.SubCommand):
@@ -21,7 +25,7 @@ class PSQL(subcommand.SubCommand):
 
     @staticmethod
     def argparse_register(subparser):
-        subparser.add_argument("action", choices=["attach"])
+        subparser.add_argument("action", choices=["attach", "migrate", "rebuild"])
 
     async def _attach(self):
 
@@ -75,3 +79,10 @@ class PSQL(subcommand.SubCommand):
         """
         if self.action == "attach":
             return await self._attach()
+
+        db_pool = await database.create_db_pool(self.config)
+        if self.action == "migrate":
+            await database.apply_revisions(db_pool=db_pool, revision_dir=REVISION_DIR)
+        elif self.action == "rebuild":
+            await database.reset_schema(db_pool=db_pool)
+            await database.apply_revisions(db_pool=db_pool, revision_dir=REVISION_DIR)

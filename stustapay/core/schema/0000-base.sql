@@ -1,3 +1,6 @@
+-- revision: 62df6b55
+-- requires: null
+
 -- stustapay core database
 --
 -- (c) 2022 Jonas Jelten <jj@sft.lol>
@@ -17,5 +20,10 @@ do $$ begin
 exception
     when duplicate_object then null;
 end $$;
+
+create table product (
+    id serial primary key,
+    name varchar(255) not null
+);
 
 commit;

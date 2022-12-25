@@ -9,7 +9,7 @@ import signal
 INF = float("inf")
 
 
-def log_setup(setting, default=1):
+def log_setup(setting: int, default=1):
     """
     Perform setup for the logger.
     Run before any logging.log thingy is called.
@@ -33,7 +33,7 @@ def log_setup(setting, default=1):
     logging.captureWarnings(True)
 
 
-def clamp(number, smallest, largest):
+def clamp(number: int, smallest: int, largest: int) -> int:
     """return number but limit it to the inclusive given value range"""
     return max(smallest, min(number, largest))
 

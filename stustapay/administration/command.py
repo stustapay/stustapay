@@ -2,12 +2,13 @@ import logging
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from stustapay.core.config import Config
 from stustapay.core.database import create_db_pool
 from stustapay.core.http.middleware import add_context_middleware
 from stustapay.core.subcommand import SubCommand
 from .routers import products, cashiers, common
-from ..core.config import Config
 
 
 class Api(SubCommand):
@@ -25,6 +26,13 @@ class Api(SubCommand):
         self.api.include_router(products.router)
         self.api.include_router(cashiers.router)
         self.api.include_router(common.router)
+        self.api.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
         self.srvconfig = uvicorn.Config(
             self.api,
