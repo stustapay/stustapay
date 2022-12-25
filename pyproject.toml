@@ -17,7 +17,7 @@ readme = "README.md"
 classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "License :: OSI Approved :: GNU Affero General Public License v3 (AGPLv3)",
 ]
 requires-python = ">=3.9"
 dependencies = [
@@ -57,6 +57,9 @@ target-version = ["py39"]
 [tool.mypy]
 ignore_missing_imports = true
 pretty = true
+plugins = [
+  "pydantic.mypy"
+]
 
 [tool.coverage.run]
 source = [
