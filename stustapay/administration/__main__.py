@@ -1,10 +1,8 @@
 import argparse
 import asyncio
 
-from . import psql
-from . import terminal
-from .config import read_config
-from .util import log_setup
+from stustapay.core.config import read_config
+from stustapay.core.util import log_setup
 
 
 def main():
@@ -28,10 +26,9 @@ def main():
         subparser.set_defaults(subcommand_class=subcommand_class)
         subcommand_class.argparse_register(subparser)
 
-    ### module registration
-    add_subcommand("psql", psql.PSQL)
-    add_subcommand("terminalserver", terminal.TerminalServer)
-    ### / module registration
+    from . import command
+
+    add_subcommand("api", command.Api)
 
     args = vars(cli.parse_args())
 
@@ -50,7 +47,6 @@ def main():
     except KeyError:
         cli.error("no subcommand was given")
     subcommand_class.argparse_validate(args, cli.error)
-
     subcommand_object = subcommand_class(config=config, **args)
     loop.run_until_complete(subcommand_object.run())
 

@@ -9,7 +9,7 @@ import signal
 INF = float("inf")
 
 
-def log_setup(setting, default=1):
+def log_setup(setting: int, default=1):
     """
     Perform setup for the logger.
     Run before any logging.log thingy is called.
@@ -18,8 +18,13 @@ def log_setup(setting, default=1):
     else: setting + default is used.
     """
 
-    levels = (logging.ERROR, logging.WARNING, logging.INFO,
-              logging.DEBUG, logging.NOTSET)
+    levels = (
+        logging.ERROR,
+        logging.WARNING,
+        logging.INFO,
+        logging.DEBUG,
+        logging.NOTSET,
+    )
 
     factor = clamp(default + setting, 0, len(levels) - 1)
     level = levels[factor]
@@ -28,8 +33,8 @@ def log_setup(setting, default=1):
     logging.captureWarnings(True)
 
 
-def clamp(number, smallest, largest):
-    """ return number but limit it to the inclusive given value range """
+def clamp(number: int, smallest: int, largest: int) -> int:
+    """return number but limit it to the inclusive given value range"""
     return max(smallest, min(number, largest))
 
 
@@ -77,9 +82,7 @@ async def run_as_fg_process(args, **kwargs):
 
     try:
         # fork the child
-        child = await asyncio.create_subprocess_exec(
-            *args, preexec_fn=new_pgid, **kwargs
-        )
+        child = await asyncio.create_subprocess_exec(*args, preexec_fn=new_pgid, **kwargs)
 
         # we can't set the process group id from the parent since the child
         # will already have exec'd. and we can't SIGSTOP it before exec,
