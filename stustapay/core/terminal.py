@@ -37,6 +37,8 @@ class TerminalServer(SubCommand):
     """
 
     def __init__(self, config, **args):
+        del args  # unused
+
         self.cfg = config
 
         self.logger = logging.getLogger(__name__)

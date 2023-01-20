@@ -17,6 +17,8 @@ class Api(SubCommand):
     """
 
     def __init__(self, config: Config, **args):
+        del args  # unused
+
         self.cfg = config
         self.dbpool = None
 

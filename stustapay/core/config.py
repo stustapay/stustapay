@@ -28,7 +28,7 @@ class Config(BaseModel):
 
 
 def read_config(config_path: str) -> Config:
-    with open(config_path) as config_file:
+    with open(config_path, "r") as config_file:
         content = yaml.safe_load(config_file)
         config = Config(**content)
         return config

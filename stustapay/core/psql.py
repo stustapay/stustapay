@@ -37,11 +37,11 @@ class PSQL(subcommand.SubCommand):
                 if self.config.database.host is not None:
                     raise ValueError("database user is None, but host is set")
                 if self.config.database.password is not None:
-                    raise ValueError("database user is None, " "but password is set")
+                    raise ValueError("database user is None, but password is set")
             else:
 
-                def escape_colon(str):
-                    return str.replace("\\", "\\\\").replace(":", "\\:")
+                def escape_colon(value: str):
+                    return value.replace("\\", "\\\\").replace(":", "\\:")
 
                 passfile = exitstack.enter_context(tempfile.NamedTemporaryFile("w"))
                 os.chmod(passfile.name, 0o600)

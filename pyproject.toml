@@ -23,6 +23,7 @@ requires-python = ">=3.9"
 dependencies = [
     "fastapi",
     "uvicorn[standard]",
+    "pydantic",
     "asyncpg",
     "PyYAML",
 ]
@@ -36,6 +37,7 @@ dev = [
     "black",
     "mypy",
     "pylint",
+    "types-PyYAML",
 ]
 
 [project.urls]
@@ -43,6 +45,11 @@ Source = "https://github.com/stustanet/stustapay"
 
 [tool.setuptools]
 packages = ["stustapay"]
+
+[tool.pylint]
+extension-pkg-whitelist = [
+    "pydantic"
+]
 
 [tool.pylint.format]
 max-line-length = 120
@@ -52,7 +59,8 @@ disable = [
     "C",
     "R",
     "fixme",
-    "logging-fstring-interpolation"
+    "logging-fstring-interpolation",
+    "unspecified-encoding"
 ]
 
 [tool.black]
@@ -62,9 +70,9 @@ target-version = ["py39"]
 [tool.mypy]
 ignore_missing_imports = true
 pretty = true
-plugins = [
-  "pydantic.mypy"
-]
+#plugins = [
+#  "pydantic.mypy"
+#]
 
 [tool.coverage.run]
 source = [

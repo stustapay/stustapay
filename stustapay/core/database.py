@@ -85,7 +85,7 @@ class SchemaRevision:
         # now for the purpose of sorting the revisions according to their dependencies
         first_revision = next((x for x in revisions if x.requires is None), None)
         if first_revision is None:
-            raise ValueError(f"Could not find a revision without any dependencies")
+            raise ValueError("Could not find a revision without any dependencies")
 
         # TODO: detect revision branches
         sorted_revisions = [first_revision]
