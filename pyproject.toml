@@ -1,6 +1,6 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "stustapay"
@@ -12,7 +12,7 @@ name = "stustapay"
 #    { name = "Michael Enßlin", email = "mic á sft.lol" }
 #]
 license = { file = "LICENSE" }
-dynamic = ["version", "description"]
+dynamic = ["version"]
 readme = "README.md"
 classifiers = [
     "Operating System :: OS Independent",
@@ -22,7 +22,9 @@ classifiers = [
 requires-python = ">=3.9"
 dependencies = [
     "fastapi",
-    "asyncpg"
+    "uvicorn[standard]",
+    "asyncpg",
+    "PyYAML",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +40,9 @@ dev = [
 
 [project.urls]
 Source = "https://github.com/stustanet/stustapay"
+
+[tool.setuptools]
+packages = ["stustapay"]
 
 [tool.pylint.format]
 max-line-length = 120

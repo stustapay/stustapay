@@ -1,3 +1,5 @@
 #!/usr/bin/env python3
 
-raise NotImplementedError()
+from setuptools import setup
+
+setup()
