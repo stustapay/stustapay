@@ -13,7 +13,7 @@ import java.nio.charset.Charset
 class NFCHandler(activity: Activity) {
     var intent: PendingIntent? = null
     var device: NfcAdapter? = null
-    var activity: Activity = activity
+    private var activity: Activity = activity
 
     fun onCreate() {
         // prepare nfc intent delivery
@@ -45,7 +45,7 @@ class NFCHandler(activity: Activity) {
             NfcAdapter.ACTION_TECH_DISCOVERED -> {
                 Toast.makeText(
                     activity,
-                    "nfc tech discovered: id=${tag.id} info=${tag.toString()} techs=${tag.techList}",
+                    "nfc tech discovered: id=${tag.id} info=$tag techs=${tag.techList}",
                     Toast.LENGTH_LONG
                 ).show()
 
@@ -56,7 +56,7 @@ class NFCHandler(activity: Activity) {
                 val nfcatag = NfcA.get(tag)
                 Toast.makeText(
                     activity,
-                    "nfca tech detected: nfca=${nfcatag.toString()}",
+                    "nfca tech detected: nfca=$nfcatag",
                     Toast.LENGTH_LONG
                 ).show()
             }

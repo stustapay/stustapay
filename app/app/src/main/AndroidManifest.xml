@@ -2,6 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="true" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -16,13 +24,12 @@
             android:theme="@style/Theme.StuStaPay">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
             </intent-filter>
-
             <intent-filter>
                 <action android:name="android.nfc.action.TECH_DISCOVERED" />
             </intent-filter>
@@ -30,17 +37,10 @@
             <meta-data
                 android:name="android.nfc.action.TECH_DISCOVERED"
                 android:resource="@xml/nfc_tech_filter" />
-
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
     </application>
 
-    <uses-permission android:name="android.permission.NFC" />
-    <uses-feature
-        android:name="android.hardware.nfc"
-        android:required="true" />
-
-    <uses-sdk android:minSdkVersion="21" />
 </manifest>
