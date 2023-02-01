@@ -4,7 +4,7 @@ import asyncpg
 from fastapi import APIRouter, Depends, status, HTTPException
 from pydantic import BaseModel
 
-from stustapay.core.http.dependencies import get_db_conn
+from stustapay.core.http.context import get_db_conn
 
 router = APIRouter(
     prefix="/products",
@@ -41,6 +41,8 @@ async def list_products(conn: asyncpg.Connection = Depends(get_db_conn)):
 async def create_product(product: ProductIn, conn: asyncpg.Connection = Depends(get_db_conn)):
     async with conn.transaction():
         row = await conn.fetchrow("insert into product (name) values ($1) returning id, name", product.name)
+        if row is None:
+            raise Exception("product insert failed")
 
         return ProductOut(id=row["id"], name=row["name"])
 

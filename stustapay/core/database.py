@@ -5,7 +5,7 @@ from typing import Optional
 
 import asyncpg
 
-from .config import Config
+from .config import DatabaseConfig
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class SchemaRevision:
         self.version = version
         self.requires = requires
 
-    async def apply(self, conn: asyncpg.Connection):
+    async def apply(self, conn):
         logger.info(f"Applying revision {self.file_name.name} with version {self.version}")
         if self.requires:
             version = await conn.fetchval(
@@ -99,16 +99,20 @@ class SchemaRevision:
         return sorted_revisions
 
 
-async def create_db_pool(cfg: Config) -> asyncpg.Pool:
+async def create_db_pool(cfg: DatabaseConfig) -> asyncpg.Pool:
     """
     get a connection pool to the database
     """
-    return await asyncpg.create_pool(
-        user=cfg.database.user,
-        password=cfg.database.password,
-        database=cfg.database.dbname,
-        host=cfg.database.host,
+    ret = await asyncpg.create_pool(
+        user=cfg.user,
+        password=cfg.password,
+        database=cfg.dbname,
+        host=cfg.host,
     )
+    if ret is None:
+        raise Exception("failed to get db pool")
+
+    return ret
 
 
 async def reset_schema(db_pool: asyncpg.Pool):
@@ -123,9 +127,7 @@ async def apply_revisions(db_pool: asyncpg.Pool, revision_dir: Path):
 
     async with db_pool.acquire() as conn:
         async with conn.transaction():
-            await conn.execute(
-                f"create table if not exists {REVISION_TABLE} (" "  version text not null primary key" ")"
-            )
+            await conn.execute(f"create table if not exists {REVISION_TABLE} (version text not null primary key)")
 
             curr_revision = await conn.fetchval(f"select version from {REVISION_TABLE} limit 1")
 

@@ -300,6 +300,15 @@ create or replace view transaction_value as
     group by
         tx.id;
 
+-- show all line items
+create or replace view transaction_items as
+    select
+        tx.*,
+    from
+        transaction tx
+        left join lineitem
+            on (tx.id = lineitem.txid);
+
 
 -- requests the tse module to sign something
 create table if not exists tse_signature (
@@ -318,9 +327,9 @@ create table if not exists tse_signature (
 );
 
 
--- requests the receipt generator to create a receipt
-create table if not exists receipt (
-    id serial not null primary key references transaction(id) on delete cascade,
+-- requests the bon generator to create a new receipt
+create table if not exists bon (
+    id bigint not null primary key references transaction(id) on delete cascade,
 
     generated bool default false,
     status text,
@@ -331,146 +340,6 @@ create table if not exists receipt (
 
 
 -------- functions
-
--- create a new booking
--- expects {'items': [{'id': itemid, 'quantity': 2}, ...]} in order definition
-create or replace function order_create(orderdef json)
-    returns bigint as $$
-declare
-    order_id bigint;
-    itemidx int;
-begin
-    insert into transaction (status) values ('pending') returning id into order_id;
-
-    select itemcount into strict itemidx from transaction where id = order_id;
-
-    declare
-        val json;
-        prid int;
-        price numeric := null;
-        tax_rate numeric;
-        tax_name text;
-    begin
-        for val in select * from json_array_elements(orderdef->'items')
-        loop
-            prid := (val->>'id')::int;
-
-            select
-                product.price,
-                tax.rate,
-                tax.name
-            into
-                price,
-                tax_rate,
-                tax_name
-            from product
-                 left join tax on (tax.name = product.tax)
-            where product.id = prid;
-
-            if price is null then
-                raise 'product id not found: id=%', prid;
-            end if;
-
-            -- create lineitem for product
-            insert into lineitem (txid, itemid, productid, quantity, price, tax_name, tax_rate)
-            select order_id, itemidx, prid, (val->>'quantity')::int, price, tax_name, tax_rate;
-
-            itemidx := itemidx + 1;
-        end loop;
-
-        update transaction set itemcount = itemidx where id = order_id;
-    end;
-
-    return order_id;
-end;
-$$ language plpgsql;
-
-
-create or replace function order_process(
-    order_id bigint,
-    source_account_id bigint,
-    target_account_id bigint
-)
-    returns text as $$
-declare
-    source_old_funds numeric := null;
-    target_old_funds numeric := null;
-    source_new_funds numeric := null;
-    target_new_funds numeric := null;
-
-    order_sum numeric := null;
-    order_tax numeric := null;
-    order_notax numeric := null;
-    already_booked text;
-begin
-    -- check if order is already processed
-    select status into already_booked from transaction where transaction.id = order_id;
-    if already_booked is null then
-        raise 'order not found';
-    end if;
-    if already_booked != 'pending' then
-        raise 'order not in pending state';
-    end if;
-
-    -- current available funds
-    select balance into source_old_funds from account where account.id = source_account_id;
-    if source_old_funds is null then
-        raise 'source account not found';
-    end if;
-
-    select balance into target_old_funds from account where account.id = target_account_id;
-    if target_old_funds is null then
-        raise 'destination account not found';
-    end if;
-
-    -- all teh moneyz
-    select
-        tv.value_sum,
-        tv.value_tax,
-        tv.value_notax
-    into strict
-        order_sum,
-        order_tax,
-        order_notax
-    from transaction_value tv
-    where tv.id = order_id;
-
-    if order_sum is null then
-        raise 'empty order';
-    end if;
-
-    if source_old_funds < order_sum then
-        raise 'not enough funds on account: % < % needed', source_old_funds, order_sum;
-    end if;
-
-    -- subtract from payer's account
-    source_new_funds := (source_old_funds - order_sum);
-    update account set balance = source_new_funds where id = source_account_id;
-
-    -- book to destination account
-    target_new_funds := (target_old_funds + order_sum);
-    update account set balance = target_new_funds where id = target_account_id;
-
-    -- mark transaction done
-    update
-        transaction
-    set source_account = source_account_id,
-        target_account = target_account_id,
-        finished_at = now(),
-        status = 'done'
-    where transaction.id = order_id;
-
-    return json_build_object(
-        'value_sum', order_sum,
-        'value_tax', order_tax,
-        'value_notax', order_notax,
-        'source_old_funds', source_old_funds,
-        'source_new_funds', source_new_funds,
-        'target_old_funds', target_old_funds,
-        'target_new_funds', target_new_funds
-    )::text;
-end;
-$$ language plpgsql;
 
 
 create or replace function order_cancel(
@@ -494,6 +363,9 @@ begin
     where transaction.id = order_id;
 end;
 $$ language plpgsql;
+
+
+
 
 
 -- wooh \o/
