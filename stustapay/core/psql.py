@@ -1,5 +1,5 @@
 """
-PSQL command.
+perform schema updates and get a db shell.
 
 Runs the 'psql' tool with the appropriate parameters.
 """
@@ -15,7 +15,7 @@ from . import subcommand
 from . import util
 from .config import Config
 
-REVISION_DIR = Path(__file__).parent / "schema"
+REVISION_DIR = Path(__file__).parent / "schema" / "db"
 
 
 class PSQL(subcommand.SubCommand):
@@ -28,7 +28,6 @@ class PSQL(subcommand.SubCommand):
         subparser.add_argument("action", choices=["attach", "migrate", "rebuild"])
 
     async def _attach(self):
-
         with contextlib.ExitStack() as exitstack:
             env = dict(os.environ)
             env["PGDATABASE"] = self.config.database.dbname

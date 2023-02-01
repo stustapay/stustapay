@@ -4,31 +4,15 @@ handles connections with ordering terminals.
 
 import logging
 
-import uvicorn
-from fastapi import FastAPI, APIRouter, Request, Depends
-
-from .database import create_db_pool
-from .http.dependencies import get_db_conn
-from .http.middleware import ContextMiddleware
 from .subcommand import SubCommand
+from .config import Config
+from .. import __version__
 
-router = APIRouter(
-    prefix="",
-    responses={404: {"description": "Not found"}},
-)
-
-
-def get_srv(request: Request):
-    """
-    get the server object from a request.
-    """
-    return request.state.server
-
-
-@router.get("/")
-async def root(conn=Depends(get_db_conn)):
-    dbver = await conn.fetchrow("select version();")
-    return {"db_version": f"{dbver[0]}"}
+from .service.transaction import TransactionService
+from .http.server import Server
+from .http.router.base import router as base_router
+from .http.router.live import router as live_router
+from .http.router.order import router as order_router
 
 
 class TerminalServer(SubCommand):
@@ -36,28 +20,38 @@ class TerminalServer(SubCommand):
     Talk with Terminals in the field.
     """
 
-    def __init__(self, config, **args):
-        del args  # unused
+    @staticmethod
+    def argparse_register(subparser):
+        pass
+
+    def __init__(self, args, config: Config, **rest):
+        del args, rest
 
         self.cfg = config
+        self.db_pool = None
 
         self.logger = logging.getLogger(__name__)
-        self.api = FastAPI()
-        self.api.include_router(router)
-        self.dbpool = None
 
-        self.srvconfig = uvicorn.Config(
-            self.api,
-            host=config.terminalserver.host,
-            port=config.terminalserver.port,
-            log_level=logging.root.level,
+        self.server = Server(
+            title="StuStaPay Terminal API",
+            config=config.terminalserver,
+            cors=True,
         )
 
+        # endpoints available in the terminal server.
+        self.server.add_router(base_router)
+        self.server.add_router(live_router)
+        self.server.add_router(order_router)
+
     async def run(self):
-        """
-        connect to database and run the web server.
-        """
-        self.dbpool = await create_db_pool(self.cfg)
-        self.api.add_middleware(ContextMiddleware, config=self.cfg, db_pool=self.dbpool)
-        webserver = uvicorn.Server(self.srvconfig)
-        await webserver.serve()
+        db_pool = await self.server.db_connect(self.cfg.database)
+
+        contexts = {
+            "config": self.cfg,
+            "db_pool": db_pool,
+            "tx_service": TransactionService(db_pool=db_pool, config=self.cfg),
+        }
+        try:
+            await self.server.run(self.cfg, contexts)
+        finally:
+            await db_pool.close()

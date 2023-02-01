@@ -1,23 +1,30 @@
 import yaml
+from typing import Optional
+
 from pydantic import BaseModel
 
 
-class AdministrationApiConfig(BaseModel):
+class HTTPServerConfig(BaseModel):
+    host: str
+    port: int
+
+
+class AdministrationApiConfig(HTTPServerConfig):
     host: str = "localhost"
     port: int = 8081
 
 
-class TerminalApiConfig(BaseModel):
+class TerminalApiConfig(HTTPServerConfig):
     host: str = "localhost"
     port: int = 8080
 
 
 class DatabaseConfig(BaseModel):
-    user: str
-    password: str
-    dbname: str
-    host: str
+    user: Optional[str] = None
+    password: Optional[str] = None
+    host: Optional[str] = None
     port: int = 5432
+    dbname: str
 
 
 class Config(BaseModel):
