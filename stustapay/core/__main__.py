@@ -24,7 +24,7 @@ def main():
 
     args = parser.parse_args(loop)
 
-    config = read_config(args.config_path)
+    config = read_config(args.config_path)  # pylint: disable=no-member
 
     args.run_subcommand(loop, config=config)
 

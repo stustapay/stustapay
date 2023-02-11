@@ -8,7 +8,6 @@ from stustapay.core.subcommand import SubCommand
 from .routers import products, users, common, tax_rates, auth
 from ..core.service.products import ProductService
 from ..core.service.tax_rates import TaxRateService
-from ..core.service.users import UserService
 
 
 class Api(SubCommand):

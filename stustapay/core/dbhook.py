@@ -8,7 +8,7 @@ import inspect
 import asyncpg
 import logging
 
-from typing import Callable, Optional, Awaitable
+from typing import Callable, Optional, Awaitable, Union, Type
 
 
 class DBHook:
@@ -31,7 +31,7 @@ class DBHook:
         self.event_handler = event_handler
         assert inspect.iscoroutinefunction(event_handler)
 
-        self.events = asyncio.Queue(maxsize=256)
+        self.events: asyncio.Queue[Union[str, Type[StopIteration]]] = asyncio.Queue(maxsize=256)
         self.logger = logging.getLogger(__name__)
 
         self.hooks_active = False

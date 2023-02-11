@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 import yaml
 from typing import Optional
 

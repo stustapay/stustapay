@@ -15,6 +15,7 @@ class TransactionService(DBService):
     async def create_transaction(
         self, *, conn: asyncpg.Connection, user: User, transaction: NewTransaction
     ) -> Transaction:
+        del user
         transaction_id: int = await conn.fetchval("insert into transaction (status) values ('pending') returning id")
 
         count = 0
@@ -67,7 +68,7 @@ class TransactionService(DBService):
         """
         get all info about a transaction.
         """
-        del transaction_id
+        del transaction_id, conn, user
         raise NotImplementedError()
 
     @with_db_transaction
@@ -75,7 +76,7 @@ class TransactionService(DBService):
         """
         try to pay a pending transaction, so one can see the available payment options.
         """
-        del transaction_id
+        del transaction_id, conn, user
         raise NotImplementedError()
 
     @with_db_transaction
@@ -91,6 +92,7 @@ class TransactionService(DBService):
         """
         apply the transaction after all payment has been settled.
         """
+        del user
         status: Optional[str] = await conn.fetchval(
             "select status from transaction where transaction.id = $1;",
             transaction_id,
@@ -188,6 +190,7 @@ class TransactionService(DBService):
 
     @with_db_transaction
     async def cancel_transaction(self, *, conn: asyncpg.Connection, user: User, transaction_id: int):
+        del user
         status: Optional[str] = await conn.fetchval(
             "select status from transaction where transaction.id = $1;",
             transaction_id,

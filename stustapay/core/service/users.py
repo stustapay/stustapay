@@ -3,7 +3,7 @@ from typing import Optional
 import asyncpg
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from .dbservice import DBService, with_db_transaction
 from ..config import Config
@@ -40,7 +40,7 @@ class UserService(DBService):
             hashed_password = self._hash_password(password)
 
         row = await conn.fetchrow(
-            "insert into usr (name, description, password) " "values ($1, $2, $3) returning id, name, description",
+            "insert into usr (name, description, password) values ($1, $2, $3) returning id, name, description",
             new_user.name,
             new_user.description,
             hashed_password,
@@ -61,10 +61,12 @@ class UserService(DBService):
     async def create_user(
         self, *, conn: asyncpg.Connection, current_user: User, new_user: UserWithoutId, password: Optional[str] = None
     ) -> User:
+        del current_user
         return await self._create_user(conn=conn, new_user=new_user, password=password)
 
     @with_db_transaction
     async def list_users(self, *, conn: asyncpg.Connection, current_user: User) -> list[User]:
+        del current_user
         cursor = conn.cursor(
             "select usr.*, array_agg(usr_privs.priv) as privileges "
             "from usr join usr_privs on usr.id = usr_privs.usr "
@@ -84,6 +86,7 @@ class UserService(DBService):
 
     @with_db_transaction
     async def get_user(self, *, conn: asyncpg.Connection, current_user: User, user_id: int) -> Optional[User]:
+        del current_user
         row = await conn.fetchrow(
             "select usr.*, array_agg(usr_privs.priv) as privileges "
             "from usr join usr_privs on usr.id = usr_privs.usr "
@@ -104,6 +107,7 @@ class UserService(DBService):
     async def update_user(
         self, *, conn: asyncpg.Connection, current_user: User, user_id: int, user: UserWithoutId
     ) -> Optional[User]:
+        del current_user
         row = await conn.fetchrow(
             "update usr set name = $2, description = $3 where id = $1 returning id, name, description",
             user_id,
@@ -122,6 +126,7 @@ class UserService(DBService):
 
     @with_db_transaction
     async def delete_user(self, *, conn: asyncpg.Connection, current_user: User, user_id: int) -> bool:
+        del current_user
         result = await conn.execute(
             "delete from usr where id = $1",
             user_id,
@@ -193,7 +198,7 @@ class UserService(DBService):
             payload = jwt.decode(token, self.cfg.core.secret_key, algorithms=[self.cfg.core.jwt_token_algorithm])
             try:
                 return TokenMetadata.parse_obj(payload)
-            except:
+            except ValidationError:
                 return None
         except JWTError:
             return None

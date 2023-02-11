@@ -34,7 +34,9 @@ class AdminCli(SubCommand):
             privileges = input("Enter privileges (comma separated, choose from 'admin', 'orga', 'cashier':\n")
 
             new_user = UserWithoutId(name=username, privileges=privileges.split(","))
-            user = await user_service.create_user_no_auth(new_user=new_user, password=password)
+            user = await user_service.create_user_no_auth( # pylint: disable=missing-kwoa
+                new_user=new_user, password=password
+            )
             print(f"created new user {user.name} with user id {user.id}")
         except KeyboardInterrupt:
             print("Aborting ...")

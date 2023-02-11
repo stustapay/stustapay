@@ -4,10 +4,8 @@ handles connections with ordering terminals.
 
 import logging
 
-from argparse import Namespace
 from .subcommand import SubCommand
 from .config import Config
-from .. import __version__
 
 from .service.transaction import TransactionService
 from .http.context import Context
