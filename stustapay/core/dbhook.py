@@ -63,12 +63,10 @@ class DBHook:
             # handle events
             while True:
                 event = await self.events.get()
-                print(event)
                 if event is StopIteration:
                     break
 
                 ret = await asyncio.wait_for(self.event_handler(event), self.HOOK_TIMELIMIT)
-                print(ret)
                 if ret == StopIteration:
                     break
         finally:
