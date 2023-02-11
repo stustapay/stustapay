@@ -342,34 +342,5 @@ create table if not exists bon (
 );
 
 
--------- functions
-
-
-create or replace function order_cancel(
-    order_id bigint
-)
-    returns text as $$
-declare
-    already_booked text;
-begin
-    select status into already_booked from transaction where transaction.id = order_id;
-    if already_booked is null then
-        raise 'order not found';
-    end if;
-    if already_booked != 'pending' then
-        raise 'order not in pending state';
-    end if;
-
-    update transaction
-    set status = 'cancelled',
-        finished_at = now()
-    where transaction.id = order_id;
-end;
-$$ language plpgsql;
-
-
-
-
-
 -- wooh \o/
 commit;
