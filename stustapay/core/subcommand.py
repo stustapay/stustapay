@@ -40,7 +40,7 @@ class SubCommand(abc.ABC):
         del args, error_cb  # unused
 
     @abc.abstractmethod
-    def __init__(self, config: Config, kwargs):
+    def __init__(self, config: Config, **kwargs):
         del self, config, kwargs  # unused
         raise NotImplementedError
 

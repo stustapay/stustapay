@@ -1,0 +1,7 @@
+{
+  "productName": "Name",
+  "productPrice": "Price",
+  "taxRate": "Tax Rate",
+  "createProduct": "Add a new product",
+  "updateProduct": "Update product"
+}

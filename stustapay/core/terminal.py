@@ -24,8 +24,8 @@ class TerminalServer(SubCommand):
     def argparse_register(subparser):
         pass
 
-    def __init__(self, args, config: Config, **rest):
-        del args, rest
+    def __init__(self, config: Config, **rest):
+        del rest
 
         self.cfg = config
         self.db_pool = None
@@ -49,7 +49,7 @@ class TerminalServer(SubCommand):
         contexts = {
             "config": self.cfg,
             "db_pool": db_pool,
-            "tx_service": TransactionService(db_pool=db_pool, config=self.cfg),
+            "transaction_service": TransactionService(db_pool=db_pool, config=self.cfg),
         }
         try:
             await self.server.run(self.cfg, contexts)

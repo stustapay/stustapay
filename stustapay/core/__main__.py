@@ -23,7 +23,7 @@ def main():
 
     args = parser.parse_args(loop)
 
-    config = read_config(vars(args)["config_path"])
+    config = read_config(args.config_path)
 
     args.run_subcommand(loop, config=config)
 

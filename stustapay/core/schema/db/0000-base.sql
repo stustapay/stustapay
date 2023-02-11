@@ -147,22 +147,23 @@ values
 
 create table if not exists tax (
     name text not null primary key,
-    rate numeric not null
+    rate numeric not null,
+    description text not null
 );
 insert into tax (
-    name, rate
+    name, rate, description
 )
 values
     -- for internal transfers
-    ('none', 0.0),
+    ('none', 0.0, 'keine Steuer'),
 
     -- reduced sales tax for food etc
     -- ermäßigte umsatzsteuer in deutschland
-    ('eust', 0.07),
+    ('eust', 0.07, 'ermäßigte Umsatzsteuer'),
 
     -- normal sales tax
     -- umsatzsteuer in deutschland
-    ('ust', 0.19)
+    ('ust', 0.19, 'normale Umsatzsteuer')
 
     on conflict do nothing;
 
@@ -303,7 +304,7 @@ create or replace view transaction_value as
 -- show all line items
 create or replace view transaction_items as
     select
-        tx.*,
+        tx.*
     from
         transaction tx
         left join lineitem

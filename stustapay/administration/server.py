@@ -5,11 +5,13 @@ from stustapay.core.http.server import Server
 from stustapay.core.subcommand import SubCommand
 
 from .routers import products, cashiers, common, tax_rates
+from ..core.service.products import ProductService
+from ..core.service.tax_rates import TaxRateService
 
 
 class Api(SubCommand):
-    def __init__(self, args, config: Config, **rest):
-        del args, rest  # unused
+    def __init__(self, config: Config, **rest):
+        del rest  # unused
 
         self.cfg = config
         self.dbpool = None
@@ -33,6 +35,8 @@ class Api(SubCommand):
         contexts = {
             "config": self.cfg,
             "db_pool": db_pool,
+            "product_service": ProductService(db_pool=db_pool, config=self.cfg),
+            "tax_rate_service": TaxRateService(db_pool=db_pool, config=self.cfg),
         }
         try:
             await self.server.run(self.cfg, contexts)

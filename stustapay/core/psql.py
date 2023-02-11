@@ -79,7 +79,7 @@ class PSQL(subcommand.SubCommand):
         if self.action == "attach":
             return await self._attach()
 
-        db_pool = await database.create_db_pool(self.config)
+        db_pool = await database.create_db_pool(self.config.database)
         if self.action == "migrate":
             await database.apply_revisions(db_pool=db_pool, revision_dir=REVISION_DIR)
         elif self.action == "rebuild":

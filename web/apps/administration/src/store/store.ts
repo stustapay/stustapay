@@ -3,16 +3,21 @@ import { setupListeners } from "@reduxjs/toolkit/dist/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { productApi } from "../api";
 import { pointOfSalesApi } from "../api/pointOfSalesApi";
+import { taxRateApi } from "../api/taxRateApi";
 import { authSlice } from "./authSlice";
 
 export const store = configureStore({
   reducer: {
     [productApi.reducerPath]: productApi.reducer,
     [pointOfSalesApi.reducerPath]: pointOfSalesApi.reducer,
+    [taxRateApi.reducerPath]: taxRateApi.reducer,
     [authSlice.name]: authSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(productApi.middleware).concat(pointOfSalesApi.middleware),
+    getDefaultMiddleware()
+      .concat(productApi.middleware)
+      .concat(pointOfSalesApi.middleware)
+      .concat(taxRateApi.middleware),
 });
 
 setupListeners(store.dispatch);

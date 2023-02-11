@@ -1,10 +1,8 @@
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
 
-import asyncpg
-from fastapi import APIRouter, Depends, status, HTTPException
-from pydantic import BaseModel
-
-from stustapay.core.http.context import get_db_conn
+from stustapay.core.http.context import get_product_service
+from stustapay.core.schema.product import Product, NewProduct
+from stustapay.core.service.products import ProductService
 
 router = APIRouter(
     prefix="/products",
@@ -13,54 +11,31 @@ router = APIRouter(
 )
 
 
-class ProductBase(BaseModel):
-    name: str
-
-    class Config:
-        schema_extra = {"example": {"name": "Helles 0,5l"}}
+@router.get("/", response_model=list[Product])
+async def list_products(product_service: ProductService = Depends(get_product_service)):
+    return await product_service.list_products()
 
 
-class ProductIn(ProductBase):
-    pass
+@router.post("/", response_model=Product)
+async def create_product(product: NewProduct, product_service: ProductService = Depends(get_product_service)):
+    return await product_service.create_product(product=product)
 
 
-class ProductOut(ProductBase):
-    id: int
-
-    class Config:
-        schema_extra = {"example": {"id": 10, "name": "Helles 0,5l"}}
-
-
-@router.get("/", response_model=List[ProductOut])
-async def list_products(conn: asyncpg.Connection = Depends(get_db_conn)):
-    rows = await conn.fetch("select * from product")
-    return [ProductOut(id=row["id"], name=row["name"]) for row in rows]
-
-
-@router.post("/", response_model=ProductOut)
-async def create_product(product: ProductIn, conn: asyncpg.Connection = Depends(get_db_conn)):
-    async with conn.transaction():
-        row = await conn.fetchrow("insert into product (name) values ($1) returning id, name", product.name)
-        if row is None:
-            raise Exception("product insert failed")
-
-        return ProductOut(id=row["id"], name=row["name"])
-
-
-@router.get("/{product_id}", response_model=ProductOut)
-async def get_product(product_id: int, conn: asyncpg.Connection = Depends(get_db_conn)):
-    row = await conn.fetchrow("select * from product where id = $1", product_id)
-    if not row:
+@router.get("/{product_id}", response_model=Product)
+async def get_product(product_id: int, product_service: ProductService = Depends(get_product_service)):
+    product = await product_service.get_product(product_id=product_id)
+    if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    return ProductOut(id=row["id"], name=row["name"])
+    return product
 
 
-@router.post("/{product_id}", response_model=ProductOut)
-async def update_product(product_id: int, product: ProductIn, conn: asyncpg.Connection = Depends(get_db_conn)):
-    async with conn.transaction():
-        row = await conn.fetchrow("update product set name = $2 where id = $1", product_id, product.name)
-        if not row:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+@router.post("/{product_id}", response_model=Product)
+async def update_product(
+    product_id: int, product: NewProduct, product_service: ProductService = Depends(get_product_service)
+):
+    product = await product_service.update_product(product_id=product_id, product=product)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-        return ProductOut(id=row["id"], name=row["name"])
+    return product

@@ -9,8 +9,8 @@ i18n
   .use(initReactI18next)
   .init({
     backend: { loadPath: "/assets/locales/{{lng}}/{{ns}}.json" },
-    lng: "de",
-    fallbackLng: "de",
+    lng: "en",
+    fallbackLng: "en",
     debug: true,
     interpolation: { escapeValue: false },
   });

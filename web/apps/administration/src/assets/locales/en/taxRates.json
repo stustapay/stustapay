@@ -1,0 +1,7 @@
+{
+    "taxRateName": "Name",
+    "taxRateRate": "Rate",
+    "taxRateDescription": "Description",
+    "createTaxRate": "Add a new Tax Rate",
+    "updateTaxRate": "Update Tax Rate"
+}

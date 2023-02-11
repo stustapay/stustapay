@@ -18,10 +18,13 @@ import {
   Dashboard as DashboardIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
+  Percent as PercentIcon,
+  Settings as SettingsIcon,
 } from "@mui/icons-material";
 import { Outlet } from "react-router-dom";
 import { ListItemLink } from "../../components/ListItemLink";
 import { useTranslation } from "react-i18next";
+import { CircularProgress } from "@mui/material";
 
 const drawerWidth = 240;
 
@@ -75,7 +78,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 }));
 
 export const Root: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
   const theme = useTheme();
   const [open, setOpen] = React.useState(true);
 
@@ -130,31 +133,45 @@ export const Root: React.FC = () => {
             <ListItemIcon>
               <DashboardIcon />
             </ListItemIcon>
-            <ListItemText primary={t("Overview")} />
+            <ListItemText primary={t("overview")} />
+          </ListItemLink>
+          <ListItemLink to="/tax-rates">
+            <ListItemIcon>
+              <PercentIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("taxRates")} />
           </ListItemLink>
           <ListItemLink to="/products">
             <ListItemIcon>
               <ShoppingCartIcon />
             </ListItemIcon>
-            <ListItemText primary={t("Products")} />
+            <ListItemText primary={t("products")} />
           </ListItemLink>
           <ListItemLink to="/point-of-sales">
             <ListItemIcon>
               <PointOfSaleIcon />
             </ListItemIcon>
-            <ListItemText primary={t("Point of Sales")} />
+            <ListItemText primary={t("pointOfSales")} />
           </ListItemLink>
           <ListItemLink to="/cashiers">
             <ListItemIcon>
               <PointOfSaleIcon />
             </ListItemIcon>
-            <ListItemText primary={t("Cashiers")} />
+            <ListItemText primary={t("cashiers")} />
+          </ListItemLink>
+          <ListItemLink to="/settings">
+            <ListItemIcon>
+              <SettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("settings")} />
           </ListItemLink>
         </List>
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
-        <Outlet />
+        <React.Suspense fallback={<CircularProgress />}>
+          <Outlet />
+        </React.Suspense>
       </Main>
     </Box>
   );
