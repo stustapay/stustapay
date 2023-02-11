@@ -23,7 +23,7 @@ class DatabaseConfig(BaseModel):
     user: Optional[str] = None
     password: Optional[str] = None
     host: Optional[str] = None
-    port: int = 5432
+    port: Optional[int] = 5432
     dbname: str
 
 
