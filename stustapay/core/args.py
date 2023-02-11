@@ -11,21 +11,18 @@ class Args(argparse.Namespace):
         super().__init__(**args)
         self._cli = cli
 
-    def _get_args(self) -> dict:
-        copied_args = {**vars(self)}
-        copied_args.pop("_cli")
-        return copied_args
-
     def run_subcommand(self, loop, **injected_args):
-        args = self._get_args()
+        args: dict = vars(self).copy()
+        args.pop("_cli")
+
         try:
             subcommand_class = args.pop("subcommand_class")
         except KeyError:
             self._cli.error("no subcommand was given")
         subcommand_class.argparse_validate(args, self._cli.error)
 
-        # pass the cli args as single param, pass the injected
-        subcommand_object = subcommand_class(**args, **injected_args)
+        # pass the cli args as single param, expand the injected
+        subcommand_object = subcommand_class(args, **injected_args)
         loop.run_until_complete(subcommand_object.run())
 
 

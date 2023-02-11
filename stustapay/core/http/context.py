@@ -37,10 +37,10 @@ class ContextMiddleware:
     # Usage:
     from fastapi import FastAPI, Request, Depends
     api = FastAPI()
+    context = Context(...)
     api.add_middleware(ContextMiddleware,
-                       db_pool=asyncpg.create_pool(...)
-                       example_query="select version();"
-                       example_value="rolf")
+                       context=context,
+                       example_query="select version();")
 
     # define dependency extractor
     def get_context(request: Request) -> Any:
@@ -60,7 +60,7 @@ class ContextMiddleware:
     async def dbver(req: Request,
                     conn=Depends(get_db_conn),
                     ctx=Depends(get_context)):
-        query = req.state.context.example_query
+        query = req.state.args.example_query
         # another way:
         # example_value == ctx.example_value
         dbver = await conn.fetchrow(query)
@@ -68,14 +68,16 @@ class ContextMiddleware:
     """
 
     def __init__(
-            self,
-            app: ASGIApp,
-            **kwargs,
+        self,
+        app: ASGIApp,
+        context: Context,
+        **args,
     ) -> None:
         self._app = app
 
         # store whatever else we need in request handling
-        self.state = Context(**kwargs)
+        self.context = context
+        self.args = args
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         # build the request object that is available in the request handler
@@ -89,7 +91,8 @@ class ContextMiddleware:
             return await self._app(scope, receive, send)
 
         # add links in the request.state to our shared members
-        req.state.context = self.state
+        req.state.context = self.context
+        req.state.args = self.args
 
         await self._app(scope, receive, send)
 
@@ -115,7 +118,7 @@ def get_tax_rate_service(request: Request) -> TaxRateService:
 
 
 async def get_db_conn(
-        db_pool: asyncpg.Pool = Depends(get_db_pool),
+    db_pool: asyncpg.Pool = Depends(get_db_pool),
 ) -> AsyncGenerator[Union[asyncpg.Connection, asyncpg.pool.PoolConnectionProxy], None]:
     async with db_pool.acquire() as conn:
         yield conn

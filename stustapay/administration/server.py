@@ -1,6 +1,7 @@
 import logging
 
 from stustapay.core.config import Config
+from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
 from stustapay.core.subcommand import SubCommand
 
@@ -10,8 +11,8 @@ from ..core.service.tax_rates import TaxRateService
 
 
 class Api(SubCommand):
-    def __init__(self, config: Config, **rest):
-        del rest  # unused
+    def __init__(self, args, config: Config, **rest):
+        del args, rest  # unused
 
         self.cfg = config
         self.dbpool = None
@@ -32,13 +33,13 @@ class Api(SubCommand):
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)
 
-        contexts = {
-            "config": self.cfg,
-            "db_pool": db_pool,
-            "product_service": ProductService(db_pool=db_pool, config=self.cfg),
-            "tax_rate_service": TaxRateService(db_pool=db_pool, config=self.cfg),
-        }
+        context = Context(
+            config=self.cfg,
+            db_pool=db_pool,
+            product_service=ProductService(db_pool=db_pool, config=self.cfg),
+            tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg),
+        )
         try:
-            await self.server.run(self.cfg, contexts)
+            await self.server.run(self.cfg, context)
         finally:
             await db_pool.close()
