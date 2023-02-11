@@ -19,10 +19,13 @@ class Args(argparse.Namespace):
             subcommand_class = args.pop("subcommand_class")
         except KeyError:
             self._cli.error("no subcommand was given")
-        subcommand_class.argparse_validate(args, self._cli.error)
+
+        # create a new namespace with the removed arguments
+        namespace_args = argparse.Namespace(**args)
+        subcommand_class.argparse_validate(namespace_args, self._cli.error)
 
         # pass the cli args as single param, expand the injected
-        subcommand_object = subcommand_class(args, **injected_args)
+        subcommand_object = subcommand_class(namespace_args, **injected_args)
         loop.run_until_complete(subcommand_object.run())
 
 

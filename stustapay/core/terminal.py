@@ -4,6 +4,7 @@ handles connections with ordering terminals.
 
 import logging
 
+from argparse import Namespace
 from .subcommand import SubCommand
 from .config import Config
 from .. import __version__
@@ -25,7 +26,7 @@ class TerminalServer(SubCommand):
     def argparse_register(subparser):
         pass
 
-    def __init__(self, args: dict, config: Config, **rest):
+    def __init__(self, args, config: Config, **rest):
         del args, rest
 
         self.cfg = config
