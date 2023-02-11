@@ -1,6 +1,5 @@
 package de.stustanet.stustapay.ui
 
-import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,26 +19,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.BuildConfig
-// import de.stustanet.stustapay.model.UserPreferencesViewModel
+import de.stustanet.stustapay.model.UserPreferencesViewModel
 import de.stustanet.stustapay.ui.pref.PrefGroup
 import de.stustanet.stustapay.ui.pref.PrefLink
-import de.stustanet.stustapay.model.UserPreferencesViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
-private const val USER_PREFERENCES_NAME = "user_preferences"
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
-    name = USER_PREFERENCES_NAME
-)
 
 
 object SettingsNavDest {
