@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-import termios
 import asyncio
 import signal
 
@@ -54,6 +53,9 @@ async def run_as_fg_process(args, **kwargs):
     fun fact: this function took a whole night
               to be figured out.
     """
+
+    # import here to only use the dependency if really necessary (not available on Windows)
+    import termios
 
     old_pgrp = os.tcgetpgrp(sys.stdin.fileno())
     old_attr = termios.tcgetattr(sys.stdin.fileno())

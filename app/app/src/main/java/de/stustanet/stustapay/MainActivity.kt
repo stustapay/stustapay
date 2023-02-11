@@ -24,9 +24,6 @@ class MainActivity : ComponentActivity(), SysUiController {
     /** nfc interface connection */
     var nfcHandler = NFCHandler(this)
 
-    /** connection to the server */
-    var network = Network(this)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

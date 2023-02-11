@@ -39,3 +39,7 @@ def read_config(config_path: str) -> Config:
         content = yaml.safe_load(config_file)
         config = Config(**content)
         return config
+    
+
+def mock_config():
+    return Config(**{"database": {"dbname": ""}})
