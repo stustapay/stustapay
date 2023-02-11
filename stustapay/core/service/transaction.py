@@ -161,6 +161,16 @@ class TransactionService(DBService):
             transaction_id,
         )
 
+        # create bon request
+        await conn.fetchval(
+            "insert into bon(id) values($1) "
+            "on conflict do"
+            "    update set generated = false, "
+            "               generated_at = null, "
+            "               status = null;",
+            transaction_id,
+        )
+
         return TransactionBooking(
             value_sum=transaction_sum,
             value_tax=transaction_tax,
