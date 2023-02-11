@@ -10,7 +10,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .context import ContextMiddleware
+from .context import Context, ContextMiddleware
 from ..database import create_db_pool
 from ..config import DatabaseConfig, HTTPServerConfig
 from ... import __version__
@@ -46,7 +46,7 @@ class Server:
     async def db_connect(self, cfg: DatabaseConfig):
         return await create_db_pool(cfg)
 
-    async def run(self, cfg, contexts: Dict[str, Any]):
+    async def run(self, cfg, context: Context):
         del cfg
 
         # register service instances so they are available in api routes
@@ -54,7 +54,7 @@ class Server:
         # in the router kwargs.
         self.api.add_middleware(
             ContextMiddleware,
-            **contexts,
+            context=context,
         )
 
         webserver = uvicorn.Server(self.uvicorn_config)

@@ -2,6 +2,7 @@
 Provides the SubCommand abstract base class
 """
 import abc
+from argparse import Namespace
 
 from .config import Config
 
@@ -40,8 +41,8 @@ class SubCommand(abc.ABC):
         del args, error_cb  # unused
 
     @abc.abstractmethod
-    def __init__(self, config: Config, **kwargs):
-        del self, config, kwargs  # unused
+    def __init__(self, args: Namespace, config: Config, **kwargs):
+        del self, args, config, kwargs  # unused
         raise NotImplementedError
 
     @abc.abstractmethod

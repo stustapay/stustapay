@@ -4,11 +4,13 @@ handles connections with ordering terminals.
 
 import logging
 
+from argparse import Namespace
 from .subcommand import SubCommand
 from .config import Config
 from .. import __version__
 
 from .service.transaction import TransactionService
+from .http.context import Context
 from .http.server import Server
 from .http.router.base import router as base_router
 from .http.router.live import router as live_router
@@ -24,8 +26,8 @@ class TerminalServer(SubCommand):
     def argparse_register(subparser):
         pass
 
-    def __init__(self, config: Config, **rest):
-        del rest
+    def __init__(self, args, config: Config, **rest):
+        del args, rest
 
         self.cfg = config
         self.db_pool = None
@@ -46,12 +48,12 @@ class TerminalServer(SubCommand):
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)
 
-        contexts = {
-            "config": self.cfg,
-            "db_pool": db_pool,
-            "transaction_service": TransactionService(db_pool=db_pool, config=self.cfg),
-        }
+        context = Context(
+            config=self.cfg,
+            db_pool=db_pool,
+            transaction_service=TransactionService(db_pool=db_pool, config=self.cfg),
+        )
         try:
-            await self.server.run(self.cfg, contexts)
+            await self.server.run(self.cfg, context)
         finally:
             await db_pool.close()
