@@ -59,7 +59,7 @@ class TerminalServer(SubCommand):
 
             await self.server.run(self.cfg, context)
             return
-        
+
         db_pool = await self.server.db_connect(self.cfg.database)
 
         context = Context(

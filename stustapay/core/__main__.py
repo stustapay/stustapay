@@ -25,8 +25,7 @@ def main():
 
     args = parser.parse_args(loop)
 
-
-    if args.mock:
+    if args.mock:  # pylint: disable=no-member
         config = mock_config()
     else:
         config = read_config(args.config_path)  # pylint: disable=no-member
