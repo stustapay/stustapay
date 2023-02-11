@@ -64,11 +64,17 @@ target-version = ["py39"]
 [tool.mypy]
 ignore_missing_imports = true
 pretty = true
-#plugins = [
-#  "pydantic.mypy"
-#]
+plugins = [
+    "pydantic.mypy"
+]
 
 [tool.coverage.run]
 source = [
     "stustapay"
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "stustapay.tests",
 ]
