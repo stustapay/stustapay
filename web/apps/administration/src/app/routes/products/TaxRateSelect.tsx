@@ -1,5 +1,5 @@
 import { Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, SelectProps } from "@mui/material";
-import { useGetTaxRatesQuery } from "apps/administration/src/api";
+import { useGetTaxRatesQuery } from "@api";
 import * as React from "react";
 
 export interface TaxRateSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {

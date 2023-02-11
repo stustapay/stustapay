@@ -9,15 +9,16 @@ import { ProductList } from "./routes/products/ProductList";
 import { TaxRateCreate } from "./routes/tax-rates/TaxRateCreate";
 import { TaxRateUpdate } from "./routes/tax-rates/TaxRateUpdate";
 import { TaxRateList } from "./routes/tax-rates/TaxRateList";
-import { Root } from "./routes/Root";
-import { CashierList } from "./routes/cashiers/CashierList";
-import { CashierDetail } from "./routes/cashiers/CashierDetail";
+import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
+import { UserList } from "./routes/users/UserList";
 import { Settings } from "./routes/settings/Settings";
+import { Login } from "./routes/auth/Login";
+import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Root />,
+    element: <AuthenticatedRoot />,
     errorElement: <ErrorPage />,
     children: [
       {
@@ -53,16 +54,22 @@ const router = createBrowserRouter([
         element: <PointOfSaleDetail />,
       },
       {
-        path: "cashiers",
-        element: <CashierList />,
-      },
-      {
-        path: "cashiers/:cashierId",
-        element: <CashierDetail />,
+        path: "users",
+        element: <UserList />,
       },
       {
         path: "settings",
         element: <Settings />,
+      },
+    ],
+  },
+  {
+    element: <UnauthenticatedRoot />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/login",
+        element: <Login />,
       },
     ],
   },

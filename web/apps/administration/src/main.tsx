@@ -1,16 +1,21 @@
-import { StrictMode } from "react";
+import * as React from "react";
 import * as ReactDOM from "react-dom/client";
+import { PersistGate } from "redux-persist/integration/react";
 import { Provider as StoreProvider } from "react-redux";
-import { store } from "./store";
+import { store, persistor } from "./store";
 import "./i18n";
 
 import App from "./app/App";
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 root.render(
-  <StrictMode>
+  <React.StrictMode>
     <StoreProvider store={store}>
-      <App />
+      <PersistGate persistor={persistor} loading={null}>
+        <React.Suspense>
+          <App />
+        </React.Suspense>
+      </PersistGate>
     </StoreProvider>
-  </StrictMode>
+  </React.StrictMode>
 );

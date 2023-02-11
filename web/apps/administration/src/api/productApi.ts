@@ -1,9 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { NewProduct, Product } from "../models/product";
+import { baseUrl, prepareAuthHeaders } from "./common";
 
 export const productApi = createApi({
-  reducerPath: "products",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:8081" }),
+  reducerPath: "productApi",
+  baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
   tagTypes: ["product"],
   endpoints: (builder) => ({
     getProductById: builder.query<Product, number>({
@@ -23,8 +24,17 @@ export const productApi = createApi({
       query: ({ id, ...product }) => ({ url: `/products/${id}`, method: "POST", body: product }),
       invalidatesTags: ["product"],
     }),
+    deleteProduct: builder.mutation<void, number>({
+      query: (id) => ({ url: `/products/${id}`, method: "DELETE" }),
+      invalidatesTags: ["product"],
+    }),
   }),
 });
 
-export const { useGetProductByIdQuery, useGetProductsQuery, useCreateProductMutation, useUpdateProductMutation } =
-  productApi;
+export const {
+  useGetProductByIdQuery,
+  useGetProductsQuery,
+  useCreateProductMutation,
+  useUpdateProductMutation,
+  useDeleteProductMutation,
+} = productApi;

@@ -1,9 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { TaxRate } from "../models/taxRate";
+import { baseUrl, prepareAuthHeaders } from "./common";
 
 export const taxRateApi = createApi({
-  reducerPath: "taxRates",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:8081" }),
+  reducerPath: "taxRatesApi",
+  baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
   tagTypes: ["taxRate"],
   endpoints: (builder) => ({
     getTaxRateByName: builder.query<TaxRate, string>({
@@ -19,12 +20,21 @@ export const taxRateApi = createApi({
       query: (taxRate) => ({ url: "/tax-rates", method: "POST", body: taxRate }),
       invalidatesTags: ["taxRate"],
     }),
-    updateTaxRate: builder.mutation<TaxRate, Partial<TaxRate> & Pick<TaxRate, "name">>({
+    updateTaxRate: builder.mutation<TaxRate, TaxRate>({
       query: ({ name, ...taxRate }) => ({ url: `/tax-rates/${name}`, method: "POST", body: taxRate }),
+      invalidatesTags: ["taxRate"],
+    }),
+    deleteTaxRate: builder.mutation<void, string>({
+      query: (name) => ({ url: `/tax-rates/${name}`, method: "DELETE" }),
       invalidatesTags: ["taxRate"],
     }),
   }),
 });
 
-export const { useCreateTaxRateMutation, useGetTaxRateByNameQuery, useGetTaxRatesQuery, useUpdateTaxRateMutation } =
-  taxRateApi;
+export const {
+  useCreateTaxRateMutation,
+  useGetTaxRateByNameQuery,
+  useGetTaxRatesQuery,
+  useUpdateTaxRateMutation,
+  useDeleteTaxRateMutation,
+} = taxRateApi;

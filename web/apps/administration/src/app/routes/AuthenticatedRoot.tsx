@@ -1,18 +1,22 @@
 import * as React from "react";
 import { styled, useTheme } from "@mui/material/styles";
-import Box from "@mui/material/Box";
-import Drawer from "@mui/material/Drawer";
-import CssBaseline from "@mui/material/CssBaseline";
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import List from "@mui/material/List";
-import Typography from "@mui/material/Typography";
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
-import MenuIcon from "@mui/icons-material/Menu";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
 import {
+  ListItemText,
+  ListItemIcon,
+  IconButton,
+  Divider,
+  Typography,
+  List,
+  Toolbar,
+  AppBar as MuiAppBar,
+  AppBarProps as MuiAppBarProps,
+  CssBaseline,
+  Drawer,
+  Box,
+  CircularProgress,
+} from "@mui/material";
+import {
+  Person as PersonIcon,
   ShoppingCart as ShoppingCartIcon,
   PointOfSale as PointOfSaleIcon,
   Dashboard as DashboardIcon,
@@ -20,11 +24,12 @@ import {
   ChevronRight as ChevronRightIcon,
   Percent as PercentIcon,
   Settings as SettingsIcon,
+  Menu as MenuIcon,
 } from "@mui/icons-material";
-import { Outlet } from "react-router-dom";
-import { ListItemLink } from "../../components/ListItemLink";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
+import { ListItemLink } from "@components";
 import { useTranslation } from "react-i18next";
-import { CircularProgress } from "@mui/material";
+import { useAppSelector, selectIsAuthenticated } from "@store";
 
 const drawerWidth = 240;
 
@@ -77,10 +82,17 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   justifyContent: "flex-end",
 }));
 
-export const Root: React.FC = () => {
+export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation(["common"]);
   const theme = useTheme();
   const [open, setOpen] = React.useState(true);
+  const location = useLocation();
+
+  const authenticated = useAppSelector(selectIsAuthenticated);
+
+  if (!authenticated) {
+    return <Navigate to={`/login?next=${location.pathname}`} />;
+  }
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -153,11 +165,11 @@ export const Root: React.FC = () => {
             </ListItemIcon>
             <ListItemText primary={t("pointOfSales")} />
           </ListItemLink>
-          <ListItemLink to="/cashiers">
+          <ListItemLink to="/users">
             <ListItemIcon>
-              <PointOfSaleIcon />
+              <PersonIcon />
             </ListItemIcon>
-            <ListItemText primary={t("cashiers")} />
+            <ListItemText primary={t("users")} />
           </ListItemLink>
           <ListItemLink to="/settings">
             <ListItemIcon>

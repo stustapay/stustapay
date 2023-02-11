@@ -64,6 +64,7 @@
     "react-i18next": "^12.1.1",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.4.5",
+    "redux-persist": "^6.0.0",
     "regenerator-runtime": "0.13.7",
     "tslib": "^2.3.0",
     "zod": "^3.20.6"

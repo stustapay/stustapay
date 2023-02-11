@@ -17,8 +17,10 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "pydantic",
+    "passlib[bcrypt]",
     "asyncpg",
     "PyYAML",
+    "python-jose[cryptography]"
 ]
 
 [project.optional-dependencies]

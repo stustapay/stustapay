@@ -1,6 +1,6 @@
 import asyncio
 
-from . import psql
+from . import psql, admin
 from . import terminal
 from .args import Parser
 from .config import read_config, mock_config
@@ -18,17 +18,17 @@ def main():
     ### module registration
     parser.add_subcommand("psql", psql.PSQL)
     parser.add_subcommand("terminalserver", terminal.TerminalServer)
+    parser.add_subcommand("admin", admin.AdminCli)
     ### / module registration
 
     loop = asyncio.new_event_loop()
 
     args = parser.parse_args(loop)
 
-
-    if args.mock:
+    if args.mock:  # pylint: disable=no-member
         config = mock_config()
     else:
-        config = read_config(args.config_path)
+        config = read_config(args.config_path)  # pylint: disable=no-member
 
     args.run_subcommand(loop, config=config)
 
