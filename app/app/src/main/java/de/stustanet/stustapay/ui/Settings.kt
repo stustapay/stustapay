@@ -1,34 +1,46 @@
 package de.stustanet.stustapay.ui
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import android.content.Context
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.BuildConfig
+// import de.stustanet.stustapay.model.UserPreferencesViewModel
 import de.stustanet.stustapay.ui.pref.PrefGroup
 import de.stustanet.stustapay.ui.pref.PrefLink
+import de.stustanet.stustapay.model.UserPreferencesViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+private const val USER_PREFERENCES_NAME = "user_preferences"
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = USER_PREFERENCES_NAME
+)
+
 
 object SettingsNavDest {
     val root = NavDest("root")
@@ -41,27 +53,41 @@ object SettingsNavDest {
 fun ConnectionView() {
     val context = LocalContext.current
 
-    // TODO: introduce Preferences DataStore :)
-    //       to save the core server url
-    var srvUrl = rememberSaveable { mutableStateOf("http://localhost:9002/") }
+    val viewModel = UserPreferencesViewModel(context)
+    val endpoint = viewModel.getEndpoint.collectAsState(initial = "")
 
+    val endpointValue = remember {
+        mutableStateOf(TextFieldValue())
+    }
     PrefGroup(title = { Text("Core Server") }) {
+        Text(text = endpoint.value, modifier = Modifier.padding(start = 15.dp, end = 10.dp))
+        Spacer(modifier = Modifier.height(15.dp))
         TextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 10.dp, end = 10.dp),
-            value = srvUrl.value,
+            value = endpointValue.value,
             onValueChange = {
-                srvUrl.value = it
+                endpointValue.value = it
             },
             leadingIcon = { Icon(Icons.Default.AccountCircle, "URL") },
-            label = { Text(text = "Endpoint URL") },
+            label = { Text(text = "New Endpoint URL") },
             maxLines = 1,
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Done,
                 keyboardType = KeyboardType.Uri
             ),
         )
+        Button(
+            modifier = Modifier.padding(start = 10.dp, end = 10.dp),
+            onClick = {
+                CoroutineScope(Dispatchers.IO).launch {
+                    viewModel.updateEndpoint(endpointValue.value.text)
+                }
+            }
+        ) {
+            Text(text = "Update Endpoint")
+        }
     }
 }
 
