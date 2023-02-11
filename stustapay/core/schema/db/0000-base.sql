@@ -304,7 +304,8 @@ create or replace view transaction_value as
 -- show all line items
 create or replace view transaction_items as
     select
-        tx.*
+        tx.*,
+        lineitem.*
     from
         transaction tx
         left join lineitem
@@ -333,6 +334,7 @@ create table if not exists bon (
     id bigint not null primary key references transaction(id) on delete cascade,
 
     generated bool default false,
+    generated_at timestamptz,
     status text,
 
     -- output file path
