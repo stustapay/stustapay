@@ -1,32 +1,38 @@
 import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
-import { ProductSchema, NewProduct } from "../../../models/product";
+import { NewProduct } from "../../../models/product";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { z } from "zod";
 import { TaxRateSelect } from "./TaxRateSelect";
 import { NumericInput } from "../../../components/NumericInput";
+import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 
 export interface ProductChangeProps<T extends NewProduct> {
   headerTitle: string;
   submitLabel: string;
   initialValues: T;
-  onSubmit: (p: T) => Promise<any>;
+  validationSchema: z.ZodSchema<T>;
+  onSubmit: (p: T) => MutationActionCreatorResult<any>;
 }
 
 export function ProductChange<T extends NewProduct>({
   headerTitle,
   initialValues,
   submitLabel,
+  validationSchema,
   onSubmit,
 }: ProductChangeProps<T>) {
   const navigate = useNavigate();
   const { t } = useTranslation(["products", "common"]);
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
+    console.log("submitting", values);
     setSubmitting(true);
 
     onSubmit(values)
+      .unwrap()
       .then(() => {
         setSubmitting(false);
         navigate("/products");
@@ -43,7 +49,7 @@ export function ProductChange<T extends NewProduct>({
       <Formik
         initialValues={initialValues}
         onSubmit={handleSubmit}
-        validationSchema={toFormikValidationSchema(ProductSchema)}
+        validationSchema={toFormikValidationSchema(validationSchema)}
       >
         {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, setFieldValue, errors, touched }) => (
           <Form onSubmit={handleSubmit}>

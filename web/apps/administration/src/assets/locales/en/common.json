@@ -7,6 +7,8 @@
   "add": "Add",
   "update": "Update",
   "taxRates": "Tax Rates",
-  "cashiers": "Cashiers",
+  "users": "Users",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
   "pointOfSales": "Point of Sales"
 }

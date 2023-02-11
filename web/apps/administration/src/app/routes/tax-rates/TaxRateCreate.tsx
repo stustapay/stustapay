@@ -1,5 +1,5 @@
 import * as React from "react";
-import { TaxRate } from "../../../models/taxRate";
+import { TaxRate, TaxRateSchema } from "../../../models/taxRate";
 import { useCreateTaxRateMutation } from "../../../api";
 import { useTranslation } from "react-i18next";
 import { TaxRateChange } from "./TaxRateChange";
@@ -19,6 +19,7 @@ export const TaxRateCreate: React.FC = () => {
       headerTitle={t("createTaxRate")}
       submitLabel={t("add", { ns: "common" })}
       initialValues={initialValues}
+      validationSchema={TaxRateSchema}
       onSubmit={createTaxRate}
     />
   );

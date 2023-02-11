@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NewProduct } from "../../../models/product";
+import { NewProduct, NewProductSchema } from "../../../models/product";
 import { useCreateProductMutation } from "../../../api";
 import { useTranslation } from "react-i18next";
 import { ProductChange } from "./ProductChange";
@@ -19,6 +19,7 @@ export const ProductCreate: React.FC = () => {
       headerTitle={t("createProduct")}
       submitLabel={t("add", { ns: "common" })}
       initialValues={initialValues}
+      validationSchema={NewProductSchema}
       onSubmit={createProduct}
     />
   );

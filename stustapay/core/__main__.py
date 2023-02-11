@@ -1,6 +1,6 @@
 import asyncio
 
-from . import psql
+from . import psql, admin
 from . import terminal
 from .args import Parser
 from .config import read_config
@@ -17,6 +17,7 @@ def main():
     ### module registration
     parser.add_subcommand("psql", psql.PSQL)
     parser.add_subcommand("terminalserver", terminal.TerminalServer)
+    parser.add_subcommand("admin", admin.AdminCli)
     ### / module registration
 
     loop = asyncio.new_event_loop()

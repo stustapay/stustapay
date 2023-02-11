@@ -9,8 +9,5 @@ class NewProduct:
 
 
 @dataclass
-class Product:
+class Product(NewProduct):
     id: int
-    name: str
-    price: float
-    tax: str

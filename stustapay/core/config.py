@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import yaml
 from typing import Optional
 
@@ -27,11 +29,17 @@ class DatabaseConfig(BaseModel):
     dbname: str
 
 
+class CoreConfig(BaseModel):
+    secret_key: str
+    jwt_token_algorithm: str = "HS256"
+
+
 class Config(BaseModel):
     # in case all params are optional this is needed to make the whole section optional
     administration: AdministrationApiConfig = AdministrationApiConfig()
     terminalserver: TerminalApiConfig = TerminalApiConfig()
     database: DatabaseConfig
+    core: CoreConfig
 
 
 def read_config(config_path: str) -> Config:

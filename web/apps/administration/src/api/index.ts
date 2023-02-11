@@ -1,4 +1,4 @@
 export * from "./productApi";
 export * from "./pointOfSalesApi";
-export * from "./cashierApi";
+export * from "./userApi";
 export * from "./taxRateApi";
