@@ -2,13 +2,11 @@
 some basic api endpoints.
 """
 
-from fastapi import APIRouter, status, Depends
-
-from ..context import get_db_conn
+from fastapi import APIRouter, status
 
 
 router = APIRouter(
-    prefix="",
+    prefix="/api",
     responses={
         status.HTTP_401_UNAUTHORIZED: {"description": "unauthorized"},
         status.HTTP_403_FORBIDDEN: {"description": "forbidden"},
@@ -23,6 +21,5 @@ async def health():
 
 
 @router.get("/dbversion", summary="return the database engine version")
-async def dbver(conn=Depends(get_db_conn)):
-    ver = await conn.fetchval("select version();")
-    return {"db_version": ver}
+async def dbver():
+    return {"db_version": "MockSQL 0.1"}

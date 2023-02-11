@@ -11,6 +11,7 @@ object RootNavDests {
     val ordering = NavDest("ordering", showNavbar = false)
     val qrscan = NavDest("qrscan")
     val settings = NavDest("settings")
+    val connTest = NavDest("connTest")
 
     fun getRoutePropMap(): HashMap<String, NavDest> {
         val routePropMap = HashMap<String, NavDest>()

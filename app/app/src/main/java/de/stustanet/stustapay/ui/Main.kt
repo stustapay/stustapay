@@ -99,6 +99,7 @@ fun RootView(uictrl: SysUiController? = null) {
             SettingsView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.qrscan.route) { QRScanView() }
+        composable(RootNavDests.connTest.route) { TestConnectionView() }
     }
 }
 

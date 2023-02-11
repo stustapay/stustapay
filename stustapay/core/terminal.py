@@ -14,6 +14,8 @@ from .http.router.base import router as base_router
 from .http.router.live import router as live_router
 from .http.router.order import router as order_router
 
+from .http.router_mock.base import router as mock_base_router
+
 
 class TerminalServer(SubCommand):
     """
@@ -25,9 +27,10 @@ class TerminalServer(SubCommand):
         pass
 
     def __init__(self, args, config: Config, **rest):
-        del args, rest
+        del rest
 
         self.cfg = config
+        self.mock = args.mock
         self.db_pool = None
 
         self.logger = logging.getLogger(__name__)
@@ -39,11 +42,24 @@ class TerminalServer(SubCommand):
         )
 
         # endpoints available in the terminal server.
-        self.server.add_router(base_router)
-        self.server.add_router(live_router)
-        self.server.add_router(order_router)
+        if self.mock:
+            self.server.add_router(mock_base_router)
+        else:
+            self.server.add_router(base_router)
+            self.server.add_router(live_router)
+            self.server.add_router(order_router)
 
     async def run(self):
+        if self.mock:
+            context = Context(
+                config=self.cfg,
+                db_pool=None,
+                transaction_service=None,
+            )
+
+            await self.server.run(self.cfg, context)
+            return
+        
         db_pool = await self.server.db_connect(self.cfg.database)
 
         context = Context(

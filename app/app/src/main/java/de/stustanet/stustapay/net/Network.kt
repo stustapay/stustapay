@@ -1,12 +1,16 @@
 package de.stustanet.stustapay.net
 
-import android.app.Activity
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
 
-/**
- * Manages the network connection to the core server.
- */
-class Network(activity: Activity) {
-    var activity: Activity = activity
+@Serializable
+data class HealthStatus(val status: String)
 
-    // TODO ktor network io :)
+object Network {
+    suspend fun getHealthStatus(): String {
+        val health: HealthStatus = ktorClient.get("http://10.0.2.2:8080/api/health").body()
+        return "Status: ${health.status}"
+    }
 }

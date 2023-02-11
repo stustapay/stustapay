@@ -78,6 +78,13 @@ private fun getNavItems(): List<NavMenuItem> {
     )
     itemsList.add(
         NavMenuItem(
+            icon = Icons.Filled.Send,
+            label = "Test Connection",
+            navDestination = RootNavDests.connTest
+        )
+    )
+    itemsList.add(
+        NavMenuItem(
             icon = Icons.Filled.ExitToApp,
             label = "Logout"
         )
