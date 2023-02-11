@@ -4,3 +4,7 @@ they are manipulated usually through the service implementation.
 
 in db/ are the database schema definitions.
 """
+
+from pathlib import Path
+
+REVISION_PATH = Path(__file__).parent / "db"

@@ -7,6 +7,8 @@ import asyncpg
 
 from .config import DatabaseConfig
 
+from .schema import REVISION_PATH
+
 logger = logging.getLogger(__name__)
 
 REVISION_VERSION_RE = re.compile(r"^-- revision: (?P<version>\w+)$")
@@ -122,8 +124,8 @@ async def reset_schema(db_pool: asyncpg.Pool):
             await conn.execute("create schema public")
 
 
-async def apply_revisions(db_pool: asyncpg.Pool, revision_dir: Path):
-    revisions = SchemaRevision.revisions_from_dir(revision_dir)
+async def apply_revisions(db_pool: asyncpg.Pool, revision_path: Optional[Path] = None):
+    revisions = SchemaRevision.revisions_from_dir(revision_path or REVISION_PATH)
 
     async with db_pool.acquire() as conn:
         async with conn.transaction():

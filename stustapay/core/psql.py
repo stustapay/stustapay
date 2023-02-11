@@ -8,14 +8,11 @@ import contextlib
 import os
 import shutil
 import tempfile
-from pathlib import Path
 
 from . import database
 from . import subcommand
 from . import util
 from .config import Config
-
-REVISION_DIR = Path(__file__).parent / "schema" / "db"
 
 
 class PSQL(subcommand.SubCommand):
@@ -81,7 +78,7 @@ class PSQL(subcommand.SubCommand):
 
         db_pool = await database.create_db_pool(self.config.database)
         if self.action == "migrate":
-            await database.apply_revisions(db_pool=db_pool, revision_dir=REVISION_DIR)
+            await database.apply_revisions(db_pool=db_pool)
         elif self.action == "rebuild":
             await database.reset_schema(db_pool=db_pool)
-            await database.apply_revisions(db_pool=db_pool, revision_dir=REVISION_DIR)
+            await database.apply_revisions(db_pool=db_pool)
