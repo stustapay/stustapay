@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from stustapay.core.service.users import UserService
+from stustapay.core.service.user import UserService
 from stustapay.core.schema.user import User
 from stustapay.core.http.context import get_user_service
 

@@ -1,8 +1,7 @@
 import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
-import { PointOfSaleList } from "./routes/point-of-sales/PointOfSaleList";
-import { PointOfSaleDetail } from "./routes/point-of-sales/PointOfSaleDetail";
+import { TerminalList } from "./routes/terminals/TerminalList";
 import { ProductCreate } from "./routes/products/ProductCreate";
 import { ProductUpdate } from "./routes/products/ProductUpdate";
 import { ProductList } from "./routes/products/ProductList";
@@ -14,6 +13,8 @@ import { UserList } from "./routes/users/UserList";
 import { Settings } from "./routes/settings/Settings";
 import { Login } from "./routes/auth/Login";
 import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
+import { TerminalCreate } from "./routes/terminals/TerminalCreate";
+import { TerminalUpdate } from "./routes/terminals/TerminalUpdate";
 
 const router = createBrowserRouter([
   {
@@ -46,12 +47,16 @@ const router = createBrowserRouter([
         element: <TaxRateUpdate />,
       },
       {
-        path: "point-of-sales",
-        element: <PointOfSaleList />,
+        path: "terminals",
+        element: <TerminalList />,
       },
       {
-        path: "point-of-sales/:pointOfSaleId",
-        element: <PointOfSaleDetail />,
+        path: "terminals/new",
+        element: <TerminalCreate />,
+      },
+      {
+        path: "terminals/:terminalId/edit",
+        element: <TerminalUpdate />,
       },
       {
         path: "users",

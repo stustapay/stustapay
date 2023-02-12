@@ -1,0 +1,98 @@
+import * as React from "react";
+import { useDeleteTerminalMutation, useGetTerminalsQuery } from "@api";
+import {
+  Paper,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  CircularProgress,
+  IconButton,
+  Typography,
+  ListItem,
+  ListItemText,
+} from "@mui/material";
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
+import { IconButtonLink, ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
+
+export const TerminalList: React.FC = () => {
+  const { t } = useTranslation(["terminals", "common"]);
+
+  const { data: terminals, isLoading: isTerminalsLoading } = useGetTerminalsQuery();
+  const [deleteTerminal] = useDeleteTerminalMutation();
+
+  const [terminalToDelete, setTerminalToDelete] = React.useState<number | null>(null);
+  if (isTerminalsLoading) {
+    return (
+      <Paper>
+        <CircularProgress />
+      </Paper>
+    );
+  }
+
+  const openConfirmDeleteDialog = (terminalId: number) => {
+    setTerminalToDelete(terminalId);
+  };
+
+  const handleConfirmDeleteTerminal: ConfirmDialogCloseHandler = (reason) => {
+    if (reason === "confirm" && terminalToDelete !== null) {
+      deleteTerminal(terminalToDelete)
+        .unwrap()
+        .catch(() => undefined);
+    }
+    setTerminalToDelete(null);
+  };
+
+  return (
+    <>
+      <Paper>
+        <ListItem
+          secondaryAction={
+            <ButtonLink to="/terminals/new" endIcon={<AddIcon />} variant="contained" color="primary">
+              {t("add", { ns: "common" })}
+            </ButtonLink>
+          }
+        >
+          <ListItemText primary={t("terminals", { ns: "common" })} />
+        </ListItem>
+        <Typography variant="body1">{}</Typography>
+      </Paper>
+      <TableContainer component={Paper} sx={{ mt: 2 }}>
+        <Table sx={{ minWidth: 650 }} aria-label="terminals">
+          <TableHead>
+            <TableRow>
+              <TableCell>{t("terminalName")}</TableCell>
+              <TableCell>{t("terminalDescription")}</TableCell>
+              <TableCell align="right">{t("actions", { ns: "common" })}</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {(terminals ?? []).map((terminal) => (
+              <TableRow key={terminal.id}>
+                <TableCell>{terminal.name}</TableCell>
+                <TableCell>{terminal.description}</TableCell>
+                <TableCell align="right">
+                  <IconButtonLink to={`/terminals/${terminal.id}/edit`} color="primary">
+                    <EditIcon />
+                  </IconButtonLink>
+                  <IconButton color="error" onClick={() => openConfirmDeleteDialog(terminal.id)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <ConfirmDialog
+        title={t("deleteTerminal")}
+        body={t("deleteTerminalDescription")}
+        show={terminalToDelete !== null}
+        onClose={handleConfirmDeleteTerminal}
+      />
+    </>
+  );
+};

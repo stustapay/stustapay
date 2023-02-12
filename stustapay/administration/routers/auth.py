@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from stustapay.core.http.auth import get_current_user
 from stustapay.core.http.context import get_user_service
 from stustapay.core.schema.user import User
-from stustapay.core.service.users import UserService, UserLoginSuccess
+from stustapay.core.service.user import UserService, UserLoginSuccess
 
 router = APIRouter(
     prefix="/auth",

@@ -218,8 +218,10 @@ create table if not exists cash_desk_profile (
 -- which cash desks do we have and in which state are they
 create table if not exists terminal (
     id serial not null primary key,
-    name text,
+    name text not null,
     description text,
+    registration_uuid uuid unique,
+    session_uuid uuid unique,
 
     -- how this terminal is mapped to a tse
     tseid text,
@@ -227,7 +229,9 @@ create table if not exists terminal (
     -- identifies the current active work shift and configuration
     active_shift text,
     active_profile int references cash_desk_profile(id) on delete restrict,
-    active_cashier int references usr(id) on delete restrict
+    active_cashier int references usr(id) on delete restrict,
+
+    constraint registration_or_session_uuid_null check ((registration_uuid is null) <> (session_uuid is null))
 );
 
 
@@ -270,7 +274,7 @@ create table if not exists transaction (
     target_account int references account(id) on delete restrict,
 
     -- who created it
-    cashierid int references usr(id) on delete restrict,
+    cashierid int not null references usr(id) on delete restrict,
     terminalid int references terminal(id) on delete restrict
 );
 
