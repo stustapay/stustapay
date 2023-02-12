@@ -5,6 +5,7 @@ import androidx.compose.material.ScaffoldState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import de.stustanet.stustapay.nfc.NFCContext
 import kotlinx.coroutines.launch
 
 
@@ -15,6 +16,7 @@ fun NavScaffold(
     title: @Composable () -> Unit,
     state: ScaffoldState = rememberScaffoldState(),
     hasDrawer: Boolean = false,
+    nfcContext: NFCContext,
     content: @Composable () -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -37,7 +39,7 @@ fun NavScaffold(
         },
 
         drawerContent = {
-            NavDrawer { navTo ->
+            NavDrawer (nfcContext) { navTo ->
                 scope.launch {
                     state.drawerState.close()
                 }
