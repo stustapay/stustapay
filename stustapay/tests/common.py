@@ -17,7 +17,7 @@ def get_test_db_config() -> dict:
         "password": os.environ.get("TEST_DB_PASSWORD", None),
         "host": os.environ.get("TEST_DB_HOST", None),
         "port": int(os.environ.get("TEST_DB_PORT", 0)) or None,
-        "dbname": os.environ.get("TEST_DB_DATABASE", "stustapay-test"),
+        "dbname": os.environ.get("TEST_DB_DATABASE", "stustapay_test"),
     }
 
 

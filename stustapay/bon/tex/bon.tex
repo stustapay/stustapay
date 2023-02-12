@@ -1,0 +1,83 @@
+\documentclass{article}
+\usepackage{tabularx}
+\usepackage[table]{xcolor}
+\usepackage{graphicx}
+
+\begin{document}
+
+    % reduce white space at beginning
+    \title{\vspace{-6cm}}
+    \date{}
+    \maketitle
+    % do not print a page number
+    \thispagestyle{empty}
+
+    
+    \begin{center}
+        \huge StuStaCulum 2023
+    \end{center}
+
+    % Rechnungsnummer und Datum
+    \vspace{1cm}
+    \textbf{Rechnung Nr. xxxx} \hspace{\fill}  01.04.2005
+
+    % Addresse und Steuer ID
+    \begin{flushright}
+        Kulturleben in der Studentenstadt e.V.\\
+        Hans Leipelt Straße 7 \\
+        80805 München \\
+        USt. Id. DExxxx \\
+    \end{flushright}
+
+    % Line Items in the Rechnung
+    \vspace{1cm}
+    \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+    \rowcolors{2}{}{gray!40}
+    \begin{tabularx}{\textwidth}{ p{1cm} p{5cm} R R }
+        & \textbf{Produkt} & \textbf{Einzelpreis} & \textbf{Gesamtpreis} \\
+        \hline
+        1x  & Bier             & 1,00                 & 1,00 [A]             \\
+        40x & Weißbier         & 1,00                 & 40,00 [B]            \\
+        1x  & Weisswurst       & 1,50                 & 1,50 [A]             \\
+    \end{tabularx}
+
+
+    % Gesamtsumme
+    \vspace{1cm}
+    \hspace{\fill} \textbf{Summe EUR} \textbf{42,50€}
+
+    %Steuerstatz
+    \vspace{1cm}
+    \rowcolors{0}{}{}
+    \begin{tabularx}{0.8\textwidth}{ RRRR }
+        \textbf{MwSt.\%} & \textbf{Brutto} & \textbf{Netto} & \textbf{MwSt.} \\
+        \hline
+        A= 7,00 \%       & 2,50            & 2,10           & 0,40           \\
+        B=19,00 \%       & 40,00           & 35,00          & 5,00           \\
+        \hline
+        & 42,50           & 37,10          & 5,40           \\
+    \end{tabularx}
+
+    % sonstige Infos
+    \vspace{1cm}
+    \begin{tabularx}{0.8\textwidth}{ RX }
+        Vorgangsbeginn:     & 01.04.2005 08:45:30 \\
+        Vorgangsende:       & 01.04.2005 08:45:45 \\
+        Kasse:              & Festzelt 1          \\
+        Kassierer:          & 133                 \\
+        TSE Seriennummer:   & asdfqwer            \\
+        TSE Signaturzähler: & signatur            \\
+        TSE Prüfwert:       & prüfwert            \\
+    \end{tabularx}
+
+    % evtl direkter online Link um die Rechnung abzurufen
+
+    % ein kurzer "witz"
+    \vspace{\fill}
+    \begin{center}
+        Ein Mann besuchte eine Bierinsel und entdeckte ein Weißbierkarusell und ein Festzelt. Als er das Karusell bestieg, bemerkte er, dass es sich immer im Kreis drehte und dass das Bier nie endete. Plötzlich sagte ein Mann neben ihm: "Willkommen auf der Bierinsel, hier dreht sich alles um das Bier." Der Mann antwortete: "Das ist großartig, aber wo ist das Festzelt?" Der Mann sagte: "Oh, das ist überall. Du bist das Festzelt."
+
+        \includegraphics[width=3cm]{logo}
+    \end{center}
+
+\end{document}

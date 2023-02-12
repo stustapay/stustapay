@@ -20,7 +20,8 @@ dependencies = [
     "passlib[bcrypt]",
     "asyncpg",
     "PyYAML",
-    "python-jose[cryptography]"
+    "python-jose[cryptography]",
+    "jinja2",
 ]
 
 [project.optional-dependencies]
