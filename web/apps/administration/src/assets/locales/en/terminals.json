@@ -1,0 +1,9 @@
+{
+  "terminalName": "Name",
+  "terminalDescription": "Description",
+  "terminal": "Terminal",
+  "createTerminal": "Add a new terminal",
+  "updateTerminal": "Update terminal",
+  "deleteTerminal": "Delete terminal",
+  "deleteTerminalDescription": "Confirm terminal deletion"
+}

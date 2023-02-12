@@ -74,7 +74,7 @@ export const TaxRateList: React.FC = () => {
             {(taxRates ?? []).map((taxRate) => (
               <TableRow key={taxRate.name}>
                 <TableCell>{taxRate.name}</TableCell>
-                <TableCell align="right">{taxRate.rate}</TableCell>
+                <TableCell align="right">{(taxRate.rate * 100).toFixed(0)} %</TableCell>
                 <TableCell>{taxRate.description}</TableCell>
                 <TableCell align="right">
                   <IconButtonLink to={`/tax-rates/${taxRate.name}/edit`} color="primary">

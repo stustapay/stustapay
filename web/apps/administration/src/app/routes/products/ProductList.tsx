@@ -43,7 +43,7 @@ export const ProductList: React.FC = () => {
 
     return (
       <Tooltip title={tax.description}>
-        <span>{tax.rate * 100} %</span>
+        <span>{(tax.rate * 100).toFixed(0)} %</span>
       </Tooltip>
     );
   };

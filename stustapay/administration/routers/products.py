@@ -4,7 +4,7 @@ from stustapay.core.http.auth import get_current_user
 from stustapay.core.http.context import get_product_service
 from stustapay.core.schema.product import Product, NewProduct
 from stustapay.core.schema.user import User
-from stustapay.core.service.products import ProductService
+from stustapay.core.service.product import ProductService
 
 router = APIRouter(
     prefix="/products",

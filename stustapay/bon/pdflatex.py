@@ -20,14 +20,14 @@ async def pdflatex(tex_tpl_name: str, context: dict, out_file: os.path) -> Tuple
 
     tex_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tex")
     env = jinja2.Environment(
-        block_start_string='\BLOCK{',
-        block_end_string='}',
-        variable_start_string='\VAR{',
-        variable_end_string='}',
-        comment_start_string='\#{',
-        comment_end_string='}',
-        line_statement_prefix='%%',
-        line_comment_prefix='%#',
+        block_start_string="\BLOCK{",
+        block_end_string="}",
+        variable_start_string="\VAR{",
+        variable_end_string="}",
+        comment_start_string="\#{",
+        comment_end_string="}",
+        line_statement_prefix="%%",
+        line_comment_prefix="%#",
         trim_blocks=True,
         loader=jinja2.FileSystemLoader(tex_path),
     )

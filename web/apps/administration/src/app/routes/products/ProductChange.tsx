@@ -56,7 +56,6 @@ export function ProductChange<T extends NewProduct>({
             <TextField
               variant="standard"
               margin="normal"
-              required
               fullWidth
               autoFocus
               name="name"
@@ -71,7 +70,6 @@ export function ProductChange<T extends NewProduct>({
             <NumericInput
               variant="standard"
               margin="normal"
-              required
               fullWidth
               name="price"
               label={t("productPrice")}

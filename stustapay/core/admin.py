@@ -6,7 +6,7 @@ from .schema.user import UserWithoutId
 from .subcommand import SubCommand
 from .config import Config
 
-from .service.users import UserService
+from .service.user import UserService
 
 
 class AdminCli(SubCommand):
@@ -14,9 +14,10 @@ class AdminCli(SubCommand):
     Admin utility cli
     """
 
-    def __init__(self, config: Config, **args):
+    def __init__(self, args, config: Config, **kwargs):
+        del kwargs
         self.config = config
-        self.action = args["action"]
+        self.action = args.action
 
     @staticmethod
     def argparse_register(subparser):

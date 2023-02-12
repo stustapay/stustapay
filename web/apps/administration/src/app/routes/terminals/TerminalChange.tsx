@@ -1,15 +1,14 @@
 import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
-import { TaxRate } from "../../../models/taxRate";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { NumericInput } from "../../../components/NumericInput";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
+import { NewTerminal } from "@models";
 
-export interface TaxRateChangeProps<T extends TaxRate> {
+export interface TerminalChangeProps<T extends NewTerminal> {
   headerTitle: string;
   submitLabel: string;
   initialValues: T;
@@ -17,15 +16,15 @@ export interface TaxRateChangeProps<T extends TaxRate> {
   onSubmit: (t: T) => MutationActionCreatorResult<any>;
 }
 
-export function TaxRateChange<T extends TaxRate>({
+export function TerminalChange<T extends NewTerminal>({
   headerTitle,
   submitLabel,
   initialValues,
   validationSchema,
   onSubmit,
-}: TaxRateChangeProps<T>) {
+}: TerminalChangeProps<T>) {
   const navigate = useNavigate();
-  const { t } = useTranslation(["taxRates", "common"]);
+  const { t } = useTranslation(["terminals", "common"]);
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
     setSubmitting(true);
 
@@ -33,11 +32,11 @@ export function TaxRateChange<T extends TaxRate>({
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/tax-rates");
+        navigate("/terminals");
       })
       .catch((err) => {
         setSubmitting(false);
-        console.warn("error in tax rate update", err);
+        console.warn("error in terminal update", err);
       });
   };
 
@@ -57,7 +56,7 @@ export function TaxRateChange<T extends TaxRate>({
               fullWidth
               autoFocus
               name="name"
-              label={t("taxRateName")}
+              label={t("terminalName")}
               error={touched.name && !!errors.name}
               helperText={(touched.name && errors.name) as string}
               onBlur={handleBlur}
@@ -65,24 +64,12 @@ export function TaxRateChange<T extends TaxRate>({
               value={values.name}
             />
 
-            <NumericInput
-              variant="standard"
-              margin="normal"
-              fullWidth
-              name="rate"
-              label={t("taxRateRate")}
-              error={touched.rate && !!errors.rate}
-              helperText={(touched.rate && errors.rate) as string}
-              onChange={(value) => setFieldValue("rate", value)}
-              value={values.rate}
-            />
-
             <TextField
               variant="standard"
               margin="normal"
               fullWidth
               name="description"
-              label={t("taxRateDescription")}
+              label={t("terminalDescription")}
               error={touched.description && !!errors.description}
               helperText={(touched.description && errors.description) as string}
               onBlur={handleBlur}

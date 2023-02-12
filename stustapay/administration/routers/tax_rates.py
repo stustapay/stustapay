@@ -4,7 +4,7 @@ from stustapay.core.http.auth import get_current_user
 from stustapay.core.http.context import get_tax_rate_service
 from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName
 from stustapay.core.schema.user import User
-from stustapay.core.service.tax_rates import TaxRateService
+from stustapay.core.service.tax_rate import TaxRateService
 
 router = APIRouter(
     prefix="/tax-rates",

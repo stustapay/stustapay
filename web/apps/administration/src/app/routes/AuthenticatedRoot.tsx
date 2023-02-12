@@ -159,11 +159,11 @@ export const AuthenticatedRoot: React.FC = () => {
             </ListItemIcon>
             <ListItemText primary={t("products")} />
           </ListItemLink>
-          <ListItemLink to="/point-of-sales">
+          <ListItemLink to="/terminals">
             <ListItemIcon>
               <PointOfSaleIcon />
             </ListItemIcon>
-            <ListItemText primary={t("pointOfSales")} />
+            <ListItemText primary={t("terminals")} />
           </ListItemLink>
           <ListItemLink to="/users">
             <ListItemIcon>

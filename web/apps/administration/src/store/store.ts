@@ -3,7 +3,7 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/dist/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { productApi, userApi } from "../api";
-import { pointOfSalesApi } from "../api/pointOfSalesApi";
+import { terminalApi } from "../api/terminalApi";
 import { taxRateApi } from "../api/taxRateApi";
 import { authSlice } from "./authSlice";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
@@ -18,7 +18,7 @@ const authPersistConfig = {
 export const store = configureStore({
   reducer: combineReducers({
     [productApi.reducerPath]: productApi.reducer,
-    [pointOfSalesApi.reducerPath]: pointOfSalesApi.reducer,
+    [terminalApi.reducerPath]: terminalApi.reducer,
     [taxRateApi.reducerPath]: taxRateApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
@@ -27,7 +27,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: { ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER] } })
       .concat(productApi.middleware)
-      .concat(pointOfSalesApi.middleware)
+      .concat(terminalApi.middleware)
       .concat(taxRateApi.middleware)
       .concat(userApi.middleware)
       .concat(authApi.middleware),
