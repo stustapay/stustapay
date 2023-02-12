@@ -1,6 +1,11 @@
+"""
+cli entrypoint for controlling the core.
+"""
+
 import asyncio
 
-from . import psql, admin
+from . import admin
+from . import database
 from . import terminal
 from .args import Parser
 from .config import read_config, mock_config
@@ -13,10 +18,10 @@ def main():
     parser = Parser()
 
     parser.add_argument("-c", "--config-path", default="server.conf")
-    parser.add_argument("--mock", action="store_true")
+    parser.add_argument("--mock", action="store_true", help="don't run with real data")
 
     ### module registration
-    parser.add_subcommand("psql", psql.PSQL)
+    parser.add_subcommand("database", database.DatabaseManage)
     parser.add_subcommand("terminalserver", terminal.TerminalServer)
     parser.add_subcommand("admin", admin.AdminCli)
     ### / module registration
