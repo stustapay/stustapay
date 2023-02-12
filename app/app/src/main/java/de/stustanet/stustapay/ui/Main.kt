@@ -1,10 +1,7 @@
 package de.stustanet.stustapay.ui
 
 import android.os.Bundle
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -84,11 +81,12 @@ fun RootView(uictrl: SysUiController? = null, nfcContext: NFCContext) {
                         navTo
                     )
                 }
-            ) {
+            ) { paddingValues ->
                 Box(
                     modifier = Modifier
                         .height(64.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(bottom = paddingValues.calculateBottomPadding()),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(text = "Welcome to StuStaPay!")

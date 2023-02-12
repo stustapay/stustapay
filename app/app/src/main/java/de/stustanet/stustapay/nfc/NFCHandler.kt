@@ -5,14 +5,12 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import android.os.Build
 import android.widget.Toast
-import de.stustanet.stustapay.nfc.get
-import java.io.IOException
 
-class NFCHandler(activity: Activity) {
-    var intent: PendingIntent? = null
-    var device: NfcAdapter? = null
-    private var activity: Activity = activity
+class NFCHandler(private var activity: Activity) {
+    private var intent: PendingIntent? = null
+    private var device: NfcAdapter? = null
     var context: NFCContext = NFCContext()
 
     fun onCreate() {
@@ -22,9 +20,16 @@ class NFCHandler(activity: Activity) {
             val topIntent = Intent(activity, activity.javaClass).apply {
                 addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
             }
-            intent = PendingIntent.getActivity(
-                activity, 0, topIntent, PendingIntent.FLAG_MUTABLE
-            )
+
+            // intents are mutable by default up until SDK version R, so FLAG_MUTABLE is only
+            // necessary starting with SDK version S
+            val intentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_MUTABLE
+            } else {
+                0
+            }
+
+            intent = PendingIntent.getActivity(activity, 0, topIntent, intentFlags)
         }
     }
 

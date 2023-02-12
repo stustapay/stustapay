@@ -2,7 +2,10 @@ package de.stustanet.stustapay.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,8 +47,10 @@ fun OrderView() {
     Scaffold(
             scaffoldState = state,
 
-            content = {
-                LazyColumn {
+            content = { paddingValues ->
+                LazyColumn(modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = paddingValues.calculateBottomPadding())) {
                     item{ OrderItem(name = "Bier", amount = "2", price = "2")}
                     item{ OrderItem(name = "Maß", amount = "1", price = "4")}
                     item{ OrderItem(name = "Radler", amount = "1", price = "1,5")}
