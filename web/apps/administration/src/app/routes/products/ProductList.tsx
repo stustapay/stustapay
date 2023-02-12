@@ -1,7 +1,6 @@
 import * as React from "react";
 import {
   Paper,
-  Button,
   TableContainer,
   Table,
   TableHead,
@@ -16,18 +15,18 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { useGetProductsQuery, useGetTaxRatesQuery } from "../../../api";
+import { useDeleteProductMutation, useGetProductsQuery, useGetTaxRatesQuery } from "../../../api";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
-import { IconButtonLink } from "../../../components/IconButtonLink";
+import { IconButtonLink, ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "../../../components";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation(["products", "common"]);
-  const navigate = useNavigate();
 
   const { data: products, isLoading: isProductsLoading } = useGetProductsQuery();
   const { data: taxRates, isLoading: isTaxRatesLoading } = useGetTaxRatesQuery();
+  const [deleteProduct] = useDeleteProductMutation();
 
+  const [productToDelete, setProductToDelete] = React.useState<number | null>(null);
   if (isProductsLoading || isTaxRatesLoading) {
     return (
       <Paper>
@@ -35,12 +34,6 @@ export const ProductList: React.FC = () => {
       </Paper>
     );
   }
-
-  const addProduct = () => {
-    navigate("/products/new");
-  };
-
-  const deleteProduct = (productId: number) => {};
 
   const renderTaxRate = (name: string) => {
     const tax = (taxRates ?? []).find((rate) => rate.name === name);
@@ -55,14 +48,27 @@ export const ProductList: React.FC = () => {
     );
   };
 
+  const openConfirmDeleteDialog = (productId: number) => {
+    setProductToDelete(productId);
+  };
+
+  const handleConfirmDeleteProduct: ConfirmDialogCloseHandler = (reason) => {
+    if (reason === "confirm" && productToDelete !== null) {
+      deleteProduct(productToDelete)
+        .unwrap()
+        .catch(() => undefined);
+    }
+    setProductToDelete(null);
+  };
+
   return (
     <>
       <Paper>
         <ListItem
           secondaryAction={
-            <Button onClick={addProduct} endIcon={<AddIcon />} variant="contained" color="primary">
+            <ButtonLink to="/products/new" endIcon={<AddIcon />} variant="contained" color="primary">
               {t("add", { ns: "common" })}
-            </Button>
+            </ButtonLink>
           }
         >
           <ListItemText primary={t("products", { ns: "common" })} />
@@ -89,7 +95,7 @@ export const ProductList: React.FC = () => {
                   <IconButtonLink to={`/products/${product.id}/edit`} color="primary">
                     <EditIcon />
                   </IconButtonLink>
-                  <IconButton color="error" onClick={() => deleteProduct(product.id)}>
+                  <IconButton color="error" onClick={() => openConfirmDeleteDialog(product.id)}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -98,6 +104,12 @@ export const ProductList: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <ConfirmDialog
+        title={t("deleteProduct")}
+        body={t("deleteProductDescription")}
+        show={productToDelete !== null}
+        onClose={handleConfirmDeleteProduct}
+      />
     </>
   );
 };

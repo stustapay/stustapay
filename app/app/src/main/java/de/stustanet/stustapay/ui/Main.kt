@@ -17,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.SysUiController
+import de.stustanet.stustapay.nfc.NFCContext
 import de.stustanet.stustapay.ui.theme.StuStaPayTheme
 
 
@@ -60,7 +61,7 @@ fun NavHostController.navigateDestination(dest: NavDest) =
 
 
 @Composable
-fun RootView(uictrl: SysUiController? = null) {
+fun RootView(uictrl: SysUiController? = null, nfcContext: NFCContext) {
     val navController = rememberNavController()
 
     if (uictrl != null) {
@@ -74,6 +75,7 @@ fun RootView(uictrl: SysUiController? = null) {
             NavScaffold(
                 title = { Text("StuStaPay") },
                 hasDrawer = true,
+                nfcContext = nfcContext,
                 navigateTo = { navTo ->
                     navController.navigateDestination(
                         navTo
@@ -94,23 +96,37 @@ fun RootView(uictrl: SysUiController? = null) {
 
         composable(RootNavDests.ordering.route) { OrderView() }
         composable(RootNavDests.settings.route) {
-            SettingsView(leaveView = { navController.navigateUp() })
+            SettingsView(nfcContext = nfcContext, leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.qrscan.route) { QRScanView() }
         composable(RootNavDests.connTest.route) { TestConnectionView() }
+        composable(RootNavDests.nfc.route) {
+            NavScaffold(
+                title = { Text("StuStaPay") },
+                hasDrawer = true,
+                nfcContext = nfcContext,
+                navigateTo = { navTo ->
+                    navController.navigateDestination(
+                        navTo
+                    )
+                }
+            ) {
+                ChipStatusView(nfcContext)
+            }
+        }
     }
 }
 
 
 @Preview(showBackground = true)
 @Composable
-fun Main(uictrl: SysUiController? = null) {
+fun Main(uictrl: SysUiController? = null, nfcContext: NFCContext = NFCContext()) {
     StuStaPayTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colors.background
         ) {
-            RootView(uictrl)
+            RootView(uictrl, nfcContext)
         }
     }
 }

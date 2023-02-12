@@ -1,7 +1,6 @@
 import * as React from "react";
 import {
   Paper,
-  Button,
   TableContainer,
   Table,
   TableHead,
@@ -15,17 +14,17 @@ import {
   ListItemText,
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { useGetTaxRatesQuery } from "../../../api";
+import { useDeleteTaxRateMutation, useGetTaxRatesQuery } from "../../../api";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
-import { IconButtonLink } from "../../../components/IconButtonLink";
+import { IconButtonLink, ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "../../../components";
 
 export const TaxRateList: React.FC = () => {
   const { t } = useTranslation(["taxRates", "common"]);
-  const navigate = useNavigate();
 
-  const { data: taxRates, error, isLoading } = useGetTaxRatesQuery();
+  const { data: taxRates, isLoading } = useGetTaxRatesQuery();
+  const [deleteTaxRate] = useDeleteTaxRateMutation();
 
+  const [taxRateToDelete, setTaxRateToDelete] = React.useState<string | null>(null);
   if (isLoading) {
     return (
       <Paper>
@@ -34,24 +33,27 @@ export const TaxRateList: React.FC = () => {
     );
   }
 
-  const addTaxRate = () => {
-    navigate("/tax-rates/new");
+  const openConfirmDeleteDialog = (taxRateName: string) => {
+    setTaxRateToDelete(taxRateName);
   };
 
-  const editTaxRate = (name: string) => {
-    navigate(`/tax-rates/${name}/edit`);
+  const handleConfirmDeleteTaxRate: ConfirmDialogCloseHandler = (reason) => {
+    if (reason === "confirm" && taxRateToDelete !== null) {
+      deleteTaxRate(taxRateToDelete)
+        .unwrap()
+        .catch(() => undefined);
+    }
+    setTaxRateToDelete(null);
   };
-
-  const deleteTaxRate = (name: string) => {};
 
   return (
     <>
       <Paper>
         <ListItem
           secondaryAction={
-            <Button onClick={addTaxRate} endIcon={<AddIcon />} variant="contained" color="primary">
+            <ButtonLink to="/tax-rates/new" endIcon={<AddIcon />} variant="contained" color="primary">
               {t("add", { ns: "common" })}
-            </Button>
+            </ButtonLink>
           }
         >
           <ListItemText primary={t("taxRates", { ns: "common" })} />
@@ -78,7 +80,7 @@ export const TaxRateList: React.FC = () => {
                   <IconButtonLink to={`/tax-rates/${taxRate.name}/edit`} color="primary">
                     <EditIcon />
                   </IconButtonLink>
-                  <IconButton color="error" onClick={() => deleteTaxRate(taxRate.name)}>
+                  <IconButton color="error" onClick={() => openConfirmDeleteDialog(taxRate.name)}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -87,6 +89,12 @@ export const TaxRateList: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <ConfirmDialog
+        title={t("deleteTaxRate")}
+        body={t("deleteTaxRateDescription")}
+        show={taxRateToDelete !== null}
+        onClose={handleConfirmDeleteTaxRate}
+      />
     </>
   );
 };

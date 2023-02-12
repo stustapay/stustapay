@@ -13,6 +13,7 @@ from stustapay.core.config import Config
 from stustapay.core.service.products import ProductService
 from stustapay.core.service.tax_rates import TaxRateService
 from stustapay.core.service.transaction import TransactionService
+from stustapay.core.service.users import UserService
 
 
 @dataclass
@@ -27,6 +28,7 @@ class Context:
     transaction_service: Optional[TransactionService] = None
     product_service: Optional[ProductService] = None
     tax_rate_service: Optional[TaxRateService] = None
+    user_service: Optional[UserService] = None
 
 
 class ContextMiddleware:
@@ -115,6 +117,10 @@ def get_product_service(request: Request) -> ProductService:
 
 def get_tax_rate_service(request: Request) -> TaxRateService:
     return request.state.context.tax_rate_service
+
+
+def get_user_service(request: Request) -> UserService:
+    return request.state.context.user_service
 
 
 async def get_db_conn(

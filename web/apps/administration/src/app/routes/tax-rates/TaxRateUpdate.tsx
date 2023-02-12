@@ -1,7 +1,7 @@
-import { useUpdateTaxRateMutation } from "apps/administration/src/api";
+import { useUpdateTaxRateMutation, useGetTaxRateByNameQuery } from "@api";
 import * as React from "react";
+import { TaxRateSchema } from "../../../models/taxRate";
 import { useParams, Navigate } from "react-router-dom";
-import { useGetTaxRateByNameQuery } from "apps/administration/src/api";
 import { useTranslation } from "react-i18next";
 import { TaxRateChange } from "./TaxRateChange";
 
@@ -20,6 +20,7 @@ export const TaxRateUpdate: React.FC = () => {
       headerTitle={t("updateTaxRate")}
       submitLabel={t("update", { ns: "common" })}
       initialValues={taxRate}
+      validationSchema={TaxRateSchema}
       onSubmit={updateTaxRate}
     />
   );

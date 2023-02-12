@@ -12,6 +12,8 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import de.stustanet.stustapay.nfc.NFCHandler
 import de.stustanet.stustapay.ui.Main
 
@@ -27,11 +29,21 @@ class MainActivity : ComponentActivity(), SysUiController {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        nfcHandler.onCreate()
-
         setContent {
-            Main(this)
+            remember {
+                nfcHandler.context!!.scanRequest = mutableStateOf(false)
+                nfcHandler.context.scanRequest!!
+            }
+
+            remember {
+                nfcHandler.context!!.uid = mutableStateOf(0uL)
+                nfcHandler.context.uid!!
+            }
+            
+            Main(this, nfcHandler.context)
         }
+
+        nfcHandler.onCreate()
     }
 
     public override fun onPause() {

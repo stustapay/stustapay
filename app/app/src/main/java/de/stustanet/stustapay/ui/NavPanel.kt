@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustanet.stustapay.nfc.NFCContext
 
 
 data class NavMenuItem(
@@ -28,6 +29,7 @@ data class NavMenuItem(
     val navDestination: NavDest? = null,
     val isUnread: Boolean = false,
     val dividePrevious: Boolean = false,
+    val scanNFC: Boolean = false
 )
 
 
@@ -66,6 +68,14 @@ private fun getNavItems(): List<NavMenuItem> {
         NavMenuItem(
             icon = Icons.Filled.Person,
             label = "Profile"
+        )
+    )
+    itemsList.add(
+        NavMenuItem(
+            icon = Icons.Filled.Send,
+            label = "NFC",
+            navDestination = RootNavDests.nfc,
+            scanNFC = true
         )
     )
     itemsList.add(
@@ -120,7 +130,8 @@ fun LoginProfile() {
 
 @Composable
 fun NavDrawer(
-    navigateTo: (NavDest) -> Unit,
+    nfcContext: NFCContext,
+    navigateTo: (NavDest) -> Unit
 ) {
     val gradientColors = listOf(Color(0xFFF70A74), Color(0xFFF59118))
     val navItems = getNavItems()
@@ -139,7 +150,7 @@ fun NavDrawer(
                 Divider()
             }
 
-            NavDrawerEntry(item = item, navigateTo = navigateTo)
+            NavDrawerEntry(item = item, nfcContext = nfcContext, navigateTo = navigateTo)
         }
     }
 }
@@ -148,12 +159,15 @@ fun NavDrawer(
 private fun NavDrawerEntry(
     item: NavMenuItem,
     unreadBadgeColor: Color = Color(0xFF0FFF93),
+    nfcContext: NFCContext,
     navigateTo: (NavDest) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
+                nfcContext.scanRequest!!.value = item.scanNFC
+
                 if (item.navDestination != null) {
                     navigateTo(item.navDestination)
                 }

@@ -1,23 +1,27 @@
 import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
-import { TaxRate, TaxRateSchema } from "../../../models/taxRate";
+import { TaxRate } from "../../../models/taxRate";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { z } from "zod";
 import { NumericInput } from "../../../components/NumericInput";
+import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 
 export interface TaxRateChangeProps<T extends TaxRate> {
   headerTitle: string;
   submitLabel: string;
   initialValues: T;
-  onSubmit: (t: T) => Promise<any>;
+  validationSchema: z.ZodSchema<T>;
+  onSubmit: (t: T) => MutationActionCreatorResult<any>;
 }
 
 export function TaxRateChange<T extends TaxRate>({
   headerTitle,
   submitLabel,
   initialValues,
+  validationSchema,
   onSubmit,
 }: TaxRateChangeProps<T>) {
   const navigate = useNavigate();
@@ -26,6 +30,7 @@ export function TaxRateChange<T extends TaxRate>({
     setSubmitting(true);
 
     onSubmit(values)
+      .unwrap()
       .then(() => {
         setSubmitting(false);
         navigate("/tax-rates");
@@ -42,7 +47,7 @@ export function TaxRateChange<T extends TaxRate>({
       <Formik
         initialValues={initialValues}
         onSubmit={handleSubmit}
-        validationSchema={toFormikValidationSchema(TaxRateSchema)}
+        validationSchema={toFormikValidationSchema(validationSchema)}
       >
         {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, setFieldValue, errors, touched }) => (
           <Form onSubmit={handleSubmit}>

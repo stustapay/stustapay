@@ -3,8 +3,6 @@ http server base class
 """
 
 import logging
-from typing import Dict, Any
-
 import uvicorn
 
 from fastapi import FastAPI

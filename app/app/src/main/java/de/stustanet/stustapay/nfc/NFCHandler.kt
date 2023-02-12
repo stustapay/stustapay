@@ -5,22 +5,18 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
-import android.nfc.tech.Ndef
-import android.nfc.tech.NfcA
 import android.os.Build
 import android.widget.Toast
-import java.nio.charset.Charset
 
 class NFCHandler(private var activity: Activity) {
     private var intent: PendingIntent? = null
     private var device: NfcAdapter? = null
+    var context: NFCContext = NFCContext()
 
     fun onCreate() {
         // prepare nfc intent delivery
         device = NfcAdapter.getDefaultAdapter(activity)
         if (device != null) {
-            Toast.makeText(activity, "device has nfc chip!", Toast.LENGTH_LONG).show()
-
             val topIntent = Intent(activity, activity.javaClass).apply {
                 addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
             }
@@ -48,44 +44,31 @@ class NFCHandler(private var activity: Activity) {
 
     fun handleTag(action: String, tag: Tag) {
         // https://developer.android.com/guide/topics/connectivity/nfc/advanced-nfc#tech-intent
-        when (action) {
-            NfcAdapter.ACTION_TECH_DISCOVERED -> {
-                Toast.makeText(
-                    activity,
-                    "nfc tech discovered: id=${tag.id} info=$tag techs=${tag.techList}",
-                    Toast.LENGTH_LONG
-                ).show()
 
-                if (!tag.techList.contains("android.nfc.tech.NfcA")) {
-                    return
-                }
+        if (context.scanRequest != null && context.scanRequest!!.value) {
+            Toast.makeText(activity, "NFC tag read", Toast.LENGTH_LONG).show()
 
-                val nfcatag = NfcA.get(tag)
-                Toast.makeText(
-                    activity,
-                    "nfca tech detected: nfca=$nfcatag",
-                    Toast.LENGTH_LONG
-                ).show()
+            if (!tag.techList.contains("android.nfc.tech.NfcA")) {
+                Toast.makeText(activity, "Incompatible NFC tag", Toast.LENGTH_LONG).show()
+                return
             }
-            NfcAdapter.ACTION_TAG_DISCOVERED -> {
-                // unhandled tag tech
-                Toast.makeText(activity, "unhandled tag discovered", Toast.LENGTH_LONG).show()
-            }
-            NfcAdapter.ACTION_NDEF_DISCOVERED -> {
-                val ndeftag = Ndef.get(tag)
 
-                ndeftag?.use { ndef ->
-                    ndef.connect()
-                    val text = String(ndef.ndefMessage.toByteArray(), Charset.forName("UTF-8"))
-                    Toast.makeText(
-                        activity,
-                        "ndef text: $text",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+            val mftag = get(tag)
+            val key = ByteArray(16) { i -> i.toByte() }
 
+            try {
+                mftag.connect()
+                while (!mftag.isConnected) {}
+
+                mftag.authenticate(key)
+
+                context.uid?.value = mftag.readSerialNumber()
+
+                mftag.close()
+            } catch (e: Exception) {
+                println(e)
+                Toast.makeText(activity, "Communication failed", Toast.LENGTH_LONG).show()
             }
         }
     }
-
 }

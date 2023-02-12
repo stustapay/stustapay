@@ -1,4 +1,3 @@
-import asyncpg
 import asyncio
 
 from .test_dbhook import DBHookTest

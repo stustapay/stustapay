@@ -5,13 +5,17 @@ import asyncpg
 
 from .dbservice import DBService, with_db_transaction
 from ..schema.transaction import NewTransaction, Transaction, TransactionBooking
+from ..schema.user import User
 
 logger = logging.getLogger(__name__)
 
 
 class TransactionService(DBService):
     @with_db_transaction
-    async def create_transaction(self, *, conn: asyncpg.Connection, transaction: NewTransaction) -> Transaction:
+    async def create_transaction(
+        self, *, conn: asyncpg.Connection, user: User, transaction: NewTransaction
+    ) -> Transaction:
+        del user
         transaction_id: int = await conn.fetchval("insert into transaction (status) values ('pending') returning id")
 
         count = 0
@@ -60,28 +64,35 @@ class TransactionService(DBService):
         return Transaction(transaction_id)
 
     @with_db_transaction
-    async def show_transaction(self, *, conn: asyncpg.Connection, transaction_id: int):
+    async def show_transaction(self, *, conn: asyncpg.Connection, user: User, transaction_id: int):
         """
         get all info about a transaction.
         """
-        del transaction_id
+        del transaction_id, conn, user
         raise NotImplementedError()
 
     @with_db_transaction
-    async def transaction_payment_info(self, *, conn: asyncpg.Connection, transaction_id: int):
+    async def transaction_payment_info(self, *, conn: asyncpg.Connection, user: User, transaction_id: int):
         """
         try to pay a pending transaction, so one can see the available payment options.
         """
-        del transaction_id
+        del transaction_id, conn, user
         raise NotImplementedError()
 
     @with_db_transaction
     async def book_transaction(
-        self, *, conn: asyncpg.Connection, transaction_id: int, source_account_id: int, target_account_id: int
+        self,
+        *,
+        conn: asyncpg.Connection,
+        user: User,
+        transaction_id: int,
+        source_account_id: int,
+        target_account_id: int,
     ):
         """
         apply the transaction after all payment has been settled.
         """
+        del user
         status: Optional[str] = await conn.fetchval(
             "select status from transaction where transaction.id = $1;",
             transaction_id,
@@ -178,7 +189,8 @@ class TransactionService(DBService):
         )
 
     @with_db_transaction
-    async def cancel_transaction(self, *, conn: asyncpg.Connection, transaction_id: int):
+    async def cancel_transaction(self, *, conn: asyncpg.Connection, user: User, transaction_id: int):
+        del user
         status: Optional[str] = await conn.fetchval(
             "select status from transaction where transaction.id = $1;",
             transaction_id,

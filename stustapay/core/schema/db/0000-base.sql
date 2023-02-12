@@ -99,11 +99,18 @@ create table if not exists account (
 create table if not exists usr (
     id serial not null primary key,
 
-    name text,
+    name text not null unique,
+    password text,
     description text,
 
     -- e.g. the backpack-account, or the cash drawer
     account bigint references account(id) on delete restrict
+);
+
+
+create table if not exists usr_session (
+    id serial not null primary key,
+    usr int references usr(id) on delete cascade not null
 );
 
 
