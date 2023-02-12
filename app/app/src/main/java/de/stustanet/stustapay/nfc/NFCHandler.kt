@@ -19,8 +19,6 @@ class NFCHandler(activity: Activity) {
         // prepare nfc intent delivery
         device = NfcAdapter.getDefaultAdapter(activity)
         if (device != null) {
-            Toast.makeText(activity, "device has nfc chip!", Toast.LENGTH_LONG).show()
-
             val topIntent = Intent(activity, activity.javaClass).apply {
                 addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
             }
@@ -51,13 +49,19 @@ class NFCHandler(activity: Activity) {
             }
 
             val mftag = get(tag)
+            val key = ByteArray(16) { i -> i.toByte() }
 
             try {
                 mftag.connect()
                 while (!mftag.isConnected) {}
+
+                mftag.authenticate(key)
+
                 context.uid?.value = mftag.readSerialNumber()
+
                 mftag.close()
-            } catch (e: IOException) {
+            } catch (e: Exception) {
+                println(e)
                 Toast.makeText(activity, "Communication failed", Toast.LENGTH_LONG).show()
             }
         }

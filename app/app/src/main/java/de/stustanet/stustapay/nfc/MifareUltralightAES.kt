@@ -6,6 +6,11 @@ import android.nfc.tech.TagTechnology
 import java.io.IOException
 import java.lang.reflect.Executable
 import java.nio.charset.Charset
+import java.security.SecureRandom
+import javax.crypto.Cipher
+import javax.crypto.SecretKey
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 const val PAGE_COUNT = 60
 const val USER_BYTES = 144
@@ -14,30 +19,77 @@ class MifareUltralightAES(rawTag: Tag) : TagTechnology {
     var rawTag = rawTag
     var nfcaTag = NfcA.get(rawTag)
 
-    fun writeUserMemory(content: String) {
-        if (!isConnected) {
-            throw Exception("Not connected")
+    fun protect() {
+        val buf = cmdRead(0x29.toByte())
+        cmdWrite(0x29, buf[0], buf[1], buf[2], 0x00)
+    }
+
+    fun unprotect() {
+        val buf = cmdRead(0x29.toByte())
+        cmdWrite(0x29, buf[0], buf[1], buf[2], 0x3c)
+    }
+
+    fun authenticate(key: ByteArray) {
+        if (!isConnected) { throw Exception("Not connected") }
+        if (key.size != 16) { throw Exception("Wrong key size") }
+
+        val cipherKey = SecretKeySpec(key, "AES")
+        val cipher = Cipher.getInstance("AES/CBC/NoPadding")
+        val iv = ByteArray(16) { i -> 0 }
+
+        val rndA = ByteArray(16)
+        SecureRandom().nextBytes(rndA)
+
+        try {
+            val ekRndB = cmdAuthenticate1()
+            cipher.init(Cipher.DECRYPT_MODE, cipherKey, IvParameterSpec(iv))
+            val rndB: ByteArray = cipher.doFinal(ekRndB)
+
+            var rndAB = rndA + rndB.clone().takeLast(15) + rndB[0]
+            cipher.init(Cipher.ENCRYPT_MODE, cipherKey, IvParameterSpec(iv))
+            val ekRndAB: ByteArray = cipher.doFinal(rndAB)
+
+            val ekRndA = cmdAuthenticate2(ekRndAB)
+            cipher.init(Cipher.DECRYPT_MODE, cipherKey, IvParameterSpec(iv))
+            val rndAResp: ByteArray = cipher.doFinal(ekRndA)
+
+            if (!(rndAResp.clone().takeLast(1) + rndAResp.clone().take(15)).toByteArray().contentEquals(rndA)) {
+                throw Exception("Auth failed")
+            }
+        } catch (e: IOException) {
+            throw Exception("Auth failed")
         }
+    }
+
+    fun writeKey(key: ByteArray) {
+        if (!isConnected) { throw Exception("Not connected") }
+        if (key.size != 16) { throw Exception("Wrong key size") }
+
+        for (i in 0 until 4) {
+            cmdWrite((i + 0x30).toByte(), key[15 - (i * 4)], key[15 - (i * 4 + 1)], key[15 - (i * 4 + 2)], key[15 - (i * 4 + 3)])
+        }
+    }
+
+    fun writeUserMemory(content: String) {
+        if (!isConnected) { throw Exception("Not connected") }
 
         val data = content.toByteArray(Charset.forName("UTF-8"))
-        val write_buffer = ByteArray(USER_BYTES)
+        val writeBuffer = ByteArray(USER_BYTES)
         for (i in 0 until USER_BYTES) {
             if (i < data.size) {
-                write_buffer[i] = data[i]
+                writeBuffer[i] = data[i]
             } else {
-                write_buffer[i] = 0x00
+                writeBuffer[i] = 0x00
             }
         }
 
         for (i in 0 until (USER_BYTES / 4)) {
-            cmdWrite((i + 4).toByte(), write_buffer[i * 4], write_buffer[i * 4 + 1], write_buffer[i * 4 + 2], write_buffer[i * 4 + 3])
+            cmdWrite((i + 4).toByte(), writeBuffer[i * 4], writeBuffer[i * 4 + 1], writeBuffer[i * 4 + 2], writeBuffer[i * 4 + 3])
         }
     }
 
     fun readUserMemory(): String {
-        if (!isConnected) {
-            throw Exception("Not connected")
-        }
+        if (!isConnected) { throw Exception("Not connected") }
 
         val readBuffer = ByteArray(USER_BYTES)
         for (i in 0 until (USER_BYTES / 16)) {
@@ -51,9 +103,7 @@ class MifareUltralightAES(rawTag: Tag) : TagTechnology {
     }
 
     fun readSerialNumber(): ULong {
-        if (!isConnected) {
-            throw Exception("Not connected")
-        }
+        if (!isConnected) { throw Exception("Not connected") }
 
         val readBuffer = cmdRead(0x00.toByte())
         var ser = 0uL
@@ -114,6 +164,24 @@ class MifareUltralightAES(rawTag: Tag) : TagTechnology {
         cmd[4] = c
         cmd[5] = d
         nfcaTag.transceive(cmd)
+    }
+
+    fun cmdAuthenticate1(): ByteArray {
+        var cmd = ByteArray(2)
+        cmd[0] = 0x1a
+        cmd[1] = 0x00
+        val resp = nfcaTag.transceive(cmd)
+        return resp.drop(1).toByteArray()
+    }
+
+    fun cmdAuthenticate2(challenge: ByteArray): ByteArray {
+        var cmd = ByteArray(33)
+        cmd[0] = 0xaf.toByte()
+        for (i in 0 until 32) {
+            cmd[i + 1] = challenge[i]
+        }
+        val resp = nfcaTag.transceive(cmd)
+        return resp.drop(1).toByteArray()
     }
 }
 
