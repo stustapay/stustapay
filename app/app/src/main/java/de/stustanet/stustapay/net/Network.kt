@@ -2,7 +2,6 @@ package de.stustanet.stustapay.net
 
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 
 @Serializable

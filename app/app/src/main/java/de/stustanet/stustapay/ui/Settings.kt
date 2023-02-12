@@ -141,10 +141,13 @@ fun SettingsView(leaveView: () -> Unit = {}) {
             }
         },
         hasDrawer = false,
-    ) {
+    ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = SettingsNavDest.root.route
+            startDestination = SettingsNavDest.root.route,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
             composable(SettingsNavDest.root.route) { SettingsRootView(navController) }
             composable(SettingsNavDest.connection.route) { ConnectionView() }

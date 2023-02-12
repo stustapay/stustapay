@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.rememberScaffoldState
@@ -15,7 +16,7 @@ fun NavScaffold(
     title: @Composable () -> Unit,
     state: ScaffoldState = rememberScaffoldState(),
     hasDrawer: Boolean = false,
-    content: @Composable () -> Unit
+    content: @Composable (PaddingValues) -> Unit
 ) {
     val scope = rememberCoroutineScope()
 
@@ -43,8 +44,8 @@ fun NavScaffold(
                 }
                 navigateTo(navTo)
             }
-        }
-    ) {
-        content()
-    }
+        },
+
+        content = content
+    )
 }

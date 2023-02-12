@@ -7,13 +7,13 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.nfc.tech.NfcA
+import android.os.Build
 import android.widget.Toast
 import java.nio.charset.Charset
 
-class NFCHandler(activity: Activity) {
-    var intent: PendingIntent? = null
-    var device: NfcAdapter? = null
-    private var activity: Activity = activity
+class NFCHandler(private var activity: Activity) {
+    private var intent: PendingIntent? = null
+    private var device: NfcAdapter? = null
 
     fun onCreate() {
         // prepare nfc intent delivery
@@ -24,9 +24,16 @@ class NFCHandler(activity: Activity) {
             val topIntent = Intent(activity, activity.javaClass).apply {
                 addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
             }
-            intent = PendingIntent.getActivity(
-                activity, 0, topIntent, PendingIntent.FLAG_MUTABLE
-            )
+
+            // intents are mutable by default up until SDK version R, so FLAG_MUTABLE is only
+            // necessary starting with SDK version S
+            val intentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_MUTABLE
+            } else {
+                0
+            }
+
+            intent = PendingIntent.getActivity(activity, 0, topIntent, intentFlags)
         }
     }
 
@@ -72,7 +79,7 @@ class NFCHandler(activity: Activity) {
                     val text = String(ndef.ndefMessage.toByteArray(), Charset.forName("UTF-8"))
                     Toast.makeText(
                         activity,
-                        "ndef text: ${text}",
+                        "ndef text: $text",
                         Toast.LENGTH_LONG
                     ).show()
                 }

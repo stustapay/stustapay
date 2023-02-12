@@ -1,5 +1,6 @@
 package de.stustanet.stustapay
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
@@ -11,7 +12,6 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import de.stustanet.stustapay.net.Network
 import de.stustanet.stustapay.nfc.NFCHandler
 import de.stustanet.stustapay.ui.Main
 
@@ -22,7 +22,7 @@ interface SysUiController {
 
 class MainActivity : ComponentActivity(), SysUiController {
     /** nfc interface connection */
-    var nfcHandler = NFCHandler(this)
+    private var nfcHandler = NFCHandler(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +67,7 @@ class MainActivity : ComponentActivity(), SysUiController {
 
     private var sysUiHidden = false
 
+    @SuppressLint("ObsoleteSdkInt")
     override fun hideSystemUI() {
         if (sysUiHidden) {
             return
@@ -98,6 +99,7 @@ class MainActivity : ComponentActivity(), SysUiController {
         sysUiHidden = true
     }
 
+    @SuppressLint("ObsoleteSdkInt")
     override fun showSystemUI() {
         if (!sysUiHidden) {
             return
