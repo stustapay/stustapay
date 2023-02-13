@@ -8,3 +8,4 @@ in db/ are the database schema definitions.
 from pathlib import Path
 
 REVISION_PATH = Path(__file__).parent / "db"
+DATA_PATH = Path(__file__).parent / "example_data"
