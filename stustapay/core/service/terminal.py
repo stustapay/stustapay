@@ -122,6 +122,7 @@ class TerminalService(DBService):
 
     @with_db_transaction
     async def logout_terminal(self, *, conn: asyncpg.Connection, user: User, terminal_id: int) -> bool:
+        del user
         id_ = await conn.fetchval(
             "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
             terminal_id,

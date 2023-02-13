@@ -2,9 +2,7 @@
 some basic api endpoints.
 """
 
-from fastapi import APIRouter, status, Depends
-
-from ..context import get_db_conn
+from fastapi import APIRouter, status
 
 
 router = APIRouter(
