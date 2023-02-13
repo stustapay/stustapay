@@ -2,15 +2,17 @@ import * as React from "react";
 import { Link as RouterLink, Outlet, Navigate, useSearchParams } from "react-router-dom";
 import { AppBar, Box, Button, CircularProgress, Container, CssBaseline, Toolbar, Typography } from "@mui/material";
 import { selectIsAuthenticated, useAppSelector } from "@store";
+import { useTranslation } from "react-i18next";
 
 export const UnauthenticatedRoot: React.FC = () => {
+  const { t } = useTranslation(["common"]);
   const authenticated = useAppSelector(selectIsAuthenticated);
 
   const [query] = useSearchParams();
 
   if (authenticated) {
     const next = query.get("next");
-    const redirectUrl = next ? next : "/";
+    const redirectUrl = next != null ? next : "/";
     return <Navigate to={redirectUrl} />;
   }
 
@@ -21,11 +23,11 @@ export const UnauthenticatedRoot: React.FC = () => {
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             <RouterLink to="/" style={{ textDecoration: "none", color: "inherit" }}>
-              StuStaPay
+              {t("StuStaPay")}
             </RouterLink>
           </Typography>
           <Button component={RouterLink} color="inherit" to="/login">
-            Login
+            {t("login")}
           </Button>
         </Toolbar>
       </AppBar>

@@ -18,6 +18,7 @@ export type UpdateTerminal = z.infer<typeof UpdateTerminalSchema>;
 export const TerminalSchema = UpdateTerminalSchema.merge(
   z.object({
     registration_uuid: z.string().nullable(),
+    is_logged_in: z.boolean(),
   })
 );
 

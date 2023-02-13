@@ -3,9 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Form, Formik, FormikHelpers } from "formik";
 import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, TextField, Typography } from "@mui/material";
 import { z } from "zod";
-import { selectIsAuthenticated, setCredentials, useAppDispatch, useAppSelector } from "@store";
+import { selectIsAuthenticated, useAppSelector } from "@store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
-import { useLoginMutation, UserResponse } from "@api/authApi";
+import { useLoginMutation } from "@api/authApi";
 import { toFormikValidationSchema } from "@stustapay/utils";
 
 const validationSchema = z.object({
@@ -22,7 +22,6 @@ const initialValues: FormSchema = {
 
 export const Login: React.FC = () => {
   const isLoggedIn = useAppSelector(selectIsAuthenticated);
-  const dispatch = useAppDispatch();
   const [query] = useSearchParams();
   const navigate = useNavigate();
   const [login] = useLoginMutation();
@@ -39,8 +38,7 @@ export const Login: React.FC = () => {
     setSubmitting(true);
     login({ username: values.username, password: values.password })
       .unwrap()
-      .then(({ user, token }: UserResponse) => {
-        dispatch(setCredentials({ user, token }));
+      .then(() => {
         setSubmitting(false);
       })
       .catch((err) => {

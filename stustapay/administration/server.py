@@ -5,7 +5,7 @@ from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
 from stustapay.core.subcommand import SubCommand
 
-from .routers import products, users, common, tax_rates, auth, terminals
+from .routers import product, user, common, tax_rate, auth, terminal
 from ..core.service.product import ProductService
 from ..core.service.tax_rate import TaxRateService
 from ..core.service.terminal import TerminalService
@@ -27,12 +27,12 @@ class Api(SubCommand):
             cors=True,
         )
 
-        self.server.add_router(products.router)
-        self.server.add_router(users.router)
+        self.server.add_router(product.router)
+        self.server.add_router(user.router)
         self.server.add_router(common.router)
-        self.server.add_router(tax_rates.router)
+        self.server.add_router(tax_rate.router)
         self.server.add_router(auth.router)
-        self.server.add_router(terminals.router)
+        self.server.add_router(terminal.router)
 
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)

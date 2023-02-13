@@ -1,6 +1,9 @@
 {
   "terminalName": "Name",
   "terminalDescription": "Description",
+  "terminalRegistrationUUID": "Registration ID",
+  "terminalLoggedIn": "Terminal registered",
+  "logoutTerminal": "Unregister terminal",
   "terminal": "Terminal",
   "createTerminal": "Add a new terminal",
   "updateTerminal": "Update terminal",

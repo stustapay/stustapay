@@ -15,13 +15,9 @@ class TokenMetadata(BaseModel):
     session_uuid: int
 
 
-class TerminalLoginResult(BaseModel):
+class TerminalRegistrationSuccess(BaseModel):
     terminal: Terminal
     token: str
-
-
-def _to_string_nullable(t) -> Optional[str]:
-    return str(t) if t is not None else None
 
 
 class TerminalService(DBService):
@@ -30,7 +26,7 @@ class TerminalService(DBService):
         del user
         row = await conn.fetchrow(
             "insert into terminal (name, description, registration_uuid, tseid, active_shift, active_profile, active_cashier) "
-            "values ($1, $2, $3, $4, $5, $6, $7) returning id, name, description, registration_uuid, "
+            "values ($1, $2, $3, $4, $5, $6, $7) returning id, name, description, registration_uuid, session_uuid, "
             "tseid, active_shift, active_profile, active_cashier",
             terminal.name,
             terminal.description,
@@ -41,16 +37,7 @@ class TerminalService(DBService):
             terminal.active_cashier,
         )
 
-        return Terminal(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            registration_uuid=_to_string_nullable(row["registration_uuid"]),
-            tseid=row["tseid"],
-            active_shift=row["active_shift"],
-            active_profile=row["active_profile"],
-            active_cashier=row["active_cashier"],
-        )
+        return Terminal.from_db(row)
 
     @with_db_transaction
     async def list_terminals(self, *, conn: asyncpg.Connection, user: User) -> list[Terminal]:
@@ -58,18 +45,7 @@ class TerminalService(DBService):
         cursor = conn.cursor("select * from terminal")
         result = []
         async for row in cursor:
-            result.append(
-                Terminal(
-                    id=row["id"],
-                    name=row["name"],
-                    description=row["description"],
-                    registration_uuid=_to_string_nullable(row["registration_uuid"]),
-                    tseid=row["tseid"],
-                    active_shift=row["active_shift"],
-                    active_profile=row["active_profile"],
-                    active_cashier=row["active_cashier"],
-                )
-            )
+            result.append(Terminal.from_db(row))
         return result
 
     @with_db_transaction
@@ -79,16 +55,7 @@ class TerminalService(DBService):
         if row is None:
             return None
 
-        return Terminal(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            registration_uuid=_to_string_nullable(row["registration_uuid"]),
-            tseid=row["tseid"],
-            active_shift=row["active_shift"],
-            active_profile=row["active_profile"],
-            active_cashier=row["active_cashier"],
-        )
+        return Terminal.from_db(row)
 
     @with_db_transaction
     async def update_terminal(
@@ -110,16 +77,7 @@ class TerminalService(DBService):
         if row is None:
             return None
 
-        return Terminal(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            registration_uuid=_to_string_nullable(row["registration_uuid"]),
-            tseid=row["tseid"],
-            active_shift=row["active_shift"],
-            active_profile=row["active_profile"],
-            active_cashier=row["active_cashier"],
-        )
+        return Terminal.from_db(row)
 
     @with_db_transaction
     async def delete_terminal(self, *, conn: asyncpg.Connection, user: User, terminal_id: int) -> bool:
@@ -146,26 +104,30 @@ class TerminalService(DBService):
             return None
 
     @with_db_transaction
-    async def login_terminal(
+    async def register_terminal(
         self, *, conn: asyncpg.Connection, registration_uuid: str
-    ) -> Optional[TerminalLoginResult]:
+    ) -> Optional[TerminalRegistrationSuccess]:
         row = await conn.fetchrow("select * from terminal where registration_uuid = $1", registration_uuid)
         if row is None:
             return None
-        terminal = Terminal(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            registration_uuid=_to_string_nullable(row["registration_uuid"]),
-            tseid=row["tseid"],
-            active_shift=row["active_shift"],
-            active_profile=row["active_profile"],
-            active_cashier=row["active_cashier"],
-        )
+        terminal = Terminal.from_db(row)
         session_uuid = uuid.uuid4()
-        await conn.execute("update terminal set session_uuid = $2 where id = $1", terminal.id, session_uuid)
+        await conn.execute(
+            "update terminal set session_uuid = $2, registration_uuid = null where id = $1",
+            terminal.id,
+            session_uuid,
+        )
         token = self._create_access_token(terminal_id=terminal.id, session_uuid=session_uuid)
-        return TerminalLoginResult(terminal=terminal, token=token)
+        return TerminalRegistrationSuccess(terminal=terminal, token=token)
+
+    @with_db_transaction
+    async def logout_terminal(self, *, conn: asyncpg.Connection, user: User, terminal_id: int) -> bool:
+        del user
+        id_ = await conn.fetchval(
+            "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
+            terminal_id,
+        )
+        return id_ is not None
 
     @with_db_transaction
     async def get_terminal_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[Terminal]:
@@ -181,13 +143,4 @@ class TerminalService(DBService):
         if row is None:
             return None
 
-        return Terminal(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            registration_uuid=_to_string_nullable(row["registration_uuid"]),
-            tseid=row["tseid"],
-            active_shift=row["active_shift"],
-            active_profile=row["active_profile"],
-            active_cashier=row["active_cashier"],
-        )
+        return Terminal.from_db(row)

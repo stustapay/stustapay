@@ -27,6 +27,8 @@ REVISION_TABLE = "schema_revision"
 
 class DatabaseManage(subcommand.SubCommand):
     def __init__(self, args, config: Config, **rest):
+        del rest
+
         self.config = config
         self.action = args.action
 

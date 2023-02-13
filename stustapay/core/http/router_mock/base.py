@@ -18,8 +18,3 @@ router = APIRouter(
 @router.get("/health", summary="health check endpoint")
 async def health():
     return {"status": "healthy"}
-
-
-@router.get("/dbversion", summary="return the database engine version")
-async def dbver():
-    return {"db_version": "MockSQL 0.1"}

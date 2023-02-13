@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 
-from stustapay.core.http.auth import get_current_user
+from stustapay.core.http.auth_user import get_current_user
 from stustapay.core.http.context import get_terminal_service
 from stustapay.core.schema.terminal import Terminal, NewTerminal
 from stustapay.core.schema.user import User
@@ -14,7 +14,7 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[Terminal])
-async def list_tax_rates(
+async def list_terminals(
     user: User = Depends(get_current_user), terminal_service: TerminalService = Depends(get_terminal_service)
 ):
     return await terminal_service.list_terminals(user=user)
@@ -30,7 +30,7 @@ async def create_terminal(
 
 
 @router.get("/{terminal_id}", response_model=Terminal)
-async def get_tax_rate(
+async def get_terminal(
     terminal_id: int,
     user: User = Depends(get_current_user),
     terminal_service: TerminalService = Depends(get_terminal_service),
@@ -54,6 +54,17 @@ async def update_terminal(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     return terminal
+
+
+@router.post("/{terminal_id}/logout")
+async def logout_terminal(
+    terminal_id: int,
+    user: User = Depends(get_current_user),
+    terminal_service: TerminalService = Depends(get_terminal_service),
+):
+    logged_out = await terminal_service.logout_terminal(user=user, terminal_id=terminal_id)
+    if not logged_out:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 @router.delete("/{terminal_id}")

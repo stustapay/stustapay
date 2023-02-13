@@ -18,12 +18,18 @@ export const authApi = createApi({
   endpoints: (builder) => ({
     login: builder.mutation<UserResponse, LoginRequest>({
       query: (credentials) => ({
-        url: "auth/login",
+        url: "/auth/login/",
         method: "POST",
         body: credentials,
+      }),
+    }),
+    logout: builder.mutation<void, void>({
+      query: () => ({
+        url: "/auth/logout/",
+        method: "POST",
       }),
     }),
   }),
 });
 
-export const { useLoginMutation } = authApi;
+export const { useLoginMutation, useLogoutMutation } = authApi;

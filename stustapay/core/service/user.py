@@ -162,8 +162,18 @@ class UserService(DBService):
         )
 
     @with_db_transaction
-    async def logout_user(self, *, conn: asyncpg.Connection, current_user: User) -> bool:
-        raise NotImplementedError()
+    async def logout_user(self, *, conn: asyncpg.Connection, current_user: User, token: str) -> bool:
+        token_payload = self._decode_jwt_payload(token)
+        if token_payload is None:
+            return False
+
+        if current_user.id != token_payload.user_id:
+            return False
+
+        result = await conn.execute(
+            "delete from usr_session where usr = $1 and id = $2", current_user.id, token_payload.session_id
+        )
+        return result != "DELETE 0"
 
     @with_db_transaction
     async def get_user_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[User]:

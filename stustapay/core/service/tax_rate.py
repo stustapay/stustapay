@@ -18,11 +18,7 @@ class TaxRateService(DBService):
             tax_rate.description,
         )
 
-        return TaxRate(
-            name=row["name"],
-            rate=row["rate"],
-            description=row["description"],
-        )
+        return TaxRate.from_db(row)
 
     @with_db_transaction
     async def list_tax_rates(self, *, conn: asyncpg.Connection, user: User) -> list[TaxRate]:
@@ -30,13 +26,7 @@ class TaxRateService(DBService):
         cursor = conn.cursor("select * from tax")
         result = []
         async for row in cursor:
-            result.append(
-                TaxRate(
-                    name=row["name"],
-                    rate=row["rate"],
-                    description=row["description"],
-                )
-            )
+            result.append(TaxRate.from_db(row))
         return result
 
     @with_db_transaction
@@ -46,11 +36,7 @@ class TaxRateService(DBService):
         if row is None:
             return None
 
-        return TaxRate(
-            name=row["name"],
-            rate=row["rate"],
-            description=row["description"],
-        )
+        return TaxRate.from_db(row)
 
     @with_db_transaction
     async def update_tax_rate(
@@ -66,11 +52,7 @@ class TaxRateService(DBService):
         if row is None:
             return None
 
-        return TaxRate(
-            name=row["name"],
-            rate=row["rate"],
-            description=row["description"],
-        )
+        return TaxRate.from_db(row)
 
     @with_db_transaction
     async def delete_tax_rate(self, *, conn: asyncpg.Connection, user: User, tax_rate_name: str) -> bool:

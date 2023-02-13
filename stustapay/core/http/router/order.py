@@ -5,7 +5,7 @@ purchase ordering.
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from stustapay.core.http.auth import get_current_user
+from stustapay.core.http.auth_user import get_current_user
 from stustapay.core.http.context import get_transaction_service
 from stustapay.core.schema.transaction import NewTransaction
 from stustapay.core.schema.user import User

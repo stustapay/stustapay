@@ -4,12 +4,17 @@ import { TaxRateSchema } from "../../../models/taxRate";
 import { useParams, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TaxRateChange } from "./TaxRateChange";
+import { Loading } from "@components/Loading";
 
 export const TaxRateUpdate: React.FC = () => {
   const { t } = useTranslation(["taxRates", "common"]);
   const { taxRateName } = useParams();
-  const { data: taxRate } = useGetTaxRateByNameQuery(taxRateName as string);
+  const { data: taxRate, isLoading } = useGetTaxRateByNameQuery(taxRateName as string);
   const [updateTaxRate] = useUpdateTaxRateMutation();
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   if (!taxRate) {
     return <Navigate to="/tax-rates" />;

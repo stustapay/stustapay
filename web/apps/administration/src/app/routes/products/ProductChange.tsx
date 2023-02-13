@@ -28,7 +28,6 @@ export function ProductChange<T extends NewProduct>({
   const navigate = useNavigate();
   const { t } = useTranslation(["products", "common"]);
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
-    console.log("submitting", values);
     setSubmitting(true);
 
     onSubmit(values)

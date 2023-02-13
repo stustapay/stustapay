@@ -14,16 +14,28 @@ import {
   ListItemText,
   Tooltip,
 } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { useDeleteProductMutation, useGetProductsQuery, useGetTaxRatesQuery } from "../../../api";
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  ContentCopy as ContentCopyIcon,
+} from "@mui/icons-material";
+import {
+  useCreateProductMutation,
+  useDeleteProductMutation,
+  useGetProductsQuery,
+  useGetTaxRatesQuery,
+} from "../../../api";
 import { useTranslation } from "react-i18next";
 import { IconButtonLink, ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "../../../components";
+import { Product } from "@models";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation(["products", "common"]);
 
   const { data: products, isLoading: isProductsLoading } = useGetProductsQuery();
   const { data: taxRates, isLoading: isTaxRatesLoading } = useGetTaxRatesQuery();
+  const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
 
   const [productToDelete, setProductToDelete] = React.useState<number | null>(null);
@@ -61,6 +73,10 @@ export const ProductList: React.FC = () => {
     setProductToDelete(null);
   };
 
+  const copyProduct = (product: Product) => {
+    createProduct({ ...product, name: `${product.name} - ${t("copy", { ns: "common" })}` });
+  };
+
   return (
     <>
       <Paper>
@@ -95,6 +111,9 @@ export const ProductList: React.FC = () => {
                   <IconButtonLink to={`/products/${product.id}/edit`} color="primary">
                     <EditIcon />
                   </IconButtonLink>
+                  <IconButton color="primary" onClick={() => copyProduct(product)}>
+                    <ContentCopyIcon />
+                  </IconButton>
                   <IconButton color="error" onClick={() => openConfirmDeleteDialog(product.id)}>
                     <DeleteIcon />
                   </IconButton>
