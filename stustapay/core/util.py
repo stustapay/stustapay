@@ -3,9 +3,14 @@ import os
 import sys
 import asyncio
 import signal
+from typing import Optional
 
 # convenience infinity.
 INF = float("inf")
+
+
+def _to_string_nullable(t) -> Optional[str]:
+    return str(t) if t is not None else None
 
 
 def log_setup(setting: int, default=1):

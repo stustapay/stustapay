@@ -15,6 +15,8 @@ import { Login } from "./routes/auth/Login";
 import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
 import { TerminalCreate } from "./routes/terminals/TerminalCreate";
 import { TerminalUpdate } from "./routes/terminals/TerminalUpdate";
+import { Logout } from "./routes/auth/Logout";
+import { TerminalDetail } from "./routes/terminals/TerminalDetail";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +24,10 @@ const router = createBrowserRouter([
     element: <AuthenticatedRoot />,
     errorElement: <ErrorPage />,
     children: [
+      {
+        path: "logout",
+        element: <Logout />,
+      },
       {
         path: "products",
         element: <ProductList />,
@@ -57,6 +63,10 @@ const router = createBrowserRouter([
       {
         path: "terminals/:terminalId/edit",
         element: <TerminalUpdate />,
+      },
+      {
+        path: "terminals/:terminalId",
+        element: <TerminalDetail />,
       },
       {
         path: "users",

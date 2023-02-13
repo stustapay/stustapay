@@ -14,6 +14,7 @@ import {
   Drawer,
   Box,
   CircularProgress,
+  Button,
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -26,7 +27,7 @@ import {
   Settings as SettingsIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
-import { Outlet, Navigate, useLocation } from "react-router-dom";
+import { Outlet, Navigate, useLocation, Link as RouterLink } from "react-router-dom";
 import { ListItemLink } from "@components";
 import { useTranslation } from "react-i18next";
 import { useAppSelector, selectIsAuthenticated } from "@store";
@@ -91,7 +92,8 @@ export const AuthenticatedRoot: React.FC = () => {
   const authenticated = useAppSelector(selectIsAuthenticated);
 
   if (!authenticated) {
-    return <Navigate to={`/login?next=${location.pathname}`} />;
+    const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
+    return <Navigate to={`/login${next}`} />;
   }
 
   const handleDrawerOpen = () => {
@@ -116,9 +118,14 @@ export const AuthenticatedRoot: React.FC = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            {t("StuStaPay")}
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            <RouterLink to="/" style={{ textDecoration: "none", color: "inherit" }}>
+              {t("StuStaPay")}
+            </RouterLink>
           </Typography>
+          <Button component={RouterLink} color="inherit" to="/logout">
+            {t("logout")}
+          </Button>
         </Toolbar>
       </AppBar>
       <Drawer

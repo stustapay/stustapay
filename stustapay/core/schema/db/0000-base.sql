@@ -181,10 +181,10 @@ create table if not exists product (
 
     -- todo: ean or something for receipt?
 
-    name text,
+    name text not null unique,
 
     -- price without tax, null if free price
-    price numeric,
+    price numeric not null,
 
     -- if bought, where is this booked to
     -- basically the transaction kind

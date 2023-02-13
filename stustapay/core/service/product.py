@@ -18,12 +18,7 @@ class ProductService(DBService):
             product.tax,
         )
 
-        return Product(
-            id=row["id"],
-            name=row["name"],
-            price=row["price"],
-            tax=row["tax"],
-        )
+        return Product.from_db(row)
 
     @with_db_transaction
     async def list_products(self, *, conn: asyncpg.Connection, user: User) -> list[Product]:
@@ -31,14 +26,7 @@ class ProductService(DBService):
         cursor = conn.cursor("select * from product")
         result = []
         async for row in cursor:
-            result.append(
-                Product(
-                    id=row["id"],
-                    name=row["name"],
-                    price=row["price"],
-                    tax=row["tax"],
-                )
-            )
+            result.append(Product.from_db(row))
         return result
 
     @with_db_transaction
@@ -48,12 +36,7 @@ class ProductService(DBService):
         if row is None:
             return None
 
-        return Product(
-            id=row["id"],
-            name=row["name"],
-            price=row["price"],
-            tax=row["tax"],
-        )
+        return Product.from_db(row)
 
     @with_db_transaction
     async def update_product(
@@ -70,12 +53,7 @@ class ProductService(DBService):
         if row is None:
             return None
 
-        return Product(
-            id=row["id"],
-            name=row["name"],
-            price=row["price"],
-            tax=row["tax"],
-        )
+        return Product.from_db(row)
 
     @with_db_transaction
     async def delete_product(self, *, conn: asyncpg.Connection, user: User, product_id: int) -> bool:

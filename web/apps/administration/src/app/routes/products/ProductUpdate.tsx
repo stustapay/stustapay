@@ -4,12 +4,17 @@ import { useGetProductByIdQuery, useUpdateProductMutation } from "../../../api";
 import { Navigate, useParams } from "react-router-dom";
 import { ProductChange } from "./ProductChange";
 import { ProductSchema } from "../../../models/product";
+import { Loading } from "@components/Loading";
 
 export const ProductUpdate: React.FC = () => {
   const { t } = useTranslation(["products", "common"]);
   const { productId } = useParams();
-  const { data: product } = useGetProductByIdQuery(Number(productId));
+  const { data: product, isLoading } = useGetProductByIdQuery(Number(productId));
   const [updateProduct] = useUpdateProductMutation();
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   if (!product) {
     return <Navigate to="/products" />;

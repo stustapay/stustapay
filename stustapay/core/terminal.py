@@ -10,9 +10,7 @@ from .config import Config
 from .service.transaction import TransactionService
 from .http.context import Context
 from .http.server import Server
-from .http.router.base import router as base_router
-from .http.router.live import router as live_router
-from .http.router.order import router as order_router
+from .http.router import base, live, order, auth
 
 from .http.router_mock.base import router as mock_base_router
 
@@ -45,9 +43,10 @@ class TerminalServer(SubCommand):
         if self.mock:
             self.server.add_router(mock_base_router)
         else:
-            self.server.add_router(base_router)
-            self.server.add_router(live_router)
-            self.server.add_router(order_router)
+            self.server.add_router(base.router)
+            self.server.add_router(live.router)
+            self.server.add_router(order.router)
+            self.server.add_router(auth.router)
 
     async def run(self):
         if self.mock:

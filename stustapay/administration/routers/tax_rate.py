@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 
-from stustapay.core.http.auth import get_current_user
+from stustapay.core.http.auth_user import get_current_user
 from stustapay.core.http.context import get_tax_rate_service
 from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName
 from stustapay.core.schema.user import User

@@ -10,11 +10,13 @@ class HTTPServerConfig(BaseModel):
 
 
 class AdministrationApiConfig(HTTPServerConfig):
+    base_url: str
     host: str = "localhost"
     port: int = 8081
 
 
 class TerminalApiConfig(HTTPServerConfig):
+    base_url: str
     host: str = "localhost"
     port: int = 8080
 
@@ -33,9 +35,8 @@ class CoreConfig(BaseModel):
 
 
 class Config(BaseModel):
-    # in case all params are optional this is needed to make the whole section optional
-    administration: AdministrationApiConfig = AdministrationApiConfig()
-    terminalserver: TerminalApiConfig = TerminalApiConfig()
+    administration: AdministrationApiConfig
+    terminalserver: TerminalApiConfig
     database: DatabaseConfig
     core: CoreConfig
 

@@ -17,6 +17,7 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { IconButtonLink, ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
+import { Link as RouterLink } from "react-router-dom";
 
 export const TerminalList: React.FC = () => {
   const { t } = useTranslation(["terminals", "common"]);
@@ -72,7 +73,9 @@ export const TerminalList: React.FC = () => {
           <TableBody>
             {(terminals ?? []).map((terminal) => (
               <TableRow key={terminal.id}>
-                <TableCell>{terminal.name}</TableCell>
+                <TableCell>
+                  <RouterLink to={`/terminals/${terminal.id}`}>{terminal.name}</RouterLink>{" "}
+                </TableCell>
                 <TableCell>{terminal.description}</TableCell>
                 <TableCell align="right">
                   <IconButtonLink to={`/terminals/${terminal.id}/edit`} color="primary">

@@ -8,24 +8,24 @@ export const taxRateApi = createApi({
   tagTypes: ["taxRate"],
   endpoints: (builder) => ({
     getTaxRateByName: builder.query<TaxRate, string>({
-      query: (name) => `/tax-rates/${name}`,
+      query: (name) => `/tax-rates/${name}/`,
       providesTags: (result, error, arg) => ["taxRate", { type: "taxRate" as const, name: arg }],
     }),
     getTaxRates: builder.query<TaxRate[], void>({
-      query: () => "/tax-rates",
+      query: () => "/tax-rates/",
       providesTags: (result, error, arg) =>
         result ? [...result.map(({ name }) => ({ type: "taxRate" as const, name })), "taxRate"] : ["taxRate"],
     }),
     createTaxRate: builder.mutation<TaxRate, TaxRate>({
-      query: (taxRate) => ({ url: "/tax-rates", method: "POST", body: taxRate }),
+      query: (taxRate) => ({ url: "/tax-rates/", method: "POST", body: taxRate }),
       invalidatesTags: ["taxRate"],
     }),
     updateTaxRate: builder.mutation<TaxRate, TaxRate>({
-      query: ({ name, ...taxRate }) => ({ url: `/tax-rates/${name}`, method: "POST", body: taxRate }),
+      query: ({ name, ...taxRate }) => ({ url: `/tax-rates/${name}/`, method: "POST", body: taxRate }),
       invalidatesTags: ["taxRate"],
     }),
     deleteTaxRate: builder.mutation<void, string>({
-      query: (name) => ({ url: `/tax-rates/${name}`, method: "DELETE" }),
+      query: (name) => ({ url: `/tax-rates/${name}/`, method: "DELETE" }),
       invalidatesTags: ["taxRate"],
     }),
   }),
