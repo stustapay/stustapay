@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 from .config import Config, DatabaseConfig
-from .schema import REVISION_PATH
+from .schema import DATA_PATH, REVISION_PATH
 from . import util
 from . import subcommand
 
@@ -34,7 +34,7 @@ class DatabaseManage(subcommand.SubCommand):
 
     @staticmethod
     def argparse_register(subparser):
-        subparser.add_argument("action", choices=["attach", "migrate", "rebuild"])
+        subparser.add_argument("action", choices=["attach", "migrate", "rebuild", "add_data"])
 
     async def _attach(self):
         with contextlib.ExitStack() as exitstack:
@@ -91,9 +91,11 @@ class DatabaseManage(subcommand.SubCommand):
         db_pool = await create_db_pool(self.config.database)
         if self.action == "migrate":
             await apply_revisions(db_pool=db_pool)
-        elif self.action == "rebuild":
+        if self.action == "rebuild":
             await reset_schema(db_pool=db_pool)
             await apply_revisions(db_pool=db_pool)
+        if self.action == "add_data":
+            await add_data(db_pool=db_pool)
 
 
 class SchemaRevision:
@@ -223,3 +225,12 @@ async def apply_revisions(db_pool: asyncpg.Pool, revision_path: Optional[Path] =
 
             if not found:
                 raise ValueError(f"Unknown revision {curr_revision} present in database")
+
+
+async def add_data(db_pool: asyncpg.Pool, data_path: Optional[Path] = DATA_PATH):
+    async with db_pool.acquire() as conn:
+        async with conn.transaction():
+            for data in sorted(data_path.glob("*.sql")):
+                content = data.read_text("utf-8")
+                logger.info(f"Applying test data {data}")
+                await conn.execute(content)

@@ -322,6 +322,21 @@ create or replace view transaction_items as
         left join lineitem
             on (tx.id = lineitem.txid);
 
+-- aggregated tax rate of items
+create or replace view transaction_tax_rates as
+select
+    tx.*,
+    tax_name,
+    tax_rate,
+    sum((price + price * tax_rate) * quantity) as value_sum,
+    sum(price * tax_rate * quantity) as value_tax,
+    sum(price * quantity) as value_notax
+from
+    transaction tx
+        left join lineitem
+            on (tx.id = lineitem.txid)
+    group by
+        tx.id, tax_rate, tax_name;
 
 -- requests the tse module to sign something
 create table if not exists tse_signature (
@@ -347,6 +362,8 @@ create table if not exists bon (
     generated bool default false,
     generated_at timestamptz,
     status text,
+    -- latex compile error
+    error text,
 
     -- output file path
     output_file text
