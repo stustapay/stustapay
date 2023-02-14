@@ -36,7 +36,6 @@ async def pdflatex(tex_tpl_name: str, context: dict, out_file: Path) -> Tuple[bo
     rendered_tpl = tpl.render(context)
 
     with TemporaryDirectory() as tmp_dir:
-
         main_tex = os.path.join(tmp_dir, "main.tex")
         with open(main_tex, "w") as f:
             f.write(rendered_tpl)

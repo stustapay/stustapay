@@ -5,9 +5,9 @@ import asyncpg
 from pydantic import BaseModel, ValidationError
 from jose import JWTError, jwt
 
-from .dbservice import DBService, with_db_transaction
-from ..schema.terminal import Terminal, NewTerminal
-from ..schema.user import User
+from .dbservice import DBService, with_db_transaction, requires_user_privileges
+from stustapay.core.schema.terminal import Terminal, NewTerminal
+from stustapay.core.schema.user import Privilege
 
 
 class TokenMetadata(BaseModel):
@@ -22,8 +22,8 @@ class TerminalRegistrationSuccess(BaseModel):
 
 class TerminalService(DBService):
     @with_db_transaction
-    async def create_terminal(self, *, conn: asyncpg.Connection, user: User, terminal: NewTerminal) -> Terminal:
-        del user
+    @requires_user_privileges([Privilege.admin])
+    async def create_terminal(self, *, conn: asyncpg.Connection, terminal: NewTerminal) -> Terminal:
         row = await conn.fetchrow(
             "insert into terminal (name, description, registration_uuid, tseid, active_shift, active_profile, active_cashier) "
             "values ($1, $2, $3, $4, $5, $6, $7) returning id, name, description, registration_uuid, session_uuid, "
@@ -40,8 +40,8 @@ class TerminalService(DBService):
         return Terminal.from_db(row)
 
     @with_db_transaction
-    async def list_terminals(self, *, conn: asyncpg.Connection, user: User) -> list[Terminal]:
-        del user
+    @requires_user_privileges([Privilege.admin])
+    async def list_terminals(self, *, conn: asyncpg.Connection) -> list[Terminal]:
         cursor = conn.cursor("select * from terminal")
         result = []
         async for row in cursor:
@@ -49,8 +49,8 @@ class TerminalService(DBService):
         return result
 
     @with_db_transaction
-    async def get_terminal(self, *, conn: asyncpg.Connection, user: User, terminal_id: str) -> Optional[Terminal]:
-        del user
+    @requires_user_privileges([Privilege.admin])
+    async def get_terminal(self, *, conn: asyncpg.Connection, terminal_id: str) -> Optional[Terminal]:
         row = await conn.fetchrow("select * from terminal where id = $1", terminal_id)
         if row is None:
             return None
@@ -58,14 +58,13 @@ class TerminalService(DBService):
         return Terminal.from_db(row)
 
     @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
     async def update_terminal(
-        self, *, conn: asyncpg.Connection, user: User, terminal_id: str, terminal: NewTerminal
+        self, *, conn: asyncpg.Connection, terminal_id: str, terminal: NewTerminal
     ) -> Optional[Terminal]:
-        del user
         row = await conn.fetchrow(
             "update terminal set name = $2, description = $3, tseid = $4, active_shift = $5, active_profile = $6, active_cashier = $7 "
-            "where id = $1 returning id, name, description, registration_uuid, tseid, active_shift, active_profile, "
-            "active_cashier",
+            "where id = $1 returning id, name, description, registration_uuid, tseid, active_shift, active_profile, session_uuid, active_cashier",
             terminal_id,
             terminal.name,
             terminal.description,
@@ -80,8 +79,8 @@ class TerminalService(DBService):
         return Terminal.from_db(row)
 
     @with_db_transaction
-    async def delete_terminal(self, *, conn: asyncpg.Connection, user: User, terminal_id: int) -> bool:
-        del user
+    @requires_user_privileges([Privilege.admin])
+    async def delete_terminal(self, *, conn: asyncpg.Connection, terminal_id: int) -> bool:
         result = await conn.execute(
             "delete from terminal where id = $1",
             terminal_id,
@@ -121,8 +120,8 @@ class TerminalService(DBService):
         return TerminalRegistrationSuccess(terminal=terminal, token=token)
 
     @with_db_transaction
-    async def logout_terminal(self, *, conn: asyncpg.Connection, user: User, terminal_id: int) -> bool:
-        del user
+    @requires_user_privileges([Privilege.admin])
+    async def logout_terminal(self, *, conn: asyncpg.Connection, terminal_id: int) -> bool:
         id_ = await conn.fetchval(
             "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
             terminal_id,

@@ -3,20 +3,22 @@ from typing import Optional
 
 import asyncpg
 
-from .dbservice import DBService, with_db_transaction
-from ..schema.transaction import LineItem, NewTransaction, Transaction, TransactionID, TransactionBooking
-from ..schema.user import User
+from stustapay.core.schema.transaction import LineItem, NewTransaction, Transaction, TransactionID, TransactionBooking
+from stustapay.core.schema.user import User, Privilege
+from .dbservice import DBService, with_db_transaction, requires_user_privileges
 
 logger = logging.getLogger(__name__)
 
 
 class TransactionService(DBService):
     @with_db_transaction
+    @requires_user_privileges([Privilege.cashier])
     async def create_transaction(
-        self, *, conn: asyncpg.Connection, user: User, transaction: NewTransaction
+        self, *, conn: asyncpg.Connection, current_user: User, transaction: NewTransaction
     ) -> TransactionID:
-        del user
-        transaction_id: int = await conn.fetchval("insert into transaction (status) values ('pending') returning id")
+        transaction_id: int = await conn.fetchval(
+            "insert into transaction (status, cashierid) values ('pending', $1) returning id", current_user.id
+        )
 
         count = 0
         for item in transaction.positions:
@@ -64,11 +66,10 @@ class TransactionService(DBService):
         return TransactionID(transaction_id)
 
     @with_db_transaction
-    async def show_transaction(self, *, conn: asyncpg.Connection, user: User, transaction_id: int) -> Optional[Transaction]:
+    async def show_transaction(self, *, conn: asyncpg.Connection, transaction_id: int) -> Optional[Transaction]:
         """
         get all info about a transaction.
         """
-        del user
         row = await conn.fetchrow("select * from transaction_value where id = $1", transaction_id)
         if row is None:
             return None
@@ -81,11 +82,11 @@ class TransactionService(DBService):
         return transaction
 
     @with_db_transaction
-    async def transaction_payment_info(self, *, conn: asyncpg.Connection, user: User, transaction_id: int):
+    async def transaction_payment_info(self, *, conn: asyncpg.Connection, transaction_id: int):
         """
         try to pay a pending transaction, so one can see the available payment options.
         """
-        del transaction_id, conn, user
+        del transaction_id, conn
         raise NotImplementedError()
 
     @with_db_transaction
@@ -93,7 +94,6 @@ class TransactionService(DBService):
         self,
         *,
         conn: asyncpg.Connection,
-        user: User,
         transaction_id: int,
         source_account_id: int,
         target_account_id: int,
@@ -101,7 +101,6 @@ class TransactionService(DBService):
         """
         apply the transaction after all payment has been settled.
         """
-        del user
         status: Optional[str] = await conn.fetchval(
             "select status from transaction where transaction.id = $1;",
             transaction_id,
@@ -202,8 +201,7 @@ class TransactionService(DBService):
         )
 
     @with_db_transaction
-    async def cancel_transaction(self, *, conn: asyncpg.Connection, user: User, transaction_id: int):
-        del user
+    async def cancel_transaction(self, *, conn: asyncpg.Connection, transaction_id: int):
         status: Optional[str] = await conn.fetchval(
             "select status from transaction where transaction.id = $1;",
             transaction_id,

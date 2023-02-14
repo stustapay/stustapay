@@ -12,6 +12,7 @@ from stustapay.core.subcommand import SubCommand
 
 from pathlib import Path
 
+
 class Generator(SubCommand):
     """
     Command which listens for database changes on bons and generates the bons immediately as pdf

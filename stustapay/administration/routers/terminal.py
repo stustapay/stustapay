@@ -17,7 +17,7 @@ router = APIRouter(
 async def list_terminals(
     user: User = Depends(get_current_user), terminal_service: TerminalService = Depends(get_terminal_service)
 ):
-    return await terminal_service.list_terminals(user=user)
+    return await terminal_service.list_terminals(current_user=user)
 
 
 @router.post("/", response_model=Terminal)
@@ -26,7 +26,7 @@ async def create_terminal(
     user: User = Depends(get_current_user),
     terminal_service: TerminalService = Depends(get_terminal_service),
 ):
-    return await terminal_service.create_terminal(user=user, terminal=terminal)
+    return await terminal_service.create_terminal(current_user=user, terminal=terminal)
 
 
 @router.get("/{terminal_id}", response_model=Terminal)

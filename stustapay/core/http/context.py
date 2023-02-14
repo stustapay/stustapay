@@ -126,7 +126,7 @@ def get_user_service(request: Request) -> UserService:
 
 
 def get_terminal_service(request: Request) -> TerminalService:
-    return request.state.context.terminal_service
+    return request.state.context.transaction_service
 
 
 async def get_db_conn(
