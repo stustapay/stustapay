@@ -4,20 +4,12 @@ import asyncio
 import aiohttp
 import json
 import logging
-from pydantic import BaseModel
 import typing
 
 from ..handler import TSEHandler
-
+from .config import DieboldNixdorfUSBTSEConfig
 
 LOGGER = logging.getLogger(__name__)
-
-
-class DieboldNixdorfUSBTSEConfig(BaseModel):
-    diebold_nixdorf_usb_ws_url: str
-
-    def make(self):
-        return DieboldNixdorfUSBTSE(self)
 
 
 class DieboldNixdorfUSBTSE(TSEHandler):

@@ -16,13 +16,10 @@ from datetime import datetime, timezone, timedelta
 from random import randbytes
 
 
-from dnerrors import dnerror
-
-HOST = "0.0.0.0"
-PORT = 10001
+from .errorcodes import dnerror
 
 
-class parser:
+class VirtualTSE:
     def __init__(self):
         self.password_block_counter = 0
         self.puk_block_counter = 0
@@ -55,9 +52,7 @@ class parser:
             "SetLimits",
         ]
 
-        return
-
-    def dn_parse_input(self, msgdata):
+    def parse_input(self, msgdata):
         response = {}
 
         msg = json.loads(msgdata.strip("\x02").strip("\x03"))
@@ -285,40 +280,37 @@ class parser:
         return response
 
 
-# init parser with state (like password tries...)
-model = parser()
+class WebsocketInterface:
+    def __init__(self, host: str, port: int):
+        self.host: str = host
+        self.port: int = port
 
+        self.tse = VirtualTSE()
 
-async def websocket_handler(request):
-    print("Websocket connection starting")
-    ws = aiohttp.web.WebSocketResponse()
-    await ws.prepare(request)
-    print("Websocket connection ready")
+    async def websocket_handler(request):
+        print("Websocket connection starting")
+        ws = aiohttp.web.WebSocketResponse()
+        await ws.prepare(request)
+        print("Websocket connection ready")
 
-    async for msg in ws:
-        # got message
-        # print(f'>>>: {msg}')
-        if msg.type == aiohttp.WSMsgType.TEXT:
-            print(f" >>: {msg.data}")
-            # check for STX ETX
-            if msg.data[0] == "\x02" and msg.data[-1] == "\x03":
-                # parse
-                resp = model.dn_parse_input(msg.data)
-                # send response
-                print(f"<< : {resp}")
-                await ws.send_str(resp)
-            else:
-                print("ERROR: missing STX and/or ETX framing")
+        async for msg in ws:
+            # got message
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                print(f" >>: {msg.data}")
+                # check for STX ETX
+                if msg.data[0] == "\x02" and msg.data[-1] == "\x03":
+                    resp = self.tse.parse_input(msg.data)
 
-    print("Websocket connection closed")
-    return ws
+                    print(f"<< : {resp}")
+                    await ws.send_str(resp)
+                else:
+                    print("ERROR: missing STX and/or ETX framing")
 
+        print("Websocket connection closed")
+        return ws
 
-def main():
-    app = aiohttp.web.Application()
-    app.router.add_route("GET", "/", websocket_handler)
-    aiohttp.web.run_app(app, host=HOST, port=PORT)
+    async def run(self):
+        app = aiohttp.web.Application()
+        app.router.add_route("GET", "/", self.websocket_handler)
 
-
-if __name__ == "__main__":
-    main()
+        await aiohttp.web._run_app(app, host=self.host, port=self.port)
