@@ -5,9 +5,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, ValidationError
 
-from .dbservice import DBService, with_db_transaction
+from .dbservice import DBService, with_db_transaction, requires_user_privileges
 from ..config import Config
-from ..schema.user import User, UserWithoutId
+from ..schema.user import User, UserWithoutId, Privilege
 
 
 class TokenMetadata(BaseModel):
@@ -58,15 +58,15 @@ class UserService(DBService):
         return await self._create_user(conn=conn, new_user=new_user, password=password)
 
     @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
     async def create_user(
-        self, *, conn: asyncpg.Connection, current_user: User, new_user: UserWithoutId, password: Optional[str] = None
+        self, *, conn: asyncpg.Connection, new_user: UserWithoutId, password: Optional[str] = None
     ) -> User:
-        del current_user
         return await self._create_user(conn=conn, new_user=new_user, password=password)
 
     @with_db_transaction
-    async def list_users(self, *, conn: asyncpg.Connection, current_user: User) -> list[User]:
-        del current_user
+    @requires_user_privileges([Privilege.admin])
+    async def list_users(self, *, conn: asyncpg.Connection) -> list[User]:
         cursor = conn.cursor(
             "select usr.*, array_agg(usr_privs.priv) as privileges "
             "from usr join usr_privs on usr.id = usr_privs.usr "
@@ -85,8 +85,8 @@ class UserService(DBService):
         return result
 
     @with_db_transaction
-    async def get_user(self, *, conn: asyncpg.Connection, current_user: User, user_id: int) -> Optional[User]:
-        del current_user
+    @requires_user_privileges([Privilege.admin])
+    async def get_user(self, *, conn: asyncpg.Connection, user_id: int) -> Optional[User]:
         row = await conn.fetchrow(
             "select usr.*, array_agg(usr_privs.priv) as privileges "
             "from usr join usr_privs on usr.id = usr_privs.usr "
@@ -104,10 +104,8 @@ class UserService(DBService):
         )
 
     @with_db_transaction
-    async def update_user(
-        self, *, conn: asyncpg.Connection, current_user: User, user_id: int, user: UserWithoutId
-    ) -> Optional[User]:
-        del current_user
+    @requires_user_privileges([Privilege.admin])
+    async def update_user(self, *, conn: asyncpg.Connection, user_id: int, user: UserWithoutId) -> Optional[User]:
         row = await conn.fetchrow(
             "update usr set name = $2, description = $3 where id = $1 returning id, name, description",
             user_id,
@@ -125,8 +123,8 @@ class UserService(DBService):
         )
 
     @with_db_transaction
-    async def delete_user(self, *, conn: asyncpg.Connection, current_user: User, user_id: int) -> bool:
-        del current_user
+    @requires_user_privileges([Privilege.admin])
+    async def delete_user(self, *, conn: asyncpg.Connection, user_id: int) -> bool:
         result = await conn.execute(
             "delete from usr where id = $1",
             user_id,

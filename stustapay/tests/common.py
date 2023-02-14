@@ -23,11 +23,14 @@ def get_test_db_config() -> dict:
 
 # input structure for core.config.Config
 TEST_CONFIG = {
+    "core": {"secret_key": "asdf1234"},
     "administration": {
+        "base_url": "http://localhost:8081",
         "host": "localhost",
         "port": 8081,
     },
     "terminalserver": {
+        "base_url": "http://localhost:8080",
         "host": "localhost",
         "port": 8080,
     },

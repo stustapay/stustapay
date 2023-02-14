@@ -227,7 +227,7 @@ async def apply_revisions(db_pool: asyncpg.Pool, revision_path: Optional[Path] =
                 raise ValueError(f"Unknown revision {curr_revision} present in database")
 
 
-async def add_data(db_pool: asyncpg.Pool, data_path: Optional[Path] = DATA_PATH):
+async def add_data(db_pool: asyncpg.Pool, data_path: Path = DATA_PATH):
     async with db_pool.acquire() as conn:
         async with conn.transaction():
             for data in sorted(data_path.glob("*.sql")):
