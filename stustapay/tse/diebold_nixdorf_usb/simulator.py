@@ -5,8 +5,6 @@ this code will simulate the dn TSE webservice (more or less)
 """
 
 
-import asyncio
-import os
 import json
 
 import aiohttp.web
@@ -222,7 +220,7 @@ class VirtualTSE:
             return dnerror(29)  # wrong user
 
         # check old pw
-        if oldpw != passwod:
+        if oldpw != password:
             self.password_block_counter += 1
             return dnerror(30)  # password wrong
 
@@ -287,7 +285,7 @@ class WebsocketInterface:
 
         self.tse = VirtualTSE()
 
-    async def websocket_handler(request):
+    async def websocket_handler(self, request):
         print("Websocket connection starting")
         ws = aiohttp.web.WebSocketResponse()
         await ws.prepare(request)
