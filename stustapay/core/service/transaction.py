@@ -4,7 +4,7 @@ from typing import Optional
 import asyncpg
 
 from .dbservice import DBService, with_db_transaction
-from ..schema.transaction import NewTransaction, Transaction, TransactionBooking
+from ..schema.transaction import LineItem, NewTransaction, Transaction, TransactionID, TransactionBooking
 from ..schema.user import User
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ class TransactionService(DBService):
     @with_db_transaction
     async def create_transaction(
         self, *, conn: asyncpg.Connection, user: User, transaction: NewTransaction
-    ) -> Transaction:
+    ) -> TransactionID:
         del user
         transaction_id: int = await conn.fetchval("insert into transaction (status) values ('pending') returning id")
 
@@ -61,15 +61,24 @@ class TransactionService(DBService):
             transaction_id,
         )
 
-        return Transaction(transaction_id)
+        return TransactionID(transaction_id)
 
     @with_db_transaction
-    async def show_transaction(self, *, conn: asyncpg.Connection, user: User, transaction_id: int):
+    async def show_transaction(self, *, conn: asyncpg.Connection, user: User, transaction_id: int) -> Optional[Transaction]:
         """
         get all info about a transaction.
         """
-        del transaction_id, conn, user
-        raise NotImplementedError()
+        del user
+        row = await conn.fetchrow("select * from transaction_value where id = $1", transaction_id)
+        if row is None:
+            return None
+
+        db_line_items = await conn.fetch(
+            "select * from lineitem join product on productid = id where txid = $1", transaction_id
+        )
+        line_items = [LineItem.from_db(row) for row in db_line_items]
+        transaction = Transaction.from_db(row, line_items)
+        return transaction
 
     @with_db_transaction
     async def transaction_payment_info(self, *, conn: asyncpg.Connection, user: User, transaction_id: int):
@@ -172,15 +181,19 @@ class TransactionService(DBService):
             transaction_id,
         )
 
+        # TODO first add a TSE signing request
+        # The TSE signer should then call the code below to add the bon request
         # create bon request
         await conn.fetchval(
             "insert into bon(id) values($1) "
             "on conflict do"
             "    update set generated = false, "
             "               generated_at = null, "
-            "               status = null;",
+            "               status = null "
+            "    where id = $1;",
             transaction_id,
         )
+        await conn.execute("select pg_notify('bon', $1);", transaction_id)
 
         return TransactionBooking(
             value_sum=transaction_sum,
