@@ -3,7 +3,7 @@ import yaml
 from pydantic import BaseModel
 
 from ..core.config import DatabaseConfig
-from .diebold_nixdorf_usb.handler import DieboldNixdorfUSBTSEConfig
+from .diebold_nixdorf_usb.config import DieboldNixdorfUSBTSEConfig
 from .dummy.handler import DummyTSEConfig
 
 
