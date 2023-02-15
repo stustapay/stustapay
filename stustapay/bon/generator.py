@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 
 import asyncpg
 
@@ -9,8 +10,6 @@ from stustapay.core.database import create_db_pool
 from stustapay.core.dbhook import DBHook
 from stustapay.core.service.order import OrderService
 from stustapay.core.subcommand import SubCommand
-
-from pathlib import Path
 
 
 class Generator(SubCommand):
@@ -70,13 +69,13 @@ class Generator(SubCommand):
             "order": order,
             "tax_rates": tax_rates,
         }
-        out_file = f"{order_id:020}.pdf"
+        out_file = f"{order_id:010}.pdf"
 
         # Generate the PDF and store the result back in the database
         success, msg = await pdflatex("bon.tex", context, Path(out_file))
         self.logger.info(f"Bon generated with result {success}, {msg}")
         return  # for testing purpose
-        if success:
+        if success:  # pylint: disable=unreachable
             await self.psql.execute(
                 "update bon set generated=$2, output_file=$3 , generated_at=now() where id=$1",
                 order_id,

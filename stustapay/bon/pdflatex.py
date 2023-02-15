@@ -2,6 +2,8 @@
 Helper Functions to generate pdfs from latex templates and store the result as file
 """
 
+# pylint: disable=anomalous-backslash-in-string
+
 import asyncio
 import os
 import shutil
@@ -10,6 +12,16 @@ from tempfile import TemporaryDirectory
 from typing import Tuple
 
 import jinja2
+
+
+def jfilter_money(value: float):
+    # how are the money values printed in the pdf
+    return f"{value:8.2f}".replace(".", ",")
+
+
+def jfilter_percent(value: float):
+    # format percentages as ' 7,00'
+    return f"{value * 100:5.2f}\%".replace(".", ",")
 
 
 async def pdflatex(tex_tpl_name: str, context: dict, out_file: Path) -> Tuple[bool, str]:
@@ -32,6 +44,8 @@ async def pdflatex(tex_tpl_name: str, context: dict, out_file: Path) -> Tuple[bo
         trim_blocks=True,
         loader=jinja2.FileSystemLoader(tex_path),
     )
+    env.filters["money"] = jfilter_money
+    env.filters["percent"] = jfilter_percent
     tpl = env.get_template(tex_tpl_name)
     rendered_tpl = tpl.render(context)
 
