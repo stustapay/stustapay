@@ -3,7 +3,7 @@ import { z } from "zod";
 export const NewTerminalSchema = z.object({
   name: z.string().min(1),
   description: z.string().nullable(),
-  tseid: z.string().nullable(),
+  tse_id: z.string().nullable(),
   active_shift: z.string().nullable(),
   active_profile: z.number().nullable(),
   active_cashier: z.number().nullable(),

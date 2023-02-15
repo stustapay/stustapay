@@ -7,7 +7,7 @@ import { TerminalChange } from "./TerminalChange";
 const initialValues: NewTerminal = {
   name: "",
   description: "",
-  tseid: null,
+  tse_id: null,
   active_cashier: null,
   active_profile: null,
   active_shift: null,
