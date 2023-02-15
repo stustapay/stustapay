@@ -20,8 +20,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustanet.stustapay.nfc.NFCContext
-
+import androidx.hilt.navigation.compose.hiltViewModel
+import de.stustanet.stustapay.ui.chipstatus.ChipStatusViewModel
 
 data class NavMenuItem(
     val icon: ImageVector,
@@ -130,7 +130,6 @@ fun LoginProfile() {
 
 @Composable
 fun NavDrawer(
-    nfcContext: NFCContext,
     navigateTo: (NavDest) -> Unit
 ) {
     val gradientColors = listOf(Color(0xFFF70A74), Color(0xFFF59118))
@@ -150,7 +149,7 @@ fun NavDrawer(
                 Divider()
             }
 
-            NavDrawerEntry(item = item, nfcContext = nfcContext, navigateTo = navigateTo)
+            NavDrawerEntry(item = item, navigateTo = navigateTo)
         }
     }
 }
@@ -159,14 +158,14 @@ fun NavDrawer(
 private fun NavDrawerEntry(
     item: NavMenuItem,
     unreadBadgeColor: Color = Color(0xFF0FFF93),
-    nfcContext: NFCContext,
+    viewModel: NavViewModel = hiltViewModel(),
     navigateTo: (NavDest) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                nfcContext.scanRequest!!.value = item.scanNFC
+                viewModel.scan(item.scanNFC)
 
                 if (item.navDestination != null) {
                     navigateTo(item.navDestination)

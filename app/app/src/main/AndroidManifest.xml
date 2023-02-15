@@ -12,6 +12,7 @@
 
     <!-- TODO: Remove 'usesCleartextTraffic' once we use HTTPS -->
     <application
+        android:name=".MainApplication"
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
