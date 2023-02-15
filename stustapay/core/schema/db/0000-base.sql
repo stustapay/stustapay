@@ -84,11 +84,14 @@ values
 -- bookkeeping account
 create table if not exists account (
     id bigserial not null primary key,
-    tokenid bigint references token(id) on delete cascade,
+    token_id bigint references token(id) on delete cascade,
     type text references account_type(name) on delete restrict,
     name text,
     comment text,
+
+    -- current balance, updated on each transaction
     balance numeric not null default 0
+
 
     -- todo: voucher
     -- todo: topup-config
@@ -151,6 +154,24 @@ values
     -- todo: paypal
 
     on conflict do nothing;
+
+create table if not exists order_type(
+    name text not null primary key
+);
+insert into order_type (
+    name
+)
+values
+    -- load token with cash
+    ('topup_cash'),
+    -- load token with ec
+    ('topup_ec'),
+    -- load token with paypal
+    ('topup_paypal'),
+    -- buy items to consume
+    ('buy_wares')
+    on conflict do nothing;
+
 
 create table if not exists tax (
     name text not null primary key,
@@ -224,7 +245,7 @@ create table if not exists terminal (
     session_uuid uuid unique,
 
     -- how this terminal is mapped to a tse
-    tseid text,
+    tse_id text,
 
     -- identifies the current active work shift and configuration
     active_shift text,
@@ -235,10 +256,10 @@ create table if not exists terminal (
 );
 
 
-create table if not exists tx_status (
+create table if not exists order_status (
     name text not null primary key
 );
-insert into tx_status (
+insert into order_status (
     name
 )
 values
@@ -249,42 +270,43 @@ values
 
     on conflict do nothing;
 
-
-create table if not exists transaction (
+-- represents an order of an customer, like buying wares or top up
+create table if not exists ordr (
     id bigserial not null primary key,
 
-    -- transaction values can be obtained with transaction_value
+    -- order values can be obtained with order_value
 
     -- how many line items does this transaction have
     -- determines the next lineitem id
     itemcount int not null default 0,
 
-    status text not null references tx_status(name) on delete restrict,
+    status text not null references order_status(name) on delete restrict,
     created_at timestamptz not null default now(),
     finished_at timestamptz,
 
     -- todo: who triggered the transaction (user)
 
-    -- how the transaction was invoked
-    txmethod text references payment_method(name) on delete restrict,
+    -- how the order was invoked
+    payment_method text references payment_method(name) on delete restrict,
     -- todo: method_info references payment_information(id) -> (sumup-id, paypal-id, ...)
     --       or inline-json without separate table?
 
-    source_account int references account(id) on delete restrict,
-    target_account int references account(id) on delete restrict,
+    -- type of the order like, top up, buy beer,
+    order_type text references order_type(name) on delete restrict,
 
     -- who created it
-    cashierid int not null references usr(id) on delete restrict,
-    terminalid int references terminal(id) on delete restrict
+    cashier_id int not null references usr(id) on delete restrict,
+    terminal_id int not null references terminal(id) on delete restrict,
+    customer_account_id int not null references account(id) on delete restrict
 );
 
 -- all products in a transaction
 create table if not exists lineitem (
-    txid bigint not null references transaction(id) on delete cascade,
-    itemid int not null,
-    primary key(txid, itemid),
+    order_id bigint not null references ordr(id) on delete cascade,
+    item_id int not null,
+    primary key(order_id, item_id),
 
-    productid int not null references product(id) on delete restrict,
+    product_id int not null references product(id) on delete restrict,
 
     quantity int not null default 1,
 
@@ -299,48 +321,122 @@ create table if not exists lineitem (
 );
 
 -- aggregates the lineitem's amounts
-create or replace view transaction_value as
+create or replace view order_value as
     select
-        tx.*,
+        ordr.*,
         sum((price + price * tax_rate) * quantity) as value_sum,
         sum(price * tax_rate * quantity) as value_tax,
         sum(price * quantity) as value_notax
     from
-        transaction tx
+        ordr
         left join lineitem
-            on (tx.id = lineitem.txid)
+            on (ordr.id = lineitem.order_id)
     group by
-        tx.id;
+        ordr.id;
 
 -- show all line items
-create or replace view transaction_items as
+create or replace view order_items as
     select
-        tx.*,
+        ordr.*,
         lineitem.*
     from
-        transaction tx
+        ordr
         left join lineitem
-            on (tx.id = lineitem.txid);
+            on (ordr.id = lineitem.order_id);
 
 -- aggregated tax rate of items
-create or replace view transaction_tax_rates as
-select
-    tx.*,
-    tax_name,
-    tax_rate,
-    sum((price + price * tax_rate) * quantity) as value_sum,
-    sum(price * tax_rate * quantity) as value_tax,
-    sum(price * quantity) as value_notax
-from
-    transaction tx
+create or replace view order_tax_rates as
+    select
+        ordr.*,
+        tax_name,
+        tax_rate,
+        sum((price + price * tax_rate) * quantity) as value_sum,
+        sum(price * tax_rate * quantity) as value_tax,
+        sum(price * quantity) as value_notax
+    from
+        ordr
         left join lineitem
-            on (tx.id = lineitem.txid)
-    group by
-        tx.id, tax_rate, tax_name;
+            on (ordr.id = lineitem.order_id)
+        group by
+            ordr.id, tax_rate, tax_name;
+
+
+create table if not exists transaction (
+    -- represents a transaction of one account to another
+    -- one order can consist of multiple transactions, hence the extra table
+    --      e.g. wares to the ware output account
+    --      and deposit to a specific deposit account
+    id bigserial not null primary key,
+    order_id bigint references ordr(id) on delete restrict,
+
+    -- what was booked in this transaction  (backpack, items, ...)
+    description text,
+
+    source_account int not null references account(id) on delete restrict,
+    target_account int not null references account(id) on delete restrict,
+    constraint source_target_account_different check (source_account <> target_account),
+
+    booked_at timestamptz not null default now(),
+
+    -- amount being transferred from source_account to target_account
+    amount numeric not null,
+    constraint amount_positive check (amount >= 0),
+    tax_rate numeric not null, -- how much tax is included in the amount
+    tax_name text not null
+);
+
+
+-- book a new transaction and update the account balances automatically, returns the new transaction_id
+create or replace function book_transaction (
+    order_id bigint,
+    description text,
+    source_account_id bigint,
+    target_account_id bigint,
+    amount numeric,
+    tax_name text
+)
+    returns bigint as $$
+<<locals>> declare
+    transaction_id bigint;
+    tax_rate numeric;
+begin
+    -- resolve tax rate
+    select rate from tax where name = tax_name into locals.tax_rate;
+    if locals.tax_rate is null then
+        raise 'unknown tax name';
+    end if;
+
+    -- add new transaction
+    insert into transaction (
+        order_id, description, source_account, target_account, amount, tax_rate, tax_name
+    )
+    values (
+        book_transaction.order_id,
+        book_transaction.description,
+        book_transaction.source_account_id,
+        book_transaction.target_account_id,
+        book_transaction.amount,
+        locals.tax_rate,
+        book_transaction.tax_name
+    ) returning id into locals.transaction_id;
+
+    -- update account values
+    update account set
+        balance = balance - amount
+        where id = source_account_id;
+    update account set
+        balance = balance + amount
+        where id = target_account_id;
+
+    return locals.transaction_id;
+
+end;
+$$ language plpgsql;
+
 
 -- requests the tse module to sign something
 create table if not exists tse_signature (
-    id serial not null primary key references transaction(id) on delete cascade,
+    id serial not null primary key references ordr(id) on delete cascade,
 
     signed bool default false,
     status text,
@@ -357,7 +453,7 @@ create table if not exists tse_signature (
 
 -- requests the bon generator to create a new receipt
 create table if not exists bon (
-    id bigint not null primary key references transaction(id) on delete cascade,
+    id bigint not null primary key references ordr(id) on delete cascade,
 
     generated bool default false,
     generated_at timestamptz,
