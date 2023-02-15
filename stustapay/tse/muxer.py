@@ -6,7 +6,7 @@ import random
 import time
 import typing
 
-from .handler import Transaction, TransactionSignature, TSEHandler
+from .handler import Order, OrderSignature, TSEHandler
 
 LOGGER = logging.Logger(__name__)
 
@@ -18,10 +18,10 @@ class SigningRequest:
     used internally inside TSEMuxer.
     """
 
-    def __init__(self, transaction: Transaction):
-        self.transaction = transaction
+    def __init__(self, order: Order):
+        self.order = order
         # will be set when the signature has been done by a TSE
-        self.signature: asyncio.Future[TransactionSignature] = asyncio.Future()
+        self.signature: asyncio.Future[OrderSignature] = asyncio.Future()
         # timestamp of when the request was received
         self.timestamp: int = time.monotonic_ns()
 
@@ -82,7 +82,7 @@ class ActiveTSE:
                 return
             try:
                 start = time.monotonic_ns()
-                result = await asyncio.wait(self.tse.sign_transaction(request.transaction), timeout=5)
+                result = await asyncio.wait(self.tse.sign_order(request.order), timeout=5)
             except asyncio.TimeoutError as exc:
                 LOGGER.error(f"TSE signature has timed out!")
                 request.signature.set_exception(exc)
@@ -95,9 +95,7 @@ class ActiveTSE:
                 # TODO reset TSE? retry?
                 continue
             duration = (time.monotonic_ns() - start) * 1e-9
-            LOGGER.info(
-                f"TSE {self.tse} has signed transaction for " f"{request.transaction.client_id!r} in {duration:.3f} s"
-            )
+            LOGGER.info(f"TSE {self.tse} has signed order for " f"{request.order.client_id!r} in {duration:.3f} s")
             request.signature.set_result(result)
 
 
@@ -164,57 +162,53 @@ class TSEMuxer:
                 # but this is not implemented right now
                 error_message = (
                     f"TSE signature has failed: TSE {active_tse.tse} was stopped "
-                    f"before it could sign the transaction from "
-                    f"{request.transaction.client_id!r}"
+                    f"before it could sign the order from "
+                    f"{request.order.client_id!r}"
                 )
                 LOGGER.error(error_message)
                 request.signature.set_exception(RuntimeError(error_message))
 
     async def select_tse(self, expected_load: float = 1) -> ActiveTSE:
         """
-        Selects a TSE which can be used for signing transactions
+        Selects a TSE which can be used for signing order
         by a new client_id which is not yet assigned to a TSE.
 
         Performs our proprietary advanced load-balancing algorithm
         to ensure that the TSE resources are optimally used.
 
-        expected_load gives a relative estimation for how many transaction
+        expected_load gives a relative estimation for how many order
         signature requests we expect this client_id to generate at peak time.
         """
         del expected_load  # unused
         return random.choice(self.tses)
 
-    async def sign_transaction(self, transaction: Transaction) -> bytes:
+    async def sign_order(self, order: Order) -> bytes:
         """
         Call this when a new TSE signing request is coming in.
 
         Internally distributes the signing request ot one of the available TSEs,
         Taking care of registration/deregistration as necessary.
 
-        Returns the transaction signature as bytes.
+        Returns the order signature as bytes.
         """
-        request = SigningRequest(transaction)
+        request = SigningRequest(order)
 
         if not self.tses:
             error_message = (
-                f"TSE signature has failed: "
-                f"No TSEs are available. "
-                f"Cannot sign transaction from {transaction.client_id!r}"
+                f"TSE signature has failed: " f"No TSEs are available. " f"Cannot sign order from {order.client_id!r}"
             )
             LOGGER.error(error_message)
             raise RuntimeError(error_message)
 
         with self.tse_lock:
-            mapped_tse = self.client_ids.get(transaction.client_id)
+            mapped_tse = self.client_ids.get(order.client_id)
             if mapped_tse is None:
                 # This client ID is not handled by any TSE yet.
                 # Select one of the existing TSEs using our proprietary load-balancing
                 # algorithm.
                 tse = await self.select_tse()
-                tse.tse.register_client_id(transaction.client_id)
-                LOGGER.info(
-                    f"Encountered new PoS client id {transaction.client_id!r}, " f"Registered with TSE {tse.tse}"
-                )
+                tse.tse.register_client_id(order.client_id)
+                LOGGER.info(f"Encountered new PoS client id {order.client_id!r}, " f"Registered with TSE {tse.tse}")
                 mapped_tse = tse
 
             queue_size = len(mapped_tse.pending_signing_requests)
@@ -222,7 +216,7 @@ class TSEMuxer:
                 # TODO try to perform load balancing
                 #      by movinge `client_id` to a different TSE
                 error_message = (
-                    f"Cannot sign transaction from {transaction.client_id!r}! "
+                    f"Cannot sign order from {order.client_id!r}! "
                     f"Signature request backlog on TSE {mapped_tse.tse} "
                     f"is too long ({queue_size} entries)."
                 )
@@ -230,7 +224,7 @@ class TSEMuxer:
                 raise RuntimeError(error_message)
             elif queue_size >= 8:
                 LOGGER.warn(
-                    f"Delay when signing transaction from {transaction.client_id!r}: "
+                    f"Delay when signing order from {order.client_id!r}: "
                     f"Signature request backlog on TSE {mapped_tse.tse} "
                     f"is very long ({queue_size} entries)."
                 )
