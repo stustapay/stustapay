@@ -18,7 +18,7 @@ class TerminalServiceTest(BaseTestCase):
             terminal=NewTerminal(
                 name="Pot 1",
                 description="Pottipot",
-                tseid=None,
+                tse_id=None,
                 active_shift=None,
                 active_cashier=None,
                 active_profile=None,
@@ -32,7 +32,7 @@ class TerminalServiceTest(BaseTestCase):
                 terminal=NewTerminal(
                     name="Pot 1",
                     description="Pottipot",
-                    tseid=None,
+                    tse_id=None,
                     active_shift=None,
                     active_cashier=None,
                     active_profile=None,
@@ -45,7 +45,7 @@ class TerminalServiceTest(BaseTestCase):
             terminal=NewTerminal(
                 name="Pot 2",
                 description="Pottipot - new",
-                tseid=None,
+                tse_id=None,
                 active_shift=None,
                 active_cashier=None,
                 active_profile=None,

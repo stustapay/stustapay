@@ -11,14 +11,14 @@ class NewLineItem:
 
 
 @dataclass
-class NewTransaction:
+class NewOrder:
     positions: list[NewLineItem]
 
 
 @dataclass
 class LineItem(NewLineItem):
-    txid: int
-    itemid: int
+    order_id: int
+    item_id: int
     product: Product
     price: float
     price_brutto: float
@@ -29,9 +29,9 @@ class LineItem(NewLineItem):
     @classmethod
     def from_db(cls, row) -> "LineItem":
         return cls(
-            txid=row["txid"],
-            itemid=row["itemid"],
-            product_id=row["productid"],
+            order_id=row["order_id"],
+            item_id=row["item_id"],
+            product_id=row["product_id"],
             product=Product.from_db(row),
             quantity=row["quantity"],
             price=row["price"],
@@ -43,14 +43,14 @@ class LineItem(NewLineItem):
 
 
 @dataclass
-class TransactionBooking:
+class OrderBooking:
     value_sum: float
     value_tax: float
     value_notax: float
 
 
 @dataclass
-class TransactionID:
+class OrderID:
     id: int
 
 
@@ -61,32 +61,33 @@ class Account:
 
 
 @dataclass
-class Transaction(TransactionBooking):
+class Order(OrderBooking):
     """
-    represents a completely finished transaction with all relevant data
+    represents a completely finished order with all relevant data
     """
 
     id: int
     itemcount: int
+    status: str
     created_at: datetime.datetime
     finished_at: datetime.datetime
-    txmethod: str
+    payment_method: str
     line_items: list[LineItem]
 
     # TODO how to handle foreign keys
-    # source_account: Account
-    # target_account: Account
-    # cashierid: User
-    # terminalid: Terminal
+    # cashier_id: User
+    # terminal_id: Terminal
+    # customer_account_id: Account
 
     @classmethod
-    def from_db(cls, row, line_items) -> "Transaction":
+    def from_db(cls, row, line_items) -> "Order":
         return cls(
             id=row["id"],
             itemcount=row["itemcount"],
+            status=row["status"],
             created_at=row["created_at"],
             finished_at=row["finished_at"],
-            txmethod=row["txmethod"],
+            payment_method=row["payment_method"],
             value_sum=row["value_sum"],
             value_tax=row["value_tax"],
             value_notax=row["value_notax"],

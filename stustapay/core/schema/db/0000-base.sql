@@ -207,11 +207,6 @@ create table if not exists product (
     -- price without tax, null if free price
     price numeric not null,
 
-    -- if bought, where is this booked to
-    -- basically the transaction kind
-    -- so we can differentiate between wares, deposit, cash-in-backpack transfer
-    target_account int references account(id) on delete restrict,
-
     -- todo: payment possible with voucher?
     -- how many vouchers of which kind does it cost?
 
@@ -297,7 +292,9 @@ create table if not exists ordr (
     -- who created it
     cashier_id int not null references usr(id) on delete restrict,
     terminal_id int not null references terminal(id) on delete restrict,
-    customer_account_id int not null references account(id) on delete restrict
+    -- customer is allowed to be null, as it is only known on the final booking, not on the creation of the order
+    -- canceled orders can have no
+    customer_account_id int references account(id) on delete restrict
 );
 
 -- all products in a transaction
