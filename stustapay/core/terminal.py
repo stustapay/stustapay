@@ -7,7 +7,7 @@ import logging
 from .subcommand import SubCommand
 from .config import Config
 
-from .service.transaction import TransactionService
+from .service.order import OrderService
 from .http.context import Context
 from .http.server import Server
 from .http.router import base, live, order, auth
@@ -53,7 +53,7 @@ class TerminalServer(SubCommand):
             context = Context(
                 config=self.cfg,
                 db_pool=None,
-                transaction_service=None,
+                order_service=None,
             )
 
             await self.server.run(self.cfg, context)
@@ -64,7 +64,7 @@ class TerminalServer(SubCommand):
         context = Context(
             config=self.cfg,
             db_pool=db_pool,
-            transaction_service=TransactionService(db_pool=db_pool, config=self.cfg),
+            order_service=OrderService(db_pool=db_pool, config=self.cfg),
         )
         try:
             await self.server.run(self.cfg, context)

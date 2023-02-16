@@ -25,13 +25,13 @@ class TerminalService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def create_terminal(self, *, conn: asyncpg.Connection, terminal: NewTerminal) -> Terminal:
         row = await conn.fetchrow(
-            "insert into terminal (name, description, registration_uuid, tseid, active_shift, active_profile, active_cashier) "
+            "insert into terminal (name, description, registration_uuid, tse_id, active_shift, active_profile, active_cashier) "
             "values ($1, $2, $3, $4, $5, $6, $7) returning id, name, description, registration_uuid, session_uuid, "
-            "tseid, active_shift, active_profile, active_cashier",
+            "tse_id, active_shift, active_profile, active_cashier",
             terminal.name,
             terminal.description,
             uuid.uuid4(),
-            terminal.tseid,
+            terminal.tse_id,
             terminal.active_shift,
             terminal.active_profile,
             terminal.active_cashier,
@@ -63,12 +63,12 @@ class TerminalService(DBService):
         self, *, conn: asyncpg.Connection, terminal_id: str, terminal: NewTerminal
     ) -> Optional[Terminal]:
         row = await conn.fetchrow(
-            "update terminal set name = $2, description = $3, tseid = $4, active_shift = $5, active_profile = $6, active_cashier = $7 "
-            "where id = $1 returning id, name, description, registration_uuid, tseid, active_shift, active_profile, session_uuid, active_cashier",
+            "update terminal set name = $2, description = $3, tse_id = $4, active_shift = $5, active_profile = $6, active_cashier = $7 "
+            "where id = $1 returning id, name, description, registration_uuid, tse_id, active_shift, active_profile, session_uuid, active_cashier",
             terminal_id,
             terminal.name,
             terminal.description,
-            terminal.tseid,
+            terminal.tse_id,
             terminal.active_shift,
             terminal.active_profile,
             terminal.active_cashier,

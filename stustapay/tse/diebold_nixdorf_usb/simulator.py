@@ -4,6 +4,7 @@
 this code will simulate the dn TSE webservice (more or less)
 """
 
+# TODO should we rename Transaction to Order here as well?
 
 import json
 

@@ -13,7 +13,7 @@ from stustapay.core.config import Config
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.terminal import TerminalService
-from stustapay.core.service.transaction import TransactionService
+from stustapay.core.service.order import OrderService
 from stustapay.core.service.user import UserService
 
 
@@ -26,7 +26,7 @@ class Context:
 
     db_pool: asyncpg.Pool
     config: Config
-    transaction_service: Optional[TransactionService] = None
+    order_service: Optional[OrderService] = None
     product_service: Optional[ProductService] = None
     tax_rate_service: Optional[TaxRateService] = None
     user_service: Optional[UserService] = None
@@ -109,8 +109,8 @@ def get_db_pool(request: Request) -> asyncpg.Pool:
     return request.state.context.db_pool
 
 
-def get_transaction_service(request: Request) -> TransactionService:
-    return request.state.context.transaction_service
+def get_order_service(request: Request) -> OrderService:
+    return request.state.context.order_service
 
 
 def get_product_service(request: Request) -> ProductService:
@@ -126,7 +126,7 @@ def get_user_service(request: Request) -> UserService:
 
 
 def get_terminal_service(request: Request) -> TerminalService:
-    return request.state.context.transaction_service
+    return request.state.context.terminal_service
 
 
 async def get_db_conn(
