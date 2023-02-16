@@ -28,10 +28,8 @@ data class NavMenuItem(
     val label: String,
     val navDestination: NavDest? = null,
     val isUnread: Boolean = false,
-    val dividePrevious: Boolean = false,
-    val scanNFC: Boolean = false
+    val dividePrevious: Boolean = false
 )
-
 
 @Composable
 private fun getNavItems(): List<NavMenuItem> {
@@ -73,9 +71,8 @@ private fun getNavItems(): List<NavMenuItem> {
     itemsList.add(
         NavMenuItem(
             icon = Icons.Filled.Send,
-            label = "NFC",
-            navDestination = RootNavDests.nfc,
-            scanNFC = true
+            label = "Chip Status",
+            navDestination = RootNavDests.chipstatus,
         )
     )
     itemsList.add(
@@ -158,15 +155,12 @@ fun NavDrawer(
 private fun NavDrawerEntry(
     item: NavMenuItem,
     unreadBadgeColor: Color = Color(0xFF0FFF93),
-    viewModel: NavViewModel = hiltViewModel(),
     navigateTo: (NavDest) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                viewModel.scan(item.scanNFC)
-
                 if (item.navDestination != null) {
                     navigateTo(item.navDestination)
                 }

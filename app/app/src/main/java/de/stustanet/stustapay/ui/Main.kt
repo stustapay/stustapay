@@ -99,7 +99,7 @@ fun RootView(uictrl: SysUiController? = null) {
         }
         composable(RootNavDests.qrscan.route) { QRScanView() }
         composable(RootNavDests.connTest.route) { TestConnectionView() }
-        composable(RootNavDests.nfc.route) {
+        composable(RootNavDests.chipstatus.route) {
             NavScaffold(
                 title = { Text("StuStaPay") },
                 hasDrawer = true,

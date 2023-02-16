@@ -19,6 +19,9 @@ fun ChipStatusView(viewModel: ChipStatusViewModel = hiltViewModel()) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+        viewModel.scan(true)
+
         val uid = uiState.uid
         Text("UID: $uid")
     }
