@@ -7,12 +7,12 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
 import android.widget.Toast
+import de.stustanet.stustapay.data.NfcState
+import kotlinx.coroutines.flow.update
 
-class NFCHandler(private var activity: Activity) {
+class NfcHandler(private var activity: Activity, private var nfcState: NfcState) {
     private var intent: PendingIntent? = null
     private var device: NfcAdapter? = null
-    var context: NFCContext = NFCContext()
-
     fun onCreate() {
         // prepare nfc intent delivery
         device = NfcAdapter.getDefaultAdapter(activity)
@@ -45,7 +45,7 @@ class NFCHandler(private var activity: Activity) {
     fun handleTag(action: String, tag: Tag) {
         // https://developer.android.com/guide/topics/connectivity/nfc/advanced-nfc#tech-intent
 
-        if (context.scanRequest != null && context.scanRequest!!.value) {
+        if (nfcState.scanRequest.value) {
             Toast.makeText(activity, "NFC tag read", Toast.LENGTH_LONG).show()
 
             if (!tag.techList.contains("android.nfc.tech.NfcA")) {
@@ -62,7 +62,7 @@ class NFCHandler(private var activity: Activity) {
 
                 mftag.authenticate(key)
 
-                context.uid?.value = mftag.readSerialNumber()
+                nfcState.uid.update { mftag.readSerialNumber() }
 
                 mftag.close()
             } catch (e: Exception) {

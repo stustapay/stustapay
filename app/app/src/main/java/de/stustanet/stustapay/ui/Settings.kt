@@ -25,7 +25,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.BuildConfig
 import de.stustanet.stustapay.model.UserPreferencesViewModel
-import de.stustanet.stustapay.nfc.NFCContext
 import de.stustanet.stustapay.ui.pref.PrefGroup
 import de.stustanet.stustapay.ui.pref.PrefLink
 import kotlinx.coroutines.CoroutineScope
@@ -127,7 +126,7 @@ fun AboutView() {
 
 @Preview
 @Composable
-fun SettingsView(nfcContext: NFCContext, leaveView: () -> Unit = {}) {
+fun SettingsView(leaveView: () -> Unit = {}) {
     val navController = rememberNavController()
     val scaffoldState = rememberScaffoldState()
 
@@ -141,8 +140,7 @@ fun SettingsView(nfcContext: NFCContext, leaveView: () -> Unit = {}) {
                 navController.popBackStack()
             }
         },
-        hasDrawer = false,
-        nfcContext = nfcContext
+        hasDrawer = false
     ) { paddingValues ->
         NavHost(
             navController = navController,
