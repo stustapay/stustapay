@@ -2,10 +2,6 @@
 __pycache__
 *.pyc
 *.pyo
-~*
-.*.swp
-\#*
-.#*
 *.egg-info
 
 # python venv
@@ -22,6 +18,11 @@ dist/
 
 # ides
 .idea
+*~
+~*
+.*.swp
+\#*
+.#*
 
 # project specific
 config.yaml
