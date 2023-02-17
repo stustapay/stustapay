@@ -14,7 +14,7 @@
 
 
     \begin{center}
-        \huge StuStaCulum 2023
+        \huge \VAR[title|latex]
     \end{center}
 
     % Rechnungsnummer und Datum
@@ -23,10 +23,10 @@
 
     % Addresse und Steuer ID
     \begin{flushright}
-        Kulturleben in der Studentenstadt e.V.\\
-        Hans Leipelt Straße 7 \\
-        80805 München \\
-        USt. Id. DExxxx \\
+        \VAR[issuer|latex] \\
+        % \VAR[address.strip().replace("\n", "\\\\")|latex] \\
+        \VAR[address.strip()|latex] \\
+        USt-IdNr. \VAR[ust_id|latex] \\
     \end{flushright}
 
     % Line Items in the Rechnung
@@ -53,7 +53,6 @@
         \textbf{MwSt.\%}                                         & \textbf{Brutto}                & \textbf{Netto}                   & \textbf{MwSt.}                 \\
         \hline
         \BLOCK[ for tax_rate in tax_rates ]
-        % TODO format MwSt delimiter with , instead of .
         \VAR[tax_rate.tax_name]=\VAR[ tax_rate.tax_rate|percent] & \VAR[tax_rate.value_sum|money] & \VAR[tax_rate.value_notax|money] & \VAR[tax_rate.value_tax|money] \\
         \BLOCK[endfor]
         \hline
@@ -78,7 +77,7 @@
     % ein kurzer "witz"
     \vspace{\fill}
     \begin{center}
-        Ein Mann besuchte eine Bierinsel und entdeckte ein Weißbierkarusell und ein Festzelt. Als er das Karusell bestieg, bemerkte er, dass es sich immer im Kreis drehte und dass das Bier nie endete. Plötzlich sagte ein Mann neben ihm: "Willkommen auf der Bierinsel, hier dreht sich alles um das Bier." Der Mann antwortete: "Das ist großartig, aber wo ist das Festzelt?" Der Mann sagte: "Oh, das ist überall. Du bist das Festzelt."
+        \VAR[funny_text|latex]
 
         \includegraphics[width=3cm]{logo}
     \end{center}
