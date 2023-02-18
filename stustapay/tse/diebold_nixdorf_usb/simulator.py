@@ -10,6 +10,7 @@ import json
 
 import aiohttp.web
 import base64
+import binascii
 
 from datetime import datetime, timezone, timedelta
 from random import randbytes
@@ -24,7 +25,8 @@ class VirtualTSE:
         self.puk_block_counter = 0
         self.transnr = 0
         self.signctr = 0
-        self.current_transactions = []
+        self.current_transactions = {}
+        self.current_transactions["POS001"] = set()
         self.serial = randbytes(32).hex()
         self.password_admin = "12345"
         self.password_timeadmin = "12345"
@@ -40,8 +42,6 @@ class VirtualTSE:
             "GetDeviceInfo",
             "GetDeviceData",
             "GetDeviceStatus",
-            "RegisterClientID",
-            "DeregisterClientID",
             "Export",
             "ExportRemove",
             "ExportAbort",
@@ -82,6 +82,10 @@ class VirtualTSE:
             response.update(self.changepassword(msg))
         elif msg["Command"] == "UnblockUser":
             response.update(self.unblockuser(msg))
+        elif msg["Command"] == "RegisterClientID":
+            response.update(self.registerclientid(msg))
+        elif msg["Command"] == "DeregisterClientID":
+            response.update(self.deregisterclientid(msg))
 
         elif msg["Command"] in self.ignored_commands:
             response["Status"] = "ok"
@@ -106,15 +110,18 @@ class VirtualTSE:
             if base64.b64decode(msg["Password"]).decode("utf8") != self.password_timeadmin:
                 self.password_block_counter += 1
                 return dnerror(30)  # password wrong
-        except:
+        except binascii.Error:
             return dnerror(9)  # base64
+
+        if msg["ClientID"] not in self.current_transactions:
+            return dnerror(19)
 
         self.password_block_counter = 0
 
         # generate transaction
         self.signctr += 1
         self.transnr += 1
-        self.current_transactions.append(self.transnr)
+        self.current_transactions[msg["ClientID"]].add(self.transnr)
 
         response["Status"] = "ok"
         response["TransactionNumber"] = self.transnr
@@ -140,13 +147,16 @@ class VirtualTSE:
             if base64.b64decode(msg["Password"]).decode("utf8") != self.password_timeadmin:
                 self.password_block_counter += 1
                 return dnerror(30)  # password wrong
-        except:
+        except binascii.Error:
             return dnerror(9)  # base64
+
+        if msg["ClientID"] not in self.current_transactions:
+            return dnerror(19)
 
         self.password_block_counter = 0
 
         # check transaction number
-        if msg["TransactionNumber"] not in self.current_transactions:
+        if msg["TransactionNumber"] not in self.current_transactions[msg["ClientID"]]:
             # error this transaction was not started
             return dnerror(5017)
 
@@ -177,16 +187,19 @@ class VirtualTSE:
             if base64.b64decode(msg["Password"]).decode("utf8") != self.password_timeadmin:
                 self.password_block_counter += 1
                 return dnerror(30)  # password wrong
-        except:
+        except binascii.Error:
             return dnerror(9)  # base64
+
+        if msg["ClientID"] not in self.current_transactions:
+            return dnerror(19)
 
         self.password_block_counter = 0
 
         # check transaction number
-        if msg["TransactionNumber"] not in self.current_transactions:
+        if msg["TransactionNumber"] not in self.current_transactions[msg["ClientID"]]:
             # error this transaction was not started
             return dnerror(5017)
-        self.current_transactions.remove(msg["TransactionNumber"])
+        self.current_transactions[msg["ClientID"]].remove(msg["TransactionNumber"])
 
         response["Status"] = "ok"
         self.signctr += 1
@@ -207,7 +220,7 @@ class VirtualTSE:
             oldpw = base64.b64decode(msg["OldPassword"]).decode("utf8")
             user = base64.b64decode(msg["UserID"]).decode("utf8")
             newpw = base64.b64decode(msg["NewPasswd"]).decode("utf8")
-        except:
+        except binascii.Error:
             return dnerror(9)  # base64
 
         if self.password_block_counter >= 3:
@@ -247,7 +260,7 @@ class VirtualTSE:
             puk = base64.b64decode(msg["Puk"]).decode("utf8")
             user = base64.b64decode(msg["UserID"]).decode("utf8")
             newpw = base64.b64decode(msg["NewPasswd"]).decode("utf8")
-        except:
+        except binascii.Error:
             return dnerror(9)  # base64
 
         if self.puk_block_counter >= 3:
@@ -275,6 +288,62 @@ class VirtualTSE:
             self.password_timeadmin = newpw
         self.password_block_counter = 0
         self.puk_block_counter = 0
+        response["Status"] = "ok"
+        return response
+
+    def registerclientid(self, msg):
+        response = {}
+        # check if all Parameters are here
+        if "ClientID" not in msg or "Password" not in msg:
+            return dnerror(3)  # param missing
+        # check password_admin == 12345
+        try:
+            if base64.b64decode(msg["Password"]).decode("utf8") != self.password_admin:
+                self.password_block_counter += 1
+                return dnerror(30)  # password wrong
+        except binascii.Error:
+            return dnerror(9)  # base64
+
+        if len(msg["ClientID"]) > 30:
+            return dnerror(4)
+
+        if len(self.current_transactions) > 15:
+            return dnerror(23)
+
+        if msg["ClientID"] in self.current_transactions:
+            return {"Status": "error", "Code": 1337, "Desc": "Client already registered"}
+
+        self.current_transactions[msg["ClientID"]] = set()
+
+        self.password_block_counter = 0
+        response["Status"] = "ok"
+        return response
+
+    def deregisterclientid(self, msg):
+        response = {}
+        # check if all Parameters are here
+        if "ClientID" not in msg or "Password" not in msg:
+            return dnerror(3)  # param missing
+        # check password_admin == 12345
+        try:
+            if base64.b64decode(msg["Password"]).decode("utf8") != self.password_admin:
+                self.password_block_counter += 1
+                return dnerror(30)  # password wrong
+        except binascii.Error:
+            return dnerror(9)  # base64
+
+        if len(msg["ClientID"]) > 30:
+            return dnerror(4)
+
+        if msg["ClientID"] in self.current_transactions:
+            if not self.current_transactions[msg["ClientID"]]:
+                del self.current_transactions[msg["ClientID"]]
+            else:
+                return dnerror(24)
+        else:
+            return dnerror(5)
+
+        self.password_block_counter = 0
         response["Status"] = "ok"
         return response
 
