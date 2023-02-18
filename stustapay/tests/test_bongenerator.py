@@ -1,6 +1,7 @@
 import datetime
 import os.path
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from .common import BaseTestCase
 from ..bon.pdflatex import pdflatex
@@ -93,9 +94,15 @@ class BonGeneratorTest(BaseTestCase):
                     "value_notax": 8.40,
                 },
             ],
+            "title": "StuStaPay 学生城 Test Überschrift 2023",
+            "issuer": "!§$%&//()=?/*-+#'@€_-µ<>|^¬°²³[\"üäö;,:.",
+            "address": "\\Musterstraße\t66\n12345 Musterstädt\n\n\nSTUSTA",
+            "ust_id": "DE123456789",
+            "funny_text": "\0🍕",
         }
 
-        out_file = Path("/tmp/bon_test.pdf")
-        success, msg = await pdflatex("bon.tex", context, out_file)
-        self.assertTrue(success, msg=f"failed to generate pdf with error: {msg}")
-        self.assertTrue(os.path.exists(out_file))
+        with NamedTemporaryFile() as file:
+            out_file = Path(file.name)
+            success, msg = await pdflatex("bon.tex", context, out_file)
+            self.assertTrue(success, msg=f"failed to generate pdf with error: {msg}")
+            self.assertTrue(os.path.exists(out_file))

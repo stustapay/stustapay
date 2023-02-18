@@ -2,7 +2,7 @@ import asyncio
 
 from stustapay.bon.generator import Generator
 from stustapay.core.args import Parser
-from stustapay.core.config import read_config
+from stustapay.bon.config import read_config
 
 
 def main():
@@ -10,7 +10,7 @@ def main():
     main entry point for launching the bon generator
     """
     parser = Parser()
-    parser.add_argument("-c", "--config-path", default="server.conf")
+    parser.add_argument("-c", "--config-path", default="etc/bon.conf")
     parser.add_subcommand("bon", Generator)
 
     loop = asyncio.new_event_loop()

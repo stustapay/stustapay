@@ -33,8 +33,17 @@ insert into config (
     key, value
 )
 values
-    ('receipt_addr', 'StuStaPay Payment System')
+    -- event organizer name
+    ('bon.issuer', 'der verein'),
+    -- event organizer address
+    ('bon.addr', E'Müsterstraße 12\n12398 Test Stadt'),
+    -- title on top of the bon. This usually is the name of the event like StuStaCulum 2023
+    ('bon.title', 'StuStaCulum 2023'),
+    -- json array. One of the strings is printed at the end of a bon
+    ('bon.closing_texts', '["funny text 0", "funny text 1", "funny text 2", "funny text 3"]'),
 
+    -- Umsatzsteuer ID. Needed on each bon
+    ('ust_id', 'DE123456789')
     on conflict do nothing;
 
 

@@ -2,16 +2,33 @@
 Helper Functions to generate pdfs from latex templates and store the result as file
 """
 
-# pylint: disable=anomalous-backslash-in-string
-
 import asyncio
 import os
+import re
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Tuple
 
 import jinja2
+from pylatexenc.latexencode import RULE_REGEX, UnicodeToLatexConversionRule, UnicodeToLatexEncoder
+
+# https://pylatexenc.readthedocs.io/en/latest/latexencode/
+LatexEncoder = UnicodeToLatexEncoder(
+    conversion_rules=[
+        UnicodeToLatexConversionRule(
+            rule_type=RULE_REGEX,
+            rule=[
+                # format newlines really as line breaks. Needed in the address Field
+                (re.compile(r"\n"), r"\\\\"),
+            ],
+        ),
+        "defaults",
+    ],
+    unknown_char_policy="unihex",
+)
+
+TEX_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tex")
 
 
 def jfilter_money(value: float):
@@ -21,7 +38,26 @@ def jfilter_money(value: float):
 
 def jfilter_percent(value: float):
     # format percentages as ' 7,00'
-    return f"{value * 100:5.2f}\%".replace(".", ",")
+    return f"{value * 100:5.2f}\\%".replace(".", ",")
+
+
+def setup_jinja_env():
+    env = jinja2.Environment(
+        block_start_string="\\BLOCK[",
+        block_end_string="]",
+        variable_start_string="\\VAR[",
+        variable_end_string="]",
+        comment_start_string="\\#[",
+        comment_end_string="]",
+        line_statement_prefix="%%",
+        line_comment_prefix="%#",
+        trim_blocks=True,
+        loader=jinja2.FileSystemLoader(TEX_PATH),
+    )
+    env.filters["money"] = jfilter_money
+    env.filters["percent"] = jfilter_percent
+    env.filters["latex"] = LatexEncoder.unicode_to_latex
+    return env
 
 
 async def pdflatex(tex_tpl_name: str, context: dict, out_file: Path) -> Tuple[bool, str]:
@@ -30,22 +66,7 @@ async def pdflatex(tex_tpl_name: str, context: dict, out_file: Path) -> Tuple[bo
     returns <True, ""> if the pdf was compiled successfully
     returns <False, error_msg> on a latex compile error
     """
-
-    tex_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tex")
-    env = jinja2.Environment(
-        block_start_string="\BLOCK[",
-        block_end_string="]",
-        variable_start_string="\VAR[",
-        variable_end_string="]",
-        comment_start_string="\#[",
-        comment_end_string="]",
-        line_statement_prefix="%%",
-        line_comment_prefix="%#",
-        trim_blocks=True,
-        loader=jinja2.FileSystemLoader(tex_path),
-    )
-    env.filters["money"] = jfilter_money
-    env.filters["percent"] = jfilter_percent
+    env = setup_jinja_env()
     tpl = env.get_template(tex_tpl_name)
     rendered_tpl = tpl.render(context)
 
@@ -55,7 +76,7 @@ async def pdflatex(tex_tpl_name: str, context: dict, out_file: Path) -> Tuple[bo
             f.write(rendered_tpl)
 
         newenv = os.environ.copy()
-        newenv["TEXINPUTS"] = os.pathsep.join([tex_path]) + os.pathsep
+        newenv["TEXINPUTS"] = os.pathsep.join([TEX_PATH]) + os.pathsep
 
         latexmk = ["latexmk", "-xelatex", "-halt-on-error", main_tex]
 
