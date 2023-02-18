@@ -35,7 +35,7 @@ async def get_terminal(
     user: User = Depends(get_current_user),
     terminal_service: TerminalService = Depends(get_terminal_service),
 ):
-    terminal = await terminal_service.get_terminal(user=user, terminal_id=terminal_id)
+    terminal = await terminal_service.get_terminal(current_user=user, terminal_id=terminal_id)
     if terminal is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -49,7 +49,7 @@ async def update_terminal(
     user: User = Depends(get_current_user),
     terminal_service: TerminalService = Depends(get_terminal_service),
 ):
-    terminal = await terminal_service.update_terminal(user=user, terminal_id=terminal_id, terminal=terminal)
+    terminal = await terminal_service.update_terminal(current_user=user, terminal_id=terminal_id, terminal=terminal)
     if terminal is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -62,7 +62,7 @@ async def logout_terminal(
     user: User = Depends(get_current_user),
     terminal_service: TerminalService = Depends(get_terminal_service),
 ):
-    logged_out = await terminal_service.logout_terminal(user=user, terminal_id=terminal_id)
+    logged_out = await terminal_service.logout_terminal(current_user=user, terminal_id=terminal_id)
     if not logged_out:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -73,6 +73,6 @@ async def delete_terminal(
     user: User = Depends(get_current_user),
     terminal_service: TerminalService = Depends(get_terminal_service),
 ):
-    deleted = await terminal_service.delete_terminal(user=user, terminal_id=terminal_id)
+    deleted = await terminal_service.delete_terminal(current_user=user, terminal_id=terminal_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

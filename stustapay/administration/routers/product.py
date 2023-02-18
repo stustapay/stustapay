@@ -17,7 +17,7 @@ router = APIRouter(
 async def list_products(
     user: User = Depends(get_current_user), product_service: ProductService = Depends(get_product_service)
 ):
-    return await product_service.list_products(user=user)
+    return await product_service.list_products(current_user=user)
 
 
 @router.post("/", response_model=Product)
@@ -26,7 +26,7 @@ async def create_product(
     user: User = Depends(get_current_user),
     product_service: ProductService = Depends(get_product_service),
 ):
-    return await product_service.create_product(user=user, product=product)
+    return await product_service.create_product(current_user=user, product=product)
 
 
 @router.get("/{product_id}", response_model=Product)
@@ -35,7 +35,7 @@ async def get_product(
     user: User = Depends(get_current_user),
     product_service: ProductService = Depends(get_product_service),
 ):
-    product = await product_service.get_product(user=user, product_id=product_id)
+    product = await product_service.get_product(current_user=user, product_id=product_id)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -49,7 +49,7 @@ async def update_product(
     user: User = Depends(get_current_user),
     product_service: ProductService = Depends(get_product_service),
 ):
-    product = await product_service.update_product(user=user, product_id=product_id, product=product)
+    product = await product_service.update_product(current_user=user, product_id=product_id, product=product)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -62,6 +62,6 @@ async def delete_product(
     user: User = Depends(get_current_user),
     product_service: ProductService = Depends(get_product_service),
 ):
-    deleted = await product_service.delete_product(user=user, product_id=product_id)
+    deleted = await product_service.delete_product(current_user=user, product_id=product_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
