@@ -7,9 +7,12 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import de.stustanet.stustapay.ui.chipscan.ChipScanView
+import kotlinx.coroutines.launch
 
 @Composable
 private fun OrderItem(name: String, price: String, amount: String) = Row(
@@ -43,10 +46,11 @@ private fun OrderItem(name: String, price: String, amount: String) = Row(
 @Composable
 fun OrderView() {
     val state = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
+    ChipScanView (onScan = { println(it) }) { chipScanState ->
+        Scaffold(
             scaffoldState = state,
-
             content = { paddingValues ->
                 LazyColumn(modifier = Modifier
                     .fillMaxSize()
@@ -59,17 +63,16 @@ fun OrderView() {
                     item{ OrderItem(name = "Pfand zurück", amount = "0", price = "")}
                 }
             },
-
             bottomBar = {
                 Row(horizontalArrangement = Arrangement.SpaceEvenly) {
                     Button(onClick = { /*TODO*/ }, modifier = Modifier.fillMaxWidth(0.45f)) {
                         Text(text = "❌")
                     }
-                    Button(onClick = { /*TODO*/ }, modifier = Modifier.fillMaxWidth(0.9f)) {
+                    Button(onClick = { scope.launch { chipScanState.scan() } }, modifier = Modifier.fillMaxWidth(0.9f)) {
                         Text(text = "✓")
                     }
                 }
             }
-    )
-
+        )
+    }
 }

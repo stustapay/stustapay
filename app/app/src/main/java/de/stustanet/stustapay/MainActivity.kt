@@ -16,7 +16,7 @@ import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.HiltAndroidApp
 import de.stustanet.stustapay.nfc.NfcHandler
-import de.stustanet.stustapay.data.NfcState
+import de.stustanet.stustapay.model.NfcState
 import de.stustanet.stustapay.ui.Main
 import javax.inject.Inject
 
