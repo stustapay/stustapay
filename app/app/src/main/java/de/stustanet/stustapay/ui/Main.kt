@@ -8,6 +8,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -16,6 +17,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.SysUiController
 import de.stustanet.stustapay.ui.chipstatus.ChipStatusView
 import de.stustanet.stustapay.ui.deposit.DepositView
@@ -89,7 +91,7 @@ fun RootView(uictrl: SysUiController? = null) {
                         .padding(bottom = paddingValues.calculateBottomPadding()),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(text = "Welcome to StuStaPay!")
+                    Text(text = stringResource(R.string.welcome_to_stustapay))
                 }
             }
         }

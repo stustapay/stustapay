@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">StuStaPay</string>
+    <string name="app_name" translatable="false">StuStaPay</string>
+    <string name="welcome_to_stustapay">Welcome to StuStaPay!</string>
 </resources>
