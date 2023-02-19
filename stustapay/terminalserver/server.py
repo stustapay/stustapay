@@ -4,18 +4,16 @@ handles connections with ordering terminals.
 
 import logging
 
-from .subcommand import SubCommand
-from .config import Config
-
-from .service.order import OrderService
-from .http.context import Context
-from .http.server import Server
-from .http.router import base, live, order, auth
-
-from .http.router_mock.base import router as mock_base_router
+from stustapay.core.config import Config
+from stustapay.core.http.context import Context
+from stustapay.core.http.server import Server
+from stustapay.core.service.order import OrderService
+from stustapay.core.subcommand import SubCommand
+from stustapay.terminalserver.router import auth, base, live, order
+from stustapay.terminalserver.router_mock.base import router as mock_base_router
 
 
-class TerminalServer(SubCommand):
+class Api(SubCommand):
     """
     Talk with Terminals in the field.
     """
