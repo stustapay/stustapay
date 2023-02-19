@@ -20,10 +20,7 @@ class ChipScanViewModel @Inject constructor(
     private val _chipAuthenticated = nfcState.chipAuthenticated
     private val _chipProtected = nfcState.chipProtected
     private val _chipUid = nfcState.chipUid
-
-    private var prevScanRequest = false
-    private var prevWriteRequest = false
-    private var prevProtectRequest = false
+    private val _chipContent = nfcState.chipContent
 
     val uiState: StateFlow<ChipScanUiState> = combine (
         _chipDataReady,
@@ -46,10 +43,6 @@ class ChipScanViewModel @Inject constructor(
     )
 
     fun scan() {
-        prevScanRequest = _scanRequest.value
-        prevWriteRequest = _writeRequest.value
-        prevProtectRequest = _protectRequest.value
-
         _scanRequest.update { true }
         _writeRequest.update { false }
         _protectRequest.update { false }
@@ -59,18 +52,20 @@ class ChipScanViewModel @Inject constructor(
         _chipAuthenticated.update { false }
         _chipProtected.update { false }
         _chipUid.update { 0uL }
+        _chipContent.update { "" }
     }
 
     fun close() {
-        _scanRequest.update { prevScanRequest }
-        _writeRequest.update { prevWriteRequest }
-        _protectRequest.update { prevProtectRequest }
+        _scanRequest.update { false }
+        _writeRequest.update { false }
+        _protectRequest.update { false }
 
         _chipDataReady.update { false }
         _chipCompatible.update { false }
         _chipAuthenticated.update { false }
         _chipProtected.update { false }
         _chipUid.update { 0uL }
+        _chipContent.update { "" }
     }
 }
 

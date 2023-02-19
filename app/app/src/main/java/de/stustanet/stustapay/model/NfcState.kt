@@ -17,4 +17,5 @@ class NfcState @Inject constructor() {
     val chipAuthenticated = MutableStateFlow(false)
     val chipProtected = MutableStateFlow(false)
     val chipUid = MutableStateFlow(0uL)
+    val chipContent = MutableStateFlow("")
 }

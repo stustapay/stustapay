@@ -9,6 +9,7 @@ import android.nfc.TagLostException
 import android.os.Build
 import android.widget.Toast
 import de.stustanet.stustapay.model.NfcState
+import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.flow.update
 
 class NfcHandler(private var activity: Activity, private var nfcState: NfcState) {
@@ -64,6 +65,9 @@ class NfcHandler(private var activity: Activity, private var nfcState: NfcState)
         } catch (e: TagLostException) {
             Toast.makeText(activity, "Chip lost", Toast.LENGTH_LONG).show()
             nfcState.chipDataReady.update { false }
+        } catch (e: IOException) {
+            Toast.makeText(activity, "Chip lost", Toast.LENGTH_LONG).show()
+            nfcState.chipDataReady.update { false }
         }
     }
 
@@ -86,15 +90,18 @@ class NfcHandler(private var activity: Activity, private var nfcState: NfcState)
             nfcState.chipAuthenticated.update { true }
         } catch (e: Exception) {
             println(e)
+            Toast.makeText(activity, "Authentication failed", Toast.LENGTH_LONG).show()
         }
 
         if (nfcState.writeRequest.value && (!nfcState.chipProtected.value || (nfcState.chipProtected.value && nfcState.chipAuthenticated.value))) {
             tag.writeKey(nfcState.key.value)
             tag.protect(nfcState.protectRequest.value)
+            tag.writeUserMemory(nfcState.chipContent.value)
         }
 
         nfcState.chipProtected.update { tag.isProtected() }
         nfcState.chipUid.update { tag.readSerialNumber() }
+        nfcState.chipContent.update { tag.readUserMemory() }
 
         tag.close()
         nfcState.chipDataReady.update { true }

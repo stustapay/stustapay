@@ -21,6 +21,7 @@ class ChipStatusViewModel @Inject constructor(
     private val _chipAuthenticated = nfcState.chipAuthenticated
     private val _chipProtected = nfcState.chipProtected
     private val _chipUid = nfcState.chipUid
+    private val _chipContent = nfcState.chipContent
 
     val uiState: StateFlow<ChipStatusUiState> = combine(
         _scanRequest,
@@ -30,8 +31,9 @@ class ChipStatusViewModel @Inject constructor(
         _chipCompatible,
         _chipAuthenticated,
         _chipProtected,
-        _chipUid
-    ) { scanRequest, writeRequest, protectRequest, dataReady, compatible, authenticated, protected, uid ->
+        _chipUid,
+        _chipContent
+    ) { scanRequest, writeRequest, protectRequest, dataReady, compatible, authenticated, protected, uid, content ->
         ChipStatusUiState (
             scanRequest = scanRequest,
             writeRequest = writeRequest,
@@ -40,7 +42,8 @@ class ChipStatusViewModel @Inject constructor(
             compatible = compatible,
             authenticated = authenticated,
             protected = protected,
-            uid = uid
+            uid = uid,
+            content = content
         )
     }.stateIn(
         scope = viewModelScope,
@@ -59,6 +62,10 @@ class ChipStatusViewModel @Inject constructor(
     fun protect(req: Boolean) {
         _protectRequest.update { req }
     }
+
+    fun setContent(content: String) {
+        _chipContent.update { content }
+    }
 }
 
 data class ChipStatusUiState(
@@ -69,5 +76,6 @@ data class ChipStatusUiState(
     val compatible: Boolean = false,
     val authenticated: Boolean = false,
     val protected: Boolean = false,
-    val uid: ULong = 0uL
+    val uid: ULong = 0uL,
+    val content: String = ""
 )

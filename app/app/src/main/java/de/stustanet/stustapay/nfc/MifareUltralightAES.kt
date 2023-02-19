@@ -104,6 +104,8 @@ class MifareUltralightAES(rawTag: Tag) : TagTechnology {
             }
         }
 
+        readBuffer.dropLastWhile { it == 0.toByte() }
+
         return readBuffer.decodeToString()
     }
 
