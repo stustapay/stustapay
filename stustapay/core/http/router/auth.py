@@ -17,7 +17,7 @@ class TerminalRegistrationPayload:
     registration_uuid: str
 
 
-@router.delete("/register_terminal", response_model=TerminalRegistrationSuccess)
+@router.post("/register_terminal", response_model=TerminalRegistrationSuccess)
 async def register_terminal(
     payload: TerminalRegistrationPayload,
     terminal_service: TerminalService = Depends(get_terminal_service),

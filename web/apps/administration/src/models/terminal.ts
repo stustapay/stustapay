@@ -5,8 +5,8 @@ export const NewTerminalSchema = z.object({
   description: z.string().nullable(),
   tse_id: z.string().nullable(),
   active_shift: z.string().nullable(),
-  active_profile: z.number().nullable(),
-  active_cashier: z.number().nullable(),
+  active_profile_id: z.number().nullable(),
+  active_cashier_id: z.number().nullable(),
 });
 
 export type NewTerminal = z.infer<typeof NewTerminalSchema>;

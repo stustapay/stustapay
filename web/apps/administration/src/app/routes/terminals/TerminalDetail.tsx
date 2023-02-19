@@ -1,11 +1,25 @@
-import { Paper, ListItem, IconButton, Typography, ListItemText, Button, List, Checkbox, Tooltip } from "@mui/material";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
+import {
+  Paper,
+  ListItem,
+  IconButton,
+  Typography,
+  ListItemText,
+  Button,
+  List,
+  Checkbox,
+  Tooltip,
+  Box,
+} from "@mui/material";
+import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useGetTerminalByIdQuery, useDeleteTerminalMutation, useLogoutTerminalMutation } from "@api";
 import { Loading } from "@components/Loading";
+import QRCode from "react-qr-code";
+import { encodeTerminalRegistrationQrCode } from "src/core";
+import { baseUrl } from "@api/common";
 
 export const TerminalDetail: React.FC = () => {
   const { t } = useTranslation(["terminals", "common"]);
@@ -70,6 +84,9 @@ export const TerminalDetail: React.FC = () => {
       <Paper sx={{ mt: 2 }}>
         <List>
           <ListItem>
+            <ListItemText primary={t("terminalId")} secondary={terminal.id} />
+          </ListItem>
+          <ListItem>
             <ListItemText primary={t("terminalName")} secondary={terminal.name} />
           </ListItem>
           <ListItem>
@@ -85,6 +102,18 @@ export const TerminalDetail: React.FC = () => {
           <ListItemText primary={t("terminalLoggedIn")} />
         </ListItem>
       </Paper>
+      {terminal.registration_uuid != null && (
+        <Paper>
+          <Box sx={{ height: "auto", margin: "0 auto", maxWidth: "20em", width: "100%", mt: 2 }}>
+            <QRCode
+              size={256}
+              style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+              value={encodeTerminalRegistrationQrCode(baseUrl, terminal.registration_uuid)}
+              viewBox={`0 0 256 256`}
+            />
+          </Box>
+        </Paper>
+      )}
       <ConfirmDialog
         title={t("deleteTerminal")}
         body={t("deleteTerminalDescription")}

@@ -31,8 +31,8 @@ class OrderLogicTest(BaseTestCase):
                 description="",
                 tse_id=None,
                 active_shift=None,
-                active_profile=None,
-                active_cashier=None,
+                active_profile_id=None,
+                active_cashier_id=None,
             ),
         )
 

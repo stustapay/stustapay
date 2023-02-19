@@ -1,6 +1,6 @@
 from stustapay.core.schema.user import User, Privilege
 from .common import BaseTestCase
-from stustapay.core.schema.terminal import NewTerminal, Terminal
+from stustapay.core.schema.terminal import NewTerminal
 from stustapay.core.service.terminal import TerminalService
 
 
@@ -20,8 +20,8 @@ class TerminalServiceTest(BaseTestCase):
                 description="Pottipot",
                 tse_id=None,
                 active_shift=None,
-                active_cashier=None,
-                active_profile=None,
+                active_cashier_id=None,
+                active_profile_id=None,
             ),
         )
         self.assertEqual(terminal.name, "Pot 1")
@@ -34,8 +34,8 @@ class TerminalServiceTest(BaseTestCase):
                     description="Pottipot",
                     tse_id=None,
                     active_shift=None,
-                    active_cashier=None,
-                    active_profile=None,
+                    active_cashier_id=None,
+                    active_profile_id=None,
                 ),
             )
 
@@ -47,8 +47,8 @@ class TerminalServiceTest(BaseTestCase):
                 description="Pottipot - new",
                 tse_id=None,
                 active_shift=None,
-                active_cashier=None,
-                active_profile=None,
+                active_cashier_id=None,
+                active_profile_id=None,
             ),
         )
         self.assertEqual(updated_terminal.name, "Pot 2")
