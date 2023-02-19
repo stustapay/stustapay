@@ -8,8 +8,8 @@ const initialValues: NewTerminal = {
   name: "",
   description: "",
   tse_id: null,
-  active_cashier: null,
-  active_profile: null,
+  active_cashier_id: null,
+  active_profile_id: null,
   active_shift: null,
 };
 

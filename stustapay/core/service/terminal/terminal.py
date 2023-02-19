@@ -2,12 +2,15 @@ import uuid
 from typing import Optional
 
 import asyncpg
-from pydantic import BaseModel, ValidationError
 from jose import JWTError, jwt
+from pydantic import BaseModel, ValidationError
 
-from .dbservice import DBService, with_db_transaction, requires_user_privileges
+from stustapay.core.config import Config
 from stustapay.core.schema.terminal import Terminal, NewTerminal
 from stustapay.core.schema.user import Privilege
+from stustapay.core.service.dbservice import DBService, with_db_transaction, requires_user_privileges, requires_terminal
+from stustapay.core.service.terminal.layout import TerminalLayoutService
+from stustapay.core.service.terminal.profile import TerminalProfileService
 
 
 class TokenMetadata(BaseModel):
@@ -21,20 +24,26 @@ class TerminalRegistrationSuccess(BaseModel):
 
 
 class TerminalService(DBService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config):
+        super().__init__(db_pool, config)
+
+        self.profile = TerminalProfileService(db_pool, config)
+        self.layout = TerminalLayoutService(db_pool, config)
+
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
     async def create_terminal(self, *, conn: asyncpg.Connection, terminal: NewTerminal) -> Terminal:
         row = await conn.fetchrow(
-            "insert into terminal (name, description, registration_uuid, tse_id, active_shift, active_profile, active_cashier) "
+            "insert into terminal (name, description, registration_uuid, tse_id, active_shift, active_profile_id, active_cashier_id) "
             "values ($1, $2, $3, $4, $5, $6, $7) returning id, name, description, registration_uuid, session_uuid, "
-            "tse_id, active_shift, active_profile, active_cashier",
+            "tse_id, active_shift, active_profile_id, active_cashier_id",
             terminal.name,
             terminal.description,
             uuid.uuid4(),
             terminal.tse_id,
             terminal.active_shift,
-            terminal.active_profile,
-            terminal.active_cashier,
+            terminal.active_profile_id,
+            terminal.active_cashier_id,
         )
 
         return Terminal.from_db(row)
@@ -63,15 +72,15 @@ class TerminalService(DBService):
         self, *, conn: asyncpg.Connection, terminal_id: str, terminal: NewTerminal
     ) -> Optional[Terminal]:
         row = await conn.fetchrow(
-            "update terminal set name = $2, description = $3, tse_id = $4, active_shift = $5, active_profile = $6, active_cashier = $7 "
-            "where id = $1 returning id, name, description, registration_uuid, tse_id, active_shift, active_profile, session_uuid, active_cashier",
+            "update terminal set name = $2, description = $3, tse_id = $4, active_shift = $5, active_profile_id = $6, active_cashier_id = $7 "
+            "where id = $1 returning id, name, description, registration_uuid, tse_id, active_shift, active_profile_id, session_uuid, active_cashier_id",
             terminal_id,
             terminal.name,
             terminal.description,
             terminal.tse_id,
             terminal.active_shift,
-            terminal.active_profile,
-            terminal.active_cashier,
+            terminal.active_profile_id,
+            terminal.active_cashier_id,
         )
         if row is None:
             return None
@@ -110,11 +119,10 @@ class TerminalService(DBService):
         if row is None:
             return None
         terminal = Terminal.from_db(row)
-        session_uuid = uuid.uuid4()
-        await conn.execute(
-            "update terminal set session_uuid = $2, registration_uuid = null where id = $1",
+        session_uuid = await conn.fetchval(
+            "update terminal set session_uuid = gen_random_uuid(), registration_uuid = null where id = $1 "
+            "returning session_uuid",
             terminal.id,
-            session_uuid,
         )
         token = self._create_access_token(terminal_id=terminal.id, session_uuid=session_uuid)
         return TerminalRegistrationSuccess(terminal=terminal, token=token)
@@ -143,3 +151,18 @@ class TerminalService(DBService):
             return None
 
         return Terminal.from_db(row)
+
+    @with_db_transaction
+    @requires_terminal
+    async def login_cashier(self, *, conn: asyncpg.Connection, current_terminal: Terminal, token_uid: str) -> bool:
+        # TODO: once proper token uid authentication is in place use that here
+        user_id = await conn.fetchval(
+            "select usr.id from usr join account a on usr.account = a.id join token t on t.id = a.token_id "
+            "where t.uid = $1",
+            token_uid,
+        )
+        if user_id is None:
+            return False
+
+        await conn.execute("update terminal set active_cashier = $1 where id = $2", user_id, current_terminal.id)
+        return True

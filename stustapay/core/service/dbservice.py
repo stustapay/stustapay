@@ -53,6 +53,18 @@ def requires_user_privileges(privileges: list[Privilege]):
     return f
 
 
+def requires_terminal(func):
+    @wraps(func)
+    async def wrapper(self, **kwargs):
+        if "current_terminal" not in kwargs:
+            raise RuntimeError("current_terminal was not provided to service function call")
+        if not kwargs["current_terminal"].is_logged_in:
+            raise PermissionError("terminal is not registered")
+        return await func(self, **kwargs)
+
+    return wrapper
+
+
 class DBService(ABC):
     """
     base class for all database interaction

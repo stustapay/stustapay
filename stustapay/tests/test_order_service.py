@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init
 from stustapay.core.schema.order import NewLineItem, NewOrder
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.terminal import NewTerminal
@@ -31,8 +32,8 @@ class OrderLogicTest(BaseTestCase):
                 description="",
                 tse_id=None,
                 active_shift=None,
-                active_profile=None,
-                active_cashier=None,
+                active_profile_id=None,
+                active_cashier_id=None,
             ),
         )
 

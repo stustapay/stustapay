@@ -223,7 +223,7 @@ create table if not exists product (
 );
 
 
-create table if not exists cash_desk_layout (
+create table if not exists terminal_layout (
     id serial not null primary key,
     name text not null,
     description text,
@@ -231,11 +231,11 @@ create table if not exists cash_desk_layout (
 );
 
 
-create table if not exists cash_desk_profile (
+create table if not exists terminal_profile (
     id serial not null primary key,
     name text not null,
     description text,
-    layout int references cash_desk_layout(id)
+    layout_id int references terminal_layout(id)
     -- todo: payment_methods?
 );
 
@@ -253,8 +253,8 @@ create table if not exists terminal (
 
     -- identifies the current active work shift and configuration
     active_shift text,
-    active_profile int references cash_desk_profile(id) on delete restrict,
-    active_cashier int references usr(id) on delete restrict,
+    active_profile_id int references terminal_profile(id) on delete restrict,
+    active_cashier_id int references usr(id) on delete restrict,
 
     constraint registration_or_session_uuid_null check ((registration_uuid is null) <> (session_uuid is null))
 );

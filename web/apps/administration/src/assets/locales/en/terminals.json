@@ -1,4 +1,5 @@
 {
+  "terminalId": "ID",
   "terminalName": "Name",
   "terminalDescription": "Description",
   "terminalRegistrationUUID": "Registration ID",
