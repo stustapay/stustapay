@@ -19,14 +19,19 @@ class MifareUltralightAES(rawTag: Tag) : TagTechnology {
     var rawTag = rawTag
     var nfcaTag = NfcA.get(rawTag)
 
-    fun protect() {
-        val buf = cmdRead(0x29.toByte())
-        cmdWrite(0x29, buf[0], buf[1], buf[2], 0x00)
+    fun protect(prot: Boolean) {
+        if (prot) {
+            val buf = cmdRead(0x29.toByte())
+            cmdWrite(0x29, buf[0], buf[1], buf[2], 0x00)
+        } else {
+            val buf = cmdRead(0x29.toByte())
+            cmdWrite(0x29, buf[0], buf[1], buf[2], 0x3c)
+        }
     }
 
-    fun unprotect() {
+    fun isProtected(): Boolean {
         val buf = cmdRead(0x29.toByte())
-        cmdWrite(0x29, buf[0], buf[1], buf[2], 0x3c)
+        return buf[3] == 0x00.toByte()
     }
 
     fun authenticate(key: ByteArray) {

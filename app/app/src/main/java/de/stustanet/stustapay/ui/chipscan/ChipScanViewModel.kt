@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.chipstatus
+package de.stustanet.stustapay.ui.chipscan
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,10 +6,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.NfcState
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
-import de.stustanet.stustapay.util.combine
 
 @HiltViewModel
-class ChipStatusViewModel @Inject constructor(
+class ChipScanViewModel @Inject constructor(
     nfcState: NfcState
 ) : ViewModel() {
     private val _scanRequest = nfcState.scanRequest
@@ -22,20 +21,18 @@ class ChipStatusViewModel @Inject constructor(
     private val _chipProtected = nfcState.chipProtected
     private val _chipUid = nfcState.chipUid
 
-    val uiState: StateFlow<ChipStatusUiState> = combine(
-        _scanRequest,
-        _writeRequest,
-        _protectRequest,
+    private var prevScanRequest = false
+    private var prevWriteRequest = false
+    private var prevProtectRequest = false
+
+    val uiState: StateFlow<ChipScanUiState> = combine (
         _chipDataReady,
         _chipCompatible,
         _chipAuthenticated,
         _chipProtected,
         _chipUid
-    ) { scanRequest, writeRequest, protectRequest, dataReady, compatible, authenticated, protected, uid ->
-        ChipStatusUiState (
-            scanRequest = scanRequest,
-            writeRequest = writeRequest,
-            protectRequest = protectRequest,
+    ) { dataReady, compatible, authenticated, protected, uid ->
+        ChipScanUiState (
             dataReady = dataReady,
             compatible = compatible,
             authenticated = authenticated,
@@ -45,26 +42,39 @@ class ChipStatusViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ChipStatusUiState(uid = 0uL)
+        initialValue = ChipScanUiState(uid = 0uL)
     )
 
-    fun scan(req: Boolean) {
-        _scanRequest.update { req }
+    fun scan() {
+        prevScanRequest = _scanRequest.value
+        prevWriteRequest = _writeRequest.value
+        prevProtectRequest = _protectRequest.value
+
+        _scanRequest.update { true }
+        _writeRequest.update { false }
+        _protectRequest.update { false }
+
+        _chipDataReady.update { false }
+        _chipCompatible.update { false }
+        _chipAuthenticated.update { false }
+        _chipProtected.update { false }
+        _chipUid.update { 0uL }
     }
 
-    fun write(req: Boolean) {
-        _writeRequest.update { req }
-    }
+    fun close() {
+        _scanRequest.update { prevScanRequest }
+        _writeRequest.update { prevWriteRequest }
+        _protectRequest.update { prevProtectRequest }
 
-    fun protect(req: Boolean) {
-        _protectRequest.update { req }
+        _chipDataReady.update { false }
+        _chipCompatible.update { false }
+        _chipAuthenticated.update { false }
+        _chipProtected.update { false }
+        _chipUid.update { 0uL }
     }
 }
 
-data class ChipStatusUiState(
-    val scanRequest: Boolean = false,
-    val writeRequest: Boolean = false,
-    val protectRequest: Boolean = false,
+data class ChipScanUiState(
     val dataReady: Boolean = false,
     val compatible: Boolean = false,
     val authenticated: Boolean = false,
