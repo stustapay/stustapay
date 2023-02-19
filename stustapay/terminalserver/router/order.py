@@ -20,13 +20,17 @@ class NewOrderPayload(BaseModel):
     order: NewOrder
 
 
-@router.post("/order/create", summary="create a new order")
-async def create(
+@router.post("/order/execute", summary="create and execute new order")
+async def execute(
     payload: NewOrderPayload,
     user: User = Depends(get_current_user),
     order_service: OrderService = Depends(get_order_service),
 ):
-    return await order_service.create_order(user=user, order=payload.order)
+    """
+    Execute the order.
+    returns either the completed order, or an error message, why the order could not be completed
+    """
+    return await order_service.execute_order(current_user=user, new_order=payload.order)
 
 
 @router.get("/order/{order_id}", summary="get information about an order")
@@ -35,14 +39,4 @@ async def show(
     user: User = Depends(get_current_user),
     order_service: OrderService = Depends(get_order_service),
 ):
-    return await order_service.show_order(user=user, order_id=order_id)
-
-
-@router.get("/order/{order_id}/pay", summary="the order is finished, suggest payment options")
-async def process(
-    order_id: int,
-    user: User = Depends(get_current_user),
-    order_service: OrderService = Depends(get_order_service),
-):
-    # return status - how it can be payed, e.g. with vouchers.
-    return await order_service.order_payment_info(user=user, order_id=order_id)
+    return await order_service.show_order(current_user=user, order_id=order_id)

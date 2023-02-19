@@ -12,10 +12,11 @@ class ProductService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def create_product(self, *, conn: asyncpg.Connection, product: NewProduct) -> Product:
         row = await conn.fetchrow(
-            "insert into product (name, price, tax) values ($1, $2, $3) returning id, name, price, tax",
+            "insert into product (name, price, tax, target_account) values ($1, $2, $3, $4) returning id, name, price, tax, target_account",
             product.name,
             product.price,
             product.tax,
+            product.target_account,
         )
 
         return Product.from_db(row)

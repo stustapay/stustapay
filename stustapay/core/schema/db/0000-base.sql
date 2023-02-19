@@ -54,34 +54,32 @@ insert into restriction_type (
     name
 )
 values
-    ('default'),
     ('under_18'),
     ('under_16')
     on conflict do nothing;
 
 
--- some secret about one or many tokens
-create table if not exists token_secret (
+-- some secret about one or many user_tags
+create table if not exists user_tag_secret (
     id bigserial not null primary key
 );
 
 -- for wristbands/cards/...
-create table if not exists token (
+create table if not exists user_tag (
     id bigserial not null primary key,
-    -- hardware id of the token
-    uid text not null,
+    -- hardware id of the tag
+    uid numeric(20) not null unique,
     -- printed on the back
     pin text,
     -- produced by wristband vendor
     serial text,
     -- age restriction information
-    restriction text references restriction_type(name) not null,
+    restriction text references restriction_type(name),
 
-    -- to validate token authenticity
-    -- secret maybe shared with several tokens.
-    secret int references token_secret(id) on delete restrict
+    -- to validate tag authenticity
+    -- secret maybe shared with several tags.
+    secret int references user_tag_secret(id) on delete restrict
 );
-create index if not exists token_uid ON token USING btree (uid);
 
 
 create table if not exists account_type (
@@ -108,8 +106,8 @@ values
 -- bookkeeping account
 create table if not exists account (
     id bigserial not null primary key,
-    token_id bigint references token(id) on delete cascade,
-    type text references account_type(name) on delete restrict,
+    user_tag_id bigint references user_tag(id) on delete cascade,
+    type text not null references account_type(name) on delete restrict,
     name text,
     comment text,
 
@@ -120,6 +118,18 @@ create table if not exists account (
     -- todo: voucher
     -- todo: topup-config
 );
+insert into account (
+    id, user_tag_id, type, name, comment
+)
+values
+    -- virtual accounts are hard coded with ids 0-99
+    (0, null, 'virtual', 'Sale Exit', 'target account for sales of the system'),
+    (1, null, 'virtual', 'Cash Entry', 'source account, when cash is brought in the system (cash top_up, ...)'),
+    (2, null, 'virtual', 'Deposit', 'Deposit currently at the customers'),
+    (3, null, 'virtual', 'Sumup', 'source account for sumup top up '),
+    (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here')
+    on conflict do nothing;
+select setval('account_id_seq', 100);
 
 
 -- people working with the payment system
@@ -188,12 +198,12 @@ insert into order_type (
 values
     -- load token with cash
     ('topup_cash'),
-    -- load token with ec
-    ('topup_ec'),
+    -- load token with sumup
+    ('topup_sumup'),
     -- load token with paypal
     ('topup_paypal'),
     -- buy items to consume
-    ('buy_wares')
+    ('sale')
     on conflict do nothing;
 
 
@@ -231,13 +241,17 @@ create table if not exists product (
     -- price including tax (what is charged in the end)
     price numeric not null,
 
+    -- if target account is set, the product is booked to this specific account,
+    -- e.g. for the deposit account, or a specific exit account (for beer, ...)
+    target_account int references account(id),
+
     -- todo: payment possible with voucher?
     -- how many vouchers of which kind does it cost?
 
     tax name not null references tax(name) on delete restrict
 );
 
--- which products are not allowed to be bought with the token restriction (eg beer, below 16)
+-- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
     id bigint references product(id) not null,
     restriction text references restriction_type(name) not null,

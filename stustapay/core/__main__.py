@@ -17,6 +17,7 @@ def main():
     parser = Parser()
 
     parser.add_argument("-c", "--config-path", default="server.conf")
+    parser.add_argument("--mock", action="store_true", help="don't run with real data")
 
     ### module registration
     parser.add_subcommand("database", database.DatabaseManage)

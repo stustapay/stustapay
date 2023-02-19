@@ -4,6 +4,11 @@ from dataclasses import dataclass
 from stustapay.core.schema.product import Product
 
 
+ORDER_TYPE_SALE = "sale"
+ORDER_TYPE_TOPUP_CASH = "topup_cash"
+ORDER_TYPE_TOPUP_SUMUP = "topup_sumup"
+
+
 @dataclass
 class NewLineItem:
     product_id: int
@@ -13,6 +18,8 @@ class NewLineItem:
 @dataclass
 class NewOrder:
     positions: list[NewLineItem]
+    order_type: str
+    customer_tag: int
 
 
 @dataclass
@@ -50,14 +57,11 @@ class OrderBooking:
 
 
 @dataclass
-class OrderID:
+class CompletedOrder:
     id: int
-
-
-@dataclass
-class Account:
-    name: str
-    balance: float
+    uuid: str
+    old_balance: float
+    new_balance: float
 
 
 @dataclass
@@ -72,6 +76,8 @@ class Order(OrderBooking):
     created_at: datetime.datetime
     finished_at: datetime.datetime
     payment_method: str
+    order_type: str
+
     line_items: list[LineItem]
 
     # TODO how to handle foreign keys
@@ -88,6 +94,7 @@ class Order(OrderBooking):
             created_at=row["created_at"],
             finished_at=row["finished_at"],
             payment_method=row["payment_method"],
+            order_type=row["order_type"],
             value_sum=row["value_sum"],
             value_tax=row["value_tax"],
             value_notax=row["value_notax"],
