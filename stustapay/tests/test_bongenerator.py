@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init
 import datetime
 import os.path
 from pathlib import Path

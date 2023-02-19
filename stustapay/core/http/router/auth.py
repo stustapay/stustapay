@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from fastapi import APIRouter, Depends, status, HTTPException
 
 from stustapay.core.http.context import get_terminal_service
-from stustapay.core.service.terminal import TerminalService, TerminalRegistrationSuccess
+from stustapay.core.service.terminal.terminal import TerminalService, TerminalRegistrationSuccess
+
 
 router = APIRouter(
     prefix="/auth",

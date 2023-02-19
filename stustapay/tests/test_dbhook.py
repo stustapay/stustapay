@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init
 import asyncio
 
 from .common import BaseTestCase

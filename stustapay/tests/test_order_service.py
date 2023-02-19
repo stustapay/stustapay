@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init
 from stustapay.core.schema.order import NewLineItem, NewOrder
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.terminal import NewTerminal

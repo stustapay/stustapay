@@ -1,7 +1,8 @@
+# pylint: disable=attribute-defined-outside-init
 from stustapay.core.schema.user import User, Privilege
 from .common import BaseTestCase
 from stustapay.core.schema.terminal import NewTerminal
-from stustapay.core.service.terminal import TerminalService
+from stustapay.core.service.terminal.terminal import TerminalService
 
 
 class TerminalServiceTest(BaseTestCase):
