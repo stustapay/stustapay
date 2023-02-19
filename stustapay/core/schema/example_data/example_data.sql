@@ -60,6 +60,7 @@ values
     (6, 'Russ 1.0l', 5.00, 'ust'),
     (7, 'Russ 0.5l', 3.00, 'ust'),
     (8, 'Limonade 1.0l', 2.00, 'ust'),
+    (14, 'Whisky 1.0l', 20.00, 'ust'),
     -- Essen
     (9, 'Weißwurst', 2.00, 'eust'),
     -- Pfand
@@ -70,6 +71,26 @@ values
     (13, '1€ Aufladen EC', 1.00, 'none')
     on conflict do nothing;
 select setval('product_id_seq', 100);
+
+
+insert into product_restriction (
+    id, restriction
+)
+values
+    -- alcohol is not allowed below 16
+    (0, 'under_16'),
+    (1, 'under_16'),
+    (2, 'under_16'),
+    (3, 'under_16'),
+    (4, 'under_16'),
+    (5, 'under_16'),
+    (6, 'under_16'),
+    (7, 'under_16'),
+    -- whisky is not allowed below 18 (and thus explicit below 16)
+    (14, 'under_16'),
+    (14, 'under_18')
+    on conflict do nothing;
+
 
 insert into terminal (
     id, name, description, registration_uuid, session_uuid, tse_id, active_shift, active_profile, active_cashier

@@ -47,13 +47,26 @@ values
     on conflict do nothing;
 
 
+create table if not exists restriction_type (
+    name text not null primary key
+);
+insert into restriction_type (
+    name
+)
+values
+    ('default'),
+    ('under_18'),
+    ('under_16')
+    on conflict do nothing;
+
+
 -- some secret about one or many tokens
 create table if not exists token_secret (
     id bigserial not null primary key
 );
 
 -- for wristbands/cards/...
-create table if not exists token(
+create table if not exists token (
     id bigserial not null primary key,
     -- hardware id of the token
     uid text not null,
@@ -61,6 +74,8 @@ create table if not exists token(
     pin text,
     -- produced by wristband vendor
     serial text,
+    -- age restriction information
+    restriction text references restriction_type(name) not null,
 
     -- to validate token authenticity
     -- secret maybe shared with several tokens.
@@ -220,6 +235,13 @@ create table if not exists product (
     -- how many vouchers of which kind does it cost?
 
     tax name not null references tax(name) on delete restrict
+);
+
+-- which products are not allowed to be bought with the token restriction (eg beer, below 16)
+create table if not exists product_restriction (
+    id bigint references product(id) not null,
+    restriction text references restriction_type(name) not null,
+    primary key (id, restriction)
 );
 
 
