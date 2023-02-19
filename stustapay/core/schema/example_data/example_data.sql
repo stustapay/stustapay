@@ -25,13 +25,24 @@ values
     (10, null, 'private', 'Guest 0', 'Token Balance of Guest 0', 20.00),
     (11, null, 'private', 'Guest 1', 'Token Balance of Guest 1', 300.20)
     on conflict do nothing;
+select setval('account_id_seq', 100);
 
 
 insert into usr (
     id, name, password, description, account
 )
 values
-    (0, 'Test Cashier', 'password', 'Some Description', 6)
+    (0, 'Test Cashier', 'password', 'Some Description', 6),
+    -- password is admin
+    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W' , null, null)
+    on conflict do nothing;
+
+
+insert into usr_privs (
+    usr, priv
+)
+values
+    (1, 'admin')
     on conflict do nothing;
 
 
@@ -40,17 +51,17 @@ insert into product (
 )
 values
     -- Getränke
-    (0, 'Helles 1.0l', 4.2016806722, 'ust'), -- brutto price 5.00
-    (1, 'Helles 0.5l', 2.5210084033, 'ust'), -- brutto price 3.00
-    (2, 'Weißbier 1.0l', 4.2016806722, 'ust'),
-    (3, 'Weißbier 0.5l', 2.5210084033, 'ust'),
-    (4, 'Radler 1.0l', 4.2016806722, 'ust'),
-    (5, 'Radler 0.5l', 2.5210084033, 'ust'),
-    (6, 'Russ 1.0l', 4.2016806722, 'ust'),
-    (7, 'Russ 0.5l', 2.5210084033, 'ust'),
-    (8, 'Limonade 1.0l', 1.6806722689, 'ust'), -- brutto price 2.00
+    (0, 'Helles 1.0l', 5.00, 'ust'),
+    (1, 'Helles 0.5l', 3.00, 'ust'),
+    (2, 'Weißbier 1.0l', 5.00, 'ust'),
+    (3, 'Weißbier 0.5l', 3.00, 'ust'),
+    (4, 'Radler 1.0l', 5.00, 'ust'),
+    (5, 'Radler 0.5l', 3.00, 'ust'),
+    (6, 'Russ 1.0l', 5.00, 'ust'),
+    (7, 'Russ 0.5l', 3.00, 'ust'),
+    (8, 'Limonade 1.0l', 2.00, 'ust'),
     -- Essen
-    (9, 'Weißwurst', 1.8691588785, 'eust'), -- brutto price 2.00
+    (9, 'Weißwurst', 2.00, 'eust'),
     -- Pfand
     (10, 'Pfand', 2.00, 'none'),
     (11, 'Pfand zurück', -2.00, 'none'),
@@ -58,7 +69,7 @@ values
     (12, '1€ Aufladen Bar', 1.00, 'none'),
     (13, '1€ Aufladen EC', 1.00, 'none')
     on conflict do nothing;
-
+select setval('product_id_seq', 100);
 
 insert into terminal (
     id, name, description, registration_uuid, session_uuid, tse_id, active_shift, active_profile, active_cashier
@@ -66,6 +77,7 @@ insert into terminal (
 values
     (0, 'Terminal 0', 'Test Terminal', null, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'tse 0', 'Shift 0', null, 0)
     on conflict do nothing;
+select setval('terminal_id_seq', 100);
 
 
 insert into ordr (
@@ -79,6 +91,7 @@ values
     -- Top Up EC
     (2, 1, 'done', '01.01.2023 16:59:20 UTC+1', '01.01.2023 17:00:07 UTC+1', 'token', 0, 0, 11)
     on conflict do nothing;
+select setval('ordr_id_seq', 100);
 
 
 insert into lineitem (
@@ -86,12 +99,12 @@ insert into lineitem (
 )
 values
     -- simple beer with deposit
-    (0, 0, 0, 1, 4.20, 'ust', 0.19), -- beer
+    (0, 0, 0, 1, 5.00, 'ust', 0.19), -- beer
     (0, 1, 10, 1, 2.00, 'none', 0.00), -- deposit
     -- items with different tax rates
-    (1, 0, 0, 2, 4.20, 'ust', 0.19), -- beer
+    (1, 0, 0, 2, 5.00, 'ust', 0.19), -- beer
     (1, 1, 10, 2, 2.00, 'none', 0.00), -- deposit
-    (1, 2, 9, 1, 1.87, 'eust', 0.07), -- other tax rate
+    (1, 2, 9, 1, 2.00, 'eust', 0.07), -- other tax rate
     -- Top Up EC
     (2, 0, 13, 20, 1.00, 'none', 0.00) -- Load 20 Money
     on conflict do nothing;
@@ -110,6 +123,7 @@ values
     -- Top Up EC
     (5, 2, null, 3, 11, '01.01.2023 17:00:06 UTC+1', 20.00, 0.00, 'none')
     on conflict do nothing;
+select setval('transaction_id_seq', 100);
 
 insert into bon (
     id, generated, generated_at, error, output_file

@@ -21,10 +21,10 @@ class LineItem(NewLineItem):
     item_id: int
     product: Product
     price: float
-    price_brutto: float
-    price_sum: float
+    total_price: float
     tax_name: str
     tax_rate: float
+    total_tax: float
 
     @classmethod
     def from_db(cls, row) -> "LineItem":
@@ -35,10 +35,10 @@ class LineItem(NewLineItem):
             product=Product.from_db(row),
             quantity=row["quantity"],
             price=row["price"],
-            price_brutto=row["price"] * (1 + row["tax_rate"]),
-            price_sum=row["price"] * (1 + row["tax_rate"]) * row["quantity"],
+            total_price=row["total_price"],
             tax_name=row["tax_name"],
             tax_rate=row["tax_rate"],
+            total_tax=row["total_tax"],
         )
 
 

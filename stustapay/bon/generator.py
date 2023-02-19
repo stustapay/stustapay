@@ -85,7 +85,8 @@ class Generator(SubCommand):
             "funny_text": random.choice(details["closing_texts"]),
             **details,
         }
-        out_file = self.config.bon.output_folder.joinpath(f"{order_id:010}.pdf")
+        file_name = f"{order_id:010}.pdf"
+        out_file = self.config.bon.output_folder.joinpath(file_name)
 
         # Generate the PDF and store the result back in the database
         success, msg = await pdflatex("bon.tex", context, out_file)
@@ -95,7 +96,7 @@ class Generator(SubCommand):
                 "update bon set generated=$2, output_file=$3 , generated_at=now() where id=$1",
                 order_id,
                 success,
-                out_file,
+                file_name,
             )
         else:
             await self.psql.execute(

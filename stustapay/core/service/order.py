@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Optional
 
@@ -78,7 +79,7 @@ class OrderService(DBService):
             return None
 
         db_line_items = await conn.fetch(
-            "select * from lineitem join product on product_id = id where order_id = $1", order_id
+            "select * from lineitem_tax join product on product_id = id where order_id = $1", order_id
         )
         line_items = [LineItem.from_db(row) for row in db_line_items]
         return Order.from_db(row, line_items)

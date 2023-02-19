@@ -213,7 +213,7 @@ create table if not exists product (
 
     name text not null unique,
 
-    -- price without tax, null if free price
+    -- price including tax (what is charged in the end)
     price numeric not null,
 
     -- todo: payment possible with voucher?
@@ -277,6 +277,7 @@ values
 -- represents an order of an customer, like buying wares or top up
 create table if not exists ordr (
     id bigserial not null primary key,
+    uuid uuid not null default gen_random_uuid() unique,
 
     -- order values can be obtained with order_value
 
@@ -316,7 +317,7 @@ create table if not exists lineitem (
 
     quantity int not null default 1,
 
-    -- price without tax
+    -- price with tax
     price numeric not null,
 
     -- tax amount
@@ -326,17 +327,26 @@ create table if not exists lineitem (
     -- todo: voucher amount
 );
 
+create or replace view lineitem_tax as
+    select
+        *,
+        price * quantity as total_price,
+        round(price * quantity * tax_rate / (1 + tax_rate ), 2) as total_tax
+    from
+         lineitem;
+
+
 -- aggregates the lineitem's amounts
 create or replace view order_value as
     select
         ordr.*,
-        sum((price + price * tax_rate) * quantity) as value_sum,
-        sum(price * tax_rate * quantity) as value_tax,
-        sum(price * quantity) as value_notax
+        sum(total_price) as value_sum,
+        sum(total_tax) as value_tax,
+        sum(total_price - total_tax) as value_notax
     from
         ordr
-        left join lineitem
-            on (ordr.id = lineitem.order_id)
+        left join lineitem_tax
+            on (ordr.id = lineitem_tax.order_id)
     group by
         ordr.id;
 
@@ -356,13 +366,13 @@ create or replace view order_tax_rates as
         ordr.*,
         tax_name,
         tax_rate,
-        sum((price + price * tax_rate) * quantity) as value_sum,
-        sum(price * tax_rate * quantity) as value_tax,
-        sum(price * quantity) as value_notax
+        sum(total_price) as value_sum,
+        sum(total_tax) as value_tax,
+        sum(total_price - total_tax) as value_notax
     from
         ordr
-        left join lineitem
-            on (ordr.id = lineitem.order_id)
+        left join lineitem_tax
+            on (ordr.id = order_id)
         group by
             ordr.id, tax_rate, tax_name;
 

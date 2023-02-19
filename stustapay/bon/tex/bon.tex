@@ -2,6 +2,7 @@
 \usepackage{tabularx}
 \usepackage[table]{xcolor}
 \usepackage{graphicx}
+\usepackage{datetime}
 
 \begin{document}
 
@@ -19,6 +20,8 @@
 
     % Rechnungsnummer und Datum
     \vspace{1cm}
+    \textit{TEST \today - \currenttime } % for testing, to see if a new bon was created
+
     \textbf{Rechnung Nr. \VAR["{:010}".format(order.id)]} \hspace{\fill}  \VAR[order.finished_at.date()]
 
     % Addresse und Steuer ID
@@ -34,10 +37,10 @@
     \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
     \rowcolors{2}{}{gray!40}
     \begin{tabularx}{\textwidth}{ p{1cm} p{4cm} R R X }
-        ~                    & \textbf{Produkt}        & \textbf{Einzelpreis}          & \textbf{Gesamt}            &                       \\
+        ~                    & \textbf{Produkt}        & \textbf{Einzelpreis}   & \textbf{Gesamt}              &                       \\
         \hline
         \BLOCK[ for item in order.line_items ]
-        \VAR[item.quantity]x & \VAR[item.product.name] & \VAR[item.price_brutto|money] & \VAR[item.price_sum|money] & [\VAR[item.tax_name]] \\
+        \VAR[item.quantity]x & \VAR[item.product.name] & \VAR[item.price|money] & \VAR[item.total_price|money] & [\VAR[item.tax_name]] \\
         \BLOCK[endfor]
     \end{tabularx}
 
@@ -63,8 +66,8 @@
     \vspace{1cm}
     \begin{tabularx}{0.8\textwidth}{ RX }
         Zahlmethode:        & \VAR[order.txmethod]    \\
-        Vorgangsbeginn:     & \VAR[order.created_at]  \\
-        Vorgangsende:       & \VAR[order.finished_at] \\
+        Vorgangsbeginn:     & \VAR[order.created_at.astimezone()]  \\
+        Vorgangsende:       & \VAR[order.finished_at.astimezone()] \\
         Kasse:              & Festzelt 1              \\
         Kassierer:          & 1337                    \\
         TSE Seriennummer:   & asdfqwer                \\
