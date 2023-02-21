@@ -12,6 +12,8 @@
       "@components/*": ["src/components/*"],
       "@store": ["src/store/index.ts"],
       "@store/*": ["src/store/*"],
+      "@core": ["src/core/index.ts"],
+      "@core/*": ["src/core/*"],
       "@models": ["src/models/index.ts"],
       "@models/*": ["src/models/*"],
       "@api": ["src/api/index.ts"],

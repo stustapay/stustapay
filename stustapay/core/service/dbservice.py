@@ -2,6 +2,7 @@
 database interaction
 """
 
+import json
 from abc import ABC
 from functools import wraps
 from inspect import signature
@@ -25,6 +26,8 @@ def with_db_transaction(func):
     @wraps(func)
     async def wrapper(self, **kwargs):
         async with self.db_pool.acquire() as conn:
+            await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
+
             async with conn.transaction():
                 return await func(self, conn=conn, **kwargs)
 

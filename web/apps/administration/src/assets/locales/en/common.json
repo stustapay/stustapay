@@ -15,5 +15,7 @@
   "users": "Users",
   "confirm": "Confirm",
   "cancel": "Cancel",
-  "terminals": "Terminals"
+  "terminals": "Terminals",
+  "terminalLayouts": "Terminal Layouts",
+  "terminalProfiles": "Terminal Profiles"
 }

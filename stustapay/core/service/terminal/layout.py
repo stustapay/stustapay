@@ -13,62 +13,71 @@ from stustapay.core.service.dbservice import DBService, with_db_transaction, req
 class TerminalLayoutService(DBService):
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
-    async def create_terminal_layout(
-        self, *, conn: asyncpg.Connection, terminal_layout: NewTerminalLayout
-    ) -> TerminalLayout:
+    async def create_layout(self, *, conn: asyncpg.Connection, layout: NewTerminalLayout) -> TerminalLayout:
         row = await conn.fetchrow(
-            "insert into terminal_layout (name, description, config) values ($1, $2, $3) "
-            "returning id, name, description, config",
-            terminal_layout.name,
-            terminal_layout.description,
-            terminal_layout.config,
+            "insert into terminal_layout (name, description) values ($1, $2) " "returning id, name, description",
+            layout.name,
+            layout.description,
         )
+        layout_id = row["id"]
 
-        return TerminalLayout.from_db(row)
+        for product in layout.products:
+            await conn.execute(
+                "insert into terminal_layout_products (product_id, layout_id, sequence_number) values ($1, $2, $3)",
+                product.product_id,
+                layout_id,
+                product.sequence_number,
+            )
+
+        return TerminalLayout.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
-    async def list_terminal_layouts(self, *, conn: asyncpg.Connection) -> list[TerminalLayout]:
-        cursor = conn.cursor("select * from terminal_layout")
+    async def list_layouts(self, *, conn: asyncpg.Connection) -> list[TerminalLayout]:
+        cursor = conn.cursor("select * from terminal_layout_with_products")
         result = []
         async for row in cursor:
-            result.append(TerminalLayout.from_db(row))
+            result.append(TerminalLayout.parse_obj(row))
         return result
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
-    async def get_terminal_layout(
-        self, *, conn: asyncpg.Connection, terminal_layout_id: int
-    ) -> Optional[TerminalLayout]:
-        row = await conn.fetchrow("select * from terminal_layout where id = $1", terminal_layout_id)
+    async def get_layout(self, *, conn: asyncpg.Connection, layout_id: int) -> Optional[TerminalLayout]:
+        row = await conn.fetchrow("select * from terminal_layout_with_products where id = $1", layout_id)
         if row is None:
             return None
 
-        return TerminalLayout.from_db(row)
+        return TerminalLayout.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
-    async def update_terminal_layout(
-        self, *, conn: asyncpg.Connection, terminal_layout_id: int, terminal_layout: NewTerminalLayout
+    async def update_layout(
+        self, *, conn: asyncpg.Connection, layout_id: int, layout: NewTerminalLayout
     ) -> Optional[TerminalLayout]:
         row = await conn.fetchrow(
-            "update terminal_layout set name = $2, description = $3, config = $4 where id = $1 "
-            "returning id, name, description, config",
-            terminal_layout_id,
-            terminal_layout.name,
-            terminal_layout.description,
-            terminal_layout.config,
+            "update terminal_layout set name = $2, description = $3 where id = $1 " "returning id, name, description",
+            layout_id,
+            layout.name,
+            layout.description,
         )
         if row is None:
             return None
+        await conn.execute("delete from terminal_layout_products where layout_id = $1", layout_id)
+        for product in layout.products:
+            await conn.execute(
+                "insert into terminal_layout_products (product_id, layout_id, sequence_number) values ($1, $2, $3)",
+                product.product_id,
+                layout_id,
+                product.sequence_number,
+            )
 
-        return TerminalLayout.from_db(row)
+        return TerminalLayout.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
-    async def delete_terminal_layout(self, *, conn: asyncpg.Connection, terminal_layout_id: int) -> bool:
+    async def delete_layout(self, *, conn: asyncpg.Connection, layout_id: int) -> bool:
         result = await conn.execute(
             "delete from terminal_layout where id = $1",
-            terminal_layout_id,
+            layout_id,
         )
         return result != "DELETE 0"

@@ -17,6 +17,14 @@ import { TerminalCreate } from "./routes/terminals/TerminalCreate";
 import { TerminalUpdate } from "./routes/terminals/TerminalUpdate";
 import { Logout } from "./routes/auth/Logout";
 import { TerminalDetail } from "./routes/terminals/TerminalDetail";
+import {
+  TerminalLayoutCreate,
+  TerminalLayoutUpdate,
+  TerminalLayoutList,
+  TerminalLayoutDetail,
+} from "./routes/terminal-layouts";
+import { TerminalProfileCreate, TerminalProfileUpdate, TerminalProfileList } from "./routes/terminal-profiles";
+import { TerminalProfileDetail } from "./routes/terminal-profiles/TerminalProfileDetail";
 
 const router = createBrowserRouter([
   {
@@ -67,6 +75,38 @@ const router = createBrowserRouter([
       {
         path: "terminals/:terminalId",
         element: <TerminalDetail />,
+      },
+      {
+        path: "terminal-layouts",
+        element: <TerminalLayoutList />,
+      },
+      {
+        path: "terminal-layouts/new",
+        element: <TerminalLayoutCreate />,
+      },
+      {
+        path: "terminal-layouts/:layoutId/edit",
+        element: <TerminalLayoutUpdate />,
+      },
+      {
+        path: "terminal-layouts/:layoutId",
+        element: <TerminalLayoutDetail />,
+      },
+      {
+        path: "terminal-profiles",
+        element: <TerminalProfileList />,
+      },
+      {
+        path: "terminal-profiles/new",
+        element: <TerminalProfileCreate />,
+      },
+      {
+        path: "terminal-profiles/:profileId/edit",
+        element: <TerminalProfileUpdate />,
+      },
+      {
+        path: "terminal-profiles/:profileId",
+        element: <TerminalProfileDetail />,
       },
       {
         path: "users",

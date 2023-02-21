@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useDeleteTerminalMutation, useGetTerminalsQuery } from "@api";
+import { useDeleteTerminalMutation, useGetTerminalsQuery, useGetTerminalProfilesQuery } from "@api";
 import {
   Paper,
   TableContainer,
@@ -23,16 +23,29 @@ export const TerminalList: React.FC = () => {
   const { t } = useTranslation(["terminals", "common"]);
 
   const { data: terminals, isLoading: isTerminalsLoading } = useGetTerminalsQuery();
+  const { data: profiles, isLoading: isProfilesLoading } = useGetTerminalProfilesQuery();
   const [deleteTerminal] = useDeleteTerminalMutation();
 
   const [terminalToDelete, setTerminalToDelete] = React.useState<number | null>(null);
-  if (isTerminalsLoading) {
+  if (isTerminalsLoading || isProfilesLoading) {
     return (
       <Paper>
         <CircularProgress />
       </Paper>
     );
   }
+
+  const renderProfile = (id: number | null) => {
+    if (id == null) {
+      return "";
+    }
+    const profile = (profiles ?? []).find((profile) => profile.id === id);
+    if (!profile) {
+      return "";
+    }
+
+    return <RouterLink to={`/terminal-profiles/${profile.id}`}>{profile.name}</RouterLink>;
+  };
 
   const openConfirmDeleteDialog = (terminalId: number) => {
     setTerminalToDelete(terminalId);
@@ -67,6 +80,7 @@ export const TerminalList: React.FC = () => {
             <TableRow>
               <TableCell>{t("terminalName")}</TableCell>
               <TableCell>{t("terminalDescription")}</TableCell>
+              <TableCell>{t("terminalProfile")}</TableCell>
               <TableCell align="right">{t("actions", { ns: "common" })}</TableCell>
             </TableRow>
           </TableHead>
@@ -77,6 +91,7 @@ export const TerminalList: React.FC = () => {
                   <RouterLink to={`/terminals/${terminal.id}`}>{terminal.name}</RouterLink>{" "}
                 </TableCell>
                 <TableCell>{terminal.description}</TableCell>
+                <TableCell>{renderProfile(terminal.active_profile_id)}</TableCell>
                 <TableCell align="right">
                   <IconButtonLink to={`/terminals/${terminal.id}/edit`} color="primary">
                     <EditIcon />
