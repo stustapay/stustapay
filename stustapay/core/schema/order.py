@@ -71,6 +71,7 @@ class Order(OrderBooking):
     """
 
     id: int
+    uuid: str
     itemcount: int
     status: str
     created_at: datetime.datetime
@@ -78,17 +79,18 @@ class Order(OrderBooking):
     payment_method: str
     order_type: str
 
-    line_items: list[LineItem]
+    # foreign keys
+    cashier_id: int
+    terminal_id: int
+    customer_account_id: int
 
-    # TODO how to handle foreign keys
-    # cashier_id: User
-    # terminal_id: Terminal
-    # customer_account_id: Account
+    line_items: list[LineItem]
 
     @classmethod
     def from_db(cls, row, line_items) -> "Order":
         return cls(
             id=row["id"],
+            uuid=row["uuid"],
             itemcount=row["itemcount"],
             status=row["status"],
             created_at=row["created_at"],
@@ -98,5 +100,8 @@ class Order(OrderBooking):
             value_sum=row["value_sum"],
             value_tax=row["value_tax"],
             value_notax=row["value_notax"],
+            cashier_id=row["cashier_id"],
+            terminal_id=row["terminal_id"],
+            customer_account_id=row["customer_account_id"],
             line_items=line_items,
         )

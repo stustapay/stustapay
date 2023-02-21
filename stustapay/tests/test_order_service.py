@@ -27,6 +27,7 @@ class OrderLogicTest(BaseTestCase):
                 name="Test Product",
                 price=3,
                 tax="ust",
+                target_account=None,
             ),
         )
         self.cashier = await self.user_service.create_user_no_auth(
@@ -50,7 +51,7 @@ class OrderLogicTest(BaseTestCase):
         )
 
     async def test_basic_order_flow(self):
-        completed_order = await self.order_service.execute_order(
+        completed_order = await self.order_service.create_order(
             current_user=self.cashier,
             current_terminal=self.terminal,
             new_order=NewOrder(
@@ -61,8 +62,12 @@ class OrderLogicTest(BaseTestCase):
         )
         self.assertEqual(completed_order.old_balance, START_BALANCE)
         order = await self.order_service.show_order(order_id=completed_order.id)
+        self.assertEqual(order.status, "pending")
         self.assertEqual(order.itemcount, 1)
         self.assertEqual(len(order.line_items), 1)
         self.assertEqual(order.line_items[0].quantity, 2)
         self.assertEqual(order.value_sum, 2 * self.product.price)
         self.assertEqual(completed_order.new_balance, START_BALANCE - order.value_sum)
+        await self.order_service.book_order(order_id=completed_order.id)
+        order = await self.order_service.show_order(order_id=completed_order.id)
+        self.assertEqual(order.status, "done")

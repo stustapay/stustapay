@@ -98,10 +98,10 @@ values
 
 
 insert into terminal (
-    id, name, description, registration_uuid, session_uuid, tse_id, active_shift, active_profile, active_cashier
+    id, name, description, registration_uuid, session_uuid, tse_id, active_shift
 )
 values
-    (0, 'Terminal 0', 'Test Terminal', null, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'tse 0', 'Shift 0', null, 0)
+    (0, 'Terminal 0', 'Test Terminal', null, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'tse 0', 'Shift 0')
     on conflict do nothing;
 select setval('terminal_id_seq', 100);
 
@@ -140,11 +140,11 @@ insert into transaction (
 )
 values
     -- simple beer with deposit
-    (0, 0, null, 200, 2, '01.01.2023 15:35:01 UTC+1', 5.00, 0.19, 'ust'),
-    (1, 0, null, 200, 5, '01.01.2023 15:35:02 UTC+1', 2.00, 0.00, 'none'),
+    (0, 0, null, 200, 0, '01.01.2023 15:35:01 UTC+1', 5.00, 0.19, 'ust'),
+    (1, 0, null, 200, 2, '01.01.2023 15:35:02 UTC+1', 2.00, 0.00, 'none'),
     -- items with different tax rates
-    (2, 1, null, 201, 2, '02.01.2023 17:00:05 UTC+1', 10.00, 0.19, 'ust'),
-    (3, 1, null, 201, 5, '02.01.2023 17:00:06 UTC+1', 4.00, 0.00, 'none'),
+    (2, 1, null, 201, 0, '02.01.2023 17:00:05 UTC+1', 10.00, 0.19, 'ust'),
+    (3, 1, null, 201, 2, '02.01.2023 17:00:06 UTC+1', 4.00, 0.00, 'none'),
     (4, 1, null, 201, 2, '02.01.2023 17:00:07 UTC+1', 2.00, 0.07, 'eust'),
     -- Top Up EC
     (5, 2, null, 3, 201, '01.01.2023 17:00:06 UTC+1', 20.00, 0.00, 'none')

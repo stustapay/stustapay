@@ -451,11 +451,20 @@ create or replace function book_transaction (
 <<locals>> declare
     transaction_id bigint;
     tax_rate numeric;
+    temp_account_id bigint;
 begin
     -- resolve tax rate
     select rate from tax where name = tax_name into locals.tax_rate;
     if locals.tax_rate is null then
         raise 'unknown tax name';
+    end if;
+
+    if amount < 0 then
+        -- swap account on negative amount, as only non-negative transactions are allowed
+        temp_account_id = source_account_id;
+        source_account_id = target_account_id;
+        target_account_id = temp_account_id;
+        amount = -amount;
     end if;
 
     -- add new transaction
