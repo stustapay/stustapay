@@ -46,7 +46,7 @@ class TerminalService(DBService):
             terminal.active_cashier_id,
         )
 
-        return Terminal.from_db(row)
+        return Terminal.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -54,7 +54,7 @@ class TerminalService(DBService):
         cursor = conn.cursor("select * from terminal")
         result = []
         async for row in cursor:
-            result.append(Terminal.from_db(row))
+            result.append(Terminal.parse_obj(row))
         return result
 
     @with_db_transaction
@@ -64,7 +64,7 @@ class TerminalService(DBService):
         if row is None:
             return None
 
-        return Terminal.from_db(row)
+        return Terminal.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -85,7 +85,7 @@ class TerminalService(DBService):
         if row is None:
             return None
 
-        return Terminal.from_db(row)
+        return Terminal.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -118,7 +118,7 @@ class TerminalService(DBService):
         row = await conn.fetchrow("select * from terminal where registration_uuid = $1", registration_uuid)
         if row is None:
             return None
-        terminal = Terminal.from_db(row)
+        terminal = Terminal.parse_obj(row)
         session_uuid = await conn.fetchval(
             "update terminal set session_uuid = gen_random_uuid(), registration_uuid = null where id = $1 "
             "returning session_uuid",
@@ -150,7 +150,7 @@ class TerminalService(DBService):
         if row is None:
             return None
 
-        return Terminal.from_db(row)
+        return Terminal.parse_obj(row)
 
     @with_db_transaction
     @requires_terminal

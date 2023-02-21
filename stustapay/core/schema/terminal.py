@@ -1,53 +1,34 @@
-from dataclasses import dataclass
 from typing import Optional
 
-from stustapay.core.util import _to_string_nullable
+from pydantic import BaseModel
 
 
-@dataclass
-class NewTerminalLayout:
+class LayoutProduct(BaseModel):
+    product_id: int
+    sequence_number: int
+
+
+class NewTerminalLayout(BaseModel):
     name: str
     description: str
-    config: dict
+    products: Optional[list[LayoutProduct]]
 
 
-@dataclass
 class TerminalLayout(NewTerminalLayout):
     id: int
 
-    @classmethod
-    def from_db(cls, row) -> "TerminalLayout":
-        return cls(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            config=row["config"],
-        )
 
-
-@dataclass
-class NewTerminalProfile:
+class NewTerminalProfile(BaseModel):
     name: str
     description: str
-    layout_id: Optional[int]
+    layout_id: int
 
 
-@dataclass
 class TerminalProfile(NewTerminalProfile):
     id: int
 
-    @classmethod
-    def from_db(cls, row) -> "TerminalProfile":
-        return cls(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            layout_id=row["layout_id"],
-        )
 
-
-@dataclass
-class NewTerminal:
+class NewTerminal(BaseModel):
     name: str
     description: Optional[str]
     tse_id: Optional[str]
@@ -56,22 +37,7 @@ class NewTerminal:
     active_cashier_id: Optional[int]
 
 
-@dataclass
 class Terminal(NewTerminal):
     id: int
     is_logged_in: bool
     registration_uuid: Optional[str]
-
-    @classmethod
-    def from_db(cls, row) -> "Terminal":
-        return cls(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            is_logged_in=row["session_uuid"] is not None,
-            registration_uuid=_to_string_nullable(row["registration_uuid"]),
-            tse_id=row["tse_id"],
-            active_shift=row["active_shift"],
-            active_profile_id=row["active_profile_id"],
-            active_cashier_id=row["active_cashier_id"],
-        )

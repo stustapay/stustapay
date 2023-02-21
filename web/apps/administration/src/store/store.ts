@@ -2,9 +2,7 @@ import { authApi } from "@api/authApi";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/dist/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
-import { productApi, userApi } from "../api";
-import { terminalApi } from "../api/terminalApi";
-import { taxRateApi } from "../api/taxRateApi";
+import { productApi, userApi, taxRateApi, terminalApi, terminalLayoutApi, terminalProfileApi } from "@api";
 import { authSlice } from "./authSlice";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
@@ -19,6 +17,8 @@ export const store = configureStore({
   reducer: combineReducers({
     [productApi.reducerPath]: productApi.reducer,
     [terminalApi.reducerPath]: terminalApi.reducer,
+    [terminalLayoutApi.reducerPath]: terminalLayoutApi.reducer,
+    [terminalProfileApi.reducerPath]: terminalProfileApi.reducer,
     [taxRateApi.reducerPath]: taxRateApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
@@ -28,6 +28,8 @@ export const store = configureStore({
     getDefaultMiddleware({ serializableCheck: { ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER] } })
       .concat(productApi.middleware)
       .concat(terminalApi.middleware)
+      .concat(terminalLayoutApi.middleware)
+      .concat(terminalProfileApi.middleware)
       .concat(taxRateApi.middleware)
       .concat(userApi.middleware)
       .concat(authApi.middleware),

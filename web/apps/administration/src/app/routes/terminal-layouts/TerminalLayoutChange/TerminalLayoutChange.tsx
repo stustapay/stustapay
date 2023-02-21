@@ -6,10 +6,10 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTerminal } from "@models";
-import { TerminalProfileSelect } from "./TerminalProfileSelect";
+import { NewTerminalLayout } from "@models";
+import { TerminalLayoutDesigner } from "./TerminalLayoutDesigner";
 
-export interface TerminalChangeProps<T extends NewTerminal> {
+export interface TerminalChangeProps<T extends NewTerminalLayout> {
   headerTitle: string;
   submitLabel: string;
   initialValues: T;
@@ -17,7 +17,7 @@ export interface TerminalChangeProps<T extends NewTerminal> {
   onSubmit: (t: T) => MutationActionCreatorResult<any>;
 }
 
-export function TerminalChange<T extends NewTerminal>({
+export function TerminalLayoutChange<T extends NewTerminalLayout>({
   headerTitle,
   submitLabel,
   initialValues,
@@ -26,6 +26,7 @@ export function TerminalChange<T extends NewTerminal>({
 }: TerminalChangeProps<T>) {
   const navigate = useNavigate();
   const { t } = useTranslation(["terminals", "common"]);
+
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
     setSubmitting(true);
 
@@ -33,7 +34,7 @@ export function TerminalChange<T extends NewTerminal>({
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/terminals");
+        navigate("/terminal-layouts");
       })
       .catch((err) => {
         setSubmitting(false);
@@ -42,22 +43,22 @@ export function TerminalChange<T extends NewTerminal>({
   };
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h5">{headerTitle}</Typography>
-      <Formik
-        initialValues={initialValues}
-        onSubmit={handleSubmit}
-        validationSchema={toFormikValidationSchema(validationSchema)}
-      >
-        {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, setFieldValue, errors, touched }) => (
-          <Form onSubmit={handleSubmit}>
+    <Formik
+      initialValues={initialValues}
+      onSubmit={handleSubmit}
+      validationSchema={toFormikValidationSchema(validationSchema)}
+    >
+      {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, setFieldValue, errors, touched }) => (
+        <Form onSubmit={handleSubmit}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h5">{headerTitle}</Typography>
             <TextField
               variant="standard"
               margin="normal"
               fullWidth
               autoFocus
               name="name"
-              label={t("terminalName")}
+              label={t("layoutName")}
               error={touched.name && !!errors.name}
               helperText={(touched.name && errors.name) as string}
               onBlur={handleBlur}
@@ -70,32 +71,28 @@ export function TerminalChange<T extends NewTerminal>({
               margin="normal"
               fullWidth
               name="description"
-              label={t("terminalDescription")}
+              label={t("layoutDescription")}
               error={touched.description && !!errors.description}
               helperText={(touched.description && errors.description) as string}
               onBlur={handleBlur}
               onChange={handleChange}
               value={values.description}
             />
-
-            <TerminalProfileSelect
-              name="layout"
-              margin="normal"
-              variant="standard"
-              label={t("terminalProfile")}
-              error={touched.active_profile_id && !!errors.active_profile_id}
-              helperText={(touched.active_profile_id ?? errors.active_profile_id) as string | undefined}
-              onChange={(value) => setFieldValue("active_profile_id", value)}
-              value={values.active_profile_id}
+          </Paper>
+          <Paper sx={{ mt: 2 }}>
+            <TerminalLayoutDesigner
+              products={values.products === null ? [] : values.products}
+              onChange={(newProducts) => setFieldValue("products", newProducts)}
             />
-
+          </Paper>
+          <Paper sx={{ mt: 2, p: 2 }}>
             {isSubmitting && <LinearProgress />}
             <Button type="submit" fullWidth variant="contained" color="primary" disabled={isSubmitting} sx={{ mt: 1 }}>
               {submitLabel}
             </Button>
-          </Form>
-        )}
-      </Formik>
-    </Paper>
+          </Paper>
+        </Form>
+      )}
+    </Formik>
   );
 }

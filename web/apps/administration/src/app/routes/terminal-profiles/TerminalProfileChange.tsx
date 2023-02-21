@@ -6,10 +6,10 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTerminal } from "@models";
-import { TerminalProfileSelect } from "./TerminalProfileSelect";
+import { NewTerminalProfile } from "@models";
+import { TerminalLayoutSelect } from "./TerminalLayoutSelect";
 
-export interface TerminalChangeProps<T extends NewTerminal> {
+export interface TerminalChangeProps<T extends NewTerminalProfile> {
   headerTitle: string;
   submitLabel: string;
   initialValues: T;
@@ -17,7 +17,7 @@ export interface TerminalChangeProps<T extends NewTerminal> {
   onSubmit: (t: T) => MutationActionCreatorResult<any>;
 }
 
-export function TerminalChange<T extends NewTerminal>({
+export function TerminalProfileChange<T extends NewTerminalProfile>({
   headerTitle,
   submitLabel,
   initialValues,
@@ -33,11 +33,11 @@ export function TerminalChange<T extends NewTerminal>({
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/terminals");
+        navigate("/terminal-profiles");
       })
       .catch((err) => {
         setSubmitting(false);
-        console.warn("error in terminal update", err);
+        console.warn("error in terminal profile update", err);
       });
   };
 
@@ -57,7 +57,7 @@ export function TerminalChange<T extends NewTerminal>({
               fullWidth
               autoFocus
               name="name"
-              label={t("terminalName")}
+              label={t("profileName")}
               error={touched.name && !!errors.name}
               helperText={(touched.name && errors.name) as string}
               onBlur={handleBlur}
@@ -70,7 +70,7 @@ export function TerminalChange<T extends NewTerminal>({
               margin="normal"
               fullWidth
               name="description"
-              label={t("terminalDescription")}
+              label={t("profileDescription")}
               error={touched.description && !!errors.description}
               helperText={(touched.description && errors.description) as string}
               onBlur={handleBlur}
@@ -78,15 +78,15 @@ export function TerminalChange<T extends NewTerminal>({
               value={values.description}
             />
 
-            <TerminalProfileSelect
+            <TerminalLayoutSelect
               name="layout"
               margin="normal"
               variant="standard"
-              label={t("terminalProfile")}
-              error={touched.active_profile_id && !!errors.active_profile_id}
-              helperText={(touched.active_profile_id ?? errors.active_profile_id) as string | undefined}
-              onChange={(value) => setFieldValue("active_profile_id", value)}
-              value={values.active_profile_id}
+              label={t("terminalLayout")}
+              error={touched.layout_id && !!errors.layout_id}
+              helperText={(touched.layout_id ?? errors.layout_id) as string | undefined}
+              onChange={(value) => setFieldValue("layout_id", value)}
+              value={values.layout_id}
             />
 
             {isSubmitting && <LinearProgress />}

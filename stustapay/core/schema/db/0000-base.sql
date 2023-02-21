@@ -225,17 +225,32 @@ create table if not exists product (
 
 create table if not exists terminal_layout (
     id serial not null primary key,
-    name text not null,
-    description text,
-    config json
+    name text not null unique,
+    description text
 );
 
+create table if not exists terminal_layout_products (
+    product_id int not null references product(id) on delete cascade,
+    layout_id int not null references terminal_layout(id) on delete cascade,
+    sequence_number int not null,
+    primary key(product_id, layout_id)
+);
+
+create or replace view terminal_layout_with_products as (
+    select t.*, j_view.products as products
+    from terminal_layout t
+    join (
+        select tlp.layout_id, json_agg(tlp) as products
+        from terminal_layout_products tlp
+        group by tlp.layout_id
+    ) j_view on t.id = j_view.layout_id
+);
 
 create table if not exists terminal_profile (
     id serial not null primary key,
-    name text not null,
+    name text not null unique,
     description text,
-    layout_id int references terminal_layout(id)
+    layout_id int references terminal_layout(id) not null
     -- todo: payment_methods?
 );
 
@@ -243,7 +258,7 @@ create table if not exists terminal_profile (
 -- which cash desks do we have and in which state are they
 create table if not exists terminal (
     id serial not null primary key,
-    name text not null,
+    name text not null unique,
     description text,
     registration_uuid uuid unique,
     session_uuid uuid unique,
