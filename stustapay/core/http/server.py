@@ -9,8 +9,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .context import Context, ContextMiddleware
+from .error import exception_handler, service_exception_handler, not_found_exception_handler
 from ..database import create_db_pool
 from ..config import DatabaseConfig, HTTPServerConfig
+from ..service.error import ServiceException, NotFoundException
 from ... import __version__
 
 
@@ -21,6 +23,10 @@ class Server:
             version=__version__,
             license_info={"name": "AGPL-3.0"},
         )
+
+        self.api.add_exception_handler(NotFoundException, not_found_exception_handler)
+        self.api.add_exception_handler(ServiceException, service_exception_handler)
+        self.api.add_exception_handler(Exception, exception_handler)
 
         if cors:
             self.api.add_middleware(

@@ -6,7 +6,6 @@ import asyncio
 
 from . import admin
 from . import database
-from . import terminal
 from .args import Parser
 from .config import read_config, mock_config
 
@@ -22,7 +21,6 @@ def main():
 
     ### module registration
     parser.add_subcommand("database", database.DatabaseManage)
-    parser.add_subcommand("terminalserver", terminal.TerminalServer)
     parser.add_subcommand("admin", admin.AdminCli)
     ### / module registration
 

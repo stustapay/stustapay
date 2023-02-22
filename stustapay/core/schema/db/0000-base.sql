@@ -47,26 +47,39 @@ values
     on conflict do nothing;
 
 
--- some secret about one or many tokens
-create table if not exists token_secret (
+create table if not exists restriction_type (
+    name text not null primary key
+);
+insert into restriction_type (
+    name
+)
+values
+    ('under_18'),
+    ('under_16')
+    on conflict do nothing;
+
+
+-- some secret about one or many user_tags
+create table if not exists user_tag_secret (
     id bigserial not null primary key
 );
 
 -- for wristbands/cards/...
-create table if not exists token(
+create table if not exists user_tag (
     id bigserial not null primary key,
-    -- hardware id of the token
-    uid text not null,
+    -- hardware id of the tag
+    uid numeric(20) not null unique,
     -- printed on the back
     pin text,
     -- produced by wristband vendor
     serial text,
+    -- age restriction information
+    restriction text references restriction_type(name),
 
-    -- to validate token authenticity
-    -- secret maybe shared with several tokens.
-    secret int references token_secret(id) on delete restrict
+    -- to validate tag authenticity
+    -- secret maybe shared with several tags.
+    secret int references user_tag_secret(id) on delete restrict
 );
-create index if not exists token_uid ON token USING btree (uid);
 
 
 create table if not exists account_type (
@@ -93,8 +106,8 @@ values
 -- bookkeeping account
 create table if not exists account (
     id bigserial not null primary key,
-    token_id bigint references token(id) on delete cascade,
-    type text references account_type(name) on delete restrict,
+    user_tag_id bigint references user_tag(id) on delete cascade,
+    type text not null references account_type(name) on delete restrict,
     name text,
     comment text,
 
@@ -105,6 +118,18 @@ create table if not exists account (
     -- todo: voucher
     -- todo: topup-config
 );
+insert into account (
+    id, user_tag_id, type, name, comment
+)
+values
+    -- virtual accounts are hard coded with ids 0-99
+    (0, null, 'virtual', 'Sale Exit', 'target account for sales of the system'),
+    (1, null, 'virtual', 'Cash Entry', 'source account, when cash is brought in the system (cash top_up, ...)'),
+    (2, null, 'virtual', 'Deposit', 'Deposit currently at the customers'),
+    (3, null, 'virtual', 'Sumup', 'source account for sumup top up '),
+    (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here')
+    on conflict do nothing;
+select setval('account_id_seq', 100);
 
 
 -- people working with the payment system
@@ -173,12 +198,12 @@ insert into order_type (
 values
     -- load token with cash
     ('topup_cash'),
-    -- load token with ec
-    ('topup_ec'),
+    -- load token with sumup
+    ('topup_sumup'),
     -- load token with paypal
     ('topup_paypal'),
     -- buy items to consume
-    ('buy_wares')
+    ('sale')
     on conflict do nothing;
 
 
@@ -213,13 +238,24 @@ create table if not exists product (
 
     name text not null unique,
 
-    -- price without tax, null if free price
+    -- price including tax (what is charged in the end)
     price numeric not null,
+
+    -- if target account is set, the product is booked to this specific account,
+    -- e.g. for the deposit account, or a specific exit account (for beer, ...)
+    target_account int references account(id),
 
     -- todo: payment possible with voucher?
     -- how many vouchers of which kind does it cost?
 
     tax name not null references tax(name) on delete restrict
+);
+
+-- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
+create table if not exists product_restriction (
+    id bigint references product(id) not null,
+    restriction text references restriction_type(name) not null,
+    primary key (id, restriction)
 );
 
 
@@ -292,6 +328,7 @@ values
 -- represents an order of an customer, like buying wares or top up
 create table if not exists ordr (
     id bigserial not null primary key,
+    uuid uuid not null default gen_random_uuid() unique,
 
     -- order values can be obtained with order_value
 
@@ -331,7 +368,7 @@ create table if not exists lineitem (
 
     quantity int not null default 1,
 
-    -- price without tax
+    -- price with tax
     price numeric not null,
 
     -- tax amount
@@ -341,17 +378,26 @@ create table if not exists lineitem (
     -- todo: voucher amount
 );
 
+create or replace view lineitem_tax as
+    select
+        *,
+        price * quantity as total_price,
+        round(price * quantity * tax_rate / (1 + tax_rate ), 2) as total_tax
+    from
+         lineitem;
+
+
 -- aggregates the lineitem's amounts
 create or replace view order_value as
     select
         ordr.*,
-        sum((price + price * tax_rate) * quantity) as value_sum,
-        sum(price * tax_rate * quantity) as value_tax,
-        sum(price * quantity) as value_notax
+        sum(total_price) as value_sum,
+        sum(total_tax) as value_tax,
+        sum(total_price - total_tax) as value_notax
     from
         ordr
-        left join lineitem
-            on (ordr.id = lineitem.order_id)
+        left join lineitem_tax
+            on (ordr.id = lineitem_tax.order_id)
     group by
         ordr.id;
 
@@ -371,13 +417,13 @@ create or replace view order_tax_rates as
         ordr.*,
         tax_name,
         tax_rate,
-        sum((price + price * tax_rate) * quantity) as value_sum,
-        sum(price * tax_rate * quantity) as value_tax,
-        sum(price * quantity) as value_notax
+        sum(total_price) as value_sum,
+        sum(total_tax) as value_tax,
+        sum(total_price - total_tax) as value_notax
     from
         ordr
-        left join lineitem
-            on (ordr.id = lineitem.order_id)
+        left join lineitem_tax
+            on (ordr.id = order_id)
         group by
             ordr.id, tax_rate, tax_name;
 
@@ -420,11 +466,20 @@ create or replace function book_transaction (
 <<locals>> declare
     transaction_id bigint;
     tax_rate numeric;
+    temp_account_id bigint;
 begin
     -- resolve tax rate
     select rate from tax where name = tax_name into locals.tax_rate;
     if locals.tax_rate is null then
         raise 'unknown tax name';
+    end if;
+
+    if amount < 0 then
+        -- swap account on negative amount, as only non-negative transactions are allowed
+        temp_account_id = source_account_id;
+        source_account_id = target_account_id;
+        target_account_id = temp_account_id;
+        amount = -amount;
     end if;
 
     -- add new transaction

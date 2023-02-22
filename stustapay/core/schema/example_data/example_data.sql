@@ -8,30 +8,46 @@ begin;
 set plpgsql.extra_warnings to 'all';
 
 
--- account
-insert into account (
-    id, token_id, type, name, comment, balance
+insert into user_tag (
+    id, uid, pin, serial, restriction, secret
 )
 values
-    (0, null, 'virtual', 'Input', 'Money payed at the festival', 1234.56),
-    (2, null, 'virtual', 'Output', 'Warenausgangkonto', 523.41),
-    (3, null, 'virtual', 'Sumup ec', 'Sumup Account', 5176.87),
-    (4, null, 'virtual', 'Cash Vault', 'Main Cash location', 200.50),
-    (5, null, 'virtual', 'Deposit', 'Deposit paid by the guests', 402.00),
-    (6, null, 'internal', 'Cash Desk 0', 'Cash money in register 0', 500.00),
-    (7, null, 'internal', 'Rucksack 0', 'Finanzer-rucksack', 200.00),
+    (0, 1234, null, null, null, null),
+    (1, 13876489173, null, null, null, null)
+    on conflict do nothing;
+
+
+insert into account (
+    id, user_tag_id, type, name, comment, balance
+)
+values
+    -- virtual accounts are hard coded with ids 0-99
+    -- internal
+    (100, null, 'internal', 'Cash Desk 0', 'Cash money in register 0', 500.00),
+    (101, null, 'internal', 'Rucksack 0', 'Finanzer-rucksack', 200.00),
 
     -- guests (which would need token IDs)
-    (10, null, 'private', 'Guest 0', 'Token Balance of Guest 0', 20.00),
-    (11, null, 'private', 'Guest 1', 'Token Balance of Guest 1', 300.20)
+    (200, 0, 'private', 'Guest 0', 'Token Balance of Guest 0', 20.00),
+    (201, 1, 'private', 'Guest 1', 'Token Balance of Guest 1', 300.20)
     on conflict do nothing;
+select setval('account_id_seq', 300);
 
 
 insert into usr (
     id, name, password, description, account
 )
 values
-    (0, 'Test Cashier', 'password', 'Some Description', 6)
+    (0, 'Test Cashier', 'password', 'Some Description', 100),
+    -- password is admin
+    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W' , null, null)
+    on conflict do nothing;
+
+
+insert into usr_privs (
+    usr, priv
+)
+values
+    (1, 'admin')
     on conflict do nothing;
 
 
@@ -40,17 +56,18 @@ insert into product (
 )
 values
     -- Getränke
-    (0, 'Helles 1.0l', 4.2016806722, 'ust'), -- brutto price 5.00
-    (1, 'Helles 0.5l', 2.5210084033, 'ust'), -- brutto price 3.00
-    (2, 'Weißbier 1.0l', 4.2016806722, 'ust'),
-    (3, 'Weißbier 0.5l', 2.5210084033, 'ust'),
-    (4, 'Radler 1.0l', 4.2016806722, 'ust'),
-    (5, 'Radler 0.5l', 2.5210084033, 'ust'),
-    (6, 'Russ 1.0l', 4.2016806722, 'ust'),
-    (7, 'Russ 0.5l', 2.5210084033, 'ust'),
-    (8, 'Limonade 1.0l', 1.6806722689, 'ust'), -- brutto price 2.00
+    (0, 'Helles 1.0l', 5.00, 'ust'),
+    (1, 'Helles 0.5l', 3.00, 'ust'),
+    (2, 'Weißbier 1.0l', 5.00, 'ust'),
+    (3, 'Weißbier 0.5l', 3.00, 'ust'),
+    (4, 'Radler 1.0l', 5.00, 'ust'),
+    (5, 'Radler 0.5l', 3.00, 'ust'),
+    (6, 'Russ 1.0l', 5.00, 'ust'),
+    (7, 'Russ 0.5l', 3.00, 'ust'),
+    (8, 'Limonade 1.0l', 2.00, 'ust'),
+    (14, 'Whisky 1.0l', 20.00, 'ust'),
     -- Essen
-    (9, 'Weißwurst', 1.8691588785, 'eust'), -- brutto price 2.00
+    (9, 'Weißwurst', 2.00, 'eust'),
     -- Pfand
     (10, 'Pfand', 2.00, 'none'),
     (11, 'Pfand zurück', -2.00, 'none'),
@@ -58,14 +75,35 @@ values
     (12, '1€ Aufladen Bar', 1.00, 'none'),
     (13, '1€ Aufladen EC', 1.00, 'none')
     on conflict do nothing;
+select setval('product_id_seq', 100);
+
+
+insert into product_restriction (
+    id, restriction
+)
+values
+    -- alcohol is not allowed below 16
+    (0, 'under_16'),
+    (1, 'under_16'),
+    (2, 'under_16'),
+    (3, 'under_16'),
+    (4, 'under_16'),
+    (5, 'under_16'),
+    (6, 'under_16'),
+    (7, 'under_16'),
+    -- whisky is not allowed below 18 (and thus explicit below 16)
+    (14, 'under_16'),
+    (14, 'under_18')
+    on conflict do nothing;
 
 
 insert into terminal (
-    id, name, description, registration_uuid, session_uuid, tse_id, active_shift, active_profile, active_cashier
+    id, name, description, registration_uuid, session_uuid, tse_id, active_shift
 )
 values
-    (0, 'Terminal 0', 'Test Terminal', null, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'tse 0', 'Shift 0', null, 0)
+    (0, 'Terminal 0', 'Test Terminal', null, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'tse 0', 'Shift 0')
     on conflict do nothing;
+select setval('terminal_id_seq', 100);
 
 
 insert into ordr (
@@ -73,12 +111,13 @@ insert into ordr (
 )
 values
     -- simple beer with deposit
-    (0, 2, 'done', '01.01.2023 15:34:17 UTC+1', '01.01.2023 15:35:02 UTC+1', 'token', 0, 0, 10),
+    (0, 2, 'done', '01.01.2023 15:34:17 UTC+1', '01.01.2023 15:35:02 UTC+1', 'token', 0, 0, 200),
     -- items with different tax rates
-    (1, 3, 'done', '02.01.2023 16:59:20 UTC+1', '02.01.2023 17:00:07 UTC+1', 'token', 0, 0, 11),
+    (1, 3, 'done', '02.01.2023 16:59:20 UTC+1', '02.01.2023 17:00:07 UTC+1', 'token', 0, 0, 201),
     -- Top Up EC
-    (2, 1, 'done', '01.01.2023 16:59:20 UTC+1', '01.01.2023 17:00:07 UTC+1', 'token', 0, 0, 11)
+    (2, 1, 'done', '01.01.2023 16:59:20 UTC+1', '01.01.2023 17:00:07 UTC+1', 'token', 0, 0, 201)
     on conflict do nothing;
+select setval('ordr_id_seq', 100);
 
 
 insert into lineitem (
@@ -86,12 +125,12 @@ insert into lineitem (
 )
 values
     -- simple beer with deposit
-    (0, 0, 0, 1, 4.20, 'ust', 0.19), -- beer
+    (0, 0, 0, 1, 5.00, 'ust', 0.19), -- beer
     (0, 1, 10, 1, 2.00, 'none', 0.00), -- deposit
     -- items with different tax rates
-    (1, 0, 0, 2, 4.20, 'ust', 0.19), -- beer
+    (1, 0, 0, 2, 5.00, 'ust', 0.19), -- beer
     (1, 1, 10, 2, 2.00, 'none', 0.00), -- deposit
-    (1, 2, 9, 1, 1.87, 'eust', 0.07), -- other tax rate
+    (1, 2, 9, 1, 2.00, 'eust', 0.07), -- other tax rate
     -- Top Up EC
     (2, 0, 13, 20, 1.00, 'none', 0.00) -- Load 20 Money
     on conflict do nothing;
@@ -101,15 +140,16 @@ insert into transaction (
 )
 values
     -- simple beer with deposit
-    (0, 0, null, 10, 2, '01.01.2023 15:35:01 UTC+1', 5.00, 0.19, 'ust'),
-    (1, 0, null, 10, 5, '01.01.2023 15:35:02 UTC+1', 2.00, 0.00, 'none'),
+    (0, 0, null, 200, 0, '01.01.2023 15:35:01 UTC+1', 5.00, 0.19, 'ust'),
+    (1, 0, null, 200, 2, '01.01.2023 15:35:02 UTC+1', 2.00, 0.00, 'none'),
     -- items with different tax rates
-    (2, 1, null, 11, 2, '02.01.2023 17:00:05 UTC+1', 10.00, 0.19, 'ust'),
-    (3, 1, null, 11, 5, '02.01.2023 17:00:06 UTC+1', 4.00, 0.00, 'none'),
-    (4, 1, null, 11, 2, '02.01.2023 17:00:07 UTC+1', 2.00, 0.07, 'eust'),
+    (2, 1, null, 201, 0, '02.01.2023 17:00:05 UTC+1', 10.00, 0.19, 'ust'),
+    (3, 1, null, 201, 2, '02.01.2023 17:00:06 UTC+1', 4.00, 0.00, 'none'),
+    (4, 1, null, 201, 2, '02.01.2023 17:00:07 UTC+1', 2.00, 0.07, 'eust'),
     -- Top Up EC
-    (5, 2, null, 3, 11, '01.01.2023 17:00:06 UTC+1', 20.00, 0.00, 'none')
+    (5, 2, null, 3, 201, '01.01.2023 17:00:06 UTC+1', 20.00, 0.00, 'none')
     on conflict do nothing;
+select setval('transaction_id_seq', 100);
 
 insert into bon (
     id, generated, generated_at, error, output_file

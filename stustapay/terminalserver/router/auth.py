@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from stustapay.core.http.context import get_terminal_service
 from stustapay.core.service.terminal.terminal import TerminalService, TerminalRegistrationSuccess

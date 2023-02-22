@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -6,6 +7,7 @@ class NewProduct:
     name: str
     price: float
     tax: str
+    target_account: Optional[int]
 
 
 @dataclass
@@ -19,4 +21,5 @@ class Product(NewProduct):
             name=row["name"],
             price=row["price"],
             tax=row["tax"],
+            target_account=row["target_account"],
         )

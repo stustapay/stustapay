@@ -3,11 +3,9 @@ websocket for live updates
 """
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
-
 from pydantic import BaseModel
 
-from ..context import get_db_conn
-
+from stustapay.core.http.context import get_db_conn
 
 router = APIRouter(
     prefix="",
