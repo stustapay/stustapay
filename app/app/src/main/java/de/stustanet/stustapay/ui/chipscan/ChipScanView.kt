@@ -50,7 +50,7 @@ fun ChipScanView(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Scan a chip", fontSize = 48.sp)
+                        Text(text = state.prompt, fontSize = 48.sp)
                     }
                 }
             }

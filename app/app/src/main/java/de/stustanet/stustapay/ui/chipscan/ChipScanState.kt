@@ -11,9 +11,11 @@ import androidx.compose.runtime.remember
 class ChipScanState (
     private val _scan: () -> Unit,
     private val _close: () -> Unit,
-    private val drawerState: DrawerState
+    private val drawerState: DrawerState,
+    var prompt: String = "Scan a chip"
 ) {
-    suspend fun scan() {
+    suspend fun scan(prompt: String = "Scan a chip") {
+        this.prompt = prompt
         _scan()
         drawerState.open()
     }

@@ -48,7 +48,7 @@ class ChipStatusViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ChipStatusUiState(uid = 0uL)
+        initialValue = ChipStatusUiState()
     )
 
     fun scan(req: Boolean) {

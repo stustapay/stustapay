@@ -93,7 +93,19 @@ fun RootView(uictrl: SysUiController? = null) {
             }
         }
 
-        composable(RootNavDests.ordering.route) { OrderView() }
+        composable(RootNavDests.ordering.route) {
+            NavScaffold(
+                title = { Text("StuStaPay") },
+                hasDrawer = true,
+                navigateTo = { navTo ->
+                    navController.navigateDestination(
+                        navTo
+                    )
+                }
+            ) {
+                OrderView()
+            }
+        }
         composable(RootNavDests.settings.route) {
             SettingsView(leaveView = { navController.navigateUp() })
         }
