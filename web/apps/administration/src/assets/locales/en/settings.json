@@ -1,5 +1,7 @@
 {
   "language": "Language",
   "currency": "Currency",
-  "juristiction": "Juristiction"
+  "juristiction": "Juristiction",
+  "serverSideConfig": "Server side settings",
+  "localConfig": "Local settings"
 }

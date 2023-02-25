@@ -96,12 +96,27 @@ values
     (14, 'under_18')
     on conflict do nothing;
 
-
-insert into terminal (
-    id, name, description, registration_uuid, session_uuid, tse_id, active_shift
+insert into terminal_layout (
+    id, name, description
 )
 values
-    (0, 'Terminal 0', 'Test Terminal', null, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'tse 0', 'Shift 0')
+    (0, 'Bierkasse', 'Allgemeine Bierkasse')
+on conflict do nothing;
+select setval('terminal_layout_id_seq', 100);
+
+insert into terminal_profile (
+    id, name, description, layout_id
+)
+values
+    (0, 'Pot', 'Allgemeine Pot Bierkasse', 0)
+on conflict do nothing;
+select setval('terminal_profile_id_seq', 100);
+
+insert into terminal (
+    id, name, description, registration_uuid, session_uuid, tse_id, active_shift, active_profile_id
+)
+values
+    (0, 'Terminal 0', 'Test Terminal', null, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'tse 0', 'Shift 0', 0)
     on conflict do nothing;
 select setval('terminal_id_seq', 100);
 

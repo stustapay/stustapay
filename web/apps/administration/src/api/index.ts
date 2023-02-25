@@ -4,3 +4,4 @@ export * from "./userApi";
 export * from "./taxRateApi";
 export * from "./terminalLayoutApi";
 export * from "./terminalProfileApi";
+export * from "./configApi";

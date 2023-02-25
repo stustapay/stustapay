@@ -29,6 +29,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { IconButtonLink, ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "../../../components";
 import { Product } from "@models";
+import { SearchInput } from "@components/SearchInput";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation(["products", "common"]);
@@ -92,6 +93,7 @@ export const ProductList: React.FC = () => {
         <Typography variant="body1">{}</Typography>
       </Paper>
       <TableContainer component={Paper} sx={{ mt: 2 }}>
+        <SearchInput />
         <Table sx={{ minWidth: 650 }} aria-label="products">
           <TableHead>
             <TableRow>

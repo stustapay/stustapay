@@ -84,7 +84,7 @@ export function TerminalChange<T extends NewTerminal>({
               variant="standard"
               label={t("terminalProfile")}
               error={touched.active_profile_id && !!errors.active_profile_id}
-              helperText={(touched.active_profile_id ?? errors.active_profile_id) as string | undefined}
+              helperText={(touched.active_profile_id && errors.active_profile_id) as string}
               onChange={(value) => setFieldValue("active_profile_id", value)}
               value={values.active_profile_id}
             />

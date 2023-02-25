@@ -84,7 +84,7 @@ export function TerminalProfileChange<T extends NewTerminalProfile>({
               variant="standard"
               label={t("terminalLayout")}
               error={touched.layout_id && !!errors.layout_id}
-              helperText={(touched.layout_id ?? errors.layout_id) as string | undefined}
+              helperText={(touched.layout_id && errors.layout_id) as string}
               onChange={(value) => setFieldValue("layout_id", value)}
               value={values.layout_id}
             />

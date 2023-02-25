@@ -27,6 +27,10 @@ export const authSlice = createSlice({
       state.user = null;
       state.token = null;
     });
+    builder.addMatcher(authApi.endpoints.logout.matchRejected, (state) => {
+      state.user = null;
+      state.token = null;
+    });
   },
 });
 

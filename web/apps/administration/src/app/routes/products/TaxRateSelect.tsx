@@ -1,4 +1,12 @@
-import { Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, SelectProps } from "@mui/material";
+import {
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
+  SelectProps,
+  FormHelperText,
+} from "@mui/material";
 import { useGetTaxRatesQuery } from "@api";
 import * as React from "react";
 
@@ -26,17 +34,18 @@ export const TaxRateSelect: React.FC<TaxRateSelectProps> = ({
   };
 
   return (
-    <FormControl fullWidth margin={margin}>
+    <FormControl fullWidth margin={margin} error={error}>
       <InputLabel variant={props.variant} id="taxRateSelectLabel">
         {label}
       </InputLabel>
-      <Select labelId="taxRateSelectLabel" value={value} onChange={handleChange as any} error={error} {...props}>
+      <Select labelId="taxRateSelectLabel" value={value} onChange={handleChange as any} {...props}>
         {(taxRates ?? []).map((taxRate) => (
           <MenuItem key={taxRate.name} value={taxRate.name}>
             {taxRate.description} ({taxRate.rate}%)
           </MenuItem>
         ))}
       </Select>
+      {helperText && <FormHelperText sx={{ ml: 0 }}>{helperText}</FormHelperText>}
     </FormControl>
   );
 };

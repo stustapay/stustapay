@@ -5,7 +5,18 @@ from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
 from stustapay.core.subcommand import SubCommand
 
-from .routers import product, user, common, tax_rate, auth, terminal, terminal_profiles, terminal_layouts
+from .routers import (
+    product,
+    user,
+    common,
+    tax_rate,
+    auth,
+    terminal,
+    terminal_profiles,
+    terminal_layouts,
+    config as config_router,
+)
+from ..core.service.config import ConfigService
 from ..core.service.product import ProductService
 from ..core.service.tax_rate import TaxRateService
 from ..core.service.terminal import TerminalService
@@ -35,6 +46,7 @@ class Api(SubCommand):
         self.server.add_router(terminal.router)
         self.server.add_router(terminal_layouts.router)
         self.server.add_router(terminal_profiles.router)
+        self.server.add_router(config_router.router)
 
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)
@@ -46,6 +58,7 @@ class Api(SubCommand):
             tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg),
             user_service=UserService(db_pool=db_pool, config=self.cfg),
             terminal_service=TerminalService(db_pool=db_pool, config=self.cfg),
+            config_service=ConfigService(db_pool=db_pool, config=self.cfg),
         )
         try:
             await self.server.run(self.cfg, context)

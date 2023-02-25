@@ -5,8 +5,8 @@ export const TerminalLayoutProductsSchema = z.array(z.object({ product_id: z.num
 export type TerminalLayoutProducts = z.infer<typeof TerminalLayoutProductsSchema>;
 
 export const NewTerminalLayoutSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().nullable(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
   products: TerminalLayoutProductsSchema.nullable(),
 });
 
@@ -20,8 +20,8 @@ export const TerminalLayoutSchema = NewTerminalLayoutSchema.merge(
 export type TerminalLayout = z.infer<typeof TerminalLayoutSchema>;
 
 export const NewTerminalProfileSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().nullable(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
   layout_id: z.number(),
 });
 
@@ -35,12 +35,12 @@ export const TerminalProfileSchema = NewTerminalProfileSchema.merge(
 export type TerminalProfile = z.infer<typeof TerminalProfileSchema>;
 
 export const NewTerminalSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().nullable(),
-  tse_id: z.string().nullable(),
-  active_shift: z.string().nullable(),
-  active_profile_id: z.number().nullable(),
-  active_cashier_id: z.number().nullable(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  tse_id: z.string().nullable().optional(),
+  active_shift: z.string().nullable().optional(),
+  active_profile_id: z.number(),
+  active_cashier_id: z.number().nullable().optional(),
 });
 
 export type NewTerminal = z.infer<typeof NewTerminalSchema>;
@@ -52,7 +52,7 @@ export type UpdateTerminal = z.infer<typeof UpdateTerminalSchema>;
 export const TerminalSchema = UpdateTerminalSchema.merge(
   z.object({
     registration_uuid: z.string().nullable(),
-    is_logged_in: z.boolean(),
+    session_uuid: z.string().nullable(),
   })
 );
 
