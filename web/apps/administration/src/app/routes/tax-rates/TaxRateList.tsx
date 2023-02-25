@@ -1,36 +1,24 @@
 import * as React from "react";
-import {
-  Paper,
-  TableContainer,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  CircularProgress,
-  IconButton,
-  Typography,
-  ListItem,
-  ListItemText,
-} from "@mui/material";
+import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { useDeleteTaxRateMutation, useGetTaxRatesQuery } from "../../../api";
+import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
+import { useDeleteTaxRateMutation, useGetTaxRatesQuery } from "@api";
 import { useTranslation } from "react-i18next";
-import { IconButtonLink, ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "../../../components";
+import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
+import { useNavigate } from "react-router-dom";
+import { TaxRate } from "@models";
+import { Loading } from "@components/Loading";
 
 export const TaxRateList: React.FC = () => {
   const { t } = useTranslation(["taxRates", "common"]);
+  const navigate = useNavigate();
 
   const { data: taxRates, isLoading } = useGetTaxRatesQuery();
   const [deleteTaxRate] = useDeleteTaxRateMutation();
 
   const [taxRateToDelete, setTaxRateToDelete] = React.useState<string | null>(null);
   if (isLoading) {
-    return (
-      <Paper>
-        <CircularProgress />
-      </Paper>
-    );
+    return <Loading />;
   }
 
   const openConfirmDeleteDialog = (taxRateName: string) => {
@@ -46,6 +34,47 @@ export const TaxRateList: React.FC = () => {
     setTaxRateToDelete(null);
   };
 
+  const columns: GridColumns<TaxRate> = [
+    {
+      field: "name",
+      headerName: t("taxRateName") as string,
+      width: 100,
+    },
+    {
+      field: "description",
+      headerName: t("taxRateDescription") as string,
+      flex: 1,
+    },
+    {
+      field: "rate",
+      headerName: t("taxRateRate") as string,
+      align: "right",
+      type: "number",
+      valueGetter: (params) => params.row.rate * 100,
+      valueFormatter: ({ value }) => `${value.toFixed(2)} %`,
+    },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: t("actions", { ns: "common" }) as string,
+      width: 150,
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          color="primary"
+          label={t("edit", { ns: "common" })}
+          onClick={() => navigate(`/tax-rates/${params.row.name}/edit`)}
+        />,
+        <GridActionsCellItem
+          icon={<DeleteIcon />}
+          color="error"
+          label={t("delete", { ns: "common" })}
+          onClick={() => openConfirmDeleteDialog(params.row.name)}
+        />,
+      ],
+    },
+  ];
+
   return (
     <>
       <Paper>
@@ -60,35 +89,14 @@ export const TaxRateList: React.FC = () => {
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table sx={{ minWidth: 650 }} aria-label="taxRates">
-          <TableHead>
-            <TableRow>
-              <TableCell>{t("taxRateName")}</TableCell>
-              <TableCell align="right">{t("taxRateRate")}</TableCell>
-              <TableCell>{t("taxRateDescription")}</TableCell>
-              <TableCell align="right">{t("actions", { ns: "common" })}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {(taxRates ?? []).map((taxRate) => (
-              <TableRow key={taxRate.name}>
-                <TableCell>{taxRate.name}</TableCell>
-                <TableCell align="right">{(taxRate.rate * 100).toFixed(0)} %</TableCell>
-                <TableCell>{taxRate.description}</TableCell>
-                <TableCell align="right">
-                  <IconButtonLink to={`/tax-rates/${taxRate.name}/edit`} color="primary">
-                    <EditIcon />
-                  </IconButtonLink>
-                  <IconButton color="error" onClick={() => openConfirmDeleteDialog(taxRate.name)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <DataGrid
+        autoHeight
+        getRowId={(row) => row.name}
+        rows={taxRates ?? []}
+        columns={columns}
+        disableSelectionOnClick
+        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      />
       <ConfirmDialog
         title={t("deleteTaxRate")}
         body={t("deleteTaxRateDescription")}

@@ -67,9 +67,7 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
     async def list_users(self, *, conn: asyncpg.Connection) -> list[User]:
-        cursor = conn.cursor(
-            "select * from usr_with_privileges"
-        )
+        cursor = conn.cursor("select * from usr_with_privileges")
         result = []
         async for row in cursor:
             result.append(
@@ -86,8 +84,7 @@ class UserService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def get_user(self, *, conn: asyncpg.Connection, user_id: int) -> Optional[User]:
         row = await conn.fetchrow(
-            "select * from usr_with_privileges "
-            "where id = $1",
+            "select * from usr_with_privileges " "where id = $1",
             user_id,
         )
         if row is None:
@@ -131,8 +128,7 @@ class UserService(DBService):
     @with_db_transaction
     async def login_user(self, *, conn: asyncpg.Connection, username: str, password: str) -> Optional[UserLoginSuccess]:
         row = await conn.fetchrow(
-            "select * from usr_with_privileges "
-            "where name = $1",
+            "select * from usr_with_privileges " "where name = $1",
             username,
         )
         if row is None:

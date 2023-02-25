@@ -1,37 +1,24 @@
 import * as React from "react";
 import { useDeleteTerminalLayoutMutation, useGetTerminalLayoutsQuery } from "@api";
-import {
-  Paper,
-  TableContainer,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  CircularProgress,
-  IconButton,
-  Typography,
-  ListItem,
-  ListItemText,
-} from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
+import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-import { IconButtonLink, ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
-import { Link as RouterLink } from "react-router-dom";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { TerminalLayout } from "@models";
+import { Loading } from "@components/Loading";
 
 export const TerminalLayoutList: React.FC = () => {
   const { t } = useTranslation(["terminals", "common"]);
+  const navigate = useNavigate();
 
   const { data: layouts, isLoading: isTerminalsLoading } = useGetTerminalLayoutsQuery();
   const [deleteTerminal] = useDeleteTerminalLayoutMutation();
 
   const [layoutToDelete, setLayoutToDelete] = React.useState<number | null>(null);
   if (isTerminalsLoading) {
-    return (
-      <Paper>
-        <CircularProgress />
-      </Paper>
-    );
+    return <Loading />;
   }
 
   const openConfirmDeleteDialog = (terminalId: number) => {
@@ -47,6 +34,40 @@ export const TerminalLayoutList: React.FC = () => {
     setLayoutToDelete(null);
   };
 
+  const columns: GridColumns<TerminalLayout> = [
+    {
+      field: "name",
+      headerName: t("layoutName") as string,
+      flex: 1,
+      renderCell: (params) => <RouterLink to={`/terminal-layouts/${params.row.id}`}>{params.row.name}</RouterLink>,
+    },
+    {
+      field: "description",
+      headerName: t("layoutDescription") as string,
+      flex: 2,
+    },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: t("actions", { ns: "common" }) as string,
+      width: 150,
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          color="primary"
+          label={t("edit", { ns: "common" })}
+          onClick={() => navigate(`/terminal-layouts/${params.row.id}/edit`)}
+        />,
+        <GridActionsCellItem
+          icon={<DeleteIcon />}
+          color="error"
+          label={t("delete", { ns: "common" })}
+          onClick={() => openConfirmDeleteDialog(params.row.id)}
+        />,
+      ],
+    },
+  ];
+
   return (
     <>
       <Paper>
@@ -61,35 +82,13 @@ export const TerminalLayoutList: React.FC = () => {
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table sx={{ minWidth: 650 }} aria-label="terminal-layouts">
-          <TableHead>
-            <TableRow>
-              <TableCell>{t("layoutName")}</TableCell>
-              <TableCell>{t("layoutDescription")}</TableCell>
-              <TableCell align="right">{t("actions", { ns: "common" })}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {(layouts ?? []).map((layout) => (
-              <TableRow key={layout.id}>
-                <TableCell>
-                  <RouterLink to={`/terminal-layouts/${layout.id}`}>{layout.name}</RouterLink>{" "}
-                </TableCell>
-                <TableCell>{layout.description}</TableCell>
-                <TableCell align="right">
-                  <IconButtonLink to={`/terminal-layouts/${layout.id}/edit`} color="primary">
-                    <EditIcon />
-                  </IconButtonLink>
-                  <IconButton color="error" onClick={() => openConfirmDeleteDialog(layout.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <DataGrid
+        autoHeight
+        rows={layouts ?? []}
+        columns={columns}
+        disableSelectionOnClick
+        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      />
       <ConfirmDialog
         title={t("deleteLayout")}
         body={t("deleteLayoutDescription")}

@@ -3,5 +3,10 @@
   "currency": "Currency",
   "juristiction": "Juristiction",
   "serverSideConfig": "Server side settings",
-  "localConfig": "Local settings"
+  "localConfig": "Local settings",
+  "bon.issuer": "Bon issuer",
+  "bon.addr": "Bon address",
+  "bon.title": "Bon title",
+  "bon.closing_texts": "Bon closing texts",
+  "ust_id": "UST ID"
 }

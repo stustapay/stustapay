@@ -1,26 +1,17 @@
 import * as React from "react";
 import { useDeleteTerminalMutation, useGetTerminalsQuery, useGetTerminalProfilesQuery } from "@api";
-import {
-  Paper,
-  TableContainer,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  CircularProgress,
-  IconButton,
-  Typography,
-  ListItem,
-  ListItemText,
-} from "@mui/material";
+import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
-import { IconButtonLink, ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
-import { Link as RouterLink } from "react-router-dom";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Terminal } from "@models";
+import { Loading } from "@components/Loading";
 
 export const TerminalList: React.FC = () => {
   const { t } = useTranslation(["terminals", "common"]);
+  const navigate = useNavigate();
 
   const { data: terminals, isLoading: isTerminalsLoading } = useGetTerminalsQuery();
   const { data: profiles, isLoading: isProfilesLoading } = useGetTerminalProfilesQuery();
@@ -28,11 +19,7 @@ export const TerminalList: React.FC = () => {
 
   const [terminalToDelete, setTerminalToDelete] = React.useState<number | null>(null);
   if (isTerminalsLoading || isProfilesLoading) {
-    return (
-      <Paper>
-        <CircularProgress />
-      </Paper>
-    );
+    return <Loading />;
   }
 
   const renderProfile = (id: number | null) => {
@@ -60,6 +47,46 @@ export const TerminalList: React.FC = () => {
     setTerminalToDelete(null);
   };
 
+  const columns: GridColumns<Terminal> = [
+    {
+      field: "name",
+      headerName: t("terminalName") as string,
+      flex: 1,
+      renderCell: (params) => <RouterLink to={`/terminals/${params.row.id}`}>{params.row.name}</RouterLink>,
+    },
+    {
+      field: "description",
+      headerName: t("terminalDescription") as string,
+      flex: 2,
+    },
+    {
+      field: "profile",
+      headerName: t("terminalProfile") as string,
+      flex: 0.5,
+      renderCell: (params) => renderProfile(params.row.active_profile_id),
+    },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: t("actions", { ns: "common" }) as string,
+      width: 150,
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          color="primary"
+          label={t("edit", { ns: "common" })}
+          onClick={() => navigate(`/terminals/${params.row.id}/edit`)}
+        />,
+        <GridActionsCellItem
+          icon={<DeleteIcon />}
+          color="error"
+          label={t("delete", { ns: "common" })}
+          onClick={() => openConfirmDeleteDialog(params.row.id)}
+        />,
+      ],
+    },
+  ];
+
   return (
     <>
       <Paper>
@@ -74,37 +101,13 @@ export const TerminalList: React.FC = () => {
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table sx={{ minWidth: 650 }} aria-label="terminals">
-          <TableHead>
-            <TableRow>
-              <TableCell>{t("terminalName")}</TableCell>
-              <TableCell>{t("terminalDescription")}</TableCell>
-              <TableCell>{t("terminalProfile")}</TableCell>
-              <TableCell align="right">{t("actions", { ns: "common" })}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {(terminals ?? []).map((terminal) => (
-              <TableRow key={terminal.id}>
-                <TableCell>
-                  <RouterLink to={`/terminals/${terminal.id}`}>{terminal.name}</RouterLink>{" "}
-                </TableCell>
-                <TableCell>{terminal.description}</TableCell>
-                <TableCell>{renderProfile(terminal.active_profile_id)}</TableCell>
-                <TableCell align="right">
-                  <IconButtonLink to={`/terminals/${terminal.id}/edit`} color="primary">
-                    <EditIcon />
-                  </IconButtonLink>
-                  <IconButton color="error" onClick={() => openConfirmDeleteDialog(terminal.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <DataGrid
+        autoHeight
+        rows={terminals ?? []}
+        columns={columns}
+        disableSelectionOnClick
+        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      />
       <ConfirmDialog
         title={t("deleteTerminal")}
         body={t("deleteTerminalDescription")}
