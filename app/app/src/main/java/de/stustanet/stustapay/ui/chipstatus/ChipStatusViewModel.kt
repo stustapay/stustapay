@@ -16,6 +16,8 @@ class ChipStatusViewModel @Inject constructor(
     private val _writeRequest = nfcState.writeRequest
     private val _protectRequest = nfcState.protectRequest
 
+    private val _enableDebugCard = nfcState.enableDebugCard
+
     private val _chipDataReady = nfcState.chipDataReady
     private val _chipCompatible = nfcState.chipCompatible
     private val _chipAuthenticated = nfcState.chipAuthenticated
@@ -27,17 +29,19 @@ class ChipStatusViewModel @Inject constructor(
         _scanRequest,
         _writeRequest,
         _protectRequest,
+        _enableDebugCard,
         _chipDataReady,
         _chipCompatible,
         _chipAuthenticated,
         _chipProtected,
         _chipUid,
         _chipContent
-    ) { scanRequest, writeRequest, protectRequest, dataReady, compatible, authenticated, protected, uid, content ->
+    ) { scanRequest, writeRequest, protectRequest, enableDebugCard, dataReady, compatible, authenticated, protected, uid, content ->
         ChipStatusUiState (
             scanRequest = scanRequest,
             writeRequest = writeRequest,
             protectRequest = protectRequest,
+            enableDebugCard = enableDebugCard,
             dataReady = dataReady,
             compatible = compatible,
             authenticated = authenticated,
@@ -63,6 +67,10 @@ class ChipStatusViewModel @Inject constructor(
         _protectRequest.update { req }
     }
 
+    fun debug(req: Boolean) {
+        _enableDebugCard.update { req }
+    }
+
     fun setContent(content: String) {
         _chipContent.update { content }
     }
@@ -72,6 +80,7 @@ data class ChipStatusUiState(
     val scanRequest: Boolean = false,
     val writeRequest: Boolean = false,
     val protectRequest: Boolean = false,
+    val enableDebugCard: Boolean = false,
     val dataReady: Boolean = false,
     val compatible: Boolean = false,
     val authenticated: Boolean = false,

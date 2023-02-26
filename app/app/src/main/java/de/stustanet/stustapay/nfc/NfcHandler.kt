@@ -55,6 +55,14 @@ class NfcHandler(private var activity: Activity, private var nfcState: NfcState)
             nfcState.chipProtected.update { false }
             nfcState.chipUid.update { 0uL }
 
+            if (nfcState.enableDebugCard.value) {
+                nfcState.chipDataReady.update { true }
+                nfcState.chipCompatible.update { true }
+                nfcState.chipAuthenticated.update { true }
+                nfcState.chipProtected.update { true }
+                return
+            }
+
             if (!tag.techList.contains("android.nfc.tech.NfcA")) {
                 Toast.makeText(activity, "Incompatible chip", Toast.LENGTH_LONG).show()
                 nfcState.chipDataReady.update { true }
