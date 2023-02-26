@@ -12,6 +12,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.ChipScanView
@@ -60,54 +61,90 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
     val state = rememberScaffoldState()
     val scope = rememberCoroutineScope()
 
-    ChipScanView(onScan = { println(it) }) { chipScanState ->
+    val totalCost = uiState.currentOrder.map {
+        uiState.products[it.key]!!.second * it.value
+    }.sum()
+
+    if (uiState.chipScanned) {
         Scaffold(
             scaffoldState = state,
-            content = { paddingValues ->
-                LazyColumn(
+            content = {
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = paddingValues.calculateBottomPadding())
+                        .padding(bottom = it.calculateBottomPadding()),
+                    contentAlignment = Alignment.Center
                 ) {
-                    for (product in uiState.products) {
-                        item {
-                            OrderItem(
-                                name = product.value.first,
-                                amount = uiState.currentOrder.getOrDefault(product.key, 0)
-                                    .toString(),
-                                price = product.value.second.toString(),
-                                onIncr = { viewModel.incrementOrderProduct(product.key) },
-                                onDecr = { viewModel.decrementOrderProduct(product.key) }
-                            )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "$totalCost€ Paid", fontSize = 48.sp)
+                        for (product in uiState.currentOrder) {
+                            val name = uiState.products[product.key]!!.first
+                            val amount = product.value
+                            Text(text = "$amount $name", fontSize = 24.sp)
                         }
                     }
                 }
             },
             bottomBar = {
-                Row(horizontalArrangement = Arrangement.SpaceEvenly) {
-                    Button(
-                        onClick = {
-                            viewModel.clearOrder()
-                        },
-                        modifier = Modifier.fillMaxWidth(0.45f)
-                    ) {
-                        Text(text = "❌")
-                    }
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                val cost = uiState.currentOrder.map {
-                                    uiState.products[it.key]!!.second * it.value
-                                }.sum()
-                                chipScanState.scan("$cost€\nScan a chip")
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(0.9f)
-                    ) {
-                        Text(text = "✓")
-                    }
+                Button(
+                    onClick = {
+                        viewModel.reset()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Next")
                 }
             }
         )
+    } else {
+        ChipScanView(onScan = {
+            viewModel.scanSuccessful(it)
+        }) { chipScanState ->
+            Scaffold(
+                scaffoldState = state,
+                content = { paddingValues ->
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = paddingValues.calculateBottomPadding())
+                    ) {
+                        for (product in uiState.products) {
+                            item {
+                                OrderItem(
+                                    name = product.value.first,
+                                    amount = uiState.currentOrder.getOrDefault(product.key, 0)
+                                        .toString(),
+                                    price = product.value.second.toString(),
+                                    onIncr = { viewModel.incrementOrderProduct(product.key) },
+                                    onDecr = { viewModel.decrementOrderProduct(product.key) }
+                                )
+                            }
+                        }
+                    }
+                },
+                bottomBar = {
+                    Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+                        Button(
+                            onClick = {
+                                viewModel.clearOrder()
+                            },
+                            modifier = Modifier.fillMaxWidth(0.45f)
+                        ) {
+                            Text(text = "❌")
+                        }
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    chipScanState.scan("$totalCost€\nScan a chip")
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
+                            Text(text = "✓")
+                        }
+                    }
+                }
+            )
+        }
     }
 }

@@ -9,6 +9,7 @@ import javax.inject.Inject
 @HiltViewModel
 class OrderViewModel @Inject constructor() : ViewModel() {
     private val _currentOrder = MutableStateFlow(mapOf<String, Int>())
+    private val _chipScanned = MutableStateFlow(false)
     private val _products: Map<String, Pair<String, Float>> = mapOf(
         Pair("bier", Pair("Bier", 3.5F)),
         Pair("mass", Pair("Maß", 6F)),
@@ -19,9 +20,13 @@ class OrderViewModel @Inject constructor() : ViewModel() {
         Pair("pfand_ret", Pair("Pfand zurück", -2F))
     )
 
-    val uiState: StateFlow<OrderUiState> = _currentOrder.map {
+    val uiState: StateFlow<OrderUiState> = combine(
+        _currentOrder,
+        _chipScanned
+    ) { currentOrder, chipScanned ->
         OrderUiState(
-            currentOrder = it,
+            currentOrder = currentOrder,
+            chipScanned = chipScanned,
             products = _products
         )
     }.stateIn(
@@ -51,9 +56,19 @@ class OrderViewModel @Inject constructor() : ViewModel() {
     fun clearOrder() {
         _currentOrder.value = HashMap()
     }
+
+    fun reset() {
+        _chipScanned.value = false
+        _currentOrder.value = HashMap()
+    }
+
+    fun scanSuccessful(id: ULong) {
+        _chipScanned.value = true
+    }
 }
 
 data class OrderUiState(
     var currentOrder: Map<String, Int> = mapOf(),
+    var chipScanned: Boolean = false,
     var products: Map<String, Pair<String, Float>> = mapOf()
 )
