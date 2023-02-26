@@ -9,6 +9,7 @@ data class NavDest(
 object RootNavDests {
     val main = NavDest("main")
     val ordering = NavDest("ordering", showNavbar = false)
+    val deposit = NavDest("deposit", showNavbar = false)
     val qrscan = NavDest("qrscan")
     val chipstatus = NavDest("chipstatus")
     val settings = NavDest("settings")

@@ -20,7 +20,7 @@ class OrderViewModel @Inject constructor() : ViewModel() {
         Pair("pfand_ret", Pair("Pfand zurück", -2F))
     )
 
-    val uiState: StateFlow<OrderUiState> = combine(
+    val uiState = combine(
         _currentOrder,
         _chipScanned
     ) { currentOrder, chipScanned ->

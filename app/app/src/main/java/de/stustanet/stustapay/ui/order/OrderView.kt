@@ -97,9 +97,7 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
             }
         )
     } else {
-        ChipScanView(onScan = {
-            viewModel.scanSuccessful(it)
-        }) { chipScanState ->
+        ChipScanView(onScan = { viewModel.scanSuccessful(it) }) { chipScanState ->
             Scaffold(
                 scaffoldState = state,
                 content = { paddingValues ->
@@ -125,9 +123,7 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                 bottomBar = {
                     Row(horizontalArrangement = Arrangement.SpaceEvenly) {
                         Button(
-                            onClick = {
-                                viewModel.clearOrder()
-                            },
+                            onClick = { viewModel.clearOrder() },
                             modifier = Modifier.fillMaxWidth(0.45f)
                         ) {
                             Text(text = "❌")
