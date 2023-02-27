@@ -49,6 +49,13 @@ fun ChipStatusView(viewModel: ChipStatusViewModel = hiltViewModel()) {
                 Text("Protect chip")
             }
 
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Switch(checked = uiState.enableDebugCard, onCheckedChange = { viewModel.debug(it) })
+                Text("Enable debug chip")
+            }
+
             Text("Content")
             TextField(
                 value = uiState.content,

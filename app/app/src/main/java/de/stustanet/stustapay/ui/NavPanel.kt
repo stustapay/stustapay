@@ -44,6 +44,13 @@ private fun getNavItems(): List<NavMenuItem> {
     )
     itemsList.add(
         NavMenuItem(
+            icon = Icons.Filled.Add,
+            label = "Process Deposits",
+            navDestination = RootNavDests.deposit,
+        )
+    )
+    itemsList.add(
+        NavMenuItem(
             icon = Icons.Filled.Home,
             label = "QR Scan",
             navDestination = RootNavDests.qrscan,
@@ -70,7 +77,7 @@ private fun getNavItems(): List<NavMenuItem> {
     )
     itemsList.add(
         NavMenuItem(
-            icon = Icons.Filled.Send,
+            icon = Icons.Filled.Info,
             label = "Chip Status",
             navDestination = RootNavDests.chipstatus,
         )

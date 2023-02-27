@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.SysUiController
 import de.stustanet.stustapay.ui.chipstatus.ChipStatusView
+import de.stustanet.stustapay.ui.deposit.DepositView
 import de.stustanet.stustapay.ui.theme.StuStaPayTheme
 
 
@@ -92,8 +93,32 @@ fun RootView(uictrl: SysUiController? = null) {
                 }
             }
         }
-
-        composable(RootNavDests.ordering.route) { OrderView() }
+        composable(RootNavDests.ordering.route) {
+            NavScaffold(
+                title = { Text("StuStaPay") },
+                hasDrawer = true,
+                navigateTo = { navTo ->
+                    navController.navigateDestination(
+                        navTo
+                    )
+                }
+            ) {
+                OrderView()
+            }
+        }
+        composable(RootNavDests.deposit.route) {
+            NavScaffold(
+                title = { Text("StuStaPay") },
+                hasDrawer = true,
+                navigateTo = { navTo ->
+                    navController.navigateDestination(
+                        navTo
+                    )
+                }
+            ) {
+                DepositView()
+            }
+        }
         composable(RootNavDests.settings.route) {
             SettingsView(leaveView = { navController.navigateUp() })
         }
