@@ -1,4 +1,12 @@
-import { Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, SelectProps } from "@mui/material";
+import {
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
+  SelectProps,
+  FormHelperText,
+} from "@mui/material";
 import { useGetTerminalProfilesQuery } from "@api";
 import * as React from "react";
 
@@ -26,7 +34,7 @@ export const TerminalProfileSelect: React.FC<TerminalProfileSelectProps> = ({
   };
 
   return (
-    <FormControl fullWidth margin={margin}>
+    <FormControl fullWidth margin={margin} error={error}>
       <InputLabel variant={props.variant} id="terminalProfileSelectLabel">
         {label}
       </InputLabel>
@@ -34,7 +42,6 @@ export const TerminalProfileSelect: React.FC<TerminalProfileSelectProps> = ({
         labelId="terminalProfileSelectLabel"
         value={value != null ? value : ""}
         onChange={handleChange as any}
-        error={error}
         {...props}
       >
         {(terminalProfiles ?? []).map((terminalProfile) => (
@@ -43,6 +50,7 @@ export const TerminalProfileSelect: React.FC<TerminalProfileSelectProps> = ({
           </MenuItem>
         ))}
       </Select>
+      {helperText && <FormHelperText sx={{ ml: 0 }}>{helperText}</FormHelperText>}
     </FormControl>
   );
 };

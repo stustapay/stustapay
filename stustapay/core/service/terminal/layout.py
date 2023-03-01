@@ -15,19 +15,20 @@ class TerminalLayoutService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def create_layout(self, *, conn: asyncpg.Connection, layout: NewTerminalLayout) -> TerminalLayout:
         row = await conn.fetchrow(
-            "insert into terminal_layout (name, description) values ($1, $2) " "returning id, name, description",
+            "insert into terminal_layout (name, description) values ($1, $2) returning id, name, description",
             layout.name,
             layout.description,
         )
         layout_id = row["id"]
 
-        for product in layout.products:
-            await conn.execute(
-                "insert into terminal_layout_products (product_id, layout_id, sequence_number) values ($1, $2, $3)",
-                product.product_id,
-                layout_id,
-                product.sequence_number,
-            )
+        if layout.products is not None:
+            for product in layout.products:
+                await conn.execute(
+                    "insert into terminal_layout_products (product_id, layout_id, sequence_number) values ($1, $2, $3)",
+                    product.product_id,
+                    layout_id,
+                    product.sequence_number,
+                )
 
         return TerminalLayout.parse_obj(row)
 

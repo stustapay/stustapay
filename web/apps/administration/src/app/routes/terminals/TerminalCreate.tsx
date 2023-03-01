@@ -7,10 +7,10 @@ import { TerminalChange } from "./TerminalChange";
 const initialValues: NewTerminal = {
   name: "",
   description: "",
-  tse_id: null,
-  active_cashier_id: null,
-  active_profile_id: null,
-  active_shift: null,
+  tse_id: undefined,
+  active_cashier_id: undefined,
+  active_profile_id: undefined as unknown as number, // to circument typescript
+  active_shift: undefined,
 };
 
 export const TerminalCreate: React.FC = () => {

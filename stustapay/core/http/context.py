@@ -10,6 +10,7 @@ from fastapi import Request, Depends, WebSocket
 from starlette.types import ASGIApp, Scope, Receive, Send
 
 from stustapay.core.config import Config
+from stustapay.core.service.config import ConfigService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.terminal import TerminalService
@@ -31,6 +32,7 @@ class Context:
     tax_rate_service: Optional[TaxRateService] = None
     user_service: Optional[UserService] = None
     terminal_service: Optional[TerminalService] = None
+    config_service: Optional[ConfigService] = None
 
 
 class ContextMiddleware:
@@ -127,6 +129,10 @@ def get_user_service(request: Request) -> UserService:
 
 def get_terminal_service(request: Request) -> TerminalService:
     return request.state.context.terminal_service
+
+
+def get_config_service(request: Request) -> ConfigService:
+    return request.state.context.config_service
 
 
 async def get_db_conn(

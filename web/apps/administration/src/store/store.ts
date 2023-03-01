@@ -2,7 +2,7 @@ import { authApi } from "@api/authApi";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/dist/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
-import { productApi, userApi, taxRateApi, terminalApi, terminalLayoutApi, terminalProfileApi } from "@api";
+import { productApi, userApi, taxRateApi, terminalApi, terminalLayoutApi, terminalProfileApi, configApi } from "@api";
 import { authSlice } from "./authSlice";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
@@ -22,6 +22,7 @@ export const store = configureStore({
     [taxRateApi.reducerPath]: taxRateApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
+    [configApi.reducerPath]: configApi.reducer,
     [authSlice.name]: persistReducer(authPersistConfig, authSlice.reducer),
   }),
   middleware: (getDefaultMiddleware) =>
@@ -32,6 +33,7 @@ export const store = configureStore({
       .concat(terminalProfileApi.middleware)
       .concat(taxRateApi.middleware)
       .concat(userApi.middleware)
+      .concat(configApi.middleware)
       .concat(authApi.middleware),
 });
 

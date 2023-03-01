@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -39,5 +40,5 @@ class NewTerminal(BaseModel):
 
 class Terminal(NewTerminal):
     id: int
-    is_logged_in: bool
-    registration_uuid: Optional[str]
+    session_uuid: Optional[UUID]
+    registration_uuid: Optional[UUID]

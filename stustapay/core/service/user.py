@@ -67,11 +67,7 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
     async def list_users(self, *, conn: asyncpg.Connection) -> list[User]:
-        cursor = conn.cursor(
-            "select usr.*, array_agg(usr_privs.priv) as privileges "
-            "from usr join usr_privs on usr.id = usr_privs.usr "
-            "group by usr.id"
-        )
+        cursor = conn.cursor("select * from usr_with_privileges")
         result = []
         async for row in cursor:
             result.append(
@@ -88,9 +84,7 @@ class UserService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def get_user(self, *, conn: asyncpg.Connection, user_id: int) -> Optional[User]:
         row = await conn.fetchrow(
-            "select usr.*, array_agg(usr_privs.priv) as privileges "
-            "from usr join usr_privs on usr.id = usr_privs.usr "
-            "where id = $1 group by usr.id ",
+            "select * from usr_with_privileges " "where id = $1",
             user_id,
         )
         if row is None:
@@ -134,9 +128,7 @@ class UserService(DBService):
     @with_db_transaction
     async def login_user(self, *, conn: asyncpg.Connection, username: str, password: str) -> Optional[UserLoginSuccess]:
         row = await conn.fetchrow(
-            "select usr.*, array_agg(usr_privs.priv) as privileges "
-            "from usr join usr_privs on usr.id = usr_privs.usr "
-            "where name = $1 group by usr.id ",
+            "select * from usr_with_privileges " "where name = $1",
             username,
         )
         if row is None:
@@ -180,9 +172,9 @@ class UserService(DBService):
             return None
 
         row = await conn.fetchrow(
-            "select usr.*, array_agg(usr_privs.priv) as privileges, s.id as session_id "
-            "from usr join usr_privs on usr.id = usr_privs.usr join usr_session s on usr.id = s.usr "
-            "where usr.id = $1 and s.id = $2 group by usr.id, s.id",
+            "select u.*, s.id as session_id "
+            "from usr_with_privileges u join usr_session s on u.id = s.usr "
+            "where u.id = $1 and s.id = $2",
             token_payload.user_id,
             token_payload.session_id,
         )

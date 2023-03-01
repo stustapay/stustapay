@@ -76,6 +76,7 @@ export const TerminalLayoutDetail: React.FC = () => {
       </Paper>
       {sortedProducts.length > 0 && (
         <Paper sx={{ mt: 2 }}>
+          <Typography variant="h5">{t("layoutProducts")}</Typography>
           <List>
             {sortedProducts.map((product) => (
               <ListItem>

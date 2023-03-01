@@ -147,7 +147,7 @@ create table if not exists usr (
 
 create table if not exists usr_session (
     id serial not null primary key,
-    usr int references usr(id) on delete cascade not null
+    usr int not null references usr(id) on delete cascade
 );
 
 
@@ -164,10 +164,20 @@ values
     on conflict do nothing;
 
 create table if not exists usr_privs (
-    usr int references usr(id) on delete cascade,
-    priv text references privilege(name) on delete cascade
+    usr int not null references usr(id) on delete cascade,
+    priv text not null references privilege(name) on delete cascade
 );
 
+create or replace view usr_with_privileges as (
+    select
+        usr.*,
+        case when usr_privs.usr is null
+            then '{}'::text array
+            else array_agg(usr_privs.priv)
+        end as privileges
+    from usr left join usr_privs on usr.id = usr_privs.usr
+    group by usr.id, usr_privs.usr
+);
 
 create table if not exists payment_method (
     name text not null primary key
@@ -243,7 +253,7 @@ create table if not exists product (
 
     -- if target account is set, the product is booked to this specific account,
     -- e.g. for the deposit account, or a specific exit account (for beer, ...)
-    target_account int references account(id),
+    target_account int references account(id) on delete restrict,
 
     -- todo: payment possible with voucher?
     -- how many vouchers of which kind does it cost?
@@ -253,8 +263,8 @@ create table if not exists product (
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
-    id bigint references product(id) not null,
-    restriction text references restriction_type(name) not null,
+    id bigint not null references product(id) on delete cascade,
+    restriction text not null references restriction_type(name) on delete restrict ,
     primary key (id, restriction)
 );
 
@@ -275,7 +285,7 @@ create table if not exists terminal_layout_products (
 create or replace view terminal_layout_with_products as (
     select t.*, j_view.products as products
     from terminal_layout t
-    join (
+    left join (
         select tlp.layout_id, json_agg(tlp) as products
         from terminal_layout_products tlp
         group by tlp.layout_id
@@ -286,7 +296,7 @@ create table if not exists terminal_profile (
     id serial not null primary key,
     name text not null unique,
     description text,
-    layout_id int references terminal_layout(id) not null
+    layout_id int not null references terminal_layout(id) on delete restrict
     -- todo: payment_methods?
 );
 
@@ -304,7 +314,7 @@ create table if not exists terminal (
 
     -- identifies the current active work shift and configuration
     active_shift text,
-    active_profile_id int references terminal_profile(id) on delete restrict,
+    active_profile_id int not null references terminal_profile(id) on delete restrict,
     active_cashier_id int references usr(id) on delete restrict,
 
     constraint registration_or_session_uuid_null check ((registration_uuid is null) <> (session_uuid is null))

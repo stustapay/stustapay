@@ -1,4 +1,12 @@
-import { Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, SelectProps } from "@mui/material";
+import {
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
+  SelectProps,
+  FormHelperText,
+} from "@mui/material";
 import { useGetTerminalLayoutsQuery } from "@api";
 import * as React from "react";
 
@@ -26,23 +34,18 @@ export const TerminalLayoutSelect: React.FC<TerminalLayoutSelectProps> = ({
   };
 
   return (
-    <FormControl fullWidth margin={margin}>
+    <FormControl fullWidth margin={margin} error={error}>
       <InputLabel variant={props.variant} id="terminalLayoutSelectLabel">
         {label}
       </InputLabel>
-      <Select
-        labelId="terminalLayoutSelectLabel"
-        value={value ?? ""}
-        onChange={handleChange as any}
-        error={error}
-        {...props}
-      >
+      <Select labelId="terminalLayoutSelectLabel" value={value ?? ""} onChange={handleChange as any} {...props}>
         {(terminalLayouts ?? []).map((terminalLayout) => (
           <MenuItem key={terminalLayout.id} value={terminalLayout.id}>
             {terminalLayout.name}
           </MenuItem>
         ))}
       </Select>
+      {helperText && <FormHelperText sx={{ ml: 0 }}>{helperText}</FormHelperText>}
     </FormControl>
   );
 };

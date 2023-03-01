@@ -62,7 +62,7 @@ export const TerminalDetail: React.FC = () => {
               <IconButtonLink to={`/terminals/${terminalId}/edit`} color="primary" sx={{ mr: 1 }}>
                 <EditIcon />
               </IconButtonLink>
-              {!terminal.is_logged_in && (
+              {terminal.session_uuid != null && (
                 <Tooltip title={t("logoutTerminal")}>
                   <IconButton onClick={performLogoutTerminal} color="warning">
                     <LogoutIcon />
@@ -98,7 +98,7 @@ export const TerminalDetail: React.FC = () => {
             <ListItemText primary={t("terminalRegistrationUUID")} secondary={terminal.registration_uuid} />
           </ListItem>
         )}
-        <ListItem secondaryAction={<Checkbox edge="end" checked={terminal.is_logged_in} disabled={true} />}>
+        <ListItem secondaryAction={<Checkbox edge="end" checked={terminal.session_uuid != null} disabled={true} />}>
           <ListItemText primary={t("terminalLoggedIn")} />
         </ListItem>
       </Paper>
