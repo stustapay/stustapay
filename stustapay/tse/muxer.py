@@ -200,7 +200,7 @@ class TSEMuxer:
             LOGGER.error(error_message)
             raise RuntimeError(error_message)
 
-        with self.tse_lock:
+        async with self.tse_lock:
             mapped_tse = self.client_ids.get(order.client_id)
             if mapped_tse is None:
                 # This client ID is not handled by any TSE yet.

@@ -1,15 +1,16 @@
-import yaml
+from typing import Union
 
+import yaml
 from pydantic import BaseModel
 
-from ..core.config import DatabaseConfig
 from .diebold_nixdorf_usb.config import DieboldNixdorfUSBTSEConfig
 from .dummy.handler import DummyTSEConfig
+from ..core.config import DatabaseConfig
 
 
 class Config(BaseModel):
     database: DatabaseConfig
-    tses: list[DieboldNixdorfUSBTSEConfig | DummyTSEConfig]
+    tses: list[Union[DieboldNixdorfUSBTSEConfig, DummyTSEConfig]]
 
 
 def read_config(config_path: str) -> Config:
