@@ -2,7 +2,6 @@ import asyncio
 import contextlib
 import logging
 
-from ..core.database import create_db_pool
 from ..core.subcommand import SubCommand
 from .config import Config
 from .muxer import TSEMuxer
@@ -33,8 +32,8 @@ class SignatureProcessor(SubCommand):
                 self.muxer.sign_order(order)
 
     async def get_signature_requests(self):
-        if False:
-            db_pool = await create_db_pool(self.cfg.database)
+        # if False:
+        #     db_pool = await create_db_pool(self.cfg.database)
 
         for order_bunch_no in range(10):
             yield Order("client0", f"{order_bunch_no} lol".encode())

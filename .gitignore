@@ -3,6 +3,8 @@ __pycache__
 *.pyc
 *.pyo
 *.egg-info
+/.coverage
+/junit
 
 # python venv
 /venv

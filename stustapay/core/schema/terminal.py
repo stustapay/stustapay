@@ -12,7 +12,7 @@ class LayoutProduct(BaseModel):
 class NewTerminalLayout(BaseModel):
     name: str
     description: str
-    products: Optional[list[LayoutProduct]]
+    products: list[LayoutProduct] = []
 
 
 class TerminalLayout(NewTerminalLayout):
@@ -34,7 +34,7 @@ class NewTerminal(BaseModel):
     description: Optional[str]
     tse_id: Optional[str]
     active_shift: Optional[str]
-    active_profile_id: Optional[int]
+    active_profile_id: int
     active_cashier_id: Optional[int]
 
 

@@ -65,7 +65,6 @@ class TSEHandler(abc.ABC):
         This means that the TSE will no longer be able to sign orders
         from this Client ID in the future.
         """
-        pass
 
     @abc.abstractmethod
     async def sign_order(self, order: Order) -> OrderSignature:

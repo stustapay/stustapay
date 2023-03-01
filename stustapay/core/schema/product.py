@@ -1,25 +1,15 @@
-from dataclasses import dataclass
 from typing import Optional
 
+from pydantic import BaseModel
 
-@dataclass
-class NewProduct:
+
+class NewProduct(BaseModel):
     name: str
     price: float
     tax: str
     target_account: Optional[int]
+    child_product_ids: list[int] = []
 
 
-@dataclass
 class Product(NewProduct):
     id: int
-
-    @classmethod
-    def from_db(cls, row) -> "Product":
-        return cls(
-            id=row["id"],
-            name=row["name"],
-            price=row["price"],
-            tax=row["tax"],
-            target_account=row["target_account"],
-        )

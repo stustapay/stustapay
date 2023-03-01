@@ -1,7 +1,7 @@
-# pylint: disable=attribute-defined-outside-init
-from stustapay.core.schema.order import NewLineItem, NewOrder
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+from stustapay.core.schema.order import NewLineItem, NewOrder, OrderType
 from stustapay.core.schema.product import NewProduct
-from stustapay.core.schema.terminal import NewTerminal
+from stustapay.core.schema.terminal import NewTerminal, NewTerminalLayout, NewTerminalProfile
 from stustapay.core.schema.user import Privilege, User, UserWithoutId
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
@@ -33,6 +33,13 @@ class OrderLogicTest(BaseTestCase):
         self.cashier = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(name="test_cashier", description="", privileges=[Privilege.cashier])
         )
+        self.terminal_layout = await self.terminal_service.layout.create_layout(
+            current_user=self.admin_user, layout=NewTerminalLayout(name="layout1", description="", products=[])
+        )
+        self.terminal_profile = await self.terminal_service.profile.create_profile(
+            current_user=self.admin_user,
+            profile=NewTerminalProfile(name="profile1", description="", layout_id=self.terminal_layout.id),
+        )
         self.terminal = await self.terminal_service.create_terminal(
             current_user=self.admin_user,
             terminal=NewTerminal(
@@ -40,7 +47,7 @@ class OrderLogicTest(BaseTestCase):
                 description="",
                 tse_id=None,
                 active_shift=None,
-                active_profile_id=None,
+                active_profile_id=self.terminal_profile.id,
                 active_cashier_id=None,
             ),
         )
@@ -56,7 +63,7 @@ class OrderLogicTest(BaseTestCase):
             current_terminal=self.terminal,
             new_order=NewOrder(
                 positions=[NewLineItem(product_id=self.product.id, quantity=2)],
-                order_type="sale",
+                order_type=OrderType.sale,
                 customer_tag=1234,
             ),
         )

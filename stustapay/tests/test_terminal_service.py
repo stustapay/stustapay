@@ -1,7 +1,7 @@
-# pylint: disable=attribute-defined-outside-init
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 from stustapay.core.schema.user import User, Privilege
 from .common import BaseTestCase
-from stustapay.core.schema.terminal import NewTerminal
+from stustapay.core.schema.terminal import NewTerminal, NewTerminalProfile, NewTerminalLayout
 from stustapay.core.service.terminal.terminal import TerminalService
 
 
@@ -14,6 +14,13 @@ class TerminalServiceTest(BaseTestCase):
         self.terminal_service = TerminalService(db_pool=self.db_pool, config=self.test_config)
 
     async def test_basic_terminal_workflow(self):
+        terminal_layout = await self.terminal_service.layout.create_layout(
+            current_user=self.admin_user, layout=NewTerminalLayout(name="layout1", description="", products=[])
+        )
+        terminal_profile = await self.terminal_service.profile.create_profile(
+            current_user=self.admin_user,
+            profile=NewTerminalProfile(name="profile1", description="", layout_id=terminal_layout.id),
+        )
         terminal = await self.terminal_service.create_terminal(
             current_user=self.admin_user,
             terminal=NewTerminal(
@@ -22,7 +29,7 @@ class TerminalServiceTest(BaseTestCase):
                 tse_id=None,
                 active_shift=None,
                 active_cashier_id=None,
-                active_profile_id=None,
+                active_profile_id=terminal_profile.id,
             ),
         )
         self.assertEqual(terminal.name, "Pot 1")
@@ -36,7 +43,7 @@ class TerminalServiceTest(BaseTestCase):
                     tse_id=None,
                     active_shift=None,
                     active_cashier_id=None,
-                    active_profile_id=None,
+                    active_profile_id=terminal_profile.id,
                 ),
             )
 
@@ -49,7 +56,7 @@ class TerminalServiceTest(BaseTestCase):
                 tse_id=None,
                 active_shift=None,
                 active_cashier_id=None,
-                active_profile_id=None,
+                active_profile_id=terminal_profile.id,
             ),
         )
         self.assertEqual(updated_terminal.name, "Pot 2")

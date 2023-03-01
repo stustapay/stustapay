@@ -1,28 +1,28 @@
 import datetime
-from dataclasses import dataclass
+import enum
+
+from pydantic import BaseModel
 
 from stustapay.core.schema.product import Product
 
 
-ORDER_TYPE_SALE = "sale"
-ORDER_TYPE_TOPUP_CASH = "topup_cash"
-ORDER_TYPE_TOPUP_SUMUP = "topup_sumup"
+class OrderType(enum.Enum):
+    sale = "sale"
+    topup_cash = "topup_cash"
+    topup_sum = "topup_sumup"
 
 
-@dataclass
-class NewLineItem:
+class NewLineItem(BaseModel):
     product_id: int
     quantity: int
 
 
-@dataclass
-class NewOrder:
+class NewOrder(BaseModel):
     positions: list[NewLineItem]
-    order_type: str
+    order_type: OrderType
     customer_tag: int
 
 
-@dataclass
 class LineItem(NewLineItem):
     order_id: int
     item_id: int
@@ -39,7 +39,7 @@ class LineItem(NewLineItem):
             order_id=row["order_id"],
             item_id=row["item_id"],
             product_id=row["product_id"],
-            product=Product.from_db(row),
+            product=Product.parse_obj(row),
             quantity=row["quantity"],
             price=row["price"],
             total_price=row["total_price"],
@@ -49,22 +49,19 @@ class LineItem(NewLineItem):
         )
 
 
-@dataclass
-class OrderBooking:
+class OrderBooking(BaseModel):
     value_sum: float
     value_tax: float
     value_notax: float
 
 
-@dataclass
-class CompletedOrder:
+class CompletedOrder(BaseModel):
     id: int
     uuid: str
     old_balance: float
     new_balance: float
 
 
-@dataclass
 class Order(OrderBooking):
     """
     represents a completely finished order with all relevant data
@@ -77,7 +74,7 @@ class Order(OrderBooking):
     created_at: datetime.datetime
     finished_at: datetime.datetime
     payment_method: str
-    order_type: str
+    order_type: OrderType
 
     # foreign keys
     cashier_id: int
@@ -88,20 +85,23 @@ class Order(OrderBooking):
 
     @classmethod
     def from_db(cls, row, line_items) -> "Order":
-        return cls(
-            id=row["id"],
-            uuid=row["uuid"],
-            itemcount=row["itemcount"],
-            status=row["status"],
-            created_at=row["created_at"],
-            finished_at=row["finished_at"],
-            payment_method=row["payment_method"],
-            order_type=row["order_type"],
-            value_sum=row["value_sum"],
-            value_tax=row["value_tax"],
-            value_notax=row["value_notax"],
-            cashier_id=row["cashier_id"],
-            terminal_id=row["terminal_id"],
-            customer_account_id=row["customer_account_id"],
-            line_items=line_items,
-        )
+        order = cls.parse_obj(row)
+        order.line_items = line_items
+        return order
+        # return cls(
+        #     id=row["id"],
+        #     uuid=row["uuid"],
+        #     itemcount=row["itemcount"],
+        #     status=row["status"],
+        #     created_at=row["created_at"],
+        #     finished_at=row["finished_at"],
+        #     payment_method=row["payment_method"],
+        #     order_type=row["order_type"],
+        #     value_sum=row["value_sum"],
+        #     value_tax=row["value_tax"],
+        #     value_notax=row["value_notax"],
+        #     cashier_id=row["cashier_id"],
+        #     terminal_id=row["terminal_id"],
+        #     customer_account_id=row["customer_account_id"],
+        #     line_items=line_items,
+        # )

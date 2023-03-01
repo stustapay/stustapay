@@ -5,7 +5,7 @@ from typing import Dict, Optional, Set, Tuple
 import asyncpg
 
 from stustapay.core.schema.account import Account, get_source_account, get_target_account
-from stustapay.core.schema.order import CompletedOrder, LineItem, NewOrder, ORDER_TYPE_SALE, Order
+from stustapay.core.schema.order import CompletedOrder, LineItem, NewOrder, OrderType, Order
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.dbservice import DBService, requires_user_privileges, with_db_transaction
@@ -54,12 +54,12 @@ class OrderService(DBService):
         )
         if customer is None:
             raise NotFoundException(element_typ="customer", element_id=str(new_order.customer_tag))
-        customer_account = Account.from_db(customer)
+        customer_account = Account.parse_obj(customer)
 
         order_id, order_uuid = await conn.fetchrow(
             "insert into ordr (status, order_type, cashier_id, terminal_id, customer_account_id) "
             "values ('pending', $1, $2, $3, $4) returning id, uuid",
-            new_order.order_type,
+            new_order.order_type.value,
             current_user.id,
             current_terminal.id,
             customer_account.id,
@@ -124,15 +124,15 @@ class OrderService(DBService):
             raise Exception("Order should have been created")
 
         # check order type specific requirements
-        if new_order.order_type == ORDER_TYPE_SALE:
+        if new_order.order_type == OrderType.sale:
             if customer_account.balance < order.value_sum:
                 raise NotEnoughFundsException(needed_fund=order.value_sum, available_fund=customer.balance)
         else:
             raise NotImplementedError()
 
         return CompletedOrder(
-            order_id,
-            order_uuid,
+            id=order_id,
+            uuid=order_uuid,
             old_balance=customer_account.balance,
             new_balance=customer_account.balance - order.value_sum,
         )
@@ -179,10 +179,10 @@ class OrderService(DBService):
         if customer is None:
             # as the foreign key is enforced in the database, this should not happen
             raise NotFoundException(element_typ="customer", element_id=str(order.customer_account_id))
-        customer_account = Account.from_db(customer)
+        customer_account = Account.parse_obj(customer)
 
         # NOW book the order, or fail
-        if order.order_type == ORDER_TYPE_SALE:
+        if order.order_type == OrderType.sale:
             await self._book_sale_order(conn=conn, order=order, customer=customer_account)
         else:
             raise NotImplementedError()
@@ -190,7 +190,9 @@ class OrderService(DBService):
         await self._finish_order(conn=conn, order=order)
 
         new_balance = await conn.fetchval("select balance from account where id = $1", customer_account.id)
-        return CompletedOrder(order.id, order.uuid, old_balance=customer_account.balance, new_balance=new_balance)
+        return CompletedOrder(
+            id=order.id, uuid=order.uuid, old_balance=customer_account.balance, new_balance=new_balance
+        )
 
     async def _book_sale_order(self, *, conn: asyncpg.Connection, order: Order, customer: Account):
         """
@@ -198,7 +200,7 @@ class OrderService(DBService):
         It is checked if enough funds are available and books the results
         returns the new balance of the customer account
         """
-        assert order.order_type == ORDER_TYPE_SALE
+        assert order.order_type == OrderType.sale
         if customer.balance < order.value_sum:
             raise NotEnoughFundsException(needed_fund=order.value_sum, available_fund=customer.balance)
 
@@ -206,8 +208,8 @@ class OrderService(DBService):
         prepared_bookings: Dict[Tuple[int, int, str], float] = defaultdict(lambda: 0.0)
         for line_item in order.line_items:
             product = line_item.product
-            source_acc_id = get_source_account(ORDER_TYPE_SALE, product, customer.id)
-            target_acc_id = get_target_account(ORDER_TYPE_SALE, product, customer.id)
+            source_acc_id = get_source_account(OrderType.sale, product, customer.id)
+            target_acc_id = get_target_account(OrderType.sale, product, customer.id)
             prepared_bookings[(source_acc_id, target_acc_id, line_item.tax_name)] += float(line_item.total_price)
 
         await self._book_prepared_bookings(conn=conn, order_id=order.id, bookings=prepared_bookings)
