@@ -5,7 +5,7 @@ from typing import Dict, Optional, Set, Tuple
 import asyncpg
 
 from stustapay.core.schema.account import Account, get_source_account, get_target_account
-from stustapay.core.schema.order import CompletedOrder, LineItem, NewOrder, OrderType, Order
+from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Order
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.dbservice import DBService, requires_user_privileges, with_db_transaction
@@ -145,11 +145,7 @@ class OrderService(DBService):
         if row is None:
             return None
 
-        db_line_items = await conn.fetch(
-            "select * from lineitem_tax join product on product_id = id where order_id = $1", order_id
-        )
-        line_items = [LineItem.from_db(row) for row in db_line_items]
-        return Order.from_db(row, line_items)
+        return Order.parse_obj(row)
 
     @with_db_transaction
     async def show_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:

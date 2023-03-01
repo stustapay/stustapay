@@ -262,6 +262,12 @@ create table if not exists product (
     tax name not null references tax(name) on delete restrict
 );
 
+create or replace view product_as_json as (
+    select p.id, json_agg(p) as json
+    from product p
+    group by p.id
+);
+
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
     id bigint not null references product(id) on delete cascade,
@@ -439,12 +445,11 @@ create table if not exists lineitem (
 
 create or replace view lineitem_tax as
     select
-        *,
-        price * quantity as total_price,
-        round(price * quantity * tax_rate / (1 + tax_rate ), 2) as total_tax
-    from
-         lineitem;
-
+        l.*,
+        l.price * l.quantity as total_price,
+        round(l.price * l.quantity * l.tax_rate / (1 + l.tax_rate ), 2) as total_tax,
+        p.json->0 as product
+    from lineitem l join product_as_json p on l.product_id = p.id;
 
 -- aggregates the lineitem's amounts
 create or replace view order_value as
@@ -452,7 +457,8 @@ create or replace view order_value as
         ordr.*,
         sum(total_price) as value_sum,
         sum(total_tax) as value_tax,
-        sum(total_price - total_tax) as value_notax
+        sum(total_price - total_tax) as value_notax,
+        json_agg(lineitem_tax) as line_items
     from
         ordr
         left join lineitem_tax

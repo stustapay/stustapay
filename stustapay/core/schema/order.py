@@ -1,5 +1,7 @@
 import datetime
 import enum
+from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -57,7 +59,7 @@ class OrderBooking(BaseModel):
 
 class CompletedOrder(BaseModel):
     id: int
-    uuid: str
+    uuid: UUID
     old_balance: float
     new_balance: float
 
@@ -68,12 +70,12 @@ class Order(OrderBooking):
     """
 
     id: int
-    uuid: str
+    uuid: UUID
     itemcount: int
     status: str
     created_at: datetime.datetime
-    finished_at: datetime.datetime
-    payment_method: str
+    finished_at: Optional[datetime.datetime]
+    payment_method: Optional[str]
     order_type: OrderType
 
     # foreign keys
@@ -82,26 +84,3 @@ class Order(OrderBooking):
     customer_account_id: int
 
     line_items: list[LineItem]
-
-    @classmethod
-    def from_db(cls, row, line_items) -> "Order":
-        order = cls.parse_obj(row)
-        order.line_items = line_items
-        return order
-        # return cls(
-        #     id=row["id"],
-        #     uuid=row["uuid"],
-        #     itemcount=row["itemcount"],
-        #     status=row["status"],
-        #     created_at=row["created_at"],
-        #     finished_at=row["finished_at"],
-        #     payment_method=row["payment_method"],
-        #     order_type=row["order_type"],
-        #     value_sum=row["value_sum"],
-        #     value_tax=row["value_tax"],
-        #     value_notax=row["value_notax"],
-        #     cashier_id=row["cashier_id"],
-        #     terminal_id=row["terminal_id"],
-        #     customer_account_id=row["customer_account_id"],
-        #     line_items=line_items,
-        # )
