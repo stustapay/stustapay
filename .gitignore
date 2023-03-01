@@ -4,6 +4,7 @@ __pycache__
 *.pyo
 *.egg-info
 /.coverage
+/coverage.xml
 /junit
 
 # python venv
