@@ -84,7 +84,7 @@ class ActiveTSE:
                 start = time.monotonic_ns()
                 result = await asyncio.wait(self.tse.sign_order(request.order), timeout=5)
             except asyncio.TimeoutError as exc:
-                LOGGER.error(f"TSE signature has timed out!")
+                LOGGER.error("TSE signature has timed out!")
                 request.signature.set_exception(exc)
                 await self.tse.reset()
                 self.pending_signing_requests.put_nowait(request)
@@ -122,7 +122,7 @@ class TSEMuxer:
             for client_id in await tse.get_client_ids():
                 mapped_tse = self.client_ids.get(client_id)
                 if mapped_tse is None:
-                    self.client_ids[client_id] = tse
+                    self.client_ids[client_id] = active_tse
                 else:
                     LOGGER.error(
                         f"Inconsistent Client ID mapping: "
@@ -182,7 +182,7 @@ class TSEMuxer:
         del expected_load  # unused
         return random.choice(self.tses)
 
-    async def sign_order(self, order: Order) -> bytes:
+    async def sign_order(self, order: Order) -> OrderSignature:
         """
         Call this when a new TSE signing request is coming in.
 
@@ -195,23 +195,23 @@ class TSEMuxer:
 
         if not self.tses:
             error_message = (
-                f"TSE signature has failed: " f"No TSEs are available. " f"Cannot sign order from {order.client_id!r}"
+                f"TSE signature has failed: No TSEs are available. Cannot sign order from {order.client_id!r}"
             )
             LOGGER.error(error_message)
             raise RuntimeError(error_message)
 
-        with self.tse_lock:
+        async with self.tse_lock:
             mapped_tse = self.client_ids.get(order.client_id)
             if mapped_tse is None:
                 # This client ID is not handled by any TSE yet.
                 # Select one of the existing TSEs using our proprietary load-balancing
                 # algorithm.
                 tse = await self.select_tse()
-                tse.tse.register_client_id(order.client_id)
+                await tse.tse.register_client_id(order.client_id)
                 LOGGER.info(f"Encountered new PoS client id {order.client_id!r}, " f"Registered with TSE {tse.tse}")
                 mapped_tse = tse
 
-            queue_size = len(mapped_tse.pending_signing_requests)
+            queue_size = mapped_tse.pending_signing_requests.qsize()
             if queue_size >= 32:
                 # TODO try to perform load balancing
                 #      by movinge `client_id` to a different TSE
@@ -223,7 +223,7 @@ class TSEMuxer:
                 LOGGER.error(error_message)
                 raise RuntimeError(error_message)
             elif queue_size >= 8:
-                LOGGER.warn(
+                LOGGER.warning(
                     f"Delay when signing order from {order.client_id!r}: "
                     f"Signature request backlog on TSE {mapped_tse.tse} "
                     f"is very long ({queue_size} entries)."

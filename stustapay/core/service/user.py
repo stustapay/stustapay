@@ -84,18 +84,13 @@ class UserService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def get_user(self, *, conn: asyncpg.Connection, user_id: int) -> Optional[User]:
         row = await conn.fetchrow(
-            "select * from usr_with_privileges " "where id = $1",
+            "select * from usr_with_privileges where id = $1",
             user_id,
         )
         if row is None:
             return None
 
-        return User(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            privileges=row["privileges"],
-        )
+        return User.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -109,12 +104,7 @@ class UserService(DBService):
         if row is None:
             return None
 
-        return User(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            privileges=row["privileges"],
-        )
+        return User.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -128,7 +118,7 @@ class UserService(DBService):
     @with_db_transaction
     async def login_user(self, *, conn: asyncpg.Connection, username: str, password: str) -> Optional[UserLoginSuccess]:
         row = await conn.fetchrow(
-            "select * from usr_with_privileges " "where name = $1",
+            "select * from usr_with_privileges where name = $1",
             username,
         )
         if row is None:
@@ -137,12 +127,7 @@ class UserService(DBService):
         if not self._check_password(password, row["password"]):
             return None
 
-        user = User(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            privileges=row["privileges"],
-        )
+        user = User.parse_obj(row)
 
         session_id = await conn.fetchval("insert into usr_session (usr) values ($1) returning id", user.id)
         token = self._create_access_token(user_id=user.id, session_id=session_id)
@@ -181,12 +166,7 @@ class UserService(DBService):
         if row is None:
             return None
 
-        return User(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            privileges=row["privileges"],
-        )
+        return User.parse_obj(row)
 
     def _create_access_token(self, user_id: int, session_id: int):
         to_encode = {"user_id": user_id, "session_id": session_id}

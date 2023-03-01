@@ -1,4 +1,4 @@
-# pylint: disable=attribute-defined-outside-init
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 from stustapay.core.schema.user import User, Privilege
 from .common import BaseTestCase
 from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName

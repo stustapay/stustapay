@@ -22,6 +22,7 @@ dependencies = [
     "PyYAML",
     "python-jose[cryptography]",
     "jinja2",
+    "aiohttp",
     "pylatexenc"
 ]
 
@@ -59,6 +60,7 @@ disable = [
     "logging-fstring-interpolation",
     "unspecified-encoding",
     "broad-exception-raised",
+    "broad-except"
 ]
 
 [tool.black]

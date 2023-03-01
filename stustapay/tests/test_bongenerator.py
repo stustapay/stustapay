@@ -1,12 +1,13 @@
 # pylint: disable=attribute-defined-outside-init
 import datetime
 import os.path
+import uuid
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from .common import BaseTestCase
 from ..bon.pdflatex import pdflatex
-from ..core.schema.order import LineItem, Order
+from ..core.schema.order import LineItem, Order, OrderType
 from ..core.schema.product import Product
 
 
@@ -14,6 +15,11 @@ class BonGeneratorTest(BaseTestCase):
     async def test_pdflatex_bon(self):
         context = {
             "order": Order(
+                uuid=str(uuid.uuid4()),
+                order_type=OrderType.sale,
+                cashier_id=0,
+                terminal_id=0,
+                customer_account_id=0,
                 value_sum=15.9969,
                 value_tax=1.7269,
                 value_notax=14.27,
@@ -31,8 +37,8 @@ class BonGeneratorTest(BaseTestCase):
                         item_id=0,
                         product=Product(name="Helles 1.0l", price=4.2016806722, tax="ust", id=0),
                         price=4.2016806722,
-                        price_brutto=4.999999999918,
-                        price_sum=9.999999999836,
+                        total_tax=4.999999999918,
+                        total_price=9.999999999836,
                         tax_name="ust",
                         tax_rate=0.19,
                     ),
@@ -43,8 +49,8 @@ class BonGeneratorTest(BaseTestCase):
                         item_id=2,
                         product=Product(name="Weißwurst", price=1.8691588785, tax="eust", id=9),
                         price=1.8691588785,
-                        price_brutto=1.999999999995,
-                        price_sum=1.999999999995,
+                        total_tax=1.999999999995,
+                        total_price=1.999999999995,
                         tax_name="eust",
                         tax_rate=0.07,
                     ),
@@ -55,8 +61,8 @@ class BonGeneratorTest(BaseTestCase):
                         item_id=1,
                         product=Product(name="Pfand", price=2.00, tax="none", id=10),
                         price=2.00,
-                        price_brutto=2.0000,
-                        price_sum=4.0000,
+                        total_tax=2.0000,
+                        total_price=4.0000,
                         tax_name="none",
                         tax_rate=0.00,
                     ),

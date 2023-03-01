@@ -56,7 +56,7 @@ class TerminalLayoutService(DBService):
         self, *, conn: asyncpg.Connection, layout_id: int, layout: NewTerminalLayout
     ) -> Optional[TerminalLayout]:
         row = await conn.fetchrow(
-            "update terminal_layout set name = $2, description = $3 where id = $1 " "returning id, name, description",
+            "update terminal_layout set name = $2, description = $3 where id = $1 returning id, name, description",
             layout_id,
             layout.name,
             layout.description,

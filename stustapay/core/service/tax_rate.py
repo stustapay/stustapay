@@ -18,7 +18,7 @@ class TaxRateService(DBService):
             tax_rate.description,
         )
 
-        return TaxRate.from_db(row)
+        return TaxRate.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -26,7 +26,7 @@ class TaxRateService(DBService):
         cursor = conn.cursor("select * from tax")
         result = []
         async for row in cursor:
-            result.append(TaxRate.from_db(row))
+            result.append(TaxRate.parse_obj(row))
         return result
 
     @with_db_transaction
@@ -36,7 +36,7 @@ class TaxRateService(DBService):
         if row is None:
             return None
 
-        return TaxRate.from_db(row)
+        return TaxRate.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -52,7 +52,7 @@ class TaxRateService(DBService):
         if row is None:
             return None
 
-        return TaxRate.from_db(row)
+        return TaxRate.parse_obj(row)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])

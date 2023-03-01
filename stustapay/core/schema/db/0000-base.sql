@@ -171,12 +171,13 @@ create table if not exists usr_privs (
 create or replace view usr_with_privileges as (
     select
         usr.*,
-        case when usr_privs.usr is null
-            then '{}'::text array
-            else array_agg(usr_privs.priv)
-        end as privileges
-    from usr left join usr_privs on usr.id = usr_privs.usr
-    group by usr.id, usr_privs.usr
+        coalesce(privs.privs, '{}'::text array) as privileges
+    from usr
+    left join (
+        select p.usr as user_id, array_agg(p.priv) as privs
+        from usr_privs p
+        group by p.usr
+    ) privs on usr.id = privs.user_id
 );
 
 create table if not exists payment_method (
@@ -261,6 +262,12 @@ create table if not exists product (
     tax name not null references tax(name) on delete restrict
 );
 
+create or replace view product_as_json as (
+    select p.id, json_agg(p) as json
+    from product p
+    group by p.id
+);
+
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
     id bigint not null references product(id) on delete cascade,
@@ -268,6 +275,54 @@ create table if not exists product_restriction (
     primary key (id, restriction)
 );
 
+create or replace function check_products_for_cyclic_dependencies(
+    product_id bigint,
+    child_id bigint
+) returns boolean as
+$$
+<<locals>> declare
+    cycle_path int[];
+begin
+    -- now for the juicy part - check if we have circular dependencies between products
+    with recursive search_graph(product_id, child_id, depth, path, cycle) as (
+        select
+            check_products_for_cyclic_dependencies.product_id,
+            check_products_for_cyclic_dependencies.child_id,
+            1,
+            array[check_products_for_cyclic_dependencies.product_id],
+            false
+        union all
+        select pc.product_id, pc.child_id, sg.depth + 1, sg.path || pc.product_id, pc.child_id = any(sg.path)
+        from product_children pc
+            join search_graph sg on sg.child_id = pc.product_id and not sg.cycle
+    )
+    select path into locals.cycle_path from search_graph where cycle limit 1;
+    -- TODO: good error message and print out all resulting cycles
+    if found then
+        raise 'this change would result in a cyclic dependency between products: %', locals.cycle_path;
+    end if;
+
+    return true;
+end
+$$ language plpgsql;
+
+create table if not exists product_children (
+    product_id bigint not null references product(id) on delete cascade,
+    child_id bigint not null references product(id) on delete cascade, -- TODO: should this cascade or restrict
+    constraint no_cyclic_dependencies check(check_products_for_cyclic_dependencies(product_id, child_id))
+);
+
+create or replace view products_with_children as (
+    select
+        p.*,
+        coalesce(ec.children, '{}'::bigint array) as child_product_ids
+    from product p
+    left join (
+        select pc.product_id, array_agg(pc.child_id) as children
+        from product_children pc
+        group by pc.product_id
+    ) ec on ec.product_id = p.id
+);
 
 create table if not exists terminal_layout (
     id serial not null primary key,
@@ -390,12 +445,11 @@ create table if not exists lineitem (
 
 create or replace view lineitem_tax as
     select
-        *,
-        price * quantity as total_price,
-        round(price * quantity * tax_rate / (1 + tax_rate ), 2) as total_tax
-    from
-         lineitem;
-
+        l.*,
+        l.price * l.quantity as total_price,
+        round(l.price * l.quantity * l.tax_rate / (1 + l.tax_rate ), 2) as total_tax,
+        p.json->0 as product
+    from lineitem l join product_as_json p on l.product_id = p.id;
 
 -- aggregates the lineitem's amounts
 create or replace view order_value as
@@ -403,7 +457,8 @@ create or replace view order_value as
         ordr.*,
         sum(total_price) as value_sum,
         sum(total_tax) as value_tax,
-        sum(total_price - total_tax) as value_notax
+        sum(total_price - total_tax) as value_notax,
+        json_agg(lineitem_tax) as line_items
     from
         ordr
         left join lineitem_tax

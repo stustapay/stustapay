@@ -1,8 +1,6 @@
-import asyncio
-
-from ..core.subcommand import SubCommand
 from .config import Config
 from .diebold_nixdorf_usb.simulator import WebsocketInterface
+from ..core.subcommand import SubCommand
 
 
 class Simulator(SubCommand):
@@ -11,7 +9,7 @@ class Simulator(SubCommand):
         subparser.add_argument("--host", default="::1")
         subparser.add_argument("-p", "--port", type=int, default=10001)
 
-    def __init__(self, args: dict, config: Config, **rest):
+    def __init__(self, args, config: Config, **rest):
         del rest  # unused
 
         self.cfg = config

@@ -31,9 +31,9 @@ class DieboldNixdorfUSBTSE(TSEHandler):
             async with session.ws_connect(self.websocket_url) as ws:
                 receive_task = asyncio.create_task(self.recieve_loop(ws))
                 while True:
-                    await self.request("PingPong")
+                    await self.request("PingPong", ws=ws)
 
-    async def request(self, command: str, *, timeout: float = 5, **kwargs) -> dict:
+    async def request(self, command: str, *, ws, timeout: float = 5, **kwargs) -> dict:
         request_id = self.request_id
         self.request_id += 1
 
@@ -41,11 +41,14 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         request.update(kwargs)
 
         LOGGER.info(f"{self}: sending request {request}")
-        await self.ws.send_str(f"\x02{json.dumps(kwargs)}\x03")
-        future = asyncio.Future()
+        await ws.send_str(f"\x02{json.dumps(kwargs)}\x03")
+        future: asyncio.Future[dict] = asyncio.Future()
         self.pending_requests[request_id] = future
         try:
-            response = await asyncio.wait(future, timeout=timeout)
+            # This code is incorrect, as it does not return the result of the future but rather two sets of awaitables
+            # done, pending = await asyncio.wait()
+            # response = await asyncio.wait(future, timeout=timeout)
+            response = await future
             LOGGER.info(f"{self}: got response {response}")
             return response
         except asyncio.TimeoutError:
