@@ -9,15 +9,10 @@ import javax.inject.Inject
 @HiltViewModel
 class DepositViewModel @Inject constructor() : ViewModel() {
     private val _currentAmount = MutableStateFlow(0u)
-    private val _chipScanned = MutableStateFlow(false)
 
-    val uiState = combine(
-        _currentAmount,
-        _chipScanned
-    ) { currentAmount, chipScanned ->
+    val uiState = _currentAmount.map { currentAmount ->
         DepositUiState(
-            currentAmount = currentAmount,
-            chipScanned = chipScanned
+            currentAmount = currentAmount
         )
     }.stateIn(
         scope = viewModelScope,
@@ -30,17 +25,11 @@ class DepositViewModel @Inject constructor() : ViewModel() {
         _currentAmount.value += (d % 10u)
     }
 
-    fun reset() {
-        _chipScanned.value = false
+    fun clear() {
         _currentAmount.value = 0u
-    }
-
-    fun scanSuccessful(id: ULong) {
-        _chipScanned.value = true
     }
 }
 
 data class DepositUiState (
    var currentAmount: UInt = 0u,
-   var chipScanned: Boolean = false
 )
