@@ -26,8 +26,8 @@ class OrderLogicTest(BaseTestCase):
             product=NewProduct(
                 name="Test Product",
                 price=3,
-                tax="ust",
-                target_account=None,
+                tax_name="ust",
+                target_account_id=None,
             ),
         )
         self.cashier = await self.user_service.create_user_no_auth(

@@ -4,9 +4,9 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useGetTerminalLayoutByIdQuery, useDeleteTerminalLayoutMutation, useGetProductsQuery } from "@api";
+import { useGetTerminalLayoutByIdQuery, useDeleteTerminalLayoutMutation, useGetTerminalButtonsQuery } from "@api";
 import { Loading } from "@components/Loading";
-import { Product } from "@models";
+import { TerminalButton } from "@models";
 
 export const TerminalLayoutDetail: React.FC = () => {
   const { t } = useTranslation(["terminals", "common"]);
@@ -14,10 +14,10 @@ export const TerminalLayoutDetail: React.FC = () => {
   const navigate = useNavigate();
   const [deleteLayout] = useDeleteTerminalLayoutMutation();
   const { data: layout, error } = useGetTerminalLayoutByIdQuery(Number(layoutId));
-  const { data: products, error: productsError } = useGetProductsQuery();
+  const { data: buttons, error: buttonsError } = useGetTerminalButtonsQuery();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
-  if (error || productsError) {
+  if (error || buttonsError) {
     return <Navigate to="/terminal-layouts" />;
   }
 
@@ -32,16 +32,14 @@ export const TerminalLayoutDetail: React.FC = () => {
     setShowConfirmDelete(false);
   };
 
-  if (layout === undefined || products === undefined) {
+  if (layout === undefined || buttons === undefined) {
     return <Loading />;
   }
 
-  const sortedProducts =
-    layout.products == null
+  const sortedButtons =
+    layout.button_ids == null
       ? []
-      : [...layout.products]
-          .sort((a, b) => a.sequence_number - b.sequence_number)
-          .map((i) => products.find((p) => p.id === i.product_id) as Product);
+      : [...layout.button_ids].map((i) => buttons.find((b) => b.id === i) as TerminalButton);
 
   return (
     <>
@@ -74,13 +72,13 @@ export const TerminalLayoutDetail: React.FC = () => {
           </ListItem>
         </List>
       </Paper>
-      {sortedProducts.length > 0 && (
+      {sortedButtons.length > 0 && (
         <Paper sx={{ mt: 2 }}>
-          <Typography variant="h5">{t("layoutProducts")}</Typography>
+          <Typography variant="h5">{t("layoutButtons")}</Typography>
           <List>
-            {sortedProducts.map((product) => (
+            {sortedButtons.map((button) => (
               <ListItem>
-                <ListItemText primary={product.name} secondary={`${product.price}€`} />
+                <ListItemText primary={button.name} secondary={`${button.price}€`} />
               </ListItem>
             ))}
           </List>

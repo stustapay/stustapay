@@ -4,15 +4,20 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class LayoutProduct(BaseModel):
-    product_id: int
-    sequence_number: int
+class NewTerminalButton(BaseModel):
+    name: str
+    product_ids: list[int]
+
+
+class TerminalButton(NewTerminalButton):
+    id: int
+    price: float
 
 
 class NewTerminalLayout(BaseModel):
     name: str
     description: str
-    products: list[LayoutProduct] = []
+    button_ids: Optional[list[int]]
 
 
 class TerminalLayout(NewTerminalLayout):

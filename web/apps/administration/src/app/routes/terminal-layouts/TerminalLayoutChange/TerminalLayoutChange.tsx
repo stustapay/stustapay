@@ -81,8 +81,8 @@ export function TerminalLayoutChange<T extends NewTerminalLayout>({
           </Paper>
           <Paper sx={{ mt: 2 }}>
             <TerminalLayoutDesigner
-              products={values.products === null ? [] : values.products}
-              onChange={(newProducts) => setFieldValue("products", newProducts)}
+              buttonIds={values.button_ids === null ? [] : values.button_ids}
+              onChange={(buttonIds) => setFieldValue("button_ids", buttonIds)}
             />
           </Paper>
           <Paper sx={{ mt: 2, p: 2 }}>

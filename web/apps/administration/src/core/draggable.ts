@@ -1,3 +1,3 @@
 export const DraggableItemTypes = {
-  PRODUCT: "product",
+  TERMINAL_BUTTON: "TERMINAL_BUTTON",
 };

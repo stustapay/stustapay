@@ -1,8 +1,8 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
-from stustapay.core.schema.user import User, Privilege
-from .common import BaseTestCase
 from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.user import User, Privilege
 from stustapay.core.service.product import ProductService
+from .common import BaseTestCase
 
 
 class ProductServiceTest(BaseTestCase):
@@ -15,23 +15,23 @@ class ProductServiceTest(BaseTestCase):
 
     async def test_basic_product_workflow(self):
         product = await self.product_service.create_product(
-            current_user=self.admin_user, product=NewProduct(name="Test Product", price=3, tax="ust")
+            current_user=self.admin_user, product=NewProduct(name="Test Product", price=3, tax_name="ust")
         )
         self.assertEqual(product.name, "Test Product")
 
         with self.assertRaises(PermissionError):
             await self.product_service.create_product(
-                current_user=self.orga_user, product=NewProduct(name="Test Product", price=3, tax="ust")
+                current_user=self.orga_user, product=NewProduct(name="Test Product", price=3, tax_name="ust")
             )
 
         updated_product = await self.product_service.update_product(
             current_user=self.admin_user,
             product_id=product.id,
-            product=NewProduct(name="Updated Test Product", price=4, tax="eust"),
+            product=NewProduct(name="Updated Test Product", price=4, tax_name="eust"),
         )
         self.assertEqual(updated_product.name, "Updated Test Product")
         self.assertEqual(updated_product.price, 4)
-        self.assertEqual(updated_product.tax, "eust")
+        self.assertEqual(updated_product.tax_name, "eust")
 
         products = await self.product_service.list_products(current_user=self.admin_user)
         self.assertEqual(len(products), 1)

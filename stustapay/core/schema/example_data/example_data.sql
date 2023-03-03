@@ -52,7 +52,7 @@ values
 
 
 insert into product (
-    id, name, price, tax
+    id, name, price, tax_name
 )
 values
     -- Getränke
@@ -76,7 +76,6 @@ values
     (13, '1€ Aufladen EC', 1.00, 'none')
     on conflict do nothing;
 select setval('product_id_seq', 100);
-
 
 insert into product_restriction (
     id, restriction

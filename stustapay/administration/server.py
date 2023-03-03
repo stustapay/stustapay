@@ -3,8 +3,12 @@ import logging
 from stustapay.core.config import Config
 from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
+from stustapay.core.service.config import ConfigService
+from stustapay.core.service.product import ProductService
+from stustapay.core.service.tax_rate import TaxRateService
+from stustapay.core.service.terminal import TerminalService
+from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
-
 from .routers import (
     product,
     user,
@@ -14,13 +18,9 @@ from .routers import (
     terminal,
     terminal_profiles,
     terminal_layouts,
+    terminal_buttons,
     config as config_router,
 )
-from ..core.service.config import ConfigService
-from ..core.service.product import ProductService
-from ..core.service.tax_rate import TaxRateService
-from ..core.service.terminal import TerminalService
-from ..core.service.user import UserService
 
 
 class Api(SubCommand):
@@ -46,6 +46,7 @@ class Api(SubCommand):
         self.server.add_router(terminal.router)
         self.server.add_router(terminal_layouts.router)
         self.server.add_router(terminal_profiles.router)
+        self.server.add_router(terminal_buttons.router)
         self.server.add_router(config_router.router)
 
     async def run(self):

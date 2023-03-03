@@ -78,7 +78,7 @@ class OrderService(DBService):
                 "    tax.rate, "
                 "    tax.name "
                 "from product "
-                "    left join tax on (tax.name = product.tax) "
+                "    left join tax on (tax.name = product.tax_name) "
                 "where product.id = $1;",
                 item_id,
             )

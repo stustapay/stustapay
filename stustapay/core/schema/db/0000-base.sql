@@ -241,31 +241,21 @@ values
     on conflict do nothing;
 
 
-
 create table if not exists product (
     id serial not null primary key,
-
     -- todo: ean or something for receipt?
-
     name text not null unique,
-
     -- price including tax (what is charged in the end)
     price numeric not null,
 
     -- if target account is set, the product is booked to this specific account,
     -- e.g. for the deposit account, or a specific exit account (for beer, ...)
-    target_account int references account(id) on delete restrict,
+    target_account_id int references account(id) on delete restrict,
 
     -- todo: payment possible with voucher?
     -- how many vouchers of which kind does it cost?
 
-    tax name not null references tax(name) on delete restrict
-);
-
-create or replace view product_as_json as (
-    select p.id, json_agg(p) as json
-    from product p
-    group by p.id
+    tax_name text not null references tax(name) on delete restrict
 );
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
@@ -275,53 +265,10 @@ create table if not exists product_restriction (
     primary key (id, restriction)
 );
 
-create or replace function check_products_for_cyclic_dependencies(
-    product_id bigint,
-    child_id bigint
-) returns boolean as
-$$
-<<locals>> declare
-    cycle_path int[];
-begin
-    -- now for the juicy part - check if we have circular dependencies between products
-    with recursive search_graph(product_id, child_id, depth, path, cycle) as (
-        select
-            check_products_for_cyclic_dependencies.product_id,
-            check_products_for_cyclic_dependencies.child_id,
-            1,
-            array[check_products_for_cyclic_dependencies.product_id],
-            false
-        union all
-        select pc.product_id, pc.child_id, sg.depth + 1, sg.path || pc.product_id, pc.child_id = any(sg.path)
-        from product_children pc
-            join search_graph sg on sg.child_id = pc.product_id and not sg.cycle
-    )
-    select path into locals.cycle_path from search_graph where cycle limit 1;
-    -- TODO: good error message and print out all resulting cycles
-    if found then
-        raise 'this change would result in a cyclic dependency between products: %', locals.cycle_path;
-    end if;
-
-    return true;
-end
-$$ language plpgsql;
-
-create table if not exists product_children (
-    product_id bigint not null references product(id) on delete cascade,
-    child_id bigint not null references product(id) on delete cascade, -- TODO: should this cascade or restrict
-    constraint no_cyclic_dependencies check(check_products_for_cyclic_dependencies(product_id, child_id))
-);
-
-create or replace view products_with_children as (
-    select
-        p.*,
-        coalesce(ec.children, '{}'::bigint array) as child_product_ids
+create or replace view product_as_json as (
+    select p.id, json_agg(p)->0 as json
     from product p
-    left join (
-        select pc.product_id, array_agg(pc.child_id) as children
-        from product_children pc
-        group by pc.product_id
-    ) ec on ec.product_id = p.id
+    group by p.id
 );
 
 create table if not exists terminal_layout (
@@ -330,20 +277,45 @@ create table if not exists terminal_layout (
     description text
 );
 
-create table if not exists terminal_layout_products (
-    product_id int not null references product(id) on delete cascade,
-    layout_id int not null references terminal_layout(id) on delete cascade,
-    sequence_number int not null,
-    primary key(product_id, layout_id)
+create table if not exists terminal_button (
+    id serial not null primary key,
+    name text not null unique
 );
 
-create or replace view terminal_layout_with_products as (
-    select t.*, j_view.products as products
+create table if not exists terminal_button_product (
+    button_id int not null references terminal_button(id) on delete cascade,
+    product_id int not null references product(id) on delete cascade,
+    primary key(button_id, product_id)
+);
+
+create or replace view terminal_button_with_products as (
+    select
+        t.*,
+        coalesce(j_view.price, 0) as price,
+        coalesce(j_view.product_ids, '{}'::int array) as product_ids
+    from terminal_button t
+    left join (
+        select tlb.button_id, sum(p.price) as price, array_agg(tlb.product_id) as product_ids
+        from terminal_button_product tlb
+        join product p on tlb.product_id = p.id
+        group by tlb.button_id
+    ) j_view on t.id = j_view.button_id
+);
+
+create table if not exists terminal_layout_to_button (
+    layout_id int not null references terminal_layout(id) on delete cascade,
+    button_id int not null references terminal_button(id) on delete restrict,
+    sequence_number int not null unique,
+    primary key (layout_id, button_id)
+);
+
+create or replace view terminal_layout_with_buttons as (
+    select t.*, coalesce(j_view.button_ids, '{}'::int array) as button_ids
     from terminal_layout t
     left join (
-        select tlp.layout_id, json_agg(tlp) as products
-        from terminal_layout_products tlp
-        group by tlp.layout_id
+        select tltb.layout_id, array_agg(tltb.button_id order by tltb.sequence_number) as button_ids
+        from terminal_layout_to_button tltb
+        group by tltb.layout_id
     ) j_view on t.id = j_view.layout_id
 );
 
@@ -354,7 +326,6 @@ create table if not exists terminal_profile (
     layout_id int not null references terminal_layout(id) on delete restrict
     -- todo: payment_methods?
 );
-
 
 -- which cash desks do we have and in which state are they
 create table if not exists terminal (
@@ -448,7 +419,7 @@ create or replace view lineitem_tax as
         l.*,
         l.price * l.quantity as total_price,
         round(l.price * l.quantity * l.tax_rate / (1 + l.tax_rate ), 2) as total_tax,
-        p.json->0 as product
+        p.json as product
     from lineitem l join product_as_json p on l.product_id = p.id;
 
 -- aggregates the lineitem's amounts

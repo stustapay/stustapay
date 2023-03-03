@@ -20,7 +20,7 @@ const ServerSideSettings: React.FC = () => {
       </Box>
       <List>
         {configEntries.map((entry) => (
-          <ListItem>
+          <ListItem key={entry.key}>
             <ListItemText primary={t(entry.key)} secondary={entry.value} />
           </ListItem>
         ))}

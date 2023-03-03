@@ -7,8 +7,8 @@ from unittest import IsolatedAsyncioTestCase as TestCase
 import asyncpg
 from asyncpg.pool import Pool
 
-from stustapay.core.config import Config
 from stustapay.core import database
+from stustapay.core.config import Config
 
 
 def get_test_db_config() -> dict:

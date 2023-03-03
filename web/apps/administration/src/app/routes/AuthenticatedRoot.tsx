@@ -166,6 +166,12 @@ export const AuthenticatedRoot: React.FC = () => {
             </ListItemIcon>
             <ListItemText primary={t("products")} />
           </ListItemLink>
+          <ListItemLink to="/terminal-buttons">
+            <ListItemIcon>
+              <PointOfSaleIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("terminalButtons")} />
+          </ListItemLink>
           <ListItemLink to="/terminal-layouts">
             <ListItemIcon>
               <PointOfSaleIcon />

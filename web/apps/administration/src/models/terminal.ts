@@ -1,13 +1,32 @@
 import { z } from "zod";
 
-export const TerminalLayoutProductsSchema = z.array(z.object({ product_id: z.number(), sequence_number: z.number() }));
+export const NewTerminalButtonSchema = z.object({
+  name: z.string(),
+  product_ids: z.array(z.number()),
+});
 
-export type TerminalLayoutProducts = z.infer<typeof TerminalLayoutProductsSchema>;
+export type NewTerminalButton = z.infer<typeof NewTerminalButtonSchema>;
+
+export const UpdateTerminalButtonSchema = NewTerminalButtonSchema.merge(
+  z.object({
+    id: z.number(),
+  })
+);
+
+export type UpdateTerminalButton = z.infer<typeof UpdateTerminalButtonSchema>;
+
+export const TerminalButtonSchema = UpdateTerminalButtonSchema.merge(
+  z.object({
+    price: z.number(),
+  })
+);
+
+export type TerminalButton = z.infer<typeof TerminalButtonSchema>;
 
 export const NewTerminalLayoutSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
-  products: TerminalLayoutProductsSchema.nullable(),
+  button_ids: z.array(z.number()).nullable(),
 });
 
 export type NewTerminalLayout = z.infer<typeof NewTerminalLayoutSchema>;

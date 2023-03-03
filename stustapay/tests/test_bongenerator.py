@@ -5,10 +5,10 @@ import uuid
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
+from stustapay.bon.pdflatex import pdflatex
+from stustapay.core.schema.order import LineItem, Order, OrderType
+from stustapay.core.schema.product import Product
 from .common import BaseTestCase
-from ..bon.pdflatex import pdflatex
-from ..core.schema.order import LineItem, Order, OrderType
-from ..core.schema.product import Product
 
 
 class BonGeneratorTest(BaseTestCase):

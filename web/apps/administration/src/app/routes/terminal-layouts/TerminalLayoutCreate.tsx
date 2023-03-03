@@ -7,7 +7,7 @@ import { TerminalLayoutChange } from "./TerminalLayoutChange";
 const initialValues: NewTerminalLayout = {
   name: "",
   description: "",
-  products: null,
+  button_ids: null,
 };
 
 export const TerminalLayoutCreate: React.FC = () => {
