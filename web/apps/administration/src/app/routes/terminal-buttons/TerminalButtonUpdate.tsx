@@ -22,7 +22,7 @@ export const TerminalButtonUpdate: React.FC = () => {
 
   return (
     <TerminalButtonChange
-      headerTitle={t("updateTerminalButton")}
+      headerTitle={t("button.update")}
       submitLabel={t("update", { ns: "common" })}
       initialValues={button}
       validationSchema={UpdateTerminalButtonSchema}

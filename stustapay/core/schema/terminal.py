@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from stustapay.core.schema.user import Privilege
+
 
 class NewTerminalButton(BaseModel):
     name: str
@@ -17,6 +19,7 @@ class TerminalButton(NewTerminalButton):
 class NewTerminalLayout(BaseModel):
     name: str
     description: str
+    allow_top_up: bool
     button_ids: Optional[list[int]]
 
 
@@ -32,6 +35,29 @@ class NewTerminalProfile(BaseModel):
 
 class TerminalProfile(NewTerminalProfile):
     id: int
+
+
+class FullTerminalLayout(BaseModel):
+    id: int
+    name: str
+    description: str
+    allow_top_up: bool
+    buttons: Optional[list[TerminalButton]]
+
+
+class FullTerminalProfile(BaseModel):
+    id: int
+    name: str
+    description: str
+    layout: FullTerminalLayout
+
+
+class TerminalConfig(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    cashier_privileges: Optional[list[Privilege]]
+    profile: FullTerminalProfile
 
 
 class NewTerminal(BaseModel):

@@ -33,7 +33,7 @@ export const AvailableButtons: React.FC<AvailableButtonsProps> = ({ assignedButt
     };
     return (
       <Typography variant="h5">
-        {t("availableButtons")}
+        {t("button.availableButtons")}
         <DragArea moveButton={moveButtonEmpty} />
       </Typography>
     );
@@ -41,7 +41,7 @@ export const AvailableButtons: React.FC<AvailableButtonsProps> = ({ assignedButt
 
   return (
     <>
-      <Typography variant="h5">{t("availableButtons")}</Typography>
+      <Typography variant="h5">{t("button.availableButtons")}</Typography>
       <List>
         {buttons.map((button) => (
           <DraggableButton key={button.id} button={button} moveButton={moveButton} />

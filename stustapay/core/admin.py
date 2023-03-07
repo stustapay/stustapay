@@ -2,7 +2,7 @@ import asyncpg
 from getpass import getpass
 
 from . import database
-from .schema.user import UserWithoutId
+from .schema.user import UserWithoutId, Privilege
 from .subcommand import SubCommand
 from .config import Config
 
@@ -34,7 +34,9 @@ class AdminCli(SubCommand):
                 return
             privileges = input("Enter privileges (comma separated, choose from 'admin', 'orga', 'cashier':\n")
 
-            new_user = UserWithoutId(name=username, privileges=privileges.split(","))
+            new_user = UserWithoutId(
+                name=username, description=None, privileges=list(map(lambda x: Privilege[x], privileges.split(",")))
+            )
             user = await user_service.create_user_no_auth(  # pylint: disable=missing-kwoa
                 new_user=new_user, password=password
             )

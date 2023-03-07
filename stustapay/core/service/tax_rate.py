@@ -2,12 +2,18 @@ from typing import Optional
 
 import asyncpg
 
-from .dbservice import DBService, with_db_transaction, requires_user_privileges
+from stustapay.core.config import Config
 from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName
 from stustapay.core.schema.user import Privilege
+from .dbservice import DBService, with_db_transaction, requires_user_privileges
+from .user import UserService
 
 
 class TaxRateService(DBService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, user_service: UserService):
+        super().__init__(db_pool, config)
+        self.user_service = user_service
+
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
     async def create_tax_rate(self, *, conn: asyncpg.Connection, tax_rate: TaxRate) -> TaxRate:

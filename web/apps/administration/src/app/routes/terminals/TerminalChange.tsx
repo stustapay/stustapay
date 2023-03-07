@@ -57,7 +57,7 @@ export function TerminalChange<T extends NewTerminal>({
               fullWidth
               autoFocus
               name="name"
-              label={t("terminalName")}
+              label={t("terminal.name")}
               error={touched.name && !!errors.name}
               helperText={(touched.name && errors.name) as string}
               onBlur={handleBlur}
@@ -70,7 +70,7 @@ export function TerminalChange<T extends NewTerminal>({
               margin="normal"
               fullWidth
               name="description"
-              label={t("terminalDescription")}
+              label={t("terminal.description")}
               error={touched.description && !!errors.description}
               helperText={(touched.description && errors.description) as string}
               onBlur={handleBlur}
@@ -82,7 +82,7 @@ export function TerminalChange<T extends NewTerminal>({
               name="layout"
               margin="normal"
               variant="standard"
-              label={t("terminalProfile")}
+              label={t("terminal.profile")}
               error={touched.active_profile_id && !!errors.active_profile_id}
               helperText={(touched.active_profile_id && errors.active_profile_id) as string}
               onChange={(value) => setFieldValue("active_profile_id", value)}

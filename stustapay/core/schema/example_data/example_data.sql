@@ -34,7 +34,7 @@ select setval('account_id_seq', 300);
 
 
 insert into usr (
-    id, name, password, description, account
+    id, name, password, description, account_id
 )
 values
     (0, 'Test Cashier', 'password', 'Some Description', 100),

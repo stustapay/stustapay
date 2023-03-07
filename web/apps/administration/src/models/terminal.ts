@@ -27,6 +27,7 @@ export const NewTerminalLayoutSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
   button_ids: z.array(z.number()).nullable(),
+  allow_top_up: z.boolean(),
 });
 
 export type NewTerminalLayout = z.infer<typeof NewTerminalLayoutSchema>;

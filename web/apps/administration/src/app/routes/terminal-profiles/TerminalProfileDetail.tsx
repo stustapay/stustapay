@@ -58,16 +58,16 @@ export const TerminalProfileDetail: React.FC = () => {
       <Paper sx={{ mt: 2 }}>
         <List>
           <ListItem>
-            <ListItemText primary={t("profileName")} secondary={profile.name} />
+            <ListItemText primary={t("profile.name")} secondary={profile.name} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("profileDescription")} secondary={profile.description} />
+            <ListItemText primary={t("profile.description")} secondary={profile.description} />
           </ListItem>
         </List>
       </Paper>
       <ConfirmDialog
-        title={t("deleteProfile")}
-        body={t("deleteProfileDescription")}
+        title={t("profile.delete")}
+        body={t("profile.deleteDescription")}
         show={showConfirmDelete}
         onClose={handleConfirmDeleteProfile}
       />

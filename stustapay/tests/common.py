@@ -1,4 +1,4 @@
-# pylint: disable=attribute-defined-outside-init
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import asyncio
 import logging
 import os
@@ -9,6 +9,8 @@ from asyncpg.pool import Pool
 
 from stustapay.core import database
 from stustapay.core.config import Config
+from stustapay.core.schema.user import UserWithoutId, Privilege
+from stustapay.core.service.user import UserService
 
 
 def get_test_db_config() -> dict:
@@ -72,6 +74,17 @@ class BaseTestCase(TestCase):
         self.db_pool = await get_test_db()
         self.db_conn: asyncpg.Connection = await self.db_pool.acquire()
         self.test_config = Config.parse_obj(TEST_CONFIG)
+        self.user_service = UserService(db_pool=self.db_pool, config=self.test_config)
+
+        self.admin_user = await self.user_service.create_user_no_auth(
+            new_user=UserWithoutId(name="test-admin-user", description="", privileges=[Privilege.admin]),
+            password="asdf",
+        )
+        self.admin_token = (await self.user_service.login_user(username=self.admin_user.name, password="asdf")).token
+        self.orga_user = await self.user_service.create_user_no_auth(
+            new_user=UserWithoutId(name="test-orga-user", description="", privileges=[Privilege.orga]), password="asdf"
+        )
+        self.orga_token = (await self.user_service.login_user(username=self.orga_user.name, password="asdf")).token
 
     async def asyncTearDown(self) -> None:
         await self.db_conn.close()

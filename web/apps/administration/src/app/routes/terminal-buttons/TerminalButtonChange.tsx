@@ -55,7 +55,7 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
         </ListItem>
       ))}
       <ProductSelect
-        label={t("addProductToButton")}
+        label={t("button.addProductToButton")}
         variant="standard"
         value={null}
         onChange={(pId: number) => addProduct(pId)}
@@ -112,7 +112,7 @@ export function TerminalButtonChange<T extends NewTerminalButton>({
               fullWidth
               autoFocus
               name="name"
-              label={t("terminalButtonName")}
+              label={t("button.name")}
               error={touched.name && !!errors.name}
               helperText={(touched.name && errors.name) as string}
               onBlur={handleBlur}

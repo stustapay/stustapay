@@ -16,7 +16,7 @@ export const TerminalProfileCreate: React.FC = () => {
 
   return (
     <TerminalProfileChange
-      headerTitle={t("createTerminalProfile")}
+      headerTitle={t("profile.create")}
       submitLabel={t("add", { ns: "common" })}
       initialValues={initialValues}
       validationSchema={NewTerminalProfileSchema}

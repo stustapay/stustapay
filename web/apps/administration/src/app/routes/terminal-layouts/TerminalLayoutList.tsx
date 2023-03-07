@@ -37,13 +37,13 @@ export const TerminalLayoutList: React.FC = () => {
   const columns: GridColumns<TerminalLayout> = [
     {
       field: "name",
-      headerName: t("layoutName") as string,
+      headerName: t("layout.name") as string,
       flex: 1,
       renderCell: (params) => <RouterLink to={`/terminal-layouts/${params.row.id}`}>{params.row.name}</RouterLink>,
     },
     {
       field: "description",
-      headerName: t("layoutDescription") as string,
+      headerName: t("layout.description") as string,
       flex: 2,
     },
     {
@@ -78,7 +78,7 @@ export const TerminalLayoutList: React.FC = () => {
             </ButtonLink>
           }
         >
-          <ListItemText primary={t("terminalLayouts", { ns: "common" })} />
+          <ListItemText primary={t("layout.layouts")} />
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>
@@ -90,8 +90,8 @@ export const TerminalLayoutList: React.FC = () => {
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
-        title={t("deleteLayout")}
-        body={t("deleteLayoutDescription")}
+        title={t("layout.delete")}
+        body={t("layout.deleteDescription")}
         show={layoutToDelete !== null}
         onClose={handleConfirmDeleteLayout}
       />

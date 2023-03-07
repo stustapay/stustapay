@@ -1,4 +1,4 @@
-import { Paper, ListItem, IconButton, Typography, ListItemText, List, Tooltip } from "@mui/material";
+import { Paper, ListItem, IconButton, Typography, ListItemText, List, Tooltip, Checkbox, Divider } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -60,24 +60,29 @@ export const TerminalLayoutDetail: React.FC = () => {
         >
           <ListItemText primary={layout.name} />
         </ListItem>
-        <Typography variant="body1">{}</Typography>
       </Paper>
       <Paper sx={{ mt: 2 }}>
         <List>
           <ListItem>
-            <ListItemText primary={t("layoutName")} secondary={layout.name} />
+            <ListItemText primary={t("layout.name")} secondary={layout.name} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("layoutDescription")} secondary={layout.description} />
+            <ListItemText primary={t("layout.description")} secondary={layout.description} />
+          </ListItem>
+          <ListItem secondaryAction={<Checkbox edge="end" checked={layout.allow_top_up} disabled={true} />}>
+            <ListItemText primary={t("layout.allowTopUp")} />
           </ListItem>
         </List>
       </Paper>
       {sortedButtons.length > 0 && (
         <Paper sx={{ mt: 2 }}>
-          <Typography variant="h5">{t("layoutButtons")}</Typography>
           <List>
+            <ListItem>
+              <Typography variant="h6">{t("button.buttons")}</Typography>
+            </ListItem>
+            <Divider />
             {sortedButtons.map((button) => (
-              <ListItem>
+              <ListItem key={button.id}>
                 <ListItemText primary={button.name} secondary={`${button.price}€`} />
               </ListItem>
             ))}
@@ -85,8 +90,8 @@ export const TerminalLayoutDetail: React.FC = () => {
         </Paper>
       )}
       <ConfirmDialog
-        title={t("deleteLayout")}
-        body={t("deleteLayoutDescription")}
+        title={t("layout.delete")}
+        body={t("layout.deleteDescription")}
         show={showConfirmDelete}
         onClose={handleConfirmDeleteLayout}
       />

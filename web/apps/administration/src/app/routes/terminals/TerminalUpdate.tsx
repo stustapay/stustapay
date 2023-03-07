@@ -22,7 +22,7 @@ export const TerminalUpdate: React.FC = () => {
 
   return (
     <TerminalChange
-      headerTitle={t("updateTerminal")}
+      headerTitle={t("terminal.update")}
       submitLabel={t("update", { ns: "common" })}
       initialValues={terminal}
       validationSchema={UpdateTerminalSchema}

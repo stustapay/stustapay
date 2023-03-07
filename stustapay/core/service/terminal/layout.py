@@ -2,6 +2,7 @@ from typing import Optional
 
 import asyncpg
 
+from stustapay.core.config import Config
 from stustapay.core.schema.terminal import (
     TerminalLayout,
     NewTerminalLayout,
@@ -10,9 +11,14 @@ from stustapay.core.schema.terminal import (
 )
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.dbservice import DBService, with_db_transaction, requires_user_privileges
+from stustapay.core.service.user import UserService
 
 
 class TerminalLayoutService(DBService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, user_service: UserService):
+        super().__init__(db_pool, config)
+        self.user_service = user_service
+
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
     async def create_button(self, *, conn: asyncpg.Connection, button: NewTerminalButton) -> TerminalButton:
@@ -86,9 +92,11 @@ class TerminalLayoutService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def create_layout(self, *, conn: asyncpg.Connection, layout: NewTerminalLayout) -> TerminalLayout:
         row = await conn.fetchrow(
-            "insert into terminal_layout (name, description) values ($1, $2) returning id, name, description",
+            "insert into terminal_layout (name, description, allow_top_up) values ($1, $2, $3) "
+            "returning id, name, description, allow_top_up",
             layout.name,
             layout.description,
+            layout.allow_top_up,
         )
         layout_id = row["id"]
 
@@ -127,10 +135,12 @@ class TerminalLayoutService(DBService):
         self, *, conn: asyncpg.Connection, layout_id: int, layout: NewTerminalLayout
     ) -> Optional[TerminalLayout]:
         row = await conn.fetchrow(
-            "update terminal_layout set name = $2, description = $3 where id = $1 returning id, name, description",
+            "update terminal_layout set name = $2, description = $3, allow_top_up = $4 where id = $1 "
+            "returning id, name, description, allow_top_up",
             layout_id,
             layout.name,
             layout.description,
+            layout.allow_top_up,
         )
         if row is None:
             return None

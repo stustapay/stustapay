@@ -37,12 +37,12 @@ export const TerminalButtonList: React.FC = () => {
   const columns: GridColumns<TerminalButton> = [
     {
       field: "name",
-      headerName: t("terminalButtonName") as string,
+      headerName: t("button.name") as string,
       flex: 1,
     },
     {
       field: "price",
-      headerName: t("terminalButtonPrice") as string,
+      headerName: t("button.price") as string,
       type: "number",
       valueFormatter: ({ value }) => `${value} €`,
     },
@@ -78,7 +78,7 @@ export const TerminalButtonList: React.FC = () => {
             </ButtonLink>
           }
         >
-          <ListItemText primary={t("terminalButtons", { ns: "common" })} />
+          <ListItemText primary={t("button.buttons")} />
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>
@@ -91,8 +91,8 @@ export const TerminalButtonList: React.FC = () => {
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
-        title={t("deleteTerminalButton")}
-        body={t("deleteTerminalButtonDescription")}
+        title={t("button.delete")}
+        body={t("button.deleteDescription")}
         show={buttonToDelete !== null}
         onClose={handleConfirmDeleteTaxRate}
       />

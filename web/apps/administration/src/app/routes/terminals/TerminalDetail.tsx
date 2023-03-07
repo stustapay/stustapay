@@ -84,22 +84,22 @@ export const TerminalDetail: React.FC = () => {
       <Paper sx={{ mt: 2 }}>
         <List>
           <ListItem>
-            <ListItemText primary={t("terminalId")} secondary={terminal.id} />
+            <ListItemText primary={t("terminal.id")} secondary={terminal.id} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("terminalName")} secondary={terminal.name} />
+            <ListItemText primary={t("terminal.name")} secondary={terminal.name} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("terminalDescription")} secondary={terminal.description} />
+            <ListItemText primary={t("terminal.description")} secondary={terminal.description} />
           </ListItem>
         </List>
         {terminal.registration_uuid != null && (
           <ListItem>
-            <ListItemText primary={t("terminalRegistrationUUID")} secondary={terminal.registration_uuid} />
+            <ListItemText primary={t("terminal.registrationUUID")} secondary={terminal.registration_uuid} />
           </ListItem>
         )}
         <ListItem secondaryAction={<Checkbox edge="end" checked={terminal.session_uuid != null} disabled={true} />}>
-          <ListItemText primary={t("terminalLoggedIn")} />
+          <ListItemText primary={t("terminal.loggedIn")} />
         </ListItem>
       </Paper>
       {terminal.registration_uuid != null && (
@@ -115,8 +115,8 @@ export const TerminalDetail: React.FC = () => {
         </Paper>
       )}
       <ConfirmDialog
-        title={t("deleteTerminal")}
-        body={t("deleteTerminalDescription")}
+        title={t("terminal.delete")}
+        body={t("terminal.deleteDescription")}
         show={showConfirmDelete}
         onClose={handleConfirmDeleteTerminal}
       />

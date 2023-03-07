@@ -8,6 +8,7 @@ const initialValues: NewTerminalLayout = {
   name: "",
   description: "",
   button_ids: null,
+  allow_top_up: false,
 };
 
 export const TerminalLayoutCreate: React.FC = () => {

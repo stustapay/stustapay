@@ -38,7 +38,12 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({
       <InputLabel variant={props.variant} id="productSelectLabel">
         {label}
       </InputLabel>
-      <Select labelId="productSelectLabel" value={value} onChange={handleChange as any} {...props}>
+      <Select
+        labelId="productSelectLabel"
+        value={value === null ? "" : value}
+        onChange={handleChange as any}
+        {...props}
+      >
         {(products ?? []).map((product) => (
           <MenuItem key={product.id} value={product.id}>
             {product.name} ({product.price}€)

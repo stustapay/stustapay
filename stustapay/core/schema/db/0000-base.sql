@@ -141,7 +141,7 @@ create table if not exists usr (
     description text,
 
     -- e.g. the backpack-account, or the cash drawer
-    account bigint references account(id) on delete restrict
+    account_id bigint references account(id) on delete restrict
 );
 
 
@@ -274,7 +274,8 @@ create or replace view product_as_json as (
 create table if not exists terminal_layout (
     id serial not null primary key,
     name text not null unique,
-    description text
+    description text,
+    allow_top_up boolean not null default false
 );
 
 create table if not exists terminal_button (

@@ -15,7 +15,7 @@ export const TerminalButtonCreate: React.FC = () => {
 
   return (
     <TerminalButtonChange
-      headerTitle={t("createTerminalButton")}
+      headerTitle={t("button.create")}
       submitLabel={t("add", { ns: "common" })}
       initialValues={initialValues}
       validationSchema={NewTerminalButtonSchema}

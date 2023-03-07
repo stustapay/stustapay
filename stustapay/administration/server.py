@@ -52,14 +52,16 @@ class Api(SubCommand):
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)
 
+        user_service = UserService(db_pool=db_pool, config=self.cfg)
+
         context = Context(
             config=self.cfg,
             db_pool=db_pool,
-            product_service=ProductService(db_pool=db_pool, config=self.cfg),
-            tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg),
-            user_service=UserService(db_pool=db_pool, config=self.cfg),
-            terminal_service=TerminalService(db_pool=db_pool, config=self.cfg),
-            config_service=ConfigService(db_pool=db_pool, config=self.cfg),
+            product_service=ProductService(db_pool=db_pool, config=self.cfg, user_service=user_service),
+            tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg, user_service=user_service),
+            user_service=user_service,
+            terminal_service=TerminalService(db_pool=db_pool, config=self.cfg, user_service=user_service),
+            config_service=ConfigService(db_pool=db_pool, config=self.cfg, user_service=user_service),
         )
         try:
             await self.server.run(self.cfg, context)

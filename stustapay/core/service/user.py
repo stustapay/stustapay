@@ -116,6 +116,17 @@ class UserService(DBService):
         return result != "DELETE 0"
 
     @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def link_user_to_account(self, *, conn: asyncpg.Connection, user_id: int, account_id: int) -> bool:
+        # TODO: FIXME: is this the way it's going to stay?
+        result = await conn.fetchval(
+            "update usr set account_id = $2 where id = $1 returning id",
+            user_id,
+            account_id,
+        )
+        return result is not None
+
+    @with_db_transaction
     async def login_user(self, *, conn: asyncpg.Connection, username: str, password: str) -> Optional[UserLoginSuccess]:
         row = await conn.fetchrow(
             "select * from usr_with_privileges where name = $1",
