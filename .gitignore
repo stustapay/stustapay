@@ -29,3 +29,4 @@ dist/
 
 # project specific
 config.yaml
+config.devcontainer.yml
