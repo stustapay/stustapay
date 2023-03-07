@@ -47,18 +47,18 @@ export const TerminalProfileList: React.FC = () => {
   const columns: GridColumns<TerminalProfile> = [
     {
       field: "name",
-      headerName: t("profileName") as string,
+      headerName: t("profile.name") as string,
       flex: 1,
       renderCell: (params) => <RouterLink to={`/terminal-profiles/${params.row.id}`}>{params.row.name}</RouterLink>,
     },
     {
       field: "description",
-      headerName: t("layoutDescription") as string,
+      headerName: t("profile.description") as string,
       flex: 2,
     },
     {
       field: "layout",
-      headerName: t("profileLayout") as string,
+      headerName: t("profile.layout") as string,
       flex: 0.5,
       renderCell: (params) => renderLayout(params.row.layout_id),
     },
@@ -94,7 +94,7 @@ export const TerminalProfileList: React.FC = () => {
             </ButtonLink>
           }
         >
-          <ListItemText primary={t("terminalProfiles", { ns: "common" })} />
+          <ListItemText primary={t("profile.profiles")} />
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>
@@ -106,8 +106,8 @@ export const TerminalProfileList: React.FC = () => {
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
-        title={t("deleteProfile")}
-        body={t("deleteProfileDescription")}
+        title={t("profile.delete")}
+        body={t("profile.deleteDescription")}
         show={profileToDelete !== null}
         onClose={handleConfirmDeleteProfile}
       />

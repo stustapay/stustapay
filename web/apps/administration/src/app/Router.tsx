@@ -25,6 +25,10 @@ import {
 } from "./routes/terminal-layouts";
 import { TerminalProfileCreate, TerminalProfileUpdate, TerminalProfileList } from "./routes/terminal-profiles";
 import { TerminalProfileDetail } from "./routes/terminal-profiles/TerminalProfileDetail";
+import { TerminalButtonUpdate } from "./routes/terminal-buttons/TerminalButtonUpdate";
+import { TerminalButtonChange } from "./routes/terminal-buttons/TerminalButtonChange";
+import { TerminalButtonCreate } from "./routes/terminal-buttons/TerminalButtonCreate";
+import { TerminalButtonList } from "./routes/terminal-buttons/TerminalButtonList";
 
 const router = createBrowserRouter([
   {
@@ -75,6 +79,18 @@ const router = createBrowserRouter([
       {
         path: "terminals/:terminalId",
         element: <TerminalDetail />,
+      },
+      {
+        path: "terminal-buttons",
+        element: <TerminalButtonList />,
+      },
+      {
+        path: "terminal-buttons/new",
+        element: <TerminalButtonCreate />,
+      },
+      {
+        path: "terminal-buttons/:buttonId/edit",
+        element: <TerminalButtonUpdate />,
       },
       {
         path: "terminal-layouts",

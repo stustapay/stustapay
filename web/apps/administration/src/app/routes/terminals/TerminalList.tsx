@@ -109,8 +109,8 @@ export const TerminalList: React.FC = () => {
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
-        title={t("deleteTerminal")}
-        body={t("deleteTerminalDescription")}
+        title={t("terminal.delete")}
+        body={t("terminal.deleteDescription")}
         show={terminalToDelete !== null}
         onClose={handleConfirmDeleteTerminal}
       />

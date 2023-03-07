@@ -30,8 +30,8 @@ def get_target_account(order_type: OrderType, product: Product, customer_account
     """
     del customer_account
     if order_type == OrderType.sale:
-        if product.target_account is not None:
-            return product.target_account
+        if product.target_account_id is not None:
+            return product.target_account_id
         return ACCOUNT_SALE_EXIT
     raise NotImplementedError()
 

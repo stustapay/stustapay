@@ -1,4 +1,13 @@
-import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
+import {
+  Paper,
+  TextField,
+  Button,
+  LinearProgress,
+  Typography,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+} from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -58,7 +67,7 @@ export function TerminalLayoutChange<T extends NewTerminalLayout>({
               fullWidth
               autoFocus
               name="name"
-              label={t("layoutName")}
+              label={t("layout.name")}
               error={touched.name && !!errors.name}
               helperText={(touched.name && errors.name) as string}
               onBlur={handleBlur}
@@ -71,18 +80,25 @@ export function TerminalLayoutChange<T extends NewTerminalLayout>({
               margin="normal"
               fullWidth
               name="description"
-              label={t("layoutDescription")}
+              label={t("layout.description")}
               error={touched.description && !!errors.description}
               helperText={(touched.description && errors.description) as string}
               onBlur={handleBlur}
               onChange={handleChange}
               value={values.description}
             />
+
+            <FormGroup>
+              <FormControlLabel
+                control={<Checkbox name="allow_top_up" checked={values.allow_top_up} onChange={handleChange} />}
+                label={t("layout.allowTopUp")}
+              />
+            </FormGroup>
           </Paper>
           <Paper sx={{ mt: 2 }}>
             <TerminalLayoutDesigner
-              products={values.products === null ? [] : values.products}
-              onChange={(newProducts) => setFieldValue("products", newProducts)}
+              buttonIds={values.button_ids === null ? [] : values.button_ids}
+              onChange={(buttonIds) => setFieldValue("button_ids", buttonIds)}
             />
           </Paper>
           <Paper sx={{ mt: 2, p: 2 }}>

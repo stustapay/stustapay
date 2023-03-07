@@ -12,6 +12,8 @@ from stustapay.bon.pdflatex import pdflatex
 from stustapay.core.database import create_db_pool
 from stustapay.core.dbhook import DBHook
 from stustapay.core.service.order import OrderService
+from stustapay.core.service.terminal import TerminalService
+from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
 
 
@@ -43,7 +45,13 @@ class Generator(SubCommand):
         pool = await create_db_pool(self.config.database)
         async with pool.acquire() as self.psql:
             async with pool.acquire() as db_hook_conn:
-                self.tx_service = OrderService(pool, self.config)
+                # pylint: disable=attribute-defined-outside-init
+                self.user_service = UserService(pool, self.config)
+                # pylint: disable=attribute-defined-outside-init
+                self.terminal_service = TerminalService(pool, self.config, self.user_service)
+                # pylint: disable=attribute-defined-outside-init
+                self.tx_service = OrderService(pool, self.config, self.terminal_service)
+                # pylint: disable=attribute-defined-outside-init
                 self.db_hook = DBHook(db_hook_conn, "bon", self.handle_hook)
                 await self.db_hook.run()
 

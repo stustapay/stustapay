@@ -18,3 +18,8 @@ router = APIRouter(
 @router.get("/health", summary="health check endpoint")
 async def health():
     return {"status": "healthy"}
+
+
+@router.get("/config", summary="obtain the current terminal config")
+async def config():
+    return

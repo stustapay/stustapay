@@ -35,21 +35,6 @@ class LineItem(NewLineItem):
     tax_rate: float
     total_tax: float
 
-    @classmethod
-    def from_db(cls, row) -> "LineItem":
-        return cls(
-            order_id=row["order_id"],
-            item_id=row["item_id"],
-            product_id=row["product_id"],
-            product=Product.parse_obj(row),
-            quantity=row["quantity"],
-            price=row["price"],
-            total_price=row["total_price"],
-            tax_name=row["tax_name"],
-            tax_rate=row["tax_rate"],
-            total_tax=row["total_tax"],
-        )
-
 
 class OrderBooking(BaseModel):
     value_sum: float

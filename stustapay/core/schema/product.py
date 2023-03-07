@@ -6,9 +6,8 @@ from pydantic import BaseModel
 class NewProduct(BaseModel):
     name: str
     price: float
-    tax: str
-    target_account: Optional[int]
-    child_product_ids: list[int] = []
+    tax_name: str
+    target_account_id: Optional[int]
 
 
 class Product(NewProduct):

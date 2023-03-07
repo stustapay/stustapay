@@ -4,12 +4,14 @@ from typing import Dict, Optional, Set, Tuple
 
 import asyncpg
 
+from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, get_source_account, get_target_account
 from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Order
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
-from stustapay.core.service.dbservice import DBService, requires_user_privileges, with_db_transaction
+from stustapay.core.service.dbservice import DBService, with_db_transaction, requires_terminal
 from stustapay.core.service.error import NotFoundException, ServiceException
+from stustapay.core.service.terminal import TerminalService
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +42,14 @@ class AlreadyFinishedException(ServiceException):
 
 
 class OrderService(DBService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, terminal_service: TerminalService):
+        super().__init__(db_pool, config)
+        self.terminal_service = terminal_service
+
     @with_db_transaction
-    @requires_user_privileges([Privilege.cashier])
+    @requires_terminal(cashier_privileges=[Privilege.cashier])
     async def create_order(
-        self, *, conn: asyncpg.Connection, current_user: User, current_terminal: Terminal, new_order: NewOrder
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_cashier: User, new_order: NewOrder
     ) -> CompletedOrder:
         """
         executes the given order: checks all requirements, determines the corresponding transactions and executes them
@@ -60,7 +66,7 @@ class OrderService(DBService):
             "insert into ordr (status, order_type, cashier_id, terminal_id, customer_account_id) "
             "values ('pending', $1, $2, $3, $4) returning id, uuid",
             new_order.order_type.value,
-            current_user.id,
+            current_cashier.id,
             current_terminal.id,
             customer_account.id,
         )
@@ -78,7 +84,7 @@ class OrderService(DBService):
                 "    tax.rate, "
                 "    tax.name "
                 "from product "
-                "    left join tax on (tax.name = product.tax) "
+                "    left join tax on (tax.name = product.tax_name) "
                 "where product.id = $1;",
                 item_id,
             )
@@ -148,10 +154,12 @@ class OrderService(DBService):
         return Order.parse_obj(row)
 
     @with_db_transaction
+    @requires_terminal(cashier_privileges=[Privilege.cashier])
     async def show_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
         return await self._fetch_order(conn=conn, order_id=order_id)
 
     @with_db_transaction
+    @requires_terminal(cashier_privileges=[Privilege.cashier])
     async def book_order(
         self,
         *,
@@ -254,6 +262,7 @@ class OrderService(DBService):
         await conn.execute("select pg_notify('bon', $1);", str(order.id))
 
     @with_db_transaction
+    @requires_terminal(cashier_privileges=[Privilege.cashier])
     async def cancel_order(self, *, conn: asyncpg.Connection, order_id: int):
         """
         Cancel a Pending order

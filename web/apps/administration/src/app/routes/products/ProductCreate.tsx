@@ -7,7 +7,7 @@ import { ProductChange } from "./ProductChange";
 const initialValues: NewProduct = {
   name: "",
   price: 0,
-  tax: "none",
+  tax_name: "none",
 };
 
 export const ProductCreate: React.FC = () => {

@@ -22,7 +22,7 @@ export const TerminalProfileUpdate: React.FC = () => {
 
   return (
     <TerminalProfileChange
-      headerTitle={t("updateTerminalProfile")}
+      headerTitle={t("profile.update")}
       submitLabel={t("update", { ns: "common" })}
       initialValues={profile}
       validationSchema={TerminalProfileSchema}

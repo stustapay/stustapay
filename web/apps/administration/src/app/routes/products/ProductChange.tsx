@@ -83,10 +83,10 @@ export function ProductChange<T extends NewProduct>({
               margin="normal"
               variant="standard"
               label={t("taxRate")}
-              error={touched.tax && !!errors.tax}
-              helperText={(touched.tax && errors.tax) as string}
-              onChange={(value) => setFieldValue("tax", value)}
-              value={values.tax}
+              error={touched.tax_name && !!errors.tax_name}
+              helperText={(touched.tax_name && errors.tax_name) as string}
+              onChange={(value) => setFieldValue("tax_name", value)}
+              value={values.tax_name}
             />
 
             {isSubmitting && <LinearProgress />}

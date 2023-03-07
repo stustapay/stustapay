@@ -22,7 +22,7 @@ export const TerminalLayoutUpdate: React.FC = () => {
 
   return (
     <TerminalLayoutChange
-      headerTitle={t("updateTerminalLayout")}
+      headerTitle={t("layout.update")}
       submitLabel={t("update", { ns: "common" })}
       initialValues={layout}
       validationSchema={TerminalLayoutSchema}

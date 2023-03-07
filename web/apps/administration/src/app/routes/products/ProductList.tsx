@@ -74,7 +74,7 @@ export const ProductList: React.FC = () => {
       field: "tax_rate",
       headerName: t("taxRate") as string,
       align: "right",
-      renderCell: (params) => renderTaxRate(params.row.tax),
+      renderCell: (params) => renderTaxRate(params.row.tax_name),
     },
     {
       field: "actions",

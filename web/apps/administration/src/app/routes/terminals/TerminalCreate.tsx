@@ -19,7 +19,7 @@ export const TerminalCreate: React.FC = () => {
 
   return (
     <TerminalChange
-      headerTitle={t("createTerminal")}
+      headerTitle={t("terminal.create")}
       submitLabel={t("add", { ns: "common" })}
       initialValues={initialValues}
       validationSchema={NewTerminalSchema}

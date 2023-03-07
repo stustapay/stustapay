@@ -6,16 +6,24 @@ from jose import JWTError, jwt
 from pydantic import BaseModel, ValidationError
 
 from stustapay.core.config import Config
-from stustapay.core.schema.terminal import Terminal, NewTerminal
+from stustapay.core.schema.terminal import (
+    Terminal,
+    NewTerminal,
+    TerminalConfig,
+    TerminalButton,
+    FullTerminalLayout,
+    FullTerminalProfile,
+)
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.dbservice import DBService, with_db_transaction, requires_user_privileges, requires_terminal
 from stustapay.core.service.terminal.layout import TerminalLayoutService
 from stustapay.core.service.terminal.profile import TerminalProfileService
+from stustapay.core.service.user import UserService
 
 
 class TokenMetadata(BaseModel):
     terminal_id: int
-    session_uuid: int
+    session_uuid: uuid.UUID
 
 
 class TerminalRegistrationSuccess(BaseModel):
@@ -24,11 +32,12 @@ class TerminalRegistrationSuccess(BaseModel):
 
 
 class TerminalService(DBService):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, user_service: UserService):
         super().__init__(db_pool, config)
+        self.user_service = user_service
 
-        self.profile = TerminalProfileService(db_pool, config)
-        self.layout = TerminalLayoutService(db_pool, config)
+        self.profile = TerminalProfileService(db_pool, config, user_service)
+        self.layout = TerminalLayoutService(db_pool, config, user_service)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -153,16 +162,58 @@ class TerminalService(DBService):
         return Terminal.parse_obj(row)
 
     @with_db_transaction
-    @requires_terminal
-    async def login_cashier(self, *, conn: asyncpg.Connection, current_terminal: Terminal, token_uid: str) -> bool:
+    @requires_terminal()
+    async def login_cashier(self, *, conn: asyncpg.Connection, current_terminal: Terminal, tag_uid: int) -> bool:
         # TODO: once proper token uid authentication is in place use that here
         user_id = await conn.fetchval(
-            "select usr.id from usr join account a on usr.account = a.id join token t on t.id = a.token_id "
+            "select usr.id from usr join account a on usr.account_id = a.id join user_tag t on t.id = a.user_tag_id "
             "where t.uid = $1",
-            token_uid,
+            tag_uid,
         )
         if user_id is None:
             return False
 
-        await conn.execute("update terminal set active_cashier = $1 where id = $2", user_id, current_terminal.id)
-        return True
+        t_id = await conn.fetchval(
+            "update terminal set active_cashier_id = $1 where id = $2 returning id", user_id, current_terminal.id
+        )
+        return t_id is not None
+
+    @with_db_transaction
+    @requires_terminal()
+    async def get_terminal_config(
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal
+    ) -> Optional[TerminalConfig]:
+        db_profile = await conn.fetchrow(
+            "select * from terminal_profile tp where id = $1", current_terminal.active_profile_id
+        )
+        if db_profile is None:
+            return None
+        cashier_privileges = await conn.fetchval(
+            "select privileges from usr_with_privileges where id = $1", current_terminal.active_cashier_id
+        )
+        db_buttons = conn.cursor(
+            "select * from terminal_button_with_products tlwb "
+            "join terminal_layout_to_button tltb on tltb.button_id = tlwb.id "
+            "where tltb.layout_id = $1",
+            db_profile["layout_id"],
+        )
+        buttons = []
+        async for db_button in db_buttons:
+            buttons.append(TerminalButton.parse_obj(db_button))
+
+        db_layout = await conn.fetchrow("select * from terminal_layout where id = $1", db_profile["layout_id"])
+        layout = FullTerminalLayout.parse_obj(db_layout)
+        if db_buttons:
+            layout.buttons = buttons
+
+        profile = FullTerminalProfile(
+            id=db_profile["id"], name=db_profile["name"], description=db_profile["description"], layout=layout
+        )
+
+        return TerminalConfig(
+            id=current_terminal.id,
+            name=current_terminal.name,
+            description=current_terminal.description,
+            profile=profile,
+            cashier_privileges=cashier_privileges,
+        )

@@ -1,38 +1,38 @@
-import { Identifier, XYCoord } from "dnd-core";
+import { Identifier } from "dnd-core";
 import * as React from "react";
 import { ListItem, ListItemText, useTheme } from "@mui/material";
 import { useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { DraggableItemTypes } from "@core/draggable";
-import { Product } from "@models";
+import { TerminalButton } from "@models";
 
-export interface DraggableProductProps {
-  product: Product;
-  moveProduct: (productId: number, hoveredProductId: number, hoveredBelow: boolean) => void;
+export interface DraggableButtonProps {
+  button: TerminalButton;
+  moveButton: (buttonId: number, hoveredButtonId: number, hoveredBelow: boolean) => void;
 }
 
-export interface DragProduct {
+export interface DragButton {
   id: number;
   type: string;
 }
 
-export const DraggableProduct: React.FC<DraggableProductProps> = ({ product, moveProduct }) => {
+export const DraggableButton: React.FC<DraggableButtonProps> = ({ button, moveButton }) => {
   const theme = useTheme();
   const ref = useRef<HTMLLIElement>(null);
 
-  const [{ handlerId }, drop] = useDrop<DragProduct, void, { handlerId: Identifier | null }>({
-    accept: DraggableItemTypes.PRODUCT,
+  const [{ handlerId }, drop] = useDrop<DragButton, void, { handlerId: Identifier | null }>({
+    accept: DraggableItemTypes.TERMINAL_BUTTON,
     collect(monitor) {
       return {
         handlerId: monitor.getHandlerId(),
       };
     },
-    hover(item: DragProduct, monitor) {
+    hover(item: DragButton, monitor) {
       if (!ref.current) {
         return;
       }
       // Don't replace items with themselves
-      if (item.id === product.id) {
+      if (item.id === button.id) {
         return;
       }
 
@@ -59,17 +59,17 @@ export const DraggableProduct: React.FC<DraggableProductProps> = ({ product, mov
       }
 
       if (hoverClientY < hoverMiddleY) {
-        moveProduct(item.id, product.id, true);
+        moveButton(item.id, button.id, true);
       } else if (hoverClientY > hoverMiddleY) {
-        moveProduct(item.id, product.id, false);
+        moveButton(item.id, button.id, false);
       }
     },
   });
 
   const [{ isDragging }, drag] = useDrag({
-    type: DraggableItemTypes.PRODUCT,
+    type: DraggableItemTypes.TERMINAL_BUTTON,
     item: () => {
-      return { id: product.id };
+      return { id: button.id };
     },
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),
@@ -80,7 +80,7 @@ export const DraggableProduct: React.FC<DraggableProductProps> = ({ product, mov
   drag(drop(ref));
   return (
     <ListItem ref={ref} data-handler-id={handlerId} sx={{ opacity: opacity, boxShadow: theme.shadows[1] }}>
-      <ListItemText primary={product.name} secondary={`${product.price}€`} />
+      <ListItemText primary={button.name} secondary={`${button.price}€`} />
     </ListItem>
   );
 };
