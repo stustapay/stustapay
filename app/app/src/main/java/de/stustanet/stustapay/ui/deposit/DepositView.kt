@@ -1,13 +1,11 @@
 package de.stustanet.stustapay.ui.deposit
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -23,6 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.ui.chipscan.ChipScanView
 import kotlinx.coroutines.launch
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Preview
 @Composable
 fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
@@ -35,14 +34,84 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
 
     NavHost(navController = nav, startDestination = "main") {
         composable("main") {
+            Scaffold(
+                content = { paddingValues ->
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                            .padding(bottom = paddingValues.calculateBottomPadding()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier.height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("%.2f€".format(amount), fontSize = 72.sp)
+                        }
+                        DepositKeyboard(
+                            onDigit = { viewModel.inputDigit(it) },
+                            onClear = { viewModel.clear() }
+                        )
+                    }
+                },
+                bottomBar = {
+                    Button(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            nav.navigate("method") { launchSingleTop = true }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
+                    ) {
+                        Text(text = "✓")
+                    }
+                }
+            )
+        }
+        composable("method") {
+            Scaffold(
+                content = { paddingValues ->
+                    Column(modifier = Modifier.fillMaxSize()
+                        .padding(bottom = paddingValues.calculateBottomPadding())
+                    ) {
+                        Button(
+                            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.5f).padding(20.dp),
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                nav.navigate("cash") { launchSingleTop = true }
+                            }
+                        ) {
+                            Text("cash", fontSize = 48.sp)
+                        }
+                        Button(
+                            modifier = Modifier.fillMaxSize().padding(20.dp),
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                nav.navigate("card") { launchSingleTop = true }
+                            }
+                        ) {
+                            Text("card", fontSize = 48.sp)
+                        }
+                    }
+                },
+                bottomBar = {
+                    Button(
+                        onClick = {
+                            viewModel.clear()
+                            nav.navigate("main") { launchSingleTop = true }
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
+                    ) {
+                        Text(text = "❌")
+                    }
+                }
+            )
+
+        }
+        composable("cash") {
             ChipScanView(
                 onScan = { uid ->
                     // TODO: Connect to DB
-                    if (amount < 10) {
-                        nav.navigate("success") { launchSingleTop = true }
-                    } else {
-                        nav.navigate("failure") { launchSingleTop = true }
-                    }
+                    nav.navigate("success") { launchSingleTop = true }
                 },
                 prompt = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -53,26 +122,28 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
             ) { chipScanState ->
                 Scaffold(
                     content = { paddingValues ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
+                        Box(
+                            modifier = Modifier.fillMaxSize()
                                 .padding(bottom = paddingValues.calculateBottomPadding()),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier.height(200.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("%.2f€".format(amount), fontSize = 72.sp)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("%.2f€".format(amount), fontSize = 48.sp)
+                                Text("received", fontSize = 48.sp)
                             }
-                            DepositKeyboard(
-                                onDigit = { viewModel.inputDigit(it) },
-                                onClear = { viewModel.clear() }
-                            )
                         }
                     },
                     bottomBar = {
-                        Row() {
+                        Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+                            Button(
+                                onClick = {
+                                    nav.navigate("method") { launchSingleTop = true }
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                },
+                                modifier = Modifier.fillMaxWidth(0.5f).height(70.dp).padding(10.dp)
+                            ) {
+                                Text(text = "❌")
+                            }
                             Button(
                                 onClick = {
                                     scope.launch {
@@ -80,13 +151,45 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
                                     }
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(70.dp)
-                                    .padding(10.dp)
+                                modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
                             ) {
                                 Text(text = "✓")
                             }
+                        }
+                    }
+                )
+            }
+        }
+        composable("card") {
+            ChipScanView(
+                onScan = { uid ->
+                    // TODO: Connect to SumUp
+                    nav.navigate("failure") { launchSingleTop = true }
+                },
+                prompt = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("%.2f€".format(amount), fontSize = 48.sp)
+                        Text("scan a chip", fontSize = 48.sp)
+                    }
+                }
+            ) { chipScanState ->
+                LaunchedEffect(nav) {
+                    scope.launch {
+                        chipScanState.scan()
+                    }
+                }
+
+                Scaffold(
+                    content = {},
+                    bottomBar = {
+                        Button(
+                            onClick = {
+                                nav.navigate("method") { launchSingleTop = true }
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            },
+                            modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
+                        ) {
+                            Text(text = "❌")
                         }
                     }
                 )
@@ -96,8 +199,7 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
             Scaffold(
                 content = {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
+                        modifier = Modifier.fillMaxSize()
                             .padding(bottom = it.calculateBottomPadding()),
                         contentAlignment = Alignment.Center
                     ) {
@@ -114,10 +216,7 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
                             nav.navigate("main") { launchSingleTop = true }
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp)
-                            .padding(10.dp)
+                        modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
                     ) {
                         Text(text = "Next")
                     }
@@ -128,12 +227,10 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
             Scaffold(
                 content = {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(bottom = it.calculateBottomPadding()),
+                        modifier = Modifier.fillMaxSize().padding(bottom = it.calculateBottomPadding()),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Transaction Failed", fontSize = 48.sp)
+                        Text(text = "transaction failed", fontSize = 48.sp)
                     }
                 },
                 bottomBar = {

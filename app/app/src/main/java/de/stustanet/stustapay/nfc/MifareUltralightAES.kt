@@ -15,9 +15,8 @@ import javax.crypto.spec.SecretKeySpec
 const val PAGE_COUNT = 60
 const val USER_BYTES = 144
 
-class MifareUltralightAES(rawTag: Tag) : TagTechnology {
-    var rawTag = rawTag
-    var nfcaTag = NfcA.get(rawTag)
+class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
+    private var nfcaTag = NfcA.get(rawTag)
 
     fun protect(prot: Boolean) {
         if (prot) {
@@ -146,24 +145,24 @@ class MifareUltralightAES(rawTag: Tag) : TagTechnology {
     }
 
     override fun getTag(): Tag {
-        return tag
+        return rawTag
     }
 
-    fun cmdGetVersion(): ByteArray {
-        var cmd = ByteArray(1)
+    private fun cmdGetVersion(): ByteArray {
+        val cmd = ByteArray(1)
         cmd[0] = 0x60
         return nfcaTag.transceive(cmd)
     }
 
-    fun cmdRead(page: Byte): ByteArray {
-        var cmd = ByteArray(2)
+    private fun cmdRead(page: Byte): ByteArray {
+        val cmd = ByteArray(2)
         cmd[0] = 0x30
         cmd[1] = page
         return nfcaTag.transceive(cmd)
     }
 
-    fun cmdWrite(page: Byte, a: Byte, b: Byte, c: Byte, d: Byte) {
-        var cmd = ByteArray(6)
+    private fun cmdWrite(page: Byte, a: Byte, b: Byte, c: Byte, d: Byte) {
+        val cmd = ByteArray(6)
         cmd[0] = 0xa2.toByte()
         cmd[1] = page
         cmd[2] = a
@@ -173,16 +172,16 @@ class MifareUltralightAES(rawTag: Tag) : TagTechnology {
         nfcaTag.transceive(cmd)
     }
 
-    fun cmdAuthenticate1(): ByteArray {
-        var cmd = ByteArray(2)
+    private fun cmdAuthenticate1(): ByteArray {
+        val cmd = ByteArray(2)
         cmd[0] = 0x1a
         cmd[1] = 0x00
         val resp = nfcaTag.transceive(cmd)
         return resp.drop(1).toByteArray()
     }
 
-    fun cmdAuthenticate2(challenge: ByteArray): ByteArray {
-        var cmd = ByteArray(33)
+    private fun cmdAuthenticate2(challenge: ByteArray): ByteArray {
+        val cmd = ByteArray(33)
         cmd[0] = 0xaf.toByte()
         for (i in 0 until 32) {
             cmd[i + 1] = challenge[i]

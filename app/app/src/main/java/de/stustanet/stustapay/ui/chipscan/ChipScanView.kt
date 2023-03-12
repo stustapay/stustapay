@@ -30,6 +30,13 @@ fun ChipScanView(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(state, uiState) {
+        if (state.isScanning && uiState.dataReady && uiState.compatible && uiState.authenticated && uiState.protected) {
+            onScan(uiState.uid)
+            scope.launch { state.close() }
+        }
+    }
+
     ModalDrawer(
         drawerState = state.getDrawerState(),
         drawerContent = {
@@ -37,13 +44,6 @@ fun ChipScanView(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize()
             ) {
-                if (state.isScanning && uiState.dataReady && uiState.compatible && uiState.authenticated && uiState.protected) {
-                    LaunchedEffect(state, uiState) {
-                        onScan(uiState.uid)
-                        scope.launch { state.close() }
-                    }
-                }
-
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -55,5 +55,4 @@ fun ChipScanView(
     ) {
         screen(state)
     }
-
 }
