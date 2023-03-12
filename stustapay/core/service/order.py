@@ -5,19 +5,27 @@ from typing import Dict, Optional, Set, Tuple
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import Account, get_source_account, get_target_account
+from stustapay.core.schema.account import (
+    ACCOUNT_CASH_VAULT,
+    Account,
+    get_source_account,
+    get_target_account,
+    ACCOUNT_SUMUP,
+    ACCOUNT_CASH_ENTRY,
+)
 from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Order
+from stustapay.core.schema.tax_rate import TAX_NONE
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.dbservice import DBService, with_db_transaction, requires_terminal
-from stustapay.core.service.error import NotFoundException, ServiceException
+from stustapay.core.service.error import NotFoundException, ServiceException, InvalidArgumentException
 from stustapay.core.service.terminal import TerminalService
 
 logger = logging.getLogger(__name__)
 
 
 class NotEnoughFundsException(ServiceException):
-    id = "NotEnoughFundsError"
+    id = "NotEnoughFunds"
     description = "The customer has not enough funds on his account to complete the order"
 
     def __init__(self, needed_fund: float, available_fund: float):
@@ -26,7 +34,7 @@ class NotEnoughFundsException(ServiceException):
 
 
 class AgeRestrictionException(ServiceException):
-    id = "AgeRestrictionError"
+    id = "AgeRestriction"
     description = "The customer is too young the buy the respective products"
 
     def __init__(self, product_ids: Set[int]):
@@ -34,7 +42,7 @@ class AgeRestrictionException(ServiceException):
 
 
 class AlreadyFinishedException(ServiceException):
-    id = "AlreadyFinishedException"
+    id = "AlreadyFinished"
     description = "The order cannot be booked, as it is not in pending state, and thus already finished or cancelled"
 
     def __init__(self, order_id):
@@ -52,7 +60,8 @@ class OrderService(DBService):
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_cashier: User, new_order: NewOrder
     ) -> CompletedOrder:
         """
-        executes the given order: checks all requirements, determines the corresponding transactions and executes them
+        prepare the given order: checks all requirements.
+        To finish the order, book_order is used.
         """
         customer = await conn.fetchrow(
             "select a.*, t.restriction from user_tag t join account a on t.id = a.user_tag_id where t.uid=$1",
@@ -71,26 +80,35 @@ class OrderService(DBService):
             customer_account.id,
         )
 
-        count = 0
+        lineitem_count = 0
         restricted_products = set()
         for item in new_order.positions:
-            item_id = item.product_id
+            product_id = item.product_id
             item_quantity = item.quantity
+            item_price = item.price
 
             # check product cost
             cost = await conn.fetchrow(
                 "select "
                 "    product.price, "
+                "    product.fixed_price, "
                 "    tax.rate, "
                 "    tax.name "
                 "from product "
                 "    left join tax on (tax.name = product.tax_name) "
                 "where product.id = $1;",
-                item_id,
+                product_id,
             )
             if cost is None:
-                raise NotFoundException(element_typ="product", element_id=str(item_id))
-            price, tax_rate, tax_name = cost
+                raise NotFoundException(element_typ="product", element_id=str(product_id))
+            price, fixed_price, tax_rate, tax_name = cost
+            if fixed_price and item_price:
+                raise InvalidArgumentException("The line item price was set for a fixed price item")
+            # other case (not fixed_price and not item_price) is implicitly checked with the database constraints,
+            # pydantic constraints and previous test
+            if not fixed_price:
+                price = item_price
+                item_quantity = 1
 
             # check age restriction
             restricted = await conn.fetchval(
@@ -98,7 +116,7 @@ class OrderService(DBService):
                 customer["restriction"],
             )
             if restricted:
-                restricted_products.add(item_id)
+                restricted_products.add(product_id)
 
             # add the line item
             await conn.fetchval(
@@ -108,21 +126,21 @@ class OrderService(DBService):
                 "    tax_name, tax_rate) "
                 "values ($1, $2, $3, $4, $5, $6, $7)",
                 order_id,
-                count,
-                item_id,
+                lineitem_count,
+                product_id,
                 item_quantity,
                 price,
                 tax_name,
                 tax_rate,
             )
-            count += 1
+            lineitem_count += 1
 
         if len(restricted_products) > 0:
             raise AgeRestrictionException(restricted_products)
 
         await conn.execute(
             "update ordr set itemcount = $1 where id = $2;",
-            count,
+            lineitem_count,
             order_id,
         )
         order = await self._fetch_order(conn=conn, order_id=order_id)
@@ -133,6 +151,15 @@ class OrderService(DBService):
         if new_order.order_type == OrderType.sale:
             if customer_account.balance < order.value_sum:
                 raise NotEnoughFundsException(needed_fund=order.value_sum, available_fund=customer.balance)
+            new_balance = customer_account.balance - order.value_sum
+
+        elif new_order.order_type == OrderType.topup_sumup or new_order.order_type == OrderType.topup_cash:
+            if len(new_order.positions) != 1:
+                raise InvalidArgumentException("A topup Order must have exactly one position")
+            if order.line_items[0].price < 0:
+                raise InvalidArgumentException("A topup Order must have positive price")
+            new_balance = customer_account.balance + order.value_sum
+
         else:
             raise NotImplementedError()
 
@@ -140,7 +167,7 @@ class OrderService(DBService):
             id=order_id,
             uuid=order_uuid,
             old_balance=customer_account.balance,
-            new_balance=customer_account.balance - order.value_sum,
+            new_balance=new_balance,
         )
 
     async def _fetch_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
@@ -164,6 +191,7 @@ class OrderService(DBService):
         self,
         *,
         conn: asyncpg.Connection,
+        current_cashier: User,
         order_id: int,
     ) -> CompletedOrder:
         """
@@ -188,6 +216,12 @@ class OrderService(DBService):
         # NOW book the order, or fail
         if order.order_type == OrderType.sale:
             await self._book_sale_order(conn=conn, order=order, customer=customer_account)
+        elif order.order_type == OrderType.topup_cash:
+            await self._book_topup_cash_order(
+                conn=conn, order=order, customer=customer_account, cashier=current_cashier
+            )
+        elif order.order_type == OrderType.topup_sumup:
+            await self._book_topup_sumup_order(conn=conn, order=order, customer=customer_account)
         else:
             raise NotImplementedError()
 
@@ -202,7 +236,6 @@ class OrderService(DBService):
         """
         The customer wants to buy same wares, like Beer.
         It is checked if enough funds are available and books the results
-        returns the new balance of the customer account
         """
         assert order.order_type == OrderType.sale
         if customer.balance < order.value_sum:
@@ -215,6 +248,41 @@ class OrderService(DBService):
             source_acc_id = get_source_account(OrderType.sale, product, customer.id)
             target_acc_id = get_target_account(OrderType.sale, product, customer.id)
             prepared_bookings[(source_acc_id, target_acc_id, line_item.tax_name)] += float(line_item.total_price)
+
+        await self._book_prepared_bookings(conn=conn, order_id=order.id, bookings=prepared_bookings)
+
+    async def _book_topup_cash_order(self, *, conn: asyncpg.Connection, order: Order, customer: Account, cashier: User):
+        """
+        The customer pays cash money to get funds on hist customer account
+        It books the money from the cash input to the current cashier's register and
+        from the cash vault to the customer
+        """
+        assert order.order_type == OrderType.topup_cash
+        assert cashier.cashier_account_id is not None
+        assert order.itemcount == len(order.line_items) == 1
+        line_item = order.line_items[0]
+        assert line_item.price >= 0
+
+        # combine booking based on (source, target, tax) -> amount
+        prepared_bookings: Dict[Tuple[int, int, str], float] = dict()
+        prepared_bookings[(ACCOUNT_CASH_VAULT, customer.id, line_item.tax_name)] = float(line_item.total_price)
+        prepared_bookings[(ACCOUNT_CASH_ENTRY, cashier.cashier_account_id, TAX_NONE)] = float(line_item.total_price)
+
+        await self._book_prepared_bookings(conn=conn, order_id=order.id, bookings=prepared_bookings)
+
+    async def _book_topup_sumup_order(self, *, conn: asyncpg.Connection, order: Order, customer: Account):
+        """
+        The customer pays ec money (via sumup) to get funds on the customer account
+        It books the money from the sumup input directlz to the customer
+        """
+        assert order.order_type == OrderType.topup_sumup
+        assert order.itemcount == len(order.line_items) == 1
+        line_item = order.line_items[0]
+        assert line_item.price >= 0
+
+        # combine booking based on (source, target, tax) -> amount
+        prepared_bookings: Dict[Tuple[int, int, str], float] = dict()
+        prepared_bookings[(ACCOUNT_SUMUP, customer.id, line_item.tax_name)] = float(line_item.total_price)
 
         await self._book_prepared_bookings(conn=conn, order_id=order.id, bookings=prepared_bookings)
 

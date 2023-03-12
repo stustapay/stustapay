@@ -13,3 +13,12 @@ class NotFoundException(ServiceException):
 
     def __str__(self):
         return f"{self.element_typ} with id {self.element_id} not found"
+
+
+class InvalidArgumentException(ServiceException):
+    # raised, when the argument error cannot be cached with pydantic, e.g. because of database constraints
+    id = "InvalidArgument"
+    description = "The provided data did not match internal constraints"
+
+    def __init__(self, detail: str):
+        self.detail = detail

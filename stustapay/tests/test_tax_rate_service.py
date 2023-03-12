@@ -23,7 +23,7 @@ class TaxRateServiceTest(BaseTestCase):
 
         with self.assertRaises(PermissionError):
             await self.tax_rate_service.create_tax_rate(
-                token=self.orga_token, tax_rate=TaxRate(name="Krasse UST", rate=0.5, description="Krasse UST")
+                token=self.cashier_token, tax_rate=TaxRate(name="Krasse UST", rate=0.5, description="Krasse UST")
             )
 
         updated_tax_rate = await self.tax_rate_service.update_tax_rate(
@@ -39,7 +39,7 @@ class TaxRateServiceTest(BaseTestCase):
         self.assertTrue(updated_tax_rate in tax_rates)
 
         with self.assertRaises(PermissionError):
-            await self.tax_rate_service.delete_tax_rate(token=self.orga_token, tax_rate_name=tax_rate.name)
+            await self.tax_rate_service.delete_tax_rate(token=self.cashier_token, tax_rate_name=tax_rate.name)
 
         deleted = await self.tax_rate_service.delete_tax_rate(token=self.admin_token, tax_rate_name=tax_rate.name)
         self.assertTrue(deleted)

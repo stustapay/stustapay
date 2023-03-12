@@ -20,7 +20,7 @@ class ProductServiceTest(BaseTestCase):
 
         with self.assertRaises(PermissionError):
             await self.product_service.create_product(
-                token=self.orga_token, product=NewProduct(name="Test Product", price=3, tax_name="ust")
+                token=self.cashier_token, product=NewProduct(name="Test Product", price=3, tax_name="ust")
             )
 
         updated_product = await self.product_service.update_product(
@@ -37,7 +37,7 @@ class ProductServiceTest(BaseTestCase):
         self.assertEqual(products[0].name, "Updated Test Product")
 
         with self.assertRaises(PermissionError):
-            await self.product_service.delete_product(token=self.orga_token, product_id=product.id)
+            await self.product_service.delete_product(token=self.cashier_token, product_id=product.id)
 
         deleted = await self.product_service.delete_product(token=self.admin_token, product_id=product.id)
         self.assertTrue(deleted)

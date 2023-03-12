@@ -37,7 +37,7 @@ class TerminalServiceTest(BaseTestCase):
 
         with self.assertRaises(PermissionError):
             await self.terminal_service.layout.create_button(
-                token=self.orga_token,
+                token=self.cashier_token,
                 button=NewTerminalButton(name="Helles 0,5l", product_ids=[product1.id, product_pfand.id]),
             )
 
@@ -54,7 +54,7 @@ class TerminalServiceTest(BaseTestCase):
         self.assertTrue(updated_button in buttons)
 
         with self.assertRaises(PermissionError):
-            await self.terminal_service.layout.delete_button(token=self.orga_token, button_id=updated_button.id)
+            await self.terminal_service.layout.delete_button(token=self.cashier_token, button_id=updated_button.id)
 
         deleted = await self.terminal_service.layout.delete_button(token=self.admin_token, button_id=updated_button.id)
         self.assertTrue(deleted)
@@ -91,7 +91,7 @@ class TerminalServiceTest(BaseTestCase):
 
         with self.assertRaises(PermissionError):
             await self.terminal_service.create_terminal(
-                token=self.orga_token,
+                token=self.cashier_token,
                 terminal=NewTerminal(
                     name="Pot 1",
                     description="Pottipot",
@@ -122,7 +122,7 @@ class TerminalServiceTest(BaseTestCase):
         self.assertEqual(terminals[0].name, "Pot 2")
 
         with self.assertRaises(PermissionError):
-            await self.terminal_service.delete_terminal(token=self.orga_token, terminal_id=terminal.id)
+            await self.terminal_service.delete_terminal(token=self.cashier_token, terminal_id=terminal.id)
 
         deleted = await self.terminal_service.delete_terminal(token=self.admin_token, terminal_id=terminal.id)
         self.assertTrue(deleted)

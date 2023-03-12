@@ -166,8 +166,7 @@ class TerminalService(DBService):
     async def login_cashier(self, *, conn: asyncpg.Connection, current_terminal: Terminal, tag_uid: int) -> bool:
         # TODO: once proper token uid authentication is in place use that here
         user_id = await conn.fetchval(
-            "select usr.id from usr join account a on usr.account_id = a.id join user_tag t on t.id = a.user_tag_id "
-            "where t.uid = $1",
+            "select usr.id from usr join user_tag t on t.id = usr.user_tag_id where t.uid = $1",
             tag_uid,
         )
         if user_id is None:

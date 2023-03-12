@@ -2,8 +2,10 @@
 some basic api endpoints.
 """
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
+from stustapay.core.http.context import get_terminal_service
+from stustapay.core.service.terminal import TerminalService
 
 router = APIRouter(
     prefix="",
@@ -21,5 +23,7 @@ async def health():
 
 
 @router.get("/config", summary="obtain the current terminal config")
-async def config():
-    return
+async def config(
+    terminal_service: TerminalService = Depends(get_terminal_service),
+):
+    return terminal_service.get_terminal_config()

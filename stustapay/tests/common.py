@@ -81,10 +81,13 @@ class BaseTestCase(TestCase):
             password="asdf",
         )
         self.admin_token = (await self.user_service.login_user(username=self.admin_user.name, password="asdf")).token
-        self.orga_user = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(name="test-orga-user", description="", privileges=[Privilege.orga]), password="asdf"
+        self.cashier_user = await self.user_service.create_user_no_auth(
+            new_user=UserWithoutId(name="test-cashier-user", description="", privileges=[Privilege.cashier]),
+            password="asdf",
         )
-        self.orga_token = (await self.user_service.login_user(username=self.orga_user.name, password="asdf")).token
+        self.cashier_token = (
+            await self.user_service.login_user(username=self.cashier_user.name, password="asdf")
+        ).token
 
     async def asyncTearDown(self) -> None:
         await self.db_conn.close()
