@@ -12,10 +12,8 @@ class ChipScanState (
     private val _scan: () -> Unit,
     private val _close: () -> Unit,
     private val drawerState: DrawerState,
-    var prompt: String = "Scan a chip"
 ) {
-    suspend fun scan(prompt: String = "Scan a chip") {
-        this.prompt = prompt
+    suspend fun scan() {
         _scan()
         drawerState.open()
     }

@@ -35,14 +35,22 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
 
     NavHost(navController = nav, startDestination = "main") {
         composable("main") {
-            ChipScanView(onScan = { uid ->
-                // TODO: Connect to DB
-                if (amount < 10) {
-                    nav.navigate("success") { launchSingleTop = true }
-                } else {
-                    nav.navigate("failure") { launchSingleTop = true }
+            ChipScanView(
+                onScan = { uid ->
+                    // TODO: Connect to DB
+                    if (amount < 10) {
+                        nav.navigate("success") { launchSingleTop = true }
+                    } else {
+                        nav.navigate("failure") { launchSingleTop = true }
+                    }
+                },
+                prompt = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("%.2f€".format(amount), fontSize = 48.sp)
+                        Text("scan a chip", fontSize = 48.sp)
+                    }
                 }
-            }) { chipScanState ->
+            ) { chipScanState ->
                 Scaffold(
                     content = { paddingValues ->
                         Column(
@@ -55,7 +63,7 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
                                 modifier = Modifier.height(200.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(text = "$amount€", fontSize = 72.sp)
+                                Text("%.2f€".format(amount), fontSize = 72.sp)
                             }
                             DepositKeyboard(
                                 onDigit = { viewModel.inputDigit(it) },
@@ -68,7 +76,7 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
                             Button(
                                 onClick = {
                                     scope.launch {
-                                        chipScanState.scan("$amount€\nScan a chip")
+                                        chipScanState.scan()
                                     }
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 },
@@ -93,7 +101,10 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
                             .padding(bottom = it.calculateBottomPadding()),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "$amount€\ndeposited", fontSize = 48.sp)
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("%.2f€".format(amount), fontSize = 48.sp)
+                            Text("deposited", fontSize = 48.sp)
+                        }
                     }
                 },
                 bottomBar = {

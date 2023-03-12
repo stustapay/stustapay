@@ -54,7 +54,10 @@ private fun OrderItem(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onIncr()
                     },
-                    modifier = Modifier.fillMaxWidth(0.7f).height(90.dp).padding(5.dp)
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(90.dp)
+                        .padding(5.dp)
                 ) {
                     Text(text = name, fontSize = 24.sp)
                 }
@@ -63,7 +66,10 @@ private fun OrderItem(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onDecr()
                     },
-                    modifier = Modifier.fillMaxWidth().height(90.dp).padding(5.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(90.dp)
+                        .padding(5.dp),
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
                 ) {
                     Text(text = "-", fontSize = 36.sp)
@@ -87,14 +93,22 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
 
     NavHost(navController = nav, startDestination = "main") {
         composable("main") {
-            ChipScanView(onScan = { uid ->
-                // TODO: Connect to DB
-                if (totalCost < 10) {
-                    nav.navigate("success") { launchSingleTop = true }
-                } else {
-                    nav.navigate("failure") { launchSingleTop = true }
+            ChipScanView(
+                onScan = { uid ->
+                    // TODO: Connect to DB
+                    if (totalCost < 10) {
+                        nav.navigate("success") { launchSingleTop = true }
+                    } else {
+                        nav.navigate("failure") { launchSingleTop = true }
+                    }
+                },
+                prompt = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("%.2f€".format(totalCost), fontSize = 48.sp)
+                        Text("scan a chip", fontSize = 48.sp)
+                    }
                 }
-            }) { chipScanState ->
+            ) { chipScanState ->
                 Scaffold(
                     content = { paddingValues ->
                         LazyColumn(
@@ -122,18 +136,24 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                                     viewModel.clearOrder()
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 },
-                                modifier = Modifier.fillMaxWidth(0.5f).height(70.dp).padding(10.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth(0.5f)
+                                    .height(70.dp)
+                                    .padding(10.dp)
                             ) {
                                 Text(text = "❌")
                             }
                             Button(
                                 onClick = {
                                     scope.launch {
-                                        chipScanState.scan("$totalCost€\nScan a chip")
+                                        chipScanState.scan()
                                     }
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 },
-                                modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(70.dp)
+                                    .padding(10.dp)
                             ) {
                                 Text(text = "✓")
                             }
@@ -152,7 +172,7 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "$totalCost€ Paid", fontSize = 48.sp)
+                            Text("%.2f€ paid".format(totalCost), fontSize = 48.sp)
                             for (product in uiState.currentOrder) {
                                 val name = uiState.products[product.key]!!.first
                                 val amount = product.value
@@ -168,7 +188,10 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                             nav.navigate("main") { launchSingleTop = true }
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
-                        modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .padding(10.dp)
                     ) {
                         Text(text = "Next")
                     }
@@ -196,7 +219,10 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                             nav.navigate("main") { launchSingleTop = true }
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
-                        modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .padding(10.dp)
                     ) {
                         Text(text = "Next")
                     }

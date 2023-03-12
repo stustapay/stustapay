@@ -7,6 +7,7 @@ import androidx.compose.material.ModalDrawer
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -23,6 +24,7 @@ fun ChipScanView(
     viewModel: ChipScanViewModel = hiltViewModel(),
     state: ChipScanState = rememberChipScanState(viewModel::scan, viewModel::close),
     onScan: (ULong) -> Unit = {},
+    prompt: @Composable () -> Unit,
     screen: @Composable (ChipScanState) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -36,22 +38,17 @@ fun ChipScanView(
                 modifier = Modifier.fillMaxSize()
             ) {
                 if (state.isScanning && uiState.dataReady && uiState.compatible && uiState.authenticated && uiState.protected) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "Success", fontSize = 48.sp)
+                    LaunchedEffect(state, uiState) {
+                        onScan(uiState.uid)
+                        scope.launch { state.close() }
                     }
+                }
 
-                    onScan(uiState.uid)
-                    scope.launch { state.close() }
-                } else {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = state.prompt, fontSize = 48.sp)
-                    }
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    prompt()
                 }
             }
         }

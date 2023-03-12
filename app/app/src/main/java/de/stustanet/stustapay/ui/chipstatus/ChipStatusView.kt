@@ -24,7 +24,10 @@ fun ChipStatusView(viewModel: ChipStatusViewModel = hiltViewModel()) {
     val scope = rememberCoroutineScope()
     val scanViewUid = remember { mutableStateOf(0uL) }
 
-    ChipScanView(onScan = { scanViewUid.value = it }) { chipScanState ->
+    ChipScanView(
+        onScan = { scanViewUid.value = it },
+        prompt = { Text("scan a chip", fontSize = 48.sp) }
+    ) { chipScanState ->
         Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
             Text(text = "Scan Settings", fontSize = 24.sp)
 
