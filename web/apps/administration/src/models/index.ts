@@ -1,4 +1,4 @@
-export * from "./terminal";
+export * from "./till";
 export * from "./product";
 export * from "./taxRate";
 export * from "./users";

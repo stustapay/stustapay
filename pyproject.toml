@@ -69,6 +69,7 @@ target-version = ["py39"]
 
 [tool.mypy]
 ignore_missing_imports = true
+# check_untyped_defs = true # TODO: enable ass soon as the checks would pass
 pretty = true
 plugins = [
     "pydantic.mypy"

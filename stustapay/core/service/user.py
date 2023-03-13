@@ -148,6 +148,7 @@ class UserService(DBService):
         )
 
     @with_db_transaction
+    @requires_user_privileges()
     async def logout_user(self, *, conn: asyncpg.Connection, current_user: User, token: str) -> bool:
         token_payload = self._decode_jwt_payload(token)
         if token_payload is None:

@@ -95,33 +95,33 @@ values
     (14, 'under_18')
     on conflict do nothing;
 
-insert into terminal_layout (
+insert into till_layout (
     id, name, description
 )
 values
     (0, 'Bierkasse', 'Allgemeine Bierkasse')
 on conflict do nothing;
-select setval('terminal_layout_id_seq', 100);
+select setval('till_layout_id_seq', 100);
 
-insert into terminal_profile (
+insert into till_profile (
     id, name, description, layout_id
 )
 values
     (0, 'Pot', 'Allgemeine Pot Bierkasse', 0)
 on conflict do nothing;
-select setval('terminal_profile_id_seq', 100);
+select setval('till_profile_id_seq', 100);
 
-insert into terminal (
+insert into till (
     id, name, description, registration_uuid, session_uuid, tse_id, active_shift, active_profile_id
 )
 values
     (0, 'Terminal 0', 'Test Terminal', null, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'tse 0', 'Shift 0', 0)
     on conflict do nothing;
-select setval('terminal_id_seq', 100);
+select setval('till_id_seq', 100);
 
 
 insert into ordr (
-    id, itemcount, status, created_at, finished_at, payment_method, cashier_id, terminal_id, customer_account_id
+    id, itemcount, status, created_at, finished_at, payment_method, cashier_id, till_id, customer_account_id
 )
 values
     -- simple beer with deposit
