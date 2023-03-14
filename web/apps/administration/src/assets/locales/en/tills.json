@@ -1,0 +1,51 @@
+{
+  "till": {
+    "till": "Till",
+    "id": "ID",
+    "name": "Name",
+    "profile": "Profile",
+    "description": "Description",
+    "registrationUUID": "Registration ID",
+    "loggedIn": "Terminal registered",
+    "logout": "Unregister till",
+    "create": "Add a new till",
+    "update": "Update till",
+    "delete": "Delete till",
+    "deleteDescription": "Confirm till deletion"
+  },
+  "layout": {
+    "layout": "Layout",
+    "layouts": "Layouts",
+    "name": "Name",
+    "description": "Description",
+    "allowTopUp": "Allow top up",
+    "create": "Add a new layout",
+    "update": "Update layout",
+    "delete": "Delete layout",
+    "deleteDescription": "Confirm layout deletion"
+  },
+  "profile": {
+    "profile": "Profile",
+    "profiles": "Profiles",
+    "name": "Name",
+    "description": "Description",
+    "create": "Add a new profile",
+    "layout": "Layout",
+    "update": "Update profile",
+    "delete": "Delete profile",
+    "deleteDescription": "Confirm profile deletion"
+  },
+  "button": {
+    "button": "Button",
+    "buttons": "Buttons",
+    "create": "Add a new button",
+    "update": "Update button",
+    "delete": "Delete button",
+    "deleteDescription": "Confirm button deletion",
+    "availableButtons": "Available buttons",
+    "assignedButtons": "Assigned buttons",
+    "name": "Name",
+    "price": "Price",
+    "addProductToButton": "Add a product"
+  }
+}

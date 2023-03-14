@@ -11,6 +11,7 @@ from typing import Optional
 from asyncpg.pool import Pool
 
 from stustapay.core.config import Config
+from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import User, Privilege
 
 
@@ -41,7 +42,7 @@ def with_db_transaction(func):
     return wrapper
 
 
-def requires_user_privileges(privileges: list[Privilege]):
+def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
     def f(func):
         @wraps(func)
         async def wrapper(self, **kwargs):
@@ -66,9 +67,10 @@ def requires_user_privileges(privileges: list[Privilege]):
             if user is None:
                 raise PermissionError("invalid user token")  # TODO: better exception typing
 
-            for privilege in privileges:
-                if privilege not in user.privileges:
-                    raise PermissionError(f"user does not have required privilege: {privilege}")
+            if privileges:
+                for privilege in privileges:
+                    if privilege not in user.privileges:
+                        raise PermissionError(f"user does not have required privilege: {privilege}")
 
             if "current_user" in signature(func).parameters:
                 kwargs["current_user"] = user
@@ -83,7 +85,7 @@ def requires_user_privileges(privileges: list[Privilege]):
     return f
 
 
-def requires_terminal(cashier_privileges: Optional[list[Privilege]] = None):
+def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
     def f(func):
         @wraps(func)
         async def wrapper(self, **kwargs):
@@ -98,36 +100,36 @@ def requires_terminal(cashier_privileges: Optional[list[Privilege]] = None):
 
             token = kwargs["token"]
             conn = kwargs["conn"]
-            if self.__class__.__name__ == "TerminalService":
-                terminal = await self.get_terminal_from_token(conn=conn, token=token)
-            elif hasattr(self, "terminal_service"):
-                terminal = await self.terminal_service.get_terminal_from_token(conn=conn, token=token)
+            if self.__class__.__name__ == "TillService":
+                terminal: Terminal = await self.get_terminal_from_token(conn=conn, token=token)
+            elif hasattr(self, "till_service"):
+                terminal: Terminal = await self.till_service.get_terminal_from_token(conn=conn, token=token)
             else:
-                raise RuntimeError("requires_terminal needs self.terminal_service to be a TerminalService instance")
+                raise RuntimeError("requires_terminal needs self.till_service to be a TillService instance")
 
             if terminal is None:
                 raise PermissionError("invalid terminal token")  # TODO: better exception typing
 
-            if cashier_privileges is not None:
-                if terminal.active_cashier_id is None:
+            if user_privileges is not None:
+                if terminal.till.active_user_id is None:
                     # TODO: better exception typing
                     raise PermissionError(
-                        f"no cashier is logged into this terminal but "
-                        f"the following privileges are required {cashier_privileges}"
+                        f"no user is logged into this terminal but "
+                        f"the following privileges are required {user_privileges}"
                     )
 
-                logged_in_cashier = User.parse_obj(
+                logged_in_user = User.parse_obj(
                     await kwargs["conn"].fetchrow(
-                        "select * from usr_with_privileges where id = $1", terminal.active_cashier_id
+                        "select * from usr_with_privileges where id = $1", terminal.till.active_user_id
                     )
                 )
 
-                for privilege in cashier_privileges:
-                    if privilege not in logged_in_cashier.privileges:
-                        raise PermissionError(f"cashier does not have required privilege: {privilege}")
+                for privilege in user_privileges:
+                    if privilege not in logged_in_user.privileges:
+                        raise PermissionError(f"user does not have required privilege: {privilege}")
 
-                if "current_cashier" in signature(func).parameters:
-                    kwargs["current_cashier"] = logged_in_cashier
+                if "current_user" in signature(func).parameters:
+                    kwargs["current_user"] = logged_in_user
 
             if "current_terminal" in signature(func).parameters:
                 kwargs["current_terminal"] = terminal

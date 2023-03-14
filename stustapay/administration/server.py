@@ -6,7 +6,7 @@ from stustapay.core.http.server import Server
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
-from stustapay.core.service.terminal import TerminalService
+from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
 from .routers import (
@@ -15,10 +15,10 @@ from .routers import (
     common,
     tax_rate,
     auth,
-    terminal,
-    terminal_profiles,
-    terminal_layouts,
-    terminal_buttons,
+    till,
+    till_profile,
+    till_layout,
+    till_button,
     config as config_router,
 )
 
@@ -43,10 +43,10 @@ class Api(SubCommand):
         self.server.add_router(common.router)
         self.server.add_router(tax_rate.router)
         self.server.add_router(auth.router)
-        self.server.add_router(terminal.router)
-        self.server.add_router(terminal_layouts.router)
-        self.server.add_router(terminal_profiles.router)
-        self.server.add_router(terminal_buttons.router)
+        self.server.add_router(till.router)
+        self.server.add_router(till_layout.router)
+        self.server.add_router(till_profile.router)
+        self.server.add_router(till_button.router)
         self.server.add_router(config_router.router)
 
     async def run(self):
@@ -60,7 +60,7 @@ class Api(SubCommand):
             product_service=ProductService(db_pool=db_pool, config=self.cfg, user_service=user_service),
             tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg, user_service=user_service),
             user_service=user_service,
-            terminal_service=TerminalService(db_pool=db_pool, config=self.cfg, user_service=user_service),
+            till_service=TillService(db_pool=db_pool, config=self.cfg, user_service=user_service),
             config_service=ConfigService(db_pool=db_pool, config=self.cfg, user_service=user_service),
         )
         try:

@@ -13,7 +13,7 @@ from stustapay.core.config import Config
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
-from stustapay.core.service.terminal import TerminalService
+from stustapay.core.service.till import TillService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.user import UserService
 
@@ -31,7 +31,7 @@ class Context:
     product_service: Optional[ProductService] = None
     tax_rate_service: Optional[TaxRateService] = None
     user_service: Optional[UserService] = None
-    terminal_service: Optional[TerminalService] = None
+    till_service: Optional[TillService] = None
     config_service: Optional[ConfigService] = None
 
 
@@ -127,8 +127,8 @@ def get_user_service(request: Request) -> UserService:
     return request.state.context.user_service
 
 
-def get_terminal_service(request: Request) -> TerminalService:
-    return request.state.context.terminal_service
+def get_till_service(request: Request) -> TillService:
+    return request.state.context.till_service
 
 
 def get_config_service(request: Request) -> ConfigService:
