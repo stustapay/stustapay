@@ -15,8 +15,8 @@
   "users": "Users",
   "confirm": "Confirm",
   "cancel": "Cancel",
-  "terminals": "Terminals",
-  "terminalLayouts": "Terminal Layouts",
-  "terminalButtons": "Terminal Buttons",
-  "terminalProfiles": "Terminal Profiles"
+  "tills": "Tills",
+  "tillLayouts": "Till Layouts",
+  "tillButtons": "Till Buttons",
+  "tillProfiles": "Till Profiles"
 }

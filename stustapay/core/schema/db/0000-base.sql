@@ -11,7 +11,7 @@
 -- - user identification through tokens
 -- - accounts for users, ware input/output and payment providers
 -- - products with custom tax rates
--- - terminal configuration profiles
+-- - till configuration profiles
 
 -- security definer functions are executed in setuid-mode
 -- to grant access to them, use:
@@ -108,6 +108,7 @@ create table if not exists account (
     id bigserial not null primary key,
     user_tag_id bigint references user_tag(id) on delete cascade,
     type text not null references account_type(name) on delete restrict,
+    constraint private_account_requires_user_tag check (user_tag_id is not null = (type = 'private')),
     name text,
     comment text,
 
@@ -148,6 +149,8 @@ create table if not exists usr (
     -- account for cashiers to store the current cash balance in input or output locations
     cashier_account_id bigint references account(id) on delete restrict
     -- depending on the transfer action, the correct account is booked
+
+    constraint password_or_user_tag_id_set check ((user_tag_id is null) <> (password is null))
 );
 
 
@@ -283,78 +286,78 @@ create or replace view product_as_json as (
     group by p.id
 );
 
-create table if not exists terminal_layout (
+create table if not exists till_layout (
     id serial not null primary key,
     name text not null unique,
-    description text,
-    allow_top_up boolean not null default false
+    description text
 );
 
-create table if not exists terminal_button (
+create table if not exists till_button (
     id serial not null primary key,
     name text not null unique
 );
 
-create table if not exists terminal_button_product (
-    button_id int not null references terminal_button(id) on delete cascade,
+create table if not exists till_button_product (
+    button_id int not null references till_button(id) on delete cascade,
     product_id int not null references product(id) on delete cascade,
     primary key(button_id, product_id)
 );
 
-create or replace view terminal_button_with_products as (
+create or replace view till_button_with_products as (
     select
         t.*,
         coalesce(j_view.price, 0) as price,
         coalesce(j_view.product_ids, '{}'::int array) as product_ids
-    from terminal_button t
+    from till_button t
     left join (
         select tlb.button_id, sum(p.price) as price, array_agg(tlb.product_id) as product_ids
-        from terminal_button_product tlb
+        from till_button_product tlb
         join product p on tlb.product_id = p.id
         group by tlb.button_id
     ) j_view on t.id = j_view.button_id
 );
 
-create table if not exists terminal_layout_to_button (
-    layout_id int not null references terminal_layout(id) on delete cascade,
-    button_id int not null references terminal_button(id) on delete restrict,
+create table if not exists till_layout_to_button (
+    layout_id int not null references till_layout(id) on delete cascade,
+    button_id int not null references till_button(id) on delete restrict,
     sequence_number int not null unique,
     primary key (layout_id, button_id)
 );
 
-create or replace view terminal_layout_with_buttons as (
+create or replace view till_layout_with_buttons as (
     select t.*, coalesce(j_view.button_ids, '{}'::int array) as button_ids
-    from terminal_layout t
+    from till_layout t
     left join (
         select tltb.layout_id, array_agg(tltb.button_id order by tltb.sequence_number) as button_ids
-        from terminal_layout_to_button tltb
+        from till_layout_to_button tltb
         group by tltb.layout_id
     ) j_view on t.id = j_view.layout_id
 );
 
-create table if not exists terminal_profile (
+create table if not exists till_profile (
     id serial not null primary key,
     name text not null unique,
     description text,
-    layout_id int not null references terminal_layout(id) on delete restrict
+    allow_top_up boolean not null default false,
+    layout_id int not null references till_layout(id) on delete restrict
     -- todo: payment_methods?
 );
 
 -- which cash desks do we have and in which state are they
-create table if not exists terminal (
+create table if not exists till (
     id serial not null primary key,
     name text not null unique,
     description text,
     registration_uuid uuid unique,
     session_uuid uuid unique,
 
-    -- how this terminal is mapped to a tse
+    -- how this till is mapped to a tse
     tse_id text,
 
     -- identifies the current active work shift and configuration
     active_shift text,
-    active_profile_id int not null references terminal_profile(id) on delete restrict,
-    active_cashier_id int references usr(id) on delete restrict,
+    active_profile_id int not null references till_profile(id) on delete restrict,
+    active_user_id int references usr(id) on delete restrict,
 
     constraint registration_or_session_uuid_null check ((registration_uuid is null) <> (session_uuid is null))
 );
@@ -401,7 +404,7 @@ create table if not exists ordr (
 
     -- who created it
     cashier_id int not null references usr(id) on delete restrict,
-    terminal_id int not null references terminal(id) on delete restrict,
+    till_id int not null references till(id) on delete restrict,
     -- customer is allowed to be null, as it is only known on the final booking, not on the creation of the order
     -- canceled orders can have no customer
     customer_account_id int references account(id) on delete restrict

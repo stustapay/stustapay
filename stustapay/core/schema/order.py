@@ -80,7 +80,7 @@ class Order(OrderBooking):
 
     # foreign keys
     cashier_id: int
-    terminal_id: int
+    till_id: int
     customer_account_id: int
 
     line_items: list[LineItem]
