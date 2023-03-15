@@ -31,7 +31,7 @@ import androidx.camera.core.Preview as CameraPreview
 
 @Preview
 @Composable
-fun QRScanView() {
+fun QRScanView(onScanSuccess: (String) -> Unit = {}) {
     var code: String? by remember {
         mutableStateOf(null)
     }
@@ -107,6 +107,7 @@ fun QRScanView() {
                         ZXingQRCode(
                             scanned = { result ->
                                 code = result
+                                onScanSuccess(result)
                             },
                             status = { message ->
                                 status = message

@@ -21,6 +21,7 @@ import de.stustanet.stustapay.R
 import de.stustanet.stustapay.SysUiController
 import de.stustanet.stustapay.ui.chipstatus.ChipStatusView
 import de.stustanet.stustapay.ui.deposit.DepositView
+import de.stustanet.stustapay.ui.settings.SettingsView
 import de.stustanet.stustapay.ui.theme.StuStaPayTheme
 
 

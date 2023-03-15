@@ -11,7 +11,7 @@ data class HealthStatus(val status: String)
 object Network {
     suspend fun getHealthStatus(): String {
         return try {
-            val health: HealthStatus = ktorClient.get("http://10.0.2.2:8080/api/health").body()
+            val health: HealthStatus = httpClient.get("http://10.0.2.2:8080/api/health").body()
             "Status: ${health.status}"
         } catch (_: ConnectTimeoutException) {
             "Connection timeout"
