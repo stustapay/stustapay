@@ -15,7 +15,7 @@ class BonGeneratorTest(BaseTestCase):
     async def test_pdflatex_bon(self):
         context = {
             "order": Order(
-                uuid=str(uuid.uuid4()),
+                uuid=uuid.uuid4(),
                 order_type=OrderType.sale,
                 cashier_id=0,
                 terminal_id=0,
@@ -35,7 +35,7 @@ class BonGeneratorTest(BaseTestCase):
                         quantity=2,
                         order_id=1,
                         item_id=0,
-                        product=Product(name="Helles 1.0l", price=4.2016806722, tax_name="ust", id=0),
+                        product=Product(name="Helles 1.0l", price=4.2016806722, tax_name="ust", id=0, fixed_price=True),
                         price=4.2016806722,
                         total_tax=4.999999999918,
                         total_price=9.999999999836,
@@ -47,7 +47,7 @@ class BonGeneratorTest(BaseTestCase):
                         quantity=1,
                         order_id=1,
                         item_id=2,
-                        product=Product(name="Weißwurst", price=1.8691588785, tax_name="eust", id=9),
+                        product=Product(name="Weißwurst", price=1.8691588785, tax_name="eust", id=9, fixed_price=True),
                         price=1.8691588785,
                         total_tax=1.999999999995,
                         total_price=1.999999999995,
@@ -59,7 +59,7 @@ class BonGeneratorTest(BaseTestCase):
                         quantity=2,
                         order_id=1,
                         item_id=1,
-                        product=Product(name="Pfand", price=2.00, tax_name="none", id=10),
+                        product=Product(name="Pfand", price=2.00, tax_name="none", id=10, fixed_price=True),
                         price=2.00,
                         total_tax=2.0000,
                         total_price=4.0000,

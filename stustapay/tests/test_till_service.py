@@ -35,7 +35,7 @@ class TillServiceTest(BaseTestCase):
 
         with self.assertRaises(PermissionError):
             await self.till_service.layout.create_button(
-                token=self.orga_token,
+                token=self.cashier_token,
                 button=NewTillButton(name="Helles 0,5l", product_ids=[product1.id, product_pfand.id]),
             )
 
@@ -52,7 +52,7 @@ class TillServiceTest(BaseTestCase):
         self.assertTrue(updated_button in buttons)
 
         with self.assertRaises(PermissionError):
-            await self.till_service.layout.delete_button(token=self.orga_token, button_id=updated_button.id)
+            await self.till_service.layout.delete_button(token=self.cashier_token, button_id=updated_button.id)
 
         deleted = await self.till_service.layout.delete_button(token=self.admin_token, button_id=updated_button.id)
         self.assertTrue(deleted)
@@ -79,7 +79,7 @@ class TillServiceTest(BaseTestCase):
                 description="Pottipot",
                 tse_id=None,
                 active_shift=None,
-                active_cashier_id=None,
+                active_user_id=None,
                 active_profile_id=till_profile.id,
             ),
         )
@@ -87,13 +87,13 @@ class TillServiceTest(BaseTestCase):
 
         with self.assertRaises(PermissionError):
             await self.till_service.create_till(
-                token=self.orga_token,
+                token=self.cashier_token,
                 till=NewTill(
                     name="Pot 1",
                     description="Pottipot",
                     tse_id=None,
                     active_shift=None,
-                    active_cashier_id=None,
+                    active_user_id=None,
                     active_profile_id=till_profile.id,
                 ),
             )
@@ -106,7 +106,7 @@ class TillServiceTest(BaseTestCase):
                 description="Pottipot - new",
                 tse_id=None,
                 active_shift=None,
-                active_cashier_id=None,
+                active_user_id=None,
                 active_profile_id=till_profile.id,
             ),
         )
@@ -118,7 +118,7 @@ class TillServiceTest(BaseTestCase):
         self.assertEqual(tills[0].name, "Pot 2")
 
         with self.assertRaises(PermissionError):
-            await self.till_service.delete_till(token=self.orga_token, till_id=till.id)
+            await self.till_service.delete_till(token=self.cashier_token, till_id=till.id)
 
         deleted = await self.till_service.delete_till(token=self.admin_token, till_id=till.id)
         self.assertTrue(deleted)
@@ -142,7 +142,7 @@ class TillServiceTest(BaseTestCase):
                 description="Pottipot",
                 tse_id=None,
                 active_shift=None,
-                active_cashier_id=None,
+                active_user_id=None,
                 active_profile_id=till_profile.id,
             ),
         )

@@ -78,7 +78,7 @@ create table if not exists user_tag (
 
     -- to validate tag authenticity
     -- secret maybe shared with several tags.
-    secret int references user_tag_secret(id) on delete restrict
+    secret bigint references user_tag_secret(id) on delete restrict
 );
 
 
@@ -108,6 +108,7 @@ create table if not exists account (
     id bigserial not null primary key,
     user_tag_id bigint references user_tag(id) on delete cascade,
     type text not null references account_type(name) on delete restrict,
+    constraint private_account_requires_user_tag check (user_tag_id is not null = (type = 'private')),
     name text,
     comment text,
 
@@ -127,7 +128,8 @@ values
     (1, null, 'virtual', 'Cash Entry', 'source account, when cash is brought in the system (cash top_up, ...)'),
     (2, null, 'virtual', 'Deposit', 'Deposit currently at the customers'),
     (3, null, 'virtual', 'Sumup', 'source account for sumup top up '),
-    (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here')
+    (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here'),
+    (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement')
     on conflict do nothing;
 select setval('account_id_seq', 100);
 
@@ -140,8 +142,15 @@ create table if not exists usr (
     password text,
     description text,
 
-    -- e.g. the backpack-account, or the cash drawer
-    account_id bigint references account(id) on delete restrict
+    user_tag_id bigint references user_tag(id) on delete restrict,
+
+    -- account for orgas to transport cash from one location to another
+    transport_account_id bigint references account(id) on delete restrict,
+    -- account for cashiers to store the current cash balance in input or output locations
+    cashier_account_id bigint references account(id) on delete restrict
+    -- depending on the transfer action, the correct account is booked
+
+    constraint password_or_user_tag_id_set check ((user_tag_id is null) <> (password is null))
 );
 
 
@@ -158,8 +167,13 @@ insert into privilege (
     name
 )
 values
+    -- Super Use
     ('admin'),
-    ('orga'),
+    -- Finanzorga
+    ('finazorga'),
+    -- Standleiter
+    -- ('orga'),
+    -- Helfer
     ('cashier')
     on conflict do nothing;
 
@@ -211,8 +225,6 @@ values
     ('topup_cash'),
     -- load token with sumup
     ('topup_sumup'),
-    -- load token with paypal
-    ('topup_paypal'),
     -- buy items to consume
     ('sale')
     on conflict do nothing;
@@ -227,7 +239,7 @@ insert into tax (
     name, rate, description
 )
 values
-    -- for internal transfers
+    -- for internal transfers, THIS LINE MUST NOT BE DELETED, EVEN BY AN ADMIN
     ('none', 0.0, 'keine Steuer'),
 
     -- reduced sales tax for food etc
@@ -246,7 +258,10 @@ create table if not exists product (
     -- todo: ean or something for receipt?
     name text not null unique,
     -- price including tax (what is charged in the end)
-    price numeric not null,
+    price numeric,
+    -- price is not fixed, e.g for top up. Then price=null and set with the api call
+    fixed_price boolean not null default true,
+    constraint product_not_fixed_or_price check ( price is not null = fixed_price),
 
     -- if target account is set, the product is booked to this specific account,
     -- e.g. for the deposit account, or a specific exit account (for beer, ...)
@@ -385,13 +400,13 @@ create table if not exists ordr (
     --       or inline-json without separate table?
 
     -- type of the order like, top up, buy beer,
-    order_type text references order_type(name) on delete restrict,
+    order_type text not null references order_type(name) on delete restrict,
 
     -- who created it
     cashier_id int not null references usr(id) on delete restrict,
     till_id int not null references till(id) on delete restrict,
     -- customer is allowed to be null, as it is only known on the final booking, not on the creation of the order
-    -- canceled orders can have no
+    -- canceled orders can have no customer
     customer_account_id int references account(id) on delete restrict
 );
 

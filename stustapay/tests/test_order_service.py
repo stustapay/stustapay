@@ -25,12 +25,25 @@ class OrderLogicTest(BaseTestCase):
             product=NewProduct(
                 name="Test Product",
                 price=3,
+                fixed_price=True,
                 tax_name="ust",
                 target_account_id=None,
             ),
         )
+        self.topup_product = await self.product_service.create_product(
+            token=self.admin_token,
+            product=NewProduct(
+                name="Top Up",
+                fixed_price=False,
+                tax_name="none",
+                target_account_id=None,
+            ),
+        )
+        cashier_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning id")
         self.cashier = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(name="test_cashier", description="", privileges=[Privilege.cashier])
+            new_user=UserWithoutId(
+                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag=cashier_tag_id
+            )
         )
         self.till_layout = await self.till_service.layout.create_layout(
             token=self.admin_token,
@@ -55,13 +68,11 @@ class OrderLogicTest(BaseTestCase):
         self.terminal_token = (
             await self.till_service.register_terminal(registration_uuid=self.till.registration_uuid)
         ).token
-        cashier_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning id")
         cashier_account_id = await self.db_conn.fetchval(
-            "insert into account (user_tag_id, type, balance) values ($1, 'internal', $2) returning id",
-            cashier_tag_id,
+            "insert into account (type, balance) values ('internal', $1) returning id",
             0,
         )
-        await self.user_service.link_user_to_account(
+        await self.user_service.link_user_to_cashier_account(
             token=self.admin_token, user_id=self.cashier.id, account_id=cashier_account_id
         )
         await self.till_service.login_cashier(token=self.terminal_token, tag_uid=54321)
@@ -94,3 +105,47 @@ class OrderLogicTest(BaseTestCase):
         await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
         order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
         self.assertEqual(order.status, "done")
+
+    async def test_topup_cash_order_flow(self):
+        completed_order = await self.order_service.create_order(
+            token=self.terminal_token,
+            new_order=NewOrder(
+                positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
+                order_type=OrderType.topup_cash,
+                customer_tag=1234,
+            ),
+        )
+        self.assertEqual(completed_order.old_balance, START_BALANCE)
+        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
+        self.assertEqual(order.status, "pending")
+        self.assertEqual(order.itemcount, 1)
+        self.assertEqual(len(order.line_items), 1)
+        self.assertEqual(order.line_items[0].quantity, 1)
+        self.assertEqual(order.line_items[0].price, 20)
+        self.assertEqual(order.value_sum, 20)
+        self.assertEqual(completed_order.new_balance, START_BALANCE + order.value_sum)
+        await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
+        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
+        self.assertEqual(order.status, "done")
+        # todo check cashier account balance
+
+    async def test_topup_sumup_order_flow(self):
+        completed_order = await self.order_service.create_order(
+            token=self.terminal_token,
+            new_order=NewOrder(
+                positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
+                order_type=OrderType.topup_sumup,
+                customer_tag=1234,
+            ),
+        )
+        self.assertEqual(completed_order.old_balance, START_BALANCE)
+        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
+        self.assertEqual(order.status, "pending")
+        self.assertEqual(order.line_items[0].quantity, 1)
+        self.assertEqual(order.line_items[0].price, 20)
+        self.assertEqual(order.value_sum, 20)
+        self.assertEqual(completed_order.new_balance, START_BALANCE + order.value_sum)
+        await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
+        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
+        self.assertEqual(order.status, "done")
+        # todo check cashier account balance

@@ -3,7 +3,7 @@ import enum
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 
 from stustapay.core.schema.product import Product
 
@@ -11,12 +11,27 @@ from stustapay.core.schema.product import Product
 class OrderType(enum.Enum):
     sale = "sale"
     topup_cash = "topup_cash"
-    topup_sum = "topup_sumup"
+    topup_sumup = "topup_sumup"
 
 
 class NewLineItem(BaseModel):
     product_id: int
-    quantity: int
+
+    # for products with a fixed price, the quantity must be specified
+    # for products with variable price the used price must be set
+    quantity: Optional[int]
+    price: Optional[float]
+
+    # check for new Items if either quantity or price is set
+    @root_validator
+    def check_quantity_or_price_set(cls, values):  # pylint: disable=no-self-argument
+        if cls == LineItem:
+            # only check for new line item
+            return values
+        quantity, price = values.get("quantity"), values.get("price")
+        if (quantity is None) == (price is None):
+            raise ValueError("either price or quantity must be set")
+        return values
 
 
 class NewOrder(BaseModel):
