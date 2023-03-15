@@ -8,11 +8,12 @@ import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.*
 
-val ktorClient = HttpClient(CIO) {
+val httpClient = HttpClient(CIO) {
     install(ContentNegotiation) {
         json(Json {
             prettyPrint = true
             isLenient = true
+            ignoreUnknownKeys = true
         })
     }
 

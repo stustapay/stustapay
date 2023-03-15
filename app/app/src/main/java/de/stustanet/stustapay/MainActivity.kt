@@ -1,7 +1,6 @@
 package de.stustanet.stustapay
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
@@ -13,15 +12,13 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.HiltAndroidApp
-import de.stustanet.stustapay.nfc.NfcHandler
 import de.stustanet.stustapay.model.NfcState
+import de.stustanet.stustapay.nfc.NfcHandler
 import de.stustanet.stustapay.ui.Main
 import javax.inject.Inject
 
-@HiltAndroidApp
-class MainApplication : Application()
 interface SysUiController {
     fun hideSystemUI()
     fun showSystemUI()
@@ -29,8 +26,11 @@ interface SysUiController {
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), SysUiController {
-    @Inject lateinit var nfcState: NfcState
+    @Inject
+    lateinit var nfcState: NfcState
     private lateinit var nfcHandler: NfcHandler
+
+    val viewModel: MainActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
