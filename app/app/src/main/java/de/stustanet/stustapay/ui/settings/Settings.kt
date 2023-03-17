@@ -19,8 +19,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.BuildConfig
-import de.stustanet.stustapay.ui.NavDest
-import de.stustanet.stustapay.ui.NavScaffold
+import de.stustanet.stustapay.ui.nav.NavDest
+import de.stustanet.stustapay.ui.nav.NavScaffold
 import de.stustanet.stustapay.ui.pref.PrefGroup
 import de.stustanet.stustapay.ui.pref.PrefLink
 

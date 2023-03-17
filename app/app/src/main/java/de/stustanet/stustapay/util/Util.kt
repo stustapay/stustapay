@@ -1,5 +1,7 @@
 package de.stustanet.stustapay.util
 
+import androidx.navigation.NavHostController
+import de.stustanet.stustapay.ui.nav.NavDest
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 

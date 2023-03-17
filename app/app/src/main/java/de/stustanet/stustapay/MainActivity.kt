@@ -17,12 +17,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import de.stustanet.stustapay.model.NfcState
 import de.stustanet.stustapay.nfc.NfcHandler
 import de.stustanet.stustapay.ui.Main
+import de.stustanet.stustapay.util.SysUiController
 import javax.inject.Inject
 
-interface SysUiController {
-    fun hideSystemUI()
-    fun showSystemUI()
-}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), SysUiController {
