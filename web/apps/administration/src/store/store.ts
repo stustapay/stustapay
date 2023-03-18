@@ -4,11 +4,18 @@ import { setupListeners } from "@reduxjs/toolkit/dist/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { productApi, userApi, taxRateApi, tillApi, tillLayoutApi, tillProfileApi, configApi } from "@api";
 import { authSlice } from "./authSlice";
+import { uiSlice } from "./uiSlice";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
 const authPersistConfig = {
   key: "auth",
+  version: 1,
+  storage,
+};
+
+const uiPersistConfig = {
+  key: "ui",
   version: 1,
   storage,
 };
@@ -24,6 +31,7 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [configApi.reducerPath]: configApi.reducer,
     [authSlice.name]: persistReducer(authPersistConfig, authSlice.reducer),
+    [uiSlice.name]: persistReducer(uiPersistConfig, uiSlice.reducer),
   }),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: { ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER] } })

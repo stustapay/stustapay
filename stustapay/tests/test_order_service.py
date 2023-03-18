@@ -34,6 +34,7 @@ class OrderLogicTest(BaseTestCase):
             token=self.admin_token,
             product=NewProduct(
                 name="Top Up",
+                price=None,
                 fixed_price=False,
                 tax_name="none",
                 target_account_id=None,
@@ -61,7 +62,7 @@ class OrderLogicTest(BaseTestCase):
                 tse_id=None,
                 active_shift=None,
                 active_profile_id=self.till_profile.id,
-                active_cashier_id=None,
+                active_user_id=None,
             ),
         )
         # login in cashier to till

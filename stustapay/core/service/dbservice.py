@@ -22,6 +22,8 @@ def with_db_connection(func):
             return await func(self, **kwargs)
 
         async with self.db_pool.acquire() as conn:
+            await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
+
             return await func(self, conn=conn, **kwargs)
 
     return wrapper

@@ -15,9 +15,9 @@ class UserWithoutId(BaseModel):
     name: str
     privileges: list[Privilege]
     description: Optional[str]
-    user_tag: Optional[int]
-    transport_account_id: Optional[int]
-    cashier_account_id: Optional[int]
+    user_tag: Optional[int] = None
+    transport_account_id: Optional[int] = None
+    cashier_account_id: Optional[int] = None
 
 
 class User(UserWithoutId):
