@@ -65,10 +65,15 @@ export const ProductList: React.FC = () => {
       flex: 1,
     },
     {
+      field: "fixed_price",
+      headerName: t("isFixedPrice") as string,
+      type: "boolean",
+    },
+    {
       field: "price",
       headerName: t("productPrice") as string,
       type: "number",
-      valueFormatter: ({ value }) => `${value} €`,
+      valueFormatter: ({ value }) => (value ? `${value} €` : ""),
     },
     {
       field: "tax_rate",

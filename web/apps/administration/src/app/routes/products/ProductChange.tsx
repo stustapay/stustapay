@@ -1,4 +1,4 @@
-import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
+import { Paper, TextField, Button, LinearProgress, Typography, FormControlLabel, Checkbox } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
 import { NewProduct } from "../../../models/product";
@@ -66,17 +66,35 @@ export function ProductChange<T extends NewProduct>({
               value={values.name}
             />
 
-            <NumericInput
-              variant="standard"
-              margin="normal"
-              fullWidth
-              name="price"
-              label={t("productPrice")}
-              error={touched.price && !!errors.price}
-              helperText={(touched.price && errors.price) as string}
-              onChange={(value) => setFieldValue("price", value)}
-              value={values.price}
+            <FormControlLabel
+              label={t("fixedPrice")}
+              control={
+                <Checkbox
+                  checked={values.fixed_price}
+                  onChange={(evt) => {
+                    const checked = evt.target.checked;
+                    setFieldValue("fixed_price", checked);
+                    if (!checked) {
+                      setFieldValue("price", null);
+                    }
+                  }}
+                />
+              }
             />
+
+            {values.fixed_price && (
+              <NumericInput
+                variant="standard"
+                margin="normal"
+                fullWidth
+                name="price"
+                label={t("productPrice")}
+                error={touched.price && !!errors.price}
+                helperText={(touched.price && errors.price) as string}
+                onChange={(value) => setFieldValue("price", value)}
+                value={values.price}
+              />
+            )}
 
             <TaxRateSelect
               name="tax"

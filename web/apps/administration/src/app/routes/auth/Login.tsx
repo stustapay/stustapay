@@ -7,6 +7,8 @@ import { selectIsAuthenticated, useAppSelector } from "@store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
 import { useLoginMutation } from "@api/authApi";
 import { toFormikValidationSchema } from "@stustapay/utils";
+import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 const validationSchema = z.object({
   username: z.string(),
@@ -21,6 +23,7 @@ const initialValues: FormSchema = {
 };
 
 export const Login: React.FC = () => {
+  const { t } = useTranslation(["auth", "common"]);
   const isLoggedIn = useAppSelector(selectIsAuthenticated);
   const [query] = useSearchParams();
   const navigate = useNavigate();
@@ -43,6 +46,8 @@ export const Login: React.FC = () => {
       })
       .catch((err) => {
         setSubmitting(false);
+        console.log(err);
+        toast.error(t("loginFailed", { reason: err.error }));
       });
   };
 
@@ -71,7 +76,7 @@ export const Login: React.FC = () => {
                 fullWidth
                 autoFocus
                 type="text"
-                label="Username"
+                label={t("username")}
                 name="username"
                 onBlur={handleBlur}
                 onChange={handleChange}
@@ -85,7 +90,7 @@ export const Login: React.FC = () => {
                 fullWidth
                 type="password"
                 name="password"
-                label="Password"
+                label={t("password")}
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.password}
@@ -100,7 +105,7 @@ export const Login: React.FC = () => {
                 disabled={isSubmitting}
                 sx={{ mt: 1 }}
               >
-                Login
+                {t("login")}
               </Button>
             </Form>
           )}
