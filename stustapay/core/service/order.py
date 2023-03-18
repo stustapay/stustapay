@@ -17,7 +17,12 @@ from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Ord
 from stustapay.core.schema.tax_rate import TAX_NONE
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
-from stustapay.core.service.dbservice import DBService, with_db_transaction, requires_terminal
+from stustapay.core.service.dbservice import (
+    DBService,
+    requires_terminal_or_user,
+    with_db_transaction,
+    requires_terminal,
+)
 from stustapay.core.service.error import NotFoundException, ServiceException, InvalidArgumentException
 from stustapay.core.service.till import TillService
 
@@ -53,6 +58,44 @@ class OrderService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, till_service: TillService):
         super().__init__(db_pool, config)
         self.till_service = till_service
+
+    @with_db_transaction
+    @requires_terminal_or_user()
+    async def list_orders(self, *, conn: asyncpg.Connection, current_user: User) -> list[Order]:
+        """
+        returns all orders of the cashier.
+        Or if an admin is logged in, return every order
+        """
+        result = []
+        if Privilege.admin in current_user.privileges or Privilege.finanzorga in current_user.privileges:
+            rows = await conn.fetch("select * from order_value")
+        # cashiers can only see their orders
+        elif Privilege.cashier in current_user.privileges:
+            rows = await conn.fetch("select * from order_value where cashier_id=$1", current_user.id)
+        else:
+            raise PermissionError("user does not have required privilege to list orders")
+
+        for row in rows:
+            if row is not None:
+                result.append(Order.parse_obj(row))
+
+        return result
+
+    @with_db_transaction
+    @requires_terminal_or_user()
+    async def show_order(self, *, conn: asyncpg.Connection, current_user: User, order_id: int) -> Optional[Order]:
+        """
+        Show the specified order, if the privilegs are sufficient
+        """
+        order = await self._fetch_order(conn=conn, order_id=order_id)
+        if order is None:
+            return None
+        if Privilege.admin in current_user.privileges or Privilege.finanzorga in current_user.privileges:
+            return order
+        if Privilege.cashier in current_user.privileges:
+            if order.cashier_id == current_user.id:
+                return order
+        raise PermissionError("user does not have required privilege to see this order")
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
@@ -179,11 +222,6 @@ class OrderService(DBService):
             return None
 
         return Order.parse_obj(row)
-
-    @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
-    async def show_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
-        return await self._fetch_order(conn=conn, order_id=order_id)
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
