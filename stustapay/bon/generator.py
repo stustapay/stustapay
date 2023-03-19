@@ -50,7 +50,9 @@ class Generator(SubCommand):
                 # pylint: disable=attribute-defined-outside-init
                 self.till_service = TillService(pool, self.config, self.user_service)
                 # pylint: disable=attribute-defined-outside-init
-                self.tx_service = OrderService(pool, self.config, self.till_service)
+                self.tx_service = OrderService(
+                    pool, self.config, till_service=self.till_service, user_service=self.user_service
+                )
                 # pylint: disable=attribute-defined-outside-init
                 self.db_hook = DBHook(db_hook_conn, "bon", self.handle_hook)
                 await self.db_hook.run()

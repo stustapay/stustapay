@@ -1,6 +1,8 @@
 {
   "StuStaPay": "StuStaPay",
   "overview": "Overview",
+  "accounts": "Accounts",
+  "orders": "Orders",
   "products": "Products",
   "actions": "Actions",
   "settings": "Settings",

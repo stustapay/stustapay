@@ -14,7 +14,14 @@ from stustapay.core.schema.till import (
     TillProfile,
 )
 from stustapay.core.schema.user import Privilege
-from stustapay.core.service.dbservice import DBService, with_db_transaction, requires_user_privileges, requires_terminal
+from stustapay.core.service.common.dbservice import (
+    DBService,
+)
+from stustapay.core.service.common.decorators import (
+    with_db_transaction,
+    requires_user_privileges,
+    requires_terminal,
+)
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.user import UserService

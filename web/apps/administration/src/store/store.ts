@@ -2,7 +2,17 @@ import { authApi } from "@api/authApi";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/dist/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
-import { productApi, userApi, taxRateApi, tillApi, tillLayoutApi, tillProfileApi, configApi } from "@api";
+import {
+  productApi,
+  userApi,
+  taxRateApi,
+  tillApi,
+  tillLayoutApi,
+  tillProfileApi,
+  configApi,
+  orderApi,
+  accountApi,
+} from "@api";
 import { authSlice } from "./authSlice";
 import { uiSlice } from "./uiSlice";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
@@ -30,6 +40,8 @@ export const store = configureStore({
     [userApi.reducerPath]: userApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [configApi.reducerPath]: configApi.reducer,
+    [orderApi.reducerPath]: orderApi.reducer,
+    [accountApi.reducerPath]: accountApi.reducer,
     [authSlice.name]: persistReducer(authPersistConfig, authSlice.reducer),
     [uiSlice.name]: persistReducer(uiPersistConfig, uiSlice.reducer),
   }),
@@ -42,6 +54,8 @@ export const store = configureStore({
       .concat(taxRateApi.middleware)
       .concat(userApi.middleware)
       .concat(configApi.middleware)
+      .concat(orderApi.middleware)
+      .concat(accountApi.middleware)
       .concat(authApi.middleware),
 });
 

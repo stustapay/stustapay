@@ -5,9 +5,10 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, ValidationError
 
-from .dbservice import DBService, requires_user_privileges, with_db_transaction
-from ..config import Config
-from ..schema.user import Privilege, User, UserWithoutId
+from stustapay.core.config import Config
+from stustapay.core.schema.user import Privilege, User, UserWithoutId
+from stustapay.core.service.common.dbservice import DBService
+from stustapay.core.service.common.decorators import requires_user_privileges, with_db_transaction
 
 
 class TokenMetadata(BaseModel):

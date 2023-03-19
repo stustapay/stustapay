@@ -17,9 +17,11 @@ from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Ord
 from stustapay.core.schema.tax_rate import TAX_NONE
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
-from stustapay.core.service.dbservice import DBService, with_db_transaction, requires_terminal
+from stustapay.core.service.common.dbservice import DBService
+from stustapay.core.service.common.decorators import with_db_transaction, requires_terminal, requires_user_privileges
 from stustapay.core.service.error import NotFoundException, ServiceException, InvalidArgumentException
 from stustapay.core.service.till import TillService
+from stustapay.core.service.user import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +52,9 @@ class AlreadyFinishedException(ServiceException):
 
 
 class OrderService(DBService):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, till_service: TillService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, user_service: UserService, till_service: TillService):
         super().__init__(db_pool, config)
+        self.user_service = user_service
         self.till_service = till_service
 
     @with_db_transaction
@@ -183,7 +186,17 @@ class OrderService(DBService):
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
     async def show_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
+        # TODO: restrict this s.t. only orders for this terminal and this cashier can be fetched
         return await self._fetch_order(conn=conn, order_id=order_id)
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def list_orders(self, *, conn: asyncpg.Connection) -> list[Order]:
+        cursor = conn.cursor("select * from order_value")
+        result = []
+        async for row in cursor:
+            result.append(Order.parse_obj(row))
+        return result
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])

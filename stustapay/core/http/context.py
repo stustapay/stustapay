@@ -3,18 +3,19 @@ context injection for the http-api with FastAPI.
 """
 
 from dataclasses import dataclass
-from typing import Union, AsyncGenerator, Optional
+from typing import Union, AsyncGenerator, Optional, Annotated
 
 import asyncpg
 from fastapi import Request, Depends, WebSocket
 from starlette.types import ASGIApp, Scope, Receive, Send
 
 from stustapay.core.config import Config
+from stustapay.core.service.account import AccountService
 from stustapay.core.service.config import ConfigService
+from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.till import TillService
-from stustapay.core.service.order import OrderService
 from stustapay.core.service.user import UserService
 
 
@@ -33,6 +34,7 @@ class Context:
     user_service: Optional[UserService] = None
     till_service: Optional[TillService] = None
     config_service: Optional[ConfigService] = None
+    account_service: Optional[AccountService] = None
 
 
 class ContextMiddleware:
@@ -133,6 +135,19 @@ def get_till_service(request: Request) -> TillService:
 
 def get_config_service(request: Request) -> ConfigService:
     return request.state.context.config_service
+
+
+def get_account_service(request: Request) -> AccountService:
+    return request.state.context.account_service
+
+
+ContextOrderService = Annotated[OrderService, Depends(get_order_service)]
+ContextProductService = Annotated[ProductService, Depends(get_product_service)]
+ContextTaxRateService = Annotated[TaxRateService, Depends(get_tax_rate_service)]
+ContextUserService = Annotated[UserService, Depends(get_user_service)]
+ContextTillService = Annotated[TillService, Depends(get_till_service)]
+ContextConfigService = Annotated[ConfigService, Depends(get_config_service)]
+ContextAccountService = Annotated[AccountService, Depends(get_account_service)]
 
 
 async def get_db_conn(
