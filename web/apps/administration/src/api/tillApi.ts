@@ -1,20 +1,32 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { Till, NewTill, UpdateTill } from "@models/till";
 import { baseUrl, prepareAuthHeaders } from "./common";
+import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
+import { convertEntityAdaptorSelectors } from "./utils";
+
+const tillAdapter = createEntityAdapter<Till>({
+  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+});
 
 export const tillApi = createApi({
   reducerPath: "tillApi",
   baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
   tagTypes: ["tills"],
   endpoints: (builder) => ({
-    getTillById: builder.query<Till, number>({
+    getTillById: builder.query<EntityState<Till>, number>({
       query: (id) => `/tills/${id}/`,
+      transformResponse: (response: Till) => {
+        return tillAdapter.addOne(tillAdapter.getInitialState(), response);
+      },
       providesTags: (result, error, arg) => ["tills", { type: "tills" as const, id: arg }],
     }),
-    getTills: builder.query<Till[], void>({
+    getTills: builder.query<EntityState<Till>, void>({
       query: () => "/tills/",
+      transformResponse: (response: Till[]) => {
+        return tillAdapter.addMany(tillAdapter.getInitialState(), response);
+      },
       providesTags: (result, error, arg) =>
-        result ? [...result.map(({ id }) => ({ type: "tills" as const, id })), "tills"] : ["tills"],
+        result ? [...result.ids.map((id) => ({ type: "tills" as const, id })), "tills"] : ["tills"],
     }),
     createTill: builder.mutation<Till, NewTill>({
       query: (till) => ({ url: "/tills/", method: "POST", body: till }),
@@ -34,6 +46,9 @@ export const tillApi = createApi({
     }),
   }),
 });
+
+export const { selectTillAll, selectTillById, selectTillEntities, selectTillIds, selectTillTotal } =
+  convertEntityAdaptorSelectors("Till", tillAdapter.getSelectors());
 
 export const {
   useCreateTillMutation,

@@ -4,7 +4,13 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useGetTillLayoutByIdQuery, useDeleteTillLayoutMutation, useGetTillButtonsQuery } from "@api";
+import {
+  useGetTillLayoutByIdQuery,
+  useDeleteTillLayoutMutation,
+  useGetTillButtonsQuery,
+  selectTillLayoutById,
+  selectTillButtonById,
+} from "@api";
 import { Loading } from "@components/Loading";
 import { TillButton } from "@models";
 
@@ -13,7 +19,12 @@ export const TillLayoutDetail: React.FC = () => {
   const { layoutId } = useParams();
   const navigate = useNavigate();
   const [deleteLayout] = useDeleteTillLayoutMutation();
-  const { data: layout, error } = useGetTillLayoutByIdQuery(Number(layoutId));
+  const { layout, error } = useGetTillLayoutByIdQuery(Number(layoutId), {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      layout: data ? selectTillLayoutById(data, Number(layoutId)) : undefined,
+    }),
+  });
   const { data: buttons, error: buttonsError } = useGetTillButtonsQuery();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
@@ -37,7 +48,7 @@ export const TillLayoutDetail: React.FC = () => {
   }
 
   const sortedButtons =
-    layout.button_ids == null ? [] : [...layout.button_ids].map((i) => buttons.find((b) => b.id === i) as TillButton);
+    layout.button_ids == null ? [] : [...layout.button_ids].map((i) => selectTillButtonById(buttons, i) as TillButton);
 
   return (
     <>

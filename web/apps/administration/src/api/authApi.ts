@@ -4,7 +4,7 @@ import { baseUrl, prepareAuthHeaders } from "./common";
 
 export interface UserResponse {
   user: User;
-  token: string;
+  access_token: string;
 }
 
 export interface LoginRequest {
@@ -17,11 +17,16 @@ export const authApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
   endpoints: (builder) => ({
     login: builder.mutation<UserResponse, LoginRequest>({
-      query: (credentials) => ({
-        url: "/auth/login/",
-        method: "POST",
-        body: credentials,
-      }),
+      query: (credentials) => {
+        const formData = new FormData();
+        formData.append("username", credentials.username);
+        formData.append("password", credentials.password);
+        return {
+          url: "/auth/login/",
+          method: "POST",
+          body: formData,
+        };
+      },
     }),
     logout: builder.mutation<void, void>({
       query: () => ({

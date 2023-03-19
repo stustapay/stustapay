@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 import { NewTillButton, Product } from "@models";
-import { useGetProductsQuery } from "@api";
+import { selectProductById, useGetProductsQuery } from "@api";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { ProductSelect } from "./ProductSelect";
 
@@ -31,7 +31,7 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
   const { t } = useTranslation(["tills", "common"]);
   const { data: products } = useGetProductsQuery();
 
-  const getProductById = (id: number) => (products ?? []).find((p) => p.id === id);
+  const getProductById = (id: number) => (products != null ? selectProductById(products, id) : undefined);
   const mapped = products ? (productIds.map((id) => getProductById(id)) as Product[]) : [];
 
   const removeProduct = (productId: number) => {

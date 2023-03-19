@@ -1,4 +1,4 @@
-import { useUpdateTillProfileMutation, useGetTillProfileByIdQuery } from "@api";
+import { useUpdateTillProfileMutation, useGetTillProfileByIdQuery, selectTillProfileById } from "@api";
 import * as React from "react";
 import { TillProfileSchema } from "@models";
 import { useParams, Navigate } from "react-router-dom";
@@ -9,7 +9,12 @@ import { Loading } from "@components/Loading";
 export const TillProfileUpdate: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const { profileId } = useParams();
-  const { data: profile, isLoading } = useGetTillProfileByIdQuery(Number(profileId));
+  const { profile, isLoading } = useGetTillProfileByIdQuery(Number(profileId), {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      profile: data ? selectTillProfileById(data, Number(profileId)) : undefined,
+    }),
+  });
   const [updateProfile] = useUpdateTillProfileMutation();
 
   if (isLoading) {

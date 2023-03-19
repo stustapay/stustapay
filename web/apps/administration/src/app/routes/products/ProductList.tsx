@@ -7,7 +7,14 @@ import {
   Add as AddIcon,
   ContentCopy as ContentCopyIcon,
 } from "@mui/icons-material";
-import { useCreateProductMutation, useDeleteProductMutation, useGetProductsQuery, useGetTaxRatesQuery } from "@api";
+import {
+  selectProductAll,
+  selectTaxRateById,
+  useCreateProductMutation,
+  useDeleteProductMutation,
+  useGetProductsQuery,
+  useGetTaxRatesQuery,
+} from "@api";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
 import { Product } from "@models";
@@ -18,7 +25,12 @@ export const ProductList: React.FC = () => {
   const { t } = useTranslation(["products", "common"]);
   const navigate = useNavigate();
 
-  const { data: products, isLoading: isProductsLoading } = useGetProductsQuery();
+  const { products, isLoading: isProductsLoading } = useGetProductsQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      products: data ? selectProductAll(data) : undefined,
+    }),
+  });
   const { data: taxRates, isLoading: isTaxRatesLoading } = useGetTaxRatesQuery();
   const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
@@ -29,7 +41,11 @@ export const ProductList: React.FC = () => {
   }
 
   const renderTaxRate = (name: string) => {
-    const tax = (taxRates ?? []).find((rate) => rate.name === name);
+    if (!taxRates) {
+      return "";
+    }
+
+    const tax = selectTaxRateById(taxRates, name);
     if (!tax) {
       return "";
     }

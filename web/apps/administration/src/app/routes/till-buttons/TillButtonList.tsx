@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
+import { Paper, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
-import { useDeleteTillButtonMutation, useGetTillButtonsQuery } from "@api";
+import { selectTillButtonAll, useDeleteTillButtonMutation, useGetTillButtonsQuery } from "@api";
 import { useTranslation } from "react-i18next";
 import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,12 @@ export const TillButtonList: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const navigate = useNavigate();
 
-  const { data: buttons, isLoading } = useGetTillButtonsQuery();
+  const { buttons, isLoading } = useGetTillButtonsQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      buttons: data ? selectTillButtonAll(data) : undefined,
+    }),
+  });
   const [deleteButton] = useDeleteTillButtonMutation();
 
   const [buttonToDelete, setButtonToDelete] = React.useState<number | null>(null);
@@ -80,7 +85,6 @@ export const TillButtonList: React.FC = () => {
         >
           <ListItemText primary={t("button.buttons")} />
         </ListItem>
-        <Typography variant="body1">{}</Typography>
       </Paper>
       <DataGrid
         autoHeight

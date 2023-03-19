@@ -7,7 +7,7 @@ import {
   SelectProps,
   FormHelperText,
 } from "@mui/material";
-import { useGetTillProfilesQuery } from "@api";
+import { useGetTillProfilesQuery, selectTillProfileAll } from "@api";
 import * as React from "react";
 
 export interface TillProfileSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
@@ -27,10 +27,17 @@ export const TillProfileSelect: React.FC<TillProfileSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { data: tillProfiles } = useGetTillProfilesQuery();
+  const { profiles } = useGetTillProfilesQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      profiles: data ? selectTillProfileAll(data) : [],
+    }),
+  });
 
-  const handleChange = (evt: SelectChangeEvent<number>) => {
-    onChange(Number(evt.target.value));
+  const handleChange = (evt: SelectChangeEvent<unknown>) => {
+    if (!isNaN(Number(evt.target.value))) {
+      onChange(Number(evt.target.value));
+    }
   };
 
   return (
@@ -38,15 +45,10 @@ export const TillProfileSelect: React.FC<TillProfileSelectProps> = ({
       <InputLabel variant={props.variant} id="tillProfileSelectLabel">
         {label}
       </InputLabel>
-      <Select
-        labelId="tillProfileSelectLabel"
-        value={value != null ? value : ""}
-        onChange={handleChange as any}
-        {...props}
-      >
-        {(tillProfiles ?? []).map((tillProfile) => (
-          <MenuItem key={tillProfile.id} value={tillProfile.id}>
-            {tillProfile.name}
+      <Select labelId="tillProfileSelectLabel" value={value != null ? value : ""} onChange={handleChange} {...props}>
+        {profiles.map((profile) => (
+          <MenuItem key={profile.id} value={profile.id}>
+            {profile.name}
           </MenuItem>
         ))}
       </Select>

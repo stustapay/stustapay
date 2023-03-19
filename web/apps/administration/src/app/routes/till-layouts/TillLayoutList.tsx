@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useDeleteTillLayoutMutation, useGetTillLayoutsQuery } from "@api";
+import { selectTillLayoutAll, useDeleteTillLayoutMutation, useGetTillLayoutsQuery } from "@api";
 import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
 import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
@@ -13,7 +13,12 @@ export const TillLayoutList: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const navigate = useNavigate();
 
-  const { data: layouts, isLoading: isTillsLoading } = useGetTillLayoutsQuery();
+  const { layouts, isLoading: isTillsLoading } = useGetTillLayoutsQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      layouts: data ? selectTillLayoutAll(data) : undefined,
+    }),
+  });
   const [deleteTill] = useDeleteTillLayoutMutation();
 
   const [layoutToDelete, setLayoutToDelete] = React.useState<number | null>(null);
