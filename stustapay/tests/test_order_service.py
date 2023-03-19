@@ -18,7 +18,12 @@ class OrderLogicTest(BaseTestCase):
         self.product_service = ProductService(
             db_pool=self.db_pool, config=self.test_config, user_service=self.user_service
         )
-        self.order_service = OrderService(db_pool=self.db_pool, config=self.test_config, till_service=self.till_service)
+        self.order_service = OrderService(
+            db_pool=self.db_pool,
+            config=self.test_config,
+            till_service=self.till_service,
+            user_service=self.user_service,
+        )
 
         self.product = await self.product_service.create_product(
             token=self.admin_token,

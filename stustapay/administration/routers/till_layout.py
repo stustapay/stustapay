@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, status, HTTPException
 
-from stustapay.core.http.auth_till import get_auth_token
-from stustapay.core.http.context import get_till_service
+from stustapay.core.http.auth_user import CurrentAuthToken
+from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.till import TillLayout, NewTillLayout
-from stustapay.core.service.till import TillService
 
 router = APIRouter(
     prefix="/till-layouts",
@@ -13,17 +12,15 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[TillLayout])
-async def list_till_layouts(
-    token: str = Depends(get_auth_token), till_service: TillService = Depends(get_till_service)
-):
+async def list_till_layouts(token: CurrentAuthToken, till_service: ContextTillService):
     return await till_service.layout.list_layouts(token=token)
 
 
 @router.post("/", response_model=NewTillLayout)
 async def create_till_layout(
     layout: NewTillLayout,
-    token: str = Depends(get_auth_token),
-    till_service: TillService = Depends(get_till_service),
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
 ):
     return await till_service.layout.create_layout(token=token, layout=layout)
 
@@ -31,8 +28,8 @@ async def create_till_layout(
 @router.get("/{layout_id}", response_model=TillLayout)
 async def get_till_layout(
     layout_id: int,
-    token: str = Depends(get_auth_token),
-    till_service: TillService = Depends(get_till_service),
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
 ):
     till = await till_service.layout.get_layout(token=token, layout_id=layout_id)
     if till is None:
@@ -45,8 +42,8 @@ async def get_till_layout(
 async def update_till_layout(
     layout_id: int,
     layout: NewTillLayout,
-    token: str = Depends(get_auth_token),
-    till_service: TillService = Depends(get_till_service),
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
 ):
     till = await till_service.layout.update_layout(token=token, layout_id=layout_id, layout=layout)
     if till is None:
@@ -58,8 +55,8 @@ async def update_till_layout(
 @router.delete("/{layout_id}")
 async def delete_till_layout(
     layout_id: int,
-    token: str = Depends(get_auth_token),
-    till_service: TillService = Depends(get_till_service),
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
 ):
     deleted = await till_service.layout.delete_layout(token=token, layout_id=layout_id)
     if not deleted:

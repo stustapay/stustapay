@@ -67,7 +67,9 @@ class Api(SubCommand):
         context = Context(
             config=self.cfg,
             db_pool=db_pool,
-            order_service=OrderService(db_pool=db_pool, config=self.cfg, till_service=till_service),
+            order_service=OrderService(
+                db_pool=db_pool, config=self.cfg, till_service=till_service, user_service=user_service
+            ),
             user_service=user_service,
             till_service=till_service,
         )

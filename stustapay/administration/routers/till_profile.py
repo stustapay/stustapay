@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, status, HTTPException
 
-from stustapay.core.http.auth_user import get_auth_token
-from stustapay.core.http.context import get_till_service
+from stustapay.core.http.auth_user import CurrentAuthToken
+from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.till import TillProfile, NewTillProfile
-from stustapay.core.service.till import TillService
 
 router = APIRouter(
     prefix="/till-profiles",
@@ -13,17 +12,15 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[TillProfile])
-async def list_till_profiles(
-    token: str = Depends(get_auth_token), till_service: TillService = Depends(get_till_service)
-):
+async def list_till_profiles(token: CurrentAuthToken, till_service: ContextTillService):
     return await till_service.profile.list_profiles(token=token)
 
 
 @router.post("/", response_model=NewTillProfile)
 async def create_till_profile(
     profile: NewTillProfile,
-    token: str = Depends(get_auth_token),
-    till_service: TillService = Depends(get_till_service),
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
 ):
     return await till_service.profile.create_profile(token=token, profile=profile)
 
@@ -31,8 +28,8 @@ async def create_till_profile(
 @router.get("/{profile_id}", response_model=TillProfile)
 async def get_till_profile(
     profile_id: int,
-    token: str = Depends(get_auth_token),
-    till_service: TillService = Depends(get_till_service),
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
 ):
     till = await till_service.profile.get_profile(token=token, profile_id=profile_id)
     if till is None:
@@ -45,8 +42,8 @@ async def get_till_profile(
 async def update_till_profile(
     profile_id: int,
     profile: NewTillProfile,
-    token: str = Depends(get_auth_token),
-    till_service: TillService = Depends(get_till_service),
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
 ):
     till = await till_service.profile.update_profile(token=token, profile_id=profile_id, profile=profile)
     if till is None:
@@ -58,8 +55,8 @@ async def update_till_profile(
 @router.delete("/{profile_id}")
 async def delete_till_profile(
     profile_id: int,
-    token: str = Depends(get_auth_token),
-    till_service: TillService = Depends(get_till_service),
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
 ):
     deleted = await till_service.profile.delete_profile(token=token, profile_id=profile_id)
     if not deleted:

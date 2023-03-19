@@ -1,16 +1,8 @@
-"""
-database interaction
-"""
-
 import json
-from abc import ABC
 from functools import wraps
 from inspect import signature
 from typing import Optional
 
-from asyncpg.pool import Pool
-
-from stustapay.core.config import Config
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import User, Privilege
 
@@ -144,13 +136,3 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
         return wrapper
 
     return f
-
-
-class DBService(ABC):
-    """
-    base class for all database interaction
-    """
-
-    def __init__(self, db_pool: Pool, config: Config):
-        self.db_pool = db_pool
-        self.cfg = config

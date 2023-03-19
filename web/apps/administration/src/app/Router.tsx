@@ -23,6 +23,8 @@ import { TillButtonUpdate } from "./routes/till-buttons/TillButtonUpdate";
 import { TillButtonCreate } from "./routes/till-buttons/TillButtonCreate";
 import { TillButtonList } from "./routes/till-buttons/TillButtonList";
 import { UserUpdate, UserDetail, UserList, UserCreate } from "./routes/users";
+import { AccountList } from "./routes/accounts/AccountList";
+import { OrderList } from "./routes/orders/OrderList";
 
 const router = createBrowserRouter([
   {
@@ -133,6 +135,14 @@ const router = createBrowserRouter([
       {
         path: "users",
         element: <UserList />,
+      },
+      {
+        path: "accounts",
+        element: <AccountList />,
+      },
+      {
+        path: "orders",
+        element: <OrderList />,
       },
       {
         path: "settings",

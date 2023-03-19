@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { NewProduct, Product } from "../models/product";
+import { NewProduct, Product } from "@models/product";
 import { baseUrl, prepareAuthHeaders } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";

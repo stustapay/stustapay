@@ -3,7 +3,8 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.config import ConfigEntry
 from stustapay.core.schema.user import Privilege
-from .dbservice import DBService, with_db_transaction, requires_user_privileges
+from stustapay.core.service.common.dbservice import DBService
+from stustapay.core.service.common.decorators import with_db_transaction, requires_user_privileges
 from .error import NotFoundException
 from .user import UserService
 
