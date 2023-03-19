@@ -1,10 +1,10 @@
 import * as React from "react";
 import { Paper, Button, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { useDeleteUserMutation, useGetUsersQuery } from "@api";
+import { selectUserAll, useDeleteUserMutation, useGetUsersQuery } from "@api";
 import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { User } from "@models";
 import { Loading, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 
@@ -12,7 +12,12 @@ export const UserList: React.FC = () => {
   const { t } = useTranslation(["users", "common"]);
   const navigate = useNavigate();
 
-  const { data: users, isLoading } = useGetUsersQuery();
+  const { users, isLoading } = useGetUsersQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      users: data ? selectUserAll(data) : undefined,
+    }),
+  });
   const [deleteUser] = useDeleteUserMutation();
   const [userToDelete, setUserToDelete] = React.useState<number | null>(null);
 
@@ -42,6 +47,7 @@ export const UserList: React.FC = () => {
       field: "name",
       headerName: t("userName") as string,
       flex: 1,
+      renderCell: (params) => <RouterLink to={`/users/${params.row.id}`}>{params.row.name}</RouterLink>,
     },
     {
       field: "description",
@@ -51,7 +57,7 @@ export const UserList: React.FC = () => {
     {
       field: "privileges",
       headerName: t("userPrivileges") as string,
-      flex: 0.5,
+      flex: 1,
     },
     {
       field: "actions",
@@ -63,7 +69,7 @@ export const UserList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit", { ns: "common" })}
-          onClick={() => navigate(`/terminals/${params.row.id}/edit`)}
+          onClick={() => navigate(`/users/${params.row.id}/edit`)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}

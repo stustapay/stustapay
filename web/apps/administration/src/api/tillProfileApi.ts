@@ -1,21 +1,33 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { NewTillProfile, TillProfile } from "@models/till";
 import { baseUrl, prepareAuthHeaders } from "./common";
+import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
+import { convertEntityAdaptorSelectors } from "./utils";
+
+const tillProfileAdapter = createEntityAdapter<TillProfile>({
+  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+});
 
 export const tillProfileApi = createApi({
   reducerPath: "tillProfileApi",
   baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
   tagTypes: ["till-profiles"],
   endpoints: (builder) => ({
-    getTillProfileById: builder.query<TillProfile, number>({
+    getTillProfileById: builder.query<EntityState<TillProfile>, number>({
       query: (id) => `/till-profiles/${id}/`,
+      transformResponse: (response: TillProfile) => {
+        return tillProfileAdapter.addOne(tillProfileAdapter.getInitialState(), response);
+      },
       providesTags: (result, error, arg) => ["till-profiles", { type: "till-profiles" as const, id: arg }],
     }),
-    getTillProfiles: builder.query<TillProfile[], void>({
+    getTillProfiles: builder.query<EntityState<TillProfile>, void>({
       query: () => "/till-profiles/",
+      transformResponse: (response: TillProfile[]) => {
+        return tillProfileAdapter.addMany(tillProfileAdapter.getInitialState(), response);
+      },
       providesTags: (result, error, arg) =>
         result
-          ? [...result.map(({ id }) => ({ type: "till-profiles" as const, id })), "till-profiles"]
+          ? [...result.ids.map((id) => ({ type: "till-profiles" as const, id })), "till-profiles"]
           : ["till-profiles"],
     }),
     createTillProfile: builder.mutation<TillProfile, NewTillProfile>({
@@ -32,6 +44,14 @@ export const tillProfileApi = createApi({
     }),
   }),
 });
+
+export const {
+  selectTillProfileAll,
+  selectTillProfileById,
+  selectTillProfileEntities,
+  selectTillProfileIds,
+  selectTillProfileTotal,
+} = convertEntityAdaptorSelectors("TillProfile", tillProfileAdapter.getSelectors());
 
 export const {
   useCreateTillProfileMutation,

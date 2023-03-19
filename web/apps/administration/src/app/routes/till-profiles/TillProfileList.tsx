@@ -1,5 +1,11 @@
 import * as React from "react";
-import { useDeleteTillProfileMutation, useGetTillLayoutsQuery, useGetTillProfilesQuery } from "@api";
+import {
+  selectTillLayoutById,
+  useDeleteTillProfileMutation,
+  useGetTillLayoutsQuery,
+  useGetTillProfilesQuery,
+  selectTillProfileAll,
+} from "@api";
 import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
@@ -13,7 +19,12 @@ export const TillProfileList: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const navigate = useNavigate();
 
-  const { data: profiles, isLoading: isTillsLoading } = useGetTillProfilesQuery();
+  const { profiles, isLoading: isTillsLoading } = useGetTillProfilesQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      profiles: data ? selectTillProfileAll(data) : undefined,
+    }),
+  });
   const { data: layouts, isLoading: isLayoutsLoading } = useGetTillLayoutsQuery();
   const [deleteTill] = useDeleteTillProfileMutation();
 
@@ -23,7 +34,11 @@ export const TillProfileList: React.FC = () => {
   }
 
   const renderLayout = (id: number) => {
-    const layout = (layouts ?? []).find((layout) => layout.id === id);
+    if (!layouts) {
+      return "";
+    }
+
+    const layout = selectTillLayoutById(layouts, id);
     if (!layout) {
       return "";
     }

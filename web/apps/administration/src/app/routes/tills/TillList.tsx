@@ -1,5 +1,11 @@
 import * as React from "react";
-import { useDeleteTillMutation, useGetTillsQuery, useGetTillProfilesQuery } from "@api";
+import {
+  useDeleteTillMutation,
+  useGetTillsQuery,
+  useGetTillProfilesQuery,
+  selectTillAll,
+  selectTillProfileById,
+} from "@api";
 import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
@@ -13,7 +19,12 @@ export const TillList: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const navigate = useNavigate();
 
-  const { data: tills, isLoading: isTillsLoading } = useGetTillsQuery();
+  const { tills, isLoading: isTillsLoading } = useGetTillsQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      tills: data ? selectTillAll(data) : undefined,
+    }),
+  });
   const { data: profiles, isLoading: isProfilesLoading } = useGetTillProfilesQuery();
   const [deleteTill] = useDeleteTillMutation();
 
@@ -23,10 +34,10 @@ export const TillList: React.FC = () => {
   }
 
   const renderProfile = (id: number | null) => {
-    if (id == null) {
+    if (id == null || !profiles) {
       return "";
     }
-    const profile = (profiles ?? []).find((profile) => profile.id === id);
+    const profile = selectTillProfileById(profiles, id);
     if (!profile) {
       return "";
     }

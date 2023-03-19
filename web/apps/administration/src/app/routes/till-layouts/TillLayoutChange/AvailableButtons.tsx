@@ -1,6 +1,6 @@
 import * as React from "react";
 import { List, Typography } from "@mui/material";
-import { useGetTillButtonsQuery } from "@api";
+import { selectTillButtonAll, useGetTillButtonsQuery } from "@api";
 import { Loading } from "@components/Loading";
 import { useTranslation } from "react-i18next";
 import { DraggableButton } from "./DraggableButton";
@@ -13,7 +13,12 @@ export interface AvailableButtonsProps {
 
 export const AvailableButtons: React.FC<AvailableButtonsProps> = ({ assignedButtonIds, setAssignedButtonIds }) => {
   const { t } = useTranslation(["tills", "common"]);
-  const { data: allButtons, isLoading } = useGetTillButtonsQuery();
+  const { allButtons, isLoading } = useGetTillButtonsQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      allButtons: data ? selectTillButtonAll(data) : undefined,
+    }),
+  });
   const buttons = (allButtons ?? [])
     .filter((button) => !assignedButtonIds.includes(button.id))
     .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));

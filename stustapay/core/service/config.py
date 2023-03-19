@@ -26,7 +26,7 @@ class ConfigService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def set_config_entry(self, *, conn: asyncpg.Connection, entry: ConfigEntry) -> ConfigEntry:
         row = await conn.fetchrow(
-            "update config set value = $2 where key = $1 returning key, value",
+            "update config set value = $2 where key = $1 returning key, value", entry.key, entry.value
         )
         if row is None:
             raise NotFoundException("config", entry.key)

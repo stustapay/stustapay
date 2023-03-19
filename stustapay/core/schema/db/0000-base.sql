@@ -170,7 +170,7 @@ values
     -- Super Use
     ('admin'),
     -- Finanzorga
-    ('finazorga'),
+    ('finanzorga'),
     -- Standleiter
     -- ('orga'),
     -- Helfer

@@ -9,7 +9,6 @@ import { TaxRateCreate } from "./routes/tax-rates/TaxRateCreate";
 import { TaxRateUpdate } from "./routes/tax-rates/TaxRateUpdate";
 import { TaxRateList } from "./routes/tax-rates/TaxRateList";
 import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
-import { UserList } from "./routes/users/UserList";
 import { Settings } from "./routes/settings/Settings";
 import { Login } from "./routes/auth/Login";
 import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
@@ -23,6 +22,7 @@ import { TillProfileDetail } from "./routes/till-profiles/TillProfileDetail";
 import { TillButtonUpdate } from "./routes/till-buttons/TillButtonUpdate";
 import { TillButtonCreate } from "./routes/till-buttons/TillButtonCreate";
 import { TillButtonList } from "./routes/till-buttons/TillButtonList";
+import { UserUpdate, UserDetail, UserList, UserCreate } from "./routes/users";
 
 const router = createBrowserRouter([
   {
@@ -117,6 +117,18 @@ const router = createBrowserRouter([
       {
         path: "till-profiles/:profileId",
         element: <TillProfileDetail />,
+      },
+      {
+        path: "users/new",
+        element: <UserCreate />,
+      },
+      {
+        path: "users/:userId/edit",
+        element: <UserUpdate />,
+      },
+      {
+        path: "users/:userId",
+        element: <UserDetail />,
       },
       {
         path: "users",

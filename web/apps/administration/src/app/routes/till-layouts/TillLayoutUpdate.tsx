@@ -1,4 +1,4 @@
-import { useUpdateTillLayoutMutation, useGetTillLayoutByIdQuery } from "@api";
+import { useUpdateTillLayoutMutation, useGetTillLayoutByIdQuery, selectTillLayoutById } from "@api";
 import * as React from "react";
 import { TillLayoutSchema } from "@models";
 import { useParams, Navigate } from "react-router-dom";
@@ -9,7 +9,12 @@ import { Loading } from "@components/Loading";
 export const TillLayoutUpdate: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const { layoutId } = useParams();
-  const { data: layout, isLoading } = useGetTillLayoutByIdQuery(Number(layoutId));
+  const { layout, isLoading } = useGetTillLayoutByIdQuery(Number(layoutId), {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      layout: data ? selectTillLayoutById(data, Number(layoutId)) : undefined,
+    }),
+  });
   const [updateLayout] = useUpdateTillLayoutMutation();
 
   if (isLoading) {

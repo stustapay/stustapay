@@ -1,4 +1,4 @@
-import { useUpdateTillMutation, useGetTillByIdQuery } from "@api";
+import { useUpdateTillMutation, useGetTillByIdQuery, selectTillById } from "@api";
 import * as React from "react";
 import { UpdateTillSchema } from "@models";
 import { useParams, Navigate } from "react-router-dom";
@@ -9,7 +9,12 @@ import { Loading } from "@components/Loading";
 export const TillUpdate: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const { tillId } = useParams();
-  const { data: till, isLoading } = useGetTillByIdQuery(Number(tillId));
+  const { till, isLoading } = useGetTillByIdQuery(Number(tillId), {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      till: data ? selectTillById(data, Number(tillId)) : undefined,
+    }),
+  });
   const [updateTill] = useUpdateTillMutation();
 
   if (isLoading) {

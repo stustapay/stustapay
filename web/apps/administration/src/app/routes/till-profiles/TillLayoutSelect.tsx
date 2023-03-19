@@ -7,7 +7,7 @@ import {
   SelectProps,
   FormHelperText,
 } from "@mui/material";
-import { useGetTillLayoutsQuery } from "@api";
+import { selectTillLayoutAll, useGetTillLayoutsQuery } from "@api";
 import * as React from "react";
 
 export interface TillLayoutSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
@@ -27,10 +27,17 @@ export const TillLayoutSelect: React.FC<TillLayoutSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { data: tillLayouts } = useGetTillLayoutsQuery();
+  const { layouts } = useGetTillLayoutsQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      layouts: data ? selectTillLayoutAll(data) : [],
+    }),
+  });
 
-  const handleChange = (evt: SelectChangeEvent<number>) => {
-    onChange(Number(evt.target.value));
+  const handleChange = (evt: SelectChangeEvent<unknown>) => {
+    if (!isNaN(Number(evt.target.value))) {
+      onChange(Number(evt.target.value));
+    }
   };
 
   return (
@@ -38,10 +45,10 @@ export const TillLayoutSelect: React.FC<TillLayoutSelectProps> = ({
       <InputLabel variant={props.variant} id="tillLayoutSelectLabel">
         {label}
       </InputLabel>
-      <Select labelId="tillLayoutSelectLabel" value={value ?? ""} onChange={handleChange as any} {...props}>
-        {(tillLayouts ?? []).map((tillLayout) => (
-          <MenuItem key={tillLayout.id} value={tillLayout.id}>
-            {tillLayout.name}
+      <Select labelId="tillLayoutSelectLabel" value={value ?? ""} onChange={handleChange} {...props}>
+        {layouts.map((layout) => (
+          <MenuItem key={layout.id} value={layout.id}>
+            {layout.name}
           </MenuItem>
         ))}
       </Select>

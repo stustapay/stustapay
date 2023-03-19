@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from stustapay.core.http.auth_user import get_auth_token
@@ -17,11 +19,17 @@ async def list_users(token: str = Depends(get_auth_token), user_service: UserSer
     return await user_service.list_users(token=token)
 
 
+class CreateUserPayload(UserWithoutId):
+    password: Optional[str]
+
+
 @router.post("/", response_model=User)
 async def create_user(
-    user: User, token: str = Depends(get_auth_token), user_service: UserService = Depends(get_user_service)
+    new_user: CreateUserPayload,
+    token: str = Depends(get_auth_token),
+    user_service: UserService = Depends(get_user_service),
 ):
-    return await user_service.create_user(token=token, user=user)
+    return await user_service.create_user(token=token, new_user=new_user, password=new_user.password)
 
 
 @router.get("/{user_id}", response_model=User)

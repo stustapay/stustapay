@@ -1,16 +1,26 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { ConfigEntry } from "@models";
 import { baseUrl, prepareAuthHeaders } from "./common";
+import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
+import { convertEntityAdaptorSelectors } from "./utils";
+
+const configAdaptor = createEntityAdapter<ConfigEntry>({
+  selectId: (entry) => entry.key,
+  sortComparer: (a, b) => a.key.localeCompare(b.key),
+});
 
 export const configApi = createApi({
   reducerPath: "configApi",
   baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
   tagTypes: ["config"],
   endpoints: (builder) => ({
-    getConfigEntries: builder.query<ConfigEntry[], void>({
+    getConfigEntries: builder.query<EntityState<ConfigEntry>, void>({
       query: () => "/config/",
+      transformResponse: (response: ConfigEntry[]) => {
+        return configAdaptor.addMany(configAdaptor.getInitialState(), response);
+      },
       providesTags: (result, error, arg) =>
-        result ? [...result.map(({ key }) => ({ type: "config" as const, key })), "config"] : ["config"],
+        result ? [...result.ids.map((id) => ({ type: "config" as const, id })), "config"] : ["config"],
     }),
     setConfigEntry: builder.mutation<ConfigEntry, ConfigEntry>({
       query: (configEntry) => ({ url: "/config/", method: "POST", body: configEntry }),
@@ -18,5 +28,13 @@ export const configApi = createApi({
     }),
   }),
 });
+
+export const {
+  selectConfigEntryById,
+  selectConfigEntryAll,
+  selectConfigEntryEntities,
+  selectConfigEntryIds,
+  selectConfigEntryTotal,
+} = convertEntityAdaptorSelectors("configEntry", configAdaptor.getSelectors());
 
 export const { useGetConfigEntriesQuery, useSetConfigEntryMutation } = configApi;

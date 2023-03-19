@@ -1,5 +1,12 @@
 {
+  "createUser": "Create User",
+  "updateUser": "Update User",
   "userName": "Name",
+  "userPassword": "Password",
   "userDescription": "Description",
-  "userPrivileges": "Privileges"
+  "userPrivileges": "Privileges",
+  "userCreateError": "Error while creating user: {{what}}",
+  "userUpdateError": "Error while creating user: {{what}}",
+  "deleteUser": "Delete User",
+  "deleteUserDescription": "Confirm user deletion"
 }
