@@ -49,4 +49,9 @@ def read_config(config_path: str) -> Config:
 
 
 def mock_config():
-    return Config(**{"database": {"dbname": ""}})
+    return Config(
+        administration=AdministrationApiConfig(base_url=""),
+        terminalserver=TerminalApiConfig(base_url=""),
+        database=DatabaseConfig(dbname=""),
+        core=CoreConfig(secret_key="")
+    )
