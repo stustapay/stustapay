@@ -53,5 +53,5 @@ def mock_config():
         administration=AdministrationApiConfig(base_url=""),
         terminalserver=TerminalApiConfig(base_url=""),
         database=DatabaseConfig(dbname=""),
-        core=CoreConfig(secret_key="")
+        core=CoreConfig(secret_key=""),
     )
