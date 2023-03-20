@@ -1,16 +1,13 @@
 package de.stustanet.stustapay.net
 
+import de.stustanet.stustapay.model.TerminalRegistrationSuccess
 import javax.inject.Inject
 
-
-data class RegisterResult(
-    var token: String
-)
 
 class RegistrationRemoteDataSource @Inject constructor(
     private val terminalAPI: TerminalAPI
 ) {
-    suspend fun register(apiUrl: String, registrationToken: String): RegisterResult {
-        return terminalAPI.register(apiUrl = apiUrl, registrationToken = registrationToken)
+    suspend fun register(apiUrl: String, registrationToken: String): TerminalRegistrationSuccess {
+        return terminalAPI.register(startApiUrl = apiUrl, registrationToken = registrationToken)
     }
 }

@@ -13,7 +13,7 @@ from stustapay.core.schema.account import (
     ACCOUNT_SUMUP,
     ACCOUNT_CASH_ENTRY,
 )
-from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Order
+from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Order, PendingOrder
 from stustapay.core.schema.tax_rate import TAX_NONE
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
@@ -61,7 +61,7 @@ class OrderService(DBService):
     @requires_terminal(user_privileges=[Privilege.cashier])
     async def create_order(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_order: NewOrder
-    ) -> CompletedOrder:
+    ) -> PendingOrder:
         """
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
@@ -166,7 +166,7 @@ class OrderService(DBService):
         else:
             raise NotImplementedError()
 
-        return CompletedOrder(
+        return PendingOrder(
             id=order_id,
             uuid=order_uuid,
             old_balance=customer_account.balance,

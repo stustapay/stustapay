@@ -55,5 +55,4 @@ fun ChipScanView(
     ) {
         screen(state)
     }
-
 }

@@ -14,7 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.R
-import de.stustanet.stustapay.ui.OrderView
+import de.stustanet.stustapay.ui.order.OrderView
 import de.stustanet.stustapay.ui.QRScanView
 import de.stustanet.stustapay.ui.TestConnectionView
 import de.stustanet.stustapay.ui.chipstatus.ChipStatusView

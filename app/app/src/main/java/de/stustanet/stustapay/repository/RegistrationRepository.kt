@@ -3,30 +3,20 @@ package de.stustanet.stustapay.repository
 
 import android.util.Base64
 import android.util.Log
+import de.stustanet.stustapay.model.RegisterQRCodeContent
 import de.stustanet.stustapay.model.RegistrationState
-import de.stustanet.stustapay.net.RegisterResult
+import de.stustanet.stustapay.model.TerminalRegistrationSuccess
 import de.stustanet.stustapay.net.RegistrationRemoteDataSource
 import de.stustanet.stustapay.storage.RegistrationLocalDataSource
 import de.stustanet.stustapay.util.merge
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
-
-
-/**
- * as defined in the administration's registration ui qrcode generator
- */
-@Serializable
-data class RegisterQRCodeContent(
-    val core_url: String,
-    val registration_uuid: String,
-)
 
 @Singleton
 class RegistrationRepository @Inject constructor(
@@ -67,9 +57,9 @@ class RegistrationRepository @Inject constructor(
                 )
             }
 
-            val registerResult: RegisterResult
+            val registrationResult: TerminalRegistrationSuccess
             try {
-                registerResult = registrationRemoteDataSource.register(
+                registrationResult = registrationRemoteDataSource.register(
                     regCode.core_url,
                     regCode.registration_uuid
                 )
@@ -80,7 +70,7 @@ class RegistrationRepository @Inject constructor(
             }
 
             return RegistrationState.Registered(
-                token = registerResult.token,
+                token = registrationResult.token,
                 apiUrl = regCode.core_url,
                 message = "success",
             )
