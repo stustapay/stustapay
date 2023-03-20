@@ -18,6 +18,8 @@ object TerminalAPIModule {
 }
 
 interface TerminalAPI {
+    suspend fun getHealthStatus(apiUrl: String): String
+
     /**
      * Register this terminal to the core.
      */
