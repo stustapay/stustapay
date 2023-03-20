@@ -6,6 +6,7 @@ import de.stustanet.stustapay.model.PendingOrder
 import de.stustanet.stustapay.model.RegistrationState
 import de.stustanet.stustapay.model.TerminalRegistrationSuccess
 import de.stustanet.stustapay.storage.RegistrationLocalDataSource
+import de.stustanet.stustapay.util.waitFor
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -42,33 +43,17 @@ class TerminalHTTPAPI @Inject constructor(
 
         Log.i("stustapay", "getting api url...")
 
-        coroutineScope {
-            val done = Channel<Unit>()
-            val job = launch {
-                // wait until we get a valid url.
-                // otherwise requests don't make sense anyway.
-                val urlUpdates = regLocalStatus.registrationState.stateIn(this)
-                urlUpdates.collect() { registerState ->
-                    url = when (registerState) {
-                        is RegistrationState.Registered -> {
-                            registerState.apiUrl
-                        }
-                        is RegistrationState.Error -> {
-                            null
-                        }
-                    }
-                    if (url != null) {
-                        done.send(Unit)
-                    }
+        regLocalStatus.registrationState.waitFor { registerState ->
+            url = when (registerState) {
+                is RegistrationState.Registered -> {
+                    registerState.apiUrl
+                }
+                is RegistrationState.Error -> {
+                    null
                 }
             }
-            // the stateflow.collect can't be terminated from inside itself it seems,
-            // so we have to cancel it...
-            done.receive()
-            job.cancel()
-            job.join()
+            url != null
         }
-
 
         Log.i("stustapay", "got api url: $url")
 

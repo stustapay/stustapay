@@ -48,7 +48,6 @@ fun RegistrationOverview(
         }
 
         Column {
-
             Text(
                 text = message!!,
                 modifier = Modifier.padding(start = 15.dp, end = 10.dp)
