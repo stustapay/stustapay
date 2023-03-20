@@ -1,29 +1,33 @@
-package de.stustanet.stustapay.ui
+package de.stustanet.stustapay.ui.debug
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Button
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import de.stustanet.stustapay.net.Network
 import kotlinx.coroutines.launch
 
 @Composable
-fun TestConnectionButton() {
-    val ctx = LocalContext.current
+fun EndpointInput(viewModel: DebugViewModel?) {
+    TextField(value = viewModel?.endpointURL ?: "asdf", onValueChange = {
+        viewModel!!.endpointURL = it
+    })
+}
+
+@Composable
+fun TestConnectionButton(viewModel: DebugViewModel?) {
     val coroutineScope = rememberCoroutineScope()
 
     Button(onClick = {
         coroutineScope.launch {
-            testConnection(ctx)
+            viewModel!!.announceHealthStatus()
         }
     }) {
         Text(text = "Test Connection")
@@ -32,16 +36,13 @@ fun TestConnectionButton() {
 
 @Preview
 @Composable
-fun TestConnectionView() {
-    Row(
+fun DebugView(viewModel: DebugViewModel? = null) {
+    Column(
         modifier = Modifier.fillMaxSize(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TestConnectionButton()
+        EndpointInput(viewModel = viewModel)
+        TestConnectionButton(viewModel)
     }
-}
-
-suspend fun testConnection(ctx: Context) {
-    Toast.makeText(ctx, Network.getHealthStatus(), Toast.LENGTH_SHORT).show()
 }

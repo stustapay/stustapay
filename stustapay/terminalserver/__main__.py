@@ -1,6 +1,6 @@
 import asyncio
 
-from stustapay.core.config import read_config
+from stustapay.core.config import mock_config, read_config
 from stustapay.core.args import Parser
 
 from . import server
@@ -23,7 +23,10 @@ def main():
 
     args = parser.parse_args(loop)
 
-    config = read_config(vars(args)["config_path"])
+    if args.mock:  # pylint: disable=no-member
+        config = mock_config()
+    else:
+        config = read_config(vars(args)["config_path"])
 
     args.run_subcommand(loop, config=config)
 
