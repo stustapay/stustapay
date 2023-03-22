@@ -8,10 +8,11 @@ from stustapay.core.schema.product import Product
 # Global Account IDs for virtual accounts
 # The virtual accounts are all fixed in the database
 ACCOUNT_SALE_EXIT = 0
-ACCOUNT_SALE_ENTRY = 1
+ACCOUNT_CASH_ENTRY = 1
 ACCOUNT_DEPOSIT = 2
 ACCOUNT_SUMUP = 3
 ACCOUNT_CASH_VAULT = 4
+ACCOUNT_IMBALANCE = 5
 
 
 def get_source_account(order_type: OrderType, product: Product, customer_account: int):
@@ -38,7 +39,7 @@ def get_target_account(order_type: OrderType, product: Product, customer_account
 
 class Account(BaseModel):
     id: int
-    user_tag_id: int
+    user_tag_id: Optional[int]
     type: str
     name: Optional[str]
     comment: Optional[str]

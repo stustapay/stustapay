@@ -1,7 +1,9 @@
 {
   "productName": "Name",
   "productPrice": "Price",
+  "isFixedPrice": "Fixed Price",
   "taxRate": "Tax Rate",
+  "fixedPrice": "Price is fixed",
   "createProduct": "Add a new product",
   "updateProduct": "Update product",
   "deleteProduct": "Delete Product",

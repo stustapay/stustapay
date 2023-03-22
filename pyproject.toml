@@ -15,6 +15,7 @@ classifiers = [
 requires-python = ">=3.9"
 dependencies = [
     "fastapi",
+    "python-multipart",
     "uvicorn[standard]",
     "pydantic",
     "passlib[bcrypt]",
@@ -69,6 +70,7 @@ target-version = ["py39"]
 
 [tool.mypy]
 ignore_missing_imports = true
+# check_untyped_defs = true # TODO: enable ass soon as the checks would pass
 pretty = true
 plugins = [
     "pydantic.mypy"

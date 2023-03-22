@@ -5,9 +5,10 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, ValidationError
 
-from .dbservice import DBService, with_db_transaction, requires_user_privileges
-from ..config import Config
-from ..schema.user import User, UserWithoutId, Privilege
+from stustapay.core.config import Config
+from stustapay.core.schema.user import Privilege, User, UserWithoutId
+from stustapay.core.service.common.dbservice import DBService
+from stustapay.core.service.common.decorators import requires_user_privileges, with_db_transaction
 
 
 class TokenMetadata(BaseModel):
@@ -39,17 +40,19 @@ class UserService(DBService):
         if password:
             hashed_password = self._hash_password(password)
 
-        row = await conn.fetchrow(
-            "insert into usr (name, description, password) values ($1, $2, $3) returning id, name, description",
+        user_id = await conn.fetchval(
+            "insert into usr (name, description, password, user_tag_id) values ($1, $2, $3, $4) returning id",
             new_user.name,
             new_user.description,
             hashed_password,
+            new_user.user_tag,
         )
 
         for privilege in new_user.privileges:
-            await conn.execute("insert into usr_privs (usr, priv) values ($1, $2)", row["id"], privilege.value)
+            await conn.execute("insert into usr_privs (usr, priv) values ($1, $2)", user_id, privilege.value)
 
-        return User(id=row["id"], name=row["name"], description=row["description"], privileges=new_user.privileges)
+        row = await conn.fetchrow("select * from usr_with_privileges where id = $1", user_id)
+        return User.parse_obj(row)
 
     @with_db_transaction
     async def create_user_no_auth(
@@ -70,14 +73,7 @@ class UserService(DBService):
         cursor = conn.cursor("select * from usr_with_privileges")
         result = []
         async for row in cursor:
-            result.append(
-                User(
-                    id=row["id"],
-                    name=row["name"],
-                    description=row["description"],
-                    privileges=row["privileges"],
-                )
-            )
+            result.append(User.parse_obj(row))
         return result
 
     @with_db_transaction
@@ -117,10 +113,21 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
-    async def link_user_to_account(self, *, conn: asyncpg.Connection, user_id: int, account_id: int) -> bool:
+    async def link_user_to_cashier_account(self, *, conn: asyncpg.Connection, user_id: int, account_id: int) -> bool:
         # TODO: FIXME: is this the way it's going to stay?
         result = await conn.fetchval(
-            "update usr set account_id = $2 where id = $1 returning id",
+            "update usr set cashier_account_id = $2 where id = $1 returning id",
+            user_id,
+            account_id,
+        )
+        return result is not None
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def link_user_to_transport_account(self, *, conn: asyncpg.Connection, user_id: int, account_id: int) -> bool:
+        # TODO: FIXME: is this the way it's going to stay?
+        result = await conn.fetchval(
+            "update usr set transport_account_id = $2 where id = $1 returning id",
             user_id,
             account_id,
         )
@@ -148,6 +155,7 @@ class UserService(DBService):
         )
 
     @with_db_transaction
+    @requires_user_privileges()
     async def logout_user(self, *, conn: asyncpg.Connection, current_user: User, token: str) -> bool:
         token_payload = self._decode_jwt_payload(token)
         if token_payload is None:

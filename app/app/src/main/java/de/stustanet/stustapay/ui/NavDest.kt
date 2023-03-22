@@ -13,7 +13,7 @@ object RootNavDests {
     val qrscan = NavDest("qrscan")
     val chipstatus = NavDest("chipstatus")
     val settings = NavDest("settings")
-    val connTest = NavDest("connTest")
+    val debug = NavDest("debug")
 
     fun getRoutePropMap(): HashMap<String, NavDest> {
         val routePropMap = HashMap<String, NavDest>()

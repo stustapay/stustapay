@@ -8,5 +8,6 @@
   "bon.addr": "Bon address",
   "bon.title": "Bon title",
   "bon.closing_texts": "Bon closing texts",
-  "ust_id": "UST ID"
+  "ust_id": "UST ID",
+  "settingsUpdateError": "Error updating setting: {{what}}"
 }

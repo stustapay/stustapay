@@ -1,11 +1,11 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 from stustapay.core.schema.order import NewLineItem, NewOrder, OrderType
 from stustapay.core.schema.product import NewProduct
-from stustapay.core.schema.terminal import NewTerminal, NewTerminalLayout, NewTerminalProfile
+from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile
 from stustapay.core.schema.user import Privilege, UserWithoutId
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
-from stustapay.core.service.terminal import TerminalService
+from stustapay.core.service.till import TillService
 from .common import BaseTestCase
 
 START_BALANCE = 100
@@ -14,14 +14,15 @@ START_BALANCE = 100
 class OrderLogicTest(BaseTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
-        self.terminal_service = TerminalService(
-            db_pool=self.db_pool, config=self.test_config, user_service=self.user_service
-        )
+        self.till_service = TillService(db_pool=self.db_pool, config=self.test_config, user_service=self.user_service)
         self.product_service = ProductService(
             db_pool=self.db_pool, config=self.test_config, user_service=self.user_service
         )
         self.order_service = OrderService(
-            db_pool=self.db_pool, config=self.test_config, terminal_service=self.terminal_service
+            db_pool=self.db_pool,
+            config=self.test_config,
+            till_service=self.till_service,
+            user_service=self.user_service,
         )
 
         self.product = await self.product_service.create_product(
@@ -29,54 +30,66 @@ class OrderLogicTest(BaseTestCase):
             product=NewProduct(
                 name="Test Product",
                 price=3,
+                fixed_price=True,
                 tax_name="ust",
                 target_account_id=None,
             ),
         )
+        self.topup_product = await self.product_service.create_product(
+            token=self.admin_token,
+            product=NewProduct(
+                name="Top Up",
+                price=None,
+                fixed_price=False,
+                tax_name="none",
+                target_account_id=None,
+            ),
+        )
+        cashier_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning id")
         self.cashier = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(name="test_cashier", description="", privileges=[Privilege.cashier])
+            new_user=UserWithoutId(
+                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag=cashier_tag_id
+            )
         )
-        self.terminal_layout = await self.terminal_service.layout.create_layout(
+        self.till_layout = await self.till_service.layout.create_layout(
             token=self.admin_token,
-            layout=NewTerminalLayout(name="layout1", description="", button_ids=None, allow_top_up=False),
+            layout=NewTillLayout(name="layout1", description="", button_ids=None),
         )
-        self.terminal_profile = await self.terminal_service.profile.create_profile(
+        self.till_profile = await self.till_service.profile.create_profile(
             token=self.admin_token,
-            profile=NewTerminalProfile(name="profile1", description="", layout_id=self.terminal_layout.id),
+            profile=NewTillProfile(name="profile1", description="", layout_id=self.till_layout.id, allow_top_up=False),
         )
-        self.terminal = await self.terminal_service.create_terminal(
+        self.till = await self.till_service.create_till(
             token=self.admin_token,
-            terminal=NewTerminal(
-                name="test_terminal",
+            till=NewTill(
+                name="test_till",
                 description="",
                 tse_id=None,
                 active_shift=None,
-                active_profile_id=self.terminal_profile.id,
-                active_cashier_id=None,
+                active_profile_id=self.till_profile.id,
+                active_user_id=None,
             ),
         )
-        # login in cashier to terminal
+        # login in cashier to till
         self.terminal_token = (
-            await self.terminal_service.register_terminal(registration_uuid=self.terminal.registration_uuid)
+            await self.till_service.register_terminal(registration_uuid=self.till.registration_uuid)
         ).token
-        cashier_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning id")
         cashier_account_id = await self.db_conn.fetchval(
-            "insert into account (user_tag_id, type, balance) values ($1, 'internal', $2) returning id",
-            cashier_tag_id,
+            "insert into account (type, balance) values ('internal', $1) returning id",
             0,
         )
-        await self.user_service.link_user_to_account(
+        await self.user_service.link_user_to_cashier_account(
             token=self.admin_token, user_id=self.cashier.id, account_id=cashier_account_id
         )
-        await self.terminal_service.login_cashier(token=self.terminal_token, tag_uid=54321)
+        await self.till_service.login_cashier(token=self.terminal_token, tag_uid=54321)
         # add customer
         user_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (1234) returning id")
         await self.db_conn.fetchval(
             "insert into account (user_tag_id, type, balance) values ($1, 'private', $2);", user_tag_id, START_BALANCE
         )
 
-        # fetch new terminal
-        self.terminal = await self.terminal_service.get_terminal(token=self.admin_token, terminal_id=self.terminal.id)
+        # fetch new till
+        self.till = await self.till_service.get_till(token=self.admin_token, till_id=self.till.id)
 
     async def test_basic_order_flow(self):
         completed_order = await self.order_service.create_order(
@@ -98,3 +111,47 @@ class OrderLogicTest(BaseTestCase):
         await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
         order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
         self.assertEqual(order.status, "done")
+
+    async def test_topup_cash_order_flow(self):
+        completed_order = await self.order_service.create_order(
+            token=self.terminal_token,
+            new_order=NewOrder(
+                positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
+                order_type=OrderType.topup_cash,
+                customer_tag=1234,
+            ),
+        )
+        self.assertEqual(completed_order.old_balance, START_BALANCE)
+        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
+        self.assertEqual(order.status, "pending")
+        self.assertEqual(order.itemcount, 1)
+        self.assertEqual(len(order.line_items), 1)
+        self.assertEqual(order.line_items[0].quantity, 1)
+        self.assertEqual(order.line_items[0].price, 20)
+        self.assertEqual(order.value_sum, 20)
+        self.assertEqual(completed_order.new_balance, START_BALANCE + order.value_sum)
+        await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
+        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
+        self.assertEqual(order.status, "done")
+        # todo check cashier account balance
+
+    async def test_topup_sumup_order_flow(self):
+        completed_order = await self.order_service.create_order(
+            token=self.terminal_token,
+            new_order=NewOrder(
+                positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
+                order_type=OrderType.topup_sumup,
+                customer_tag=1234,
+            ),
+        )
+        self.assertEqual(completed_order.old_balance, START_BALANCE)
+        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
+        self.assertEqual(order.status, "pending")
+        self.assertEqual(order.line_items[0].quantity, 1)
+        self.assertEqual(order.line_items[0].price, 20)
+        self.assertEqual(order.value_sum, 20)
+        self.assertEqual(completed_order.new_balance, START_BALANCE + order.value_sum)
+        await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
+        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
+        self.assertEqual(order.status, "done")
+        # todo check cashier account balance

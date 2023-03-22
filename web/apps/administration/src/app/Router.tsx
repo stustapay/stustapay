@@ -1,7 +1,7 @@
 import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
-import { TerminalList } from "./routes/terminals/TerminalList";
+import { TillList } from "./routes/tills/TillList";
 import { ProductCreate } from "./routes/products/ProductCreate";
 import { ProductUpdate } from "./routes/products/ProductUpdate";
 import { ProductList } from "./routes/products/ProductList";
@@ -9,26 +9,22 @@ import { TaxRateCreate } from "./routes/tax-rates/TaxRateCreate";
 import { TaxRateUpdate } from "./routes/tax-rates/TaxRateUpdate";
 import { TaxRateList } from "./routes/tax-rates/TaxRateList";
 import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
-import { UserList } from "./routes/users/UserList";
 import { Settings } from "./routes/settings/Settings";
 import { Login } from "./routes/auth/Login";
 import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
-import { TerminalCreate } from "./routes/terminals/TerminalCreate";
-import { TerminalUpdate } from "./routes/terminals/TerminalUpdate";
+import { TillCreate } from "./routes/tills/TillCreate";
+import { TillUpdate } from "./routes/tills/TillUpdate";
 import { Logout } from "./routes/auth/Logout";
-import { TerminalDetail } from "./routes/terminals/TerminalDetail";
-import {
-  TerminalLayoutCreate,
-  TerminalLayoutUpdate,
-  TerminalLayoutList,
-  TerminalLayoutDetail,
-} from "./routes/terminal-layouts";
-import { TerminalProfileCreate, TerminalProfileUpdate, TerminalProfileList } from "./routes/terminal-profiles";
-import { TerminalProfileDetail } from "./routes/terminal-profiles/TerminalProfileDetail";
-import { TerminalButtonUpdate } from "./routes/terminal-buttons/TerminalButtonUpdate";
-import { TerminalButtonChange } from "./routes/terminal-buttons/TerminalButtonChange";
-import { TerminalButtonCreate } from "./routes/terminal-buttons/TerminalButtonCreate";
-import { TerminalButtonList } from "./routes/terminal-buttons/TerminalButtonList";
+import { TillDetail } from "./routes/tills/TillDetail";
+import { TillLayoutCreate, TillLayoutUpdate, TillLayoutList, TillLayoutDetail } from "./routes/till-layouts";
+import { TillProfileCreate, TillProfileUpdate, TillProfileList } from "./routes/till-profiles";
+import { TillProfileDetail } from "./routes/till-profiles/TillProfileDetail";
+import { TillButtonUpdate } from "./routes/till-buttons/TillButtonUpdate";
+import { TillButtonCreate } from "./routes/till-buttons/TillButtonCreate";
+import { TillButtonList } from "./routes/till-buttons/TillButtonList";
+import { UserUpdate, UserDetail, UserList, UserCreate } from "./routes/users";
+import { AccountList } from "./routes/accounts/AccountList";
+import { OrderList } from "./routes/orders/OrderList";
 
 const router = createBrowserRouter([
   {
@@ -65,68 +61,88 @@ const router = createBrowserRouter([
         element: <TaxRateUpdate />,
       },
       {
-        path: "terminals",
-        element: <TerminalList />,
+        path: "tills",
+        element: <TillList />,
       },
       {
-        path: "terminals/new",
-        element: <TerminalCreate />,
+        path: "tills/new",
+        element: <TillCreate />,
       },
       {
-        path: "terminals/:terminalId/edit",
-        element: <TerminalUpdate />,
+        path: "tills/:tillId/edit",
+        element: <TillUpdate />,
       },
       {
-        path: "terminals/:terminalId",
-        element: <TerminalDetail />,
+        path: "tills/:tillId",
+        element: <TillDetail />,
       },
       {
-        path: "terminal-buttons",
-        element: <TerminalButtonList />,
+        path: "till-buttons",
+        element: <TillButtonList />,
       },
       {
-        path: "terminal-buttons/new",
-        element: <TerminalButtonCreate />,
+        path: "till-buttons/new",
+        element: <TillButtonCreate />,
       },
       {
-        path: "terminal-buttons/:buttonId/edit",
-        element: <TerminalButtonUpdate />,
+        path: "till-buttons/:buttonId/edit",
+        element: <TillButtonUpdate />,
       },
       {
-        path: "terminal-layouts",
-        element: <TerminalLayoutList />,
+        path: "till-layouts",
+        element: <TillLayoutList />,
       },
       {
-        path: "terminal-layouts/new",
-        element: <TerminalLayoutCreate />,
+        path: "till-layouts/new",
+        element: <TillLayoutCreate />,
       },
       {
-        path: "terminal-layouts/:layoutId/edit",
-        element: <TerminalLayoutUpdate />,
+        path: "till-layouts/:layoutId/edit",
+        element: <TillLayoutUpdate />,
       },
       {
-        path: "terminal-layouts/:layoutId",
-        element: <TerminalLayoutDetail />,
+        path: "till-layouts/:layoutId",
+        element: <TillLayoutDetail />,
       },
       {
-        path: "terminal-profiles",
-        element: <TerminalProfileList />,
+        path: "till-profiles",
+        element: <TillProfileList />,
       },
       {
-        path: "terminal-profiles/new",
-        element: <TerminalProfileCreate />,
+        path: "till-profiles/new",
+        element: <TillProfileCreate />,
       },
       {
-        path: "terminal-profiles/:profileId/edit",
-        element: <TerminalProfileUpdate />,
+        path: "till-profiles/:profileId/edit",
+        element: <TillProfileUpdate />,
       },
       {
-        path: "terminal-profiles/:profileId",
-        element: <TerminalProfileDetail />,
+        path: "till-profiles/:profileId",
+        element: <TillProfileDetail />,
+      },
+      {
+        path: "users/new",
+        element: <UserCreate />,
+      },
+      {
+        path: "users/:userId/edit",
+        element: <UserUpdate />,
+      },
+      {
+        path: "users/:userId",
+        element: <UserDetail />,
       },
       {
         path: "users",
         element: <UserList />,
+      },
+      {
+        path: "accounts",
+        element: <AccountList />,
+      },
+      {
+        path: "orders",
+        element: <OrderList />,
       },
       {
         path: "settings",

@@ -34,13 +34,14 @@ select setval('account_id_seq', 300);
 
 
 insert into usr (
-    id, name, password, description, account_id
+    id, name, password, description, transport_account_id, cashier_account_id
 )
 values
-    (0, 'Test Cashier', 'password', 'Some Description', 100),
+    (0, 'Test Cashier', 'password', 'Some Description', null, 100),
     -- password is admin
-    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W' , null, null)
+    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W' , null, null, null)
     on conflict do nothing;
+select setval('usr_id_seq', 100);
 
 
 insert into usr_privs (
@@ -52,28 +53,28 @@ values
 
 
 insert into product (
-    id, name, price, tax_name
+    id, name, price, fixed_price, target_account_id, tax_name
 )
 values
     -- Getränke
-    (0, 'Helles 1.0l', 5.00, 'ust'),
-    (1, 'Helles 0.5l', 3.00, 'ust'),
-    (2, 'Weißbier 1.0l', 5.00, 'ust'),
-    (3, 'Weißbier 0.5l', 3.00, 'ust'),
-    (4, 'Radler 1.0l', 5.00, 'ust'),
-    (5, 'Radler 0.5l', 3.00, 'ust'),
-    (6, 'Russ 1.0l', 5.00, 'ust'),
-    (7, 'Russ 0.5l', 3.00, 'ust'),
-    (8, 'Limonade 1.0l', 2.00, 'ust'),
-    (14, 'Whisky 1.0l', 20.00, 'ust'),
+    (0, 'Helles 1.0l', 5.00, true, null, 'ust'),
+    (1, 'Helles 0.5l', 3.00, true, null, 'ust'),
+    (2, 'Weißbier 1.0l', 5.00, true, null, 'ust'),
+    (3, 'Weißbier 0.5l', 3.00, true, null, 'ust'),
+    (4, 'Radler 1.0l', 5.00, true, null, 'ust'),
+    (5, 'Radler 0.5l', 3.00, true, null, 'ust'),
+    (6, 'Russ 1.0l', 5.00, true, null, 'ust'),
+    (7, 'Russ 0.5l', 3.00, true, null, 'ust'),
+    (8, 'Limonade 1.0l', 2.00, true, null, 'ust'),
+    (14, 'Whisky 1.0l', 20.00, true, null, 'ust'),
     -- Essen
-    (9, 'Weißwurst', 2.00, 'eust'),
+    (9, 'Weißwurst', 2.00, true, null, 'eust'),
     -- Pfand
-    (10, 'Pfand', 2.00, 'none'),
-    (11, 'Pfand zurück', -2.00, 'none'),
+    (10, 'Pfand', 2.00, true, 2, 'none'),
+    (11, 'Pfand zurück', -2.00, true, 2, 'none'),
     -- Top Up
-    (12, '1€ Aufladen Bar', 1.00, 'none'),
-    (13, '1€ Aufladen EC', 1.00, 'none')
+    (12, 'Aufladen', null, false, null, 'none'),
+    (13, 'Auszahlen', null, false, null, 'none')
     on conflict do nothing;
 select setval('product_id_seq', 100);
 
@@ -95,41 +96,42 @@ values
     (14, 'under_18')
     on conflict do nothing;
 
-insert into terminal_layout (
+insert into till_layout (
     id, name, description
 )
 values
     (0, 'Bierkasse', 'Allgemeine Bierkasse')
 on conflict do nothing;
-select setval('terminal_layout_id_seq', 100);
+select setval('till_layout_id_seq', 100);
 
-insert into terminal_profile (
+insert into till_profile (
     id, name, description, layout_id
 )
 values
     (0, 'Pot', 'Allgemeine Pot Bierkasse', 0)
 on conflict do nothing;
-select setval('terminal_profile_id_seq', 100);
+select setval('till_profile_id_seq', 100);
 
-insert into terminal (
+insert into till (
     id, name, description, registration_uuid, session_uuid, tse_id, active_shift, active_profile_id
 )
 values
     (0, 'Terminal 0', 'Test Terminal', null, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'tse 0', 'Shift 0', 0)
     on conflict do nothing;
-select setval('terminal_id_seq', 100);
+select setval('till_id_seq', 100);
 
 
 insert into ordr (
-    id, itemcount, status, created_at, finished_at, payment_method, cashier_id, terminal_id, customer_account_id
+    id, itemcount, status, created_at, finished_at, payment_method, order_type,
+    cashier_id, till_id, customer_account_id
 )
 values
     -- simple beer with deposit
-    (0, 2, 'done', '01.01.2023 15:34:17 UTC+1', '01.01.2023 15:35:02 UTC+1', 'token', 0, 0, 200),
+    (0, 2, 'done', '01.01.2023 15:34:17 UTC+1', '01.01.2023 15:35:02 UTC+1', 'token', 'sale', 0, 0, 200),
     -- items with different tax rates
-    (1, 3, 'done', '02.01.2023 16:59:20 UTC+1', '02.01.2023 17:00:07 UTC+1', 'token', 0, 0, 201),
+    (1, 3, 'done', '02.01.2023 16:59:20 UTC+1', '02.01.2023 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201),
     -- Top Up EC
-    (2, 1, 'done', '01.01.2023 16:59:20 UTC+1', '01.01.2023 17:00:07 UTC+1', 'token', 0, 0, 201)
+    (2, 1, 'done', '01.01.2023 16:59:20 UTC+1', '01.01.2023 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201)
     on conflict do nothing;
 select setval('ordr_id_seq', 100);
 

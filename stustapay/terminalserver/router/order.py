@@ -5,14 +5,12 @@ purchase ordering.
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from stustapay.core.http.auth_terminal import get_auth_token
+from stustapay.core.http.auth_till import get_auth_token
 from stustapay.core.http.context import get_order_service
 from stustapay.core.schema.order import NewOrder
 from stustapay.core.service.order import OrderService
 
-router = APIRouter(
-    prefix="/api",
-)
+router = APIRouter(prefix="/api", tags=["orders"])
 
 
 class NewOrderPayload(BaseModel):

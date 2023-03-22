@@ -1,10 +1,13 @@
-from dataclasses import dataclass
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import get_auth_token
 from stustapay.core.http.context import get_user_service
-from stustapay.core.service.user import UserService, UserLoginSuccess
+from stustapay.core.schema.user import User
+from stustapay.core.service.user import UserService
 
 router = APIRouter(
     prefix="/auth",
@@ -13,22 +16,22 @@ router = APIRouter(
 )
 
 
-@dataclass
-class LoginPayload:
-    username: str
-    password: str
+class LoginResponse(BaseModel):
+    user: User
+    access_token: str
+    grant_type = "bearer"
 
 
-@router.post("/login", summary="login with username and password", response_model=UserLoginSuccess)
+@router.post("/login", summary="login with username and password", response_model=LoginResponse)
 async def login(
-    payload: LoginPayload,
+    payload: Annotated[OAuth2PasswordRequestForm, Depends()],
     user_service: UserService = Depends(get_user_service),
 ):
     response = await user_service.login_user(username=payload.username, password=payload.password)
     if response is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    return response
+    return {"user": response.user, "access_token": response.token, "grant_type": "bearer"}
 
 
 @router.post(

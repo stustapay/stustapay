@@ -2,7 +2,7 @@ import * as React from "react";
 import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
-import { useDeleteTaxRateMutation, useGetTaxRatesQuery } from "@api";
+import { selectTaxRateAll, useDeleteTaxRateMutation, useGetTaxRatesQuery } from "@api";
 import { useTranslation } from "react-i18next";
 import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,12 @@ export const TaxRateList: React.FC = () => {
   const { t } = useTranslation(["taxRates", "common"]);
   const navigate = useNavigate();
 
-  const { data: taxRates, isLoading } = useGetTaxRatesQuery();
+  const { taxRates, isLoading } = useGetTaxRatesQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      taxRates: data ? selectTaxRateAll(data) : undefined,
+    }),
+  });
   const [deleteTaxRate] = useDeleteTaxRateMutation();
 
   const [taxRateToDelete, setTaxRateToDelete] = React.useState<string | null>(null);

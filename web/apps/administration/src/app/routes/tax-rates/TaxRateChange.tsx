@@ -1,12 +1,12 @@
 import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
-import { TaxRate } from "../../../models/taxRate";
+import { TaxRate } from "@models/taxRate";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { NumericInput } from "../../../components/NumericInput";
+import { NumericInput } from "@components/NumericInput";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 
 export interface TaxRateChangeProps<T extends TaxRate> {

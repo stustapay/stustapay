@@ -26,6 +26,8 @@ import {
   Percent as PercentIcon,
   Settings as SettingsIcon,
   Menu as MenuIcon,
+  AccountBalance as AccountBalanceIcon,
+  AddShoppingCart as AddShoppingCartIcon,
 } from "@mui/icons-material";
 import { Outlet, Navigate, useLocation, Link as RouterLink } from "react-router-dom";
 import { ListItemLink } from "@components";
@@ -166,29 +168,41 @@ export const AuthenticatedRoot: React.FC = () => {
             </ListItemIcon>
             <ListItemText primary={t("products")} />
           </ListItemLink>
-          <ListItemLink to="/terminal-buttons">
+          <ListItemLink to="/till-buttons">
             <ListItemIcon>
               <PointOfSaleIcon />
             </ListItemIcon>
-            <ListItemText primary={t("terminalButtons")} />
+            <ListItemText primary={t("tillButtons")} />
           </ListItemLink>
-          <ListItemLink to="/terminal-layouts">
+          <ListItemLink to="/till-layouts">
             <ListItemIcon>
               <PointOfSaleIcon />
             </ListItemIcon>
-            <ListItemText primary={t("terminalLayouts")} />
+            <ListItemText primary={t("tillLayouts")} />
           </ListItemLink>
-          <ListItemLink to="/terminal-profiles">
+          <ListItemLink to="/till-profiles">
             <ListItemIcon>
               <PointOfSaleIcon />
             </ListItemIcon>
-            <ListItemText primary={t("terminalProfiles")} />
+            <ListItemText primary={t("tillProfiles")} />
           </ListItemLink>
-          <ListItemLink to="/terminals">
+          <ListItemLink to="/tills">
             <ListItemIcon>
               <PointOfSaleIcon />
             </ListItemIcon>
-            <ListItemText primary={t("terminals")} />
+            <ListItemText primary={t("tills")} />
+          </ListItemLink>
+          <ListItemLink to="/accounts">
+            <ListItemIcon>
+              <AccountBalanceIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("accounts")} />
+          </ListItemLink>
+          <ListItemLink to="/orders">
+            <ListItemIcon>
+              <AddShoppingCartIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("orders")} />
           </ListItemLink>
           <ListItemLink to="/users">
             <ListItemIcon>

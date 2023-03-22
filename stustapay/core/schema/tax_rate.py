@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+TAX_NONE = "none"
+
 
 class TaxRateWithoutName(BaseModel):
     rate: float

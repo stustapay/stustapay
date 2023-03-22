@@ -12,7 +12,7 @@ from stustapay.bon.pdflatex import pdflatex
 from stustapay.core.database import create_db_pool
 from stustapay.core.dbhook import DBHook
 from stustapay.core.service.order import OrderService
-from stustapay.core.service.terminal import TerminalService
+from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
 
@@ -48,9 +48,11 @@ class Generator(SubCommand):
                 # pylint: disable=attribute-defined-outside-init
                 self.user_service = UserService(pool, self.config)
                 # pylint: disable=attribute-defined-outside-init
-                self.terminal_service = TerminalService(pool, self.config, self.user_service)
+                self.till_service = TillService(pool, self.config, self.user_service)
                 # pylint: disable=attribute-defined-outside-init
-                self.tx_service = OrderService(pool, self.config, self.terminal_service)
+                self.tx_service = OrderService(
+                    pool, self.config, till_service=self.till_service, user_service=self.user_service
+                )
                 # pylint: disable=attribute-defined-outside-init
                 self.db_hook = DBHook(db_hook_conn, "bon", self.handle_hook)
                 await self.db_hook.run()
