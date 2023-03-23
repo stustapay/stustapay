@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class RegistrationLocalDataSource @Inject constructor(
-    @ApplicationContext val context: Context
+    @ApplicationContext val context: Context,
+    val regStateStore: DataStore<RegistrationState>
 ) {
 
     companion object {

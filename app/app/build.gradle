@@ -4,6 +4,7 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization'
     id 'kotlin-kapt'
     id 'com.google.dagger.hilt.android'
+    id 'com.google.protobuf'
 }
 
 def getVersionCode = { ->
@@ -100,6 +101,7 @@ dependencies {
     implementation "io.ktor:ktor-client-logging:$ktor_version"
     implementation 'androidx.databinding:databinding-runtime:7.1.2'
     implementation 'androidx.datastore:datastore:1.0.0'
+    implementation 'com.google.protobuf:protobuf-javalite:3.22.2'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
@@ -117,4 +119,23 @@ dependencies {
 
 kapt {
     correctErrorTypes true
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.22.2"
+    }
+
+    // Generates the java Protobuf-lite code for the Protobufs in this project. See
+    // https://github.com/google/protobuf-gradle-plugin#customizing-protobuf-compilation
+    // for more information.
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {
+                    option 'lite'
+                }
+            }
+        }
+    }
 }
