@@ -58,7 +58,7 @@ async def logout_till(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    logged_out = await till_service.logout_terminal(token=token, till_id=till_id)
+    logged_out = await till_service.logout_terminal_id(token=token, till_id=till_id)
     if not logged_out:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 

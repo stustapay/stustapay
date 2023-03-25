@@ -13,7 +13,7 @@ from stustapay.core.schema.account import (
     ACCOUNT_SUMUP,
     ACCOUNT_CASH_ENTRY,
 )
-from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Order
+from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Order, PendingOrder
 from stustapay.core.schema.tax_rate import TAX_NONE
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
@@ -61,7 +61,7 @@ class OrderService(DBService):
     @requires_terminal(user_privileges=[Privilege.cashier])
     async def create_order(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_order: NewOrder
-    ) -> CompletedOrder:
+    ) -> PendingOrder:
         """
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
@@ -166,7 +166,7 @@ class OrderService(DBService):
         else:
             raise NotImplementedError()
 
-        return CompletedOrder(
+        return PendingOrder(
             id=order_id,
             uuid=order_uuid,
             old_balance=customer_account.balance,
@@ -185,9 +185,20 @@ class OrderService(DBService):
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
-    async def show_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
-        # TODO: restrict this s.t. only orders for this terminal and this cashier can be fetched
-        return await self._fetch_order(conn=conn, order_id=order_id)
+    async def show_order(self, *, conn: asyncpg.Connection, current_user: User, order_id: int) -> Optional[Order]:
+        order = await self._fetch_order(conn=conn, order_id=order_id)
+        if order is not None and order.cashier_id == current_user.id:
+            return order
+        return None
+
+    @with_db_transaction
+    @requires_terminal([Privilege.cashier])
+    async def list_orders_terminal(self, *, conn: asyncpg.Connection, current_user: User) -> list[Order]:
+        cursor = conn.cursor("select * from order_value where ordr.cashier_id = $1", current_user.id)
+        result = []
+        async for row in cursor:
+            result.append(Order.parse_obj(row))
+        return result
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
