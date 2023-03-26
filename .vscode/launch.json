@@ -8,9 +8,9 @@
             "name": "Launch 'terminalserver' in mock-mode",
             "type": "python",
             "request": "launch",
-            "module": "stustapay.core",
+            "module": "stustapay.terminalserver",
             "justMyCode": true,
-            "args": ["--mock", "-v", "terminalserver"]
+            "args": ["--mock", "-v", "api"]
         }
     ]
 }

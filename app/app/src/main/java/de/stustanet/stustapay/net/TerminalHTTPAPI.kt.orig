@@ -59,8 +59,12 @@ class TerminalHTTPAPI @Inject constructor(
         }
     }
 
-    override suspend fun getHealthStatus(apiUrl: String): Response<HealthStatus> {
-        return client.get("health", basePath = apiUrl)
+    override suspend fun getHealthStatus(apiUrl: String): String {
+        val health: Response<HealthStatus> = client.get("health", basePath = apiUrl)
+        return when (health) {
+            is Response.OK -> health.data.status
+            is Response.Error -> health.msg()
+        }
     }
 
     override suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder> {

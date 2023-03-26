@@ -10,14 +10,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.order.OrderView
 import de.stustanet.stustapay.ui.QRScanView
-import de.stustanet.stustapay.ui.TestConnectionView
 import de.stustanet.stustapay.ui.chipstatus.ChipStatusView
+import de.stustanet.stustapay.ui.debug.DebugView
 import de.stustanet.stustapay.ui.deposit.DepositView
 import de.stustanet.stustapay.ui.nav.*
 import de.stustanet.stustapay.ui.settings.SettingsView
@@ -32,7 +33,7 @@ object RootNavDests {
     val qrscan = NavDest("qrscan")
     val chipstatus = NavDest("chipstatus")
     val settings = NavDest("settings")
-    val connTest = NavDest("connTest")
+    val debug = NavDest("debug")
 
     fun getRoutePropMap(): HashMap<String, NavDest> {
         val routePropMap = HashMap<String, NavDest>()
@@ -96,7 +97,7 @@ fun RootView(uictrl: SysUiController? = null) {
             SettingsView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.qrscan.route) { QRScanView() }
-        composable(RootNavDests.connTest.route) { TestConnectionView() }
+        composable(RootNavDests.debug.route) { DebugView(hiltViewModel()) }
         composable(RootNavDests.chipstatus.route) {
             NavScaffold(
                 title = { Text("StuStaPay") },

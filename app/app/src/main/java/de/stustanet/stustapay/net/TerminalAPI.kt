@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import de.stustanet.stustapay.model.HealthStatus
 import de.stustanet.stustapay.model.NewOrder
 import de.stustanet.stustapay.model.PendingOrder
 import de.stustanet.stustapay.model.TerminalRegistrationSuccess
@@ -35,7 +36,7 @@ sealed class Response<out T> {
 
         data class Exception(val throwable: Throwable) : Error() {
             override fun msg(): String {
-                return throwable.localizedMessage
+                return "Exception: ${throwable.localizedMessage}"
             }
         }
 
@@ -49,6 +50,11 @@ sealed class Response<out T> {
 
 
 interface TerminalAPI {
+    /**
+     * get health information at this api url.
+     */
+    suspend fun getHealthStatus(apiUrl: String): Response<HealthStatus>
+
     /**
      * Register this terminal to the core.
      */

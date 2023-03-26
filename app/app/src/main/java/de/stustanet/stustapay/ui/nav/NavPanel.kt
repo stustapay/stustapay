@@ -92,8 +92,8 @@ private fun getNavItems(): List<NavMenuItem> {
     itemsList.add(
         NavMenuItem(
             icon = Icons.Filled.Send,
-            label = "Test Connection",
-            navDestination = RootNavDests.connTest
+            label = "Debug",
+            navDestination = RootNavDests.debug
         )
     )
     itemsList.add(
