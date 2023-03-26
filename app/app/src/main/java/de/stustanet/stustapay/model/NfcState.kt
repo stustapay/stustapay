@@ -1,10 +1,12 @@
 package de.stustanet.stustapay.model
 
+import dagger.hilt.android.scopes.ActivityRetainedScoped
+import dagger.hilt.android.scopes.ActivityScoped
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton
+@ActivityRetainedScoped
 class NfcState @Inject constructor() {
     val scanRequest = MutableStateFlow(false)
     val writeRequest = MutableStateFlow(false)

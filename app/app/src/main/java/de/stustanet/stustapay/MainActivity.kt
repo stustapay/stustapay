@@ -23,16 +23,12 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), SysUiController {
-    @Inject
-    lateinit var nfcState: NfcState
-    private lateinit var nfcHandler: NfcHandler
-
+    @Inject lateinit var nfcHandler: NfcHandler
     val viewModel: MainActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        nfcHandler = NfcHandler(this, nfcState)
-        nfcHandler.onCreate()
+        nfcHandler.onCreate(this)
 
         setContent {
             Main(this)
@@ -42,26 +38,26 @@ class MainActivity : ComponentActivity(), SysUiController {
     public override fun onPause() {
         super.onPause()
 
-        nfcHandler.onPause()
+        nfcHandler.onPause(this)
     }
 
     public override fun onResume() {
         super.onResume()
 
-        nfcHandler.onResume()
+        nfcHandler.onResume(this)
     }
 
     public override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        if (intent.action == NfcAdapter.ACTION_TECH_DISCOVERED ||
+        if (intent.action == NfcAdapter.ACTION_TECH_DISCOVERED||
             intent.action == NfcAdapter.ACTION_TAG_DISCOVERED ||
             intent.action == NfcAdapter.ACTION_NDEF_DISCOVERED
         ) {
             @Suppress("DEPRECATION")
             val tag: Tag? = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
-                nfcHandler.handleTag(intent.action!!, tag)
+                nfcHandler.handleTag(tag)
             }
         }
     }

@@ -2,48 +2,56 @@ package de.stustanet.stustapay.nfc
 
 import android.app.Activity
 import android.app.PendingIntent
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.TagLostException
 import android.os.Build
 import android.widget.Toast
+import dagger.hilt.android.qualifiers.ActivityContext
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.ActivityRetainedScoped
 import de.stustanet.stustapay.model.NfcState
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-class NfcHandler(private var activity: Activity, private var nfcState: NfcState) {
-    private var intent: PendingIntent? = null
-    private var device: NfcAdapter? = null
+@ActivityRetainedScoped
+class NfcHandler @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val nfcState: NfcState
+) {
+    private lateinit var intent: PendingIntent
+    private lateinit var device: NfcAdapter
 
-    fun onCreate() {
+    fun onCreate(activity: Activity) {
         device = NfcAdapter.getDefaultAdapter(activity)
-        if (device != null) {
-            val topIntent = Intent(activity, activity.javaClass).apply {
-                addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            }
-
-            // intents are mutable by default up until SDK version R, so FLAG_MUTABLE is only
-            // necessary starting with SDK version S
-            val intentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                PendingIntent.FLAG_MUTABLE
-            } else {
-                0
-            }
-
-            intent = PendingIntent.getActivity(activity, 0, topIntent, intentFlags)
+        val topIntent = Intent(activity, activity.javaClass).apply {
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
+
+        // intents are mutable by default up until SDK version R, so FLAG_MUTABLE is only
+        // necessary starting with SDK version S
+        val intentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PendingIntent.FLAG_MUTABLE
+        } else {
+            0
+        }
+
+        intent = PendingIntent.getActivity(activity, 0, topIntent, intentFlags)
     }
 
-    fun onPause() {
-        device?.disableForegroundDispatch(activity)
+    fun onPause(activity: Activity) {
+        device.disableForegroundDispatch(activity)
     }
 
-    fun onResume() {
-        device?.enableForegroundDispatch(activity, intent, null, null)
+    fun onResume(activity: Activity) {
+        device.enableForegroundDispatch(activity, intent, null, null)
     }
 
-    fun handleTag(action: String, tag: Tag) {
+    fun handleTag(tag: Tag) {
         if (!nfcState.scanRequest.value) {
             return
         }
@@ -64,22 +72,22 @@ class NfcHandler(private var activity: Activity, private var nfcState: NfcState)
             }
 
             if (!tag.techList.contains("android.nfc.tech.NfcA")) {
-                Toast.makeText(activity, "Incompatible chip", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Incompatible chip", Toast.LENGTH_LONG).show()
                 nfcState.chipDataReady.update { true }
                 return
             }
 
             doScan(get(tag))
         } catch (e: TagLostException) {
-            Toast.makeText(activity, "Chip lost", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Chip lost", Toast.LENGTH_LONG).show()
             nfcState.chipDataReady.update { false }
         } catch (e: IOException) {
-            Toast.makeText(activity, "Chip lost", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Chip lost", Toast.LENGTH_LONG).show()
             nfcState.chipDataReady.update { false }
         }
     }
 
-    fun doScan(tag: MifareUltralightAES) {
+    private fun doScan(tag: MifareUltralightAES) {
         try {
             tag.connect()
             while (!tag.isConnected) {}
@@ -87,7 +95,7 @@ class NfcHandler(private var activity: Activity, private var nfcState: NfcState)
             nfcState.chipCompatible.update { true }
         } catch (e: Exception) {
             println(e)
-            Toast.makeText(activity, "Incompatible chip", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Incompatible chip", Toast.LENGTH_LONG).show()
             nfcState.chipDataReady.update { true }
             return
         }
@@ -98,7 +106,7 @@ class NfcHandler(private var activity: Activity, private var nfcState: NfcState)
             nfcState.chipAuthenticated.update { true }
         } catch (e: Exception) {
             println(e)
-            Toast.makeText(activity, "Authentication failed", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Authentication failed", Toast.LENGTH_LONG).show()
         }
 
         if (nfcState.writeRequest.value && (!nfcState.chipProtected.value || (nfcState.chipProtected.value && nfcState.chipAuthenticated.value))) {
