@@ -51,3 +51,11 @@ data class PendingOrder(
     val old_balance: Double,
     val new_balance: Double,
 )
+
+/**
+ * Error in the API request
+ */
+@Serializable
+data class Error(
+    val msg: String,
+)

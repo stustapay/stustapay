@@ -17,7 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun OrderSuccess(viewModel: OrderViewModel, onDismiss: () -> Unit) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.orderUiState.collectAsStateWithLifecycle()
     val totalCost = uiState.currentOrder.map {
         uiState.products[it.key]!!.price * it.value
     }.sum()

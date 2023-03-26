@@ -41,4 +41,10 @@ class RegistrationLocalDataSource @Inject constructor(
             pref[API_ENDPOINT] = registrationState.apiUrl
         }
     }
+
+    suspend fun delete() {
+        context.loginStore.edit { pref ->
+            pref.clear()
+        }
+    }
 }

@@ -6,29 +6,9 @@ import de.stustanet.stustapay.model.PendingOrder
 import de.stustanet.stustapay.model.RegistrationState
 import de.stustanet.stustapay.model.TerminalRegistrationSuccess
 import de.stustanet.stustapay.storage.RegistrationLocalDataSource
-import de.stustanet.stustapay.util.waitFor
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
-
-
-@Serializable
-data class RegistrationRequest(
-    val registration_uuid: String
-)
-
-@Serializable
-data class RegistrationResponse(
-    val token: String
-)
 
 
 /**
@@ -38,58 +18,54 @@ class TerminalHTTPAPI @Inject constructor(
     private val regLocalStatus: RegistrationLocalDataSource,
 ) : TerminalAPI {
 
-    private suspend fun getApiUrl(): String {
-        var url: String? = null
+    /**
+     * create a http client that can fetch base url and login token
+     * through our current api registration state.
+     */
+    private val client: HttpClient = HttpClient {
+        var regState = regLocalStatus.registrationState.first()
 
-        Log.i("stustapay", "getting api url...")
-
-        regLocalStatus.registrationState.waitFor { registerState ->
-            url = when (registerState) {
-                is RegistrationState.Registered -> {
-                    registerState.apiUrl
-                }
-                is RegistrationState.Error -> {
-                    null
-                }
+        var api: HttpClientTarget? = when (regState) {
+            null -> null
+            is RegistrationState.Registered -> {
+                HttpClientTarget(regState.apiUrl, regState.token)
             }
-            url != null
+            is RegistrationState.Error -> {
+                null
+            }
+            is RegistrationState.Pending -> {
+                null
+            }
         }
 
-        Log.i("stustapay", "got api url: $url")
-
-        return url!!
+        api
     }
 
+
+    /**
+     * register the terminal at the till.
+     * special implementation: we don't have an api endpoint or key yet,
+     * therefore the request has to be done manually.
+     */
     override suspend fun register(
         startApiUrl: String,
         registrationToken: String
-    ): TerminalRegistrationSuccess {
+    ): Response<TerminalRegistrationSuccess> {
         var apiUrl = startApiUrl.removeSuffix("/")
 
         Log.i("StuStaPay", "call to register: $apiUrl $registrationToken")
 
-        // TODO: handle returned errors
-        // the api returns null when there's no such auth token.
-        val response: TerminalRegistrationSuccess =
-            httpClient.post("${apiUrl}/auth/register_terminal") {
-                contentType(ContentType.Application.Json)
-                setBody(RegistrationRequest(registrationToken))
-            }.body()
+        @Serializable
+        data class RegistrationRequest(
+            val registration_uuid: String
+        )
 
-        return response
+        return client.post("auth/register_terminal", basePath = apiUrl) {
+            RegistrationRequest(registrationToken)
+        }
     }
 
-    override suspend fun createOrder(newOrder: NewOrder): PendingOrder {
-        val apiUrl = getApiUrl()
-
-        Log.i("StuStaPay", "call to createOrder: $apiUrl ${newOrder.customer_tag}")
-
-        val response: PendingOrder =
-            httpClient.post("${apiUrl}/order/create") {
-                contentType(ContentType.Application.Json)
-                setBody(newOrder)
-            }.body()
-
-        return response
+    override suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder> {
+        return client.post("order/create") { newOrder }
     }
 }

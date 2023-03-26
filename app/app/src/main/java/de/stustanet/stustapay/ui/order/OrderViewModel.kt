@@ -7,12 +7,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.NewLineItem
 import de.stustanet.stustapay.model.NewOrder
 import de.stustanet.stustapay.model.OrderType
+import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.OrderRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import java.util.SortedMap
 import javax.inject.Inject
 
 
@@ -43,7 +43,8 @@ data class OrderUiState(
 class OrderViewModel @Inject constructor(
     private val orderRepository: OrderRepository
 ) : ViewModel() {
-    private val _currentOrder = MutableStateFlow(mapOf<Int, Int>())
+    private val order = MutableStateFlow(mapOf<Int, Int>())
+    val status = MutableStateFlow("ready")
 
     private val products = mapOf<Int, TillProductButtonUI>(
         Pair(1, TillProductButtonUI(0, "Bier", 3.5, listOf(0, 10))),
@@ -54,7 +55,7 @@ class OrderViewModel @Inject constructor(
         Pair(11, TillProductButtonUI(11, "Pfand zurück", -2.0, listOf(11))),
     )
 
-    val uiState = _currentOrder.map { currentOrder ->
+    val orderUiState = order.map { currentOrder ->
         OrderUiState(
             currentOrder = currentOrder,
             products = products
@@ -66,35 +67,45 @@ class OrderViewModel @Inject constructor(
     )
 
     fun incrementOrderProduct(product: Int) {
-        if (_currentOrder.value.contains(product)) {
-            _currentOrder.value += Pair(product, _currentOrder.value[product]!! + 1)
+        if (order.value.contains(product)) {
+            order.value += Pair(product, order.value[product]!! + 1)
         } else {
-            _currentOrder.value += Pair(product, 1)
+            order.value += Pair(product, 1)
         }
     }
 
     fun decrementOrderProduct(product: Int) {
-        if (_currentOrder.value.contains(product)) {
-            if (_currentOrder.value[product]!! > 0) {
-                _currentOrder.value += Pair(product, _currentOrder.value[product]!! - 1)
+        if (order.value.contains(product)) {
+            if (order.value[product]!! > 0) {
+                order.value += Pair(product, order.value[product]!! - 1)
             }
         } else {
-            _currentOrder.value += Pair(product, 0)
+            order.value += Pair(product, 0)
         }
     }
 
     fun clearOrder() {
-        _currentOrder.value = HashMap()
+        order.value = HashMap()
     }
 
     suspend fun submitOrder() {
-        Log.i("stustapay", "orderviewmodel: submit order")
-        orderRepository.createOrder(
+        status.emit("submitting...")
+
+        val response = orderRepository.createOrder(
             newOrder = NewOrder(
+                // TODO: create real line items
                 positions = listOf(NewLineItem(0, 1)),
                 order_type = OrderType.sale,
                 customer_tag = 1337,
             )
         )
+        when (response) {
+            is Response.OK -> {
+                status.emit("created order id=${response.data.id}")
+            }
+            is Response.Error -> {
+                status.emit(response.msg())
+            }
+        }
     }
 }

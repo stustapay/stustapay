@@ -6,7 +6,8 @@ import android.util.Log
 import de.stustanet.stustapay.model.RegisterQRCodeContent
 import de.stustanet.stustapay.model.RegistrationState
 import de.stustanet.stustapay.model.TerminalRegistrationSuccess
-import de.stustanet.stustapay.net.RegistrationRemoteDataSource
+import de.stustanet.stustapay.net.Response
+import de.stustanet.stustapay.netsource.RegistrationRemoteDataSource
 import de.stustanet.stustapay.storage.RegistrationLocalDataSource
 import de.stustanet.stustapay.util.merge
 import io.ktor.utils.io.errors.*
@@ -31,6 +32,8 @@ class RegistrationRepository @Inject constructor(
     suspend fun register(
         qrcode_b64: String,
     ) {
+        localRegState.emit(RegistrationState.Pending("registering..."))
+
         val state = registerAsState(qrcode_b64)
 
         // only persist if registration was successful
@@ -39,6 +42,11 @@ class RegistrationRepository @Inject constructor(
         } else {
             localRegState.emit(state)
         }
+    }
+
+    suspend fun deregister() {
+        // TODO: maybe try to send a request to inform the server?
+        registrationLocalDataSource.delete()
     }
 
     private suspend fun registerAsState(qrcode_b64: String): RegistrationState {
@@ -57,23 +65,31 @@ class RegistrationRepository @Inject constructor(
                 )
             }
 
-            val registrationResult: TerminalRegistrationSuccess
-            try {
-                registrationResult = registrationRemoteDataSource.register(
-                    regCode.core_url,
-                    regCode.registration_uuid
-                )
-            } catch (e: IOException) {
-                return RegistrationState.Error(
-                    message = "error during io: ${e.localizedMessage}, endpoint=${regCode.core_url}",
-                )
+            val registrationResponse = registrationRemoteDataSource.register(
+                regCode.core_url,
+                regCode.registration_uuid
+            )
+
+            return when (registrationResponse) {
+                is Response.OK -> {
+                    RegistrationState.Registered(
+                        token = registrationResponse.data.token,
+                        apiUrl = regCode.core_url,
+                        message = "success",
+                    )
+                }
+                is Response.Error.Msg -> {
+                    RegistrationState.Error(
+                        message = "error: ${registrationResponse.msg}, endpoint=${regCode.core_url}, code=${registrationResponse.code}",
+                    )
+                }
+                is Response.Error.Exception -> {
+                    RegistrationState.Error(
+                        message = "exception: ${registrationResponse.throwable.localizedMessage}, endpoint=${regCode.core_url}",
+                    )
+                }
             }
 
-            return RegistrationState.Registered(
-                token = registrationResult.token,
-                apiUrl = regCode.core_url,
-                message = "success",
-            )
         } catch (e: Exception) {
             Log.e("StuStaPay", "exception during registration", e)
             return RegistrationState.Error(

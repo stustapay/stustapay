@@ -22,6 +22,32 @@ object TerminalAPIModule {
     }
 }
 
+
+/**
+ * communication api response result type.
+ * T: success type
+ * E: deserialized error body type
+ */
+sealed class Response<out T> {
+    data class OK<T>(val data: T) : Response<T>()
+    sealed class Error : Response<Nothing>() {
+        abstract fun msg(): String
+
+        data class Exception(val throwable: Throwable) : Error() {
+            override fun msg(): String {
+                return throwable.localizedMessage
+            }
+        }
+
+        data class Msg(val msg: String, val code: Int? = null) : Error() {
+            override fun msg(): String {
+                return msg
+            }
+        }
+    }
+}
+
+
 interface TerminalAPI {
     /**
      * Register this terminal to the core.
@@ -29,10 +55,10 @@ interface TerminalAPI {
     suspend fun register(
         startApiUrl: String,
         registrationToken: String
-    ): TerminalRegistrationSuccess
+    ): Response<TerminalRegistrationSuccess>
 
     /**
      * Create a new order, which is not yet booked.
      */
-    suspend fun createOrder(newOrder: NewOrder): PendingOrder
+    suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder>
 }

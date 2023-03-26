@@ -13,8 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import de.stustanet.stustapay.net.Network
+import de.stustanet.stustapay.net.HttpClient
+import de.stustanet.stustapay.net.Response
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 @Composable
 fun TestConnectionButton() {
@@ -43,5 +45,25 @@ fun TestConnectionView() {
 }
 
 suspend fun testConnection(ctx: Context) {
-    Toast.makeText(ctx, Network.getHealthStatus(), Toast.LENGTH_SHORT).show()
+    val httpClient = HttpClient() { null }
+
+    @Serializable
+    data class HealthStatus(val status: String)
+
+    val health: Response<HealthStatus> =
+        httpClient.get("health", basePath = "http://10.150.9.92:8080")
+
+    val result = when (health) {
+        is Response.OK -> {
+            "Status: ${health.data.status}"
+        }
+        is Response.Error.Msg -> {
+            "Error: ${health.msg}"
+        }
+        is Response.Error.Exception -> {
+            "Exception: ${health.throwable.localizedMessage}"
+        }
+    }
+
+    Toast.makeText(ctx, result, Toast.LENGTH_LONG).show()
 }
