@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui
+package de.stustanet.stustapay.ui.nav
 
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -7,6 +7,11 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.Composable
 import androidx.compose.material.TopAppBar as MaterialTopAppBar
+
+enum class TopAppBarIcon {
+    MENU,
+    BACK,
+}
 
 
 @Composable

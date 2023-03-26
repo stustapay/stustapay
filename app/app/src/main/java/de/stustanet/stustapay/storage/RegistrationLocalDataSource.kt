@@ -4,7 +4,9 @@ import androidx.datastore.core.DataStore
 import de.stustanet.stustapay.model.RegistrationState
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class RegistrationLocalDataSource @Inject constructor(
     private val regStateStore: DataStore<RegistrationState>
 ) {
@@ -12,5 +14,12 @@ class RegistrationLocalDataSource @Inject constructor(
 
     suspend fun setState(registrationState: RegistrationState.Registered) {
         regStateStore.updateData { registrationState }
+    }
+
+    suspend fun delete() {
+        regStateStore.updateData {
+            // TODO: can't we just clear the datastore??
+            RegistrationState.NotRegistered("deregistered")
+        }
     }
 }

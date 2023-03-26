@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.debug
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +12,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+<<<<<<< HEAD:app/app/src/main/java/de/stustanet/stustapay/ui/ConnectionTest.kt
+import de.stustanet.stustapay.net.HttpClient
+import de.stustanet.stustapay.net.Response
+=======
+>>>>>>> github/master:app/app/src/main/java/de/stustanet/stustapay/ui/debug/DebugView.kt
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 @Composable
 fun EndpointInput(viewModel: DebugViewModel?) {
@@ -44,4 +51,31 @@ fun DebugView(viewModel: DebugViewModel? = null) {
         EndpointInput(viewModel = viewModel)
         TestConnectionButton(viewModel)
     }
+<<<<<<< HEAD:app/app/src/main/java/de/stustanet/stustapay/ui/ConnectionTest.kt
+}
+
+suspend fun testConnection(ctx: Context) {
+    val httpClient = HttpClient() { null }
+
+    @Serializable
+    data class HealthStatus(val status: String)
+
+    val health: Response<HealthStatus> =
+        httpClient.get("health", basePath = "http://10.150.9.92:8080")
+
+    val result = when (health) {
+        is Response.OK -> {
+            "Status: ${health.data.status}"
+        }
+        is Response.Error.Msg -> {
+            "Error: ${health.msg}"
+        }
+        is Response.Error.Exception -> {
+            "Exception: ${health.throwable.localizedMessage}"
+        }
+    }
+
+    Toast.makeText(ctx, result, Toast.LENGTH_LONG).show()
+=======
+>>>>>>> github/master:app/app/src/main/java/de/stustanet/stustapay/ui/debug/DebugView.kt
 }

@@ -64,6 +64,10 @@ class CompletedOrder(BaseModel):
     new_balance: float
 
 
+class PendingOrder(CompletedOrder):
+    pass
+
+
 class Order(OrderBooking):
     """
     represents a completely finished order with all relevant data

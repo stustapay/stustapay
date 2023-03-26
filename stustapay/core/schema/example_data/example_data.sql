@@ -6,6 +6,7 @@
 begin;
 
 set plpgsql.extra_warnings to 'all';
+set datestyle to 'ISO';
 
 
 insert into user_tag (
@@ -127,11 +128,11 @@ insert into ordr (
 )
 values
     -- simple beer with deposit
-    (0, 2, 'done', '01.01.2023 15:34:17 UTC+1', '01.01.2023 15:35:02 UTC+1', 'token', 'sale', 0, 0, 200),
+    (0, 2, 'done', '2023-01-01 15:34:17 UTC+1', '2023-01-01 15:35:02 UTC+1', 'token', 'sale', 0, 0, 200),
     -- items with different tax rates
-    (1, 3, 'done', '02.01.2023 16:59:20 UTC+1', '02.01.2023 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201),
+    (1, 3, 'done', '2023-01-02 16:59:20 UTC+1', '2023-01-02 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201),
     -- Top Up EC
-    (2, 1, 'done', '01.01.2023 16:59:20 UTC+1', '01.01.2023 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201)
+    (2, 1, 'done', '2023-01-01 16:59:20 UTC+1', '2023-01-01 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201)
     on conflict do nothing;
 select setval('ordr_id_seq', 100);
 
@@ -156,14 +157,14 @@ insert into transaction (
 )
 values
     -- simple beer with deposit
-    (0, 0, null, 200, 0, '01.01.2023 15:35:01 UTC+1', 5.00, 0.19, 'ust'),
-    (1, 0, null, 200, 2, '01.01.2023 15:35:02 UTC+1', 2.00, 0.00, 'none'),
+    (0, 0, null, 200, 0, '2023-01-01 15:35:01 UTC+1', 5.00, 0.19, 'ust'),
+    (1, 0, null, 200, 2, '2023-01-01 15:35:02 UTC+1', 2.00, 0.00, 'none'),
     -- items with different tax rates
-    (2, 1, null, 201, 0, '02.01.2023 17:00:05 UTC+1', 10.00, 0.19, 'ust'),
-    (3, 1, null, 201, 2, '02.01.2023 17:00:06 UTC+1', 4.00, 0.00, 'none'),
-    (4, 1, null, 201, 2, '02.01.2023 17:00:07 UTC+1', 2.00, 0.07, 'eust'),
+    (2, 1, null, 201, 0, '2023-01-02 17:00:05 UTC+1', 10.00, 0.19, 'ust'),
+    (3, 1, null, 201, 2, '2023-01-02 17:00:06 UTC+1', 4.00, 0.00, 'none'),
+    (4, 1, null, 201, 2, '2023-01-02 17:00:07 UTC+1', 2.00, 0.07, 'eust'),
     -- Top Up EC
-    (5, 2, null, 3, 201, '01.01.2023 17:00:06 UTC+1', 20.00, 0.00, 'none')
+    (5, 2, null, 3, 201, '2023-01-01 17:00:06 UTC+1', 20.00, 0.00, 'none')
     on conflict do nothing;
 select setval('transaction_id_seq', 100);
 
@@ -171,7 +172,7 @@ insert into bon (
     id, generated, generated_at, error, output_file
 )
 values
-    (0, true, '01.01.2023 15:34:57 UTC+1', null, null),
+    (0, true, '2023-01-01 15:34:57 UTC+1', null, null),
     (1, false, null, null, null)
     -- transaction 2 would not need a bon, as it is a top up
     on conflict do nothing;

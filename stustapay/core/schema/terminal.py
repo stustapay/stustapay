@@ -17,3 +17,8 @@ class TerminalConfig(BaseModel):
     user_privileges: Optional[list[Privilege]]
     allow_top_up: bool
     buttons: Optional[list[TillButton]]
+
+
+class TerminalRegistrationSuccess(BaseModel):
+    till: Till
+    token: str

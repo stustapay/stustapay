@@ -17,12 +17,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import de.stustanet.stustapay.model.NfcState
 import de.stustanet.stustapay.nfc.NfcHandler
 import de.stustanet.stustapay.ui.Main
+import de.stustanet.stustapay.util.SysUiController
 import javax.inject.Inject
 
-interface SysUiController {
-    fun hideSystemUI()
-    fun showSystemUI()
-}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), SysUiController {
@@ -61,6 +58,7 @@ class MainActivity : ComponentActivity(), SysUiController {
             intent.action == NfcAdapter.ACTION_TAG_DISCOVERED ||
             intent.action == NfcAdapter.ACTION_NDEF_DISCOVERED
         ) {
+            @Suppress("DEPRECATION")
             val tag: Tag? = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
                 nfcHandler.handleTag(intent.action!!, tag)

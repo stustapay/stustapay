@@ -24,12 +24,19 @@ object RegistrationStateSerializer : Serializer<RegistrationState> {
     override suspend fun readFrom(input: InputStream): RegistrationState {
         return try {
             val regState = RegistrationStateProto.parseFrom(input);
-            RegistrationState.Registered(
-                regState.authToken,
-                regState.apiEndpoint,
-                "in local storage")
+            if (regState.registered) {
+                RegistrationState.Registered(
+                    regState.authToken,
+                    regState.apiEndpoint,
+                    "in local storage"
+                )
+            } else {
+                RegistrationState.NotRegistered(
+                    "not registered"
+                )
+            }
         } catch (exception: InvalidProtocolBufferException) {
-            RegistrationState.Error("data in local storage corrupted")
+            RegistrationState.Error("invalid data in local storage")
         }
     }
 
@@ -40,6 +47,10 @@ object RegistrationStateSerializer : Serializer<RegistrationState> {
                     .setApiEndpoint(t.apiUrl)
                     .setAuthToken(t.token)
                     .build()
+                regState.writeTo(output);
+            }
+            is RegistrationState.NotRegistered -> {
+                val regState = RegistrationStateProto.newBuilder().clear().setRegistered(true).build()
                 regState.writeTo(output);
             }
             else -> {
