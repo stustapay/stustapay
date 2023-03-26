@@ -4,6 +4,7 @@ option java_package = "de.stustanet.stustapay.proto";
 option java_multiple_files = true;
 
 message RegistrationStateProto {
-  string apiEndpoint = 1;
-  string authToken = 2;
+  bool registered = 1;
+  string apiEndpoint = 2;
+  string authToken = 3;
 }

@@ -32,7 +32,7 @@ class RegistrationRepository @Inject constructor(
     suspend fun register(
         qrcode_b64: String,
     ) {
-        localRegState.emit(RegistrationState.Pending("registering..."))
+        localRegState.emit(RegistrationState.NotRegistered("registering..."))
 
         val state = registerAsState(qrcode_b64)
 

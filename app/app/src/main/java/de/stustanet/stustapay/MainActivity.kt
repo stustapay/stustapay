@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity(), SysUiController {
             intent.action == NfcAdapter.ACTION_TAG_DISCOVERED ||
             intent.action == NfcAdapter.ACTION_NDEF_DISCOVERED
         ) {
+            @Suppress("DEPRECATION")
             val tag: Tag? = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
                 nfcHandler.handleTag(intent.action!!, tag)

@@ -22,14 +22,13 @@ class TerminalHTTPAPI @Inject constructor(
         var regState = regLocalStatus.registrationState.first()
 
         var api: HttpClientTarget? = when (regState) {
-            null -> null
             is RegistrationState.Registered -> {
                 HttpClientTarget(regState.apiUrl, regState.token)
             }
             is RegistrationState.Error -> {
                 null
             }
-            is RegistrationState.Pending -> {
+            is RegistrationState.NotRegistered -> {
                 null
             }
         }

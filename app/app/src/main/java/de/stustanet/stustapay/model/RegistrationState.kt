@@ -8,7 +8,7 @@ sealed interface RegistrationState {
         var message: String? = null,
     ) : RegistrationState
 
-    data class Pending(
+    data class NotRegistered(
         var message: String
     ) : RegistrationState
 

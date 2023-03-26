@@ -17,8 +17,9 @@ class RegistrationLocalDataSource @Inject constructor(
     }
 
     suspend fun delete() {
-        context.loginStore.edit { pref ->
-            pref.clear()
+        regStateStore.updateData {
+            // TODO: can't we just clear the datastore??
+            RegistrationState.NotRegistered("deregistered")
         }
     }
 }

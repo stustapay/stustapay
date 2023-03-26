@@ -73,7 +73,7 @@ private fun registrationUiState(
                                 message = registerState.message,
                             )
                         }
-                        is RegistrationState.Pending -> {
+                        is RegistrationState.NotRegistered -> {
                             RegistrationUiState.Error(
                                 message = registerState.message,
                             )
