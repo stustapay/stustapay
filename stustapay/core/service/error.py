@@ -16,7 +16,7 @@ class NotFoundException(ServiceException):
 
 
 class InvalidArgumentException(ServiceException):
-    # raised, when the argument error cannot be cached with pydantic, e.g. because of database constraints
+    # raised, when the argument error cannot be caught with pydantic, e.g. because of database constraints
     id = "InvalidArgument"
     description = "The provided data did not match internal constraints"
 

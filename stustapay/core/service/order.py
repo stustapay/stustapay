@@ -185,9 +185,20 @@ class OrderService(DBService):
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
-    async def show_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
-        # TODO: restrict this s.t. only orders for this terminal and this cashier can be fetched
-        return await self._fetch_order(conn=conn, order_id=order_id)
+    async def show_order(self, *, conn: asyncpg.Connection, current_user: User, order_id: int) -> Optional[Order]:
+        order = await self._fetch_order(conn=conn, order_id=order_id)
+        if order is not None and order.cashier_id == current_user.id:
+            return order
+        return None
+
+    @with_db_transaction
+    @requires_terminal([Privilege.cashier])
+    async def list_orders_terminal(self, *, conn: asyncpg.Connection, current_user: User) -> list[Order]:
+        cursor = conn.cursor("select * from order_value where ordr.cashier_id = $1", current_user.id)
+        result = []
+        async for row in cursor:
+            result.append(Order.parse_obj(row))
+        return result
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])

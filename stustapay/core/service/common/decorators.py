@@ -37,6 +37,11 @@ def with_db_transaction(func):
 
 
 def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
+    """
+    Check if a user is logged in via a user jwt token and has ALL provided privileges
+    Sets the arguments current_user in the wrapped function
+    """
+
     def f(func):
         @wraps(func)
         async def wrapper(self, **kwargs):
@@ -80,6 +85,12 @@ def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
 
 
 def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
+    """
+    Check if a terminal is logged in via a provided terminal jwt token
+    Further, if privileges are provided, checks if a user is logged in and if it has ALL provided privileges
+    Sets the arguments current_terminal and current_user in the wrapped function
+    """
+
     def f(func):
         @wraps(func)
         async def wrapper(self, **kwargs):

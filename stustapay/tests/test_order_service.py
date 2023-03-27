@@ -67,7 +67,7 @@ class OrderLogicTest(BaseTestCase):
                 tse_id=None,
                 active_shift=None,
                 active_profile_id=self.till_profile.id,
-                active_user_id=None,
+                active_user_id=self.cashier.id,
             ),
         )
         # login in cashier to till
@@ -81,7 +81,6 @@ class OrderLogicTest(BaseTestCase):
         await self.user_service.link_user_to_cashier_account(
             token=self.admin_token, user_id=self.cashier.id, account_id=cashier_account_id
         )
-        await self.till_service.login_cashier(token=self.terminal_token, tag_uid=54321)
         # add customer
         user_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (1234) returning id")
         await self.db_conn.fetchval(

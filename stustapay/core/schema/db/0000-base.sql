@@ -419,6 +419,7 @@ create table if not exists lineitem (
     product_id int not null references product(id) on delete restrict,
 
     quantity int not null default 1,
+    constraint quantity_positive check ( quantity > 0 ),
 
     -- price with tax
     price numeric not null,

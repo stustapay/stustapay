@@ -11,7 +11,7 @@ from stustapay.core.service.order import OrderService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
-from stustapay.terminalserver.router import auth, base, live, order
+from stustapay.terminalserver.router import auth, base, live, order, user
 from stustapay.terminalserver.router_mock.base import router as mock_base_router
 
 
@@ -47,6 +47,7 @@ class Api(SubCommand):
             self.server.add_router(live.router)
             self.server.add_router(order.router)
             self.server.add_router(auth.router)
+            self.server.add_router(user.router)
 
     async def run(self):
         if self.mock:

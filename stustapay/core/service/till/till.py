@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 from stustapay.core.config import Config
 from stustapay.core.schema.terminal import TerminalConfig, Terminal, TerminalRegistrationSuccess
 from stustapay.core.schema.till import Till, NewTill, TillButton, TillProfile
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.common.dbservice import (
     DBService,
 )
@@ -17,6 +17,7 @@ from stustapay.core.service.common.decorators import (
     requires_user_privileges,
     requires_terminal,
 )
+from stustapay.core.service.error import NotFoundException
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.user import UserService
@@ -132,6 +133,17 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
+    async def logout_terminal_id(self, *, conn: asyncpg.Connection, till_id: int) -> bool:
+        id_ = await conn.fetchval(
+            "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
+            till_id,
+        )
+        if id_ is None:
+            raise NotFoundException(element_typ="till", element_id=str(till_id))
+        return True
+
+    @with_db_transaction
+    @requires_terminal()
     async def logout_terminal(self, *, conn: asyncpg.Connection, current_terminal: Terminal) -> bool:
         id_ = await conn.fetchval(
             "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
@@ -157,17 +169,69 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def login_cashier(self, *, conn: asyncpg.Connection, current_terminal: Terminal, tag_uid: int) -> bool:
-        # TODO: once proper token uid authentication is in place use that here
-        user_id = await conn.fetchval(
-            "select usr.id from usr join user_tag t on t.id = usr.user_tag_id where t.uid = $1",
-            tag_uid,
+    async def login_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal, user_tag: int) -> User:
+        """
+        Login a User to the terminal, but only if the correct permissions exists:
+        wants to login | allowed to log in
+        official       | always
+        cashier        | only if official is logged in
+
+        where officials are admins and finanzorgas
+
+        returns the newly logged-in User if successful
+        """
+        row = await conn.fetchrow(
+            "select u.* from usr_with_privileges as u join user_tag t on t.id = u.user_tag_id where t.uid = $1",
+            user_tag,
         )
-        if user_id is None:
-            return False
+        if row is None:
+            raise NotFoundException(element_typ="user_tag", element_id=str(user_tag))
+        new_user = User.parse_obj(row)
+
+        row = await conn.fetchrow(
+            "select * from usr_with_privileges where id = $1",
+            current_terminal.till.active_user_id,
+        )
+        current_user = None if row is None else User.parse_obj(row)
+
+        # check if login allowed
+        officials = {Privilege.admin, Privilege.finanzorga}
+        if officials & set(new_user.privileges):
+            # Admin and Finanzorga can always log in
+            pass
+        elif Privilege.cashier in new_user.privileges:
+            if not current_user or not {Privilege.admin, Privilege.finanzorga} & set(current_user.privileges):
+                # TODO better exception type needed
+                raise PermissionError("Cashiers are only allowed to login, when an orga is logged beforehand")
 
         t_id = await conn.fetchval(
-            "update till set active_user_id = $1 where id = $2 returning id", user_id, current_terminal.till.id
+            "update till set active_user_id = $1 where id = $2 returning id", new_user.id, current_terminal.till.id
+        )
+        if t_id is None:
+            # should not happen
+            raise NotFoundException(element_typ="till", element_id=str(current_terminal.till.id))
+        return new_user
+
+    @with_db_transaction
+    @requires_terminal()
+    async def get_current_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal) -> Optional[User]:
+        row = await conn.fetchrow(
+            "select * from usr_with_privileges where id = $1",
+            current_terminal.till.active_user_id,
+        )
+        if row is None:
+            return None
+        return User.parse_obj(row)
+
+    @with_db_transaction
+    @requires_terminal()
+    async def logout_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal) -> bool:
+        """
+        Logout the currently logged-in user. This is always possible
+        """
+
+        t_id = await conn.fetchval(
+            "update till set active_user_id = null where id = $1 returning id", current_terminal.till.id
         )
         return t_id is not None
 

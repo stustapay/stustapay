@@ -156,3 +156,13 @@ class TillServiceTest(BaseTestCase):
         terminal_config = await self.till_service.get_terminal_config(token=terminal_token)
         self.assertEqual(terminal_config.id, till.id)
         self.assertEqual(len(terminal_config.buttons), 1)
+
+        # logout till from terminal
+        logged_out = await self.till_service.logout_terminal(token=terminal_token)
+        self.assertTrue(logged_out)
+
+        # logout till from admin
+        till = await self.till_service.get_till(token=self.admin_token, till_id=till.id)
+        await self.till_service.register_terminal(registration_uuid=till.registration_uuid)
+        logged_out = await self.till_service.logout_terminal_id(token=self.admin_token, till_id=till.id)
+        self.assertTrue(logged_out)
