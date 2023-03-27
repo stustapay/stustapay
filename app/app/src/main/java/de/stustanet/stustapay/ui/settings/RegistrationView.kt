@@ -1,12 +1,13 @@
 package de.stustanet.stustapay.ui.settings
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -26,7 +27,8 @@ import kotlinx.coroutines.launch
 fun RegistrationOverview(
     scope: CoroutineScope,
     navController: NavController,
-    registrationUiState: RegistrationUiState
+    registrationUiState: RegistrationUiState,
+    deregister: () -> Unit,
 ) {
 
     PrefGroup(title = { Text("Server Connection") }) {
@@ -48,7 +50,6 @@ fun RegistrationOverview(
         }
 
         Column {
-
             Text(
                 text = message!!,
                 modifier = Modifier.padding(start = 15.dp, end = 10.dp)
@@ -62,12 +63,54 @@ fun RegistrationOverview(
         Spacer(modifier = Modifier.height(15.dp))
 
         Row {
-            Button(modifier = Modifier.padding(start = 10.dp, end = 10.dp), onClick = {
-                scope.launch {
-                    navController.navigate("scan")
+            if (registrationUiState is Registered) {
+                var showConfirmDeregister by remember { mutableStateOf(false) }
+                if (showConfirmDeregister) {
+                    AlertDialog(
+                        title = {
+                            Text(text = "Deregister Terminal")
+                        },
+                        text = {
+                            Text("Do you really want do remove the terminal's server association?")
+                        },
+                        onDismissRequest = { showConfirmDeregister = false },
+                        confirmButton = {
+                            Button(
+                                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                                onClick = {
+                                    deregister()
+                                }) {
+                                Text("Yes")
+                            }
+                        },
+                        dismissButton = {
+                            Button(
+                                onClick = {
+                                    showConfirmDeregister = false
+                                }) {
+                                Text("Abort deregistration")
+                            }
+                        }
+                    )
                 }
-            }) {
-                Text(text = "Scan Registration QR Code")
+
+                Button(
+                    modifier = Modifier.padding(start = 10.dp, end = 10.dp),
+                    onClick = {
+                        showConfirmDeregister = true
+                    },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
+                ) {
+                    Text(text = "Deregister Terminal")
+                }
+            } else {
+                Button(modifier = Modifier.padding(start = 10.dp, end = 10.dp), onClick = {
+                    scope.launch {
+                        navController.navigate("scan")
+                    }
+                }) {
+                    Text(text = "Scan Registration QR Code")
+                }
             }
         }
     }
@@ -95,11 +138,12 @@ fun RegistrationView(viewModel: RegistrationViewModel = hiltViewModel()) {
             RegistrationOverview(
                 scope = scope,
                 navController = navController,
-                registrationUiState = registrationUiState
+                registrationUiState = registrationUiState,
+                deregister = { scope.launch { viewModel.deregister() } }
             )
         }
         composable("scan") {
-            QRScanView {qrcode ->
+            QRScanView { qrcode ->
                 scope.launch {
                     viewModel.register(qrcode)
                 }

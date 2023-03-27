@@ -1,9 +1,6 @@
-package de.stustanet.stustapay.ui
+package de.stustanet.stustapay.ui.root
 
-data class NavDest(
-    val route: String,
-    val showNavbar: Boolean = true
-)
+import de.stustanet.stustapay.ui.nav.NavDest
 
 /** root views (opened by navigation drawer) */
 object RootNavDests {

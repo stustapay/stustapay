@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui
+package de.stustanet.stustapay.ui.nav
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.Scaffold

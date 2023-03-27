@@ -4,7 +4,8 @@ from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
-from stustapay.core.service.till.till import TillRegistrationSuccess
+from stustapay.core.schema.terminal import TerminalRegistrationSuccess
+
 
 router = APIRouter(
     prefix="/auth",
@@ -14,13 +15,13 @@ router = APIRouter(
 
 
 @dataclass
-class TillRegistrationPayload:
+class TerminalRegistrationPayload:
     registration_uuid: str
 
 
-@router.post("/register_terminal", summary="Register a new Terminal", response_model=TillRegistrationSuccess)
+@router.post("/register_terminal", summary="Register a new Terminal", response_model=TerminalRegistrationSuccess)
 async def register_terminal(
-    payload: TillRegistrationPayload,
+    payload: TerminalRegistrationPayload,
     till_service: ContextTillService,
 ):
     result = await till_service.register_terminal(registration_uuid=payload.registration_uuid)

@@ -6,14 +6,8 @@ from jose import JWTError, jwt
 from pydantic import BaseModel, ValidationError
 
 from stustapay.core.config import Config
-from stustapay.core.service.error import NotFoundException
-from stustapay.core.schema.terminal import TerminalConfig, Terminal
-from stustapay.core.schema.till import (
-    Till,
-    NewTill,
-    TillButton,
-    TillProfile,
-)
+from stustapay.core.schema.terminal import TerminalConfig, Terminal, TerminalRegistrationSuccess
+from stustapay.core.schema.till import Till, NewTill, TillButton, TillProfile
 from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.common.dbservice import (
     DBService,
@@ -23,6 +17,7 @@ from stustapay.core.service.common.decorators import (
     requires_user_privileges,
     requires_terminal,
 )
+from stustapay.core.service.error import NotFoundException
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.user import UserService
@@ -31,11 +26,6 @@ from stustapay.core.service.user import UserService
 class TokenMetadata(BaseModel):
     till_id: int
     session_uuid: uuid.UUID
-
-
-class TillRegistrationSuccess(BaseModel):
-    till: Till
-    token: str
 
 
 class TillService(DBService):
@@ -128,7 +118,7 @@ class TillService(DBService):
     @with_db_transaction
     async def register_terminal(
         self, *, conn: asyncpg.Connection, registration_uuid: str
-    ) -> Optional[TillRegistrationSuccess]:
+    ) -> Optional[TerminalRegistrationSuccess]:
         row = await conn.fetchrow("select * from till where registration_uuid = $1", registration_uuid)
         if row is None:
             return None
@@ -139,7 +129,7 @@ class TillService(DBService):
             till.id,
         )
         token = self._create_access_token(till_id=till.id, session_uuid=session_uuid)
-        return TillRegistrationSuccess(till=till, token=token)
+        return TerminalRegistrationSuccess(till=till, token=token)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
