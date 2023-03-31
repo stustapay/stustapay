@@ -431,6 +431,35 @@ create table if not exists lineitem (
     -- todo: voucher amount
 );
 
+create or replace function order_updated() returns trigger as
+$$
+begin
+    -- A deletion should only be able to occur for uncommitted revisions
+    if NEW is null then
+        return null;
+    end if;
+    perform pg_notify(
+        'order',
+        json_build_object(
+            'order_id', NEW.id,
+            'order_uuid', NEW.uuid,
+            'cashier_id', NEW.cashier_id,
+            'till_id', NEW.till_id,
+            'status', NEW.status
+        )::text
+    );
+
+    return null;
+end;
+$$ language plpgsql;
+
+drop trigger if exists order_updated_trigger on ordr;
+create trigger order_updated_trigger
+    after insert or update
+    on ordr
+    for each row
+execute function order_updated();
+
 create or replace view lineitem_tax as
     select
         l.*,

@@ -25,7 +25,7 @@ export const OrderList: React.FC = () => {
       field: "id",
       headerName: t("orderId") as string,
       type: "number",
-      width: 50,
+      width: 100,
     },
     {
       field: "status",
@@ -35,7 +35,19 @@ export const OrderList: React.FC = () => {
     {
       field: "payment_method",
       headerName: t("orderPaymentMethod") as string,
-      width: 50,
+      width: 150,
+    },
+    {
+      field: "created_at",
+      headerName: t("orderCreatedAt") as string,
+      type: "dateTime",
+      flex: 1,
+    },
+    {
+      field: "finished_at",
+      headerName: t("orderFinishedAt") as string,
+      type: "dateTime",
+      flex: 1,
     },
     // {
     //   field: "actions",

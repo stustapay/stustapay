@@ -10,7 +10,7 @@ import asyncpg
 from stustapay.bon.config import Config
 from stustapay.bon.pdflatex import pdflatex
 from stustapay.core.database import create_db_pool
-from stustapay.core.dbhook import DBHook
+from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
