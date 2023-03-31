@@ -19,15 +19,12 @@ class NewLineItem(BaseModel):
 
     # for products with a fixed price, the quantity must be specified
     # for products with variable price the used price must be set
-    quantity: Optional[int]
-    price: Optional[float]
+    quantity: Optional[int] = None
+    price: Optional[float] = None
 
     # check for new Items if either quantity or price is set
     @root_validator
     def check_quantity_or_price_set(cls, values):  # pylint: disable=no-self-argument
-        if cls == LineItem:
-            # only check for new line item
-            return values
         quantity, price = values.get("quantity"), values.get("price")
         if (quantity is None) == (price is None):
             raise ValueError("either price or quantity must be set")
@@ -40,9 +37,11 @@ class NewOrder(BaseModel):
     customer_tag: int
 
 
-class LineItem(NewLineItem):
+class LineItem(BaseModel):
+    product_id: int
     order_id: int
     item_id: int
+    quantity: int
     product: Product
     price: float
     total_price: float

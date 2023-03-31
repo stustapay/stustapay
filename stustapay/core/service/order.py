@@ -1,3 +1,4 @@
+import json
 import logging
 from collections import defaultdict
 from typing import Dict, Optional, Set, Tuple
@@ -17,8 +18,10 @@ from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Ord
 from stustapay.core.schema.tax_rate import TAX_NONE
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
+from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction, requires_terminal, requires_user_privileges
+from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.service.error import NotFoundException, ServiceException, InvalidArgumentException
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
@@ -56,6 +59,43 @@ class OrderService(DBService):
         super().__init__(db_pool, config)
         self.user_service = user_service
         self.till_service = till_service
+
+        self.admin_order_update_queues: set[Subscription] = set()
+
+    async def run(self):
+        async with self.db_pool.acquire() as conn:
+            order_hook = DBHook(connection=conn, channel="order", event_handler=self._handle_order_update)
+            await order_hook.run()
+
+    async def _propagate_order_update(self, order: Order):
+        for queue in self.admin_order_update_queues:
+            queue.queue.put_nowait(order)
+
+    async def _handle_order_update(self, payload: Optional[str]):
+        if payload is None:
+            return
+
+        try:
+            json_payload = json.loads(payload)
+            async with self.db_pool.acquire() as conn:
+                async with conn.transaction():
+                    order = await self._fetch_order(conn=conn, order_id=json_payload["order_id"])
+                    if order:
+                        await self._propagate_order_update(order=order)
+        except:  # pylint: disable=bare-except
+            return
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def register_for_order_updates(self, conn: asyncpg.Connection) -> Subscription:
+        del conn  # unused
+
+        def on_unsubscribe(subscription):
+            self.admin_order_update_queues.remove(subscription)
+
+        subscription = Subscription(on_unsubscribe)
+        self.admin_order_update_queues.add(subscription)
+        return subscription
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
@@ -153,7 +193,7 @@ class OrderService(DBService):
         # check order type specific requirements
         if new_order.order_type == OrderType.sale:
             if customer_account.balance < order.value_sum:
-                raise NotEnoughFundsException(needed_fund=order.value_sum, available_fund=customer.balance)
+                raise NotEnoughFundsException(needed_fund=order.value_sum, available_fund=customer_account.balance)
             new_balance = customer_account.balance - order.value_sum
 
         elif new_order.order_type == OrderType.topup_sumup or new_order.order_type == OrderType.topup_cash:

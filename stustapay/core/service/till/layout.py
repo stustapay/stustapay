@@ -46,6 +46,7 @@ class TillLayoutService(DBService):
         result = []
         async for row in cursor:
             result.append(TillButton.parse_obj(row))
+
         return result
 
     @with_db_transaction

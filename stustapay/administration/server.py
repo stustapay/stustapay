@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from stustapay.core.config import Config
@@ -58,6 +59,9 @@ class Api(SubCommand):
 
         user_service = UserService(db_pool=db_pool, config=self.cfg)
         till_service = TillService(db_pool=db_pool, config=self.cfg, user_service=user_service)
+        order_service = OrderService(
+            db_pool=db_pool, config=self.cfg, user_service=user_service, till_service=till_service
+        )
 
         context = Context(
             config=self.cfg,
@@ -68,11 +72,9 @@ class Api(SubCommand):
             till_service=till_service,
             config_service=ConfigService(db_pool=db_pool, config=self.cfg, user_service=user_service),
             account_service=AccountService(db_pool=db_pool, config=self.cfg, user_service=user_service),
-            order_service=OrderService(
-                db_pool=db_pool, config=self.cfg, user_service=user_service, till_service=till_service
-            ),
+            order_service=order_service,
         )
         try:
-            await self.server.run(self.cfg, context)
+            await asyncio.gather(self.server.run(self.cfg, context), order_service.run())
         finally:
             await db_pool.close()

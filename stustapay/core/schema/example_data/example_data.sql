@@ -28,19 +28,20 @@ values
     (101, null, 'internal', 'Rucksack 0', 'Finanzer-rucksack', 200.00),
 
     -- guests (which would need token IDs)
-    (200, 0, 'private', 'Guest 0', 'Token Balance of Guest 0', 20.00),
-    (201, 1, 'private', 'Guest 1', 'Token Balance of Guest 1', 300.20)
+    (200, 0, 'private', 'Guest 0', 'Token Balance of Guest 0', 2000000.00),
+    (201, 1, 'private', 'Guest 1', 'Token Balance of Guest 1', 30000000.20)
     on conflict do nothing;
 select setval('account_id_seq', 300);
 
 
 insert into usr (
-    id, name, password, description, transport_account_id, cashier_account_id
+    id, name, password, description, transport_account_id, cashier_account_id, user_tag_id
 )
 values
-    (0, 'Test Cashier', 'password', 'Some Description', null, 100),
     -- password is admin
-    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W' , null, null, null)
+    (0, 'test-cashier', null, 'Some Description', null, 100, 0),
+    -- password is admin
+    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W' , null, null, null, null)
     on conflict do nothing;
 select setval('usr_id_seq', 100);
 
@@ -49,7 +50,8 @@ insert into usr_privs (
     usr, priv
 )
 values
-    (1, 'admin')
+    (1, 'admin'),
+    (0, 'cashier')
     on conflict do nothing;
 
 
@@ -97,6 +99,21 @@ values
     (14, 'under_18')
     on conflict do nothing;
 
+insert into till_button (
+    id, name
+) values
+    (0, 'Helles 0,5l'),
+    (1, 'Helles 1,0l');
+select setval('till_button_id_seq', 100);
+
+insert into till_button_product (
+    button_id, product_id
+)  values
+    (0, 1),
+    (0, 10),
+    (1, 0),
+    (1, 10);
+
 insert into till_layout (
     id, name, description
 )
@@ -104,6 +121,12 @@ values
     (0, 'Bierkasse', 'Allgemeine Bierkasse')
 on conflict do nothing;
 select setval('till_layout_id_seq', 100);
+
+insert into till_layout_to_button (
+    layout_id, button_id, sequence_number
+) values
+    (0, 0, 0),
+    (0, 1, 1);
 
 insert into till_profile (
     id, name, description, layout_id

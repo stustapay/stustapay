@@ -14,6 +14,7 @@ def with_db_connection(func):
             return await func(self, **kwargs)
 
         async with self.db_pool.acquire() as conn:
+            # leads to slow queries in some cases
             await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
 
             return await func(self, conn=conn, **kwargs)
@@ -28,6 +29,7 @@ def with_db_transaction(func):
             return await func(self, **kwargs)
 
         async with self.db_pool.acquire() as conn:
+            # leads to slow queries in some cases
             await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
 
             async with conn.transaction():
