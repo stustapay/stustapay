@@ -16,13 +16,13 @@ class ChipScanState (
 ) {
     suspend fun scan(prompt: String = "Scan a chip") {
         this.prompt = prompt
-        _scan()
         drawerState.open()
+        _scan()
     }
 
     suspend fun close() {
-        _close()
         drawerState.close()
+        _close()
     }
 
     fun getDrawerState(): DrawerState {

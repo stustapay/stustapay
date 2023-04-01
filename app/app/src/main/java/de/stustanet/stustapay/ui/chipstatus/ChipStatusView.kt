@@ -38,15 +38,8 @@ fun ChipStatusView(viewModel: ChipStatusViewModel = hiltViewModel()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Switch(checked = uiState.writeRequest, onCheckedChange = { viewModel.write(it) })
-                Text("Enable writing")
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Switch(checked = uiState.protectRequest, onCheckedChange = { viewModel.protect(it) })
-                Text("Protect chip")
+                Switch(checked = uiState.cmacEnabled, onCheckedChange = { viewModel.cmac(it) })
+                Text("Enable CMAC authentication")
             }
 
             Row(
@@ -54,6 +47,27 @@ fun ChipStatusView(viewModel: ChipStatusViewModel = hiltViewModel()) {
             ) {
                 Switch(checked = uiState.enableDebugCard, onCheckedChange = { viewModel.debug(it) })
                 Text("Enable debug chip")
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Switch(checked = uiState.writeRequest, onCheckedChange = { viewModel.write(it) })
+                Text("Enable writing")
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Switch(checked = uiState.protectRequest, onCheckedChange = { viewModel.writeProtect(it) })
+                Text("Write chip protection")
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Switch(checked = uiState.cmacRequest, onCheckedChange = { viewModel.writeCmac(it) })
+                Text("Write CMAC enable")
             }
 
             Text("Content")

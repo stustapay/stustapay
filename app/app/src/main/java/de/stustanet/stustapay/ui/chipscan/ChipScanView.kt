@@ -39,7 +39,7 @@ fun ChipScanView(
                     }
 
                     onScan(uiState.uid)
-                    LaunchedEffect(state) {
+                    LaunchedEffect(state, uiState) {
                         state.close()
                     }
                 } else {

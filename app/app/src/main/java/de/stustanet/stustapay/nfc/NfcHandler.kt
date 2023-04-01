@@ -102,7 +102,7 @@ class NfcHandler @Inject constructor(
         }
 
         try {
-            tag.authenticate(nfcState.key.value, MifareUltralightAES.KeyType.DATA_PROT_KEY)
+            tag.authenticate(nfcState.key.value, MifareUltralightAES.KeyType.DATA_PROT_KEY, nfcState.cmacEnabled.value)
 
             nfcState.chipAuthenticated.update { true }
         } catch (e: Exception) {
@@ -117,6 +117,7 @@ class NfcHandler @Inject constructor(
             } else {
                 tag.setAuth0(0x3c)
             }
+            tag.setCMAC(nfcState.cmacRequest.value)
 
             val data = ByteArray(14 * 4)
             val sig = "StuStaPay - built by SSN & friends!\nglhf ;)\n".toByteArray(Charset.forName("UTF-8"))

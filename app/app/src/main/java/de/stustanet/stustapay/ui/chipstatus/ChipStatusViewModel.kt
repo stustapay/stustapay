@@ -15,7 +15,9 @@ class ChipStatusViewModel @Inject constructor(
     private val _scanRequest = nfcState.scanRequest
     private val _writeRequest = nfcState.writeRequest
     private val _protectRequest = nfcState.protectRequest
+    private val _cmacRequest = nfcState.cmacRequest
 
+    private val _cmacEnabled = nfcState.cmacEnabled
     private val _enableDebugCard = nfcState.enableDebugCard
 
     private val _chipDataReady = nfcState.chipDataReady
@@ -29,6 +31,8 @@ class ChipStatusViewModel @Inject constructor(
         _scanRequest,
         _writeRequest,
         _protectRequest,
+        _cmacRequest,
+        _cmacEnabled,
         _enableDebugCard,
         _chipDataReady,
         _chipCompatible,
@@ -36,11 +40,13 @@ class ChipStatusViewModel @Inject constructor(
         _chipProtected,
         _chipUid,
         _chipContent
-    ) { scanRequest, writeRequest, protectRequest, enableDebugCard, dataReady, compatible, authenticated, protected, uid, content ->
+    ) { scanRequest, writeRequest, protectRequest, cmacRequest, cmacEnabled, enableDebugCard, dataReady, compatible, authenticated, protected, uid, content ->
         ChipStatusUiState (
             scanRequest = scanRequest,
             writeRequest = writeRequest,
             protectRequest = protectRequest,
+            cmacRequest = cmacRequest,
+            cmacEnabled = cmacEnabled,
             enableDebugCard = enableDebugCard,
             dataReady = dataReady,
             compatible = compatible,
@@ -63,8 +69,16 @@ class ChipStatusViewModel @Inject constructor(
         _writeRequest.update { req }
     }
 
-    fun protect(req: Boolean) {
+    fun writeProtect(req: Boolean) {
         _protectRequest.update { req }
+    }
+
+    fun writeCmac(req: Boolean) {
+        _cmacRequest.update { req }
+    }
+
+    fun cmac(req: Boolean) {
+        _cmacEnabled.update { req }
     }
 
     fun debug(req: Boolean) {
@@ -80,6 +94,8 @@ data class ChipStatusUiState(
     val scanRequest: Boolean = false,
     val writeRequest: Boolean = false,
     val protectRequest: Boolean = false,
+    val cmacRequest: Boolean = false,
+    val cmacEnabled: Boolean = false,
     val enableDebugCard: Boolean = false,
     val dataReady: Boolean = false,
     val compatible: Boolean = false,
