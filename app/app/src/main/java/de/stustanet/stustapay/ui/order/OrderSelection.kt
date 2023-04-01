@@ -7,6 +7,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -23,11 +24,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun OrderSelection(
     viewModel: OrderViewModel,
     onAbort: () -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    fetch: () -> Unit
 ) {
     val orderUiState by viewModel.orderUiState.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
+
+    /**
+     * Fetch Terminal Config on startup.
+     */
+    LaunchedEffect(true) {
+        fetch()
+    }
 
     Scaffold(
         topBar = {

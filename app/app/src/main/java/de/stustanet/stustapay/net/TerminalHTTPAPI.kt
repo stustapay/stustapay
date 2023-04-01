@@ -65,4 +65,8 @@ class TerminalHTTPAPI @Inject constructor(
     override suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder> {
         return client.post("order/create") { newOrder }
     }
+
+    override suspend fun getTerminalConfig(): Response<TerminalConfig> {
+        return client.get("config")
+    }
 }

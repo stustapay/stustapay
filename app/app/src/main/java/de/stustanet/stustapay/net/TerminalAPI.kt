@@ -4,10 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import de.stustanet.stustapay.model.HealthStatus
-import de.stustanet.stustapay.model.NewOrder
-import de.stustanet.stustapay.model.PendingOrder
-import de.stustanet.stustapay.model.TerminalRegistrationSuccess
+import de.stustanet.stustapay.model.*
 import de.stustanet.stustapay.storage.RegistrationLocalDataSource
 import java.util.*
 import javax.inject.Singleton
@@ -67,4 +64,9 @@ interface TerminalAPI {
      * Create a new order, which is not yet booked.
      */
     suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder>
+
+    /**
+     * Get the button configuration of the terminal.
+     */
+    suspend fun getTerminalConfig(): Response<TerminalConfig>
 }

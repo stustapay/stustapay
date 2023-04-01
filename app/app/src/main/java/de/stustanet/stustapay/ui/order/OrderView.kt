@@ -33,7 +33,12 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                     scope.launch {
                         Log.i("stustapay", "submit order")
                         viewModel.submitOrder()
-                        //scanning = true
+                        //chipScanState.scan("--total cost--€\nScan a chip")
+                    }
+                },
+                fetch = {
+                    scope.launch {
+                        viewModel.fetchConfig()
                     }
                 }
             )
