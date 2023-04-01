@@ -10,13 +10,13 @@ from stustapay.core.schema.till import (
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction, requires_user_privileges
-from stustapay.core.service.user import UserService
+from stustapay.core.service.user import AuthService
 
 
 class TillProfileService(DBService):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, user_service: UserService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
-        self.user_service = user_service
+        self.auth_service = auth_service
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])

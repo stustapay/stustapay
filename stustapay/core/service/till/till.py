@@ -2,39 +2,27 @@ import uuid
 from typing import Optional
 
 import asyncpg
-from jose import JWTError, jwt
-from pydantic import BaseModel, ValidationError
 
 from stustapay.core.config import Config
-from stustapay.core.schema.terminal import TerminalConfig, Terminal, TerminalRegistrationSuccess
-from stustapay.core.schema.till import Till, NewTill, TillButton, TillProfile
+from stustapay.core.schema.terminal import Terminal, TerminalConfig, TerminalRegistrationSuccess
+from stustapay.core.schema.till import NewTill, Till, TillButton, TillProfile
 from stustapay.core.schema.user import Privilege, User
-from stustapay.core.service.common.dbservice import (
-    DBService,
-)
-from stustapay.core.service.common.decorators import (
-    with_db_transaction,
-    requires_user_privileges,
-    requires_terminal,
-)
+from stustapay.core.service.auth import TerminalTokenMetadata
+from stustapay.core.service.common.dbservice import DBService
+from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
 from stustapay.core.service.error import NotFoundException
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
-from stustapay.core.service.user import UserService
-
-
-class TokenMetadata(BaseModel):
-    till_id: int
-    session_uuid: uuid.UUID
+from stustapay.core.service.user import AuthService
 
 
 class TillService(DBService):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, user_service: UserService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
-        self.user_service = user_service
+        self.auth_service = auth_service
 
-        self.profile = TillProfileService(db_pool, config, user_service)
-        self.layout = TillLayoutService(db_pool, config, user_service)
+        self.profile = TillProfileService(db_pool, config, auth_service)
+        self.layout = TillLayoutService(db_pool, config, auth_service)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -100,21 +88,6 @@ class TillService(DBService):
         )
         return result != "DELETE 0"
 
-    def _create_access_token(self, till_id: int, session_uuid: uuid.UUID):
-        to_encode = {"till_id": till_id, "session_uuid": str(session_uuid)}
-        encoded_jwt = jwt.encode(to_encode, self.cfg.core.secret_key, algorithm=self.cfg.core.jwt_token_algorithm)
-        return encoded_jwt
-
-    def _decode_jwt_payload(self, token: str) -> Optional[TokenMetadata]:
-        try:
-            payload = jwt.decode(token, self.cfg.core.secret_key, algorithms=[self.cfg.core.jwt_token_algorithm])
-            try:
-                return TokenMetadata.parse_obj(payload)
-            except ValidationError:
-                return None
-        except JWTError:
-            return None
-
     @with_db_transaction
     async def register_terminal(
         self, *, conn: asyncpg.Connection, registration_uuid: str
@@ -128,7 +101,9 @@ class TillService(DBService):
             "returning session_uuid",
             till.id,
         )
-        token = self._create_access_token(till_id=till.id, session_uuid=session_uuid)
+        token = self.auth_service.create_terminal_access_token(
+            TerminalTokenMetadata(till_id=till.id, session_uuid=session_uuid)
+        )
         return TerminalRegistrationSuccess(till=till, token=token)
 
     @with_db_transaction
@@ -150,22 +125,6 @@ class TillService(DBService):
             current_terminal.till.id,
         )
         return id_ is not None
-
-    @with_db_transaction
-    async def get_terminal_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[Terminal]:
-        token_payload = self._decode_jwt_payload(token)
-        if token_payload is None:
-            return None
-
-        row = await conn.fetchrow(
-            "select * from till where id = $1 and session_uuid = $2",
-            token_payload.till_id,
-            token_payload.session_uuid,
-        )
-        if row is None:
-            return None
-
-        return Terminal(till=Till.parse_obj(row))
 
     @with_db_transaction
     @requires_terminal()

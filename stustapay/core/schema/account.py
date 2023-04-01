@@ -1,3 +1,4 @@
+import enum
 from typing import Optional
 
 from pydantic import BaseModel
@@ -13,6 +14,12 @@ ACCOUNT_DEPOSIT = 2
 ACCOUNT_SUMUP = 3
 ACCOUNT_CASH_VAULT = 4
 ACCOUNT_IMBALANCE = 5
+
+
+class AccountType(enum.Enum):
+    virtual = "virtual"
+    internal = "internal"
+    private = "private"
 
 
 def get_source_account(order_type: OrderType, product: Product, customer_account: int):
@@ -40,7 +47,7 @@ def get_target_account(order_type: OrderType, product: Product, customer_account
 class Account(BaseModel):
     id: int
     user_tag_id: Optional[int]
-    type: str
+    type: AccountType
     name: Optional[str]
     comment: Optional[str]
     balance: float

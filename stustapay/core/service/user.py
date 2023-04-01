@@ -1,19 +1,17 @@
+# pylint: disable=unexpected-keyword-arg
 from typing import Optional
 
 import asyncpg
-from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.schema.user import Privilege, User, UserWithoutId
+from stustapay.core.schema.account import AccountType
+from stustapay.core.schema.user import NewUser, Privilege, User, UserWithoutId
+from stustapay.core.service.auth import AuthService, UserTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user_privileges, with_db_transaction
-
-
-class TokenMetadata(BaseModel):
-    user_id: int
-    session_id: int
+from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
+from stustapay.core.service.error import NotFoundException
 
 
 class UserLoginSuccess(BaseModel):
@@ -22,8 +20,9 @@ class UserLoginSuccess(BaseModel):
 
 
 class UserService(DBService):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
+        self.auth_service = auth_service
 
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -41,11 +40,14 @@ class UserService(DBService):
             hashed_password = self._hash_password(password)
 
         user_id = await conn.fetchval(
-            "insert into usr (name, description, password, user_tag_id) values ($1, $2, $3, $4) returning id",
+            "insert into usr (name, description, password, user_tag_id, transport_account_id, cashier_account_id) "
+            "values ($1, $2, $3, $4, $5, $6) returning id",
             new_user.name,
             new_user.description,
             hashed_password,
-            new_user.user_tag,
+            new_user.user_tag_id,
+            new_user.transport_account_id,
+            new_user.cashier_account_id,
         )
 
         for privilege in new_user.privileges:
@@ -68,6 +70,84 @@ class UserService(DBService):
         return await self._create_user(conn=conn, new_user=new_user, password=password)
 
     @with_db_transaction
+    @requires_terminal([Privilege.admin])
+    async def create_cashier(self, *, conn: asyncpg.Connection, current_user: User, new_user: NewUser) -> User:
+        user = await self.create_user_with_tag(current_user=current_user, conn=conn, new_user=new_user)
+        user = await self.promote_to_cashier(current_user=current_user, conn=conn, user_id=user.id)
+        return user
+
+    @with_db_transaction
+    @requires_terminal([Privilege.admin])
+    async def create_finanzorga(self, *, conn: asyncpg.Connection, current_user: User, new_user: NewUser) -> User:
+        user = await self.create_user_with_tag(current_user=current_user, conn=conn, new_user=new_user)
+        user = await self.promote_to_cashier(current_user=current_user, conn=conn, user_id=user.id)
+        user = await self.promote_to_finanzorga(current_user=current_user, conn=conn, user_id=user.id)
+        return user
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def create_user_with_tag(self, *, conn: asyncpg.Connection, new_user: NewUser) -> User:
+        """
+        Create a user at a Terminal, where a name and the user tag must be provided
+        If a user with the given tag already exists, this user is returned, without updating the name
+
+        returns the created user
+        """
+        user_tag_id = await conn.fetchval("select id from user_tag where uid = $1", new_user.user_tag)
+        if user_tag_id is None:
+            raise NotFoundException(element_typ="user_tag", element_id=str(new_user.user_tag))
+
+        existing_user = await conn.fetchrow("select * from usr_with_privileges where user_tag_id = $1", user_tag_id)
+        if existing_user is not None:
+            # ignore the name provided in new_user
+            return User.parse_obj(existing_user)
+
+        user = UserWithoutId(
+            name=new_user.name,
+            privileges=[],
+            user_tag_id=user_tag_id,
+        )
+        return await self._create_user(conn=conn, new_user=user)
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def promote_to_cashier(self, *, conn: asyncpg.Connection, user_id: int) -> User:
+        user = await self._get_user(conn=conn, user_id=user_id)
+        if user is None:
+            raise NotFoundException(element_typ="user", element_id=str(user_id))
+
+        if Privilege.cashier in user.privileges:
+            return user
+
+        # create cashier account
+        user.cashier_account_id = await conn.fetchval(
+            "insert into account (type, name) values ($1, $2) returning id",
+            AccountType.internal.value,
+            f"Cashier account for {user.name}",
+        )
+        user.privileges.append(Privilege.cashier)
+        return await self._update_user(conn=conn, user_id=user.id, user=user)
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def promote_to_finanzorga(self, *, conn: asyncpg.Connection, user_id: int) -> User:
+        user = await self._get_user(conn=conn, user_id=user_id)
+        if user is None:
+            raise NotFoundException(element_typ="user", element_id=str(user_id))
+
+        if Privilege.finanzorga in user.privileges:
+            return user
+
+        # create backpack account
+        user.transport_account_id = await conn.fetchval(
+            "insert into account (type, name) values ($1, $2) returning id",
+            AccountType.internal.value,
+            f"Transport account for finanzorga {user.name}",
+        )
+        user.privileges.append(Privilege.finanzorga)
+        return await self._update_user(conn=conn, user_id=user.id, user=user)
+
+    @with_db_transaction
     @requires_user_privileges([Privilege.admin])
     async def list_users(self, *, conn: asyncpg.Connection) -> list[User]:
         cursor = conn.cursor("select * from usr_with_privileges")
@@ -76,31 +156,43 @@ class UserService(DBService):
             result.append(User.parse_obj(row))
         return result
 
+    async def _get_user(self, conn: asyncpg.Connection, user_id: int) -> User:
+        row = await conn.fetchrow("select * from usr_with_privileges where id = $1", user_id)
+        if row is None:
+            raise NotFoundException(element_typ="user", element_id=str(user_id))
+        return User.parse_obj(row)
+
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
     async def get_user(self, *, conn: asyncpg.Connection, user_id: int) -> Optional[User]:
+        return await self._get_user(conn, user_id)
+
+    async def _update_user(self, *, conn: asyncpg.Connection, user_id: int, user: UserWithoutId) -> User:
         row = await conn.fetchrow(
-            "select * from usr_with_privileges where id = $1",
+            "update usr "
+            "set name = $2, description = $3, user_tag_id = $4, transport_account_id = $5, cashier_account_id = $6 "
+            "where id = $1 returning id",
             user_id,
+            user.name,
+            user.description,
+            user.user_tag_id,
+            user.transport_account_id,
+            user.cashier_account_id,
         )
         if row is None:
-            return None
+            raise NotFoundException(element_typ="user", element_id=str(user_id))
 
-        return User.parse_obj(row)
+        # Update privileges
+        await conn.execute("delete from usr_privs where usr = $1", user_id)
+        for privilege in user.privileges:
+            await conn.execute("insert into usr_privs (usr, priv) values ($1, $2)", user_id, privilege.value)
+
+        return await self._get_user(conn, user_id)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
     async def update_user(self, *, conn: asyncpg.Connection, user_id: int, user: UserWithoutId) -> Optional[User]:
-        row = await conn.fetchrow(
-            "update usr set name = $2, description = $3 where id = $1 returning id, name, description",
-            user_id,
-            user.name,
-            user.description,
-        )
-        if row is None:
-            return None
-
-        return User.parse_obj(row)
+        return await self._update_user(conn=conn, user_id=user_id, user=user)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -148,7 +240,7 @@ class UserService(DBService):
         user = User.parse_obj(row)
 
         session_id = await conn.fetchval("insert into usr_session (usr) values ($1) returning id", user.id)
-        token = self._create_access_token(user_id=user.id, session_id=session_id)
+        token = self.auth_service.create_user_access_token(UserTokenMetadata(user_id=user.id, session_id=session_id))
         return UserLoginSuccess(
             user=user,
             token=token,
@@ -157,7 +249,7 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user_privileges()
     async def logout_user(self, *, conn: asyncpg.Connection, current_user: User, token: str) -> bool:
-        token_payload = self._decode_jwt_payload(token)
+        token_payload = self.auth_service.decode_user_jwt_payload(token)
         if token_payload is None:
             return False
 
@@ -168,36 +260,3 @@ class UserService(DBService):
             "delete from usr_session where usr = $1 and id = $2", current_user.id, token_payload.session_id
         )
         return result != "DELETE 0"
-
-    @with_db_transaction
-    async def get_user_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[User]:
-        token_payload = self._decode_jwt_payload(token)
-        if token_payload is None:
-            return None
-
-        row = await conn.fetchrow(
-            "select u.*, s.id as session_id "
-            "from usr_with_privileges u join usr_session s on u.id = s.usr "
-            "where u.id = $1 and s.id = $2",
-            token_payload.user_id,
-            token_payload.session_id,
-        )
-        if row is None:
-            return None
-
-        return User.parse_obj(row)
-
-    def _create_access_token(self, user_id: int, session_id: int):
-        to_encode = {"user_id": user_id, "session_id": session_id}
-        encoded_jwt = jwt.encode(to_encode, self.cfg.core.secret_key, algorithm=self.cfg.core.jwt_token_algorithm)
-        return encoded_jwt
-
-    def _decode_jwt_payload(self, token: str) -> Optional[TokenMetadata]:
-        try:
-            payload = jwt.decode(token, self.cfg.core.secret_key, algorithms=[self.cfg.core.jwt_token_algorithm])
-            try:
-                return TokenMetadata.parse_obj(payload)
-            except ValidationError:
-                return None
-        except JWTError:
-            return None

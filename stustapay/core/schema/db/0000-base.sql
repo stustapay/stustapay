@@ -4,6 +4,7 @@
 -- stustapay core database
 --
 -- (c) 2022-2023 Jonas Jelten <jj@sft.lol>
+-- (c) 2022-2023 Leo Fahrbach <leo.fahrbach@stusta.de>
 --
 -- targets >=postgresql-13
 --
@@ -106,7 +107,7 @@ values
 -- bookkeeping account
 create table if not exists account (
     id bigserial not null primary key,
-    user_tag_id bigint references user_tag(id) on delete cascade,
+    user_tag_id bigint unique references user_tag(id) on delete cascade,
     type text not null references account_type(name) on delete restrict,
     constraint private_account_requires_user_tag check (user_tag_id is not null = (type = 'private')),
     name text,
@@ -142,7 +143,7 @@ create table if not exists usr (
     password text,
     description text,
 
-    user_tag_id bigint references user_tag(id) on delete restrict,
+    user_tag_id bigint unique references user_tag(id) on delete restrict,
 
     -- account for orgas to transport cash from one location to another
     transport_account_id bigint references account(id) on delete restrict,
@@ -179,7 +180,8 @@ values
 
 create table if not exists usr_privs (
     usr int not null references usr(id) on delete cascade,
-    priv text not null references privilege(name) on delete cascade
+    priv text not null references privilege(name) on delete cascade,
+    primary key (usr, priv)
 );
 
 create or replace view usr_with_privileges as (

@@ -11,11 +11,16 @@ class Privilege(enum.Enum):
     cashier = "cashier"
 
 
+class NewUser(BaseModel):
+    name: str
+    user_tag: int
+
+
 class UserWithoutId(BaseModel):
     name: str
     privileges: list[Privilege]
     description: Optional[str]
-    user_tag: Optional[int] = None
+    user_tag_id: Optional[int] = None
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None
 
