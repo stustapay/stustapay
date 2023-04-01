@@ -1,19 +1,18 @@
 package de.stustanet.stustapay.ui.order
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustanet.stustapay.model.NewLineItem
-import de.stustanet.stustapay.model.NewOrder
-import de.stustanet.stustapay.model.OrderType
+import de.stustanet.stustapay.model.*
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.OrderRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import de.stustanet.stustapay.repository.TerminalConfigRepository
+import de.stustanet.stustapay.util.Result
+import de.stustanet.stustapay.util.asResult
+import kotlinx.coroutines.flow.*
+import java.lang.Thread.State
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 
 /**
@@ -41,30 +40,22 @@ data class OrderUiState(
 
 @HiltViewModel
 class OrderViewModel @Inject constructor(
-    private val orderRepository: OrderRepository
+    private val orderRepository: OrderRepository,
+    private val terminalConfigRepository: TerminalConfigRepository
 ) : ViewModel() {
     private val order = MutableStateFlow(mapOf<Int, Int>())
     val status = MutableStateFlow("ready")
-
-    private val products = mapOf<Int, TillProductButtonUI>(
-        Pair(1, TillProductButtonUI(0, "Bier", 3.5, listOf(0, 10))),
-        Pair(1, TillProductButtonUI(1, "Mass", 6.0, listOf(1, 10))),
-        Pair(2, TillProductButtonUI(2, "Weißbier", 3.5, listOf(2, 10))),
-        Pair(3, TillProductButtonUI(3, "Radler", 3.5, listOf(3, 10))),
-        Pair(4, TillProductButtonUI(4, "Spezi", 3.5, listOf(4, 10))),
-        Pair(11, TillProductButtonUI(11, "Pfand zurück", -2.0, listOf(11))),
-    )
-
-    val orderUiState = order.map { currentOrder ->
-        OrderUiState(
-            currentOrder = currentOrder,
-            products = products
-        )
-    }.stateIn(
+    val orderUiState: StateFlow<OrderUiState> = terminalUiConfigState(
+        terminalConfigRepository = terminalConfigRepository
+    ).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = OrderUiState()
     )
+
+    suspend fun fetchConfig() {
+        terminalConfigRepository.fetchConfig()
+    }
 
     fun incrementOrderProduct(product: Int) {
         if (order.value.contains(product)) {
@@ -108,4 +99,54 @@ class OrderViewModel @Inject constructor(
             }
         }
     }
+
+
+    private fun terminalUiConfigState(
+        terminalConfigRepository: TerminalConfigRepository,
+    ): Flow<OrderUiState> {
+        val terminalConfigState: Flow<TerminalConfigState> =
+            terminalConfigRepository.terminalConfigState
+
+        return terminalConfigState.asResult()
+            .map { terminalConfigStateResult ->
+                when (terminalConfigStateResult) {
+                    is Result.Success -> {
+                        when (val orderUiState = terminalConfigStateResult.data) {
+                            is TerminalConfigState.Success -> {
+                                status.emit("Terminal config fetched.")
+                                OrderUiState(
+                                    currentOrder = mapOf<Int, Int>(),
+                                    products = orderUiState.config.buttons?.map {
+                                        Pair(it.id, TillProductButtonUI(id=it.id, caption = it.name, price = it.price, products = it.product_ids))
+                                    }?.toMap() ?: mapOf()
+                                )
+                            }
+                            is TerminalConfigState.Error -> {
+                                status.emit(orderUiState.message)
+                                OrderUiState(
+                                    currentOrder = mapOf<Int, Int>(),
+                                    products = mapOf<Int, TillProductButtonUI>()
+                                )
+                            }
+                        }
+                    }
+
+                    is Result.Loading -> {
+                        status.emit("Loading")
+                        OrderUiState(
+                            currentOrder = mapOf<Int, Int>(),
+                            products = mapOf<Int, TillProductButtonUI>()
+                        )
+                    }
+
+                    is Result.Error -> {
+                        status.emit("Error")
+                        OrderUiState(
+                            currentOrder = mapOf<Int, Int>(),
+                            products = mapOf<Int, TillProductButtonUI>()
+                        )
+                    }
+                }
+            }
+        }
 }
