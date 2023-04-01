@@ -1,6 +1,8 @@
-package de.stustanet.stustapay.ui.chipstatus
+package de.stustanet.stustapay.ui.debug
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,20 +16,31 @@ import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
 
 @Preview
 @Composable
-fun ChipStatusView(viewModel: ChipStatusViewModel = hiltViewModel()) {
+fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var scanViewUid by remember { mutableStateOf(0uL) }
     var scanViewOpen by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
-    Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
-        Text(text = "Scan Settings", fontSize = 24.sp)
+    Column(modifier = Modifier
+        .padding(16.dp)
+        .fillMaxSize()
+        .verticalScroll(state = scrollState)
+    ) {
+        Text(text = "Scan View", fontSize = 24.sp)
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+        Button(
+            onClick = { scanViewOpen = true },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Switch(checked = uiState.scanRequest, onCheckedChange = { viewModel.scan(it) })
-            Text("Enable scanning")
+            Text("Open Scan View")
         }
+
+        val uid = scanViewUid
+        Text("UID: $uid")
+
+        Spacer(modifier = Modifier.height(32.dp))
+        Text(text = "Global Settings", fontSize = 24.sp)
 
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -41,6 +54,16 @@ fun ChipStatusView(viewModel: ChipStatusViewModel = hiltViewModel()) {
         ) {
             Switch(checked = uiState.enableDebugCard, onCheckedChange = { viewModel.debug(it) })
             Text("Enable debug chip")
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+        Text(text = "Scan Settings", fontSize = 24.sp)
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Switch(checked = uiState.scanRequest, onCheckedChange = { viewModel.scan(it) })
+            Text("Enable scanning")
         }
 
         Row(
@@ -101,19 +124,6 @@ fun ChipStatusView(viewModel: ChipStatusViewModel = hiltViewModel()) {
                 Text("Scan a chip")
             }
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(text = "Scan View", fontSize = 24.sp)
-
-        Button(
-            onClick = { scanViewOpen = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Test scan view")
-        }
-
-        val uid = scanViewUid
-        Text("UID: $uid")
     }
 
     if (scanViewOpen) {

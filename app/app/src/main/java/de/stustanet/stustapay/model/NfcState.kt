@@ -15,7 +15,7 @@ class NfcState @Inject constructor() {
 
     val key = MutableStateFlow(ByteArray(16) { i -> i.toByte() })
     val enableDebugCard = MutableStateFlow(false)
-    val cmacEnabled = MutableStateFlow(false)
+    val cmacEnabled = MutableStateFlow(true)
 
     val chipDataReady = MutableStateFlow(false)
     val chipCompatible = MutableStateFlow(false)

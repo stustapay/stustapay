@@ -51,8 +51,6 @@ class ChipScanViewModel @Inject constructor(
         _protectRequest.update { false }
         _cmacRequest.update { false }
 
-        _cmacEnabled.update { true }
-
         _chipDataReady.update { false }
         _chipCompatible.update { false }
         _chipAuthenticated.update { false }
@@ -66,8 +64,6 @@ class ChipScanViewModel @Inject constructor(
         _writeRequest.update { false }
         _protectRequest.update { false }
         _cmacRequest.update { false }
-
-        _cmacEnabled.update { false }
 
         _chipDataReady.update { false }
         _chipCompatible.update { false }

@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.chipstatus
+package de.stustanet.stustapay.ui.debug
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +9,7 @@ import javax.inject.Inject
 import de.stustanet.stustapay.util.combine
 
 @HiltViewModel
-class ChipStatusViewModel @Inject constructor(
+class NfcDebugViewModel @Inject constructor(
     nfcState: NfcState
 ) : ViewModel() {
     private val _scanRequest = nfcState.scanRequest
@@ -27,7 +27,7 @@ class ChipStatusViewModel @Inject constructor(
     private val _chipUid = nfcState.chipUid
     private val _chipContent = nfcState.chipContent
 
-    val uiState: StateFlow<ChipStatusUiState> = combine(
+    val uiState: StateFlow<NfcDebugUiState> = combine(
         _scanRequest,
         _writeRequest,
         _protectRequest,
@@ -41,7 +41,7 @@ class ChipStatusViewModel @Inject constructor(
         _chipUid,
         _chipContent
     ) { scanRequest, writeRequest, protectRequest, cmacRequest, cmacEnabled, enableDebugCard, dataReady, compatible, authenticated, protected, uid, content ->
-        ChipStatusUiState (
+        NfcDebugUiState (
             scanRequest = scanRequest,
             writeRequest = writeRequest,
             protectRequest = protectRequest,
@@ -58,7 +58,7 @@ class ChipStatusViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ChipStatusUiState()
+        initialValue = NfcDebugUiState()
     )
 
     fun scan(req: Boolean) {
@@ -90,7 +90,7 @@ class ChipStatusViewModel @Inject constructor(
     }
 }
 
-data class ChipStatusUiState(
+data class NfcDebugUiState(
     val scanRequest: Boolean = false,
     val writeRequest: Boolean = false,
     val protectRequest: Boolean = false,

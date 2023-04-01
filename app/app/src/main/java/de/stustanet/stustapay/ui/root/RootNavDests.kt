@@ -8,7 +8,6 @@ object RootNavDests {
     val ordering = NavDest("ordering", showNavbar = false)
     val deposit = NavDest("deposit", showNavbar = false)
     val qrscan = NavDest("qrscan")
-    val chipstatus = NavDest("chipstatus")
     val settings = NavDest("settings")
     val debug = NavDest("debug")
 
