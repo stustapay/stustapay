@@ -5,9 +5,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -20,66 +18,70 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.stustanet.stustapay.ui.chipscan.ChipScanView
-import kotlinx.coroutines.launch
+import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
 
 @Preview
 @Composable
 fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val nav = rememberNavController()
-    val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
+    var scanning by remember { mutableStateOf(false) }
 
     val amount = uiState.currentAmount.toFloat() / 100
 
     NavHost(navController = nav, startDestination = "main") {
         composable("main") {
-            ChipScanView(onScan = { uid ->
-                // TODO: Connect to DB
-                if (amount < 10) {
-                    nav.navigate("success") { launchSingleTop = true }
-                } else {
-                    nav.navigate("failure") { launchSingleTop = true }
-                }
-            }) { chipScanState ->
-                Scaffold(
-                    content = { paddingValues ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(bottom = paddingValues.calculateBottomPadding()),
-                            horizontalAlignment = Alignment.CenterHorizontally
+            Scaffold(
+                content = { paddingValues ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = paddingValues.calculateBottomPadding()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier.height(200.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier.height(200.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "$amount€", fontSize = 72.sp)
-                            }
-                            DepositKeyboard(
-                                onDigit = { viewModel.inputDigit(it) },
-                                onClear = { viewModel.clear() }
-                            )
+                            Text(text = "$amount€", fontSize = 72.sp)
+                        }
+                        DepositKeyboard(
+                            onDigit = { viewModel.inputDigit(it) },
+                            onClear = { viewModel.clear() }
+                        )
+                    }
+                },
+                bottomBar = {
+                    Row() {
+                        Button(
+                            onClick = {
+                                scanning = true
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(70.dp)
+                                .padding(10.dp)
+                        ) {
+                            Text(text = "✓")
+                        }
+                    }
+                }
+            )
+
+            if (scanning) {
+                ChipScanDialog(
+                    onScan = { uid ->
+                        // TODO: Connect to DB
+                        if (amount < 10) {
+                            nav.navigate("success") { launchSingleTop = true }
+                        } else {
+                            nav.navigate("failure") { launchSingleTop = true }
                         }
                     },
-                    bottomBar = {
-                        Row() {
-                            Button(
-                                onClick = {
-                                    scope.launch {
-                                        chipScanState.scan("$amount€\nScan a chip")
-                                    }
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(70.dp)
-                                    .padding(10.dp)
-                            ) {
-                                Text(text = "✓")
-                            }
-                        }
+                    onDismissRequest = {
+                        scanning = false
                     }
                 )
             }
@@ -132,7 +134,10 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
                             nav.navigate("main") { launchSingleTop = true }
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
-                        modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .padding(10.dp)
                     ) {
                         Text(text = "Next")
                     }
