@@ -17,7 +17,7 @@ import androidx.navigation.NavHostController
 import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
-fun DepositSuccess(nav: NavHostController, viewModel: DepositViewModel) {
+fun DepositSuccess(goToMain: () -> Unit, viewModel: DepositViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
 
@@ -38,7 +38,7 @@ fun DepositSuccess(nav: NavHostController, viewModel: DepositViewModel) {
             Button(
                 onClick = {
                     viewModel.clear()
-                    nav.navigateTo("main")
+                    goToMain()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)

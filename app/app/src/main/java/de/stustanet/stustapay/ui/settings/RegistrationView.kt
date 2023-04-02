@@ -17,7 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.ui.QRScanView
-import de.stustanet.stustapay.ui.pref.PrefGroup
+import de.stustanet.stustapay.ui.common.PrefGroup
 import de.stustanet.stustapay.ui.settings.RegistrationUiState.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

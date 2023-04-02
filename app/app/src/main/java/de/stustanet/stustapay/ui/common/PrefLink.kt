@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.pref
+package de.stustanet.stustapay.ui.common
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

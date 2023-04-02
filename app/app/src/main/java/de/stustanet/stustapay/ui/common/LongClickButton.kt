@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui
+package de.stustanet.stustapay.ui.common
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi

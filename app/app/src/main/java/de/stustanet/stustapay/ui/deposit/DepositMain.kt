@@ -14,10 +14,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import de.stustanet.stustapay.ui.common.DepositKeyboard
 import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
-fun DepositMain(nav: NavHostController, viewModel: DepositViewModel) {
+fun DepositMain(goToMethod: () -> Unit, viewModel: DepositViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
 
@@ -45,7 +46,7 @@ fun DepositMain(nav: NavHostController, viewModel: DepositViewModel) {
             Button(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    nav.navigateTo("method")
+                    goToMethod()
                 },
                 modifier = Modifier
                     .fillMaxWidth()

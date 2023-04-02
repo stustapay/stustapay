@@ -14,7 +14,7 @@ import androidx.navigation.NavHostController
 import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
-fun DepositMethod(nav: NavHostController, viewModel: DepositViewModel) {
+fun DepositMethod(goToMain: () -> Unit, goToCash: () -> Unit, goToCard: () -> Unit, viewModel: DepositViewModel) {
     val haptic = LocalHapticFeedback.current
 
     Scaffold(
@@ -30,7 +30,7 @@ fun DepositMethod(nav: NavHostController, viewModel: DepositViewModel) {
                         .padding(20.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        nav.navigateTo("cash")
+                        goToCash()
                     }
                 ) {
                     Text("cash", fontSize = 48.sp)
@@ -41,7 +41,7 @@ fun DepositMethod(nav: NavHostController, viewModel: DepositViewModel) {
                         .padding(20.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        nav.navigateTo("card")
+                        goToCard()
                     }
                 ) {
                     Text("card", fontSize = 48.sp)
@@ -52,7 +52,7 @@ fun DepositMethod(nav: NavHostController, viewModel: DepositViewModel) {
             Button(
                 onClick = {
                     viewModel.clear()
-                    nav.navigateTo("main")
+                    goToMain()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 modifier = Modifier
