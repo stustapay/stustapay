@@ -10,16 +10,14 @@ import de.stustanet.stustapay.net.TerminalAPI
 import javax.inject.Inject
 
 @HiltViewModel
-class DebugViewModel @Inject constructor(
+class NetDebugViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val terminalAPI: TerminalAPI
 ) : ViewModel() {
     var endpointURL: String = "http://10.0.2.2:8080/"
 
     suspend fun announceHealthStatus() {
-        val health = terminalAPI.getHealthStatus(endpointURL)
-
-        val msg = when (health) {
+        val msg = when (val health = terminalAPI.getHealthStatus(endpointURL)) {
             is Response.OK -> health.data.status
             is Response.Error -> health.msg()
         }

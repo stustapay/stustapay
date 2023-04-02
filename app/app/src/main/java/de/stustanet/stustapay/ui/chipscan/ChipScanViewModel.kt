@@ -14,6 +14,9 @@ class ChipScanViewModel @Inject constructor(
     private val _scanRequest = nfcState.scanRequest
     private val _writeRequest = nfcState.writeRequest
     private val _protectRequest = nfcState.protectRequest
+    private val _cmacRequest = nfcState.cmacRequest
+
+    private val _cmacEnabled = nfcState.cmacEnabled
 
     private val _chipDataReady = nfcState.chipDataReady
     private val _chipCompatible = nfcState.chipCompatible
@@ -46,6 +49,7 @@ class ChipScanViewModel @Inject constructor(
         _scanRequest.update { true }
         _writeRequest.update { false }
         _protectRequest.update { false }
+        _cmacRequest.update { false }
 
         _chipDataReady.update { false }
         _chipCompatible.update { false }
@@ -59,6 +63,7 @@ class ChipScanViewModel @Inject constructor(
         _scanRequest.update { false }
         _writeRequest.update { false }
         _protectRequest.update { false }
+        _cmacRequest.update { false }
 
         _chipDataReady.update { false }
         _chipCompatible.update { false }

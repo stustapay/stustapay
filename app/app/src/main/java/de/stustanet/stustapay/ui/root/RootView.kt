@@ -10,14 +10,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.order.OrderView
 import de.stustanet.stustapay.ui.QRScanView
-import de.stustanet.stustapay.ui.chipstatus.ChipStatusView
 import de.stustanet.stustapay.ui.debug.DebugView
 import de.stustanet.stustapay.ui.deposit.DepositView
 import de.stustanet.stustapay.ui.nav.*
@@ -67,8 +65,7 @@ fun RootView(uictrl: SysUiController? = null) {
             SettingsView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.qrscan.route) { QRScanView() }
-        composable(RootNavDests.debug.route) { DebugView(hiltViewModel()) }
-        composable(RootNavDests.chipstatus.route) {
+        composable(RootNavDests.debug.route) {
             NavScaffold(
                 title = { Text("StuStaPay") },
                 hasDrawer = true,
@@ -78,7 +75,7 @@ fun RootView(uictrl: SysUiController? = null) {
                     )
                 }
             ) {
-                ChipStatusView()
+                DebugView()
             }
         }
     }

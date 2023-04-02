@@ -76,13 +76,6 @@ private fun getNavItems(): List<NavMenuItem> {
     )
     itemsList.add(
         NavMenuItem(
-            icon = Icons.Filled.Info,
-            label = "Chip Status",
-            navDestination = RootNavDests.chipstatus,
-        )
-    )
-    itemsList.add(
-        NavMenuItem(
             icon = Icons.Filled.Settings,
             label = "Settings",
             navDestination = RootNavDests.settings,
