@@ -1,7 +1,24 @@
 {
-    "orderId": "ID",
-    "orderStatus": "Status",
-    "orderPaymentMethod": "Payment Method",
-    "orderFinishedAt": "Finished At",
-    "orderCreatedAt": "Created At"
+    "order": {
+        "id": "ID",
+        "itemCount": "number of items",
+        "status": "Status",
+        "paymentMethod": "Payment Method",
+        "finishedAt": "Finished At",
+        "createdAt": "Created At",
+        "type": "Type",
+        "name": "Order with ID: {{id}}",
+        "totalPrice": "Total Price",
+        "totalTax": "Total Tax",
+        "totalNoTax": "Total Without Tax"
+    },
+    "item": {
+        "product": "Product",
+        "price": "Price",
+        "quantity": "Quantity",
+        "totalPrice": "Total Price",
+        "taxName": "Tax",
+        "taxRate": "Tax Rate",
+        "totalTax": "Total Tax"
+    }
 }

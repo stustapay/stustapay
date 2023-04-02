@@ -1,5 +1,5 @@
 import * as React from "react";
-import { styled, useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 import {
   ListItemText,
   ListItemIcon,
@@ -8,13 +8,14 @@ import {
   Typography,
   List,
   Toolbar,
-  AppBar as MuiAppBar,
-  AppBarProps as MuiAppBarProps,
   CssBaseline,
   Drawer,
   Box,
   CircularProgress,
   Button,
+  Collapse,
+  ListItemButton,
+  Alert,
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -28,62 +29,47 @@ import {
   Menu as MenuIcon,
   AccountBalance as AccountBalanceIcon,
   AddShoppingCart as AddShoppingCartIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
 import { Outlet, Navigate, useLocation, Link as RouterLink } from "react-router-dom";
-import { ListItemLink } from "@components";
+import { ListItemLink, Loading } from "@components";
 import { useTranslation } from "react-i18next";
-import { useAppSelector, selectIsAuthenticated } from "@store";
+import { useAppSelector, selectCurrentUser } from "@store";
+import { AppBar, Main, DrawerHeader, drawerWidth } from "@components";
+import { PrivilegeAdmin } from "@models";
+import { useGetConfigEntriesQuery } from "@api";
 
-const drawerWidth = 240;
+const AdminMenu: React.FC = () => {
+  const { t } = useTranslation(["common"]);
+  const [open, setOpen] = React.useState(false);
 
-const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
-  open?: boolean;
-}>(({ theme, open }) => ({
-  flexGrow: 1,
-  padding: theme.spacing(3),
-  transition: theme.transitions.create("margin", {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  marginLeft: `-${drawerWidth}px`,
-  ...(open && {
-    transition: theme.transitions.create("margin", {
-      easing: theme.transitions.easing.easeOut,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-    marginLeft: 0,
-  }),
-}));
-
-interface AppBarProps extends MuiAppBarProps {
-  open?: boolean;
-}
-
-const AppBar = styled(MuiAppBar, {
-  shouldForwardProp: (prop) => prop !== "open",
-})<AppBarProps>(({ theme, open }) => ({
-  transition: theme.transitions.create(["margin", "width"], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  ...(open && {
-    width: `calc(100% - ${drawerWidth}px)`,
-    marginLeft: `${drawerWidth}px`,
-    transition: theme.transitions.create(["margin", "width"], {
-      easing: theme.transitions.easing.easeOut,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  }),
-}));
-
-const DrawerHeader = styled("div")(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
-  ...theme.mixins.toolbar,
-  justifyContent: "flex-end",
-}));
+  const toggleOpen = () => setOpen((open) => !open);
+  return (
+    <>
+      <ListItemButton onClick={toggleOpen}>
+        <ListItemIcon>{open ? <ExpandLessIcon /> : <ExpandMoreIcon />}</ListItemIcon>
+        <ListItemText primary={t("advanced")} />
+      </ListItemButton>
+      <Collapse in={open}>
+        <List sx={{ pl: 2 }}>
+          <ListItemLink to="/users">
+            <ListItemIcon>
+              <PersonIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("users")} />
+          </ListItemLink>
+          <ListItemLink to="/settings">
+            <ListItemIcon>
+              <SettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("settings")} />
+          </ListItemLink>
+        </List>
+      </Collapse>
+    </>
+  );
+};
 
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation(["common"]);
@@ -91,12 +77,17 @@ export const AuthenticatedRoot: React.FC = () => {
   const [open, setOpen] = React.useState(true);
   const location = useLocation();
 
-  const authenticated = useAppSelector(selectIsAuthenticated);
+  const user = useAppSelector(selectCurrentUser);
+  const { error: configLoadingError, isLoading: isConfigLoading } = useGetConfigEntriesQuery();
 
-  if (!authenticated) {
+  const isLoading = isConfigLoading;
+  const isError = configLoadingError;
+
+  if (!user) {
     const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
     return <Navigate to={`/login${next}`} />;
   }
+  const isAdmin = user.privileges.includes(PrivilegeAdmin);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -156,6 +147,12 @@ export const AuthenticatedRoot: React.FC = () => {
             </ListItemIcon>
             <ListItemText primary={t("overview")} />
           </ListItemLink>
+          <ListItemLink to="/cashiers">
+            <ListItemIcon>
+              <PersonIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("cashiers")} />
+          </ListItemLink>
           <ListItemLink to="/tax-rates">
             <ListItemIcon>
               <PercentIcon />
@@ -204,25 +201,20 @@ export const AuthenticatedRoot: React.FC = () => {
             </ListItemIcon>
             <ListItemText primary={t("orders")} />
           </ListItemLink>
-          <ListItemLink to="/users">
-            <ListItemIcon>
-              <PersonIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("users")} />
-          </ListItemLink>
-          <ListItemLink to="/settings">
-            <ListItemIcon>
-              <SettingsIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("settings")} />
-          </ListItemLink>
+          {isAdmin && <AdminMenu />}
         </List>
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
-        <React.Suspense fallback={<CircularProgress />}>
-          <Outlet />
-        </React.Suspense>
+        {isLoading ? (
+          <Loading />
+        ) : isError ? (
+          <Alert color="error">{t("configLoadingError")}</Alert>
+        ) : (
+          <React.Suspense fallback={<CircularProgress />}>
+            <Outlet />
+          </React.Suspense>
+        )}
       </Main>
     </Box>
   );

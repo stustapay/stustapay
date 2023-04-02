@@ -1,6 +1,8 @@
 {
   "StuStaPay": "StuStaPay",
+  "cashiers": "Cashiers",
   "overview": "Overview",
+  "advanced": "Advanced",
   "accounts": "Accounts",
   "orders": "Orders",
   "products": "Products",

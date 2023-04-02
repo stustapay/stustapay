@@ -44,7 +44,9 @@ values
     ('bon.closing_texts', '["funny text 0", "funny text 1", "funny text 2", "funny text 3"]'),
 
     -- Umsatzsteuer ID. Needed on each bon
-    ('ust_id', 'DE123456789')
+    ('ust_id', 'DE123456789'),
+    ('currency.symbol', '€'),
+    ('currency.identifier', 'EUR')
     on conflict do nothing;
 
 
@@ -129,7 +131,8 @@ values
     (2, null, 'virtual', 'Deposit', 'Deposit currently at the customers'),
     (3, null, 'virtual', 'Sumup', 'source account for sumup top up '),
     (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here'),
-    (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement')
+    (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement'),
+    (6, null, 'virtual', 'Cashing Up', 'Upon cashing up a cashier for a till a 0 transaction will be booked to this account to mark the cashing up time')
     on conflict do nothing;
 select setval('account_id_seq', 100);
 
@@ -150,7 +153,7 @@ create table if not exists usr (
     cashier_account_id bigint references account(id) on delete restrict
     -- depending on the transfer action, the correct account is booked
 
-    constraint password_or_user_tag_uid_set check ((user_tag_uid is null) <> (password is null))
+    constraint password_or_user_tag_id_set check ((user_tag_uid is not null) or (password is not null))
 );
 
 
@@ -360,7 +363,7 @@ create table if not exists till (
     active_profile_id int not null references till_profile(id) on delete restrict,
     active_user_id int references usr(id) on delete restrict,
 
-    constraint registration_or_session_uuid_null check ((registration_uuid is null) <> (session_uuid is null))
+    constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null))
 );
 
 
@@ -473,9 +476,9 @@ create or replace view lineitem_tax as
 create or replace view order_value as
     select
         ordr.*,
-        sum(total_price) as value_sum,
-        sum(total_tax) as value_tax,
-        sum(total_price - total_tax) as value_notax,
+        sum(total_price) as total_price,
+        sum(total_tax) as total_tax,
+        sum(total_price - total_tax) as total_no_tax,
         json_agg(lineitem_tax) as line_items
     from
         ordr
@@ -524,7 +527,7 @@ create table if not exists transaction (
 
     source_account int not null references account(id) on delete restrict,
     target_account int not null references account(id) on delete restrict,
-    constraint source_target_account_different check (source_account <> target_account),
+    constraint source_target_account_different check (source_account != target_account),
 
     booked_at timestamptz not null default now(),
 
@@ -533,6 +536,20 @@ create table if not exists transaction (
     constraint amount_positive check (amount >= 0),
     tax_rate numeric not null, -- how much tax is included in the amount
     tax_name text not null
+);
+
+
+create or replace view cashiers as (
+    select
+        usr.id,
+        usr.name,
+        usr.description,
+        usr.user_tag_uid,
+        a.balance as cash_drawer_balance,
+        t.id as till_id
+    from usr
+    join account a on usr.cashier_account_id = a.id
+    left join till t on t.active_user_id = usr.id
 );
 
 

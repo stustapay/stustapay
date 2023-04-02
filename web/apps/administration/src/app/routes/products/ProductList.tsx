@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, Typography, ListItem, ListItemText, Tooltip } from "@mui/material";
+import { Paper, ListItem, ListItemText, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
 import {
   Edit as EditIcon,
@@ -20,10 +20,12 @@ import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@component
 import { Product } from "@models";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "@components/Loading";
+import { useCurrencyFormatter } from "src/hooks";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation(["products", "common"]);
   const navigate = useNavigate();
+  const formatCurrency = useCurrencyFormatter();
 
   const { products, isLoading: isProductsLoading } = useGetProductsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
@@ -89,7 +91,7 @@ export const ProductList: React.FC = () => {
       field: "price",
       headerName: t("productPrice") as string,
       type: "number",
-      valueFormatter: ({ value }) => (value ? `${value} €` : ""),
+      valueFormatter: ({ value }) => formatCurrency(value),
     },
     {
       field: "tax_rate",
@@ -137,7 +139,6 @@ export const ProductList: React.FC = () => {
         >
           <ListItemText primary={t("products", { ns: "common" })} />
         </ListItem>
-        <Typography variant="body1">{}</Typography>
       </Paper>
       <DataGrid
         autoHeight

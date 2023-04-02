@@ -17,7 +17,9 @@
       "@models": ["src/models/index.ts"],
       "@models/*": ["src/models/*"],
       "@api": ["src/api/index.ts"],
-      "@api/*": ["src/api/*"]
+      "@api/*": ["src/api/*"],
+      "@hooks": ["src/hooks/index.ts"],
+      "@hooks/*": ["src/hooks/*"]
     }
   },
   "files": [],

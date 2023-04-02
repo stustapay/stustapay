@@ -190,16 +190,16 @@ class OrderService(DBService):
 
         # check order type specific requirements
         if new_order.order_type == OrderType.sale:
-            if customer_account.balance < order.value_sum:
-                raise NotEnoughFundsException(needed_fund=order.value_sum, available_fund=customer_account.balance)
-            new_balance = customer_account.balance - order.value_sum
+            if customer_account.balance < order.total_price:
+                raise NotEnoughFundsException(needed_fund=order.total_price, available_fund=customer_account.balance)
+            new_balance = customer_account.balance - order.total_price
 
         elif new_order.order_type == OrderType.topup_sumup or new_order.order_type == OrderType.topup_cash:
             if len(new_order.positions) != 1:
                 raise InvalidArgumentException("A topup Order must have exactly one position")
             if order.line_items[0].price < 0:
                 raise InvalidArgumentException("A topup Order must have positive price")
-            new_balance = customer_account.balance + order.value_sum
+            new_balance = customer_account.balance + order.total_price
 
         else:
             raise NotImplementedError()
@@ -246,6 +246,20 @@ class OrderService(DBService):
         async for row in cursor:
             result.append(Order.parse_obj(row))
         return result
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def list_orders_by_till(self, *, conn: asyncpg.Connection, till_id: int) -> list[Order]:
+        cursor = conn.cursor("select * from order_value where till_id = $1", till_id)
+        result = []
+        async for row in cursor:
+            result.append(Order.parse_obj(row))
+        return result
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def get_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
+        return await self._fetch_order(conn=conn, order_id=order_id)
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
@@ -298,8 +312,8 @@ class OrderService(DBService):
         It is checked if enough funds are available and books the results
         """
         assert order.order_type == OrderType.sale
-        if customer.balance < order.value_sum:
-            raise NotEnoughFundsException(needed_fund=order.value_sum, available_fund=customer.balance)
+        if customer.balance < order.total_price:
+            raise NotEnoughFundsException(needed_fund=order.total_price, available_fund=customer.balance)
 
         # combine booking based on (source, target, tax) -> amount
         prepared_bookings: Dict[Tuple[int, int, str], float] = defaultdict(lambda: 0.0)

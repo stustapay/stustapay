@@ -12,12 +12,24 @@ export const orderApi = createApi({
   baseQuery: adminApiBaseQuery,
   tagTypes: ["order"],
   endpoints: (builder) => ({
+    getOrderById: builder.query<EntityState<Order>, number>({
+      query: (id) => `/orders/${id}`,
+      transformResponse: (response: Order) => {
+        return orderAdapter.upsertOne(orderAdapter.getInitialState(), response);
+      },
+    }),
+    getOrderByTill: builder.query<EntityState<Order>, number>({
+      query: (id) => `/orders/by-till/${id}`,
+      transformResponse: (response: Order[]) => {
+        return orderAdapter.addMany(orderAdapter.getInitialState(), response);
+      },
+    }),
     getOrders: builder.query<EntityState<Order>, void>({
       query: () => "/orders/",
       transformResponse: (response: Order[]) => {
         return orderAdapter.addMany(orderAdapter.getInitialState(), response);
       },
-      providesTags: (result, error, arg) =>
+      providesTags: (result) =>
         result ? [...result.ids.map((id) => ({ type: "order" as const, id })), "order"] : ["order"],
       onCacheEntryAdded: async (arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, getState }) => {
         const token = selectAuthToken(getState() as RootState);
@@ -64,4 +76,4 @@ export const orderApi = createApi({
 export const { selectOrderAll, selectOrderById, selectOrderEntities, selectOrderIds, selectOrderTotal } =
   convertEntityAdaptorSelectors("Order", orderAdapter.getSelectors());
 
-export const { useGetOrdersQuery } = orderApi;
+export const { useGetOrdersQuery, useGetOrderByIdQuery, useGetOrderByTillQuery } = orderApi;

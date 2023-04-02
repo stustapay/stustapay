@@ -1,6 +1,7 @@
 {
   "language": "Language",
-  "currency": "Currency",
+  "currency.symbol": "Currency Symbol",
+  "currency.identifier": "Currency Identifier",
   "juristiction": "Juristiction",
   "serverSideConfig": "Server side settings",
   "localConfig": "Local settings",
