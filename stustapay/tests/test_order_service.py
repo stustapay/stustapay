@@ -42,10 +42,10 @@ class OrderLogicTest(BaseTestCase):
                 target_account_id=None,
             ),
         )
-        cashier_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning id")
+        cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
         self.cashier = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
-                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag_id=cashier_tag_id
+                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag_uid=cashier_tag_uid
             )
         )
         self.till_layout = await self.till_service.layout.create_layout(
@@ -79,9 +79,11 @@ class OrderLogicTest(BaseTestCase):
             token=self.admin_token, user_id=self.cashier.id, account_id=cashier_account_id
         )
         # add customer
-        user_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (1234) returning id")
+        self.customer_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (1234) returning uid")
         await self.db_conn.fetchval(
-            "insert into account (user_tag_id, type, balance) values ($1, 'private', $2);", user_tag_id, START_BALANCE
+            "insert into account (user_tag_uid, type, balance) values ($1, 'private', $2);",
+            self.customer_uid,
+            START_BALANCE,
         )
 
         # fetch new till
@@ -93,7 +95,7 @@ class OrderLogicTest(BaseTestCase):
             new_order=NewOrder(
                 positions=[NewLineItem(product_id=self.product.id, quantity=2)],
                 order_type=OrderType.sale,
-                customer_tag=1234,
+                customer_tag=self.customer_uid,
             ),
         )
         self.assertEqual(completed_order.old_balance, START_BALANCE)
@@ -114,7 +116,7 @@ class OrderLogicTest(BaseTestCase):
             new_order=NewOrder(
                 positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
                 order_type=OrderType.topup_cash,
-                customer_tag=1234,
+                customer_tag=self.customer_uid,
             ),
         )
         self.assertEqual(completed_order.old_balance, START_BALANCE)
@@ -137,7 +139,7 @@ class OrderLogicTest(BaseTestCase):
             new_order=NewOrder(
                 positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
                 order_type=OrderType.topup_sumup,
-                customer_tag=1234,
+                customer_tag=self.customer_uid,
             ),
         )
         self.assertEqual(completed_order.old_balance, START_BALANCE)

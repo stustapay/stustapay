@@ -40,12 +40,12 @@ class UserService(DBService):
             hashed_password = self._hash_password(password)
 
         user_id = await conn.fetchval(
-            "insert into usr (name, description, password, user_tag_id, transport_account_id, cashier_account_id) "
+            "insert into usr (name, description, password, user_tag_uid, transport_account_id, cashier_account_id) "
             "values ($1, $2, $3, $4, $5, $6) returning id",
             new_user.name,
             new_user.description,
             hashed_password,
-            new_user.user_tag_id,
+            new_user.user_tag_uid,
             new_user.transport_account_id,
             new_user.cashier_account_id,
         )
@@ -93,11 +93,11 @@ class UserService(DBService):
 
         returns the created user
         """
-        user_tag_id = await conn.fetchval("select id from user_tag where uid = $1", new_user.user_tag)
-        if user_tag_id is None:
-            raise NotFoundException(element_typ="user_tag", element_id=str(new_user.user_tag))
+        user_tag_uid = await conn.fetchval("select uid from user_tag where uid = $1", new_user.user_tag_uid)
+        if user_tag_uid is None:
+            raise NotFoundException(element_typ="user_tag", element_id=str(new_user.user_tag_uid))
 
-        existing_user = await conn.fetchrow("select * from usr_with_privileges where user_tag_id = $1", user_tag_id)
+        existing_user = await conn.fetchrow("select * from usr_with_privileges where user_tag_uid = $1", user_tag_uid)
         if existing_user is not None:
             # ignore the name provided in new_user
             return User.parse_obj(existing_user)
@@ -105,7 +105,7 @@ class UserService(DBService):
         user = UserWithoutId(
             name=new_user.name,
             privileges=[],
-            user_tag_id=user_tag_id,
+            user_tag_uid=user_tag_uid,
         )
         return await self._create_user(conn=conn, new_user=user)
 
@@ -170,12 +170,12 @@ class UserService(DBService):
     async def _update_user(self, *, conn: asyncpg.Connection, user_id: int, user: UserWithoutId) -> User:
         row = await conn.fetchrow(
             "update usr "
-            "set name = $2, description = $3, user_tag_id = $4, transport_account_id = $5, cashier_account_id = $6 "
+            "set name = $2, description = $3, user_tag_uid = $4, transport_account_id = $5, cashier_account_id = $6 "
             "where id = $1 returning id",
             user_id,
             user.name,
             user.description,
-            user.user_tag_id,
+            user.user_tag_uid,
             user.transport_account_id,
             user.cashier_account_id,
         )

@@ -128,7 +128,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def login_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal, user_tag: int) -> User:
+    async def login_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal, user_tag_uid: int) -> User:
         """
         Login a User to the terminal, but only if the correct permissions exists:
         wants to login | allowed to log in
@@ -140,11 +140,11 @@ class TillService(DBService):
         returns the newly logged-in User if successful
         """
         row = await conn.fetchrow(
-            "select u.* from usr_with_privileges as u join user_tag t on t.id = u.user_tag_id where t.uid = $1",
-            user_tag,
+            "select u.* from usr_with_privileges as u where u.user_tag_uid = $1",
+            user_tag_uid,
         )
         if row is None:
-            raise NotFoundException(element_typ="user_tag", element_id=str(user_tag))
+            raise NotFoundException(element_typ="user_tag", element_id=str(user_tag_uid))
         new_user = User.parse_obj(row)
 
         row = await conn.fetchrow(

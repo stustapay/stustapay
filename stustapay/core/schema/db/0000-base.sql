@@ -67,9 +67,8 @@ create table if not exists user_tag_secret (
 
 -- for wristbands/cards/...
 create table if not exists user_tag (
-    id bigserial not null primary key,
     -- hardware id of the tag
-    uid numeric(20) not null unique,
+    uid numeric(20) primary key,
     -- printed on the back
     pin text,
     -- produced by wristband vendor
@@ -107,9 +106,9 @@ values
 -- bookkeeping account
 create table if not exists account (
     id bigserial not null primary key,
-    user_tag_id bigint unique references user_tag(id) on delete cascade,
+    user_tag_uid bigint unique references user_tag(uid) on delete cascade,
     type text not null references account_type(name) on delete restrict,
-    constraint private_account_requires_user_tag check (user_tag_id is not null = (type = 'private')),
+    constraint private_account_requires_user_tag check (user_tag_uid is not null = (type = 'private')),
     name text,
     comment text,
 
@@ -121,7 +120,7 @@ create table if not exists account (
     -- todo: topup-config
 );
 insert into account (
-    id, user_tag_id, type, name, comment
+    id, user_tag_uid, type, name, comment
 )
 values
     -- virtual accounts are hard coded with ids 0-99
@@ -143,7 +142,7 @@ create table if not exists usr (
     password text,
     description text,
 
-    user_tag_id bigint unique references user_tag(id) on delete restrict,
+    user_tag_uid bigint unique references user_tag(uid) on delete restrict,
 
     -- account for orgas to transport cash from one location to another
     transport_account_id bigint references account(id) on delete restrict,
@@ -151,7 +150,7 @@ create table if not exists usr (
     cashier_account_id bigint references account(id) on delete restrict
     -- depending on the transfer action, the correct account is booked
 
-    constraint password_or_user_tag_id_set check ((user_tag_id is null) <> (password is null))
+    constraint password_or_user_tag_uid_set check ((user_tag_uid is null) <> (password is null))
 );
 
 

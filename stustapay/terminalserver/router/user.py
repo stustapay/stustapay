@@ -19,11 +19,11 @@ async def get_current_user(
 
 @router.post("/login", summary="Login User", response_model=User)
 async def login_user(
-    user_tag: int,
+    user_tag_uid: int,
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    return await till_service.login_user(token=token, user_tag=user_tag)
+    return await till_service.login_user(token=token, user_tag_uid=user_tag_uid)
 
 
 @router.post("/logout", summary="Logout the current user", status_code=status.HTTP_204_NO_CONTENT)
