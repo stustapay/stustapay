@@ -2,8 +2,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useCurrencyFormatter } from "@hooks";
 import { Paper, ListItem, ListItemText } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColumns } from "@mui/x-data-grid";
-import { selectCashierAll, useGetCashiersQuery } from "@api";
+import { selectCashierAll, selectTillById, useGetCashiersQuery, useGetTillsQuery } from "@api";
 import { Cashier } from "@models";
 import { Loading } from "@components";
 
@@ -16,10 +17,24 @@ export const CashierList: React.FC = () => {
       cashiers: data ? selectCashierAll(data) : undefined,
     }),
   });
+  const { data: tills, isLoading: isTillsLoading } = useGetTillsQuery();
 
-  if (isCashiersLoading) {
+  if (isCashiersLoading || isTillsLoading) {
     return <Loading />;
   }
+
+  const renderTill = (id?: number | null) => {
+    if (!id || !tills) {
+      return "";
+    }
+
+    const till = selectTillById(tills, id);
+    if (!till) {
+      return "";
+    }
+
+    return <RouterLink to={`/tills/${till.id}`}>{till.name}</RouterLink>;
+  };
 
   const columns: GridColumns<Cashier> = [
     {
@@ -39,6 +54,12 @@ export const CashierList: React.FC = () => {
       type: "number",
       valueFormatter: ({ value }) => value ?? "",
       width: 150,
+    },
+    {
+      field: "till_id",
+      headerName: t("cashier.till") as string,
+      flex: 0.5,
+      renderCell: (params) => renderTill(params.row.till_id),
     },
     {
       field: "cash_drawer_balance",

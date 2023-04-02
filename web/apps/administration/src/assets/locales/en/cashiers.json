@@ -3,6 +3,7 @@
         "name": "Name",
         "description": "Description",
         "cashDrawerBalance": "Cash Drawer",
-        "tagId": "Tag ID"
+        "tagId": "Tag ID",
+        "till": "Till"
     }
 }
