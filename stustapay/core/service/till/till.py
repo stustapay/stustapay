@@ -10,7 +10,7 @@ from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
-from stustapay.core.service.error import NotFoundException
+from stustapay.core.service.common.error import NotFoundException
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.user import AuthService

@@ -22,8 +22,8 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
+from stustapay.core.service.common.error import InvalidArgumentException, NotFoundException, ServiceException
 from stustapay.core.service.common.notifications import Subscription
-from stustapay.core.service.error import InvalidArgumentException, NotFoundException, ServiceException
 
 logger = logging.getLogger(__name__)
 

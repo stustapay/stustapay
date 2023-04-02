@@ -5,8 +5,8 @@ from stustapay.core.schema.config import ConfigEntry
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user_privileges
-from stustapay.core.service.error import NotFoundException
+from stustapay.core.service.common.decorators import requires_user_privileges, with_db_transaction
+from stustapay.core.service.common.error import NotFoundException
 
 
 class ConfigService(DBService):
