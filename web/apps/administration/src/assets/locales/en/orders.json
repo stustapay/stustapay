@@ -1,5 +1,7 @@
 {
     "orderId": "ID",
     "orderStatus": "Status",
-    "orderPaymentMethod": "Payment Method"
+    "orderPaymentMethod": "Payment Method",
+    "orderFinishedAt": "Finished At",
+    "orderCreatedAt": "Created At"
 }

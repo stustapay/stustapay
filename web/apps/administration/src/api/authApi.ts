@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { User } from "@models";
-import { baseUrl, prepareAuthHeaders } from "./common";
+import { adminApiBaseQuery } from "./common";
 
 export interface UserResponse {
   user: User;
@@ -14,7 +14,7 @@ export interface LoginRequest {
 
 export const authApi = createApi({
   reducerPath: "authApi",
-  baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
+  baseQuery: adminApiBaseQuery,
   endpoints: (builder) => ({
     login: builder.mutation<UserResponse, LoginRequest>({
       query: (credentials) => {

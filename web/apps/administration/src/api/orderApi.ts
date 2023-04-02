@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { Order, OrderSchema } from "@models/order";
-import { baseUrl, baseWebsocketUrl, prepareAuthHeaders } from "./common";
+import { config, adminApiBaseQuery } from "./common";
 import { RootState, selectAuthToken } from "@store";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
@@ -9,7 +9,7 @@ const orderAdapter = createEntityAdapter<Order>({ sortComparer: (a, b) => b.id -
 
 export const orderApi = createApi({
   reducerPath: "orderApi",
-  baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
+  baseQuery: adminApiBaseQuery,
   tagTypes: ["order"],
   endpoints: (builder) => ({
     getOrders: builder.query<EntityState<Order>, void>({
@@ -26,7 +26,7 @@ export const orderApi = createApi({
         }
         document.cookie = `authorization=${token}`;
         // create a websocket connection when the cache subscription starts
-        const ws = new WebSocket(`${baseWebsocketUrl}/orders/ws`);
+        const ws = new WebSocket(`${config.adminApiBaseWebsocketUrl}/orders/ws`);
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded;

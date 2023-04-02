@@ -24,6 +24,7 @@ from .routers import (
     till_layout,
     till_profile,
     user,
+    endpoints,
 )
 
 
@@ -53,6 +54,7 @@ class Api(SubCommand):
         self.server.add_router(config_router.router)
         self.server.add_router(account.router)
         self.server.add_router(order.router)
+        self.server.add_router(endpoints.router)
 
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)

@@ -8,7 +8,7 @@ import { useGetTillByIdQuery, useDeleteTillMutation, useLogoutTillMutation, sele
 import { Loading } from "@components/Loading";
 import QRCode from "react-qr-code";
 import { encodeTillRegistrationQrCode } from "@core";
-import { baseUrl } from "@api/common";
+import { config } from "@api/common";
 
 export const TillDetail: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
@@ -102,7 +102,7 @@ export const TillDetail: React.FC = () => {
             <QRCode
               size={256}
               style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-              value={encodeTillRegistrationQrCode(baseUrl, till.registration_uuid)}
+              value={encodeTillRegistrationQrCode(config.terminalApiBaseUrl, till.registration_uuid)}
               viewBox={`0 0 256 256`}
             />
           </Box>
