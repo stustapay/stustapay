@@ -14,6 +14,8 @@ import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import de.stustanet.stustapay.model.NfcState
+import de.stustanet.stustapay.util.asBitVector
+import de.stustanet.stustapay.util.bv
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.flow.update
 import java.nio.charset.Charset
@@ -102,7 +104,7 @@ class NfcHandler @Inject constructor(
         }
 
         try {
-            tag.authenticate(nfcState.key.value, MifareUltralightAES.KeyType.DATA_PROT_KEY, nfcState.cmacEnabled.value)
+            tag.authenticate(nfcState.key.value.asBitVector(), MifareUltralightAES.KeyType.DATA_PROT_KEY, nfcState.cmacEnabled.value)
 
             nfcState.chipAuthenticated.update { true }
         } catch (e: Exception) {
@@ -111,26 +113,24 @@ class NfcHandler @Inject constructor(
         }
 
         if (nfcState.writeRequest.value && (!nfcState.chipProtected.value || (nfcState.chipProtected.value && nfcState.chipAuthenticated.value))) {
-            tag.writeDataProtKey(nfcState.key.value)
+            tag.writeDataProtKey(nfcState.key.value.asBitVector())
             if (nfcState.protectRequest.value) {
-                tag.setAuth0(0x10)
+                tag.setAuth0(0x10u)
             } else {
-                tag.setAuth0(0x3c)
+                tag.setAuth0(0x3cu)
             }
             tag.setCMAC(nfcState.cmacRequest.value)
 
-            val data = ByteArray(14 * 4)
-            val sig = "StuStaPay - built by SSN & friends!\nglhf ;)\n".toByteArray(Charset.forName("UTF-8"))
-            for (i in 0 until 11 * 4) { data[i] = sig[i] }
-            for (i in 11 * 4 until 12 * 4) { data[i] = 0 }
-            for (i in 12 * 4 until 14 * 4) { data[i] = i.toByte() }
+            var data = "StuStaPay - built by SSN & friends!\nglhf ;)\n".toByteArray(Charset.forName("UTF-8")).asBitVector()
+            for (i in 0u until 4u) { data += 0.bv }
+            for (i in 48u until 56u) { data += i.bv }
 
             tag.writeUserMemory(data)
         }
 
         nfcState.chipProtected.update { tag.isProtected() }
         nfcState.chipUid.update { tag.readSerialNumber() }
-        nfcState.chipContent.update { tag.readUserMemory().decodeToString() }
+        nfcState.chipContent.update { tag.readUserMemory().asByteArray().decodeToString() }
 
         tag.close()
         nfcState.chipDataReady.update { true }

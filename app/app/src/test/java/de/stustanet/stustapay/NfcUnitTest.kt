@@ -1,6 +1,8 @@
 package de.stustanet.stustapay
 
 import de.stustanet.stustapay.nfc.*
+import de.stustanet.stustapay.util.asBitVector
+import de.stustanet.stustapay.util.println
 import org.junit.Assert
 import org.junit.Test
 
@@ -9,7 +11,7 @@ class NfcUnitTest {
     fun cmacCalculation() {
         val k = ByteArray(16) { 0 }
 
-        val rndA = ByteArray(32)
+        val rndA = ByteArray(16)
         rndA[0] = 0x42
         rndA[1] = 0xbd.toByte()
         rndA[2] = 0xf7.toByte()
@@ -27,7 +29,7 @@ class NfcUnitTest {
         rndA[14] = 0xc2.toByte()
         rndA[15] = 0xb9.toByte()
 
-        val rndB = ByteArray(32)
+        val rndB = ByteArray(16)
         rndB[0] = 0x0d
         rndB[1] = 0x2b
         rndB[2] = 0xba.toByte()
@@ -45,12 +47,12 @@ class NfcUnitTest {
         rndB[14] = 0xf7.toByte()
         rndB[15] = 0x96.toByte()
 
-        val sessionKey = genSessionKey(k, rndA, rndB);
+        val sessionKey = genSessionKey(k.asBitVector(), rndA.asBitVector(), rndB.asBitVector());
 
         val msg = ByteArray(1)
         msg[0] = 0x60
 
-        val cmac = cmacMfulaes(sessionKey, msg, 0u)
+        val cmac = msg.asBitVector().cmacMfulaes(sessionKey, 0u)
 
         val expectedCmac = ByteArray(8)
         expectedCmac[0] = 0x1d
@@ -62,6 +64,6 @@ class NfcUnitTest {
         expectedCmac[6] = 0x16
         expectedCmac[7] = 0x70
 
-        Assert.assertArrayEquals(expectedCmac, cmac)
+        Assert.assertArrayEquals(expectedCmac, cmac.asByteArray())
     }
 }
