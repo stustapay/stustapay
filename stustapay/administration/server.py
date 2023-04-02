@@ -10,20 +10,20 @@ from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.till import TillService
-from stustapay.core.service.user import UserService
+from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.subcommand import SubCommand
 from .routers import (
-    product,
-    user,
-    tax_rate,
-    auth,
-    till,
-    till_profile,
-    till_layout,
-    till_button,
-    config as config_router,
     account,
+    auth,
+    config as config_router,
     order,
+    product,
+    tax_rate,
+    till,
+    till_button,
+    till_layout,
+    till_profile,
+    user,
 )
 
 
@@ -57,21 +57,18 @@ class Api(SubCommand):
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)
 
-        user_service = UserService(db_pool=db_pool, config=self.cfg)
-        till_service = TillService(db_pool=db_pool, config=self.cfg, user_service=user_service)
-        order_service = OrderService(
-            db_pool=db_pool, config=self.cfg, user_service=user_service, till_service=till_service
-        )
+        auth_service = AuthService(db_pool=db_pool, config=self.cfg)
+        order_service = OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
 
         context = Context(
             config=self.cfg,
             db_pool=db_pool,
-            product_service=ProductService(db_pool=db_pool, config=self.cfg, user_service=user_service),
-            tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg, user_service=user_service),
-            user_service=user_service,
-            till_service=till_service,
-            config_service=ConfigService(db_pool=db_pool, config=self.cfg, user_service=user_service),
-            account_service=AccountService(db_pool=db_pool, config=self.cfg, user_service=user_service),
+            product_service=ProductService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            till_service=TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            config_service=ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            account_service=AccountService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             order_service=order_service,
         )
         try:

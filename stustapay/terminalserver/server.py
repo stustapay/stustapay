@@ -7,6 +7,7 @@ import logging
 from stustapay.core.config import Config
 from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
+from stustapay.core.service.auth import AuthService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
@@ -62,17 +63,14 @@ class Api(SubCommand):
 
         db_pool = await self.server.db_connect(self.cfg.database)
 
-        user_service = UserService(db_pool=db_pool, config=self.cfg)
-        till_service = TillService(db_pool=db_pool, config=self.cfg, user_service=user_service)
+        auth_service = AuthService(db_pool=db_pool, config=self.cfg)
 
         context = Context(
             config=self.cfg,
             db_pool=db_pool,
-            order_service=OrderService(
-                db_pool=db_pool, config=self.cfg, till_service=till_service, user_service=user_service
-            ),
-            user_service=user_service,
-            till_service=till_service,
+            order_service=OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            till_service=TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
         try:
             await self.server.run(self.cfg, context)

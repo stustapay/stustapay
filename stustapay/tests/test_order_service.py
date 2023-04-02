@@ -5,7 +5,6 @@ from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile
 from stustapay.core.schema.user import Privilege, UserWithoutId
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
-from stustapay.core.service.till import TillService
 from .common import BaseTestCase
 
 START_BALANCE = 100
@@ -14,15 +13,13 @@ START_BALANCE = 100
 class OrderLogicTest(BaseTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
-        self.till_service = TillService(db_pool=self.db_pool, config=self.test_config, user_service=self.user_service)
         self.product_service = ProductService(
-            db_pool=self.db_pool, config=self.test_config, user_service=self.user_service
+            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
         self.order_service = OrderService(
             db_pool=self.db_pool,
             config=self.test_config,
-            till_service=self.till_service,
-            user_service=self.user_service,
+            auth_service=self.auth_service,
         )
 
         self.product = await self.product_service.create_product(
@@ -48,7 +45,7 @@ class OrderLogicTest(BaseTestCase):
         cashier_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning id")
         self.cashier = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
-                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag=cashier_tag_id
+                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag_id=cashier_tag_id
             )
         )
         self.till_layout = await self.till_service.layout.create_layout(

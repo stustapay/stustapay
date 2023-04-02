@@ -1,7 +1,7 @@
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
-from stustapay.core.service.error import NotFoundException, ServiceException
+from stustapay.core.service.common.error import NotFoundException, ServiceException
 
 
 def not_found_exception_handler(request: Request, exc: NotFoundException):

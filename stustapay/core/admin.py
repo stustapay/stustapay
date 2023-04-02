@@ -1,12 +1,13 @@
-import asyncpg
 from getpass import getpass
 
-from . import database
-from .schema.user import UserWithoutId, Privilege
-from .subcommand import SubCommand
-from .config import Config
+import asyncpg
 
+from . import database
+from .config import Config
+from .schema.user import Privilege, UserWithoutId
+from .service.auth import AuthService
 from .service.user import UserService
+from .subcommand import SubCommand
 
 
 class AdminCli(SubCommand):
@@ -25,7 +26,8 @@ class AdminCli(SubCommand):
 
     async def _add_user(self, db_pool: asyncpg.Pool):
         try:
-            user_service = UserService(db_pool=db_pool, config=self.config)
+            auth_service = AuthService(db_pool=db_pool, config=self.config)
+            user_service = UserService(db_pool=db_pool, config=self.config, auth_service=auth_service)
             username = input("Enter username:\n")
             password = getpass("Enter password:\n")
             confirm_password = getpass("Confirm password:\n")

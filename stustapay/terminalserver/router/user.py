@@ -3,8 +3,8 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
-from stustapay.core.http.context import ContextTillService
-from stustapay.core.schema.user import User
+from stustapay.core.http.context import ContextTillService, ContextUserService
+from stustapay.core.schema.user import NewUser, User
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -34,3 +34,21 @@ async def logout_user(
     logged_out = await till_service.logout_user(token=token)
     if not logged_out:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+
+@router.post("/create_cashier", summary="Create a New Account with cashier privilege", response_model=User)
+async def create_cashier(
+    token: CurrentAuthToken,
+    user_service: ContextUserService,
+    new_user: NewUser,
+):
+    return await user_service.create_cashier(token=token, new_user=new_user)
+
+
+@router.post("/create_finanzorga", summary="Create a New Account with finanzorga privilege", response_model=User)
+async def create_finanzorga(
+    token: CurrentAuthToken,
+    user_service: ContextUserService,
+    new_user: NewUser,
+):
+    return await user_service.create_finanzorga(token=token, new_user=new_user)

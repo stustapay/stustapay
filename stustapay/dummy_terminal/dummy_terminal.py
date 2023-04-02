@@ -6,10 +6,11 @@ import random
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.order import NewOrder, OrderType, NewLineItem
+from stustapay.core.schema.order import NewLineItem, NewOrder, OrderType
 from stustapay.core.schema.till import TillButton
+from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import with_db_connection
-from stustapay.core.service.order import OrderService, NotEnoughFundsException
+from stustapay.core.service.order import NotEnoughFundsException, OrderService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 
@@ -19,11 +20,11 @@ class DummyTerminal:
         self.logger = logging.getLogger(__name__)
         self.config = config
         self.db_pool = db_pool
-        self.user_service = UserService(config=self.config, db_pool=self.db_pool)
-        self.till_service = TillService(config=self.config, db_pool=self.db_pool, user_service=self.user_service)
-        self.order_service = OrderService(
-            config=self.config, db_pool=self.db_pool, till_service=self.till_service, user_service=self.user_service
-        )
+
+        self.auth_service = AuthService(config=self.config, db_pool=self.db_pool)
+        self.user_service = UserService(config=self.config, db_pool=self.db_pool, auth_service=self.auth_service)
+        self.till_service = TillService(config=self.config, db_pool=self.db_pool, auth_service=self.auth_service)
+        self.order_service = OrderService(config=self.config, db_pool=self.db_pool, auth_service=self.auth_service)
 
         self.min_interval_between_orders = 0.0001
         self.max_interval_between_orders = 0.001

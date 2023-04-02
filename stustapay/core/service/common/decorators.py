@@ -40,15 +40,16 @@ def with_db_transaction(func):
 
 def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
     """
-    Check if a user is logged in via a user jwt token and has ALL provided privileges
+    Check if a user is logged in via a user jwt token and has ALL provided privileges.
+    If the current_user is already know from a previous authentication, it can be used the check the privileges
     Sets the arguments current_user in the wrapped function
     """
 
     def f(func):
         @wraps(func)
         async def wrapper(self, **kwargs):
-            if "token" not in kwargs:
-                raise RuntimeError("token was not provided to service function call")
+            if "token" not in kwargs and "current_user" not in kwargs:
+                raise RuntimeError("token or user was not provided to service function call")
 
             if "conn" not in kwargs:
                 raise RuntimeError(
@@ -56,14 +57,16 @@ def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
                     "with_db_transaction needs to be put before this decorator"
                 )
 
-            token = kwargs["token"]
+            token = kwargs["token"] if "token" in kwargs else None
+            user = kwargs["current_user"] if "current_user" in kwargs else None
             conn = kwargs["conn"]
-            if self.__class__.__name__ == "UserService":
-                user = await self.get_user_from_token(conn=conn, token=token)
-            elif hasattr(self, "user_service"):
-                user = await self.user_service.get_user_from_token(conn=conn, token=token)
-            else:
-                raise RuntimeError("requires_terminal needs self.user_service to be a UserService instance")
+            if user is None:
+                if self.__class__.__name__ == "AuthService":
+                    user = await self.get_user_from_token(conn=conn, token=token)
+                elif hasattr(self, "auth_service"):
+                    user = await self.auth_service.get_user_from_token(conn=conn, token=token)
+                else:
+                    raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
             if user is None:
                 raise PermissionError("invalid user token")  # TODO: better exception typing
@@ -75,8 +78,10 @@ def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
 
             if "current_user" in signature(func).parameters:
                 kwargs["current_user"] = user
+            elif "current_user" in kwargs:
+                kwargs.pop("current_user")
 
-            if "token" not in signature(func).parameters:
+            if "token" not in signature(func).parameters and "token" in kwargs:
                 kwargs.pop("token")
 
             return await func(self, **kwargs)
@@ -107,12 +112,12 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
 
             token = kwargs["token"]
             conn = kwargs["conn"]
-            if self.__class__.__name__ == "TillService":
+            if self.__class__.__name__ == "AuthService":
                 terminal: Terminal = await self.get_terminal_from_token(conn=conn, token=token)
-            elif hasattr(self, "till_service"):
-                terminal: Terminal = await self.till_service.get_terminal_from_token(conn=conn, token=token)
+            elif hasattr(self, "auth_service"):
+                terminal: Terminal = await self.auth_service.get_terminal_from_token(conn=conn, token=token)
             else:
-                raise RuntimeError("requires_terminal needs self.till_service to be a TillService instance")
+                raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
             if terminal is None:
                 raise PermissionError("invalid terminal token")  # TODO: better exception typing
