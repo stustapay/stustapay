@@ -9,7 +9,10 @@ from asyncpg.pool import Pool
 
 from stustapay.core import database
 from stustapay.core.config import Config
-from stustapay.core.schema.user import UserWithoutId, Privilege
+from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile
+from stustapay.core.schema.user import Privilege, UserWithoutId
+from stustapay.core.service.auth import AuthService
+from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 
 
@@ -74,7 +77,10 @@ class BaseTestCase(TestCase):
         self.db_pool = await get_test_db()
         self.db_conn: asyncpg.Connection = await self.db_pool.acquire()
         self.test_config = Config.parse_obj(TEST_CONFIG)
-        self.user_service = UserService(db_pool=self.db_pool, config=self.test_config)
+
+        self.auth_service = AuthService(db_pool=self.db_pool, config=self.test_config)
+        self.user_service = UserService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
+        self.till_service = TillService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
 
         self.admin_user = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(name="test-admin-user", description="", privileges=[Privilege.admin]),
@@ -94,3 +100,26 @@ class BaseTestCase(TestCase):
         await self.db_pool.close()
 
         testing_lock.release()
+
+    async def create_terminal_token(self) -> None:
+        """
+        creates a basic terminal login
+        """
+        till_layout = await self.till_service.layout.create_layout(
+            token=self.admin_token,
+            layout=NewTillLayout(name="test-layout", description="", button_ids=[]),
+        )
+        till_profile = await self.till_service.profile.create_profile(
+            token=self.admin_token,
+            profile=NewTillProfile(name="test-profile", description="", layout_id=till_layout.id, allow_top_up=False),
+        )
+        self.till = await self.till_service.create_till(
+            token=self.admin_token,
+            till=NewTill(
+                name="test-till",
+                active_profile_id=till_profile.id,
+            ),
+        )
+        self.terminal_token = (
+            await self.till_service.register_terminal(registration_uuid=self.till.registration_uuid)
+        ).token

@@ -9,7 +9,7 @@ class TaxRateServiceTest(BaseTestCase):
         await super().asyncSetUp()
 
         self.tax_rate_service = TaxRateService(
-            db_pool=self.db_pool, config=self.test_config, user_service=self.user_service
+            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
 
     async def test_basic_tax_rate_workflow(self):

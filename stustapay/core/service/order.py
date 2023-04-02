@@ -7,24 +7,23 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import (
+    ACCOUNT_CASH_ENTRY,
     ACCOUNT_CASH_VAULT,
+    ACCOUNT_SUMUP,
     Account,
     get_source_account,
     get_target_account,
-    ACCOUNT_SUMUP,
-    ACCOUNT_CASH_ENTRY,
 )
-from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Order, PendingOrder
+from stustapay.core.schema.order import CompletedOrder, NewOrder, Order, OrderType, PendingOrder
 from stustapay.core.schema.tax_rate import TAX_NONE
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
+from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_terminal, requires_user_privileges
+from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
+from stustapay.core.service.common.error import InvalidArgumentException, NotFoundException, ServiceException
 from stustapay.core.service.common.notifications import Subscription
-from stustapay.core.service.error import NotFoundException, ServiceException, InvalidArgumentException
-from stustapay.core.service.till import TillService
-from stustapay.core.service.user import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +54,9 @@ class AlreadyFinishedException(ServiceException):
 
 
 class OrderService(DBService):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, user_service: UserService, till_service: TillService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
-        self.user_service = user_service
-        self.till_service = till_service
+        self.auth_service = auth_service
 
         self.admin_order_update_queues: set[Subscription] = set()
 
