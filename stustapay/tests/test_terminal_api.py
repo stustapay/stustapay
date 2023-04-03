@@ -7,16 +7,16 @@ class TerminalAPiTest(BaseTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
 
-        cashier_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning id")
+        self.cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
         self.cashier = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
-                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag_id=cashier_tag_id
+                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag_uid=self.cashier_tag_uid
             )
         )
-        admin_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning id")
+        self.admin_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
         self.admin = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
-                name="Fianazorga", description="", privileges=[Privilege.finanzorga], user_tag_id=admin_tag_id
+                name="Fianazorga", description="", privileges=[Privilege.finanzorga], user_tag_uid=self.admin_tag_uid
             )
         )
 
@@ -25,13 +25,13 @@ class TerminalAPiTest(BaseTestCase):
     async def test_terminal_user_management(self):
         # Cashier cannot simply login
         with self.assertRaises(PermissionError):
-            await self.till_service.login_user(token=self.terminal_token, user_tag=54321)
+            await self.till_service.login_user(token=self.terminal_token, user_tag_uid=self.cashier_tag_uid)
         # Admins can login
-        admin = await self.till_service.login_user(token=self.terminal_token, user_tag=12345)
+        admin = await self.till_service.login_user(token=self.terminal_token, user_tag_uid=self.admin_tag_uid)
         self.assertIsNotNone(admin)
         self.assertEqual(admin, self.admin)
         # Now Cashiers can login
-        cashier = await self.till_service.login_user(token=self.terminal_token, user_tag=54321)
+        cashier = await self.till_service.login_user(token=self.terminal_token, user_tag_uid=self.cashier_tag_uid)
         self.assertIsNotNone(cashier)
         self.assertEqual(cashier, self.cashier)
 

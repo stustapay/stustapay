@@ -105,7 +105,7 @@ class OrderService(DBService):
         To finish the order, book_order is used.
         """
         customer = await conn.fetchrow(
-            "select a.*, t.restriction from user_tag t join account a on t.id = a.user_tag_id where t.uid=$1",
+            "select a.*, t.restriction from user_tag t join account a on t.uid = a.user_tag_uid where t.uid=$1",
             new_order.customer_tag,
         )
         if customer is None:

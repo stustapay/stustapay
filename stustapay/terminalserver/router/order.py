@@ -32,7 +32,7 @@ async def show(
     return await order_service.show_order(token=token, order_id=order_id)
 
 
-@router.post("/create", summary="create and execute new order", response_model=PendingOrder)
+@router.post("", summary="create a new order and prepare it to be processed", response_model=PendingOrder)
 async def create(
     order: NewOrder,
     token: CurrentAuthToken,

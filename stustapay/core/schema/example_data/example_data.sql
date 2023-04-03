@@ -10,16 +10,16 @@ set datestyle to 'ISO';
 
 
 insert into user_tag (
-    id, uid, pin, serial, restriction, secret
+    uid, pin, serial, restriction, secret
 )
 values
-    (0, 1234, null, null, null, null),
-    (1, 13876489173, null, null, null, null)
+    (1234, null, null, null, null),
+    (13876489173, null, null, null, null)
     on conflict do nothing;
 
 
 insert into account (
-    id, user_tag_id, type, name, comment, balance
+    id, user_tag_uid, type, name, comment, balance
 )
 values
     -- virtual accounts are hard coded with ids 0-99
@@ -35,11 +35,11 @@ select setval('account_id_seq', 300);
 
 
 insert into usr (
-    id, name, password, description, transport_account_id, cashier_account_id, user_tag_id
+    id, name, password, description, transport_account_id, cashier_account_id, user_tag_uid
 )
 values
     -- password is admin
-    (0, 'test-cashier', null, 'Some Description', null, 100, 0),
+    (0, 'test-cashier', null, 'Some Description', null, 100, 1234),
     -- password is admin
     (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W' , null, null, null, null)
     on conflict do nothing;

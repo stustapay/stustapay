@@ -46,7 +46,7 @@ def get_target_account(order_type: OrderType, product: Product, customer_account
 
 class Account(BaseModel):
     id: int
-    user_tag_id: Optional[int]
+    user_tag_uid: Optional[int]
     type: AccountType
     name: Optional[str]
     comment: Optional[str]
