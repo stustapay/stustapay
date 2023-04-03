@@ -17,7 +17,7 @@ import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
 import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
-fun DepositCash(nav: NavHostController, viewModel: DepositViewModel) {
+fun DepositCash(goToMethod: () -> Unit, goToSuccess: () -> Unit, goToFailure: () -> Unit, viewModel: DepositViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     var scanning by remember { mutableStateOf(false) }
@@ -39,7 +39,7 @@ fun DepositCash(nav: NavHostController, viewModel: DepositViewModel) {
             Row(horizontalArrangement = Arrangement.SpaceEvenly) {
                 Button(
                     onClick = {
-                        nav.navigateTo("method")
+                        goToMethod()
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     },
                     modifier = Modifier.fillMaxWidth(0.5f).height(70.dp).padding(10.dp)
@@ -61,7 +61,7 @@ fun DepositCash(nav: NavHostController, viewModel: DepositViewModel) {
 
     if (scanning) {
         ChipScanDialog(
-            onScan = { nav.navigateTo("success") },
+            onScan = { goToSuccess() },
             onDismissRequest = { scanning = false }
         )
     }

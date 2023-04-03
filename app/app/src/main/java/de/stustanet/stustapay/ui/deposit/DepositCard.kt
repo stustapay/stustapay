@@ -14,11 +14,11 @@ import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
 import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
-fun DepositCard(nav: NavHostController, viewModel: DepositViewModel) {
+fun DepositCard(goToMethod: () -> Unit, goToSuccess: () -> Unit, goToFailure: () -> Unit, viewModel: DepositViewModel) {
     val haptic = LocalHapticFeedback.current
     var scanning by remember { mutableStateOf(false) }
 
-    LaunchedEffect(nav) {
+    LaunchedEffect(scanning) {
         scanning = true
     }
 
@@ -29,7 +29,7 @@ fun DepositCard(nav: NavHostController, viewModel: DepositViewModel) {
         bottomBar = {
             Button(
                 onClick = {
-                    nav.navigateTo("method")
+                    goToMethod()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
@@ -41,7 +41,7 @@ fun DepositCard(nav: NavHostController, viewModel: DepositViewModel) {
 
     if (scanning) {
         ChipScanDialog(
-            onScan = { nav.navigateTo("failure") },
+            onScan = { goToFailure() },
             onDismissRequest = { scanning = false }
         )
     }

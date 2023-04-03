@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.deposit
+package de.stustanet.stustapay.ui.common
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button

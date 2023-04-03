@@ -6,6 +6,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Preview
 @Composable
@@ -14,22 +15,46 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
 
     NavHost(navController = nav, startDestination = "main") {
         composable("main") {
-            DepositMain(nav, viewModel)
+            DepositMain(
+                goToMethod = { nav.navigateTo("method") },
+                viewModel
+            )
         }
         composable("method") {
-            DepositMethod(nav, viewModel)
+            DepositMethod(
+                goToMain = { nav.navigateTo("main") },
+                goToCash = { nav.navigateTo("cash") },
+                goToCard = { nav.navigateTo("card") },
+                viewModel
+            )
         }
         composable("cash") {
-            DepositCash(nav, viewModel)
+            DepositCash(
+                goToMethod = { nav.navigateTo("method") },
+                goToSuccess = { nav.navigateTo("success") },
+                goToFailure = { nav.navigateTo("failure") },
+                viewModel
+            )
         }
         composable("card") {
-            DepositCard(nav, viewModel)
+            DepositCard(
+                goToMethod = { nav.navigateTo("method") },
+                goToSuccess = { nav.navigateTo("success") },
+                goToFailure = { nav.navigateTo("failure") },
+                viewModel
+            )
         }
         composable("success") {
-            DepositSuccess(nav, viewModel)
+            DepositSuccess(
+                goToMain = { nav.navigateTo("main") },
+                viewModel
+            )
         }
         composable("failure") {
-            DepositFailure(nav, viewModel)
+            DepositFailure(
+                goToMain = { nav.navigateTo("main") },
+                viewModel
+            )
         }
     }
 }

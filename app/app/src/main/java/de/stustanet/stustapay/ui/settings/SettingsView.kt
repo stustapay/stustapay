@@ -21,8 +21,8 @@ import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.BuildConfig
 import de.stustanet.stustapay.ui.nav.NavDest
 import de.stustanet.stustapay.ui.nav.NavScaffold
-import de.stustanet.stustapay.ui.pref.PrefGroup
-import de.stustanet.stustapay.ui.pref.PrefLink
+import de.stustanet.stustapay.ui.common.PrefGroup
+import de.stustanet.stustapay.ui.common.PrefLink
 
 
 object SettingsNavDest {

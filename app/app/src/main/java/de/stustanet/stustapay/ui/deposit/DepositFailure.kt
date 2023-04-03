@@ -15,7 +15,7 @@ import androidx.navigation.NavHostController
 import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
-fun DepositFailure(nav: NavHostController, viewModel: DepositViewModel) {
+fun DepositFailure(goToMain: () -> Unit, viewModel: DepositViewModel) {
     val haptic = LocalHapticFeedback.current
 
     Scaffold(
@@ -31,7 +31,7 @@ fun DepositFailure(nav: NavHostController, viewModel: DepositViewModel) {
             Button(
                 onClick = {
                     viewModel.clear()
-                    nav.navigateTo("main")
+                    goToMain()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
