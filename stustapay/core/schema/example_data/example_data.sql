@@ -28,8 +28,8 @@ values
     (101, null, 'internal', 'Rucksack 0', 'Finanzer-rucksack', 200.00),
 
     -- guests (which would need token IDs)
-    (200, 0, 'private', 'Guest 0', 'Token Balance of Guest 0', 2000000.00),
-    (201, 1, 'private', 'Guest 1', 'Token Balance of Guest 1', 30000000.20)
+    (200, 1234, 'private', 'Guest 0', 'Token Balance of Guest 0', 2000000.00),
+    (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 30000000.20)
     on conflict do nothing;
 select setval('account_id_seq', 300);
 
@@ -59,44 +59,46 @@ insert into product (
     id, name, price, fixed_price, target_account_id, tax_name
 )
 values
-    -- Getränke
-    (0, 'Helles 1.0l', 5.00, true, null, 'ust'),
-    (1, 'Helles 0.5l', 3.00, true, null, 'ust'),
-    (2, 'Weißbier 1.0l', 5.00, true, null, 'ust'),
-    (3, 'Weißbier 0.5l', 3.00, true, null, 'ust'),
-    (4, 'Radler 1.0l', 5.00, true, null, 'ust'),
-    (5, 'Radler 0.5l', 3.00, true, null, 'ust'),
-    (6, 'Russ 1.0l', 5.00, true, null, 'ust'),
-    (7, 'Russ 0.5l', 3.00, true, null, 'ust'),
-    (8, 'Limonade 1.0l', 2.00, true, null, 'ust'),
-    (14, 'Whisky 1.0l', 20.00, true, null, 'ust'),
-    -- Essen
-    (9, 'Weißwurst', 2.00, true, null, 'eust'),
+    -- Special Product: id 0-99
     -- Pfand
     (10, 'Pfand', 2.00, true, 2, 'none'),
     (11, 'Pfand zurück', -2.00, true, 2, 'none'),
     -- Top Up
     (12, 'Aufladen', null, false, null, 'none'),
-    (13, 'Auszahlen', null, false, null, 'none')
+    (13, 'Auszahlen', null, false, null, 'none'),
+
+    -- Getränke
+    (100, 'Helles 1.0l', 5.00, true, null, 'ust'),
+    (101, 'Helles 0.5l', 3.00, true, null, 'ust'),
+    (102, 'Weißbier 1.0l', 5.00, true, null, 'ust'),
+    (103, 'Weißbier 0.5l', 3.00, true, null, 'ust'),
+    (104, 'Radler 1.0l', 5.00, true, null, 'ust'),
+    (105, 'Radler 0.5l', 3.00, true, null, 'ust'),
+    (106, 'Russ 1.0l', 5.00, true, null, 'ust'),
+    (107, 'Russ 0.5l', 3.00, true, null, 'ust'),
+    (108, 'Limonade 1.0l', 2.00, true, null, 'ust'),
+    (109, 'Whisky 1.0l', 20.00, true, null, 'ust'),
+    -- Essen
+    (150, 'Weißwurst', 2.00, true, null, 'eust')
     on conflict do nothing;
-select setval('product_id_seq', 100);
+select setval('product_id_seq', 200);
 
 insert into product_restriction (
     id, restriction
 )
 values
     -- alcohol is not allowed below 16
-    (0, 'under_16'),
-    (1, 'under_16'),
-    (2, 'under_16'),
-    (3, 'under_16'),
-    (4, 'under_16'),
-    (5, 'under_16'),
-    (6, 'under_16'),
-    (7, 'under_16'),
+    (100, 'under_16'),
+    (101, 'under_16'),
+    (102, 'under_16'),
+    (103, 'under_16'),
+    (104, 'under_16'),
+    (105, 'under_16'),
+    (106, 'under_16'),
+    (107, 'under_16'),
     -- whisky is not allowed below 18 (and thus explicit below 16)
-    (14, 'under_16'),
-    (14, 'under_18')
+    (109, 'under_16'),
+    (109, 'under_18')
     on conflict do nothing;
 
 insert into till_button (
@@ -109,9 +111,9 @@ select setval('till_button_id_seq', 100);
 insert into till_button_product (
     button_id, product_id
 )  values
-    (0, 1),
+    (0, 101),
     (0, 10),
-    (1, 0),
+    (1, 100),
     (1, 10);
 
 insert into till_layout (
@@ -165,12 +167,12 @@ insert into lineitem (
 )
 values
     -- simple beer with deposit
-    (0, 0, 0, 1, 5.00, 'ust', 0.19), -- beer
+    (0, 0, 100, 1, 5.00, 'ust', 0.19), -- beer
     (0, 1, 10, 1, 2.00, 'none', 0.00), -- deposit
     -- items with different tax rates
-    (1, 0, 0, 2, 5.00, 'ust', 0.19), -- beer
+    (1, 0, 100, 2, 5.00, 'ust', 0.19), -- beer
     (1, 1, 10, 2, 2.00, 'none', 0.00), -- deposit
-    (1, 2, 9, 1, 2.00, 'eust', 0.07), -- other tax rate
+    (1, 2, 150, 1, 2.00, 'eust', 0.07), -- other tax rate
     -- Top Up EC
     (2, 0, 13, 20, 1.00, 'none', 0.00) -- Load 20 Money
     on conflict do nothing;
