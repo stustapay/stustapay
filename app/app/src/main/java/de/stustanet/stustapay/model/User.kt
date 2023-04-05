@@ -15,5 +15,5 @@ data class User(
 
 @Serializable
 data class UserTag(
-    val user_tag_uid: ULong,
+    val uid: ULong,
 )

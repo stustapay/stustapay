@@ -6,7 +6,7 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.terminal import Terminal, TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.till import NewTill, Till, TillButton, TillProfile
-from stustapay.core.schema.user import Privilege, User
+from stustapay.core.schema.user import Privilege, User, UserTag
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
@@ -128,7 +128,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def login_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal, user_tag_uid: int) -> User:
+    async def login_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal, user_tag: UserTag) -> User:
         """
         Login a User to the terminal, but only if the correct permissions exists:
         wants to login | allowed to log in
@@ -141,10 +141,10 @@ class TillService(DBService):
         """
         row = await conn.fetchrow(
             "select u.* from usr_with_privileges as u where u.user_tag_uid = $1",
-            user_tag_uid,
+            user_tag.uid,
         )
         if row is None:
-            raise NotFoundException(element_typ="user_tag", element_id=str(user_tag_uid))
+            raise NotFoundException(element_typ="user_tag", element_id=str(user_tag.uid))
         new_user = User.parse_obj(row)
 
         row = await conn.fetchrow(

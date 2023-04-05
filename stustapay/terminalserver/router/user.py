@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService, ContextUserService
-from stustapay.core.schema.user import NewUser, User
+from stustapay.core.schema.user import NewUser, User, UserTag
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -19,11 +19,11 @@ async def get_current_user(
 
 @router.post("/login", summary="Login User", response_model=User)
 async def login_user(
-    user_tag_uid: int,
+    user_tag: UserTag,
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    return await till_service.login_user(token=token, user_tag_uid=user_tag_uid)
+    return await till_service.login_user(token=token, user_tag=user_tag)
 
 
 @router.post("/logout", summary="Logout the current user", status_code=status.HTTP_204_NO_CONTENT)
