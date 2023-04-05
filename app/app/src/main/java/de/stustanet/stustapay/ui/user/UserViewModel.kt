@@ -37,6 +37,8 @@ class UserViewModel @Inject constructor(
             initialValue = UserUIState.Error("Loading..."),
         )
 
+    val userLoginStatus = userRepository.status
+
     suspend fun fetchLogin() {
         userRepository.fetchLogin()
     }

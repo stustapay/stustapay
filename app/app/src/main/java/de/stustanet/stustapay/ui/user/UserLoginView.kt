@@ -3,6 +3,7 @@ package de.stustanet.stustapay.ui.user
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ fun UserLoginView(
 
     val scope = rememberCoroutineScope()
     val userUiState: UserUIState by viewModel.userUIState.collectAsStateWithLifecycle()
+    val userLoginStatus by viewModel.userLoginStatus.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -156,6 +158,20 @@ fun UserLoginView(
             }
         ) {
             Text("Create new user", fontSize = 24.sp)
+        }
+
+        val status = userLoginStatus
+        if (status != null) {
+            ListItem(
+                text = { Text(status) },
+                icon = {
+                    Icon(
+                        Icons.Filled.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(56.dp)
+                    )
+                }
+            )
         }
     }
 }

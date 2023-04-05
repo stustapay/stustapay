@@ -38,11 +38,13 @@ fun NavScaffold(
         },
 
         drawerContent = {
-            NavDrawer { navTo ->
-                scope.launch {
-                    state.drawerState.close()
+            if (hasDrawer) {
+                NavDrawer { navTo ->
+                    scope.launch {
+                        state.drawerState.close()
+                    }
+                    navigateTo(navTo)
                 }
-                navigateTo(navTo)
             }
         },
 

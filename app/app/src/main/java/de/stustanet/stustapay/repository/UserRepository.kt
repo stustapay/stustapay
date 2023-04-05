@@ -12,16 +12,24 @@ class UserRepository @Inject constructor(
     private val userRemoteDataSource: UserRemoteDataSource
 ) {
     var userState = MutableStateFlow<UserState>(UserState.Error("Initialized"))
+    var status = MutableStateFlow<String?>(null)
 
     suspend fun fetchLogin() {
         userState.emit(userRemoteDataSource.currentUser())
     }
 
     suspend fun login(userTag: ULong) {
-        userRemoteDataSource.userLogin(UserTag(userTag))
+        userState.emit(userRemoteDataSource.userLogin(UserTag(userTag)))
     }
 
     suspend fun logout() {
-        userRemoteDataSource.userLogout()
+        val result = userRemoteDataSource.userLogout()
+        if (result != null) {
+            status.emit(result)
+        }
+        else {
+            status.emit("Logged out.")
+            userState.emit(UserState.NoLogin)
+        }
     }
 }

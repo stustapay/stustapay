@@ -1,18 +1,10 @@
 package de.stustanet.stustapay.ui.root
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.stustanet.stustapay.R
-import de.stustanet.stustapay.ui.QRScanView
 import de.stustanet.stustapay.ui.debug.DebugView
 import de.stustanet.stustapay.ui.deposit.DepositView
 import de.stustanet.stustapay.ui.nav.NavChangeHandler
@@ -31,7 +23,7 @@ fun RootView(uictrl: SysUiController? = null) {
 
     if (uictrl != null) {
         navController.addOnDestinationChangedListener(
-            NavChangeHandler(RootNavDests.getRoutePropMap(), uictrl)
+            NavChangeHandler(RootNavDests, uictrl)
         )
     }
 
@@ -63,18 +55,8 @@ fun RootView(uictrl: SysUiController? = null) {
         composable(RootNavDests.settings.route) {
             SettingsView(leaveView = { navController.navigateUp() })
         }
-        composable(RootNavDests.debug.route) {
-            NavScaffold(
-                title = { Text("StuStaPay") },
-                hasDrawer = true,
-                navigateTo = { navTo ->
-                    navController.navigateDestination(
-                        navTo
-                    )
-                }
-            ) {
-                DebugView()
-            }
+        composable(RootNavDests.development.route) {
+            DebugView(leaveView = { navController.navigateUp() })
         }
     }
 }

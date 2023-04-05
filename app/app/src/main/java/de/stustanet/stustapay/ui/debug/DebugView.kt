@@ -1,72 +1,65 @@
 package de.stustanet.stustapay.ui.debug
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.ui.QRScanView
-import de.stustanet.stustapay.ui.nav.TopAppBar
-import de.stustanet.stustapay.ui.nav.TopAppBarIcon
-import de.stustanet.stustapay.ui.nav.navigateTo
+import de.stustanet.stustapay.ui.nav.NavDest
+import de.stustanet.stustapay.ui.nav.NavDestinations
+import de.stustanet.stustapay.ui.nav.NavScaffold
+
+object DevelopNavDest : NavDestinations() {
+    val main = NavDest("main", title = "Development")
+    val net = NavDest("net", title = "Network")
+    val nfc = NavDest("nfc", title = "NFC")
+    val qr = NavDest("qr", title = "QR Scan")
+}
 
 @Preview
 @Composable
-fun DebugView() {
-    val nav = rememberNavController()
+fun DebugView(leaveView: () -> Unit = {}) {
 
-    NavHost(navController = nav, startDestination = "main") {
-        composable("main") {
-            DebugNavView(nav)
-        }
-        composable("net") {
-            NavScaffold(nav, "Network") {
+    val nav = rememberNavController()
+    val scaffoldState = rememberScaffoldState()
+
+    NavScaffold(
+        title = { Text(text = DevelopNavDest.title(nav) ?: "Development") },
+        state = scaffoldState,
+        navigateBack = {
+            if (nav.currentDestination?.route == DevelopNavDest.main.route) {
+                leaveView()
+            } else {
+                nav.popBackStack()
+            }
+        },
+        hasDrawer = false,
+    ) { paddingValues ->
+        NavHost(
+            navController = nav,
+            startDestination = DevelopNavDest.main.route,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = paddingValues.calculateBottomPadding())
+        ) {
+            composable(DevelopNavDest.main.route) {
+                DebugNavView(nav)
+            }
+            composable(DevelopNavDest.net.route) {
                 NetDebugView()
             }
-        }
-        composable("nfc") {
-            NavScaffold(nav, "NFC") {
+            composable(DevelopNavDest.nfc.route) {
                 NfcDebugView()
             }
-        }
-        composable("qr") {
-            NavScaffold(nav, "QR Scan") {
+            composable(DevelopNavDest.qr.route) {
                 QRScanView()
             }
         }
     }
-}
-
-@Composable
-private fun NavScaffold(nav: NavHostController, title: String, content: @Composable () -> Unit) {
-    val scaffoldState = rememberScaffoldState()
-
-    Scaffold(
-        scaffoldState = scaffoldState,
-        topBar = {
-            TopAppBar(
-                title = { Text(title) },
-                iconType = TopAppBarIcon.BACK,
-            ) {
-                nav.navigateTo("main")
-            }
-        },
-        content = {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(it)
-            ) {
-                content()
-            }
-        }
-    )
 }

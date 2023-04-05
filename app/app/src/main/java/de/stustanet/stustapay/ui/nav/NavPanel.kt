@@ -70,8 +70,8 @@ private fun getNavItems(): List<NavMenuItem> {
     itemsList.add(
         NavMenuItem(
             icon = Icons.Filled.Send,
-            label = "Debug",
-            navDestination = RootNavDests.debug
+            label = "Development",
+            navDestination = RootNavDests.development
         )
     )
 
