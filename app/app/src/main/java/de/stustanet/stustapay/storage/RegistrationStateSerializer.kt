@@ -44,13 +44,14 @@ object RegistrationStateSerializer : Serializer<RegistrationState> {
         when(t) {
             is RegistrationState.Registered -> {
                 val regState = RegistrationStateProto.newBuilder()
+                    .setRegistered(true)
                     .setApiEndpoint(t.apiUrl)
                     .setAuthToken(t.token)
                     .build()
                 regState.writeTo(output);
             }
             is RegistrationState.NotRegistered -> {
-                val regState = RegistrationStateProto.newBuilder().clear().setRegistered(true).build()
+                val regState = RegistrationStateProto.newBuilder().clear().setRegistered(false).build()
                 regState.writeTo(output);
             }
             else -> {

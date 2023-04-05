@@ -57,7 +57,7 @@ class HttpClient(retry: Boolean = false, logRequests: Boolean = true, val target
                 level = LogLevel.ALL
                 logger = object : Logger {
                     override fun log(message: String) {
-                        Log.d("SSP req", message)
+                        Log.d("StuStaPay req", message)
                     }
                 }
             }
@@ -105,8 +105,6 @@ class HttpClient(retry: Boolean = false, logRequests: Boolean = true, val target
             val reqBasePath = basePath ?: api?.url
             ?: return Response.Error.Msg("no api base path available")
 
-            Log.d("StuStaPay", "basepath $reqBasePath/$path token: ${api?.token}")
-
             val response: HttpResponse = httpClient.request {
                 this.method = method
 
@@ -127,7 +125,7 @@ class HttpClient(retry: Boolean = false, logRequests: Boolean = true, val target
             }
             return transformResponse(response)
         } catch (e: Exception) {
-            Log.e("StuStaPay", "request error: $path: ${e.localizedMessage}")
+            Log.e("StuStaPay", "http request error: $path: ${e.localizedMessage}\n${e.stackTraceToString()}")
             return Response.Error.Exception(e)
         }
     }

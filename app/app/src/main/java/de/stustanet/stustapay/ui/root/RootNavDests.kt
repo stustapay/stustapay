@@ -4,10 +4,10 @@ import de.stustanet.stustapay.ui.nav.NavDest
 
 /** root views (opened by navigation drawer) */
 object RootNavDests {
-    val main = NavDest("main")
+    val startpage = NavDest("startpage")
     val ordering = NavDest("ordering", showNavbar = false)
     val deposit = NavDest("deposit", showNavbar = false)
-    val qrscan = NavDest("qrscan")
+    val user = NavDest("user")
     val settings = NavDest("settings")
     val debug = NavDest("debug")
 

@@ -33,5 +33,14 @@ fun DebugNavView(nav: NavHostController) {
         ) {
             Text( "NFC", fontSize = 24.sp)
         }
+
+        Button(
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            onClick = {
+                nav.navigateTo("qr")
+            }
+        ) {
+            Text( "QR Scan", fontSize = 24.sp)
+        }
     }
 }

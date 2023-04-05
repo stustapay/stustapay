@@ -115,8 +115,8 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                         Text("Not protected")
                     }
 
-                    val uid = uiState.uid
-                    Text("UID: $uid")
+                    val tagId = uiState.uid
+                    Text("UID: $tagId")
                 } else {
                     Text("Incompatible chip")
                 }

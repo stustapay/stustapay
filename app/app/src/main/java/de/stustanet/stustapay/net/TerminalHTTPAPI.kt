@@ -58,6 +58,10 @@ class TerminalHTTPAPI @Inject constructor(
         }
     }
 
+    override suspend fun deregister(): Response<Unit> {
+        return client.post<Unit, Unit>("auth/logout_terminal")
+    }
+
     override suspend fun getHealthStatus(apiUrl: String): Response<HealthStatus> {
         return client.get("health", basePath = apiUrl)
     }
@@ -68,5 +72,17 @@ class TerminalHTTPAPI @Inject constructor(
 
     override suspend fun getTerminalConfig(): Response<TerminalConfig> {
         return client.get("config")
+    }
+
+    override suspend fun currentUser(): Response<User?> {
+        return client.get("user")
+    }
+
+    override suspend fun userLogin(userTag: UserTag): Response<User> {
+        return client.post("user/login") { userTag }
+    }
+
+    override suspend fun userLogout(): Response<Unit> {
+        return client.post<Unit, Unit>("user/logout")
     }
 }

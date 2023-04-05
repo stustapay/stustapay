@@ -16,6 +16,7 @@ class TerminalConfigRepository @Inject constructor(
     var terminalConfigState = MutableSharedFlow<TerminalConfigState>()
 
     suspend fun fetchConfig() {
+        // TODO fetch from remote datasource
         return terminalConfigState.emit(
             TerminalConfigState.Success(
                 TerminalConfig(

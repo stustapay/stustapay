@@ -61,6 +61,11 @@ interface TerminalAPI {
     ): Response<TerminalRegistrationSuccess>
 
     /**
+     * Tell the core to deregister the terminal.
+     */
+    suspend fun deregister(): Response<Unit>
+
+    /**
      * Create a new order, which is not yet booked.
      */
     suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder>
@@ -69,4 +74,19 @@ interface TerminalAPI {
      * Get the button configuration of the terminal.
      */
     suspend fun getTerminalConfig(): Response<TerminalConfig>
+
+    /**
+     * Get the currently logged in user.
+     */
+    suspend fun currentUser(): Response<User?>
+
+    /**
+     * Login a user by token.
+     */
+    suspend fun userLogin(userTag: UserTag): Response<User>
+
+    /**
+     * Logout the current user.
+     */
+    suspend fun userLogout(): Response<Unit>
 }
