@@ -11,6 +11,7 @@ import java.security.SecureRandom
 // https://www.nxp.com/docs/en/data-sheet/MF0AES(H)20.pdf
 // https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38B.pdf
 // https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-108r1.pdf
+// https://www.cs.ru.nl/~rverdult/Ciphertext-only_Cryptanalysis_on_Hardened_Mifare_Classic_Cards-CCS_2015.pdf
 
 class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     private val nfcaTag = NfcA.get(rawTag)
@@ -95,7 +96,6 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
                 throw Exception("Key mismatch")
             }
         } catch (e: IOException) {
-            e.printStackTrace()
             throw Exception("Auth failed")
         }
 
