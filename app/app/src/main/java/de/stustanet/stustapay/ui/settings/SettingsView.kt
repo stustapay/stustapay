@@ -79,7 +79,6 @@ fun SettingsView(leaveView: () -> Unit = {}) {
                 navController.popBackStack()
             }
         },
-        hasDrawer = false
     ) { paddingValues ->
         NavHost(
             navController = navController,

@@ -39,7 +39,6 @@ fun DebugView(leaveView: () -> Unit = {}) {
                 nav.popBackStack()
             }
         },
-        hasDrawer = false,
     ) { paddingValues ->
         NavHost(
             navController = nav,

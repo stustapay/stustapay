@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.nav
+package de.stustanet.stustapay.ui.root
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.padding
@@ -41,7 +41,8 @@ fun LoginProfile(
         imageVector = image,
         modifier = Modifier
             .size(size = 120.dp)
-            .clip(shape = CircleShape),
+            .clip(shape = CircleShape)
+            .padding(top = 2.dp),
         contentDescription = "Avatar"
     )
 

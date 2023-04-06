@@ -41,7 +41,6 @@ fun UserView(leaveView: () -> Unit = {},
                 navController.popBackStack()
             }
         },
-        hasDrawer = false
     ) { paddingValues ->
         NavHost(
             navController = navController,

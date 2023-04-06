@@ -19,21 +19,7 @@ class TerminalHTTPAPI @Inject constructor(
      * through our current api registration state.
      */
     private val client: HttpClient = HttpClient {
-        var regState = regLocalStatus.registrationState.first()
-
-        var api: HttpClientTarget? = when (regState) {
-            is RegistrationState.Registered -> {
-                HttpClientTarget(regState.apiUrl, regState.token)
-            }
-            is RegistrationState.Error -> {
-                null
-            }
-            is RegistrationState.NotRegistered -> {
-                null
-            }
-        }
-
-        api
+        regLocalStatus.registrationState.first()
     }
 
 

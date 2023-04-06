@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.nav
+package de.stustanet.stustapay.ui.root
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustanet.stustapay.ui.root.RootNavDests
+import de.stustanet.stustapay.ui.nav.NavDest
 
 data class NavMenuItem(
     val icon: ImageVector,
@@ -80,11 +80,12 @@ private fun getNavItems(): List<NavMenuItem> {
 
 
 @Composable
-fun NavDrawer(
-    navigateTo: (NavDest) -> Unit
+fun StartpageView(
+    navigateTo: (NavDest) -> Unit = {},
 ) {
-    val gradientColors = listOf(Color(0xFFF70A74), Color(0xFFF59118))
+
     val navItems = getNavItems()
+    val gradientColors = listOf(Color(0xFFF70A74), Color(0xFFF59118))
 
     Column(
         modifier = Modifier
@@ -92,6 +93,13 @@ fun NavDrawer(
             .background(brush = Brush.verticalGradient(colors = gradientColors)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Text(
+            text = "StuStaPay",
+            fontSize = 30.sp,
+            color = Color.White,
+            modifier = Modifier.padding(top = 10.dp)
+        )
+
         LoginProfile()
 
         for (item in navItems) {
@@ -100,13 +108,14 @@ fun NavDrawer(
                 Divider()
             }
 
-            NavDrawerEntry(item = item, navigateTo = navigateTo)
+            StartpageEntry(item = item, navigateTo = navigateTo)
         }
     }
 }
 
+
 @Composable
-private fun NavDrawerEntry(
+private fun StartpageEntry(
     item: NavMenuItem,
     unreadBadgeColor: Color = Color(0xFF0FFF93),
     navigateTo: (NavDest) -> Unit

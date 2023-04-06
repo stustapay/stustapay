@@ -25,7 +25,7 @@ class UserRemoteDataSource @Inject constructor(
             }
             is Response.Error -> {
                 UserState.Error(
-                    msg = "error: ${userResponse.msg()}",
+                    msg = "server error: ${userResponse.msg()}",
                 )
             }
         }
@@ -43,7 +43,7 @@ class UserRemoteDataSource @Inject constructor(
             }
             is Response.Error -> {
                 UserState.Error(
-                    msg = "error: ${userLoginResponse.msg()}",
+                    msg = "server error: ${userLoginResponse.msg()}",
                 )
             }
         }
@@ -58,7 +58,7 @@ class UserRemoteDataSource @Inject constructor(
                 null
             }
             is Response.Error -> {
-                "error: ${userLogoutResponse.msg()}"
+                "server error: ${userLogoutResponse.msg()}"
             }
         }
     }

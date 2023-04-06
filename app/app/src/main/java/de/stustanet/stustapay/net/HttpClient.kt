@@ -1,6 +1,7 @@
 package de.stustanet.stustapay.net
 
 import android.util.Log
+import de.stustanet.stustapay.model.RegistrationState
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -14,18 +15,17 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-class HttpClientTarget(
-    val url: String,
-    val token: String,
-)
-
 @Serializable
 data class ErrorDetail(
     val detail: String
 )
 
 
-class HttpClient(retry: Boolean = false, logRequests: Boolean = true, val targetConfig: suspend () -> HttpClientTarget?) {
+class HttpClient(
+    retry: Boolean = false,
+    logRequests: Boolean = true,
+    val registrationState: suspend () -> RegistrationState
+) {
     val httpClient = HttpClient(CIO) {
 
         // automatic json conversions
@@ -86,35 +86,57 @@ class HttpClient(retry: Boolean = false, logRequests: Boolean = true, val target
 
     /**
      * send a http get/post/... request using the current registration token.
-     * @param basePath overrides api base path from registration, and if given, no bearer token is sent.
+     * @param apiBasePath overrides api base path from registration, and if given, no bearer token is sent.
      */
     suspend inline fun <reified I, reified O> request(
         path: String,
         method: HttpMethod,
         options: HttpRequestBuilder.() -> Unit = {},
-        basePath: String? = null,
+        apiBasePath: String? = null,
         noinline body: (() -> I)? = null,
     ): Response<O> {
 
         try {
             Log.d("StuStaPay", "request ${method.value} to $path")
 
-            val api: HttpClientTarget? = targetConfig()
+            val regState = registrationState()
+            val apiBase : String
 
-            // prefer custom base-path over the one from the targetConfig.
-            val reqBasePath = basePath ?: api?.url
-            ?: return Response.Error.Msg("no api base path available")
+            var token : String? = null
+
+            when (regState) {
+                is RegistrationState.Registered -> {
+                    apiBase = apiBasePath ?: regState.apiUrl
+                    if (apiBasePath == null) {
+                        token = regState.token
+                    }
+                }
+                is RegistrationState.Error -> {
+                    if (apiBasePath == null) {
+                        return Response.Error.Msg(regState.message)
+                    } else {
+                        apiBase = apiBasePath
+                    }
+                }
+                is RegistrationState.NotRegistered -> {
+                    if (apiBasePath == null) {
+                        return Response.Error.Msg("terminal not registered")
+                    } else {
+                        apiBase = apiBasePath
+                    }
+                }
+            }
 
             val response: HttpResponse = httpClient.request {
                 this.method = method
 
                 contentType(ContentType.Application.Json)
 
-                url("${reqBasePath}/${path}")
+                url("${apiBase}/${path}")
 
-                if (api != null) {
+                if (token != null) {
                     headers {
-                        append(HttpHeaders.Authorization, "Bearer ${api.token}")
+                        append(HttpHeaders.Authorization, "Bearer ${token}")
                     }
                 }
 

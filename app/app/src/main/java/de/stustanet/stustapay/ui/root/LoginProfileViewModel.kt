@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.nav
+package de.stustanet.stustapay.ui.root
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
