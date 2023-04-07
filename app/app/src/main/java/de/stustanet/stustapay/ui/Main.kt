@@ -7,14 +7,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import de.stustanet.stustapay.ui.root.RootView
-import de.stustanet.stustapay.ui.theme.StuStaPayTheme
+import de.stustanet.stustapay.ui.theme.Theme
 import de.stustanet.stustapay.util.SysUiController
 
 
 @Preview(showBackground = true)
 @Composable
 fun Main(uictrl: SysUiController? = null) {
-    StuStaPayTheme {
+    Theme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colors.background

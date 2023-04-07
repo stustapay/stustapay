@@ -10,9 +10,7 @@ import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.util.Result
 import de.stustanet.stustapay.util.asResult
 import kotlinx.coroutines.flow.*
-import java.lang.Thread.State
 import javax.inject.Inject
-import kotlinx.coroutines.launch
 
 
 /**

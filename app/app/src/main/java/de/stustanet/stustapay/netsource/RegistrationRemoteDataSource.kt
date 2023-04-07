@@ -23,14 +23,19 @@ class RegistrationRemoteDataSource @Inject constructor(
                     message = "success",
                 )
             }
-            is Response.Error.Msg -> {
+            is Response.Error.Server -> {
                 RegistrationState.Error(
-                    message = "server error: ${registrationResponse.msg}, endpoint=${apiUrl}, code=${registrationResponse.code}",
+                    message = registrationResponse.msg,
                 )
             }
-            is Response.Error.Exception -> {
+            is Response.Error.Request -> {
                 RegistrationState.Error(
-                    message = "exception: ${registrationResponse.throwable.localizedMessage}, endpoint=${apiUrl}",
+                    message = "${registrationResponse.msg}, endpoint=${apiUrl}",
+                )
+            }
+            is Response.Error.Access -> {
+                RegistrationState.Error(
+                    message = registrationResponse.msg
                 )
             }
         }

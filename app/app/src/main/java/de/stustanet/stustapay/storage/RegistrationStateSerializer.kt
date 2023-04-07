@@ -19,7 +19,7 @@ import javax.inject.Singleton
 
 object RegistrationStateSerializer : Serializer<RegistrationState> {
     override val defaultValue: RegistrationState
-        get() = RegistrationState.Error("not in local storage")
+        get() = RegistrationState.NotRegistered("no registration state")
 
     override suspend fun readFrom(input: InputStream): RegistrationState {
         return try {

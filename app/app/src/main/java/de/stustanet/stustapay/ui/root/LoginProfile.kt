@@ -69,7 +69,7 @@ fun LoginProfile(
                 text = "No Login",
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
-                color = Color.Cyan
+                color = Color.White
             )
         }
         is LoginProfileUIState.Error -> {

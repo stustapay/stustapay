@@ -73,14 +73,9 @@ class HttpClient(
     suspend inline fun <reified T> transformResponse(response: HttpResponse): Response<T> {
         return when (response.status.value) {
             in 200..299 -> Response.OK(response.body())
-            in 300..399 -> Response.Error.Msg("unhandled redirect")
-            in 400..403 -> {
-                Response.Error.Msg(
-                    (response.body() as ErrorDetail).detail,
-                    response.status.value
-                )
-            }
-            else -> Response.Error.Msg("error ${response.status.value}: ${response.bodyAsText()}")
+            in 300..399 -> Response.Error.Server("unhandled redirect", response.status.value)
+            401, 403 -> Response.Error.Access((response.body() as ErrorDetail).detail)
+            else -> Response.Error.Server("code ${response.status.value}: ${response.bodyAsText()}", response.status.value)
         }
     }
 
@@ -113,14 +108,14 @@ class HttpClient(
                 }
                 is RegistrationState.Error -> {
                     if (apiBasePath == null) {
-                        return Response.Error.Msg(regState.message)
+                        return Response.Error.Request(regState.message)
                     } else {
                         apiBase = apiBasePath
                     }
                 }
                 is RegistrationState.NotRegistered -> {
                     if (apiBasePath == null) {
-                        return Response.Error.Msg("terminal not registered")
+                        return Response.Error.Access("terminal not registered: ${regState.message}")
                     } else {
                         apiBase = apiBasePath
                     }
@@ -148,7 +143,7 @@ class HttpClient(
             return transformResponse(response)
         } catch (e: Exception) {
             Log.e("StuStaPay", "http request error: $path: ${e.localizedMessage}\n${e.stackTraceToString()}")
-            return Response.Error.Exception(e)
+            return Response.Error.Request(null, e)
         }
     }
 
