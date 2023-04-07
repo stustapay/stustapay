@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
+import de.stustanet.stustapay.ui.chipscan.rememberChipScanState
 import kotlinx.coroutines.launch
 
 /** after a scan happened, where do we send the info to */
@@ -29,6 +30,8 @@ fun UserLoginView(
     val userUiState: UserUIState by viewModel.userUIState.collectAsStateWithLifecycle()
     val userLoginStatus by viewModel.userLoginStatus.collectAsStateWithLifecycle()
 
+    val scanState = rememberChipScanState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -39,26 +42,20 @@ fun UserLoginView(
             viewModel.fetchLogin()
         }
 
-        var scanTag by remember { mutableStateOf(false) }
         var target by remember { mutableStateOf(ScanTarget.Login) }
 
-        if (scanTag) {
-            ChipScanDialog(
-                onScan = { uid ->
-                    scanTag = false
-                    when (target) {
-                        ScanTarget.Login -> {
-                            scope.launch {
-                                viewModel.login(uid)
-                            }
+        ChipScanDialog(
+            scanState,
+            onScan = { uid ->
+                when (target) {
+                    ScanTarget.Login -> {
+                        scope.launch {
+                            viewModel.login(uid)
                         }
                     }
-                },
-                onDismissRequest = {
-                    scanTag = false
                 }
-            )
-        }
+            },
+        )
 
         val user: String
         var subtext: String? = null
@@ -102,7 +99,7 @@ fun UserLoginView(
                 .fillMaxWidth()
                 .padding(8.dp),
             onClick = {
-                scanTag = true
+                scanState.open()
                 target = ScanTarget.Login
             },
         ) {
