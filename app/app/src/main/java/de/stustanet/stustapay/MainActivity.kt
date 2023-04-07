@@ -6,11 +6,9 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -23,17 +21,14 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), SysUiController {
-    @Inject lateinit var nfcHandler: NfcHandler
+    @Inject
+    lateinit var nfcHandler: NfcHandler
     val viewModel: MainActivityViewModel by viewModels()
 
     @SuppressLint("ObsoleteSdkInt")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         nfcHandler.onCreate(this)
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            Log.e("SSP", "windowdecor ============ ${window.decorView.systemUiVisibility}")
-        }
 
         setContent {
             Main(this)
