@@ -23,6 +23,12 @@ sealed class Response<out T> {
             }
         }
 
+        data class NotFound(val msg: String) : Error() {
+            override fun msg(): String {
+                return "not found: $msg"
+            }
+        }
+
         data class Request(val msg: String? = null, val throwable: Throwable? = null) : Error() {
             init {
                 require((msg != null) != (throwable != null)) {

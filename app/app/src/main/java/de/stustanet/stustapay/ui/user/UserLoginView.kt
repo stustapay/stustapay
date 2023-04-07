@@ -27,8 +27,11 @@ fun UserLoginView(
 ) {
 
     val scope = rememberCoroutineScope()
-    val userUiState: UserUIState by viewModel.userUIState.collectAsStateWithLifecycle()
-    val userLoginStatus by viewModel.userLoginStatus.collectAsStateWithLifecycle()
+
+    val userUIStateSync: UserUIState by viewModel.userUIState.collectAsStateWithLifecycle()
+    val userUIState = userUIStateSync
+
+    val userUIMessage by viewModel.userUIMessage.collectAsStateWithLifecycle()
 
     val scanState = rememberChipScanState()
 
@@ -59,17 +62,17 @@ fun UserLoginView(
 
         val user: String
         var subtext: String? = null
-        when (val state = userUiState) {
+        when (userUIState) {
             is UserUIState.NotLoggedIn -> {
                 user = "Not logged in"
             }
             is UserUIState.LoggedIn -> {
-                user = state.username
-                subtext = "Logged in"
+                user = userUIState.username
+                subtext = userUIState.privileges
             }
             is UserUIState.Error -> {
                 user = "Error"
-                subtext = state.message
+                subtext = userUIState.message
             }
         }
 
@@ -106,7 +109,7 @@ fun UserLoginView(
             Text("Login User", fontSize = 24.sp)
         }
 
-        if (userUiState is UserUIState.LoggedIn) {
+        if (userUIState is UserUIState.LoggedIn) {
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -146,18 +149,9 @@ fun UserLoginView(
             )
         }
 
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            onClick = {
-                newUserUnavailableHint = true
-            }
-        ) {
-            Text("Create new user", fontSize = 24.sp)
-        }
+        Spacer(modifier = Modifier.height(15.dp))
 
-        val status = userLoginStatus
+        val status = userUIMessage
         if (status != null) {
             ListItem(
                 text = { Text(status) },
@@ -169,6 +163,22 @@ fun UserLoginView(
                     )
                 }
             )
+        }
+
+        Spacer(modifier = Modifier.height(15.dp))
+
+
+        if (userUIState is UserUIState.LoggedIn && userUIState.showCreateUser) {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                onClick = {
+                    newUserUnavailableHint = true
+                }
+            ) {
+                Text("Create new user", fontSize = 24.sp)
+            }
         }
     }
 }

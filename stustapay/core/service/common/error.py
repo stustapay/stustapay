@@ -1,11 +1,13 @@
 class ServiceException(Exception):
     id: str
-    description: str  # allgemeine Fehler beschreibung
 
 
-class NotFoundException(ServiceException):
+class NotFound(ServiceException):
+    """
+    raised when something wasn't found.
+    """
+
     id = "NotFound"
-    description = "Element not found"
 
     def __init__(self, element_typ: str, element_id: str):
         self.element_typ = element_typ  # eg. order
@@ -15,10 +17,22 @@ class NotFoundException(ServiceException):
         return f"{self.element_typ} with id {self.element_id} not found"
 
 
-class InvalidArgumentException(ServiceException):
-    # raised, when the argument error cannot be caught with pydantic, e.g. because of database constraints
-    id = "InvalidArgument"
-    description = "The provided data did not match internal constraints"
+class InvalidArgument(ServiceException):
+    """
+    raised, when the argument error cannot be caught with pydantic, e.g. because of database constraints
+    """
 
-    def __init__(self, detail: str):
-        self.detail = detail
+    id = "InvalidArgument"
+
+    def __init__(self, msg: str):
+        self.msg = msg
+
+
+class AccessDenied(ServiceException):
+    id = "AccessDenied"
+
+    def __init__(self, msg: str):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg

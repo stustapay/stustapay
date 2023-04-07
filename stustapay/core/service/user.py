@@ -11,7 +11,7 @@ from stustapay.core.schema.user import NewUser, Privilege, User, UserWithoutId
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
-from stustapay.core.service.common.error import NotFoundException
+from stustapay.core.service.common.error import NotFound
 
 
 class UserLoginSuccess(BaseModel):
@@ -95,7 +95,7 @@ class UserService(DBService):
         """
         user_tag_uid = await conn.fetchval("select uid from user_tag where uid = $1", new_user.user_tag_uid)
         if user_tag_uid is None:
-            raise NotFoundException(element_typ="user_tag", element_id=str(new_user.user_tag_uid))
+            raise NotFound(element_typ="user_tag", element_id=str(new_user.user_tag_uid))
 
         existing_user = await conn.fetchrow("select * from usr_with_privileges where user_tag_uid = $1", user_tag_uid)
         if existing_user is not None:
@@ -114,7 +114,7 @@ class UserService(DBService):
     async def promote_to_cashier(self, *, conn: asyncpg.Connection, user_id: int) -> User:
         user = await self._get_user(conn=conn, user_id=user_id)
         if user is None:
-            raise NotFoundException(element_typ="user", element_id=str(user_id))
+            raise NotFound(element_typ="user", element_id=str(user_id))
 
         if Privilege.cashier in user.privileges:
             return user
@@ -133,7 +133,7 @@ class UserService(DBService):
     async def promote_to_finanzorga(self, *, conn: asyncpg.Connection, user_id: int) -> User:
         user = await self._get_user(conn=conn, user_id=user_id)
         if user is None:
-            raise NotFoundException(element_typ="user", element_id=str(user_id))
+            raise NotFound(element_typ="user", element_id=str(user_id))
 
         if Privilege.finanzorga in user.privileges:
             return user
@@ -159,7 +159,7 @@ class UserService(DBService):
     async def _get_user(self, conn: asyncpg.Connection, user_id: int) -> User:
         row = await conn.fetchrow("select * from usr_with_privileges where id = $1", user_id)
         if row is None:
-            raise NotFoundException(element_typ="user", element_id=str(user_id))
+            raise NotFound(element_typ="user", element_id=str(user_id))
         return User.parse_obj(row)
 
     @with_db_transaction
@@ -180,7 +180,7 @@ class UserService(DBService):
             user.cashier_account_id,
         )
         if row is None:
-            raise NotFoundException(element_typ="user", element_id=str(user_id))
+            raise NotFound(element_typ="user", element_id=str(user_id))
 
         # Update privileges
         await conn.execute("delete from usr_privs where usr = $1", user_id)

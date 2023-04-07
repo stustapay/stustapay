@@ -3,6 +3,7 @@ package de.stustanet.stustapay.ui.user
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustanet.stustapay.model.Access
 import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.repository.UserRepository
 import de.stustanet.stustapay.util.Result
@@ -14,6 +15,7 @@ sealed interface UserUIState {
     data class LoggedIn(
         val username: String,
         val privileges: String,
+        val showCreateUser: Boolean,
     ) : UserUIState
 
     object NotLoggedIn : UserUIState
@@ -37,7 +39,9 @@ class UserViewModel @Inject constructor(
             initialValue = UserUIState.Error("Loading..."),
         )
 
-    val userLoginStatus = userRepository.status
+    val userState : StateFlow<UserState> = userRepository.userState
+
+    val userUIMessage = userRepository.status
 
     suspend fun fetchLogin() {
         userRepository.fetchLogin()
@@ -71,7 +75,8 @@ private fun userUiState(
                         is UserState.LoggedIn -> {
                             UserUIState.LoggedIn(
                                 username = userState.user.name,
-                                privileges = userState.user.privileges.map { it.id }.joinToString(),
+                                privileges = userState.user.privileges.joinToString { it.id }.ifEmpty { "no privileges" },
+                                showCreateUser = Access.canCreateUser(userState.user),
                             )
                         }
                         is UserState.NoLogin -> {

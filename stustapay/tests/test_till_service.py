@@ -121,7 +121,7 @@ class TillServiceTest(BaseTestCase):
         deleted = await self.till_service.delete_till(token=self.admin_token, till_id=till.id)
         self.assertTrue(deleted)
 
-    async def test_cashier_loging_flow(self):
+    async def test_cashier_login_flow(self):
         await self.create_terminal_token()
         till = await self.till_service.get_till(token=self.admin_token, till_id=self.till.id)
 

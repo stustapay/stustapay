@@ -10,7 +10,7 @@ from stustapay.core.schema.user import Privilege, User, UserTag
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
-from stustapay.core.service.common.error import NotFoundException
+from stustapay.core.service.common.error import AccessDenied, NotFound
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.user import AuthService
@@ -114,7 +114,7 @@ class TillService(DBService):
             till_id,
         )
         if id_ is None:
-            raise NotFoundException(element_typ="till", element_id=str(till_id))
+            raise NotFound(element_typ="till", element_id=str(till_id))
         return True
 
     @with_db_transaction
@@ -144,7 +144,7 @@ class TillService(DBService):
             user_tag.uid,
         )
         if row is None:
-            raise NotFoundException(element_typ="user_tag", element_id=str(user_tag.uid))
+            raise NotFound(element_typ="user_tag", element_id=str(user_tag.uid))
         new_user = User.parse_obj(row)
 
         row = await conn.fetchrow(
@@ -160,15 +160,16 @@ class TillService(DBService):
             pass
         elif Privilege.cashier in new_user.privileges:
             if not current_user or not {Privilege.admin, Privilege.finanzorga} & set(current_user.privileges):
-                # TODO better exception type needed
-                raise PermissionError("Cashiers are only allowed to login, when an orga is logged beforehand")
+                raise AccessDenied("You can only be logged in by an orga")
+        else:
+            raise AccessDenied("No cashier privilege")
 
         t_id = await conn.fetchval(
             "update till set active_user_id = $1 where id = $2 returning id", new_user.id, current_terminal.till.id
         )
         if t_id is None:
             # should not happen
-            raise NotFoundException(element_typ="till", element_id=str(current_terminal.till.id))
+            raise NotFound(element_typ="till", element_id=str(current_terminal.till.id))
         return new_user
 
     @with_db_transaction

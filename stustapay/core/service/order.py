@@ -22,7 +22,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
-from stustapay.core.service.common.error import InvalidArgumentException, NotFoundException, ServiceException
+from stustapay.core.service.common.error import InvalidArgument, NotFound, ServiceException
 from stustapay.core.service.common.notifications import Subscription
 
 logger = logging.getLogger(__name__)
@@ -109,7 +109,7 @@ class OrderService(DBService):
             new_order.customer_tag,
         )
         if customer is None:
-            raise NotFoundException(element_typ="customer", element_id=str(new_order.customer_tag))
+            raise NotFound(element_typ="customer", element_id=str(new_order.customer_tag))
         customer_account = Account.parse_obj(customer)
 
         order_id, order_uuid = await conn.fetchrow(
@@ -141,10 +141,10 @@ class OrderService(DBService):
                 product_id,
             )
             if cost is None:
-                raise NotFoundException(element_typ="product", element_id=str(product_id))
+                raise NotFound(element_typ="product", element_id=str(product_id))
             price, fixed_price, tax_rate, tax_name = cost
             if fixed_price and item_price:
-                raise InvalidArgumentException("The line item price was set for a fixed price item")
+                raise InvalidArgument("The line item price was set for a fixed price item")
             # other case (not fixed_price and not item_price) is implicitly checked with the database constraints,
             # pydantic constraints and previous test
             if not fixed_price:
@@ -196,9 +196,9 @@ class OrderService(DBService):
 
         elif new_order.order_type == OrderType.topup_sumup or new_order.order_type == OrderType.topup_cash:
             if len(new_order.positions) != 1:
-                raise InvalidArgumentException("A topup Order must have exactly one position")
+                raise InvalidArgument("A topup Order must have exactly one position")
             if order.line_items[0].price < 0:
-                raise InvalidArgumentException("A topup Order must have positive price")
+                raise InvalidArgument("A topup Order must have positive price")
             new_balance = customer_account.balance + order.value_sum
 
         else:
@@ -261,7 +261,7 @@ class OrderService(DBService):
         """
         order = await self._fetch_order(conn=conn, order_id=order_id)
         if order is None:
-            raise NotFoundException(element_typ="order", element_id=str(order_id))
+            raise NotFound(element_typ="order", element_id=str(order_id))
 
         if order.status != "pending":
             raise AlreadyFinishedException(order_id=order.id)
@@ -272,7 +272,7 @@ class OrderService(DBService):
         )
         if customer is None:
             # as the foreign key is enforced in the database, this should not happen
-            raise NotFoundException(element_typ="customer", element_id=str(order.customer_account_id))
+            raise NotFound(element_typ="customer", element_id=str(order.customer_account_id))
         customer_account = Account.parse_obj(customer)
 
         # NOW book the order, or fail
@@ -398,7 +398,7 @@ class OrderService(DBService):
 
         order = await self._fetch_order(conn=conn, order_id=order_id)
         if order is None:
-            raise NotFoundException(element_typ="order", element_id=str(order_id))
+            raise NotFound(element_typ="order", element_id=str(order_id))
         if order.status != "pending":
             raise AlreadyFinishedException(order_id=order.id)
 

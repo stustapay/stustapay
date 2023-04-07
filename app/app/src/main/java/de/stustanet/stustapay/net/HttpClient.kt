@@ -3,7 +3,6 @@ package de.stustanet.stustapay.net
 import android.util.Log
 import de.stustanet.stustapay.model.RegistrationState
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -12,14 +11,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-
-@Serializable
-data class ErrorDetail(
-    val detail: String
-)
-
 
 class HttpClient(
     retry: Boolean = false,
@@ -70,15 +62,6 @@ class HttpClient(
     }
 
 
-    suspend inline fun <reified T> transformResponse(response: HttpResponse): Response<T> {
-        return when (response.status.value) {
-            in 200..299 -> Response.OK(response.body())
-            in 300..399 -> Response.Error.Server("unhandled redirect", response.status.value)
-            401, 403 -> Response.Error.Access((response.body() as ErrorDetail).detail)
-            else -> Response.Error.Server("code ${response.status.value}: ${response.bodyAsText()}", response.status.value)
-        }
-    }
-
     /**
      * send a http get/post/... request using the current registration token.
      * @param apiBasePath overrides api base path from registration, and if given, no bearer token is sent.
@@ -95,9 +78,9 @@ class HttpClient(
             Log.d("StuStaPay", "request ${method.value} to $path")
 
             val regState = registrationState()
-            val apiBase : String
+            val apiBase: String
 
-            var token : String? = null
+            var token: String? = null
 
             when (regState) {
                 is RegistrationState.Registered -> {
@@ -142,7 +125,10 @@ class HttpClient(
             }
             return transformResponse(response)
         } catch (e: Exception) {
-            Log.e("StuStaPay", "http request error: $path: ${e.localizedMessage}\n${e.stackTraceToString()}")
+            Log.e(
+                "StuStaPay",
+                "http request error: $path: ${e.localizedMessage}\n${e.stackTraceToString()}"
+            )
             return Response.Error.Request(null, e)
         }
     }
