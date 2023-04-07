@@ -3,11 +3,11 @@ package de.stustanet.stustapay.ui.chipscan
 import androidx.compose.runtime.*
 
 @Stable
-class ChipScanState() {
+class NfcScanDialogState() {
     private var open by mutableStateOf(false)
-    private lateinit var viewModel: ChipScanViewModel
+    private lateinit var viewModel: NfcScanDialogViewModel
 
-    fun setViewModel(viewModel: ChipScanViewModel) {
+    fun setViewModel(viewModel: NfcScanDialogViewModel) {
         this.viewModel = viewModel
     }
 
@@ -27,8 +27,8 @@ class ChipScanState() {
 }
 
 @Composable
-fun rememberChipScanState(): ChipScanState {
+fun rememberNfcScanDialogState(): NfcScanDialogState {
     return remember {
-        ChipScanState()
+        NfcScanDialogState()
     }
 }
