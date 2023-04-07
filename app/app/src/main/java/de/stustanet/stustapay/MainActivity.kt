@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity(), SysUiController {
     public override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        if (intent.action == NfcAdapter.ACTION_TECH_DISCOVERED||
+        if (intent.action == NfcAdapter.ACTION_TECH_DISCOVERED ||
             intent.action == NfcAdapter.ACTION_TAG_DISCOVERED ||
             intent.action == NfcAdapter.ACTION_NDEF_DISCOVERED
         ) {

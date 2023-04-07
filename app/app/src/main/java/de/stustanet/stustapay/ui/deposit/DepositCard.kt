@@ -11,20 +11,26 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
+import de.stustanet.stustapay.ui.chipscan.rememberChipScanState
 import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
 fun DepositCard(goToMethod: () -> Unit, goToSuccess: () -> Unit, goToFailure: () -> Unit, viewModel: DepositViewModel) {
     val haptic = LocalHapticFeedback.current
-    var scanning by remember { mutableStateOf(false) }
+    val scanState = rememberChipScanState()
 
-    LaunchedEffect(scanning) {
-        scanning = true
+    LaunchedEffect(scanState) {
+        scanState.open()
     }
+
+    ChipScanDialog(scanState, onScan = { goToFailure() })
 
     Scaffold(
         content = {
-            Box(Modifier.fillMaxSize().padding(it))
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(it))
         },
         bottomBar = {
             Button(
@@ -32,17 +38,13 @@ fun DepositCard(goToMethod: () -> Unit, goToSuccess: () -> Unit, goToFailure: ()
                     goToMethod()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
-                modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(70.dp)
+                    .padding(10.dp)
             ) {
                 Text(text = "❌")
             }
         }
     )
-
-    if (scanning) {
-        ChipScanDialog(
-            onScan = { goToFailure() },
-            onDismissRequest = { scanning = false }
-        )
-    }
 }

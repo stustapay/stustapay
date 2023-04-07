@@ -7,20 +7,52 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
+import de.stustanet.stustapay.ui.chipscan.rememberChipScanState
+import kotlinx.coroutines.launch
 
 @Preview
 @Composable
 fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
+    val state = rememberNfcDebugState(viewModel)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var scanViewUid by remember { mutableStateOf(0uL) }
-    var scanViewOpen by remember { mutableStateOf(false) }
+    val scanState = rememberChipScanState()
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+
+    ChipScanDialog(scanState, onScan = { scanViewUid = it })
+
+    if (state.isScanning()) {
+        Dialog(
+            onDismissRequest = {
+                state.stop()
+            }
+        ) {
+            Box(Modifier.size(300.dp, 300.dp)) {
+                Card(modifier = Modifier.padding(20.dp)) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Scan a Chip!", textAlign = TextAlign.Center, fontSize = 48.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     Column(modifier = Modifier
         .padding(16.dp)
@@ -30,7 +62,7 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
         Text(text = "Scan View", fontSize = 24.sp)
 
         Button(
-            onClick = { scanViewOpen = true },
+            onClick = { scanState.open() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Open Scan View")
@@ -40,93 +72,173 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
         Text("UID: $uid")
 
         Spacer(modifier = Modifier.height(32.dp))
-        Text(text = "Global Settings", fontSize = 24.sp)
+        Text(text = "Settings", fontSize = 24.sp)
 
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Switch(checked = uiState.cmacEnabled, onCheckedChange = { viewModel.cmac(it) })
-            Text("Enable CMAC authentication")
+            Switch(checked = uiState.enableDebugCard, onCheckedChange = { viewModel.setDebugCard(it) })
+            Text("Enable Debug Chip")
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Switch(checked = uiState.enableDebugCard, onCheckedChange = { viewModel.debug(it) })
-            Text("Enable debug chip")
+            Switch(checked = uiState.enableAuth, onCheckedChange = { viewModel.setAuth(it) })
+            Text("Enable Authentication")
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Switch(checked = uiState.enableCmac, onCheckedChange = { viewModel.setCmac(it) })
+            Text("Enable CMAC")
         }
 
         Spacer(modifier = Modifier.height(32.dp))
-        Text(text = "Scan Settings", fontSize = 24.sp)
+        Text(text = "Actions", fontSize = 24.sp)
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+        Button(
+            onClick = {
+                scope.launch {
+                    state.start()
+                    viewModel.read()
+                    state.stop()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Switch(checked = uiState.scanRequest, onCheckedChange = { viewModel.scan(it) })
-            Text("Enable scanning")
+            Text("Read")
+        }
+
+        Button(
+            onClick = {
+                scope.launch {
+                    state.start()
+                    viewModel.writeSig()
+                    state.stop()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Write Signature")
+        }
+
+        Button(
+            onClick = {
+                scope.launch {
+                    state.start()
+                    viewModel.writeKey()
+                    state.stop()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Write Key")
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Switch(checked = uiState.writeRequest, onCheckedChange = { viewModel.write(it) })
-            Text("Enable writing")
+            Button(
+                onClick = {
+                    scope.launch {
+                        state.start()
+                        viewModel.writeProtectOn()
+                        state.stop()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(0.5f).padding(end = 5.dp)
+            ) {
+                Text("Enable Protection")
+            }
+            Button(
+                onClick = {
+                    scope.launch {
+                        state.start()
+                        viewModel.writeProtectOff()
+                        state.stop()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().padding(start = 5.dp)
+            ) {
+                Text("Disable Protection")
+            }
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Switch(checked = uiState.protectRequest, onCheckedChange = { viewModel.writeProtect(it) })
-            Text("Write chip protection")
+            Button(
+                onClick = {
+                    scope.launch {
+                        state.start()
+                        viewModel.writeCmacOn()
+                        state.stop()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(0.5f).padding(end = 5.dp)
+            ) {
+                Text("Enable CMAC")
+            }
+            Button(
+                onClick = {
+                    scope.launch {
+                        state.start()
+                        viewModel.writeCmacOff()
+                        state.stop()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().padding(start = 5.dp)
+            ) {
+                Text("Disable CMAC")
+            }
         }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Switch(checked = uiState.cmacRequest, onCheckedChange = { viewModel.writeCmac(it) })
-            Text("Write CMAC enable")
-        }
-
-        Text("Content")
-        TextField(
-            value = uiState.content,
-            modifier = Modifier.fillMaxWidth(),
-            onValueChange = { viewModel.setContent(it) }
-        )
 
         Spacer(modifier = Modifier.height(32.dp))
-        Text(text = "Scan Results", fontSize = 24.sp)
+        Text(text = "Results", fontSize = 24.sp)
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (uiState.dataReady) {
-                if (uiState.compatible) {
-                    if (uiState.authenticated) {
-                        Text("Authenticated")
-                    } else {
-                        Text("Not authenticated")
-                    }
-
-                    if (uiState.protected) {
-                        Text("Protected")
-                    } else {
-                        Text("Not protected")
-                    }
-
-                    val tagId = uiState.uid
-                    Text("UID: $tagId")
-                } else {
-                    Text("Incompatible chip")
+            Text("Compatible: " +
+                when (uiState.compatible) {
+                    null -> "Unknown"
+                    true -> "Yes"
+                    else -> "No"
                 }
-            } else {
-                Text("Scan a chip")
-            }
-        }
-    }
+            )
 
-    if (scanViewOpen) {
-        ChipScanDialog(onScan = { scanViewUid = it }, onDismissRequest = { scanViewOpen = false })
+            Text("Authenticated: " +
+                when (uiState.authenticated) {
+                    null -> "Unknown"
+                    true -> "Yes"
+                    else -> "No"
+                }
+            )
+
+            Text("Protected: " +
+                when (uiState.protected) {
+                    null -> "Unknown"
+                    true -> "Yes"
+                    else -> "No"
+                }
+            )
+
+            Text("UID: " +
+                when (uiState.uid) {
+                    null -> "Unknown"
+                    else -> uiState.uid!!
+                }
+            )
+
+            Text("Content:\n" +
+                when (uiState.content) {
+                    null -> "Unknown"
+                    else -> uiState.content!!
+                }
+            )
+        }
     }
 }
