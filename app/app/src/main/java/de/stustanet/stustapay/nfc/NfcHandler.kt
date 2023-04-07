@@ -2,27 +2,20 @@ package de.stustanet.stustapay.nfc
 
 import android.app.Activity
 import android.app.PendingIntent
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
-import android.nfc.TagLostException
 import android.os.Build
-import android.widget.Toast
-import dagger.hilt.android.qualifiers.ActivityContext
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ActivityRetainedScoped
-import de.stustanet.stustapay.model.NfcState
-import io.ktor.utils.io.errors.*
-import kotlinx.coroutines.flow.update
+import de.stustanet.stustapay.util.asBitVector
+import de.stustanet.stustapay.util.bv
+import kotlinx.coroutines.flow.first
 import java.nio.charset.Charset
 import javax.inject.Inject
+import javax.inject.Singleton
 
-@ActivityRetainedScoped
+@Singleton
 class NfcHandler @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val nfcState: NfcState
+    private val dataSource: NfcDataSource
 ) {
     private lateinit var intent: PendingIntent
     private lateinit var device: NfcAdapter
@@ -33,8 +26,6 @@ class NfcHandler @Inject constructor(
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
 
-        // intents are mutable by default up until SDK version R, so FLAG_MUTABLE is only
-        // necessary starting with SDK version S
         val intentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             PendingIntent.FLAG_MUTABLE
         } else {
@@ -53,86 +44,82 @@ class NfcHandler @Inject constructor(
     }
 
     fun handleTag(tag: Tag) {
-        if (!nfcState.scanRequest.value) {
+        if (dataSource.isDebugCard()) {
+            dataSource.emitScanRead(true, true, true, 1uL, "debug")
             return
         }
 
         try {
-            nfcState.chipDataReady.update { false }
-            nfcState.chipCompatible.update { false }
-            nfcState.chipAuthenticated.update { false }
-            nfcState.chipProtected.update { false }
-            nfcState.chipUid.update { 0uL }
-
-            if (nfcState.enableDebugCard.value) {
-                nfcState.chipDataReady.update { true }
-                nfcState.chipCompatible.update { true }
-                nfcState.chipAuthenticated.update { true }
-                nfcState.chipProtected.update { true }
-                return
-            }
-
             if (!tag.techList.contains("android.nfc.tech.NfcA")) {
-                Toast.makeText(context, "Incompatible chip", Toast.LENGTH_LONG).show()
-                nfcState.chipDataReady.update { true }
+                dataSource.emitScanFailure()
                 return
             }
 
-            doScan(get(tag))
-        } catch (e: TagLostException) {
-            Toast.makeText(context, "Chip lost", Toast.LENGTH_LONG).show()
-            nfcState.chipDataReady.update { false }
-        } catch (e: IOException) {
-            Toast.makeText(context, "Chip lost", Toast.LENGTH_LONG).show()
-            nfcState.chipDataReady.update { false }
+            val mfulaesTag = get(tag)
+            mfulaesTag.connect()
+            while (!mfulaesTag.isConnected) {}
+
+            doScan(mfulaesTag)
+
+            mfulaesTag.close()
+        } catch (e: Exception) {
+            dataSource.emitScanFailure()
         }
     }
 
     private fun doScan(tag: MifareUltralightAES) {
         try {
-            tag.connect()
-            while (!tag.isConnected) {}
-
-            nfcState.chipCompatible.update { true }
+            if (dataSource.isAuth()) {
+                tag.authenticate(
+                    dataSource.getAuthKey(),
+                    MifareUltralightAES.KeyType.DATA_PROT_KEY,
+                    dataSource.isCmac()
+                )
+            }
         } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(context, "Incompatible chip", Toast.LENGTH_LONG).show()
-            nfcState.chipDataReady.update { true }
+            dataSource.emitScanFailure()
             return
         }
 
-        try {
-            tag.authenticate(nfcState.key.value, MifareUltralightAES.KeyType.DATA_PROT_KEY, nfcState.cmacEnabled.value)
-
-            nfcState.chipAuthenticated.update { true }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(context, "Authentication failed", Toast.LENGTH_LONG).show()
-        }
-
-        if (nfcState.writeRequest.value && (!nfcState.chipProtected.value || (nfcState.chipProtected.value && nfcState.chipAuthenticated.value))) {
-            tag.writeDataProtKey(nfcState.key.value)
-            if (nfcState.protectRequest.value) {
-                tag.setAuth0(0x10)
-            } else {
-                tag.setAuth0(0x3c)
-            }
-            tag.setCMAC(nfcState.cmacRequest.value)
-
-            val data = ByteArray(14 * 4)
-            val sig = "StuStaPay - built by SSN & friends!\nglhf ;)\n".toByteArray(Charset.forName("UTF-8"))
-            for (i in 0 until 11 * 4) { data[i] = sig[i] }
-            for (i in 11 * 4 until 12 * 4) { data[i] = 0 }
-            for (i in 12 * 4 until 14 * 4) { data[i] = i.toByte() }
-
+        if (dataSource.isWriteSigRequest() != null) {
+            var data = "StuStaPay - built by SSN & friends!\nglhf ;)\n".toByteArray(Charset.forName("UTF-8")).asBitVector()
+            for (i in 0u until 4u) { data += 0.bv }
+            for (i in 48u until 56u) { data += i.bv }
             tag.writeUserMemory(data)
+            dataSource.emitScanWrite()
+            return
         }
 
-        nfcState.chipProtected.update { tag.isProtected() }
-        nfcState.chipUid.update { tag.readSerialNumber() }
-        nfcState.chipContent.update { tag.readUserMemory().decodeToString() }
+        if (dataSource.isWriteKeyRequest() != null) {
+            tag.writeDataProtKey(dataSource.getAuthKey())
+            dataSource.emitScanWrite()
+            return
+        }
 
-        tag.close()
-        nfcState.chipDataReady.update { true }
+        val protectRequest = dataSource.isWriteProtectRequest()
+        if (protectRequest != null) {
+            if (protectRequest) {
+                tag.setAuth0(0x10u)
+            } else {
+                tag.setAuth0(0x3cu)
+            }
+            dataSource.emitScanWrite()
+            return
+        }
+
+        val cmacRequest = dataSource.isWriteCmacRequest()
+        if (cmacRequest != null) {
+            tag.setCMAC(cmacRequest)
+            dataSource.emitScanWrite()
+            return
+        }
+
+        if (dataSource.isReadRequest() != null) {
+            val chipProtected = tag.isProtected()
+            val chipUid = tag.readSerialNumber()
+            val chipContent = tag.readUserMemory().asByteArray().decodeToString()
+            dataSource.emitScanRead(true, true, chipProtected, chipUid, chipContent)
+            return
+        }
     }
 }

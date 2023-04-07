@@ -3,104 +3,114 @@ package de.stustanet.stustapay.ui.debug
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustanet.stustapay.model.NfcState
+import de.stustanet.stustapay.model.NfcScanResult
+import de.stustanet.stustapay.nfc.NfcDataSource
+import de.stustanet.stustapay.repository.NfcRepository
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
-import de.stustanet.stustapay.util.combine
 
 @HiltViewModel
 class NfcDebugViewModel @Inject constructor(
-    nfcState: NfcState
+    private val nfcRepository: NfcRepository,
+    nfcDataSource: NfcDataSource
 ) : ViewModel() {
-    private val _scanRequest = nfcState.scanRequest
-    private val _writeRequest = nfcState.writeRequest
-    private val _protectRequest = nfcState.protectRequest
-    private val _cmacRequest = nfcState.cmacRequest
+    private val _enableDebugCard = nfcDataSource.enableDebugCard
+    private val _enableAuth = nfcDataSource.enableAuth
+    private val _enableCmac = nfcDataSource.enableCmac
 
-    private val _cmacEnabled = nfcState.cmacEnabled
-    private val _enableDebugCard = nfcState.enableDebugCard
+    private val _scanResult = MutableStateFlow<NfcScanResult>(NfcScanResult.Failed)
 
-    private val _chipDataReady = nfcState.chipDataReady
-    private val _chipCompatible = nfcState.chipCompatible
-    private val _chipAuthenticated = nfcState.chipAuthenticated
-    private val _chipProtected = nfcState.chipProtected
-    private val _chipUid = nfcState.chipUid
-    private val _chipContent = nfcState.chipContent
-
-    val uiState: StateFlow<NfcDebugUiState> = combine(
-        _scanRequest,
-        _writeRequest,
-        _protectRequest,
-        _cmacRequest,
-        _cmacEnabled,
-        _enableDebugCard,
-        _chipDataReady,
-        _chipCompatible,
-        _chipAuthenticated,
-        _chipProtected,
-        _chipUid,
-        _chipContent
-    ) { scanRequest, writeRequest, protectRequest, cmacRequest, cmacEnabled, enableDebugCard, dataReady, compatible, authenticated, protected, uid, content ->
-        NfcDebugUiState (
-            scanRequest = scanRequest,
-            writeRequest = writeRequest,
-            protectRequest = protectRequest,
-            cmacRequest = cmacRequest,
-            cmacEnabled = cmacEnabled,
-            enableDebugCard = enableDebugCard,
-            dataReady = dataReady,
-            compatible = compatible,
-            authenticated = authenticated,
-            protected = protected,
-            uid = uid,
-            content = content
-        )
+    val uiState: StateFlow<NfcDebugViewUiState> = combine(_scanResult, _enableDebugCard, _enableAuth, _enableCmac) {
+        scanResult, enableDebugCard, enableAuth, enableCmac -> when (scanResult) {
+            is NfcScanResult.Read -> {
+                NfcDebugViewUiState(
+                    enableDebugCard = enableDebugCard,
+                    enableAuth = enableAuth,
+                    enableCmac = enableCmac,
+                    compatible = scanResult.chipCompatible,
+                    authenticated = scanResult.chipAuthenticated,
+                    protected = scanResult.chipProtected,
+                    uid = scanResult.chipUid,
+                    content = scanResult.chipContent
+                )
+            }
+            is NfcScanResult.Write -> {
+                NfcDebugViewUiState(
+                    enableDebugCard = enableDebugCard,
+                    enableAuth = enableAuth,
+                    enableCmac = enableCmac
+                )
+            }
+            is NfcScanResult.Failed -> {
+                NfcDebugViewUiState(
+                    enableDebugCard = enableDebugCard,
+                    enableAuth = enableAuth,
+                    enableCmac = enableCmac
+                )
+            }
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = NfcDebugUiState()
+        initialValue = NfcDebugViewUiState()
     )
 
-    fun scan(req: Boolean) {
-        _scanRequest.update { req }
+    suspend fun read() {
+        val res = nfcRepository.read()
+        _scanResult.emit(res)
     }
 
-    fun write(req: Boolean) {
-        _writeRequest.update { req }
+    suspend fun writeSig() {
+        val res = nfcRepository.writeSig()
+        _scanResult.emit(res)
     }
 
-    fun writeProtect(req: Boolean) {
-        _protectRequest.update { req }
+    suspend fun writeKey() {
+        val res = nfcRepository.writeKey()
+        _scanResult.emit(res)
     }
 
-    fun writeCmac(req: Boolean) {
-        _cmacRequest.update { req }
+    suspend fun writeProtectOn() {
+        val res = nfcRepository.writeProtect(true)
+        _scanResult.emit(res)
     }
 
-    fun cmac(req: Boolean) {
-        _cmacEnabled.update { req }
+    suspend fun writeProtectOff() {
+        val res = nfcRepository.writeProtect(false)
+        _scanResult.emit(res)
     }
 
-    fun debug(req: Boolean) {
-        _enableDebugCard.update { req }
+    suspend fun writeCmacOn() {
+        val res = nfcRepository.writeCmac(true)
+        _scanResult.emit(res)
     }
 
-    fun setContent(content: String) {
-        _chipContent.update { content }
+    suspend fun writeCmacOff() {
+        val res = nfcRepository.writeCmac(false)
+        _scanResult.emit(res)
+    }
+
+    fun setDebugCard(enable: Boolean) {
+        _enableDebugCard.update { enable }
+    }
+
+    fun setAuth(enable: Boolean) {
+        _enableAuth.update { enable }
+    }
+
+    fun setCmac(enable: Boolean) {
+        _enableCmac.update { enable }
     }
 }
 
-data class NfcDebugUiState(
-    val scanRequest: Boolean = false,
-    val writeRequest: Boolean = false,
-    val protectRequest: Boolean = false,
-    val cmacRequest: Boolean = false,
-    val cmacEnabled: Boolean = false,
+data class NfcDebugViewUiState(
     val enableDebugCard: Boolean = false,
-    val dataReady: Boolean = false,
-    val compatible: Boolean = false,
-    val authenticated: Boolean = false,
-    val protected: Boolean = false,
-    val uid: ULong = 0uL,
-    val content: String = ""
+    val enableAuth: Boolean = false,
+    val enableCmac: Boolean = false,
+
+    val compatible: Boolean? = null,
+    val authenticated: Boolean? = null,
+    val protected: Boolean? = null,
+    val uid: ULong? = null,
+    val content: String? = null
 )

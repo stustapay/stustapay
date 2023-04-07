@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
+import de.stustanet.stustapay.ui.chipscan.rememberChipScanState
 import de.stustanet.stustapay.ui.nav.navigateTo
 import kotlinx.coroutines.launch
 
@@ -20,7 +21,7 @@ import kotlinx.coroutines.launch
 fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
     val scope = rememberCoroutineScope()
     val nav = rememberNavController()
-    var scanning by remember { mutableStateOf(false) }
+    val scanState = rememberChipScanState()
 
     NavHost(navController = nav, startDestination = "main") {
         composable("main") {
@@ -43,17 +44,13 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                 }
             )
 
-            if (scanning) {
-                ChipScanDialog(
-                    onScan = { uid ->
-                        nav.navigateTo("success")
-                        // TODO: store uid in order progress
-                    },
-                    onDismissRequest = {
-                        scanning = false
-                    }
-                )
-            }
+            ChipScanDialog(
+                scanState,
+                onScan = { uid ->
+                    nav.navigateTo("success")
+                    // TODO: store uid in order progress
+                }
+            )
         }
         composable("success") {
             OrderSuccess(

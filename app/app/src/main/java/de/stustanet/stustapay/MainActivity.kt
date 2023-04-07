@@ -14,7 +14,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
-import de.stustanet.stustapay.model.NfcState
 import de.stustanet.stustapay.nfc.NfcHandler
 import de.stustanet.stustapay.ui.Main
 import de.stustanet.stustapay.util.SysUiController
@@ -50,7 +49,7 @@ class MainActivity : ComponentActivity(), SysUiController {
     public override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        if (intent.action == NfcAdapter.ACTION_TECH_DISCOVERED||
+        if (intent.action == NfcAdapter.ACTION_TECH_DISCOVERED ||
             intent.action == NfcAdapter.ACTION_TAG_DISCOVERED ||
             intent.action == NfcAdapter.ACTION_NDEF_DISCOVERED
         ) {
