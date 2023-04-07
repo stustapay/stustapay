@@ -11,8 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
-import de.stustanet.stustapay.ui.chipscan.rememberChipScanState
+import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
+import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import kotlinx.coroutines.launch
 
 /** after a scan happened, where do we send the info to */
@@ -33,7 +33,7 @@ fun UserLoginView(
 
     val userUIMessage by viewModel.userUIMessage.collectAsStateWithLifecycle()
 
-    val scanState = rememberChipScanState()
+    val scanState = rememberNfcScanDialogState()
 
     Column(
         modifier = Modifier
@@ -47,7 +47,7 @@ fun UserLoginView(
 
         var target by remember { mutableStateOf(ScanTarget.Login) }
 
-        ChipScanDialog(
+        NfcScanDialog(
             scanState,
             onScan = { uid ->
                 when (target) {

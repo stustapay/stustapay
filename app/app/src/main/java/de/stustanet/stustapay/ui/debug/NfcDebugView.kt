@@ -14,8 +14,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
-import de.stustanet.stustapay.ui.chipscan.rememberChipScanState
+import de.stustanet.stustapay.model.NfcScanFailure
+import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
+import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import kotlinx.coroutines.launch
 
 @Preview
@@ -24,11 +25,11 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
     val state = rememberNfcDebugState(viewModel)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var scanViewUid by remember { mutableStateOf(0uL) }
-    val scanState = rememberChipScanState()
+    val scanState = rememberNfcScanDialogState()
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
-    ChipScanDialog(scanState, onScan = { scanViewUid = it })
+    NfcScanDialog(scanState, onScan = { scanViewUid = it })
 
     if (state.isScanning()) {
         Dialog(
@@ -77,13 +78,6 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Switch(checked = uiState.enableDebugCard, onCheckedChange = { viewModel.setDebugCard(it) })
-            Text("Enable Debug Chip")
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
             Switch(checked = uiState.enableAuth, onCheckedChange = { viewModel.setAuth(it) })
             Text("Enable Authentication")
         }
@@ -110,6 +104,21 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
         ) {
             Text("Read")
         }
+
+        Button(
+            onClick = {
+                scope.launch {
+                    state.start()
+                    viewModel.program()
+                    state.stop()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Full Program")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
@@ -144,7 +153,7 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                 onClick = {
                     scope.launch {
                         state.start()
-                        viewModel.writeProtectOn()
+                        viewModel.writeProtect(true)
                         state.stop()
                     }
                 },
@@ -156,7 +165,7 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                 onClick = {
                     scope.launch {
                         state.start()
-                        viewModel.writeProtectOff()
+                        viewModel.writeProtect(false)
                         state.stop()
                     }
                 },
@@ -173,7 +182,7 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                 onClick = {
                     scope.launch {
                         state.start()
-                        viewModel.writeCmacOn()
+                        viewModel.writeCmac(true)
                         state.stop()
                     }
                 },
@@ -185,7 +194,7 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                 onClick = {
                     scope.launch {
                         state.start()
-                        viewModel.writeCmacOff()
+                        viewModel.writeCmac(false)
                         state.stop()
                     }
                 },
@@ -202,43 +211,28 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Compatible: " +
-                when (uiState.compatible) {
-                    null -> "Unknown"
-                    true -> "Yes"
-                    else -> "No"
+            when (uiState.result) {
+                is NfcDebugScanResult.None -> {}
+                is NfcDebugScanResult.ReadSuccess -> {
+                    Text("Protected: " +
+                        when ((uiState.result as NfcDebugScanResult.ReadSuccess).protected) {
+                            true -> "Yes"
+                            else -> "No"
+                        }
+                    )
+                    Text("UID: " + (uiState.result as NfcDebugScanResult.ReadSuccess).uid)
+                    Text("Content:\n" + (uiState.result as NfcDebugScanResult.ReadSuccess).content)
                 }
-            )
-
-            Text("Authenticated: " +
-                when (uiState.authenticated) {
-                    null -> "Unknown"
-                    true -> "Yes"
-                    else -> "No"
+                is NfcDebugScanResult.WriteSuccess -> Text("Written")
+                is NfcDebugScanResult.Failure -> {
+                    when ((uiState.result as NfcDebugScanResult.Failure).reason) {
+                        is NfcScanFailure.Other -> Text("Other failure")
+                        is NfcScanFailure.Incompatible -> Text("Tag incompatible")
+                        is NfcScanFailure.Lost -> Text("Tag lost")
+                        is NfcScanFailure.Auth -> Text("Authentication failed")
+                    }
                 }
-            )
-
-            Text("Protected: " +
-                when (uiState.protected) {
-                    null -> "Unknown"
-                    true -> "Yes"
-                    else -> "No"
-                }
-            )
-
-            Text("UID: " +
-                when (uiState.uid) {
-                    null -> "Unknown"
-                    else -> uiState.uid!!
-                }
-            )
-
-            Text("Content:\n" +
-                when (uiState.content) {
-                    null -> "Unknown"
-                    else -> uiState.content!!
-                }
-            )
+            }
         }
     }
 }
