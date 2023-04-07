@@ -14,7 +14,8 @@ insert into user_tag (
 )
 values
     (1234, null, null, null, null),
-    (13876489173, null, null, null, null)
+    (13876489173, null, null, null, null),
+    (5424726191074820, 'LOL-tag2', 'stuff', null, null)
     on conflict do nothing;
 
 
@@ -38,10 +39,10 @@ insert into usr (
     id, name, password, description, transport_account_id, cashier_account_id, user_tag_uid
 )
 values
-    -- password is admin
     (0, 'test-cashier', null, 'Some Description', null, 100, 1234),
     -- password is admin
-    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W' , null, null, null, null)
+    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W' , null, null, null, null),
+    (2, 'tag2', null, null, null, null, 5424726191074820)
     on conflict do nothing;
 select setval('usr_id_seq', 100);
 
@@ -51,7 +52,8 @@ insert into usr_privs (
 )
 values
     (1, 'admin'),
-    (0, 'cashier')
+    (0, 'cashier'),
+    (2, 'admin') -- tag #2
     on conflict do nothing;
 
 
@@ -105,7 +107,8 @@ insert into till_button (
     id, name
 ) values
     (0, 'Helles 0,5l'),
-    (1, 'Helles 1,0l');
+    (1, 'Helles 1,0l')
+    on conflict do nothing;
 select setval('till_button_id_seq', 100);
 
 insert into till_button_product (
@@ -114,28 +117,31 @@ insert into till_button_product (
     (0, 101),
     (0, 10),
     (1, 100),
-    (1, 10);
+    (1, 10)
+    on conflict do nothing;
+
 
 insert into till_layout (
     id, name, description
 )
 values
     (0, 'Bierkasse', 'Allgemeine Bierkasse')
-on conflict do nothing;
+    on conflict do nothing;
 select setval('till_layout_id_seq', 100);
 
 insert into till_layout_to_button (
     layout_id, button_id, sequence_number
 ) values
     (0, 0, 0),
-    (0, 1, 1);
+    (0, 1, 1)
+    on conflict do nothing;
 
 insert into till_profile (
     id, name, description, layout_id
 )
 values
     (0, 'Pot', 'Allgemeine Pot Bierkasse', 0)
-on conflict do nothing;
+    on conflict do nothing;
 select setval('till_profile_id_seq', 100);
 
 insert into till (
