@@ -106,7 +106,7 @@ values
 -- bookkeeping account
 create table if not exists account (
     id bigserial not null primary key,
-    user_tag_uid bigint unique references user_tag(uid) on delete cascade,
+    user_tag_uid numeric(20) unique references user_tag(uid) on delete cascade,
     type text not null references account_type(name) on delete restrict,
     constraint private_account_requires_user_tag check (user_tag_uid is not null = (type = 'private')),
     name text,
@@ -142,7 +142,7 @@ create table if not exists usr (
     password text,
     description text,
 
-    user_tag_uid bigint unique references user_tag(uid) on delete restrict,
+    user_tag_uid numeric(20) unique references user_tag(uid) on delete restrict,
 
     -- account for orgas to transport cash from one location to another
     transport_account_id bigint references account(id) on delete restrict,
