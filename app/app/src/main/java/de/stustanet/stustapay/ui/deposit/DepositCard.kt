@@ -9,21 +9,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
-import de.stustanet.stustapay.ui.chipscan.rememberChipScanState
-import de.stustanet.stustapay.ui.nav.navigateTo
+import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
+import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 
 @Composable
 fun DepositCard(goToMethod: () -> Unit, goToSuccess: () -> Unit, goToFailure: () -> Unit, viewModel: DepositViewModel) {
     val haptic = LocalHapticFeedback.current
-    val scanState = rememberChipScanState()
+    val scanState = rememberNfcScanDialogState()
 
     LaunchedEffect(scanState) {
         scanState.open()
     }
 
-    ChipScanDialog(scanState, onScan = { goToFailure() })
+    NfcScanDialog(scanState, onScan = { goToFailure() })
 
     Scaffold(
         content = {

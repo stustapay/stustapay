@@ -12,18 +12,16 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
-import de.stustanet.stustapay.ui.chipscan.ChipScanDialog
-import de.stustanet.stustapay.ui.chipscan.rememberChipScanState
-import de.stustanet.stustapay.ui.nav.navigateTo
+import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
+import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 
 @Composable
 fun DepositCash(goToMethod: () -> Unit, goToSuccess: () -> Unit, goToFailure: () -> Unit, viewModel: DepositViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
-    val scanState = rememberChipScanState()
+    val scanState = rememberNfcScanDialogState()
 
-    ChipScanDialog(scanState, onScan = { goToSuccess() })
+    NfcScanDialog(scanState, onScan = { goToSuccess() })
 
     Scaffold(
         content = { paddingValues ->

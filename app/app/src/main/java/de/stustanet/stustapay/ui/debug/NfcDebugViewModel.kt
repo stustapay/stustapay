@@ -3,6 +3,7 @@ package de.stustanet.stustapay.ui.debug
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustanet.stustapay.model.NfcScanFailure
 import de.stustanet.stustapay.model.NfcScanResult
 import de.stustanet.stustapay.nfc.NfcDataSource
 import de.stustanet.stustapay.repository.NfcRepository
@@ -12,43 +13,17 @@ import javax.inject.Inject
 @HiltViewModel
 class NfcDebugViewModel @Inject constructor(
     private val nfcRepository: NfcRepository,
-    nfcDataSource: NfcDataSource
 ) : ViewModel() {
-    private val _enableDebugCard = nfcDataSource.enableDebugCard
-    private val _enableAuth = nfcDataSource.enableAuth
-    private val _enableCmac = nfcDataSource.enableCmac
+    private val _result = MutableStateFlow<NfcDebugScanResult>(NfcDebugScanResult.None)
+    private val _enableAuth = MutableStateFlow(true)
+    private val _enableCmac = MutableStateFlow(true)
 
-    private val _scanResult = MutableStateFlow<NfcScanResult>(NfcScanResult.Failed)
-
-    val uiState: StateFlow<NfcDebugViewUiState> = combine(_scanResult, _enableDebugCard, _enableAuth, _enableCmac) {
-        scanResult, enableDebugCard, enableAuth, enableCmac -> when (scanResult) {
-            is NfcScanResult.Read -> {
-                NfcDebugViewUiState(
-                    enableDebugCard = enableDebugCard,
-                    enableAuth = enableAuth,
-                    enableCmac = enableCmac,
-                    compatible = scanResult.chipCompatible,
-                    authenticated = scanResult.chipAuthenticated,
-                    protected = scanResult.chipProtected,
-                    uid = scanResult.chipUid,
-                    content = scanResult.chipContent
-                )
-            }
-            is NfcScanResult.Write -> {
-                NfcDebugViewUiState(
-                    enableDebugCard = enableDebugCard,
-                    enableAuth = enableAuth,
-                    enableCmac = enableCmac
-                )
-            }
-            is NfcScanResult.Failed -> {
-                NfcDebugViewUiState(
-                    enableDebugCard = enableDebugCard,
-                    enableAuth = enableAuth,
-                    enableCmac = enableCmac
-                )
-            }
-        }
+    val uiState: StateFlow<NfcDebugViewUiState> = combine(_result, _enableAuth, _enableCmac) {
+        result, enableAuth, enableCmac -> NfcDebugViewUiState(
+            enableAuth = enableAuth,
+            enableCmac = enableCmac,
+            result = result
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -56,42 +31,68 @@ class NfcDebugViewModel @Inject constructor(
     )
 
     suspend fun read() {
-        val res = nfcRepository.read()
-        _scanResult.emit(res)
+        when (val res = nfcRepository.read(_enableAuth.value, _enableCmac.value)) {
+            is NfcScanResult.Read -> _result.emit(NfcDebugScanResult.ReadSuccess(
+                res.chipProtected,
+                res.chipUid,
+                res.chipContent
+            ))
+            is NfcScanResult.Fail -> _result.emit(NfcDebugScanResult.Failure(res.reason))
+            else -> _result.emit(NfcDebugScanResult.None)
+        }
+    }
+
+    suspend fun program() {
+        val requiresAuth = when (nfcRepository.read(false, false)) {
+            is NfcScanResult.Read -> false
+            else -> true
+        }
+
+        val requiresCmac = if (requiresAuth) {
+            when (nfcRepository.read(true, false)) {
+                is NfcScanResult.Read -> false
+                else -> true
+            }
+        } else {
+            false
+        }
+
+        nfcRepository.writeSig(requiresAuth, requiresCmac)
+        nfcRepository.writeKey(requiresAuth, requiresCmac)
+        nfcRepository.writeProtect(true, true, requiresCmac)
+        nfcRepository.writeCmac(true, true, requiresCmac)
     }
 
     suspend fun writeSig() {
-        val res = nfcRepository.writeSig()
-        _scanResult.emit(res)
+        when (val res = nfcRepository.writeSig(_enableAuth.value, _enableCmac.value)) {
+            is NfcScanResult.Write -> _result.emit(NfcDebugScanResult.WriteSuccess)
+            is NfcScanResult.Fail -> _result.emit(NfcDebugScanResult.Failure(res.reason))
+            else -> _result.emit(NfcDebugScanResult.None)
+        }
     }
 
     suspend fun writeKey() {
-        val res = nfcRepository.writeKey()
-        _scanResult.emit(res)
+        when (val res = nfcRepository.writeKey(_enableAuth.value, _enableCmac.value)) {
+            is NfcScanResult.Write -> _result.emit(NfcDebugScanResult.WriteSuccess)
+            is NfcScanResult.Fail -> _result.emit(NfcDebugScanResult.Failure(res.reason))
+            else -> _result.emit(NfcDebugScanResult.None)
+        }
     }
 
-    suspend fun writeProtectOn() {
-        val res = nfcRepository.writeProtect(true)
-        _scanResult.emit(res)
+    suspend fun writeProtect(enable: Boolean) {
+        when (val res = nfcRepository.writeProtect(enable, _enableAuth.value, _enableCmac.value)) {
+            is NfcScanResult.Write -> _result.emit(NfcDebugScanResult.WriteSuccess)
+            is NfcScanResult.Fail -> _result.emit(NfcDebugScanResult.Failure(res.reason))
+            else -> _result.emit(NfcDebugScanResult.None)
+        }
     }
 
-    suspend fun writeProtectOff() {
-        val res = nfcRepository.writeProtect(false)
-        _scanResult.emit(res)
-    }
-
-    suspend fun writeCmacOn() {
-        val res = nfcRepository.writeCmac(true)
-        _scanResult.emit(res)
-    }
-
-    suspend fun writeCmacOff() {
-        val res = nfcRepository.writeCmac(false)
-        _scanResult.emit(res)
-    }
-
-    fun setDebugCard(enable: Boolean) {
-        _enableDebugCard.update { enable }
+    suspend fun writeCmac(enable: Boolean) {
+        when (val res = nfcRepository.writeCmac(enable, _enableAuth.value, _enableCmac.value)) {
+            is NfcScanResult.Write -> _result.emit(NfcDebugScanResult.WriteSuccess)
+            is NfcScanResult.Fail -> _result.emit(NfcDebugScanResult.Failure(res.reason))
+            else -> _result.emit(NfcDebugScanResult.None)
+        }
     }
 
     fun setAuth(enable: Boolean) {
@@ -104,13 +105,20 @@ class NfcDebugViewModel @Inject constructor(
 }
 
 data class NfcDebugViewUiState(
-    val enableDebugCard: Boolean = false,
     val enableAuth: Boolean = false,
     val enableCmac: Boolean = false,
-
-    val compatible: Boolean? = null,
-    val authenticated: Boolean? = null,
-    val protected: Boolean? = null,
-    val uid: ULong? = null,
-    val content: String? = null
+    val result: NfcDebugScanResult = NfcDebugScanResult.None
 )
+
+sealed interface NfcDebugScanResult {
+    object None: NfcDebugScanResult
+    data class ReadSuccess(
+        val protected: Boolean,
+        val uid: ULong,
+        val content: String
+    ): NfcDebugScanResult
+    object WriteSuccess: NfcDebugScanResult
+    data class Failure(
+        val reason: NfcScanFailure
+    ): NfcDebugScanResult
+}
