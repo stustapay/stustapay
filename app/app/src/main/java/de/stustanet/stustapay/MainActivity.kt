@@ -2,6 +2,7 @@ package de.stustanet.stustapay
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
@@ -25,9 +26,13 @@ class MainActivity : ComponentActivity(), SysUiController {
     lateinit var nfcHandler: NfcHandler
     val viewModel: MainActivityViewModel by viewModels()
 
-    @SuppressLint("ObsoleteSdkInt")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // disable all automatic screen rotation
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        // things that need the activity
         nfcHandler.onCreate(this)
 
         setContent {
