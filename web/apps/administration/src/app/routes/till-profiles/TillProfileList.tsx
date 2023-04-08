@@ -9,7 +9,7 @@ import {
 import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { TillProfile } from "@models";
@@ -59,7 +59,7 @@ export const TillProfileList: React.FC = () => {
     setProfileToDelete(null);
   };
 
-  const columns: GridColumns<TillProfile> = [
+  const columns: GridColDef<TillProfile>[] = [
     {
       field: "name",
       headerName: t("profile.name") as string,
@@ -117,7 +117,7 @@ export const TillProfileList: React.FC = () => {
         autoHeight
         rows={profiles ?? []}
         columns={columns}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog

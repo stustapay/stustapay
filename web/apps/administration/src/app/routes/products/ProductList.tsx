@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Paper, Typography, ListItem, ListItemText, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
+import { Paper, ListItem, ListItemText, Tooltip } from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -20,10 +20,12 @@ import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@component
 import { Product } from "@models";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "@components/Loading";
+import { useCurrencyFormatter } from "src/hooks";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation(["products", "common"]);
   const navigate = useNavigate();
+  const formatCurrency = useCurrencyFormatter();
 
   const { products, isLoading: isProductsLoading } = useGetProductsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
@@ -74,7 +76,7 @@ export const ProductList: React.FC = () => {
     createProduct({ ...product, name: `${product.name} - ${t("copy", { ns: "common" })}` });
   };
 
-  const columns: GridColumns<Product> = [
+  const columns: GridColDef<Product>[] = [
     {
       field: "name",
       headerName: t("productName") as string,
@@ -89,7 +91,7 @@ export const ProductList: React.FC = () => {
       field: "price",
       headerName: t("productPrice") as string,
       type: "number",
-      valueFormatter: ({ value }) => (value ? `${value} €` : ""),
+      valueFormatter: ({ value }) => formatCurrency(value),
     },
     {
       field: "tax_rate",
@@ -137,13 +139,12 @@ export const ProductList: React.FC = () => {
         >
           <ListItemText primary={t("products", { ns: "common" })} />
         </ListItem>
-        <Typography variant="body1">{}</Typography>
       </Paper>
       <DataGrid
         autoHeight
         rows={products ?? []}
         columns={columns}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog

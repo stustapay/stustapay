@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { NewProduct, Product } from "@models/product";
-import { baseUrl, prepareAuthHeaders } from "./common";
+import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
 
@@ -10,7 +10,7 @@ const productAdapter = createEntityAdapter<Product>({
 
 export const productApi = createApi({
   reducerPath: "productApi",
-  baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
+  baseQuery: adminApiBaseQuery,
   tagTypes: ["product"],
   endpoints: (builder) => ({
     getProductById: builder.query<EntityState<Product>, number>({

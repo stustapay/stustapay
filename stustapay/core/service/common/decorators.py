@@ -72,9 +72,8 @@ def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
                 raise PermissionError("invalid user token")  # TODO: better exception typing
 
             if privileges:
-                for privilege in privileges:
-                    if privilege not in user.privileges:
-                        raise PermissionError(f"user does not have required privilege: {privilege}")
+                if not any([p in privileges for p in user.privileges]):
+                    raise PermissionError(f"user does not have any of the required privileges: {privileges}")
 
             if "current_user" in signature(func).parameters:
                 kwargs["current_user"] = user
@@ -136,9 +135,8 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
                     )
                 )
 
-                for privilege in user_privileges:
-                    if privilege not in logged_in_user.privileges:
-                        raise PermissionError(f"user does not have required privilege: {privilege}")
+                if not any([p in user_privileges for p in logged_in_user.privileges]):
+                    raise PermissionError(f"user does not have any of the required privileges: {user_privileges}")
 
                 if "current_user" in signature(func).parameters:
                     kwargs["current_user"] = logged_in_user

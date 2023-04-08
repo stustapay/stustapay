@@ -11,6 +11,7 @@ from starlette.types import ASGIApp, Scope, Receive, Send
 
 from stustapay.core.config import Config
 from stustapay.core.service.account import AccountService
+from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
@@ -35,6 +36,7 @@ class Context:
     till_service: Optional[TillService] = None
     config_service: Optional[ConfigService] = None
     account_service: Optional[AccountService] = None
+    cashier_service: Optional[CashierService] = None
 
 
 class ContextMiddleware:
@@ -141,6 +143,10 @@ def get_account_service(request: Request) -> AccountService:
     return request.state.context.account_service
 
 
+def get_cashier_service(request: Request) -> CashierService:
+    return request.state.context.cashier_service
+
+
 ContextOrderService = Annotated[OrderService, Depends(get_order_service)]
 ContextProductService = Annotated[ProductService, Depends(get_product_service)]
 ContextTaxRateService = Annotated[TaxRateService, Depends(get_tax_rate_service)]
@@ -148,6 +154,7 @@ ContextUserService = Annotated[UserService, Depends(get_user_service)]
 ContextTillService = Annotated[TillService, Depends(get_till_service)]
 ContextConfigService = Annotated[ConfigService, Depends(get_config_service)]
 ContextAccountService = Annotated[AccountService, Depends(get_account_service)]
+ContextCashierService = Annotated[CashierService, Depends(get_cashier_service)]
 
 
 async def get_db_conn(

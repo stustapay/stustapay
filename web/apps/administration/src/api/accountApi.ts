@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { Account } from "@models/account";
-import { baseUrl, prepareAuthHeaders } from "./common";
+import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
 
@@ -8,7 +8,7 @@ const accountAdapter = createEntityAdapter<Account>();
 
 export const accountApi = createApi({
   reducerPath: "accountApi",
-  baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
+  baseQuery: adminApiBaseQuery,
   tagTypes: ["account"],
   endpoints: (builder) => ({
     getAccounts: builder.query<EntityState<Account>, void>({

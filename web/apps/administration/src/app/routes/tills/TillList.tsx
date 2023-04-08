@@ -8,7 +8,7 @@ import {
 } from "@api";
 import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -58,7 +58,7 @@ export const TillList: React.FC = () => {
     setTillToDelete(null);
   };
 
-  const columns: GridColumns<Till> = [
+  const columns: GridColDef<Till>[] = [
     {
       field: "name",
       headerName: t("till.name") as string,
@@ -116,7 +116,7 @@ export const TillList: React.FC = () => {
         autoHeight
         rows={tills ?? []}
         columns={columns}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog

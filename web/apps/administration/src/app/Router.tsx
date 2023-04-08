@@ -25,6 +25,10 @@ import { TillButtonList } from "./routes/till-buttons/TillButtonList";
 import { UserUpdate, UserDetail, UserList, UserCreate } from "./routes/users";
 import { AccountList } from "./routes/accounts/AccountList";
 import { OrderList } from "./routes/orders/OrderList";
+import { AdminRoot } from "./routes/AdminRoot";
+import { OrderDetail } from "./routes/orders/OrderDetail";
+import { CashierList, CashierDetail } from "./routes/cashiers";
+import { CashierCloseOut } from "./routes/cashiers/CashierCloseOut";
 
 const router = createBrowserRouter([
   {
@@ -47,6 +51,18 @@ const router = createBrowserRouter([
       {
         path: "products/:productId/edit",
         element: <ProductUpdate />,
+      },
+      {
+        path: "cashiers",
+        element: <CashierList />,
+      },
+      {
+        path: "cashiers/:cashierId",
+        element: <CashierDetail />,
+      },
+      {
+        path: "cashiers/:cashierId/close-out",
+        element: <CashierCloseOut />,
       },
       {
         path: "tax-rates",
@@ -121,18 +137,6 @@ const router = createBrowserRouter([
         element: <TillProfileDetail />,
       },
       {
-        path: "users/new",
-        element: <UserCreate />,
-      },
-      {
-        path: "users/:userId/edit",
-        element: <UserUpdate />,
-      },
-      {
-        path: "users/:userId",
-        element: <UserDetail />,
-      },
-      {
         path: "users",
         element: <UserList />,
       },
@@ -145,8 +149,30 @@ const router = createBrowserRouter([
         element: <OrderList />,
       },
       {
+        path: "orders/:orderId",
+        element: <OrderDetail />,
+      },
+      {
         path: "settings",
         element: <Settings />,
+      },
+      {
+        path: "admin",
+        element: <AdminRoot />,
+        children: [
+          {
+            path: "users/new",
+            element: <UserCreate />,
+          },
+          {
+            path: "users/:userId/edit",
+            element: <UserUpdate />,
+          },
+          {
+            path: "users/:userId",
+            element: <UserDetail />,
+          },
+        ],
       },
     ],
   },

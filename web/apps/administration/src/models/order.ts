@@ -29,6 +29,9 @@ export const OrderSchema = z.object({
   finished_at: z.string().datetime({ offset: true }).nullable(),
   payment_method: z.string().nullable(),
   order_type: OrderTypeSchema.nullable(),
+  total_price: z.number(),
+  total_tax: z.number(),
+  total_no_tax: z.number(),
 
   cashier_id: z.number(),
   till_id: z.number(),
