@@ -23,7 +23,7 @@ import { TillButtonUpdate } from "./routes/till-buttons/TillButtonUpdate";
 import { TillButtonCreate } from "./routes/till-buttons/TillButtonCreate";
 import { TillButtonList } from "./routes/till-buttons/TillButtonList";
 import { UserUpdate, UserDetail, UserList, UserCreate } from "./routes/users";
-import { AccountList } from "./routes/accounts/AccountList";
+import { SystemAccountList, CustomerAccountDetail, SystemAccountDetail, FindAccounts } from "./routes/accounts";
 import { OrderList } from "./routes/orders/OrderList";
 import { AdminRoot } from "./routes/AdminRoot";
 import { OrderDetail } from "./routes/orders/OrderDetail";
@@ -141,8 +141,20 @@ const router = createBrowserRouter([
         element: <UserList />,
       },
       {
-        path: "accounts",
-        element: <AccountList />,
+        path: "system-accounts",
+        element: <SystemAccountList />,
+      },
+      {
+        path: "system-accounts/:accountId",
+        element: <SystemAccountDetail />,
+      },
+      {
+        path: "customer-accounts/:accountId",
+        element: <CustomerAccountDetail />,
+      },
+      {
+        path: "find-accounts",
+        element: <FindAccounts />,
       },
       {
         path: "orders",

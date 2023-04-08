@@ -24,6 +24,12 @@ export const orderApi = createApi({
         return orderAdapter.addMany(orderAdapter.getInitialState(), response);
       },
     }),
+    getOrderByCustomer: builder.query<EntityState<Order>, number>({
+      query: (id) => `/orders?customer_account_id=${id}`,
+      transformResponse: (response: Order[]) => {
+        return orderAdapter.addMany(orderAdapter.getInitialState(), response);
+      },
+    }),
     getOrders: builder.query<EntityState<Order>, void>({
       query: () => "/orders/",
       transformResponse: (response: Order[]) => {
@@ -76,4 +82,4 @@ export const orderApi = createApi({
 export const { selectOrderAll, selectOrderById, selectOrderEntities, selectOrderIds, selectOrderTotal } =
   convertEntityAdaptorSelectors("Order", orderAdapter.getSelectors());
 
-export const { useGetOrdersQuery, useGetOrderByIdQuery, useGetOrderByTillQuery } = orderApi;
+export const { useGetOrdersQuery, useGetOrderByIdQuery, useGetOrderByTillQuery, useGetOrderByCustomerQuery } = orderApi;

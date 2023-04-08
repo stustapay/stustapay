@@ -13,8 +13,6 @@ import {
   Box,
   CircularProgress,
   Button,
-  Collapse,
-  ListItemButton,
   Alert,
 } from "@mui/material";
 import {
@@ -29,11 +27,10 @@ import {
   Menu as MenuIcon,
   AccountBalance as AccountBalanceIcon,
   AddShoppingCart as AddShoppingCartIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import { Outlet, Navigate, useLocation, Link as RouterLink } from "react-router-dom";
-import { ListItemLink, Loading } from "@components";
+import { ExpandableLinkMenu, ListItemLink, Loading } from "@components";
 import { useTranslation } from "react-i18next";
 import { useAppSelector, selectCurrentUser } from "@store";
 import { AppBar, Main, DrawerHeader, drawerWidth } from "@components";
@@ -42,32 +39,23 @@ import { useGetConfigEntriesQuery } from "@api";
 
 const AdminMenu: React.FC = () => {
   const { t } = useTranslation(["common"]);
-  const [open, setOpen] = React.useState(false);
-
-  const toggleOpen = () => setOpen((open) => !open);
   return (
-    <>
-      <ListItemButton onClick={toggleOpen}>
-        <ListItemIcon>{open ? <ExpandLessIcon /> : <ExpandMoreIcon />}</ListItemIcon>
-        <ListItemText primary={t("advanced")} />
-      </ListItemButton>
-      <Collapse in={open}>
-        <List sx={{ pl: 2 }}>
-          <ListItemLink to="/users">
-            <ListItemIcon>
-              <PersonIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("users")} />
-          </ListItemLink>
-          <ListItemLink to="/settings">
-            <ListItemIcon>
-              <SettingsIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("settings")} />
-          </ListItemLink>
-        </List>
-      </Collapse>
-    </>
+    <ExpandableLinkMenu label={t("advanced")}>
+      <List sx={{ pl: 2 }}>
+        <ListItemLink to="/users">
+          <ListItemIcon>
+            <PersonIcon />
+          </ListItemIcon>
+          <ListItemText primary={t("users")} />
+        </ListItemLink>
+        <ListItemLink to="/settings">
+          <ListItemIcon>
+            <SettingsIcon />
+          </ListItemIcon>
+          <ListItemText primary={t("settings")} />
+        </ListItemLink>
+      </List>
+    </ExpandableLinkMenu>
   );
 };
 
@@ -189,12 +177,22 @@ export const AuthenticatedRoot: React.FC = () => {
             </ListItemIcon>
             <ListItemText primary={t("tills")} />
           </ListItemLink>
-          <ListItemLink to="/accounts">
-            <ListItemIcon>
-              <AccountBalanceIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("accounts")} />
-          </ListItemLink>
+          <ExpandableLinkMenu label={t("accounts")}>
+            <List sx={{ pl: 2 }}>
+              <ListItemLink to="/find-accounts">
+                <ListItemIcon>
+                  <SearchIcon />
+                </ListItemIcon>
+                <ListItemText primary={t("findAccounts")} />
+              </ListItemLink>
+              <ListItemLink to="/system-accounts">
+                <ListItemIcon>
+                  <AccountBalanceIcon />
+                </ListItemIcon>
+                <ListItemText primary={t("systemAccounts")} />
+              </ListItemLink>
+            </List>
+          </ExpandableLinkMenu>
           <ListItemLink to="/orders">
             <ListItemIcon>
               <AddShoppingCartIcon />
