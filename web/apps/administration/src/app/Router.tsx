@@ -27,7 +27,8 @@ import { AccountList } from "./routes/accounts/AccountList";
 import { OrderList } from "./routes/orders/OrderList";
 import { AdminRoot } from "./routes/AdminRoot";
 import { OrderDetail } from "./routes/orders/OrderDetail";
-import { CashierList } from "./routes/cashiers";
+import { CashierList, CashierDetail } from "./routes/cashiers";
+import { CashierCloseOut } from "./routes/cashiers/CashierCloseOut";
 
 const router = createBrowserRouter([
   {
@@ -54,6 +55,14 @@ const router = createBrowserRouter([
       {
         path: "cashiers",
         element: <CashierList />,
+      },
+      {
+        path: "cashiers/:cashierId",
+        element: <CashierDetail />,
+      },
+      {
+        path: "cashiers/:cashierId/close-out",
+        element: <CashierCloseOut />,
       },
       {
         path: "tax-rates",

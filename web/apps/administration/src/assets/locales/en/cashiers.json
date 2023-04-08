@@ -4,6 +4,7 @@
         "description": "Description",
         "cashDrawerBalance": "Cash Drawer",
         "tagId": "Tag ID",
-        "till": "Till"
+        "till": "Till",
+        "closeOut": "Close Out"
     }
 }

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import asyncpg
 
 from stustapay.core.config import Config
@@ -21,3 +23,11 @@ class CashierService(DBService):
         async for row in cursor:
             result.append(Cashier.parse_obj(row))
         return result
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin, Privilege.finanzorga])
+    async def get_cashier(self, *, conn: asyncpg.Connection, cashier_id: int) -> Optional[Cashier]:
+        row = await conn.fetchrow("select * from cashiers where id = $1", cashier_id)
+        if not row:
+            return None
+        return Cashier.parse_obj(row)

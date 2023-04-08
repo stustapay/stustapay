@@ -21,10 +21,17 @@ export const cashierApi = createApi({
       providesTags: (result) =>
         result ? [...result.ids.map((id) => ({ type: "cashier" as const, id })), "cashier"] : ["cashier"],
     }),
+    getCashierById: builder.query<EntityState<Cashier>, number>({
+      query: (id) => `/cashiers/${id}/`,
+      transformResponse: (response: Cashier) => {
+        return cashierAdapter.addOne(cashierAdapter.getInitialState(), response);
+      },
+      providesTags: (result, error, arg) => ["cashier", { type: "cashier" as const, id: arg }],
+    }),
   }),
 });
 
 export const { selectCashierAll, selectCashierById, selectCashierEntities, selectCashierIds, selectCashierTotal } =
   convertEntityAdaptorSelectors("Cashier", cashierAdapter.getSelectors());
 
-export const { useGetCashiersQuery } = cashierApi;
+export const { useGetCashiersQuery, useGetCashierByIdQuery } = cashierApi;

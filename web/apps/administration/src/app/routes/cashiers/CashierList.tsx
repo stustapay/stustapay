@@ -40,6 +40,7 @@ export const CashierList: React.FC = () => {
     {
       field: "name",
       headerName: t("cashier.name") as string,
+      renderCell: (params) => <RouterLink to={`/cashiers/${params.row.id}`}>{params.row.name}</RouterLink>,
       flex: 1,
     },
     {
