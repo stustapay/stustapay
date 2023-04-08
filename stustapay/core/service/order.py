@@ -248,8 +248,11 @@ class OrderService(DBService):
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
-    async def list_orders(self, *, conn: asyncpg.Connection) -> list[Order]:
-        cursor = conn.cursor("select * from order_value")
+    async def list_orders(self, *, conn: asyncpg.Connection, customer_account_id: Optional[int] = None) -> list[Order]:
+        if customer_account_id is not None:
+            cursor = conn.cursor("select * from order_value where customer_account_id = $1", customer_account_id)
+        else:
+            cursor = conn.cursor("select * from order_value")
         result = []
         async for row in cursor:
             result.append(Order.parse_obj(row))

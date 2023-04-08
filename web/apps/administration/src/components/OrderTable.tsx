@@ -40,7 +40,7 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
       headerName: t("order.totalNoTax") as string,
       align: "right",
       valueFormatter: ({ value }) => formatCurrency(value),
-      width: 100,
+      width: 150,
     },
     {
       field: "total_tax",
@@ -59,13 +59,15 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
     {
       field: "created_at",
       headerName: t("order.createdAt") as string,
-      type: "dateTime",
+      type: "string",
+      valueGetter: ({ value }) => value && new Date(value).toLocaleString("de-DE"),
       flex: 1,
     },
     {
       field: "finished_at",
       headerName: t("order.finishedAt") as string,
-      type: "dateTime",
+      type: "string",
+      valueGetter: ({ value }) => value && new Date(value).toLocaleString("de-DE"),
       flex: 1,
     },
   ];

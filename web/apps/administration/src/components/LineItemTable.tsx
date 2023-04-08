@@ -58,7 +58,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
       field: "product_id",
       headerName: t("item.product") as string,
       type: "number",
-      width: 100,
+      width: 200,
       renderCell: (params) => renderProduct(params.row.product_id),
     },
     {
