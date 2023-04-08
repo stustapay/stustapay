@@ -19,13 +19,15 @@ class ProductService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def create_product(self, *, conn: asyncpg.Connection, product: NewProduct) -> Product:
         row = await conn.fetchrow(
-            "insert into product (name, price, tax_name, target_account_id, fixed_price) values ($1, $2, $3, $4, $5) "
-            "returning id, name, price, tax_name, target_account_id, fixed_price",
+            "insert into product (name, price, tax_name, target_account_id, fixed_price, price_in_vouchers) "
+            "values ($1, $2, $3, $4, $5, $6) "
+            "returning id, name, price, tax_name, target_account_id, fixed_price, price_in_vouchers",
             product.name,
             product.price,
             product.tax_name,
             product.target_account_id,
             product.fixed_price,
+            product.price_in_vouchers,
         )
 
         return Product.parse_obj(row)
@@ -54,15 +56,17 @@ class ProductService(DBService):
         self, *, conn: asyncpg.Connection, product_id: int, product: NewProduct
     ) -> Optional[Product]:
         row = await conn.fetchrow(
-            "update product set name = $2, price = $3, tax_name = $4, target_account_id = $5, fixed_price = $6 "
+            "update product set name = $2, price = $3, tax_name = $4, target_account_id = $5, fixed_price = $6, "
+            "price_in_vouchers = $7 "
             "where id = $1 "
-            "returning id, name, price, tax_name, target_account_id, fixed_price",
+            "returning id, name, price, tax_name, target_account_id, fixed_price, price_in_vouchers",
             product_id,
             product.name,
             product.price,
             product.tax_name,
             product.target_account_id,
             product.fixed_price,
+            product.price_in_vouchers,
         )
         if row is None:
             return None

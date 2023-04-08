@@ -4,6 +4,7 @@ export const NewProductSchema = z.object({
   name: z.string().min(1),
   price: z.number().nullable(),
   fixed_price: z.boolean(),
+  price_in_vouchers: z.number().nullable(),
   tax_name: z.string().min(1),
 });
 export type NewProduct = z.infer<typeof NewProductSchema>;

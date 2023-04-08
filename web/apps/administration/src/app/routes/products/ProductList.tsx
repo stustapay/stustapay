@@ -94,6 +94,11 @@ export const ProductList: React.FC = () => {
       valueFormatter: ({ value }) => formatCurrency(value),
     },
     {
+      field: "price_in_vouchers",
+      headerName: t("productPriceInVouchers") as string,
+      type: "number",
+    },
+    {
       field: "tax_rate",
       headerName: t("taxRate") as string,
       align: "right",
