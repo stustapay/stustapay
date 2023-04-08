@@ -1,6 +1,7 @@
 {
   "productName": "Name",
   "productPrice": "Price",
+  "productPriceInVouchers": "Price in Vouchers",
   "isFixedPrice": "Fixed Price",
   "taxRate": "Tax Rate",
   "fixedPrice": "Price is fixed",

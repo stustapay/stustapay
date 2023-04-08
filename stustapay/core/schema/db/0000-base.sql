@@ -115,7 +115,9 @@ create table if not exists account (
     comment text,
 
     -- current balance, updated on each transaction
-    balance numeric not null default 0
+    balance numeric not null default 0,
+    -- current number of vouchers, updated on each transaction
+    voucher bigint not null default 0
 
 
     -- todo: voucher
@@ -265,6 +267,8 @@ create table if not exists product (
     price numeric,
     -- price is not fixed, e.g for top up. Then price=null and set with the api call
     fixed_price boolean not null default true,
+    price_in_vouchers bigint,
+    constraint product_vouchers_only_with_fixed_price check ( price_in_vouchers is not null and fixed_price or price_in_vouchers is null ),
     constraint product_not_fixed_or_price check ( price is not null = fixed_price),
 
     -- if target account is set, the product is booked to this specific account,
@@ -534,6 +538,8 @@ create table if not exists transaction (
     -- amount being transferred from source_account to target_account
     amount numeric not null,
     constraint amount_positive check (amount >= 0),
+    vouchers bigint not null,
+    constraint vouchers_positive check (vouchers >= 0),
     tax_rate numeric not null, -- how much tax is included in the amount
     tax_name text not null
 );
@@ -560,7 +566,8 @@ create or replace function book_transaction (
     source_account_id bigint,
     target_account_id bigint,
     amount numeric,
-    tax_name text
+    tax_name text,
+    vouchers bigint
 )
     returns bigint as $$
 <<locals>> declare
@@ -574,6 +581,10 @@ begin
         raise 'unknown tax name';
     end if;
 
+    if vouchers < 0 then
+        raise 'vouchers cannot be negative';
+    end if;
+
     if amount < 0 then
         -- swap account on negative amount, as only non-negative transactions are allowed
         temp_account_id = source_account_id;
@@ -584,7 +595,7 @@ begin
 
     -- add new transaction
     insert into transaction (
-        order_id, description, source_account, target_account, amount, tax_rate, tax_name
+        order_id, description, source_account, target_account, amount, tax_rate, tax_name, vouchers
     )
     values (
         book_transaction.order_id,
@@ -593,7 +604,8 @@ begin
         book_transaction.target_account_id,
         book_transaction.amount,
         locals.tax_rate,
-        book_transaction.tax_name
+        book_transaction.tax_name,
+        book_transaction.vouchers
     ) returning id into locals.transaction_id;
 
     -- update account values
