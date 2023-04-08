@@ -1,6 +1,7 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import NewTill, NewTillButton, NewTillLayout, NewTillProfile
+from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.product import ProductService
 from .common import BaseTestCase
 
@@ -31,7 +32,7 @@ class TillServiceTest(BaseTestCase):
         self.assertEqual(button.name, "Helles 0,5l")
         self.assertEqual(button.price, 5.5)
 
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(AccessDenied):
             await self.till_service.layout.create_button(
                 token=self.cashier_token,
                 button=NewTillButton(name="Helles 0,5l", product_ids=[product1.id, product_pfand.id]),
@@ -49,7 +50,7 @@ class TillServiceTest(BaseTestCase):
         self.assertEqual(len(buttons), 1)
         self.assertTrue(updated_button in buttons)
 
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(AccessDenied):
             await self.till_service.layout.delete_button(token=self.cashier_token, button_id=updated_button.id)
 
         deleted = await self.till_service.layout.delete_button(token=self.admin_token, button_id=updated_button.id)
@@ -83,7 +84,7 @@ class TillServiceTest(BaseTestCase):
         )
         self.assertEqual(till.name, "Pot 1")
 
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(AccessDenied):
             await self.till_service.create_till(
                 token=self.cashier_token,
                 till=NewTill(
@@ -115,7 +116,7 @@ class TillServiceTest(BaseTestCase):
         self.assertEqual(len(tills), 1)
         self.assertEqual(tills[0].name, "Pot 2")
 
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(AccessDenied):
             await self.till_service.delete_till(token=self.cashier_token, till_id=till.id)
 
         deleted = await self.till_service.delete_till(token=self.admin_token, till_id=till.id)

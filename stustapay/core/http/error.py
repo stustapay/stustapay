@@ -45,11 +45,12 @@ def access_exception_handler(request: Request, exc: AccessDenied):
 
 
 def exception_handler(request: Request, exc: Exception):
-    del request, exc
+    del request
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "type": "internal",
+            "id": exc.__class__.__name__,
             "message": "Internal Server Error",
         },
     )

@@ -1,4 +1,5 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.schema.user import Privilege, UserWithoutId, UserTag
 from stustapay.tests.common import BaseTestCase
 
@@ -24,7 +25,7 @@ class TerminalAPiTest(BaseTestCase):
 
     async def test_terminal_user_management(self):
         # Cashier cannot simply login
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(AccessDenied):
             await self.till_service.login_user(token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid))
         # Admins can login
         admin = await self.till_service.login_user(token=self.terminal_token, user_tag=UserTag(uid=self.admin_tag_uid))
