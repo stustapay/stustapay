@@ -1,8 +1,6 @@
 import { selectConfigEntryById, useGetConfigEntriesQuery } from "@api";
 
-export type CurrencyFormatter = (value: number | null) => string;
-
-export const useCurrencyFormatter = (): CurrencyFormatter => {
+export const useCurrencySymbol = (): string => {
   const { currencySymbol, error } = useGetConfigEntriesQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
@@ -14,10 +12,5 @@ export const useCurrencyFormatter = (): CurrencyFormatter => {
     throw new Error("Currency symbol is undefined unexpectedly");
   }
 
-  return (value: number | null) => {
-    if (value === null) {
-      return "";
-    }
-    return `${value.toFixed(2)} ${currencySymbol}`;
-  };
+  return currencySymbol;
 };

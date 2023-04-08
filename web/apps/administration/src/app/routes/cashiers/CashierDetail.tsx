@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List } from "@mui/material";
+import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { selectCashierById, useGetCashierByIdQuery, selectTillById, useGetTillsQuery } from "@api";
@@ -46,7 +46,9 @@ export const CashierDetail: React.FC = () => {
         <ListItem
           secondaryAction={
             <>
-              <ButtonLink to={`/cashiers/${cashierId}/close-out`}>{t("cashier.closeOut")}</ButtonLink>
+              {cashier.cash_drawer_balance !== 0 && (
+                <ButtonLink to={`/cashiers/${cashierId}/close-out`}>{t("cashier.closeOut")}</ButtonLink>
+              )}
               <IconButtonLink to={`/cashiers/${cashierId}/edit`} color="primary" sx={{ mr: 1 }}>
                 <EditIcon />
               </IconButtonLink>
@@ -81,6 +83,11 @@ export const CashierDetail: React.FC = () => {
               primary={t("cashier.cashDrawerBalance")}
               secondary={formatCurrency(cashier.cash_drawer_balance)}
             />
+            {cashier.cash_drawer_balance !== 0 && (
+              <ListItemSecondaryAction>
+                <ButtonLink to={`/cashiers/${cashierId}/close-out`}>{t("cashier.closeOut")}</ButtonLink>
+              </ListItemSecondaryAction>
+            )}
           </ListItem>
         </List>
       </Paper>
