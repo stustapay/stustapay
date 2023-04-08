@@ -1,6 +1,6 @@
 import * as React from "react";
 import { selectTillLayoutAll, useDeleteTillLayoutMutation, useGetTillLayoutsQuery } from "@api";
-import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
@@ -39,7 +39,7 @@ export const TillLayoutList: React.FC = () => {
     setLayoutToDelete(null);
   };
 
-  const columns: GridColumns<TillLayout> = [
+  const columns: GridColDef<TillLayout>[] = [
     {
       field: "name",
       headerName: t("layout.name") as string,
@@ -91,7 +91,7 @@ export const TillLayoutList: React.FC = () => {
         autoHeight
         rows={layouts ?? []}
         columns={columns}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog

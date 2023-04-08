@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Tooltip } from "@mui/material";
-import { DataGrid, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { selectProductById, useGetProductsQuery, selectTaxRateById, useGetTaxRatesQuery } from "@api";
@@ -53,7 +53,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
     );
   };
 
-  const itemColumns: GridColumns<LineItem> = [
+  const itemColumns: GridColDef<LineItem>[] = [
     {
       field: "product_id",
       headerName: t("item.product") as string,
@@ -104,7 +104,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
       autoHeight
       rows={lineItems}
       columns={itemColumns}
-      disableSelectionOnClick
+      disableRowSelectionOnClick
       getRowId={(row) => row.item_id}
       sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
     />

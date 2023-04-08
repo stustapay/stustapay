@@ -1,5 +1,5 @@
 import * as React from "react";
-import { DataGrid, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { useCurrencyFormatter } from "@hooks";
@@ -13,7 +13,7 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
   const { t } = useTranslation(["orders", "common"]);
   const formatCurrency = useCurrencyFormatter();
 
-  const columns: GridColumns<Order> = [
+  const columns: GridColDef<Order>[] = [
     {
       field: "id",
       headerName: t("order.id") as string,
@@ -75,7 +75,7 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
       autoHeight
       rows={orders ?? []}
       columns={columns}
-      disableSelectionOnClick
+      disableRowSelectionOnClick
       sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
     />
   );

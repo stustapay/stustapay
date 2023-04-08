@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Paper, ListItem, ListItemText } from "@mui/material";
-import { DataGrid, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { selectAccountAll, useGetAccountsQuery } from "@api";
 import { useTranslation } from "react-i18next";
 import { Account } from "@models";
@@ -20,7 +20,7 @@ export const AccountList: React.FC = () => {
     return <Loading />;
   }
 
-  const columns: GridColumns<Account> = [
+  const columns: GridColDef<Account>[] = [
     {
       field: "name",
       headerName: t("accountName") as string,
@@ -62,7 +62,7 @@ export const AccountList: React.FC = () => {
         autoHeight
         rows={accounts ?? []}
         columns={columns}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
     </>

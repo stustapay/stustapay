@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useCurrencyFormatter } from "@hooks";
 import { Paper, ListItem, ListItemText } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { DataGrid, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { selectCashierAll, selectTillById, useGetCashiersQuery, useGetTillsQuery } from "@api";
 import { Cashier } from "@models";
 import { Loading } from "@components";
@@ -36,7 +36,7 @@ export const CashierList: React.FC = () => {
     return <RouterLink to={`/tills/${till.id}`}>{till.name}</RouterLink>;
   };
 
-  const columns: GridColumns<Cashier> = [
+  const columns: GridColDef<Cashier>[] = [
     {
       field: "name",
       headerName: t("cashier.name") as string,
@@ -82,7 +82,7 @@ export const CashierList: React.FC = () => {
         autoHeight
         rows={cashiers ?? []}
         columns={columns}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
     </>

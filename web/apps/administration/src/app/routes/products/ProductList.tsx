@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Paper, ListItem, ListItemText, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -76,7 +76,7 @@ export const ProductList: React.FC = () => {
     createProduct({ ...product, name: `${product.name} - ${t("copy", { ns: "common" })}` });
   };
 
-  const columns: GridColumns<Product> = [
+  const columns: GridColDef<Product>[] = [
     {
       field: "name",
       headerName: t("productName") as string,
@@ -144,7 +144,7 @@ export const ProductList: React.FC = () => {
         autoHeight
         rows={products ?? []}
         columns={columns}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
