@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { Account } from "@models/account";
-import { baseUrl, prepareAuthHeaders } from "./common";
+import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
 
@@ -8,16 +8,27 @@ const accountAdapter = createEntityAdapter<Account>();
 
 export const accountApi = createApi({
   reducerPath: "accountApi",
-  baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
+  baseQuery: adminApiBaseQuery,
   tagTypes: ["account"],
   endpoints: (builder) => ({
-    getAccounts: builder.query<EntityState<Account>, void>({
-      query: () => "/accounts/",
+    getSystemAccounts: builder.query<EntityState<Account>, void>({
+      query: () => "/system-accounts/",
       transformResponse: (response: Account[]) => {
         return accountAdapter.addMany(accountAdapter.getInitialState(), response);
       },
-      providesTags: (result, error, arg) =>
+      providesTags: (result) =>
         result ? [...result.ids.map((id) => ({ type: "account" as const, id })), "account"] : ["account"],
+    }),
+    getAccountById: builder.query<EntityState<Account>, number>({
+      query: (id) => `/accounts/${id}`,
+      transformResponse: (response: Account) => {
+        return accountAdapter.addOne(accountAdapter.getInitialState(), response);
+      },
+      providesTags: (result) =>
+        result ? [...result.ids.map((id) => ({ type: "account" as const, id })), "account"] : ["account"],
+    }),
+    findAccounts: builder.mutation<Account[], string>({
+      query: (searchTerm) => ({ url: "/accounts/find-accounts/", method: "POST", body: { search_term: searchTerm } }),
     }),
   }),
 });
@@ -25,4 +36,4 @@ export const accountApi = createApi({
 export const { selectAccountAll, selectAccountById, selectAccountEntities, selectAccountIds, selectAccountTotal } =
   convertEntityAdaptorSelectors("account", accountAdapter.getSelectors());
 
-export const { useGetAccountsQuery } = accountApi;
+export const { useGetSystemAccountsQuery, useGetAccountByIdQuery, useFindAccountsMutation } = accountApi;

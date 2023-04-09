@@ -186,18 +186,18 @@ values
     on conflict do nothing;
 
 insert into transaction (
-    id, order_id, description, source_account, target_account, booked_at, amount, tax_rate, tax_name
+    id, order_id, description, source_account, target_account, booked_at, amount, tax_rate, tax_name, vouchers
 )
 values
     -- simple beer with deposit
-    (0, 0, null, 200, 0, '2023-01-01 15:35:01 UTC+1', 5.00, 0.19, 'ust'),
-    (1, 0, null, 200, 2, '2023-01-01 15:35:02 UTC+1', 2.00, 0.00, 'none'),
+    (0, 0, null, 200, 0, '2023-01-01 15:35:01 UTC+1', 5.00, 0.19, 'ust', 0),
+    (1, 0, null, 200, 2, '2023-01-01 15:35:02 UTC+1', 2.00, 0.00, 'none', 0),
     -- items with different tax rates
-    (2, 1, null, 201, 0, '2023-01-02 17:00:05 UTC+1', 10.00, 0.19, 'ust'),
-    (3, 1, null, 201, 2, '2023-01-02 17:00:06 UTC+1', 4.00, 0.00, 'none'),
-    (4, 1, null, 201, 2, '2023-01-02 17:00:07 UTC+1', 2.00, 0.07, 'eust'),
+    (2, 1, null, 201, 0, '2023-01-02 17:00:05 UTC+1', 10.00, 0.19, 'ust', 0),
+    (3, 1, null, 201, 2, '2023-01-02 17:00:06 UTC+1', 4.00, 0.00, 'none', 0),
+    (4, 1, null, 201, 2, '2023-01-02 17:00:07 UTC+1', 2.00, 0.07, 'eust', 0),
     -- Top Up EC
-    (5, 2, null, 3, 201, '2023-01-01 17:00:06 UTC+1', 20.00, 0.00, 'none')
+    (5, 2, null, 3, 201, '2023-01-01 17:00:06 UTC+1', 20.00, 0.00, 'none', 0)
     on conflict do nothing;
 select setval('transaction_id_seq', 100);
 

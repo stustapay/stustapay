@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { Till, NewTill, UpdateTill } from "@models/till";
-import { baseUrl, prepareAuthHeaders } from "./common";
+import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
 
@@ -10,7 +10,7 @@ const tillAdapter = createEntityAdapter<Till>({
 
 export const tillApi = createApi({
   reducerPath: "tillApi",
-  baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
+  baseQuery: adminApiBaseQuery,
   tagTypes: ["tills"],
   endpoints: (builder) => ({
     getTillById: builder.query<EntityState<Till>, number>({

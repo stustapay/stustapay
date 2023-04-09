@@ -51,9 +51,9 @@ class LineItem(BaseModel):
 
 
 class OrderBooking(BaseModel):
-    value_sum: float
-    value_tax: float
-    value_notax: float
+    total_price: float
+    total_tax: float
+    total_no_tax: float
 
 
 class CompletedOrder(BaseModel):

@@ -1,0 +1,25 @@
+{
+    "cashier": {
+        "name": "Name",
+        "description": "Description",
+        "cashDrawerBalance": "Cash Drawer",
+        "tagId": "Tag ID",
+        "till": "Till",
+        "closeOut": "Close Out"
+    },
+    "closeOut": {
+        "start": "Start",
+        "targetInDrawer": "Target in cash drawer",
+        "countedInDrawer": "Counted in cash drawer",
+        "difference": "Difference",
+        "comment": "Comment",
+        "sum": "Sum",
+        "coins": "Coins",
+        "bill5Euro": "5€ *",
+        "bill10Euro": "10€ *",
+        "bill20Euro": "20€ *",
+        "bill50Euro": "50€ *",
+        "bill100Euro": "100€ *",
+        "bill200Euro": "200€ *"
+    }
+}

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Paper, Button, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { selectUserAll, useDeleteUserMutation, useGetUsersQuery } from "@api";
-import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { User } from "@models";
@@ -42,7 +42,7 @@ export const UserList: React.FC = () => {
     setUserToDelete(null);
   };
 
-  const columns: GridColumns<User> = [
+  const columns: GridColDef<User>[] = [
     {
       field: "name",
       headerName: t("userName") as string,
@@ -99,7 +99,7 @@ export const UserList: React.FC = () => {
         autoHeight
         rows={users ?? []}
         columns={columns}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog

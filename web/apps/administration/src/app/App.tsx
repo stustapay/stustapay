@@ -1,11 +1,14 @@
 import * as React from "react";
 import { useMediaQuery, PaletteMode, createTheme, ThemeProvider, CssBaseline } from "@mui/material";
 import { Router } from "./Router";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { useAppSelector } from "@store";
 import { selectTheme } from "@store/uiSlice";
+import { Loading } from "@components";
+import { fetchConfig } from "@api/common";
 
 export function App() {
+  const [loading, setLoading] = React.useState(true);
   const darkModeSystem = useMediaQuery("(prefers-color-scheme: dark)");
   const themeModeStore = useAppSelector(selectTheme);
 
@@ -21,11 +24,24 @@ export function App() {
     [themeMode]
   );
 
+  React.useEffect(() => {
+    const init = async () => {
+      await fetchConfig();
+    };
+    init()
+      .then(() => {
+        setLoading(false);
+      })
+      .catch((e) => {
+        toast.error(`Error while fetching config: ${e}`);
+      });
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ToastContainer position="top-right" autoClose={4000} pauseOnFocusLoss={false} theme={themeMode} />
-      <Router />
+      {loading ? <Loading /> : <Router />}
     </ThemeProvider>
   );
 }

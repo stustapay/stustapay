@@ -56,7 +56,7 @@ class TillProfileService(DBService):
         self, *, conn: asyncpg.Connection, profile_id: int, profile: NewTillProfile
     ) -> Optional[TillProfile]:
         row = await conn.fetchrow(
-            "update till_profile set name = $2, description = $3, allow_top_up = $4, layout_id = $4 where id = $1 "
+            "update till_profile set name = $2, description = $3, allow_top_up = $4, layout_id = $5 where id = $1 "
             "returning id, name, description, allow_top_up, layout_id",
             profile_id,
             profile.name,

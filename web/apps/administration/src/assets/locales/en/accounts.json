@@ -1,6 +1,11 @@
 {
-    "accountName": "Name",
-    "accountComment": "Comment",
-    "accountBalance": "Balance",
-    "accountType": "Type"
+    "account.name": "Name",
+    "account.comment": "Comment",
+    "account.balance": "Balance",
+    "account.type": "Type",
+    "account.id": "ID",
+    "account.user_tag_uid": "User Tag UID",
+    "account.vouchers": "Vouchers",
+    "findAccounts": "Find Accounts",
+    "searchTerm": "Search Term"
 }

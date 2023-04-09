@@ -1,14 +1,21 @@
 import { Paper, ListItem, IconButton, Typography, ListItemText, List, Checkbox, Tooltip, Box } from "@mui/material";
-import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
+import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, OrderTable } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useGetTillByIdQuery, useDeleteTillMutation, useLogoutTillMutation, selectTillById } from "@api";
+import {
+  useGetTillByIdQuery,
+  useDeleteTillMutation,
+  useLogoutTillMutation,
+  selectTillById,
+  useGetOrderByTillQuery,
+  selectOrderAll,
+} from "@api";
 import { Loading } from "@components/Loading";
 import QRCode from "react-qr-code";
 import { encodeTillRegistrationQrCode } from "@core";
-import { baseUrl } from "@api/common";
+import { config } from "@api/common";
 
 export const TillDetail: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
@@ -16,15 +23,21 @@ export const TillDetail: React.FC = () => {
   const navigate = useNavigate();
   const [deleteTill] = useDeleteTillMutation();
   const [logoutTill] = useLogoutTillMutation();
-  const { till, error } = useGetTillByIdQuery(Number(tillId), {
+  const { till, error: tillError } = useGetTillByIdQuery(Number(tillId), {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       till: data ? selectTillById(data, Number(tillId)) : undefined,
     }),
   });
+  const { orders, error: orderError } = useGetOrderByTillQuery(Number(tillId), {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      orders: data ? selectOrderAll(data) : undefined,
+    }),
+  });
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
-  if (error) {
+  if (tillError || orderError) {
     return <Navigate to="/tills" />;
   }
 
@@ -102,12 +115,13 @@ export const TillDetail: React.FC = () => {
             <QRCode
               size={256}
               style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-              value={encodeTillRegistrationQrCode(baseUrl, till.registration_uuid)}
+              value={encodeTillRegistrationQrCode(config.terminalApiBaseUrl, till.registration_uuid)}
               viewBox={`0 0 256 256`}
             />
           </Box>
         </Paper>
       )}
+      <OrderTable orders={orders ?? []} />
       <ConfirmDialog
         title={t("till.delete")}
         body={t("till.deleteDescription")}

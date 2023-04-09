@@ -7,6 +7,7 @@ export const AccountSchema = z.object({
   name: z.string().nullable(),
   comment: z.string().nullable(),
   balance: z.number(),
+  vouchers: z.number(),
 });
 
 export type Account = z.infer<typeof AccountSchema>;

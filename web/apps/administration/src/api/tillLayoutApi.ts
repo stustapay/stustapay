@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { NewTillLayout, TillLayout, TillButton, NewTillButton, UpdateTillButton } from "@models/till";
-import { baseUrl, prepareAuthHeaders } from "./common";
+import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
 
@@ -13,7 +13,7 @@ const tillButtonAdapter = createEntityAdapter<TillButton>({
 
 export const tillLayoutApi = createApi({
   reducerPath: "tillLayoutApi",
-  baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
+  baseQuery: adminApiBaseQuery,
   tagTypes: ["till-buttons", "till-layouts"],
   endpoints: (builder) => ({
     getTillButtonById: builder.query<EntityState<TillButton>, number>({

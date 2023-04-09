@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { selectTaxRateAll, useDeleteTaxRateMutation, useGetTaxRatesQuery } from "@api";
 import { useTranslation } from "react-i18next";
 import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
@@ -39,7 +39,7 @@ export const TaxRateList: React.FC = () => {
     setTaxRateToDelete(null);
   };
 
-  const columns: GridColumns<TaxRate> = [
+  const columns: GridColDef<TaxRate>[] = [
     {
       field: "name",
       headerName: t("taxRateName") as string,
@@ -99,7 +99,7 @@ export const TaxRateList: React.FC = () => {
         getRowId={(row) => row.name}
         rows={taxRates ?? []}
         columns={columns}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog

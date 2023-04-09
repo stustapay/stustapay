@@ -5,6 +5,7 @@ from stustapay.core.config import Config
 from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
 from stustapay.core.service.account import AccountService
+from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
@@ -24,6 +25,8 @@ from .routers import (
     till_layout,
     till_profile,
     user,
+    endpoints,
+    cashier,
 )
 
 
@@ -53,11 +56,14 @@ class Api(SubCommand):
         self.server.add_router(config_router.router)
         self.server.add_router(account.router)
         self.server.add_router(order.router)
+        self.server.add_router(endpoints.router)
+        self.server.add_router(cashier.router)
 
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)
 
         auth_service = AuthService(db_pool=db_pool, config=self.cfg)
+        till_service = TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
         order_service = OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
 
         context = Context(
@@ -66,9 +72,10 @@ class Api(SubCommand):
             product_service=ProductService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
-            till_service=TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            till_service=till_service,
             config_service=ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             account_service=AccountService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            cashier_service=CashierService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             order_service=order_service,
         )
         try:
