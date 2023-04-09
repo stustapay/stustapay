@@ -30,7 +30,8 @@ values
 
     -- guests (which would need token IDs)
     (200, 1234, 'private', 'Guest 0', 'Token Balance of Guest 0', 2000000.00),
-    (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 30000000.20)
+    (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 30000000.20),
+    (202, 5424726191074820, 'private', 'LOL-tag2', 'test token 2', 30.00)
     on conflict do nothing;
 select setval('account_id_seq', 300);
 
@@ -53,7 +54,8 @@ insert into usr_privs (
 values
     (1, 'admin'),
     (0, 'cashier'),
-    (2, 'admin') -- tag #2
+    (2, 'admin'), -- tag #2
+    (2, 'cashier')
     on conflict do nothing;
 
 
