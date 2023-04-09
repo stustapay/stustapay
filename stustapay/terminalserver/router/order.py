@@ -29,7 +29,7 @@ async def show(
     token: CurrentAuthToken,
     order_service: ContextOrderService,
 ):
-    return await order_service.show_order(token=token, order_id=order_id.id)
+    return await order_service.show_order(token=token, order_id=order_id)
 
 
 @router.post("", summary="create a new order and prepare it to be processed", response_model=PendingOrder)
@@ -51,4 +51,4 @@ async def process(
     token: CurrentAuthToken,
     order_service: ContextOrderService,
 ):
-    return await order_service.book_order(token=token, order_id=order_id.id)
+    return await order_service.book_order(token=token, order_id=order_id)
