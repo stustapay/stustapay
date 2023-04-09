@@ -33,7 +33,7 @@ fun OrderItem(
     ) {
         // TODO: highlight background color if amount > 0
         Text(
-            text = price.toString().plus(" x ").plus(amount.toString()),
+            text = "%.02f x %2d".format(price, amount),
             modifier = Modifier.fillMaxWidth(0.25f),
             fontSize = 24.sp
         )
@@ -63,7 +63,7 @@ fun OrderItem(
                         .padding(5.dp),
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
                 ) {
-                    Text(text = "-", fontSize = 36.sp)
+                    Text(text = "-", fontSize = 50.sp, color = Color.Black)
                 }
             }
         }

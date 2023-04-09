@@ -1,6 +1,5 @@
-package de.stustanet.stustapay.ui.nav
+package de.stustanet.stustapay.ui.root
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,14 +12,13 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustanet.stustapay.ui.root.RootNavDests
+import de.stustanet.stustapay.ui.nav.NavDest
 
 data class NavMenuItem(
     val icon: ImageVector,
@@ -50,20 +48,6 @@ private fun getNavItems(): List<NavMenuItem> {
     )
     itemsList.add(
         NavMenuItem(
-            icon = Icons.Filled.Home,
-            label = "QR Scan",
-            navDestination = RootNavDests.qrscan,
-        )
-    )
-    itemsList.add(
-        NavMenuItem(
-            icon = Icons.Filled.Email,
-            label = "System Messages",
-            isUnread = true
-        )
-    )
-    itemsList.add(
-        NavMenuItem(
             icon = Icons.Filled.List,
             label = "Transaction History",
         )
@@ -71,7 +55,8 @@ private fun getNavItems(): List<NavMenuItem> {
     itemsList.add(
         NavMenuItem(
             icon = Icons.Filled.Person,
-            label = "Profile"
+            navDestination = RootNavDests.user,
+            label = "User"
         )
     )
     itemsList.add(
@@ -85,51 +70,22 @@ private fun getNavItems(): List<NavMenuItem> {
     itemsList.add(
         NavMenuItem(
             icon = Icons.Filled.Send,
-            label = "Debug",
-            navDestination = RootNavDests.debug
-        )
-    )
-    itemsList.add(
-        NavMenuItem(
-            icon = Icons.Filled.ExitToApp,
-            label = "Logout"
+            label = "Development",
+            navDestination = RootNavDests.development
         )
     )
 
     return itemsList
 }
 
-@Composable
-fun LoginProfile() {
-    Image(
-        imageVector = Icons.Filled.Person,
-        modifier = Modifier
-            .size(size = 120.dp)
-            .clip(shape = CircleShape),
-        contentDescription = "Avatar"
-    )
-    Text(
-        modifier = Modifier.padding(top = 12.dp),
-        text = "Walter Hoppenstedt",
-        fontSize = 26.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.White
-    )
-    Text(
-        modifier = Modifier.padding(top = 8.dp, bottom = 30.dp),
-        text = "Potzelt",
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        color = Color.White
-    )
-}
 
 @Composable
-fun NavDrawer(
-    navigateTo: (NavDest) -> Unit
+fun StartpageView(
+    navigateTo: (NavDest) -> Unit = {},
 ) {
-    val gradientColors = listOf(Color(0xFFF70A74), Color(0xFFF59118))
+
     val navItems = getNavItems()
+    val gradientColors = listOf(Color(0xFFF70A74), Color(0xFFF59118))
 
     Column(
         modifier = Modifier
@@ -137,6 +93,13 @@ fun NavDrawer(
             .background(brush = Brush.verticalGradient(colors = gradientColors)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Text(
+            text = "StuStaPay",
+            fontSize = 30.sp,
+            color = Color.White,
+            modifier = Modifier.padding(top = 10.dp)
+        )
+
         LoginProfile()
 
         for (item in navItems) {
@@ -145,13 +108,14 @@ fun NavDrawer(
                 Divider()
             }
 
-            NavDrawerEntry(item = item, navigateTo = navigateTo)
+            StartpageEntry(item = item, navigateTo = navigateTo)
         }
     }
 }
 
+
 @Composable
-private fun NavDrawerEntry(
+private fun StartpageEntry(
     item: NavMenuItem,
     unreadBadgeColor: Color = Color(0xFF0FFF93),
     navigateTo: (NavDest) -> Unit

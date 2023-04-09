@@ -19,21 +19,7 @@ class TerminalHTTPAPI @Inject constructor(
      * through our current api registration state.
      */
     private val client: HttpClient = HttpClient {
-        var regState = regLocalStatus.registrationState.first()
-
-        var api: HttpClientTarget? = when (regState) {
-            is RegistrationState.Registered -> {
-                HttpClientTarget(regState.apiUrl, regState.token)
-            }
-            is RegistrationState.Error -> {
-                null
-            }
-            is RegistrationState.NotRegistered -> {
-                null
-            }
-        }
-
-        api
+        regLocalStatus.registrationState.first()
     }
 
 
@@ -58,15 +44,35 @@ class TerminalHTTPAPI @Inject constructor(
         }
     }
 
+    override suspend fun deregister(): Response<Unit> {
+        return client.post<Unit, Unit>("auth/logout_terminal")
+    }
+
     override suspend fun getHealthStatus(apiUrl: String): Response<HealthStatus> {
         return client.get("health", basePath = apiUrl)
     }
 
     override suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder> {
-        return client.post("order/create") { newOrder }
+        return client.post("order") { newOrder }
+    }
+
+    override suspend fun processOrder(id: Int): Response<CompletedOrder> {
+        return client.post<Unit, CompletedOrder>("order/$id/process")
     }
 
     override suspend fun getTerminalConfig(): Response<TerminalConfig> {
         return client.get("config")
+    }
+
+    override suspend fun currentUser(): Response<User?> {
+        return client.get("user")
+    }
+
+    override suspend fun userLogin(userTag: UserTag): Response<User> {
+        return client.post("user/login") { userTag }
+    }
+
+    override suspend fun userLogout(): Response<Unit> {
+        return client.post<Unit, Unit>("user/logout")
     }
 }

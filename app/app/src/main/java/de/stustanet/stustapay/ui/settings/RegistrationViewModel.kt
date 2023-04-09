@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.RegistrationState
+import de.stustanet.stustapay.repository.ForceDeregisterState
 import de.stustanet.stustapay.repository.RegistrationRepository
 import de.stustanet.stustapay.util.Result
 import de.stustanet.stustapay.util.asResult
@@ -13,16 +14,17 @@ import javax.inject.Inject
 
 sealed interface RegistrationUiState {
     data class Registered(
-        val message: String? = null,
+        val msg: String? = null,
         val endpointUrl: String? = null,
     ) : RegistrationUiState
 
     data class Error(
-        val message: String
+        val msg: String
     ) : RegistrationUiState
 
     object Loading : RegistrationUiState
 }
+
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
@@ -40,12 +42,19 @@ class RegistrationViewModel @Inject constructor(
             initialValue = RegistrationUiState.Loading,
         )
 
+    val allowForceDeregister: StateFlow<ForceDeregisterState> =
+        registrationRepo.forceDeregisterState.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = ForceDeregisterState.Disallow,
+        )
+
     suspend fun register(qrcode_b64: String) {
         registrationRepo.register(qrcode_b64)
     }
 
-    suspend fun deregister() {
-        registrationRepo.deregister()
+    suspend fun deregister(force: Boolean = false) {
+        registrationRepo.deregister(force)
     }
 }
 
@@ -65,17 +74,17 @@ private fun registrationUiState(
                         is RegistrationState.Registered -> {
                             RegistrationUiState.Registered(
                                 endpointUrl = registerState.apiUrl,
-                                message = registerState.message,
+                                msg = registerState.message,
                             )
                         }
                         is RegistrationState.Error -> {
                             RegistrationUiState.Error(
-                                message = registerState.message,
+                                msg = registerState.message,
                             )
                         }
                         is RegistrationState.NotRegistered -> {
                             RegistrationUiState.Error(
-                                message = registerState.message,
+                                msg = registerState.message,
                             )
                         }
                     }

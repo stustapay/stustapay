@@ -1,5 +1,5 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
-from stustapay.core.schema.user import NewUser, Privilege, UserWithoutId
+from stustapay.core.schema.user import NewUser, Privilege, UserWithoutId, UserTag
 from stustapay.tests.common import BaseTestCase
 
 
@@ -16,7 +16,7 @@ class UserServiceTest(BaseTestCase):
                 name="terminal_admin", description="", privileges=[Privilege.admin], user_tag_uid=admin_tag_uid
             )
         )
-        await self.till_service.login_user(token=self.terminal_token, user_tag_uid=admin_tag_uid)
+        await self.till_service.login_user(token=self.terminal_token, user_tag=UserTag(uid=admin_tag_uid))
 
     async def test_user_creation(self):
         cashier = await self.user_service.create_cashier(

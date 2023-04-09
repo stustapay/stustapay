@@ -2,20 +2,15 @@ package de.stustanet.stustapay.ui.order
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Button
 import androidx.compose.material.Scaffold
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.ui.nav.TopAppBar
 
 /**
  * View for displaying available purchase items
@@ -25,27 +20,19 @@ fun OrderSelection(
     viewModel: OrderViewModel,
     onAbort: () -> Unit,
     onSubmit: () -> Unit,
-    fetch: () -> Unit
 ) {
-    val orderUiState by viewModel.orderUiState.collectAsStateWithLifecycle()
+    val orderConfig by viewModel.orderConfig.collectAsStateWithLifecycle()
+    val order by viewModel.order.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
-    val haptic = LocalHapticFeedback.current
-
-    /**
-     * Fetch Terminal Config on startup.
-     */
-    LaunchedEffect(true) {
-        fetch()
-    }
 
     Scaffold(
         topBar = {
-            val totalCost = orderUiState.currentOrder.map {
-                orderUiState.products[it.key]!!.price * it.value
-            }.sum()
+            Column {
+                TopAppBar(title = { Text(orderConfig.tillName) })
 
-            Row(horizontalArrangement = Arrangement.SpaceEvenly) {
-                Text("$totalCost €")
+                Row(horizontalArrangement = Arrangement.Start) {
+                    OrderCost(order)
+                }
             }
         },
         content = { paddingValues ->
@@ -54,11 +41,12 @@ fun OrderSelection(
                     .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
-                for (product in orderUiState.products) {
+                // TODO: voucher amount adjustment when in edit mode
+                for (product in orderConfig.buttons) {
                     item {
                         OrderItem(
                             caption = product.value.caption,
-                            amount = orderUiState.currentOrder.getOrDefault(product.value.id, 0),
+                            amount = order.buttonSelections.getOrDefault(product.value.id, 0),
                             price = product.value.price,
                             onIncr = { viewModel.incrementOrderProduct(product.value.id) },
                             onDecr = { viewModel.decrementOrderProduct(product.value.id) }
@@ -68,41 +56,19 @@ fun OrderSelection(
             }
         },
         bottomBar = {
-            Column {
-                Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+            OrderBottomBar(
+                status = {
                     Text(
                         text = status,
                         modifier = Modifier.fillMaxWidth(),
-                        fontSize = 24.sp,
+                        fontSize = 18.sp,
+                        fontFamily = FontFamily.Monospace,
                     )
-                }
-                Row(horizontalArrangement = Arrangement.SpaceEvenly) {
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onAbort()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .height(70.dp)
-                            .padding(10.dp)
-                    ) {
-                        Text(text = "❌")
-                    }
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onSubmit()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp)
-                            .padding(10.dp)
-                    ) {
-                        Text(text = "✓")
-                    }
-                }
-            }
+                },
+                orderConfig = orderConfig,
+                onAbort = onAbort,
+                onSubmit = onSubmit,
+            )
         }
     )
 }

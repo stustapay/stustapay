@@ -1,15 +1,17 @@
 package de.stustanet.stustapay.ui.order
 
-import android.util.Log
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
-import de.stustanet.stustapay.ui.nav.navigateTo
 import kotlinx.coroutines.launch
 
 
@@ -21,51 +23,84 @@ import kotlinx.coroutines.launch
 fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
     val scope = rememberCoroutineScope()
     val nav = rememberNavController()
-    val scanState = rememberNfcScanDialogState()
 
-    NavHost(navController = nav, startDestination = "main") {
-        composable("main") {
+    val navTarget by viewModel.navState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(navTarget) {
+        if (nav.currentDestination?.route != navTarget.route) {
+            nav.navigate(navTarget.route)
+        }
+    }
+
+    // fetch the terminal configuration
+    LaunchedEffect(Unit) {
+        viewModel.fetchConfig()
+    }
+
+    NavHost(navController = nav, startDestination = OrderPage.ProductSelect.route) {
+        composable(OrderPage.ProductSelect.route) {
+            val scanState = rememberNfcScanDialogState()
+
             OrderSelection(
                 viewModel,
                 onAbort = {
-                    viewModel.clearOrder()
+                    scope.launch {
+                        viewModel.clearOrder()
+                    }
                 },
                 onSubmit = {
                     scope.launch {
-                        Log.i("stustapay", "submit order")
-                        viewModel.submitOrder()
-                        //chipScanState.scan("--total cost--€\nScan a chip")
+                        // TODO: no new scan in refine-state - then viewModel.submitOrder()
+                        scanState.open()
                     }
                 },
-                fetch = {
-                    scope.launch {
-                        viewModel.fetchConfig()
-                    }
-                }
             )
 
             NfcScanDialog(
                 scanState,
                 onScan = { uid ->
-                    nav.navigateTo("success")
-                    // TODO: store uid in order progress
-                }
+                    scope.launch {
+                        viewModel.submitOrder(uid)
+                    }
+                },
             )
         }
-        composable("success") {
+
+        // what would be booked, from there one can get back to edit-mode
+        composable(OrderPage.Confirm.route) {
+            OrderConfirmation(
+                viewModel,
+                onAbort = {
+                    scope.launch {
+                        viewModel.editOrder()
+                    }
+                },
+                onSubmit = {
+                    scope.launch {
+                        viewModel.bookOrder()
+                    }
+                },
+            )
+        }
+
+        // the order was booked successfully.
+        composable(OrderPage.Done.route) {
             OrderSuccess(
                 viewModel,
-                onDismiss = {
-                    viewModel.clearOrder()
-                    nav.navigateTo("main")
+                onConfirm = {
+                    scope.launch {
+                        viewModel.clearOrder()
+                    }
                 }
             )
         }
 
-        composable("failure") {
+        // order was aborted
+        composable(OrderPage.Aborted.route) {
             OrderFailure(onDismiss = {
-                viewModel.clearOrder()
-                nav.navigateTo("main")
+                scope.launch {
+                    viewModel.clearOrder()
+                }
             })
         }
     }

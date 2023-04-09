@@ -1,3 +1,5 @@
+*.orig
+
 # python
 __pycache__
 *.pyc
@@ -26,6 +28,7 @@ dist/
 .*.swp
 \#*
 .#*
+flycheck_*
 
 # project specific
 config.yaml

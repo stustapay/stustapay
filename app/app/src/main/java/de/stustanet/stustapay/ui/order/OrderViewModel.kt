@@ -7,12 +7,9 @@ import de.stustanet.stustapay.model.*
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.OrderRepository
 import de.stustanet.stustapay.repository.TerminalConfigRepository
-import de.stustanet.stustapay.util.Result
-import de.stustanet.stustapay.util.asResult
+import de.stustanet.stustapay.util.mapState
 import kotlinx.coroutines.flow.*
-import java.lang.Thread.State
 import javax.inject.Inject
-import kotlinx.coroutines.launch
 
 
 /**
@@ -26,73 +23,147 @@ data class TillProductButtonUI(
     val products: List<Int>,
 )
 
-data class OrderUiState(
+data class OrderConfig(
     /**
-     * product id -> number of times bought.
+     * Can we create a new order?
      */
-    var currentOrder: Map<Int, Int> = mapOf(),
+    var ready: Boolean = false,
+
+    /**
+     * How the till configuration is named.
+     */
+    var tillName: String = "",
 
     /**
      * available product buttons, in order from top to bottom.
      */
-    var products: Map<Int, TillProductButtonUI> = mapOf(),
+    var buttons: Map<Int, TillProductButtonUI> = mapOf(),
 )
+
+
+data class Order(
+    /**
+     * Sum of all ordered items.
+     */
+    var sum: Double = 0.0,
+
+    /**
+     * button id -> number of times bought.
+     */
+    var buttonSelections: Map<Int, Int> = mapOf(),
+) {
+
+    private fun updateSum(orderConfig: OrderConfig) {
+        sum = buttonSelections.map {
+            orderConfig.buttons[it.key]!!.price * it.value
+        }.sum()
+    }
+
+    fun incrementButton(productID: Int, orderConfig: OrderConfig) {
+        if (buttonSelections.contains(productID)) {
+            buttonSelections += Pair(productID, buttonSelections[productID]!! + 1)
+        } else {
+            buttonSelections += Pair(productID, 1)
+        }
+        updateSum(orderConfig)
+    }
+
+    fun decrementButton(productID: Int, orderConfig: OrderConfig) {
+        if (buttonSelections.contains(productID)) {
+            if (buttonSelections[productID]!! > 0) {
+                buttonSelections += Pair(productID, buttonSelections[productID]!! - 1)
+            }
+        } else {
+            buttonSelections += Pair(productID, 0)
+        }
+        updateSum(orderConfig)
+    }
+}
+
+enum class OrderPage(val route: String) {
+    ProductSelect("product"),
+    Confirm("confirm"),
+    Done("done"),
+    Aborted("aborted"),
+}
 
 @HiltViewModel
 class OrderViewModel @Inject constructor(
     private val orderRepository: OrderRepository,
     private val terminalConfigRepository: TerminalConfigRepository
 ) : ViewModel() {
-    private val order = MutableStateFlow(mapOf<Int, Int>())
-    val status = MutableStateFlow("ready")
-    val orderUiState: StateFlow<OrderUiState> = terminalUiConfigState(
-        terminalConfigRepository = terminalConfigRepository
-    ).stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = OrderUiState()
+
+    val navState = MutableStateFlow(OrderPage.ProductSelect)
+    val order = MutableStateFlow(Order())
+
+    val status = MutableStateFlow("loading")
+
+    // infos from backend
+    val orderConfig: StateFlow<OrderConfig> = terminalUIConfigState(
+        terminalConfigRepository.terminalConfigState
     )
+
+    /** order we received from the server */
+    private var serverOrder : PendingOrder? = null
 
     suspend fun fetchConfig() {
         terminalConfigRepository.fetchConfig()
     }
 
     fun incrementOrderProduct(product: Int) {
-        if (order.value.contains(product)) {
-            order.value += Pair(product, order.value[product]!! + 1)
-        } else {
-            order.value += Pair(product, 1)
+        order.update { order ->
+            val newOrder = order.copy()
+            newOrder.incrementButton(product, orderConfig.value)
+            newOrder
         }
     }
 
     fun decrementOrderProduct(product: Int) {
-        if (order.value.contains(product)) {
-            if (order.value[product]!! > 0) {
-                order.value += Pair(product, order.value[product]!! - 1)
-            }
-        } else {
-            order.value += Pair(product, 0)
+        order.update { order ->
+            val newOrder = order.copy()
+            newOrder.decrementButton(product, orderConfig.value)
+            newOrder
         }
     }
 
-    fun clearOrder() {
-        order.value = HashMap()
+    suspend fun editOrder() {
+        // TODO: enter edit mode in selection view
+        navState.emit(OrderPage.ProductSelect)
     }
 
-    suspend fun submitOrder() {
-        status.emit("submitting...")
+    suspend fun clearOrder() {
+        serverOrder = null
+        order.update { Order() }
+        navState.emit(OrderPage.ProductSelect)
+    }
+
+    suspend fun submitOrder(uid: ULong) {
+        // transform buttons to products
+        var positions = mutableMapOf<Int, Int>()
+        for (selection in order.value.buttonSelections) {
+            for (productID in orderConfig.value.buttons[selection.key]!!.products) {
+                positions[productID] = positions.getOrDefault(productID, 0) + selection.value
+            }
+        }
 
         val response = orderRepository.createOrder(
             newOrder = NewOrder(
-                // TODO: create real line items
-                positions = listOf(NewLineItem(0, 1)),
+                // TODO free-price items
+                positions = positions.map {
+                    NewLineItem(product_id = it.key, quantity = it.value)
+                },
                 order_type = OrderType.sale,
-                customer_tag = 1337,
+                customer_tag = uid,
             )
         )
+
         when (response) {
             is Response.OK -> {
                 status.emit("created order id=${response.data.id}")
+                // TODO: maybe the response contains already an error
+                //       then we have to go to another page.
+                serverOrder = response.data
+                navState.emit(OrderPage.Confirm)
             }
             is Response.Error -> {
                 status.emit(response.msg())
@@ -100,53 +171,60 @@ class OrderViewModel @Inject constructor(
         }
     }
 
+    suspend fun bookOrder() {
+        if (serverOrder == null) {
+            status.emit("server order id not known")
+            return
+        }
 
-    private fun terminalUiConfigState(
-        terminalConfigRepository: TerminalConfigRepository,
-    ): Flow<OrderUiState> {
-        val terminalConfigState: Flow<TerminalConfigState> =
-            terminalConfigRepository.terminalConfigState
+        val response = orderRepository.processOrder(
+            id = serverOrder?.id ?: -1
+        )
+        when (response) {
+            is Response.OK -> {
+                status.emit("order booked: old balance=${response.data.old_balance} new balance=${response.data.new_balance}")
+                navState.emit(OrderPage.Done)
+            }
+            is Response.Error -> {
+                status.emit(response.msg())
+            }
+        }
+    }
 
-        return terminalConfigState.asResult()
-            .map { terminalConfigStateResult ->
-                when (terminalConfigStateResult) {
-                    is Result.Success -> {
-                        when (val orderUiState = terminalConfigStateResult.data) {
-                            is TerminalConfigState.Success -> {
-                                status.emit("Terminal config fetched.")
-                                OrderUiState(
-                                    currentOrder = mapOf<Int, Int>(),
-                                    products = orderUiState.config.buttons?.map {
-                                        Pair(it.id, TillProductButtonUI(id=it.id, caption = it.name, price = it.price, products = it.product_ids))
-                                    }?.toMap() ?: mapOf()
+    private fun terminalUIConfigState(
+        terminalConfigFlow : StateFlow<TerminalConfigState>,
+    ): StateFlow<OrderConfig> {
+
+        return terminalConfigFlow
+            .mapState(OrderConfig(), viewModelScope) { terminalConfig ->
+                when (terminalConfig) {
+                    is TerminalConfigState.Success -> {
+                        status.emit("Terminal config fetched.")
+                        OrderConfig(
+                            ready = true,
+                            buttons = terminalConfig.config.buttons?.associate {
+                                Pair(
+                                    it.id,
+                                    TillProductButtonUI(
+                                        id = it.id,
+                                        caption = it.name,
+                                        price = it.price,
+                                        products = it.product_ids
+                                    )
                                 )
-                            }
-                            is TerminalConfigState.Error -> {
-                                status.emit(orderUiState.message)
-                                OrderUiState(
-                                    currentOrder = mapOf<Int, Int>(),
-                                    products = mapOf<Int, TillProductButtonUI>()
-                                )
-                            }
-                        }
+                            } ?: mapOf(),
+                            tillName = terminalConfig.config.name,
+                        )
                     }
-
-                    is Result.Loading -> {
+                    is TerminalConfigState.Error -> {
+                        status.emit(terminalConfig.message)
+                        OrderConfig()
+                    }
+                    is TerminalConfigState.Loading -> {
                         status.emit("Loading")
-                        OrderUiState(
-                            currentOrder = mapOf<Int, Int>(),
-                            products = mapOf<Int, TillProductButtonUI>()
-                        )
-                    }
-
-                    is Result.Error -> {
-                        status.emit("Error")
-                        OrderUiState(
-                            currentOrder = mapOf<Int, Int>(),
-                            products = mapOf<Int, TillProductButtonUI>()
-                        )
+                        OrderConfig()
                     }
                 }
             }
-        }
+    }
 }

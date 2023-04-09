@@ -45,7 +45,7 @@ async def create(
     return await order_service.create_order(token=token, new_order=order)
 
 
-@router.get("/{order_id}/process", summary="finish the order and book the transactions", response_model=CompletedOrder)
+@router.post("/{order_id}/process", summary="finish the order and book the transactions", response_model=CompletedOrder)
 async def process(
     order_id: int,
     token: CurrentAuthToken,

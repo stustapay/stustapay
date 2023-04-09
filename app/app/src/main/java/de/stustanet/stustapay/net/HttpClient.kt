@@ -1,8 +1,8 @@
 package de.stustanet.stustapay.net
 
 import android.util.Log
+import de.stustanet.stustapay.model.RegistrationState
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -11,21 +11,13 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-class HttpClientTarget(
-    val url: String,
-    val token: String,
-)
-
-@Serializable
-data class ErrorDetail(
-    val detail: String
-)
-
-
-class HttpClient(retry: Boolean = false, logRequests: Boolean = true, val targetConfig: suspend () -> HttpClientTarget?) {
+class HttpClient(
+    retry: Boolean = false,
+    logRequests: Boolean = true,
+    val registrationState: suspend () -> RegistrationState
+) {
     val httpClient = HttpClient(CIO) {
 
         // automatic json conversions
@@ -57,7 +49,7 @@ class HttpClient(retry: Boolean = false, logRequests: Boolean = true, val target
                 level = LogLevel.ALL
                 logger = object : Logger {
                     override fun log(message: String) {
-                        Log.d("SSP req", message)
+                        Log.d("StuStaPay req", message)
                     }
                 }
             }
@@ -70,53 +62,59 @@ class HttpClient(retry: Boolean = false, logRequests: Boolean = true, val target
     }
 
 
-    suspend inline fun <reified T> transformResponse(response: HttpResponse): Response<T> {
-        return when (response.status.value) {
-            in 200..299 -> Response.OK(response.body())
-            in 300..399 -> Response.Error.Msg("unhandled redirect")
-            in 400..403 -> {
-                Response.Error.Msg(
-                    (response.body() as ErrorDetail).detail,
-                    response.status.value
-                )
-            }
-            else -> Response.Error.Msg("error ${response.status.value}: ${response.bodyAsText()}")
-        }
-    }
-
     /**
      * send a http get/post/... request using the current registration token.
-     * @param basePath overrides api base path from registration, and if given, no bearer token is sent.
+     * @param apiBasePath overrides api base path from registration, and if given, no bearer token is sent.
      */
     suspend inline fun <reified I, reified O> request(
         path: String,
         method: HttpMethod,
         options: HttpRequestBuilder.() -> Unit = {},
-        basePath: String? = null,
+        apiBasePath: String? = null,
         noinline body: (() -> I)? = null,
     ): Response<O> {
 
         try {
             Log.d("StuStaPay", "request ${method.value} to $path")
 
-            val api: HttpClientTarget? = targetConfig()
+            val regState = registrationState()
+            val apiBase: String
 
-            // prefer custom base-path over the one from the targetConfig.
-            val reqBasePath = basePath ?: api?.url
-            ?: return Response.Error.Msg("no api base path available")
+            var token: String? = null
 
-            Log.d("StuStaPay", "basepath $reqBasePath/$path token: ${api?.token}")
+            when (regState) {
+                is RegistrationState.Registered -> {
+                    apiBase = apiBasePath ?: regState.apiUrl
+                    if (apiBasePath == null) {
+                        token = regState.token
+                    }
+                }
+                is RegistrationState.Error -> {
+                    if (apiBasePath == null) {
+                        return Response.Error.Request(regState.message)
+                    } else {
+                        apiBase = apiBasePath
+                    }
+                }
+                is RegistrationState.NotRegistered -> {
+                    if (apiBasePath == null) {
+                        return Response.Error.Access("terminal not registered: ${regState.message}")
+                    } else {
+                        apiBase = apiBasePath
+                    }
+                }
+            }
 
             val response: HttpResponse = httpClient.request {
                 this.method = method
 
                 contentType(ContentType.Application.Json)
 
-                url("${reqBasePath}/${path}")
+                url("${apiBase}/${path}")
 
-                if (api != null) {
+                if (token != null) {
                     headers {
-                        append(HttpHeaders.Authorization, "Bearer ${api.token}")
+                        append(HttpHeaders.Authorization, "Bearer ${token}")
                     }
                 }
 
@@ -127,8 +125,11 @@ class HttpClient(retry: Boolean = false, logRequests: Boolean = true, val target
             }
             return transformResponse(response)
         } catch (e: Exception) {
-            Log.e("StuStaPay", "request error: $path: ${e.localizedMessage}")
-            return Response.Error.Exception(e)
+            Log.e(
+                "StuStaPay",
+                "http request error: $path: ${e.localizedMessage}\n${e.stackTraceToString()}"
+            )
+            return Response.Error.Request(null, e)
         }
     }
 

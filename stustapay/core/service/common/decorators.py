@@ -3,6 +3,7 @@ from functools import wraps
 from inspect import signature
 from typing import Optional
 
+from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import User, Privilege
 
@@ -69,11 +70,11 @@ def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
                     raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
             if user is None:
-                raise PermissionError("invalid user token")  # TODO: better exception typing
+                raise AccessDenied("invalid user token")
 
             if privileges:
                 if not any([p in privileges for p in user.privileges]):
-                    raise PermissionError(f"user does not have any of the required privileges: {privileges}")
+                    raise AccessDenied(f"user does not have any of the required privileges: {privileges}")
 
             if "current_user" in signature(func).parameters:
                 kwargs["current_user"] = user
@@ -119,12 +120,11 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
                 raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
             if terminal is None:
-                raise PermissionError("invalid terminal token")  # TODO: better exception typing
+                raise AccessDenied("invalid terminal token")
 
             if user_privileges is not None:
                 if terminal.till.active_user_id is None:
-                    # TODO: better exception typing
-                    raise PermissionError(
+                    raise AccessDenied(
                         f"no user is logged into this terminal but "
                         f"the following privileges are required {user_privileges}"
                     )
@@ -136,7 +136,7 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
                 )
 
                 if not any([p in user_privileges for p in logged_in_user.privileges]):
-                    raise PermissionError(f"user does not have any of the required privileges: {user_privileges}")
+                    raise AccessDenied(f"user does not have any of the required privileges: {user_privileges}")
 
                 if "current_user" in signature(func).parameters:
                     kwargs["current_user"] = logged_in_user

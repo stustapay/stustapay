@@ -31,3 +31,7 @@ class User(UserWithoutId):
 
 class UserWithPassword(User):
     password: str
+
+
+class UserTag(BaseModel):
+    uid: int

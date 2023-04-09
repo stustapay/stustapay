@@ -1,6 +1,5 @@
 package de.stustanet.stustapay.ui.settings
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,11 +17,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.stustanet.stustapay.BuildConfig
-import de.stustanet.stustapay.ui.nav.NavDest
-import de.stustanet.stustapay.ui.nav.NavScaffold
 import de.stustanet.stustapay.ui.common.PrefGroup
 import de.stustanet.stustapay.ui.common.PrefLink
+import de.stustanet.stustapay.ui.nav.NavDest
+import de.stustanet.stustapay.ui.nav.NavScaffold
 
 
 object SettingsNavDest {
@@ -64,15 +62,6 @@ fun SettingsRootView(navController: NavHostController) {
     }
 }
 
-@Preview
-@Composable
-fun AboutView() {
-    Column {
-        Text("Version: " + BuildConfig.VERSION_NAME)
-        Text("Version code: " + BuildConfig.VERSION_CODE)
-    }
-}
-
 
 @Preview
 @Composable
@@ -90,7 +79,6 @@ fun SettingsView(leaveView: () -> Unit = {}) {
                 navController.popBackStack()
             }
         },
-        hasDrawer = false
     ) { paddingValues ->
         NavHost(
             navController = navController,
@@ -100,6 +88,7 @@ fun SettingsView(leaveView: () -> Unit = {}) {
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
             composable(SettingsNavDest.root.route) { SettingsRootView(navController) }
+            composable(SettingsNavDest.connection.route) { RegistrationView() }
             composable(SettingsNavDest.connection.route) { RegistrationView() }
             composable(SettingsNavDest.about.route) { AboutView() }
         }

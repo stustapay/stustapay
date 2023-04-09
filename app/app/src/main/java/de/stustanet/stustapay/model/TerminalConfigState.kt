@@ -1,6 +1,8 @@
 package de.stustanet.stustapay.model
 
 sealed interface TerminalConfigState {
+    object Loading : TerminalConfigState
+
     data class Success(
         var config: TerminalConfig
     ) : TerminalConfigState

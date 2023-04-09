@@ -3,21 +3,25 @@ package de.stustanet.stustapay.repository
 
 import android.util.Base64
 import android.util.Log
+import de.stustanet.stustapay.model.DeregistrationState
 import de.stustanet.stustapay.model.RegisterQRCodeContent
 import de.stustanet.stustapay.model.RegistrationState
-import de.stustanet.stustapay.model.TerminalRegistrationSuccess
-import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.netsource.RegistrationRemoteDataSource
 import de.stustanet.stustapay.storage.RegistrationLocalDataSource
 import de.stustanet.stustapay.util.merge
-import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
+
+sealed interface ForceDeregisterState {
+    data class Allow(val msg: String) : ForceDeregisterState
+    object Disallow : ForceDeregisterState
+}
 
 @Singleton
 class RegistrationRepository @Inject constructor(
@@ -29,10 +33,13 @@ class RegistrationRepository @Inject constructor(
     var registrationState: Flow<RegistrationState> =
         registrationLocalDataSource.registrationState.merge(localRegState)
 
+    var forceDeregisterState = MutableStateFlow<ForceDeregisterState>(ForceDeregisterState.Disallow)
+
     suspend fun register(
         qrcode_b64: String,
     ) {
         localRegState.emit(RegistrationState.NotRegistered("registering..."))
+        forceDeregisterState.emit(ForceDeregisterState.Disallow)
 
         val state = registerAsState(qrcode_b64)
 
@@ -44,9 +51,24 @@ class RegistrationRepository @Inject constructor(
         }
     }
 
-    suspend fun deregister() {
-        // TODO: maybe try to send a request to inform the server?
-        registrationLocalDataSource.delete()
+    suspend fun deregister(force: Boolean = false) {
+        when (val result = registrationRemoteDataSource.deregister()) {
+            is DeregistrationState.Error -> {
+                // remote deregistration failed
+                if (force) {
+                    // delete the local state anyway
+                    registrationLocalDataSource.delete()
+                    forceDeregisterState.emit(ForceDeregisterState.Disallow)
+                } else {
+                    // allow deleting local state anyway
+                    forceDeregisterState.emit(ForceDeregisterState.Allow(result.message))
+                }
+            }
+            is DeregistrationState.Deregistered -> {
+                registrationLocalDataSource.delete()
+                forceDeregisterState.emit(ForceDeregisterState.Disallow)
+            }
+        }
     }
 
     private suspend fun registerAsState(qrcode_b64: String): RegistrationState {
@@ -65,30 +87,10 @@ class RegistrationRepository @Inject constructor(
                 )
             }
 
-            val registrationResponse = registrationRemoteDataSource.register(
+            return registrationRemoteDataSource.register(
                 regCode.core_url,
                 regCode.registration_uuid
             )
-
-            return when (registrationResponse) {
-                is Response.OK -> {
-                    RegistrationState.Registered(
-                        token = registrationResponse.data.token,
-                        apiUrl = regCode.core_url,
-                        message = "success",
-                    )
-                }
-                is Response.Error.Msg -> {
-                    RegistrationState.Error(
-                        message = "error: ${registrationResponse.msg}, endpoint=${regCode.core_url}, code=${registrationResponse.code}",
-                    )
-                }
-                is Response.Error.Exception -> {
-                    RegistrationState.Error(
-                        message = "exception: ${registrationResponse.throwable.localizedMessage}, endpoint=${regCode.core_url}",
-                    )
-                }
-            }
 
         } catch (e: Exception) {
             Log.e("StuStaPay", "exception during registration", e)
