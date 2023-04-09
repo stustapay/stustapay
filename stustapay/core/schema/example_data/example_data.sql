@@ -156,21 +156,21 @@ select setval('till_id_seq', 100);
 
 
 insert into ordr (
-    id, itemcount, status, created_at, finished_at, payment_method, order_type,
+    id, item_count, booked_at, payment_method, order_type,
     cashier_id, till_id, customer_account_id
 )
 values
     -- simple beer with deposit
-    (0, 2, 'done', '2023-01-01 15:34:17 UTC+1', '2023-01-01 15:35:02 UTC+1', 'token', 'sale', 0, 0, 200),
+    (0, 2, '2023-01-01 15:35:02 UTC+1', 'token', 'sale', 0, 0, 200),
     -- items with different tax rates
-    (1, 3, 'done', '2023-01-02 16:59:20 UTC+1', '2023-01-02 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201),
+    (1, 3, '2023-01-02 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201),
     -- Top Up EC
-    (2, 1, 'done', '2023-01-01 16:59:20 UTC+1', '2023-01-01 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201)
+    (2, 1, '2023-01-01 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201)
     on conflict do nothing;
 select setval('ordr_id_seq', 100);
 
 
-insert into lineitem (
+insert into line_item (
     order_id, item_id, product_id, quantity, price, tax_name, tax_rate
 )
 values
@@ -186,18 +186,18 @@ values
     on conflict do nothing;
 
 insert into transaction (
-    id, order_id, description, source_account, target_account, booked_at, amount, tax_rate, tax_name, vouchers
+    id, order_id, description, source_account, target_account, booked_at, amount, vouchers
 )
 values
     -- simple beer with deposit
-    (0, 0, null, 200, 0, '2023-01-01 15:35:01 UTC+1', 5.00, 0.19, 'ust', 0),
-    (1, 0, null, 200, 2, '2023-01-01 15:35:02 UTC+1', 2.00, 0.00, 'none', 0),
+    (0, 0, null, 200, 0, '2023-01-01 15:35:01 UTC+1', 5.00, 0),
+    (1, 0, null, 200, 2, '2023-01-01 15:35:02 UTC+1', 2.00, 0),
     -- items with different tax rates
-    (2, 1, null, 201, 0, '2023-01-02 17:00:05 UTC+1', 10.00, 0.19, 'ust', 0),
-    (3, 1, null, 201, 2, '2023-01-02 17:00:06 UTC+1', 4.00, 0.00, 'none', 0),
-    (4, 1, null, 201, 2, '2023-01-02 17:00:07 UTC+1', 2.00, 0.07, 'eust', 0),
+    (2, 1, null, 201, 0, '2023-01-02 17:00:05 UTC+1', 10.00,0),
+    (3, 1, null, 201, 2, '2023-01-02 17:00:06 UTC+1', 4.00, 0),
+    (4, 1, null, 201, 2, '2023-01-02 17:00:07 UTC+1', 2.00, 0),
     -- Top Up EC
-    (5, 2, null, 3, 201, '2023-01-01 17:00:06 UTC+1', 20.00, 0.00, 'none', 0)
+    (5, 2, null, 3, 201, '2023-01-01 17:00:06 UTC+1', 20.00, 0)
     on conflict do nothing;
 select setval('transaction_id_seq', 100);
 

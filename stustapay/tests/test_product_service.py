@@ -34,8 +34,7 @@ class ProductServiceTest(BaseTestCase):
         self.assertEqual(updated_product.tax_name, "eust")
 
         products = await self.product_service.list_products(token=self.admin_token)
-        self.assertEqual(len(products), 1)
-        self.assertEqual(products[0].name, "Updated Test Product")
+        self.assertEqual(len(list(filter(lambda p: p.name == "Updated Test Product", products))), 1)
 
         with self.assertRaises(AccessDenied):
             await self.product_service.delete_product(token=self.cashier_token, product_id=product.id)

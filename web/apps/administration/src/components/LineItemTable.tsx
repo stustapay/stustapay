@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Tooltip } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, gridColumnsTotalWidthSelector } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { selectProductById, useGetProductsQuery, selectTaxRateById, useGetTaxRatesQuery } from "@api";
@@ -59,7 +59,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
       headerName: t("item.product") as string,
       type: "number",
       width: 200,
-      renderCell: (params) => renderProduct(params.row.product_id),
+      renderCell: (params) => renderProduct(params.row.product.id),
     },
     {
       field: "quantity",
@@ -98,6 +98,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
       width: 100,
     },
   ];
+  console.log(lineItems);
 
   return (
     <DataGrid

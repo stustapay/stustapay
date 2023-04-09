@@ -117,7 +117,7 @@ create table if not exists account (
     -- current balance, updated on each transaction
     balance numeric not null default 0,
     -- current number of vouchers, updated on each transaction
-    voucher bigint not null default 0
+    vouchers bigint not null default 0
 
 
     -- todo: voucher
@@ -281,6 +281,10 @@ create table if not exists product (
     tax_name text not null references tax(name) on delete restrict
 );
 
+insert into product (id, name, fixed_price, tax_name)
+values (1, 'Rabatt', false, 'none');
+select setval('product_id_seq', 100);
+
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
     id bigint not null references product(id) on delete cascade,
@@ -370,21 +374,6 @@ create table if not exists till (
     constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null))
 );
 
-
-create table if not exists order_status (
-    name text not null primary key
-);
-insert into order_status (
-    name
-)
-values
-    ('pending'),
-    ('done'),
-    ('cancelled')
-    -- tsesig? draft? paid?
-
-    on conflict do nothing;
-
 -- represents an order of an customer, like buying wares or top up
 create table if not exists ordr (
     id bigserial not null primary key,
@@ -393,12 +382,10 @@ create table if not exists ordr (
     -- order values can be obtained with order_value
 
     -- how many line items does this transaction have
-    -- determines the next lineitem id
-    itemcount int not null default 0,
+    -- determines the next line_item id
+    item_count int not null default 0,
 
-    status text not null references order_status(name) on delete restrict,
-    created_at timestamptz not null default now(),
-    finished_at timestamptz,
+    booked_at timestamptz not null default now(),
 
     -- todo: who triggered the transaction (user)
 
@@ -419,7 +406,7 @@ create table if not exists ordr (
 );
 
 -- all products in a transaction
-create table if not exists lineitem (
+create table if not exists line_item (
     order_id bigint not null references ordr(id) on delete cascade,
     item_id int not null,
     primary key(order_id, item_id),
@@ -435,8 +422,6 @@ create table if not exists lineitem (
     -- tax amount
     tax_name text,
     tax_rate numeric
-
-    -- todo: voucher amount
 );
 
 create or replace function order_updated() returns trigger as
@@ -452,8 +437,7 @@ begin
             'order_id', NEW.id,
             'order_uuid', NEW.uuid,
             'cashier_id', NEW.cashier_id,
-            'till_id', NEW.till_id,
-            'status', NEW.status
+            'till_id', NEW.till_id
         )::text
     );
 
@@ -468,26 +452,26 @@ create trigger order_updated_trigger
     for each row
 execute function order_updated();
 
-create or replace view lineitem_tax as
+create or replace view line_item_tax as
     select
         l.*,
         l.price * l.quantity as total_price,
         round(l.price * l.quantity * l.tax_rate / (1 + l.tax_rate ), 2) as total_tax,
         p.json as product
-    from lineitem l join product_as_json p on l.product_id = p.id;
+    from line_item l join product_as_json p on l.product_id = p.id;
 
--- aggregates the lineitem's amounts
+-- aggregates the line_item's amounts
 create or replace view order_value as
     select
         ordr.*,
         sum(total_price) as total_price,
         sum(total_tax) as total_tax,
         sum(total_price - total_tax) as total_no_tax,
-        json_agg(lineitem_tax) as line_items
+        json_agg(line_item_tax) as line_items
     from
         ordr
-        left join lineitem_tax
-            on (ordr.id = lineitem_tax.order_id)
+        left join line_item_tax
+            on (ordr.id = line_item_tax.order_id)
     group by
         ordr.id;
 
@@ -495,11 +479,11 @@ create or replace view order_value as
 create or replace view order_items as
     select
         ordr.*,
-        lineitem.*
+        line_item.*
     from
         ordr
-        left join lineitem
-            on (ordr.id = lineitem.order_id);
+        left join line_item
+            on (ordr.id = line_item.order_id);
 
 -- aggregated tax rate of items
 create or replace view order_tax_rates as
@@ -512,7 +496,7 @@ create or replace view order_tax_rates as
         sum(total_price - total_tax) as value_notax
     from
         ordr
-        left join lineitem_tax
+        left join line_item_tax
             on (ordr.id = order_id)
         group by
             ordr.id, tax_rate, tax_name;
@@ -539,9 +523,7 @@ create table if not exists transaction (
     amount numeric not null,
     constraint amount_positive check (amount >= 0),
     vouchers bigint not null,
-    constraint vouchers_positive check (vouchers >= 0),
-    tax_rate numeric not null, -- how much tax is included in the amount
-    tax_name text not null
+    constraint vouchers_positive check (vouchers >= 0)
 );
 
 
@@ -566,21 +548,13 @@ create or replace function book_transaction (
     source_account_id bigint,
     target_account_id bigint,
     amount numeric,
-    tax_name text,
     vouchers bigint
 )
     returns bigint as $$
 <<locals>> declare
     transaction_id bigint;
-    tax_rate numeric;
     temp_account_id bigint;
 begin
-    -- resolve tax rate
-    select rate from tax where name = tax_name into locals.tax_rate;
-    if locals.tax_rate is null then
-        raise 'unknown tax name';
-    end if;
-
     if vouchers < 0 then
         raise 'vouchers cannot be negative';
     end if;
@@ -595,7 +569,7 @@ begin
 
     -- add new transaction
     insert into transaction (
-        order_id, description, source_account, target_account, amount, tax_rate, tax_name, vouchers
+        order_id, description, source_account, target_account, amount, vouchers
     )
     values (
         book_transaction.order_id,
@@ -603,8 +577,6 @@ begin
         book_transaction.source_account_id,
         book_transaction.target_account_id,
         book_transaction.amount,
-        locals.tax_rate,
-        book_transaction.tax_name,
         book_transaction.vouchers
     ) returning id into locals.transaction_id;
 

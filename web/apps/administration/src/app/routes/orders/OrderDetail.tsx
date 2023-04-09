@@ -44,10 +44,7 @@ export const OrderDetail: React.FC = () => {
             <ListItemText primary={t("order.id")} secondary={order.id} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("order.status")} secondary={order.status} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("order.itemCount")} secondary={order.itemcount} />
+            <ListItemText primary={t("order.itemCount")} secondary={order.item_count} />
           </ListItem>
           <ListItem>
             <ListItemText primary={t("order.paymentMethod")} secondary={order.payment_method} />
@@ -56,10 +53,7 @@ export const OrderDetail: React.FC = () => {
             <ListItemText primary={t("order.type")} secondary={order.order_type} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("order.createdAt")} secondary={order.created_at} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("order.finishedAt")} secondary={order.finished_at} />
+            <ListItemText primary={t("order.bookedAt")} secondary={order.booked_at} />
           </ListItem>
         </List>
       </Paper>
