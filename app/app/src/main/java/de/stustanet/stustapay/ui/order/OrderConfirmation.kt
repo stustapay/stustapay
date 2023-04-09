@@ -16,7 +16,7 @@ import de.stustanet.stustapay.ui.nav.TopAppBar
  * View for displaying available purchase items
  */
 @Composable
-fun OrderSelection(
+fun OrderConfirmation(
     viewModel: OrderViewModel,
     onAbort: () -> Unit,
     onSubmit: () -> Unit,
@@ -41,16 +41,11 @@ fun OrderSelection(
                     .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
-                // TODO: voucher amount adjustment when in edit mode
-                for (product in orderConfig.buttons) {
+                for (product in order.buttonSelections) {
+                    // TODO: use serverOrder's product names here
+                    //       not just the button captions
                     item {
-                        OrderItem(
-                            caption = product.value.caption,
-                            amount = order.buttonSelections.getOrDefault(product.value.id, 0),
-                            price = product.value.price,
-                            onIncr = { viewModel.incrementOrderProduct(product.value.id) },
-                            onDecr = { viewModel.decrementOrderProduct(product.value.id) }
-                        )
+                        OrderConfirmItem("Bla: ${product.key}", 13.37, product.value)
                     }
                 }
             }

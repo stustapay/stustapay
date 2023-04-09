@@ -37,10 +37,11 @@ data class NewLineItem(
 data class NewOrder(
     val positions: List<NewLineItem>,
     val order_type: OrderType,
-    val customer_tag: Int,
+    val customer_tag: ULong,
 )
 
 /**
+ * Returned once we create an order.
  * PendingOrder class defined in core model.
  */
 @Serializable
@@ -52,9 +53,13 @@ data class PendingOrder(
 )
 
 /**
- * Error in the API request
+ * Returned once the order is booked.
+ * CompletedOrder class defined in core mode.
  */
 @Serializable
-data class Error(
-    val msg: String,
+data class CompletedOrder(
+    val id: Int,
+    val uuid: String,
+    val old_balance: Double,
+    val new_balance: Double,
 )

@@ -16,7 +16,7 @@ suspend inline fun <reified T> transformResponse(response: HttpResponse): Respon
         404 -> Response.Error.NotFound(parseException(response))
         500 -> Response.Error.Server(parseException(response), response.status.value)
         else -> Response.Error.Server(
-            "code ${response.status.value}: ${response.bodyAsText()}",
+            response.bodyAsText(),
             response.status.value
         )
     }

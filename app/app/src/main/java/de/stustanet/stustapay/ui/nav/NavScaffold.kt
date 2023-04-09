@@ -8,7 +8,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 
 
@@ -24,16 +23,16 @@ fun NavScaffold(
         topBar = {
             TopAppBar(
                 title = title,
-                iconType = TopAppBarIcon.BACK,
-            ) {
-                navigateBack()
-            }
+                icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) { navigateBack() },
+            )
         },
 
         content = { innerPadding ->
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
                 content(innerPadding)
             }
         }

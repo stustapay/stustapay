@@ -46,6 +46,11 @@ interface TerminalAPI {
     suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder>
 
     /**
+     * Book a new order - this transfers the money between accounts.
+     */
+    suspend fun processOrder(id: Int): Response<CompletedOrder>
+
+    /**
      * Get the button configuration of the terminal.
      */
     suspend fun getTerminalConfig(): Response<TerminalConfig>

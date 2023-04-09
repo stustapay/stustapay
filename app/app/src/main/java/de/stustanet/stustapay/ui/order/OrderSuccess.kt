@@ -16,11 +16,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 
 @Composable
-fun OrderSuccess(viewModel: OrderViewModel, onDismiss: () -> Unit) {
-    val uiState by viewModel.orderUiState.collectAsStateWithLifecycle()
-    val totalCost = uiState.currentOrder.map {
-        uiState.products[it.key]!!.price * it.value
-    }.sum()
+fun OrderSuccess(viewModel: OrderViewModel, onConfirm: () -> Unit) {
+    val orderConfig by viewModel.orderConfig.collectAsStateWithLifecycle()
+    val order by viewModel.order.collectAsStateWithLifecycle()
 
     val haptic = LocalHapticFeedback.current
 
@@ -33,9 +31,10 @@ fun OrderSuccess(viewModel: OrderViewModel, onDismiss: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "$totalCost€ Paid", fontSize = 48.sp)
-                    for (product in uiState.currentOrder) {
-                        val name = uiState.products[product.key]!!.caption
+                    OrderCost(order)
+
+                    for (product in order.buttonSelections) {
+                        val name = orderConfig.buttons[product.key]!!.caption
                         val amount = product.value
                         Text(text = "$amount $name", fontSize = 24.sp)
                     }
@@ -46,7 +45,7 @@ fun OrderSuccess(viewModel: OrderViewModel, onDismiss: () -> Unit) {
             Button(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onDismiss()
+                    onConfirm()
                 },
                 modifier = Modifier
                     .fillMaxWidth()

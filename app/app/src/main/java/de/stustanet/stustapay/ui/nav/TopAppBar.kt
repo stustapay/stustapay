@@ -8,28 +8,42 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.Composable
 import androidx.compose.material.TopAppBar as MaterialTopAppBar
 
-enum class TopAppBarIcon {
-    MENU,
-    BACK,
+class TopAppBarIcon(
+    val type: Type,
+    val onClick: () -> Unit
+) {
+    enum class Type {
+        MENU,
+        BACK,
+    }
 }
 
 
 @Composable
 fun TopAppBar(
-    title: @Composable () -> Unit, iconType: TopAppBarIcon, onTopLeftIconClick: () -> Unit
+    title: @Composable () -> Unit,
+    icon: TopAppBarIcon? = null,
+    onTopLeftIconClick: () -> Unit = {}
 ) {
-    MaterialTopAppBar(title = title, navigationIcon = {
-        IconButton(onClick = {
-            onTopLeftIconClick()
-        }) {
-            when (iconType) {
-                TopAppBarIcon.MENU -> {
-                    Icon(Icons.Filled.Menu, "Open the menu")
-                }
-                TopAppBarIcon.BACK -> {
-                    Icon(Icons.Filled.ArrowBack, "Go back")
+    MaterialTopAppBar(
+        title = title,
+        navigationIcon = if (icon != null) {
+            {
+                IconButton(onClick = {
+                    onTopLeftIconClick()
+                }) {
+                    when (icon.type) {
+                        TopAppBarIcon.Type.MENU -> {
+                            Icon(Icons.Filled.Menu, "Open the menu")
+                        }
+                        TopAppBarIcon.Type.BACK -> {
+                            Icon(Icons.Filled.ArrowBack, "Go back")
+                        }
+                    }
                 }
             }
+        } else {
+            null
         }
-    })
+    )
 }

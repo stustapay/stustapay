@@ -21,7 +21,7 @@ class NavChangeHandler(
     ) {
         val dest = destinations.routes[destination.route]
         if (dest != null) {
-            if (dest.showNavbar) {
+            if (dest.showSystemUI) {
                 uictrl.showSystemUI()
             } else {
                 uictrl.hideSystemUI()

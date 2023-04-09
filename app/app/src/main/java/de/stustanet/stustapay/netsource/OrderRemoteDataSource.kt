@@ -1,6 +1,7 @@
 package de.stustanet.stustapay.netsource
 
 
+import de.stustanet.stustapay.model.CompletedOrder
 import de.stustanet.stustapay.model.NewOrder
 import de.stustanet.stustapay.model.PendingOrder
 import de.stustanet.stustapay.net.Response
@@ -12,5 +13,9 @@ class OrderRemoteDataSource @Inject constructor(
 ) {
     suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder> {
         return terminalAPI.createOrder(newOrder)
+    }
+
+    suspend fun processOrder(id: Int): Response<CompletedOrder> {
+        return terminalAPI.processOrder(id)
     }
 }

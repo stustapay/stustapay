@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.util
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
@@ -105,4 +106,21 @@ suspend fun <T> Flow<T>.waitFor(predicate: (T) -> Boolean): T {
         job.join()
     }
     return ret
+}
+
+
+/**
+ * transform a stateflow into another stateflow,
+ * since the initial value transformation would suspend,
+ * you need to provide the initial value of the new flow manually.
+ */
+fun <T, K> StateFlow<T>.mapState(
+    initialValue: K,
+    scope: CoroutineScope,
+    transform: suspend (T) -> K
+): StateFlow<K> {
+    return mapLatest {
+        transform(it)
+    }
+        .stateIn(scope, SharingStarted.Eagerly, initialValue)
 }
