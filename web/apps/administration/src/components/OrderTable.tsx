@@ -21,11 +21,6 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
       width: 100,
     },
     {
-      field: "status",
-      headerName: t("order.status") as string,
-      width: 100,
-    },
-    {
       field: "order_type",
       headerName: t("order.type") as string,
       width: 100,
@@ -57,15 +52,8 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
       width: 100,
     },
     {
-      field: "created_at",
-      headerName: t("order.createdAt") as string,
-      type: "string",
-      valueGetter: ({ value }) => value && new Date(value).toLocaleString("de-DE"),
-      flex: 1,
-    },
-    {
-      field: "finished_at",
-      headerName: t("order.finishedAt") as string,
+      field: "bookedAt",
+      headerName: t("order.bookedAt") as string,
       type: "string",
       valueGetter: ({ value }) => value && new Date(value).toLocaleString("de-DE"),
       flex: 1,

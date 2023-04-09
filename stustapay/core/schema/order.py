@@ -3,9 +3,10 @@ import enum
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, root_validator
+from pydantic import root_validator
 
 from stustapay.core.schema.product import Product
+from stustapay.core.util import BaseModel
 
 
 class OrderType(enum.Enum):
@@ -34,50 +35,76 @@ class NewLineItem(BaseModel):
 class NewOrder(BaseModel):
     positions: list[NewLineItem]
     order_type: OrderType
-    customer_tag: int
+    customer_tag_uid: int
+    uuid: Optional[UUID] = None
+    used_vouchers: Optional[int] = None
 
 
-class LineItem(BaseModel):
-    product_id: int
-    order_id: int
-    item_id: int
+class PendingLineItem(BaseModel):
     quantity: int
     product: Product
     price: float
-    total_price: float
     tax_name: str
     tax_rate: float
-    total_tax: float
+
+    @property
+    def total_price(self) -> float:
+        return self.price * self.quantity
 
 
-class OrderBooking(BaseModel):
-    total_price: float
-    total_tax: float
-    total_no_tax: float
+class PendingOrder(BaseModel):
+    order_type: OrderType
 
-
-class CompletedOrder(BaseModel):
-    id: int
-    uuid: UUID
     old_balance: float
     new_balance: float
 
+    old_voucher_balance: int
+    new_voucher_balance: int
 
-class PendingOrder(CompletedOrder):
-    pass
+    customer_account_id: int
+
+    line_items: list[PendingLineItem]
+
+    @property
+    def item_count(self) -> int:
+        return len(self.line_items)
+
+    @property
+    def total_price(self) -> float:
+        agg = 0.0
+        for line_item in self.line_items:
+            agg += line_item.total_price
+        return agg
 
 
-class Order(OrderBooking):
+class CompletedOrder(PendingOrder):
+    id: int
+    uuid: UUID
+
+    booked_at: datetime.datetime
+
+    cashier_id: int
+    till_id: int
+
+
+class LineItem(PendingLineItem):
+    item_id: int
+    total_tax: float
+
+
+class Order(BaseModel):
     """
     represents a completely finished order with all relevant data
     """
 
     id: int
     uuid: UUID
-    itemcount: int
-    status: str
-    created_at: datetime.datetime
-    finished_at: Optional[datetime.datetime]
+
+    total_price: float
+    total_tax: float
+    total_no_tax: float
+
+    booked_at: datetime.datetime
     payment_method: Optional[str]
     order_type: OrderType
 

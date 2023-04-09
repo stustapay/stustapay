@@ -19,7 +19,7 @@ class NewUser(BaseModel):
 class UserWithoutId(BaseModel):
     name: str
     privileges: list[Privilege]
-    description: Optional[str]
+    description: Optional[str] = None
     user_tag_uid: Optional[int] = None
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None

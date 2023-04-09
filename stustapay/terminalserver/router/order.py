@@ -23,17 +23,8 @@ async def list_orders(
     return await order_service.list_orders_terminal(token=token)
 
 
-@router.get("/{order_id}", summary="get information about an order", response_model=Optional[Order])
-async def show(
-    order_id: int,
-    token: CurrentAuthToken,
-    order_service: ContextOrderService,
-):
-    return await order_service.show_order(token=token, order_id=order_id)
-
-
-@router.post("", summary="create a new order and prepare it to be processed", response_model=PendingOrder)
-async def create(
+@router.post("/check", summary="create a new order and prepare it to be processed", response_model=PendingOrder)
+async def check(
     order: NewOrder,
     token: CurrentAuthToken,
     order_service: ContextOrderService,
@@ -42,13 +33,22 @@ async def create(
     Execute the order.
     returns either the completed order, or an error message, why the order could not be completed
     """
-    return await order_service.create_order(token=token, new_order=order)
+    return await order_service.check_order(token=token, new_order=order)
 
 
-@router.post("/{order_id}/process", summary="finish the order and book the transactions", response_model=CompletedOrder)
-async def process(
+@router.post("/book", summary="finish the order and book the transactions", response_model=CompletedOrder)
+async def book(
+    order: NewOrder,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+):
+    return await order_service.book_order(token=token, new_order=order)
+
+
+@router.get("/{order_id}", summary="get information about an order", response_model=Optional[Order])
+async def show(
     order_id: int,
     token: CurrentAuthToken,
     order_service: ContextOrderService,
 ):
-    return await order_service.book_order(token=token, order_id=order_id)
+    return await order_service.show_order(token=token, order_id=order_id)

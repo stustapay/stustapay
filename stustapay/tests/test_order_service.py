@@ -1,9 +1,11 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+import uuid
+
 from stustapay.core.schema.order import NewLineItem, NewOrder, OrderType
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile
 from stustapay.core.schema.user import Privilege, UserWithoutId
-from stustapay.core.service.order import OrderService
+from stustapay.core.service.order import OrderService, NotEnoughVouchersException
 from stustapay.core.service.product import ProductService
 from .common import BaseTestCase
 
@@ -30,6 +32,7 @@ class OrderLogicTest(BaseTestCase):
                 fixed_price=True,
                 tax_name="ust",
                 target_account_id=None,
+                price_in_vouchers=1,
             ),
         )
         self.topup_product = await self.product_service.create_product(
@@ -90,66 +93,119 @@ class OrderLogicTest(BaseTestCase):
         self.till = await self.till_service.get_till(token=self.admin_token, till_id=self.till.id)
 
     async def test_basic_order_flow(self):
-        completed_order = await self.order_service.create_order(
-            token=self.terminal_token,
-            new_order=NewOrder(
-                positions=[NewLineItem(product_id=self.product.id, quantity=2)],
-                order_type=OrderType.sale,
-                customer_tag=self.customer_uid,
-            ),
+        new_order = NewOrder(
+            positions=[NewLineItem(product_id=self.product.id, quantity=2)],
+            order_type=OrderType.sale,
+            customer_tag_uid=self.customer_uid,
         )
-        self.assertEqual(completed_order.old_balance, START_BALANCE)
-        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
-        self.assertEqual(order.status, "pending")
-        self.assertEqual(order.itemcount, 1)
-        self.assertEqual(len(order.line_items), 1)
-        self.assertEqual(order.line_items[0].quantity, 2)
-        self.assertEqual(order.total_price, 2 * self.product.price)
-        self.assertEqual(completed_order.new_balance, START_BALANCE - order.total_price)
-        await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
-        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
-        self.assertEqual(order.status, "done")
+        pending_order = await self.order_service.check_order(
+            token=self.terminal_token,
+            new_order=new_order,
+        )
+        self.assertEqual(pending_order.old_balance, START_BALANCE)
+        self.assertEqual(pending_order.item_count, 1)
+        self.assertEqual(len(pending_order.line_items), 1)
+        self.assertEqual(pending_order.line_items[0].quantity, 2)
+        self.assertEqual(pending_order.total_price, 2 * self.product.price)
+        self.assertEqual(pending_order.new_balance, START_BALANCE - pending_order.total_price)
+        completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)
+        self.assertIsNotNone(completed_order)
+
+    async def test_basic_order_flow_with_vouchers(self):
+        customer_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
+        await self.db_conn.fetchval(
+            "insert into account (user_tag_uid, type, balance, vouchers) values ($1, 'private', $2, $3);",
+            customer_uid,
+            100,
+            3,
+        )
+        new_order = NewOrder(
+            positions=[NewLineItem(product_id=self.product.id, quantity=3)],
+            order_type=OrderType.sale,
+            customer_tag_uid=customer_uid,
+        )
+        pending_order = await self.order_service.check_order(
+            token=self.terminal_token,
+            new_order=new_order,
+        )
+        self.assertEqual(pending_order.old_balance, 100)
+        self.assertEqual(pending_order.item_count, 2)
+        self.assertEqual(len(pending_order.line_items), 2)
+        self.assertEqual(pending_order.new_voucher_balance, 0)
+        completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)
+        self.assertIsNotNone(completed_order)
+
+    async def test_basic_order_flow_with_uuid(self):
+        uid = uuid.uuid4()
+        new_order = NewOrder(
+            positions=[NewLineItem(product_id=self.product.id, quantity=2)],
+            order_type=OrderType.sale,
+            customer_tag_uid=self.customer_uid,
+            uuid=uid,
+        )
+        completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)
+        self.assertEqual(completed_order.uuid, uid)
+
+    async def test_basic_order_flow_with_fixed_vouchers(self):
+        customer_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
+        await self.db_conn.fetchval(
+            "insert into account (user_tag_uid, type, balance, vouchers) values ($1, 'private', $2, $3);",
+            customer_uid,
+            100,
+            3,
+        )
+        new_order = NewOrder(
+            positions=[NewLineItem(product_id=self.product.id, quantity=3)],
+            order_type=OrderType.sale,
+            customer_tag_uid=customer_uid,
+            used_vouchers=4,
+        )
+        with self.assertRaises(NotEnoughVouchersException):
+            await self.order_service.check_order(
+                token=self.terminal_token,
+                new_order=new_order,
+            )
+        new_order.used_vouchers = 2
+        pending_order = await self.order_service.check_order(
+            token=self.terminal_token,
+            new_order=new_order,
+        )
+        self.assertEqual(pending_order.old_voucher_balance, 3)
+        self.assertEqual(pending_order.new_voucher_balance, 1)
 
     async def test_topup_cash_order_flow(self):
-        completed_order = await self.order_service.create_order(
-            token=self.terminal_token,
-            new_order=NewOrder(
-                positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
-                order_type=OrderType.topup_cash,
-                customer_tag=self.customer_uid,
-            ),
+        new_order = NewOrder(
+            positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
+            order_type=OrderType.topup_cash,
+            customer_tag_uid=self.customer_uid,
         )
-        self.assertEqual(completed_order.old_balance, START_BALANCE)
-        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
-        self.assertEqual(order.status, "pending")
-        self.assertEqual(order.itemcount, 1)
-        self.assertEqual(len(order.line_items), 1)
-        self.assertEqual(order.line_items[0].quantity, 1)
-        self.assertEqual(order.line_items[0].price, 20)
-        self.assertEqual(order.total_price, 20)
-        self.assertEqual(completed_order.new_balance, START_BALANCE + order.total_price)
-        await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
-        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
-        self.assertEqual(order.status, "done")
+        pending_order = await self.order_service.check_order(token=self.terminal_token, new_order=new_order)
+        self.assertEqual(pending_order.old_balance, START_BALANCE)
+        self.assertEqual(pending_order.item_count, 1)
+        self.assertEqual(len(pending_order.line_items), 1)
+        self.assertEqual(pending_order.line_items[0].quantity, 1)
+        self.assertEqual(pending_order.line_items[0].price, 20)
+        self.assertEqual(pending_order.total_price, 20)
+        self.assertEqual(pending_order.new_balance, START_BALANCE + pending_order.total_price)
+        completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)
+        self.assertIsNotNone(completed_order)
         # todo check cashier account balance
 
     async def test_topup_sumup_order_flow(self):
-        completed_order = await self.order_service.create_order(
-            token=self.terminal_token,
-            new_order=NewOrder(
-                positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
-                order_type=OrderType.topup_sumup,
-                customer_tag=self.customer_uid,
-            ),
+        new_order = NewOrder(
+            positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
+            order_type=OrderType.topup_sumup,
+            customer_tag_uid=self.customer_uid,
         )
-        self.assertEqual(completed_order.old_balance, START_BALANCE)
-        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
-        self.assertEqual(order.status, "pending")
-        self.assertEqual(order.line_items[0].quantity, 1)
-        self.assertEqual(order.line_items[0].price, 20)
-        self.assertEqual(order.total_price, 20)
-        self.assertEqual(completed_order.new_balance, START_BALANCE + order.total_price)
-        await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
-        order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
-        self.assertEqual(order.status, "done")
+        pending_order = await self.order_service.check_order(
+            token=self.terminal_token,
+            new_order=new_order,
+        )
+        self.assertEqual(pending_order.old_balance, START_BALANCE)
+        self.assertEqual(pending_order.line_items[0].quantity, 1)
+        self.assertEqual(pending_order.line_items[0].price, 20)
+        self.assertEqual(pending_order.total_price, 20)
+        self.assertEqual(pending_order.new_balance, START_BALANCE + pending_order.total_price)
+        completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)
+        self.assertIsNotNone(completed_order)
         # todo check cashier account balance

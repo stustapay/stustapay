@@ -51,3 +51,4 @@ class Account(BaseModel):
     name: Optional[str]
     comment: Optional[str]
     balance: float
+    vouchers: int

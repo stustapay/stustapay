@@ -34,8 +34,7 @@ class DummyTerminal:
 
     async def run(self):
         try:
-            async with self.db_pool.acquire() as conn:
-                await self._run(conn)
+            await self._run()  # pylint: disable=no-value-for-parameter
         finally:
             await self.db_pool.close()
 
@@ -72,25 +71,19 @@ class DummyTerminal:
             await asyncio.sleep(random.uniform(self.min_interval_between_orders, self.max_interval_between_orders))
 
             products_to_book = self.select_random_products_from_buttons(terminal_config.buttons)
-            customer_tag = await self.select_random_customer_tag(conn)
+            customer_tag_uid = await self.select_random_customer_tag(conn)
             line_items = [NewLineItem(product_id=product_id, quantity=1) for product_id in products_to_book]
-            new_order = NewOrder(order_type=OrderType.sale, customer_tag=customer_tag, positions=line_items)
+            new_order = NewOrder(order_type=OrderType.sale, customer_tag_uid=customer_tag_uid, positions=line_items)
             self.logger.info(f"Creating order {new_order}")
             try:
-                order = await self.order_service.create_order(
+                order = await self.order_service.book_order(
                     token=terminal_token,
                     new_order=new_order,
                 )
+                print(order)
             except NotEnoughFundsException as e:
                 self.logger.info(f"not enough funds: {e}")
                 continue
             await asyncio.sleep(
                 random.uniform(self.min_interval_before_finishing_order, self.max_interval_before_finishing_order)
             )
-            should_book = random.random() >= 0.1
-            if should_book:
-                self.logger.info("Booking order")
-                await self.order_service.book_order(token=terminal_token, order_id=order.id)
-            else:
-                self.logger.info("Cancelling order")
-                await self.order_service.cancel_order(token=terminal_token, order_id=order.id)

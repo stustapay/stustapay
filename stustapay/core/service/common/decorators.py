@@ -101,7 +101,7 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
     def f(func):
         @wraps(func)
         async def wrapper(self, **kwargs):
-            if "token" not in kwargs:
+            if "token" not in kwargs and "current_terminal" not in kwargs:
                 raise RuntimeError("token was not provided to service function call")
 
             if "conn" not in kwargs:
@@ -110,14 +110,16 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
                     "with_db_transaction needs to be put before this decorator"
                 )
 
-            token = kwargs["token"]
+            token = kwargs["token"] if "token" in kwargs else None
+            terminal = kwargs["current_terminal"] if "current_terminal" in kwargs else None
             conn = kwargs["conn"]
-            if self.__class__.__name__ == "AuthService":
-                terminal: Terminal = await self.get_terminal_from_token(conn=conn, token=token)
-            elif hasattr(self, "auth_service"):
-                terminal: Terminal = await self.auth_service.get_terminal_from_token(conn=conn, token=token)
-            else:
-                raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
+            if terminal is None:
+                if self.__class__.__name__ == "AuthService":
+                    terminal: Terminal = await self.get_terminal_from_token(conn=conn, token=token)
+                elif hasattr(self, "auth_service"):
+                    terminal: Terminal = await self.auth_service.get_terminal_from_token(conn=conn, token=token)
+                else:
+                    raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
             if terminal is None:
                 raise AccessDenied("invalid terminal token")
@@ -140,11 +142,15 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
 
                 if "current_user" in signature(func).parameters:
                     kwargs["current_user"] = logged_in_user
+                elif "current_user" in kwargs:
+                    kwargs.pop("current_user")
 
             if "current_terminal" in signature(func).parameters:
                 kwargs["current_terminal"] = terminal
+            elif "current_terminal" in kwargs:
+                kwargs.pop("current_terminal")
 
-            if "token" not in signature(func).parameters:
+            if "token" not in signature(func).parameters and "token" in kwargs:
                 kwargs.pop("token")
 
             return await func(self, **kwargs)
