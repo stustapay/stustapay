@@ -17,7 +17,7 @@ class TillButton(NewTillButton):
 class NewTillLayout(BaseModel):
     name: str
     description: str
-    button_ids: Optional[list[int]]
+    button_ids: Optional[list[int]] = None
 
 
 class TillLayout(NewTillLayout):
@@ -26,7 +26,7 @@ class TillLayout(NewTillLayout):
 
 class NewTillProfile(BaseModel):
     name: str
-    description: str
+    description: Optional[str] = None
     layout_id: int
     allow_top_up: bool
 
@@ -37,14 +37,14 @@ class TillProfile(NewTillProfile):
 
 class NewTill(BaseModel):
     name: str
-    description: Optional[str]
-    tse_id: Optional[str]
-    active_shift: Optional[str]
+    description: Optional[str] = None
+    tse_id: Optional[str] = None
+    active_shift: Optional[str] = None
     active_profile_id: int
-    active_user_id: Optional[int]
+    active_user_id: Optional[int] = None
 
 
 class Till(NewTill):
     id: int
-    session_uuid: Optional[UUID]
-    registration_uuid: Optional[UUID]
+    session_uuid: Optional[UUID] = None
+    registration_uuid: Optional[UUID] = None

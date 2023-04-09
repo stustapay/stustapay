@@ -8,6 +8,10 @@ sealed interface RegistrationState {
         var message: String? = null,
     ) : RegistrationState
 
+    data class NotRegistered(
+        var message: String
+    ) : RegistrationState
+
     data class Error(
         val message: String
     ) : RegistrationState

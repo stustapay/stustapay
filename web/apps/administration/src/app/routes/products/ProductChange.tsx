@@ -83,17 +83,30 @@ export function ProductChange<T extends NewProduct>({
             />
 
             {values.fixed_price && (
-              <NumericInput
-                variant="standard"
-                margin="normal"
-                fullWidth
-                name="price"
-                label={t("productPrice")}
-                error={touched.price && !!errors.price}
-                helperText={(touched.price && errors.price) as string}
-                onChange={(value) => setFieldValue("price", value)}
-                value={values.price}
-              />
+              <>
+                <NumericInput
+                  variant="standard"
+                  margin="normal"
+                  fullWidth
+                  name="price"
+                  label={t("productPrice")}
+                  error={touched.price && !!errors.price}
+                  helperText={(touched.price && errors.price) as string}
+                  onChange={(value) => setFieldValue("price", value)}
+                  value={values.price}
+                />
+                <NumericInput
+                  variant="standard"
+                  margin="normal"
+                  fullWidth
+                  name="price_in_vouchers"
+                  label={t("productPriceInVouchers")}
+                  error={touched.price_in_vouchers && !!errors.price_in_vouchers}
+                  helperText={(touched.price_in_vouchers && errors.price_in_vouchers) as string}
+                  onChange={(value) => setFieldValue("price_in_vouchers", value)}
+                  value={values.price_in_vouchers}
+                />
+              </>
             )}
 
             <TaxRateSelect

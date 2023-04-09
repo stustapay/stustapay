@@ -2,8 +2,10 @@ import { z } from "zod";
 import { ProductSchema } from "./product";
 
 export const LineItemSchema = z.object({
+  product_id: z.number(),
   order_id: z.number(),
   item_id: z.number(),
+  quantity: z.number(),
   product: ProductSchema,
   price: z.number(),
   total_price: z.number(),
@@ -23,10 +25,13 @@ export const OrderSchema = z.object({
   uuid: z.string().uuid(),
   itemcount: z.number(),
   status: z.string(),
-  created_at: z.string().datetime(),
-  finished_at: z.string().datetime().nullable(),
+  created_at: z.string().datetime({ offset: true }),
+  finished_at: z.string().datetime({ offset: true }).nullable(),
   payment_method: z.string().nullable(),
   order_type: OrderTypeSchema.nullable(),
+  total_price: z.number(),
+  total_tax: z.number(),
+  total_no_tax: z.number(),
 
   cashier_id: z.number(),
   till_id: z.number(),

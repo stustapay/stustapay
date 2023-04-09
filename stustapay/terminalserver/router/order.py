@@ -1,48 +1,54 @@
 """
 purchase ordering.
 """
+from typing import Optional
 
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter
 
-from stustapay.core.http.auth_till import get_auth_token
-from stustapay.core.http.context import get_order_service
-from stustapay.core.schema.order import NewOrder
-from stustapay.core.service.order import OrderService
+from stustapay.core.http.auth_till import CurrentAuthToken
+from stustapay.core.http.context import ContextOrderService
+from stustapay.core.schema.order import CompletedOrder, NewOrder, Order, PendingOrder
 
-router = APIRouter(prefix="/api", tags=["orders"])
-
-
-class NewOrderPayload(BaseModel):
-    order: NewOrder
+router = APIRouter(prefix="/order", tags=["order"])
 
 
-@router.post("/order/create", summary="create and execute new order")
+@router.get("", summary="list all orders", response_model=list[Order])
+async def list_orders(
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+):
+    """
+    List all the order of the currently logged in Cashier
+    """
+    return await order_service.list_orders_terminal(token=token)
+
+
+@router.get("/{order_id}", summary="get information about an order", response_model=Optional[Order])
+async def show(
+    order_id: int,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+):
+    return await order_service.show_order(token=token, order_id=order_id)
+
+
+@router.post("", summary="create a new order and prepare it to be processed", response_model=PendingOrder)
 async def create(
-    payload: NewOrderPayload,
-    token: str = Depends(get_auth_token),
-    order_service: OrderService = Depends(get_order_service),
+    order: NewOrder,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
 ):
     """
     Execute the order.
     returns either the completed order, or an error message, why the order could not be completed
     """
-    return await order_service.create_order(token=token, new_order=payload.order)
+    return await order_service.create_order(token=token, new_order=order)
 
 
-@router.get("/order/{order_id}", summary="get information about an order")
-async def show(
-    order_id: int,
-    token: str = Depends(get_auth_token),
-    order_service: OrderService = Depends(get_order_service),
-):
-    return await order_service.show_order(token=token, order_id=order_id)
-
-
-@router.get("/order/{order_id}/process", summary="finish the order and book the transactions")
+@router.post("/{order_id}/process", summary="finish the order and book the transactions", response_model=CompletedOrder)
 async def process(
     order_id: int,
-    token: str = Depends(get_auth_token),
-    order_service: OrderService = Depends(get_order_service),
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
 ):
     return await order_service.book_order(token=token, order_id=order_id)

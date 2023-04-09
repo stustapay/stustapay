@@ -192,6 +192,12 @@ async def create_db_pool(cfg: DatabaseConfig) -> asyncpg.Pool:
         password=cfg.password,
         database=cfg.dbname,
         host=cfg.host,
+        # the introspection query of asyncpg (defined as introspection.INTRO_LOOKUP_TYPES)
+        # can take 1s with the jit.
+        # the introspection is triggered to create converters for unknown types,
+        # for example the integer[] (oid = 1007).
+        # see https://github.com/MagicStack/asyncpg/issues/530
+        server_settings={"jit": "off"},
     )
     if ret is None:
         raise Exception("failed to get db pool")

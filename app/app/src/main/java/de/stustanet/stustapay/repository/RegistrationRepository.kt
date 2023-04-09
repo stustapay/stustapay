@@ -3,30 +3,25 @@ package de.stustanet.stustapay.repository
 
 import android.util.Base64
 import android.util.Log
+import de.stustanet.stustapay.model.DeregistrationState
+import de.stustanet.stustapay.model.RegisterQRCodeContent
 import de.stustanet.stustapay.model.RegistrationState
-import de.stustanet.stustapay.net.RegisterResult
-import de.stustanet.stustapay.net.RegistrationRemoteDataSource
+import de.stustanet.stustapay.netsource.RegistrationRemoteDataSource
 import de.stustanet.stustapay.storage.RegistrationLocalDataSource
 import de.stustanet.stustapay.util.merge
-import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.serialization.Serializable
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
-/**
- * as defined in the administration's registration ui qrcode generator
- */
-@Serializable
-data class RegisterQRCodeContent(
-    val core_url: String,
-    val registration_uuid: String,
-)
+sealed interface ForceDeregisterState {
+    data class Allow(val msg: String) : ForceDeregisterState
+    object Disallow : ForceDeregisterState
+}
 
 @Singleton
 class RegistrationRepository @Inject constructor(
@@ -38,9 +33,14 @@ class RegistrationRepository @Inject constructor(
     var registrationState: Flow<RegistrationState> =
         registrationLocalDataSource.registrationState.merge(localRegState)
 
+    var forceDeregisterState = MutableStateFlow<ForceDeregisterState>(ForceDeregisterState.Disallow)
+
     suspend fun register(
         qrcode_b64: String,
     ) {
+        localRegState.emit(RegistrationState.NotRegistered("registering..."))
+        forceDeregisterState.emit(ForceDeregisterState.Disallow)
+
         val state = registerAsState(qrcode_b64)
 
         // only persist if registration was successful
@@ -48,6 +48,26 @@ class RegistrationRepository @Inject constructor(
             registrationLocalDataSource.setState(state)
         } else {
             localRegState.emit(state)
+        }
+    }
+
+    suspend fun deregister(force: Boolean = false) {
+        when (val result = registrationRemoteDataSource.deregister()) {
+            is DeregistrationState.Error -> {
+                // remote deregistration failed
+                if (force) {
+                    // delete the local state anyway
+                    registrationLocalDataSource.delete()
+                    forceDeregisterState.emit(ForceDeregisterState.Disallow)
+                } else {
+                    // allow deleting local state anyway
+                    forceDeregisterState.emit(ForceDeregisterState.Allow(result.message))
+                }
+            }
+            is DeregistrationState.Deregistered -> {
+                registrationLocalDataSource.delete()
+                forceDeregisterState.emit(ForceDeregisterState.Disallow)
+            }
         }
     }
 
@@ -67,23 +87,11 @@ class RegistrationRepository @Inject constructor(
                 )
             }
 
-            val registerResult: RegisterResult
-            try {
-                registerResult = registrationRemoteDataSource.register(
-                    regCode.core_url,
-                    regCode.registration_uuid
-                )
-            } catch (e: IOException) {
-                return RegistrationState.Error(
-                    message = "error during io: ${e.localizedMessage}, endpoint=${regCode.core_url}",
-                )
-            }
-
-            return RegistrationState.Registered(
-                token = registerResult.token,
-                apiUrl = regCode.core_url,
-                message = "success",
+            return registrationRemoteDataSource.register(
+                regCode.core_url,
+                regCode.registration_uuid
             )
+
         } catch (e: Exception) {
             Log.e("StuStaPay", "exception during registration", e)
             return RegistrationState.Error(

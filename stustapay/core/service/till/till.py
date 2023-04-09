@@ -2,48 +2,27 @@ import uuid
 from typing import Optional
 
 import asyncpg
-from jose import JWTError, jwt
-from pydantic import BaseModel, ValidationError
 
 from stustapay.core.config import Config
-from stustapay.core.schema.terminal import TerminalConfig, Terminal
-from stustapay.core.schema.till import (
-    Till,
-    NewTill,
-    TillButton,
-    TillProfile,
-)
-from stustapay.core.schema.user import Privilege
-from stustapay.core.service.common.dbservice import (
-    DBService,
-)
-from stustapay.core.service.common.decorators import (
-    with_db_transaction,
-    requires_user_privileges,
-    requires_terminal,
-)
+from stustapay.core.schema.terminal import Terminal, TerminalConfig, TerminalRegistrationSuccess
+from stustapay.core.schema.till import NewTill, Till, TillButton, TillProfile
+from stustapay.core.schema.user import Privilege, User, UserTag
+from stustapay.core.service.auth import TerminalTokenMetadata
+from stustapay.core.service.common.dbservice import DBService
+from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
+from stustapay.core.service.common.error import AccessDenied, NotFound
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
-from stustapay.core.service.user import UserService
-
-
-class TokenMetadata(BaseModel):
-    till_id: int
-    session_uuid: uuid.UUID
-
-
-class TillRegistrationSuccess(BaseModel):
-    till: Till
-    token: str
+from stustapay.core.service.user import AuthService
 
 
 class TillService(DBService):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, user_service: UserService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
-        self.user_service = user_service
+        self.auth_service = auth_service
 
-        self.profile = TillProfileService(db_pool, config, user_service)
-        self.layout = TillLayoutService(db_pool, config, user_service)
+        self.profile = TillProfileService(db_pool, config, auth_service)
+        self.layout = TillLayoutService(db_pool, config, auth_service)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -109,25 +88,10 @@ class TillService(DBService):
         )
         return result != "DELETE 0"
 
-    def _create_access_token(self, till_id: int, session_uuid: uuid.UUID):
-        to_encode = {"till_id": till_id, "session_uuid": str(session_uuid)}
-        encoded_jwt = jwt.encode(to_encode, self.cfg.core.secret_key, algorithm=self.cfg.core.jwt_token_algorithm)
-        return encoded_jwt
-
-    def _decode_jwt_payload(self, token: str) -> Optional[TokenMetadata]:
-        try:
-            payload = jwt.decode(token, self.cfg.core.secret_key, algorithms=[self.cfg.core.jwt_token_algorithm])
-            try:
-                return TokenMetadata.parse_obj(payload)
-            except ValidationError:
-                return None
-        except JWTError:
-            return None
-
     @with_db_transaction
     async def register_terminal(
         self, *, conn: asyncpg.Connection, registration_uuid: str
-    ) -> Optional[TillRegistrationSuccess]:
+    ) -> Optional[TerminalRegistrationSuccess]:
         row = await conn.fetchrow("select * from till where registration_uuid = $1", registration_uuid)
         if row is None:
             return None
@@ -137,11 +101,24 @@ class TillService(DBService):
             "returning session_uuid",
             till.id,
         )
-        token = self._create_access_token(till_id=till.id, session_uuid=session_uuid)
-        return TillRegistrationSuccess(till=till, token=token)
+        token = self.auth_service.create_terminal_access_token(
+            TerminalTokenMetadata(till_id=till.id, session_uuid=session_uuid)
+        )
+        return TerminalRegistrationSuccess(till=till, token=token)
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
+    async def logout_terminal_id(self, *, conn: asyncpg.Connection, till_id: int) -> bool:
+        id_ = await conn.fetchval(
+            "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
+            till_id,
+        )
+        if id_ is None:
+            raise NotFound(element_typ="till", element_id=str(till_id))
+        return True
+
+    @with_db_transaction
+    @requires_terminal()
     async def logout_terminal(self, *, conn: asyncpg.Connection, current_terminal: Terminal) -> bool:
         id_ = await conn.fetchval(
             "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
@@ -150,34 +127,71 @@ class TillService(DBService):
         return id_ is not None
 
     @with_db_transaction
-    async def get_terminal_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[Terminal]:
-        token_payload = self._decode_jwt_payload(token)
-        if token_payload is None:
-            return None
+    @requires_terminal()
+    async def login_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal, user_tag: UserTag) -> User:
+        """
+        Login a User to the terminal, but only if the correct permissions exists:
+        wants to login | allowed to log in
+        official       | always
+        cashier        | only if official is logged in
 
+        where officials are admins and finanzorgas
+
+        returns the newly logged-in User if successful
+        """
         row = await conn.fetchrow(
-            "select * from till where id = $1 and session_uuid = $2",
-            token_payload.till_id,
-            token_payload.session_uuid,
+            "select u.* from usr_with_privileges as u where u.user_tag_uid = $1",
+            user_tag.uid,
         )
         if row is None:
-            return None
+            raise NotFound(element_typ="user_tag", element_id=str(user_tag.uid))
+        new_user = User.parse_obj(row)
 
-        return Terminal(till=Till.parse_obj(row))
+        row = await conn.fetchrow(
+            "select * from usr_with_privileges where id = $1",
+            current_terminal.till.active_user_id,
+        )
+        current_user = None if row is None else User.parse_obj(row)
+
+        # check if login allowed
+        officials = {Privilege.admin, Privilege.finanzorga}
+        if officials & set(new_user.privileges):
+            # Admin and Finanzorga can always log in
+            pass
+        elif Privilege.cashier in new_user.privileges:
+            if not current_user or not {Privilege.admin, Privilege.finanzorga} & set(current_user.privileges):
+                raise AccessDenied("You can only be logged in by an orga")
+        else:
+            raise AccessDenied("No cashier privilege")
+
+        t_id = await conn.fetchval(
+            "update till set active_user_id = $1 where id = $2 returning id", new_user.id, current_terminal.till.id
+        )
+        if t_id is None:
+            # should not happen
+            raise NotFound(element_typ="till", element_id=str(current_terminal.till.id))
+        return new_user
 
     @with_db_transaction
     @requires_terminal()
-    async def login_cashier(self, *, conn: asyncpg.Connection, current_terminal: Terminal, tag_uid: int) -> bool:
-        # TODO: once proper token uid authentication is in place use that here
-        user_id = await conn.fetchval(
-            "select usr.id from usr join user_tag t on t.id = usr.user_tag_id where t.uid = $1",
-            tag_uid,
+    async def get_current_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal) -> Optional[User]:
+        row = await conn.fetchrow(
+            "select * from usr_with_privileges where id = $1",
+            current_terminal.till.active_user_id,
         )
-        if user_id is None:
-            return False
+        if row is None:
+            return None
+        return User.parse_obj(row)
+
+    @with_db_transaction
+    @requires_terminal()
+    async def logout_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal) -> bool:
+        """
+        Logout the currently logged-in user. This is always possible
+        """
 
         t_id = await conn.fetchval(
-            "update till set active_user_id = $1 where id = $2 returning id", user_id, current_terminal.till.id
+            "update till set active_user_id = null where id = $1 returning id", current_terminal.till.id
         )
         return t_id is not None
 

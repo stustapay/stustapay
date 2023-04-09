@@ -9,6 +9,7 @@ const initialValues: NewProduct = {
   price: 0,
   tax_name: "none",
   fixed_price: true,
+  price_in_vouchers: 0,
 };
 
 export const ProductCreate: React.FC = () => {

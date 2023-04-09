@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-export const PossiblePrivileges = ["admin", "finanzorga", "cashier"] as const;
+export const PrivilegeAdmin = "admin" as const;
+export const PrivilegeFinanzorga = "finanzorga" as const;
+export const PrivilegeCashier = "cashier" as const;
+
+export const PossiblePrivileges = [PrivilegeAdmin, PrivilegeFinanzorga, PrivilegeCashier] as const;
 
 export const PrivilegeSchema = z.union([z.literal("admin"), z.literal("finanzorga"), z.literal("cashier")]);
 
@@ -11,7 +15,7 @@ export const NewUserSchema = z.object({
   description: z.string().optional(),
   privileges: z.array(PrivilegeSchema),
   password: z.string().optional().nullable(),
-  user_tag: z.number().optional().nullable(),
+  user_tag_uid: z.number().optional().nullable(),
   transport_account_id: z.number().optional().nullable(),
   cashier_account_id: z.number().optional().nullable(),
 });

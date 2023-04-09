@@ -18,7 +18,7 @@ class BonGeneratorTest(BaseTestCase):
                 uuid=uuid.uuid4(),
                 order_type=OrderType.sale,
                 cashier_id=0,
-                terminal_id=0,
+                till_id=0,
                 customer_account_id=0,
                 value_sum=15.9969,
                 value_tax=1.7269,

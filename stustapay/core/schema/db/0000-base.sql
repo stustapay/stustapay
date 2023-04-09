@@ -4,6 +4,7 @@
 -- stustapay core database
 --
 -- (c) 2022-2023 Jonas Jelten <jj@sft.lol>
+-- (c) 2022-2023 Leo Fahrbach <leo.fahrbach@stusta.de>
 --
 -- targets >=postgresql-13
 --
@@ -43,7 +44,9 @@ values
     ('bon.closing_texts', '["funny text 0", "funny text 1", "funny text 2", "funny text 3"]'),
 
     -- Umsatzsteuer ID. Needed on each bon
-    ('ust_id', 'DE123456789')
+    ('ust_id', 'DE123456789'),
+    ('currency.symbol', '€'),
+    ('currency.identifier', 'EUR')
     on conflict do nothing;
 
 
@@ -66,9 +69,8 @@ create table if not exists user_tag_secret (
 
 -- for wristbands/cards/...
 create table if not exists user_tag (
-    id bigserial not null primary key,
     -- hardware id of the tag
-    uid numeric(20) not null unique,
+    uid numeric(20) primary key,
     -- printed on the back
     pin text,
     -- produced by wristband vendor
@@ -106,21 +108,23 @@ values
 -- bookkeeping account
 create table if not exists account (
     id bigserial not null primary key,
-    user_tag_id bigint references user_tag(id) on delete cascade,
+    user_tag_uid numeric(20) unique references user_tag(uid) on delete cascade,
     type text not null references account_type(name) on delete restrict,
-    constraint private_account_requires_user_tag check (user_tag_id is not null = (type = 'private')),
+    constraint private_account_requires_user_tag check (user_tag_uid is not null = (type = 'private')),
     name text,
     comment text,
 
     -- current balance, updated on each transaction
-    balance numeric not null default 0
+    balance numeric not null default 0,
+    -- current number of vouchers, updated on each transaction
+    voucher bigint not null default 0
 
 
     -- todo: voucher
     -- todo: topup-config
 );
 insert into account (
-    id, user_tag_id, type, name, comment
+    id, user_tag_uid, type, name, comment
 )
 values
     -- virtual accounts are hard coded with ids 0-99
@@ -129,7 +133,8 @@ values
     (2, null, 'virtual', 'Deposit', 'Deposit currently at the customers'),
     (3, null, 'virtual', 'Sumup', 'source account for sumup top up '),
     (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here'),
-    (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement')
+    (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement'),
+    (6, null, 'virtual', 'Cashing Up', 'Upon cashing up a cashier for a till a 0 transaction will be booked to this account to mark the cashing up time')
     on conflict do nothing;
 select setval('account_id_seq', 100);
 
@@ -142,7 +147,7 @@ create table if not exists usr (
     password text,
     description text,
 
-    user_tag_id bigint references user_tag(id) on delete restrict,
+    user_tag_uid numeric(20) unique references user_tag(uid) on delete restrict,
 
     -- account for orgas to transport cash from one location to another
     transport_account_id bigint references account(id) on delete restrict,
@@ -150,7 +155,7 @@ create table if not exists usr (
     cashier_account_id bigint references account(id) on delete restrict
     -- depending on the transfer action, the correct account is booked
 
-    constraint password_or_user_tag_id_set check ((user_tag_id is null) <> (password is null))
+    constraint password_or_user_tag_id_set check ((user_tag_uid is not null) or (password is not null))
 );
 
 
@@ -179,7 +184,8 @@ values
 
 create table if not exists usr_privs (
     usr int not null references usr(id) on delete cascade,
-    priv text not null references privilege(name) on delete cascade
+    priv text not null references privilege(name) on delete cascade,
+    primary key (usr, priv)
 );
 
 create or replace view usr_with_privileges as (
@@ -261,6 +267,8 @@ create table if not exists product (
     price numeric,
     -- price is not fixed, e.g for top up. Then price=null and set with the api call
     fixed_price boolean not null default true,
+    price_in_vouchers bigint,
+    constraint product_vouchers_only_with_fixed_price check ( price_in_vouchers is not null and fixed_price or price_in_vouchers is null ),
     constraint product_not_fixed_or_price check ( price is not null = fixed_price),
 
     -- if target account is set, the product is booked to this specific account,
@@ -359,7 +367,7 @@ create table if not exists till (
     active_profile_id int not null references till_profile(id) on delete restrict,
     active_user_id int references usr(id) on delete restrict,
 
-    constraint registration_or_session_uuid_null check ((registration_uuid is null) <> (session_uuid is null))
+    constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null))
 );
 
 
@@ -419,6 +427,7 @@ create table if not exists lineitem (
     product_id int not null references product(id) on delete restrict,
 
     quantity int not null default 1,
+    constraint quantity_positive check ( quantity > 0 ),
 
     -- price with tax
     price numeric not null,
@@ -429,6 +438,35 @@ create table if not exists lineitem (
 
     -- todo: voucher amount
 );
+
+create or replace function order_updated() returns trigger as
+$$
+begin
+    -- A deletion should only be able to occur for uncommitted revisions
+    if NEW is null then
+        return null;
+    end if;
+    perform pg_notify(
+        'order',
+        json_build_object(
+            'order_id', NEW.id,
+            'order_uuid', NEW.uuid,
+            'cashier_id', NEW.cashier_id,
+            'till_id', NEW.till_id,
+            'status', NEW.status
+        )::text
+    );
+
+    return null;
+end;
+$$ language plpgsql;
+
+drop trigger if exists order_updated_trigger on ordr;
+create trigger order_updated_trigger
+    after insert or update
+    on ordr
+    for each row
+execute function order_updated();
 
 create or replace view lineitem_tax as
     select
@@ -442,9 +480,9 @@ create or replace view lineitem_tax as
 create or replace view order_value as
     select
         ordr.*,
-        sum(total_price) as value_sum,
-        sum(total_tax) as value_tax,
-        sum(total_price - total_tax) as value_notax,
+        sum(total_price) as total_price,
+        sum(total_tax) as total_tax,
+        sum(total_price - total_tax) as total_no_tax,
         json_agg(lineitem_tax) as line_items
     from
         ordr
@@ -493,15 +531,31 @@ create table if not exists transaction (
 
     source_account int not null references account(id) on delete restrict,
     target_account int not null references account(id) on delete restrict,
-    constraint source_target_account_different check (source_account <> target_account),
+    constraint source_target_account_different check (source_account != target_account),
 
     booked_at timestamptz not null default now(),
 
     -- amount being transferred from source_account to target_account
     amount numeric not null,
     constraint amount_positive check (amount >= 0),
+    vouchers bigint not null,
+    constraint vouchers_positive check (vouchers >= 0),
     tax_rate numeric not null, -- how much tax is included in the amount
     tax_name text not null
+);
+
+
+create or replace view cashiers as (
+    select
+        usr.id,
+        usr.name,
+        usr.description,
+        usr.user_tag_uid,
+        a.balance as cash_drawer_balance,
+        t.id as till_id
+    from usr
+    join account a on usr.cashier_account_id = a.id
+    left join till t on t.active_user_id = usr.id
 );
 
 
@@ -512,7 +566,8 @@ create or replace function book_transaction (
     source_account_id bigint,
     target_account_id bigint,
     amount numeric,
-    tax_name text
+    tax_name text,
+    vouchers bigint
 )
     returns bigint as $$
 <<locals>> declare
@@ -526,6 +581,10 @@ begin
         raise 'unknown tax name';
     end if;
 
+    if vouchers < 0 then
+        raise 'vouchers cannot be negative';
+    end if;
+
     if amount < 0 then
         -- swap account on negative amount, as only non-negative transactions are allowed
         temp_account_id = source_account_id;
@@ -536,7 +595,7 @@ begin
 
     -- add new transaction
     insert into transaction (
-        order_id, description, source_account, target_account, amount, tax_rate, tax_name
+        order_id, description, source_account, target_account, amount, tax_rate, tax_name, vouchers
     )
     values (
         book_transaction.order_id,
@@ -545,7 +604,8 @@ begin
         book_transaction.target_account_id,
         book_transaction.amount,
         locals.tax_rate,
-        book_transaction.tax_name
+        book_transaction.tax_name,
+        book_transaction.vouchers
     ) returning id into locals.transaction_id;
 
     -- update account values

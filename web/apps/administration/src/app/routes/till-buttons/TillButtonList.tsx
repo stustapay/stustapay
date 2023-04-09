@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Paper, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { DataGrid, GridActionsCellItem, GridColumns } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { selectTillButtonAll, useDeleteTillButtonMutation, useGetTillButtonsQuery } from "@api";
 import { useTranslation } from "react-i18next";
 import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
@@ -39,7 +39,7 @@ export const TillButtonList: React.FC = () => {
     setButtonToDelete(null);
   };
 
-  const columns: GridColumns<TillButton> = [
+  const columns: GridColDef<TillButton>[] = [
     {
       field: "name",
       headerName: t("button.name") as string,
@@ -91,7 +91,7 @@ export const TillButtonList: React.FC = () => {
         getRowId={(row) => row.name}
         rows={buttons ?? []}
         columns={columns}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog

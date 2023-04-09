@@ -1,7 +1,7 @@
 # pylint: disable=attribute-defined-outside-init
 import asyncio
 
-from stustapay.core.dbhook import DBHook
+from stustapay.core.service.common.dbhook import DBHook
 from .common import BaseTestCase
 
 

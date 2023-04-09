@@ -17,3 +17,6 @@ class DBService(ABC):
     def __init__(self, db_pool: Pool, config: Config):
         self.db_pool = db_pool
         self.cfg = config
+
+    async def run(self):
+        pass

@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+option java_package = "de.stustanet.stustapay.proto";
+option java_multiple_files = true;
+
+message RegistrationStateProto {
+  bool registered = 1;
+  string apiEndpoint = 2;
+  string authToken = 3;
+}

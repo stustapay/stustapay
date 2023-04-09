@@ -5,7 +5,6 @@ from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile
 from stustapay.core.schema.user import Privilege, UserWithoutId
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
-from stustapay.core.service.till import TillService
 from .common import BaseTestCase
 
 START_BALANCE = 100
@@ -14,15 +13,13 @@ START_BALANCE = 100
 class OrderLogicTest(BaseTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
-        self.till_service = TillService(db_pool=self.db_pool, config=self.test_config, user_service=self.user_service)
         self.product_service = ProductService(
-            db_pool=self.db_pool, config=self.test_config, user_service=self.user_service
+            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
         self.order_service = OrderService(
             db_pool=self.db_pool,
             config=self.test_config,
-            till_service=self.till_service,
-            user_service=self.user_service,
+            auth_service=self.auth_service,
         )
 
         self.product = await self.product_service.create_product(
@@ -45,10 +42,10 @@ class OrderLogicTest(BaseTestCase):
                 target_account_id=None,
             ),
         )
-        cashier_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning id")
+        cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
         self.cashier = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
-                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag=cashier_tag_id
+                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag_uid=cashier_tag_uid
             )
         )
         self.till_layout = await self.till_service.layout.create_layout(
@@ -67,7 +64,7 @@ class OrderLogicTest(BaseTestCase):
                 tse_id=None,
                 active_shift=None,
                 active_profile_id=self.till_profile.id,
-                active_user_id=None,
+                active_user_id=self.cashier.id,
             ),
         )
         # login in cashier to till
@@ -81,11 +78,12 @@ class OrderLogicTest(BaseTestCase):
         await self.user_service.link_user_to_cashier_account(
             token=self.admin_token, user_id=self.cashier.id, account_id=cashier_account_id
         )
-        await self.till_service.login_cashier(token=self.terminal_token, tag_uid=54321)
         # add customer
-        user_tag_id = await self.db_conn.fetchval("insert into user_tag (uid) values (1234) returning id")
+        self.customer_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (1234) returning uid")
         await self.db_conn.fetchval(
-            "insert into account (user_tag_id, type, balance) values ($1, 'private', $2);", user_tag_id, START_BALANCE
+            "insert into account (user_tag_uid, type, balance) values ($1, 'private', $2);",
+            self.customer_uid,
+            START_BALANCE,
         )
 
         # fetch new till
@@ -97,7 +95,7 @@ class OrderLogicTest(BaseTestCase):
             new_order=NewOrder(
                 positions=[NewLineItem(product_id=self.product.id, quantity=2)],
                 order_type=OrderType.sale,
-                customer_tag=1234,
+                customer_tag=self.customer_uid,
             ),
         )
         self.assertEqual(completed_order.old_balance, START_BALANCE)
@@ -106,8 +104,8 @@ class OrderLogicTest(BaseTestCase):
         self.assertEqual(order.itemcount, 1)
         self.assertEqual(len(order.line_items), 1)
         self.assertEqual(order.line_items[0].quantity, 2)
-        self.assertEqual(order.value_sum, 2 * self.product.price)
-        self.assertEqual(completed_order.new_balance, START_BALANCE - order.value_sum)
+        self.assertEqual(order.total_price, 2 * self.product.price)
+        self.assertEqual(completed_order.new_balance, START_BALANCE - order.total_price)
         await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
         order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
         self.assertEqual(order.status, "done")
@@ -118,7 +116,7 @@ class OrderLogicTest(BaseTestCase):
             new_order=NewOrder(
                 positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
                 order_type=OrderType.topup_cash,
-                customer_tag=1234,
+                customer_tag=self.customer_uid,
             ),
         )
         self.assertEqual(completed_order.old_balance, START_BALANCE)
@@ -128,8 +126,8 @@ class OrderLogicTest(BaseTestCase):
         self.assertEqual(len(order.line_items), 1)
         self.assertEqual(order.line_items[0].quantity, 1)
         self.assertEqual(order.line_items[0].price, 20)
-        self.assertEqual(order.value_sum, 20)
-        self.assertEqual(completed_order.new_balance, START_BALANCE + order.value_sum)
+        self.assertEqual(order.total_price, 20)
+        self.assertEqual(completed_order.new_balance, START_BALANCE + order.total_price)
         await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
         order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
         self.assertEqual(order.status, "done")
@@ -141,7 +139,7 @@ class OrderLogicTest(BaseTestCase):
             new_order=NewOrder(
                 positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
                 order_type=OrderType.topup_sumup,
-                customer_tag=1234,
+                customer_tag=self.customer_uid,
             ),
         )
         self.assertEqual(completed_order.old_balance, START_BALANCE)
@@ -149,8 +147,8 @@ class OrderLogicTest(BaseTestCase):
         self.assertEqual(order.status, "pending")
         self.assertEqual(order.line_items[0].quantity, 1)
         self.assertEqual(order.line_items[0].price, 20)
-        self.assertEqual(order.value_sum, 20)
-        self.assertEqual(completed_order.new_balance, START_BALANCE + order.value_sum)
+        self.assertEqual(order.total_price, 20)
+        self.assertEqual(completed_order.new_balance, START_BALANCE + order.total_price)
         await self.order_service.book_order(token=self.terminal_token, order_id=completed_order.id)
         order = await self.order_service.show_order(token=self.terminal_token, order_id=completed_order.id)
         self.assertEqual(order.status, "done")

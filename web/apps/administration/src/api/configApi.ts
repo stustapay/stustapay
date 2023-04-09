@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { ConfigEntry } from "@models";
-import { baseUrl, prepareAuthHeaders } from "./common";
+import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
 
@@ -11,7 +11,7 @@ const configAdaptor = createEntityAdapter<ConfigEntry>({
 
 export const configApi = createApi({
   reducerPath: "configApi",
-  baseQuery: fetchBaseQuery({ baseUrl: baseUrl, prepareHeaders: prepareAuthHeaders }),
+  baseQuery: adminApiBaseQuery,
   tagTypes: ["config"],
   endpoints: (builder) => ({
     getConfigEntries: builder.query<EntityState<ConfigEntry>, void>({

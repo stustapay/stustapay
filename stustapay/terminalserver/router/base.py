@@ -1,12 +1,11 @@
 """
 some basic api endpoints.
 """
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
-from stustapay.core.http.auth_till import get_auth_token
-from stustapay.core.http.context import get_till_service
+from stustapay.core.http.auth_till import CurrentAuthToken
+from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.terminal import TerminalConfig
-from stustapay.core.service.till import TillService
 
 router = APIRouter(
     prefix="",
@@ -25,7 +24,10 @@ async def health():
 
 
 @router.get("/config", summary="obtain the current terminal config", response_model=TerminalConfig)
-async def config(token: str = Depends(get_auth_token), till_service: TillService = Depends(get_till_service)):
+async def config(
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
+):
     terminal_config = await till_service.get_terminal_config(token=token)
     if terminal_config is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

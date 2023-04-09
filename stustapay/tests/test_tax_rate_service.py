@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName
+from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.tax_rate import TaxRateService
 from .common import BaseTestCase
 
@@ -9,7 +10,7 @@ class TaxRateServiceTest(BaseTestCase):
         await super().asyncSetUp()
 
         self.tax_rate_service = TaxRateService(
-            db_pool=self.db_pool, config=self.test_config, user_service=self.user_service
+            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
 
     async def test_basic_tax_rate_workflow(self):
@@ -21,7 +22,7 @@ class TaxRateServiceTest(BaseTestCase):
         )
         self.assertEqual(tax_rate.name, "krass")
 
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(AccessDenied):
             await self.tax_rate_service.create_tax_rate(
                 token=self.cashier_token, tax_rate=TaxRate(name="Krasse UST", rate=0.5, description="Krasse UST")
             )
@@ -38,7 +39,7 @@ class TaxRateServiceTest(BaseTestCase):
         self.assertEqual(len(tax_rates), 4)
         self.assertTrue(updated_tax_rate in tax_rates)
 
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(AccessDenied):
             await self.tax_rate_service.delete_tax_rate(token=self.cashier_token, tax_rate_name=tax_rate.name)
 
         deleted = await self.tax_rate_service.delete_tax_rate(token=self.admin_token, tax_rate_name=tax_rate.name)

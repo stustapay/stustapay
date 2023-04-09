@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 from stustapay.core.schema.product import NewProduct
+from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.product import ProductService
 from .common import BaseTestCase
 
@@ -9,7 +10,7 @@ class ProductServiceTest(BaseTestCase):
         await super().asyncSetUp()
 
         self.product_service = ProductService(
-            db_pool=self.db_pool, config=self.test_config, user_service=self.user_service
+            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
 
     async def test_basic_product_workflow(self):
@@ -18,7 +19,7 @@ class ProductServiceTest(BaseTestCase):
         )
         self.assertEqual(product.name, "Test Product")
 
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(AccessDenied):
             await self.product_service.create_product(
                 token=self.cashier_token, product=NewProduct(name="Test Product", price=3, tax_name="ust")
             )
@@ -36,7 +37,7 @@ class ProductServiceTest(BaseTestCase):
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].name, "Updated Test Product")
 
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(AccessDenied):
             await self.product_service.delete_product(token=self.cashier_token, product_id=product.id)
 
         deleted = await self.product_service.delete_product(token=self.admin_token, product_id=product.id)

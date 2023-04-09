@@ -3,17 +3,22 @@ http server base class
 """
 
 import logging
-import uvicorn
 
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .context import Context, ContextMiddleware
-from .error import exception_handler, service_exception_handler, not_found_exception_handler
-from ..database import create_db_pool
-from ..config import DatabaseConfig, HTTPServerConfig
-from ..service.error import ServiceException, NotFoundException
-from ... import __version__
+from stustapay import __version__
+from stustapay.core.config import DatabaseConfig, HTTPServerConfig
+from stustapay.core.database import create_db_pool
+from stustapay.core.http.context import Context, ContextMiddleware
+from stustapay.core.http.error import (
+    exception_handler,
+    not_found_exception_handler,
+    service_exception_handler,
+    access_exception_handler,
+)
+from stustapay.core.service.common.error import NotFound, ServiceException, AccessDenied
 
 
 class Server:
@@ -24,8 +29,9 @@ class Server:
             license_info={"name": "AGPL-3.0"},
         )
 
-        self.api.add_exception_handler(NotFoundException, not_found_exception_handler)
+        self.api.add_exception_handler(NotFound, not_found_exception_handler)
         self.api.add_exception_handler(ServiceException, service_exception_handler)
+        self.api.add_exception_handler(AccessDenied, access_exception_handler)
         self.api.add_exception_handler(Exception, exception_handler)
 
         if cors:

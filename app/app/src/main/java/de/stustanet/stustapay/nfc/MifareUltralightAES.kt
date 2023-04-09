@@ -3,119 +3,222 @@ package de.stustanet.stustapay.nfc
 import android.nfc.Tag
 import android.nfc.tech.NfcA
 import android.nfc.tech.TagTechnology
+import de.stustanet.stustapay.util.*
 import java.io.IOException
-import java.lang.reflect.Executable
-import java.nio.charset.Charset
 import java.security.SecureRandom
-import javax.crypto.Cipher
-import javax.crypto.SecretKey
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
 
-const val PAGE_COUNT = 60
-const val USER_BYTES = 144
+// https://www.nxp.com/docs/en/application-note/AN13452.pdf
+// https://www.nxp.com/docs/en/data-sheet/MF0AES(H)20.pdf
+// https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38B.pdf
+// https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-108r1.pdf
+// https://www.cs.ru.nl/~rverdult/Ciphertext-only_Cryptanalysis_on_Hardened_Mifare_Classic_Cards-CCS_2015.pdf
 
-class MifareUltralightAES(rawTag: Tag) : TagTechnology {
-    var rawTag = rawTag
-    var nfcaTag = NfcA.get(rawTag)
+class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
+    private val nfcaTag = NfcA.get(rawTag)
 
-    fun protect(prot: Boolean) {
-        if (prot) {
-            val buf = cmdRead(0x29.toByte())
-            cmdWrite(0x29, buf[0], buf[1], buf[2], 0x00)
+    private var chipState = ChipState.IDLE
+    private var auth0State: UByte? = null
+    private var sessionKey: BitVector? = null
+    private var sessionCounter: UShort? = null
+
+    fun setAuth0(page: UByte) {
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw Exception("Authentication required") }
+
+        val buf = if (sessionKey != null) {
+            val ret = cmdRead(0x29u, sessionKey!!, sessionCounter!!, nfcaTag)
+            sessionCounter = (sessionCounter!! + 2u).toUShort()
+            ret
         } else {
-            val buf = cmdRead(0x29.toByte())
-            cmdWrite(0x29, buf[0], buf[1], buf[2], 0x3c)
+            cmdRead(0x29u, nfcaTag)
+        }
+
+        if (sessionKey != null) {
+            cmdWrite(0x29u, buf.gbe(0uL), buf.gbe(1uL), buf.gbe(2uL), page, sessionKey!!, sessionCounter!!, nfcaTag)
+            sessionCounter = (sessionCounter!! + 2u).toUShort()
+        } else {
+            cmdWrite(0x29u, buf.gbe(0uL), buf.gbe(1uL), buf.gbe(2uL), page, nfcaTag)
+        }
+
+        auth0State = page
+    }
+
+    fun setCMAC(enable: Boolean) {
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw Exception("Authentication required") }
+
+        val buf = if (sessionKey != null) {
+            val ret = cmdRead(0x29u, sessionKey!!, sessionCounter!!, nfcaTag)
+            sessionCounter = (sessionCounter!! + 2u).toUShort()
+            ret
+        } else {
+            cmdRead(0x29u, nfcaTag)
+        }
+
+        val a: UByte = if (enable) { 0x02u } else { 0x00u }
+
+        if (sessionKey != null) {
+            cmdWrite(0x29u, a, buf.gbe(1uL), buf.gbe(2uL), buf.gbe(3uL), sessionKey!!, sessionCounter!!, nfcaTag)
+            sessionCounter = (sessionCounter!! + 2u).toUShort()
+        } else {
+            cmdWrite(0x29u, a, buf.gbe(1uL), buf.gbe(2uL), buf.gbe(3uL), nfcaTag)
         }
     }
 
     fun isProtected(): Boolean {
-        val buf = cmdRead(0x29.toByte())
-        return buf[3] == 0x00.toByte()
+        return auth0State == null || auth0State!! <= 0x29u
     }
 
-    fun authenticate(key: ByteArray) {
+    fun isAuthenticated(): Boolean {
+        return chipState == ChipState.AUTHENTICATED || chipState == ChipState.TRACEABLE
+    }
+
+    fun authenticate(key: BitVector, type: KeyType, cmacEnabled: Boolean) {
         if (!isConnected) { throw Exception("Not connected") }
-        if (key.size != 16) { throw Exception("Wrong key size") }
+        if (key.len != 16uL * 8uL) { throw Exception("Wrong key size") }
+        if (chipState == type.state) { throw Exception("Already authenticated") }
 
-        val cipherKey = SecretKeySpec(key, "AES")
-        val cipher = Cipher.getInstance("AES/CBC/NoPadding")
-        val iv = ByteArray(16) { i -> 0 }
+        val nonce = ByteArray(16)
+        SecureRandom().nextBytes(nonce)
 
-        val rndA = ByteArray(16)
-        SecureRandom().nextBytes(rndA)
+        val rndA = nonce.asBitVector()
+        val rndB: BitVector
 
         try {
-            val ekRndB = cmdAuthenticate1()
-            cipher.init(Cipher.DECRYPT_MODE, cipherKey, IvParameterSpec(iv))
-            val rndB: ByteArray = cipher.doFinal(ekRndB)
+            val ekRndB = cmdAuthenticate1(type.code, nfcaTag)
+            rndB = ekRndB.aesDecrypt(key)
 
-            var rndAB = rndA + rndB.clone().takeLast(15) + rndB[0]
-            cipher.init(Cipher.ENCRYPT_MODE, cipherKey, IvParameterSpec(iv))
-            val ekRndAB: ByteArray = cipher.doFinal(rndAB)
+            val rndAB = rndA + rndB.rotl(8uL)
+            val ekRndAB = rndAB.aesEncrypt(key)
 
-            val ekRndA = cmdAuthenticate2(ekRndAB)
-            cipher.init(Cipher.DECRYPT_MODE, cipherKey, IvParameterSpec(iv))
-            val rndAResp: ByteArray = cipher.doFinal(ekRndA)
+            val ekRndA = cmdAuthenticate2(ekRndAB, nfcaTag)
+            val rndAResp = ekRndA.aesDecrypt(key)
 
-            if (!(rndAResp.clone().takeLast(1) + rndAResp.clone().take(15)).toByteArray().contentEquals(rndA)) {
-                throw Exception("Auth failed")
+            if (!rndAResp.equals(rndA.rotl(8uL))) {
+                throw Exception("Key mismatch")
             }
         } catch (e: IOException) {
             throw Exception("Auth failed")
         }
-    }
 
-    fun writeKey(key: ByteArray) {
-        if (!isConnected) { throw Exception("Not connected") }
-        if (key.size != 16) { throw Exception("Wrong key size") }
+        chipState = type.state
 
-        for (i in 0 until 4) {
-            cmdWrite((i + 0x30).toByte(), key[15 - (i * 4)], key[15 - (i * 4 + 1)], key[15 - (i * 4 + 2)], key[15 - (i * 4 + 3)])
+        val cfg0 = if (cmacEnabled) {
+            sessionKey = genSessionKey(key, rndA, rndB)
+            sessionCounter = 0u
+            val ret = cmdRead(0x29u, sessionKey!!, sessionCounter!!, nfcaTag)
+            sessionCounter = (sessionCounter!! + 2u).toUShort()
+            ret
+        } else {
+            cmdRead(0x29u, nfcaTag)
         }
+
+        auth0State = cfg0.gbe(3uL)
     }
 
-    fun writeUserMemory(content: String) {
+    fun writeDataProtKey(key: BitVector) {
         if (!isConnected) { throw Exception("Not connected") }
+        if (key.len != 16uL * 8uL) { throw Exception("Wrong key size") }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw Exception("Authentication required") }
 
-        val data = content.toByteArray(Charset.forName("UTF-8"))
-        val writeBuffer = ByteArray(USER_BYTES)
-        for (i in 0 until USER_BYTES) {
-            if (i < data.size) {
-                writeBuffer[i] = data[i]
+        for (i in 0uL until 4uL) {
+            if (sessionKey != null) {
+                cmdWrite(
+                    (i + 0x30u).toUByte(),
+                    key.gle(i * 4uL),
+                    key.gle(i * 4uL + 1uL),
+                    key.gle(i * 4uL + 2uL),
+                    key.gle(i * 4uL + 3uL),
+                    sessionKey!!,
+                    sessionCounter!!,
+                    nfcaTag
+                )
+                sessionCounter = (sessionCounter!! + 2u).toUShort()
             } else {
-                writeBuffer[i] = 0x00
+                cmdWrite(
+                    (i + 0x30u).toUByte(),
+                    key.gle(i * 4uL),
+                    key.gle(i * 4uL + 1uL),
+                    key.gle(i * 4uL + 2uL),
+                    key.gle(i * 4uL + 3uL),
+                    nfcaTag
+                )
             }
-        }
-
-        for (i in 0 until (USER_BYTES / 4)) {
-            cmdWrite((i + 4).toByte(), writeBuffer[i * 4], writeBuffer[i * 4 + 1], writeBuffer[i * 4 + 2], writeBuffer[i * 4 + 3])
         }
     }
 
-    fun readUserMemory(): String {
+    fun writeUserMemory(content: BitVector) {
         if (!isConnected) { throw Exception("Not connected") }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw Exception("Authentication required") }
 
-        val readBuffer = ByteArray(USER_BYTES)
-        for (i in 0 until (USER_BYTES / 16)) {
-            val resp = cmdRead((i * 4 + 4).toByte())
-            for (j in 0 until 16) {
-                readBuffer[i * 16 + j] = resp[j]
+        val writeBuffer = BitVector(USER_BYTES * 8uL)
+        for (i in 0uL until USER_BYTES) {
+            if (i * 8uL < content.len) {
+                writeBuffer.sbe(i, content.gbe(i))
+            } else {
+                writeBuffer.sbe(i, 0x00u)
             }
         }
 
-        readBuffer.dropLastWhile { it == 0.toByte() }
+        for (i in 0uL until USER_BYTES / 4uL) {
+            if (sessionKey != null) {
+                cmdWrite(
+                    (i + 4u).toUByte(),
+                    writeBuffer.gbe(i * 4uL),
+                    writeBuffer.gbe(i * 4uL + 1uL),
+                    writeBuffer.gbe(i * 4uL + 2uL),
+                    writeBuffer.gbe(i * 4uL + 3uL),
+                    sessionKey!!,
+                    sessionCounter!!,
+                    nfcaTag
+                )
+                sessionCounter = (sessionCounter!! + 2u).toUShort()
+            } else {
+                cmdWrite(
+                    (i + 4u).toUByte(),
+                    writeBuffer.gbe(i * 4uL),
+                    writeBuffer.gbe(i * 4uL + 1uL),
+                    writeBuffer.gbe(i * 4uL + 2uL),
+                    writeBuffer.gbe(i * 4uL + 3uL),
+                    nfcaTag
+                )
+            }
+        }
+    }
 
-        return readBuffer.decodeToString()
+    fun readUserMemory(): BitVector {
+        if (!isConnected) { throw Exception("Not connected") }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw Exception("Authentication required") }
+
+        val readBuffer = BitVector(USER_BYTES * 8uL)
+        for (i in 0uL until USER_BYTES / 16uL) {
+            val resp = if (sessionKey != null) {
+                val ret = cmdRead((i * 4u + 4u).toUByte(), sessionKey!!, sessionCounter!!, nfcaTag)
+                sessionCounter = (sessionCounter!! + 2u).toUShort()
+                ret
+            } else {
+                cmdRead((i * 4u + 4u).toUByte(), nfcaTag)
+            }
+            for (j in 0uL until 16uL) {
+                readBuffer.sbe(i * 16uL + j, resp.gbe(j))
+            }
+        }
+
+        return readBuffer
     }
 
     fun readSerialNumber(): ULong {
         if (!isConnected) { throw Exception("Not connected") }
 
-        val readBuffer = cmdRead(0x00.toByte())
+        val readBuffer = if (sessionKey != null) {
+            val ret = cmdRead(0x00u, sessionKey!!, sessionCounter!!, nfcaTag)
+            sessionCounter = (sessionCounter!! + 2u).toUShort()
+            ret
+        } else {
+            cmdRead(0x00u, nfcaTag)
+        }
+
         var ser = 0uL
-        for (i in 0 until 7) {
-            ser = ser or (readBuffer[i].toULong() shl (i * 8))
+        for (i in 0uL until 7uL) {
+            ser = ser or (readBuffer.gbe(i).toULong() shl (i * 8u).toInt())
         }
 
         return ser
@@ -124,16 +227,18 @@ class MifareUltralightAES(rawTag: Tag) : TagTechnology {
     override fun connect() {
         nfcaTag.connect()
 
-        var resp = cmdGetVersion()
-        val vendorID = resp[1]
-        val productType = resp[2]
-        val productSubType = resp[3]
-        val majorVer = resp[4]
-        val minorVer = resp[5]
-        val storageSize = resp[6]
-        val protocolType = resp[7]
-        if (!(vendorID == 0x04.toByte() && productType == 0x03.toByte() && (productSubType == 0x01.toByte() || productSubType == 0x02.toByte()) && majorVer == 0x04.toByte())) {
-            throw Exception("Not a MF-UL-AES chip")
+        val resp = cmdGetVersion(nfcaTag)
+        if (!(resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x01.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv) ||
+                    resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x02.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv))) {
+            throw Exception("Not a Mifare Ultralight AES chip")
+        }
+
+        chipState = ChipState.ACTIVE
+
+        auth0State = try {
+            cmdRead(0x29u, nfcaTag).gbe(3uL)
+        } catch (e: IOException) {
+            null
         }
     }
 
@@ -146,50 +251,16 @@ class MifareUltralightAES(rawTag: Tag) : TagTechnology {
     }
 
     override fun getTag(): Tag {
-        return tag
+        return rawTag
     }
 
-    fun cmdGetVersion(): ByteArray {
-        var cmd = ByteArray(1)
-        cmd[0] = 0x60
-        return nfcaTag.transceive(cmd)
+    enum class KeyType(val code: UByte, val state: ChipState) {
+        DATA_PROT_KEY(0x00u, ChipState.AUTHENTICATED),
+        UID_RETR_KEY(0x01u, ChipState.TRACEABLE),
+        ORIGINALITY_KEY(0x02u, ChipState.ACTIVE)
     }
 
-    fun cmdRead(page: Byte): ByteArray {
-        var cmd = ByteArray(2)
-        cmd[0] = 0x30
-        cmd[1] = page
-        return nfcaTag.transceive(cmd)
-    }
-
-    fun cmdWrite(page: Byte, a: Byte, b: Byte, c: Byte, d: Byte) {
-        var cmd = ByteArray(6)
-        cmd[0] = 0xa2.toByte()
-        cmd[1] = page
-        cmd[2] = a
-        cmd[3] = b
-        cmd[4] = c
-        cmd[5] = d
-        nfcaTag.transceive(cmd)
-    }
-
-    fun cmdAuthenticate1(): ByteArray {
-        var cmd = ByteArray(2)
-        cmd[0] = 0x1a
-        cmd[1] = 0x00
-        val resp = nfcaTag.transceive(cmd)
-        return resp.drop(1).toByteArray()
-    }
-
-    fun cmdAuthenticate2(challenge: ByteArray): ByteArray {
-        var cmd = ByteArray(33)
-        cmd[0] = 0xaf.toByte()
-        for (i in 0 until 32) {
-            cmd[i + 1] = challenge[i]
-        }
-        val resp = nfcaTag.transceive(cmd)
-        return resp.drop(1).toByteArray()
-    }
+    enum class ChipState { IDLE, ACTIVE, TRACEABLE, AUTHENTICATED }
 }
 
 fun get(tag: Tag): MifareUltralightAES {

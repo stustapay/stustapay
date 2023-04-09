@@ -1,29 +1,39 @@
+import json
 import logging
 from collections import defaultdict
-from typing import Dict, Optional, Set, Tuple
+from dataclasses import dataclass
+from typing import Dict, Optional, Set
 
 import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import (
+    ACCOUNT_CASH_ENTRY,
     ACCOUNT_CASH_VAULT,
+    ACCOUNT_SUMUP,
     Account,
     get_source_account,
     get_target_account,
-    ACCOUNT_SUMUP,
-    ACCOUNT_CASH_ENTRY,
 )
-from stustapay.core.schema.order import CompletedOrder, NewOrder, OrderType, Order
+from stustapay.core.schema.order import CompletedOrder, NewOrder, Order, OrderType, PendingOrder
 from stustapay.core.schema.tax_rate import TAX_NONE
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
+from stustapay.core.service.auth import AuthService
+from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_terminal, requires_user_privileges
-from stustapay.core.service.error import NotFoundException, ServiceException, InvalidArgumentException
-from stustapay.core.service.till import TillService
-from stustapay.core.service.user import UserService
+from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
+from stustapay.core.service.common.error import InvalidArgument, NotFound, ServiceException
+from stustapay.core.service.common.notifications import Subscription
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(eq=True, frozen=True)
+class BookingIdentifier:
+    source_account_id: int
+    target_account_id: int
+    tax_name: str
 
 
 class NotEnoughFundsException(ServiceException):
@@ -52,26 +62,62 @@ class AlreadyFinishedException(ServiceException):
 
 
 class OrderService(DBService):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, user_service: UserService, till_service: TillService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
-        self.user_service = user_service
-        self.till_service = till_service
+        self.auth_service = auth_service
+
+        self.admin_order_update_queues: set[Subscription] = set()
+
+    async def run(self):
+        async with self.db_pool.acquire() as conn:
+            order_hook = DBHook(connection=conn, channel="order", event_handler=self._handle_order_update)
+            await order_hook.run()
+
+    async def _propagate_order_update(self, order: Order):
+        for queue in self.admin_order_update_queues:
+            queue.queue.put_nowait(order)
+
+    async def _handle_order_update(self, payload: Optional[str]):
+        if payload is None:
+            return
+
+        try:
+            json_payload = json.loads(payload)
+            async with self.db_pool.acquire() as conn:
+                async with conn.transaction():
+                    order = await self._fetch_order(conn=conn, order_id=json_payload["order_id"])
+                    if order:
+                        await self._propagate_order_update(order=order)
+        except:  # pylint: disable=bare-except
+            return
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def register_for_order_updates(self, conn: asyncpg.Connection) -> Subscription:
+        del conn  # unused
+
+        def on_unsubscribe(subscription):
+            self.admin_order_update_queues.remove(subscription)
+
+        subscription = Subscription(on_unsubscribe)
+        self.admin_order_update_queues.add(subscription)
+        return subscription
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
     async def create_order(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_order: NewOrder
-    ) -> CompletedOrder:
+    ) -> PendingOrder:
         """
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
         """
         customer = await conn.fetchrow(
-            "select a.*, t.restriction from user_tag t join account a on t.id = a.user_tag_id where t.uid=$1",
+            "select a.*, t.restriction from user_tag t join account a on t.uid = a.user_tag_uid where t.uid=$1",
             new_order.customer_tag,
         )
         if customer is None:
-            raise NotFoundException(element_typ="customer", element_id=str(new_order.customer_tag))
+            raise NotFound(element_typ="customer", element_id=str(new_order.customer_tag))
         customer_account = Account.parse_obj(customer)
 
         order_id, order_uuid = await conn.fetchrow(
@@ -103,10 +149,10 @@ class OrderService(DBService):
                 product_id,
             )
             if cost is None:
-                raise NotFoundException(element_typ="product", element_id=str(product_id))
+                raise NotFound(element_typ="product", element_id=str(product_id))
             price, fixed_price, tax_rate, tax_name = cost
             if fixed_price and item_price:
-                raise InvalidArgumentException("The line item price was set for a fixed price item")
+                raise InvalidArgument("The line item price was set for a fixed price item")
             # other case (not fixed_price and not item_price) is implicitly checked with the database constraints,
             # pydantic constraints and previous test
             if not fixed_price:
@@ -152,21 +198,21 @@ class OrderService(DBService):
 
         # check order type specific requirements
         if new_order.order_type == OrderType.sale:
-            if customer_account.balance < order.value_sum:
-                raise NotEnoughFundsException(needed_fund=order.value_sum, available_fund=customer.balance)
-            new_balance = customer_account.balance - order.value_sum
+            if customer_account.balance < order.total_price:
+                raise NotEnoughFundsException(needed_fund=order.total_price, available_fund=customer_account.balance)
+            new_balance = customer_account.balance - order.total_price
 
         elif new_order.order_type == OrderType.topup_sumup or new_order.order_type == OrderType.topup_cash:
             if len(new_order.positions) != 1:
-                raise InvalidArgumentException("A topup Order must have exactly one position")
+                raise InvalidArgument("A topup Order must have exactly one position")
             if order.line_items[0].price < 0:
-                raise InvalidArgumentException("A topup Order must have positive price")
-            new_balance = customer_account.balance + order.value_sum
+                raise InvalidArgument("A topup Order must have positive price")
+            new_balance = customer_account.balance + order.total_price
 
         else:
             raise NotImplementedError()
 
-        return CompletedOrder(
+        return PendingOrder(
             id=order_id,
             uuid=order_uuid,
             old_balance=customer_account.balance,
@@ -185,18 +231,46 @@ class OrderService(DBService):
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
-    async def show_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
-        # TODO: restrict this s.t. only orders for this terminal and this cashier can be fetched
-        return await self._fetch_order(conn=conn, order_id=order_id)
+    async def show_order(self, *, conn: asyncpg.Connection, current_user: User, order_id: int) -> Optional[Order]:
+        order = await self._fetch_order(conn=conn, order_id=order_id)
+        if order is not None and order.cashier_id == current_user.id:
+            return order
+        return None
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
-    async def list_orders(self, *, conn: asyncpg.Connection) -> list[Order]:
-        cursor = conn.cursor("select * from order_value")
+    @requires_terminal([Privilege.cashier])
+    async def list_orders_terminal(self, *, conn: asyncpg.Connection, current_user: User) -> list[Order]:
+        cursor = conn.cursor("select * from order_value where ordr.cashier_id = $1", current_user.id)
         result = []
         async for row in cursor:
             result.append(Order.parse_obj(row))
         return result
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def list_orders(self, *, conn: asyncpg.Connection, customer_account_id: Optional[int] = None) -> list[Order]:
+        if customer_account_id is not None:
+            cursor = conn.cursor("select * from order_value where customer_account_id = $1", customer_account_id)
+        else:
+            cursor = conn.cursor("select * from order_value")
+        result = []
+        async for row in cursor:
+            result.append(Order.parse_obj(row))
+        return result
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def list_orders_by_till(self, *, conn: asyncpg.Connection, till_id: int) -> list[Order]:
+        cursor = conn.cursor("select * from order_value where till_id = $1", till_id)
+        result = []
+        async for row in cursor:
+            result.append(Order.parse_obj(row))
+        return result
+
+    @with_db_transaction
+    @requires_user_privileges([Privilege.admin])
+    async def get_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
+        return await self._fetch_order(conn=conn, order_id=order_id)
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
@@ -212,7 +286,7 @@ class OrderService(DBService):
         """
         order = await self._fetch_order(conn=conn, order_id=order_id)
         if order is None:
-            raise NotFoundException(element_typ="order", element_id=str(order_id))
+            raise NotFound(element_typ="order", element_id=str(order_id))
 
         if order.status != "pending":
             raise AlreadyFinishedException(order_id=order.id)
@@ -223,7 +297,7 @@ class OrderService(DBService):
         )
         if customer is None:
             # as the foreign key is enforced in the database, this should not happen
-            raise NotFoundException(element_typ="customer", element_id=str(order.customer_account_id))
+            raise NotFound(element_typ="customer", element_id=str(order.customer_account_id))
         customer_account = Account.parse_obj(customer)
 
         # NOW book the order, or fail
@@ -249,16 +323,20 @@ class OrderService(DBService):
         It is checked if enough funds are available and books the results
         """
         assert order.order_type == OrderType.sale
-        if customer.balance < order.value_sum:
-            raise NotEnoughFundsException(needed_fund=order.value_sum, available_fund=customer.balance)
+        if customer.balance < order.total_price:
+            raise NotEnoughFundsException(needed_fund=order.total_price, available_fund=customer.balance)
 
         # combine booking based on (source, target, tax) -> amount
-        prepared_bookings: Dict[Tuple[int, int, str], float] = defaultdict(lambda: 0.0)
+        prepared_bookings: Dict[BookingIdentifier, float] = defaultdict(lambda: 0.0)
         for line_item in order.line_items:
             product = line_item.product
             source_acc_id = get_source_account(OrderType.sale, product, customer.id)
             target_acc_id = get_target_account(OrderType.sale, product, customer.id)
-            prepared_bookings[(source_acc_id, target_acc_id, line_item.tax_name)] += float(line_item.total_price)
+            prepared_bookings[
+                BookingIdentifier(
+                    source_account_id=source_acc_id, target_account_id=target_acc_id, tax_name=line_item.tax_name
+                )
+            ] += float(line_item.total_price)
 
         await self._book_prepared_bookings(conn=conn, order_id=order.id, bookings=prepared_bookings)
 
@@ -274,10 +352,14 @@ class OrderService(DBService):
         line_item = order.line_items[0]
         assert line_item.price >= 0
 
-        # combine booking based on (source, target, tax) -> amount
-        prepared_bookings: Dict[Tuple[int, int, str], float] = dict()
-        prepared_bookings[(ACCOUNT_CASH_VAULT, customer.id, line_item.tax_name)] = float(line_item.total_price)
-        prepared_bookings[(ACCOUNT_CASH_ENTRY, cashier.cashier_account_id, TAX_NONE)] = float(line_item.total_price)
+        prepared_bookings: Dict[BookingIdentifier, float] = {
+            BookingIdentifier(
+                source_account_id=ACCOUNT_CASH_VAULT, target_account_id=customer.id, tax_name=line_item.tax_name
+            ): float(line_item.total_price),
+            BookingIdentifier(
+                source_account_id=ACCOUNT_CASH_ENTRY, target_account_id=cashier.cashier_account_id, tax_name=TAX_NONE
+            ): float(line_item.total_price),
+        }
 
         await self._book_prepared_bookings(conn=conn, order_id=order.id, bookings=prepared_bookings)
 
@@ -291,20 +373,22 @@ class OrderService(DBService):
         line_item = order.line_items[0]
         assert line_item.price >= 0
 
-        # combine booking based on (source, target, tax) -> amount
-        prepared_bookings: Dict[Tuple[int, int, str], float] = dict()
-        prepared_bookings[(ACCOUNT_SUMUP, customer.id, line_item.tax_name)] = float(line_item.total_price)
+        prepared_bookings = {
+            BookingIdentifier(
+                source_account_id=ACCOUNT_SUMUP, target_account_id=customer.id, tax_name=line_item.tax_name
+            ): float(line_item.total_price)
+        }
 
         await self._book_prepared_bookings(conn=conn, order_id=order.id, bookings=prepared_bookings)
 
     async def _book_prepared_bookings(
-        self, conn: asyncpg.Connection, order_id: int, bookings: Dict[Tuple[int, int, str], float]
+        self, conn: asyncpg.Connection, order_id: int, bookings: Dict[BookingIdentifier, float]
     ):
         """
         insert the selected bookings into the database.
         bookings are (source, target, tax) -> amount
         """
-        for (source_account_id, target_account_id, tax_name), amount in bookings.items():
+        for booking_identifier, amount in bookings.items():
             await conn.fetchval(
                 "select * from book_transaction("
                 "   order_id => $1,"
@@ -312,13 +396,15 @@ class OrderService(DBService):
                 "   source_account_id => $3,"
                 "   target_account_id => $4,"
                 "   amount => $5,"
-                "   tax_name => $6)",
+                "   tax_name => $6,"
+                "   vouchers => $7)",
                 order_id,
                 "",
-                source_account_id,
-                target_account_id,
+                booking_identifier.source_account_id,
+                booking_identifier.target_account_id,
                 amount,
-                tax_name,
+                booking_identifier.tax_name,
+                0,  # TODO: add vouchers here
             )
 
     async def _finish_order(self, *, conn: asyncpg.Connection, order: Order):
@@ -349,7 +435,7 @@ class OrderService(DBService):
 
         order = await self._fetch_order(conn=conn, order_id=order_id)
         if order is None:
-            raise NotFoundException(element_typ="order", element_id=str(order_id))
+            raise NotFound(element_typ="order", element_id=str(order_id))
         if order.status != "pending":
             raise AlreadyFinishedException(order_id=order.id)
 

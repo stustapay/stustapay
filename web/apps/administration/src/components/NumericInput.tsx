@@ -40,6 +40,7 @@ export const NumericInput: React.FC<NumericInputProps> = ({ value, onChange, ...
       value={internalValue}
       onChange={onInternalChange}
       onBlur={onInternalBlur}
+      inputProps={{ style: { textAlign: "right" } }}
       onKeyUp={onKeyUp}
       variant="standard"
       {...props}

@@ -11,7 +11,7 @@ class Args(argparse.Namespace):
         super().__init__(**args)
         self._cli = cli
 
-    def run_subcommand(self, loop, **injected_args):
+    def run_subcommand(self, loop, **injected_args) -> None:
         args: dict = vars(self).copy()
         args.pop("_cli")
 
