@@ -1,6 +1,6 @@
-import yaml
 from typing import Optional
 
+import yaml
 from pydantic import BaseModel
 
 
@@ -46,12 +46,3 @@ def read_config(config_path: str) -> Config:
         content = yaml.safe_load(config_file)
         config = Config(**content)
         return config
-
-
-def mock_config():
-    return Config(
-        administration=AdministrationApiConfig(base_url=""),
-        terminalserver=TerminalApiConfig(base_url=""),
-        database=DatabaseConfig(dbname=""),
-        core=CoreConfig(secret_key=""),
-    )

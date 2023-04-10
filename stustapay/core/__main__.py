@@ -7,7 +7,7 @@ import asyncio
 from . import admin
 from . import database
 from .args import Parser
-from .config import read_config, mock_config
+from .config import read_config
 
 
 def main():
@@ -28,10 +28,7 @@ def main():
 
     args = parser.parse_args(loop)
 
-    if args.mock:  # pylint: disable=no-member
-        config = mock_config()
-    else:
-        config = read_config(args.config_path)  # pylint: disable=no-member
+    config = read_config(args.config_path)  # pylint: disable=no-member
 
     args.run_subcommand(loop, config=config)
 
