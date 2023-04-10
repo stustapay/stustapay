@@ -7,7 +7,6 @@ import android.util.Log
 import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
-import javax.inject.Singleton
 
 @ActivityScoped
 class ActivityCallback @Inject constructor(
