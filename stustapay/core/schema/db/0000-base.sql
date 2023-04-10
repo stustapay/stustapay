@@ -267,34 +267,48 @@ create table if not exists product (
     price numeric,
     -- price is not fixed, e.g for top up. Then price=null and set with the api call
     fixed_price boolean not null default true,
-    price_in_vouchers bigint,
+    price_in_vouchers bigint, -- will be null if this product cannot be bought with vouchers
     constraint product_vouchers_only_with_fixed_price check ( price_in_vouchers is not null and fixed_price or price_in_vouchers is null ),
     constraint product_not_fixed_or_price check ( price is not null = fixed_price),
+
+    -- whether the core metadata of this product (price, price_in_vouchers, fixed_price, tax_name and target_account_id) is editable
+    is_locked bool not null default false,
 
     -- if target account is set, the product is booked to this specific account,
     -- e.g. for the deposit account, or a specific exit account (for beer, ...)
     target_account_id int references account(id) on delete restrict,
 
-    -- todo: payment possible with voucher?
-    -- how many vouchers of which kind does it cost?
-
     tax_name text not null references tax(name) on delete restrict
 );
 
-insert into product (id, name, fixed_price, tax_name)
-values (1, 'Rabatt', false, 'none');
+insert into product (id, name, fixed_price, tax_name, is_locked)
+values (1, 'Rabatt', false, 'none', true);
 select setval('product_id_seq', 100);
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
-    id bigint not null references product(id) on delete cascade,
-    restriction text not null references restriction_type(name) on delete restrict ,
+    id          bigint not null references product (id) on delete cascade,
+    restriction text   not null references restriction_type (name) on delete restrict,
     primary key (id, restriction)
+);
+
+create or replace view product_with_tax_and_restrictions as (
+    select
+        p.*,
+        tax.rate as tax_rate,
+        coalesce(pr.restrictions, '{}'::text array) as restrictions
+    from product p
+    join tax on p.tax_name = tax.name
+    left join (
+        select r.id, array_agg(r.restriction) as restrictions
+        from product_restriction r
+        group by r.id
+    ) pr on pr.id = p.id
 );
 
 create or replace view product_as_json as (
     select p.id, json_agg(p)->0 as json
-    from product p
+    from product_with_tax_and_restrictions p
     group by p.id
 );
 
@@ -312,7 +326,8 @@ create table if not exists till_button (
 create table if not exists till_button_product (
     button_id int not null references till_button(id) on delete cascade,
     product_id int not null references product(id) on delete cascade,
-    primary key(button_id, product_id)
+    primary key (button_id, product_id)
+    -- TODO: constraint that we can only reference non-editable products
 );
 
 create or replace view till_button_with_products as (
@@ -324,7 +339,7 @@ create or replace view till_button_with_products as (
     left join (
         select tlb.button_id, sum(p.price) as price, array_agg(tlb.product_id) as product_ids
         from till_button_product tlb
-        join product p on tlb.product_id = p.id
+        join product_with_tax_and_restrictions p on tlb.product_id = p.id
         group by tlb.button_id
     ) j_view on t.id = j_view.button_id
 );
@@ -548,14 +563,14 @@ create or replace function book_transaction (
     source_account_id bigint,
     target_account_id bigint,
     amount numeric,
-    vouchers bigint
+    vouchers_amount bigint
 )
     returns bigint as $$
 <<locals>> declare
     transaction_id bigint;
     temp_account_id bigint;
 begin
-    if vouchers < 0 then
+    if vouchers_amount < 0 then
         raise 'vouchers cannot be negative';
     end if;
 
@@ -577,15 +592,17 @@ begin
         book_transaction.source_account_id,
         book_transaction.target_account_id,
         book_transaction.amount,
-        book_transaction.vouchers
+        book_transaction.vouchers_amount
     ) returning id into locals.transaction_id;
 
     -- update account values
     update account set
-        balance = balance - amount
+        balance = balance - amount,
+        vouchers = vouchers - vouchers_amount
         where id = source_account_id;
     update account set
-        balance = balance + amount
+        balance = balance + amount,
+        vouchers = vouchers + vouchers_amount
         where id = target_account_id;
 
     return locals.transaction_id;

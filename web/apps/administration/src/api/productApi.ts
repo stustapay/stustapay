@@ -36,6 +36,14 @@ export const productApi = createApi({
       query: ({ id, ...product }) => ({ url: `/products/${id}/`, method: "POST", body: product }),
       invalidatesTags: ["product"],
     }),
+    lockProduct: builder.mutation<Product, Product>({
+      query: ({ id, ...product }) => ({
+        url: `/products/${id}/`,
+        method: "POST",
+        body: { ...product, is_locked: true },
+      }),
+      invalidatesTags: ["product"],
+    }),
     deleteProduct: builder.mutation<void, number>({
       query: (id) => ({ url: `/products/${id}/`, method: "DELETE" }),
       invalidatesTags: ["product"],
@@ -52,4 +60,5 @@ export const {
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
+  useLockProductMutation,
 } = productApi;

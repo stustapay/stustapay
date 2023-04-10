@@ -10,6 +10,8 @@ const initialValues: NewProduct = {
   tax_name: "none",
   fixed_price: true,
   price_in_vouchers: 0,
+  restrictions: [],
+  is_locked: false,
 };
 
 export const ProductCreate: React.FC = () => {

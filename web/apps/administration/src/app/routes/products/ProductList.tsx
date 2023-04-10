@@ -6,6 +6,7 @@ import {
   Delete as DeleteIcon,
   Add as AddIcon,
   ContentCopy as ContentCopyIcon,
+  Lock as LockIcon,
 } from "@mui/icons-material";
 import {
   selectProductAll,
@@ -14,6 +15,7 @@ import {
   useDeleteProductMutation,
   useGetProductsQuery,
   useGetTaxRatesQuery,
+  useLockProductMutation,
 } from "@api";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
@@ -36,6 +38,7 @@ export const ProductList: React.FC = () => {
   const { data: taxRates, isLoading: isTaxRatesLoading } = useGetTaxRatesQuery();
   const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
+  const [lockProduct] = useLockProductMutation();
 
   const [productToDelete, setProductToDelete] = React.useState<number | null>(null);
   if (isProductsLoading || isTaxRatesLoading) {
@@ -83,6 +86,11 @@ export const ProductList: React.FC = () => {
       flex: 1,
     },
     {
+      field: "is_locked",
+      headerName: t("productIsLocked") as string,
+      type: "boolean",
+    },
+    {
       field: "fixed_price",
       headerName: t("isFixedPrice") as string,
       type: "boolean",
@@ -105,6 +113,12 @@ export const ProductList: React.FC = () => {
       renderCell: (params) => renderTaxRate(params.row.tax_name),
     },
     {
+      field: "restrictions",
+      headerName: t("productRestrictions") as string,
+      valueFormatter: ({ value }) => value.join(", "),
+      width: 150,
+    },
+    {
       field: "actions",
       type: "actions",
       headerName: t("actions", { ns: "common" }) as string,
@@ -121,6 +135,13 @@ export const ProductList: React.FC = () => {
           color="primary"
           label={t("copy", { ns: "common" })}
           onClick={() => copyProduct(params.row)}
+        />,
+        <GridActionsCellItem
+          icon={<LockIcon />}
+          color="primary"
+          disabled={params.row.is_locked}
+          label={t("lockProduct")}
+          onClick={() => lockProduct(params.row)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
