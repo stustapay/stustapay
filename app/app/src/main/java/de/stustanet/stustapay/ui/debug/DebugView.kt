@@ -20,6 +20,7 @@ object DevelopNavDest : NavDestinations() {
     val net = NavDest("net", title = "Network")
     val nfc = NavDest("nfc", title = "NFC")
     val qr = NavDest("qr", title = "QR Scan")
+    val ec = NavDest("ec", title = "EC Payment")
 }
 
 @Preview
@@ -58,6 +59,9 @@ fun DebugView(leaveView: () -> Unit = {}) {
             }
             composable(DevelopNavDest.qr.route) {
                 QRScanView()
+            }
+            composable(DevelopNavDest.ec.route) {
+                ECDebugView()
             }
         }
     }

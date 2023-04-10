@@ -10,6 +10,10 @@ class Terminal(BaseModel):
     till: Till
 
 
+class TerminalSecrets(BaseModel):
+    sumup_affiliate_key: str
+
+
 class TerminalConfig(BaseModel):
     id: int
     name: str
@@ -17,6 +21,7 @@ class TerminalConfig(BaseModel):
     user_privileges: Optional[list[Privilege]]
     allow_top_up: bool
     buttons: Optional[list[TillButton]]
+    secrets: Optional[TerminalSecrets]
 
 
 class TerminalRegistrationSuccess(BaseModel):

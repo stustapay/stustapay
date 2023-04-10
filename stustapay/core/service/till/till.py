@@ -4,7 +4,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.terminal import Terminal, TerminalConfig, TerminalRegistrationSuccess
+from stustapay.core.schema.terminal import Terminal, TerminalConfig, TerminalRegistrationSuccess, TerminalSecrets
 from stustapay.core.schema.till import NewTill, Till, TillButton, TillProfile
 from stustapay.core.schema.user import Privilege, User, UserTag
 from stustapay.core.service.auth import TerminalTokenMetadata
@@ -223,6 +223,10 @@ class TillService(DBService):
         )
         profile = TillProfile.parse_obj(db_profile)
 
+        secrets = None
+        # TODO: only send secrets if profile.allow_top_up:
+        secrets = TerminalSecrets(sumup_affiliate_key=self.cfg.core.sumup_affiliate_key)
+
         return TerminalConfig(
             id=current_terminal.till.id,
             name=current_terminal.till.name,
@@ -230,4 +234,5 @@ class TillService(DBService):
             user_privileges=user_privileges,
             allow_top_up=profile.allow_top_up,
             buttons=buttons,
+            secrets=secrets,
         )

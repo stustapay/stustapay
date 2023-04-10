@@ -19,7 +19,7 @@ sealed class Response<out T> {
 
         data class Access(val msg: String) : Error() {
             override fun msg(): String {
-                return "permission denied: $msg"
+                return "access denied: $msg"
             }
         }
 

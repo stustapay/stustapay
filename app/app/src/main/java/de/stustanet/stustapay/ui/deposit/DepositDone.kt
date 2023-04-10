@@ -13,47 +13,43 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
-import de.stustanet.stustapay.ui.common.DepositKeyboard
-import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
-fun DepositMain(goToMethod: () -> Unit, viewModel: DepositViewModel) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+fun DepositDone(onDismiss: () -> Unit, viewModel: DepositViewModel) {
+    val depositState by viewModel.depositState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
 
     Scaffold(
-        content = { paddingValues ->
-            Column(
+        content = {
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = paddingValues.calculateBottomPadding()),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(bottom = it.calculateBottomPadding()),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier.height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("%.2f€".format(uiState.currentAmount.toFloat() / 100), fontSize = 72.sp)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "%.2f€".format(depositState.currentAmount.toFloat() / 100),
+                        fontSize = 48.sp
+                    )
+                    Text("deposited", fontSize = 48.sp)
+                    Text(depositState.status, fontSize = 24.sp)
                 }
-                DepositKeyboard(
-                    onDigit = { viewModel.inputDigit(it) },
-                    onClear = { viewModel.clear() }
-                )
             }
         },
         bottomBar = {
             Button(
                 onClick = {
+                    viewModel.clear()
+                    onDismiss()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    goToMethod()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(70.dp)
                     .padding(10.dp)
             ) {
-                Text(text = "✓")
+                Text(text = "Continue")
             }
         }
     )

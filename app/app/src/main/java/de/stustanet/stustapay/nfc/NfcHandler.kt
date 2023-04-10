@@ -10,6 +10,7 @@ import android.os.Build
 import de.stustanet.stustapay.model.NfcScanFailure
 import de.stustanet.stustapay.model.NfcScanRequest
 import de.stustanet.stustapay.model.NfcScanResult
+import de.stustanet.stustapay.util.ActivityCallback
 import de.stustanet.stustapay.util.asBitVector
 import de.stustanet.stustapay.util.bv
 import java.io.IOException

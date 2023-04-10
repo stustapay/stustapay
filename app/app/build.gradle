@@ -100,6 +100,8 @@ dependencies {
     implementation "io.ktor:ktor-client-logging:$ktor_version"
     implementation 'androidx.databinding:databinding-runtime:7.1.2'
     implementation 'androidx.datastore:datastore:1.0.0'
+    implementation 'com.sumup:merchant-api:1.4.0'
+    implementation 'com.sumup:merchant-sdk:4.0.3'
     implementation "com.google.protobuf:protobuf-javalite:$protobuf_version"
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

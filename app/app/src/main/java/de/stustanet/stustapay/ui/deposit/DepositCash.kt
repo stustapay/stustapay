@@ -4,7 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -16,23 +17,31 @@ import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 
 @Composable
-fun DepositCash(goToMethod: () -> Unit, goToSuccess: () -> Unit, goToFailure: () -> Unit, viewModel: DepositViewModel) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+fun DepositCash(
+    goBack: () -> Unit,
+    onSuccess: () -> Unit,
+    viewModel: DepositViewModel
+) {
+    val depositState by viewModel.depositState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     val scanState = rememberNfcScanDialogState()
 
-    NfcScanDialog(scanState, onScan = { goToSuccess() })
+    NfcScanDialog(scanState, onScan = {
+        viewModel.cashFinished(it)
+        onSuccess()
+    })
 
     Scaffold(
         content = { paddingValues ->
             Box(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding()),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("%.2f€".format(uiState.currentAmount.toFloat() / 100), fontSize = 48.sp)
-                    Text("received", fontSize = 48.sp)
+                    Text("%.2f€".format(depositState.currentAmount.toFloat() / 100), fontSize = 48.sp)
+                    Text("received?", fontSize = 48.sp)
                 }
             }
         },
@@ -40,19 +49,25 @@ fun DepositCash(goToMethod: () -> Unit, goToSuccess: () -> Unit, goToFailure: ()
             Row(horizontalArrangement = Arrangement.SpaceEvenly) {
                 Button(
                     onClick = {
-                        goToMethod()
+                        goBack()
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     },
-                    modifier = Modifier.fillMaxWidth(0.5f).height(70.dp).padding(10.dp)
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(70.dp)
+                        .padding(10.dp)
                 ) {
-                    Text(text = "❌")
+                    Text(text = "Back")
                 }
                 Button(
                     onClick = {
                         scanState.open()
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     },
-                    modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(70.dp)
+                        .padding(10.dp)
                 ) {
                     Text(text = "✓")
                 }

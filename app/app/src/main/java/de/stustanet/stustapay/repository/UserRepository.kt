@@ -18,8 +18,8 @@ class UserRepository @Inject constructor(
         userState.emit(userRemoteDataSource.currentUser())
     }
 
-    suspend fun login(userTag: ULong) {
-        userState.emit(userRemoteDataSource.userLogin(UserTag(userTag)))
+    suspend fun login(userTag: UserTag) {
+        userState.emit(userRemoteDataSource.userLogin(userTag))
     }
 
     suspend fun logout() {
