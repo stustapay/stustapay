@@ -32,6 +32,7 @@ class DatabaseConfig(BaseModel):
 class CoreConfig(BaseModel):
     secret_key: str
     jwt_token_algorithm: str = "HS256"
+    sumup_affiliate_key: str = "unset"
 
 
 class Config(BaseModel):
