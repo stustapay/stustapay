@@ -13,7 +13,6 @@ from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
 from stustapay.terminalserver.router import auth, base, live, order, user
-from stustapay.terminalserver.router_mock.base import router as mock_base_router
 
 
 class Api(SubCommand):
@@ -29,7 +28,6 @@ class Api(SubCommand):
         del rest
 
         self.cfg = config
-        self.mock = args.mock
         self.db_pool = None
 
         self.logger = logging.getLogger(__name__)
@@ -41,26 +39,13 @@ class Api(SubCommand):
         )
 
         # endpoints available in the terminal server.
-        if self.mock:
-            self.server.add_router(mock_base_router)
-        else:
-            self.server.add_router(base.router)
-            self.server.add_router(live.router)
-            self.server.add_router(order.router)
-            self.server.add_router(auth.router)
-            self.server.add_router(user.router)
+        self.server.add_router(base.router)
+        self.server.add_router(live.router)
+        self.server.add_router(order.router)
+        self.server.add_router(auth.router)
+        self.server.add_router(user.router)
 
     async def run(self):
-        if self.mock:
-            context = Context(
-                config=self.cfg,
-                db_pool=None,
-                order_service=None,
-            )
-
-            await self.server.run(self.cfg, context)
-            return
-
         db_pool = await self.server.db_connect(self.cfg.database)
 
         auth_service = AuthService(db_pool=db_pool, config=self.cfg)

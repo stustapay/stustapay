@@ -23,8 +23,9 @@ from stustapay.core.schema.order import (
     OrderType,
     PendingOrder,
     PendingLineItem,
+    NewLineItem,
 )
-from stustapay.core.schema.product import Product, DISCOUNT_PRODUCT_ID
+from stustapay.core.schema.product import Product, DISCOUNT_PRODUCT_ID, ProductRestriction
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.auth import AuthService
@@ -33,6 +34,7 @@ from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
 from stustapay.core.service.common.error import InvalidArgument, NotFound, ServiceException
 from stustapay.core.service.common.notifications import Subscription
+from .voucher import VoucherService
 
 logger = logging.getLogger(__name__)
 
@@ -68,57 +70,11 @@ class AgeRestrictionException(ServiceException):
         self.product_ids = product_ids
 
 
-class AlreadyFinishedException(ServiceException):
-    id = "AlreadyFinished"
-    description = "The order cannot be booked, as it is not in pending state, and thus already finished or cancelled"
-
-    def __init__(self, order_id):
-        self.order_id = order_id
-
-
-@dataclass
-class VoucherUsage:
-    used_vouchers: int
-    additional_line_items: list[PendingLineItem]
-
-
-def _compute_optimal_voucher_usage(
-    max_vouchers: int, line_items: list[PendingLineItem], discount_product: Product
-) -> VoucherUsage:
-    if max_vouchers == 0:
-        return VoucherUsage(used_vouchers=0, additional_line_items=[])
-
-    used_vouchers = 0
-    additional_line_items = []
-    line_items_by_price_per_voucher = list(
-        sorted(line_items, key=lambda x: (x.product.price_per_voucher is None, x.product.price_per_voucher))
-    )
-    while used_vouchers < max_vouchers:
-        remaining_vouchers = max_vouchers - used_vouchers
-        current_line_item = line_items_by_price_per_voucher.pop(0)
-        if current_line_item.product.price_in_vouchers is None:
-            continue
-        vouchers_for_product = min(
-            remaining_vouchers, current_line_item.product.price_in_vouchers * current_line_item.quantity
-        )
-        additional_line_items.append(
-            PendingLineItem(
-                product=discount_product,
-                tax_rate=current_line_item.tax_rate,
-                tax_name=current_line_item.tax_name,
-                price=-current_line_item.price,
-                quantity=vouchers_for_product,
-            )
-        )
-        used_vouchers += vouchers_for_product
-
-    return VoucherUsage(used_vouchers=used_vouchers, additional_line_items=additional_line_items)
-
-
 class OrderService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
+        self.voucher_service = VoucherService(db_pool=db_pool, config=config, auth_service=auth_service)
 
         self.admin_order_update_queues: set[Subscription] = set()
 
@@ -158,11 +114,76 @@ class OrderService(DBService):
         return subscription
 
     @staticmethod
-    async def _fetch_discount_product(conn: asyncpg.Connection) -> Product:
-        row = await conn.fetchrow("select * from product where id = $1", DISCOUNT_PRODUCT_ID)
+    async def _fetch_product(*, conn: asyncpg.Connection, product_id: int) -> Optional[Product]:
+        row = await conn.fetchrow("select * from product_with_tax_and_restrictions where id = $1", product_id)
         if row is None:
-            raise RuntimeError("now discount product found in database")
+            return None
         return Product.parse_obj(row)
+
+    async def _fetch_discount_product(self, *, conn: asyncpg.Connection) -> Product:
+        product = await self._fetch_product(conn=conn, product_id=DISCOUNT_PRODUCT_ID)
+        if product is None:
+            raise RuntimeError("now discount product found in database")
+        return product
+
+    async def _preprocess_order_positions(
+        self,
+        *,
+        conn: asyncpg.Connection,
+        customer_restrictions: Optional[ProductRestriction],
+        positions: list[NewLineItem],
+    ) -> list[PendingLineItem]:
+        # we preprocess positions in a new order to group the resulting line items
+        # by product and aggregate their quantity
+        line_items_by_product: dict[int, PendingLineItem] = {}
+        restricted_products = set()
+        for item in positions:
+            product_id = item.product_id
+            item_quantity = item.quantity
+            item_price = item.price
+
+            if product_id in line_items_by_product:
+                current_line_item = line_items_by_product[product_id]
+                if not current_line_item.product.fixed_price:
+                    raise InvalidArgument("Cannot book the same product with different prices")
+
+                if item_quantity is None:
+                    raise RuntimeError("invalid internal line item state, should not happen")
+
+                current_line_item.quantity += item_quantity
+            else:
+                # check product cost
+                product = await self._fetch_product(conn=conn, product_id=product_id)
+                if product is None:
+                    raise NotFound(element_typ="product", element_id=str(product_id))
+                if product.fixed_price and item_price:
+                    raise InvalidArgument("The line item price was set for a fixed price item")
+                # other case (not fixed_price and not item_price) is implicitly checked with the database constraints,
+                # pydantic constraints and previous test
+                price = product.price
+                if not product.fixed_price:
+                    price = item_price
+                    item_quantity = 1
+
+                if price is None or item_quantity is None:
+                    raise RuntimeError("invalid internal price state, should not happen")
+
+                # check age restriction
+                if customer_restrictions is not None and customer_restrictions in product.restrictions:
+                    restricted_products.add(product_id)
+
+                line_items_by_product[product_id] = PendingLineItem(
+                    quantity=item_quantity,
+                    price=price,
+                    tax_rate=product.tax_rate,
+                    tax_name=product.tax_name,
+                    product=product,
+                )
+
+        if len(restricted_products) > 0:
+            raise AgeRestrictionException(restricted_products)
+
+        return list(line_items_by_product.values())
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
@@ -179,61 +200,9 @@ class OrderService(DBService):
             raise NotFound(element_typ="customer", element_id=str(new_order.customer_tag_uid))
         customer_account = Account.parse_obj(customer)
 
-        line_items: list[PendingLineItem] = []
-        restricted_products = set()
-        for item in new_order.positions:
-            product_id = item.product_id
-            item_quantity = item.quantity
-            item_price = item.price
-
-            # check product cost
-            product_row = await conn.fetchrow(
-                "select "
-                "    product.*, "
-                "    tax.rate as tax_rate, "
-                "    tax.name as tax_name "
-                "from product "
-                "    left join tax on (tax.name = product.tax_name) "
-                "where product.id = $1;",
-                product_id,
-            )
-            if product_row is None:
-                raise NotFound(element_typ="product", element_id=str(product_id))
-            product = Product.parse_obj(product_row)
-            tax_rate = product_row["tax_rate"]
-            tax_name = product_row["tax_name"]
-            if product.fixed_price and item_price:
-                raise InvalidArgument("The line item price was set for a fixed price item")
-            # other case (not fixed_price and not item_price) is implicitly checked with the database constraints,
-            # pydantic constraints and previous test
-            price = product.price
-            if not product.fixed_price:
-                price = item_price
-                item_quantity = 1
-
-            if price is None or item_quantity is None:
-                raise RuntimeError("invalid internal price state, should not happen")
-
-            # check age restriction
-            restricted = await conn.fetchval(
-                "select * from product_restriction r join product p on r.id = p.id where r.restriction = $1",
-                customer["restriction"],
-            )
-            if restricted:
-                restricted_products.add(product_id)
-
-            line_items.append(
-                PendingLineItem(
-                    quantity=item_quantity,
-                    price=price,
-                    tax_rate=tax_rate,
-                    tax_name=tax_name,
-                    product=product,
-                )
-            )
-
-        if len(restricted_products) > 0:
-            raise AgeRestrictionException(restricted_products)
+        line_items = await self._preprocess_order_positions(
+            conn=conn, customer_restrictions=customer_account.restriction, positions=new_order.positions
+        )
 
         order = PendingOrder(
             order_type=new_order.order_type,
@@ -253,7 +222,7 @@ class OrderService(DBService):
                     raise NotEnoughVouchersException(available_vouchers=customer_account.vouchers)
                 vouchers_to_use = new_order.used_vouchers
             discount_product = await self._fetch_discount_product(conn=conn)
-            voucher_usage = _compute_optimal_voucher_usage(
+            voucher_usage = self.voucher_service.compute_optimal_voucher_usage(
                 max_vouchers=vouchers_to_use, line_items=order.line_items, discount_product=discount_product
             )
 
@@ -456,7 +425,7 @@ class OrderService(DBService):
                 "   source_account_id => $3,"
                 "   target_account_id => $4,"
                 "   amount => $5,"
-                "   vouchers => $6)",
+                "   vouchers_amount => $6)",
                 order_id,
                 "",
                 booking_identifier.source_account_id,

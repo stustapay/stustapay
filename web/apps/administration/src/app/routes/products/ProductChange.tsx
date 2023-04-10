@@ -1,14 +1,25 @@
-import { Paper, TextField, Button, LinearProgress, Typography, FormControlLabel, Checkbox } from "@mui/material";
+import {
+  Paper,
+  TextField,
+  Button,
+  LinearProgress,
+  Typography,
+  FormControlLabel,
+  Checkbox,
+  InputAdornment,
+} from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
-import { NewProduct } from "../../../models/product";
+import { NewProduct } from "@models";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { TaxRateSelect } from "./TaxRateSelect";
-import { NumericInput } from "../../../components/NumericInput";
+import { NumericInput } from "@components";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
+import { RestrictionSelect } from "./RestrictionSelect";
+import { useCurrencySymbol } from "@hooks";
 
 export interface ProductChangeProps<T extends NewProduct> {
   headerTitle: string;
@@ -27,6 +38,7 @@ export function ProductChange<T extends NewProduct>({
 }: ProductChangeProps<T>) {
   const navigate = useNavigate();
   const { t } = useTranslation(["products", "common"]);
+  const currencySymbol = useCurrencySymbol();
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
     setSubmitting(true);
 
@@ -67,10 +79,25 @@ export function ProductChange<T extends NewProduct>({
             />
 
             <FormControlLabel
+              label={t("isReturnable")}
+              control={
+                <Checkbox
+                  checked={values.is_returnable}
+                  disabled={values.is_locked}
+                  onChange={(evt) => {
+                    const checked = evt.target.checked;
+                    setFieldValue("is_returnable", checked);
+                  }}
+                />
+              }
+            />
+
+            <FormControlLabel
               label={t("fixedPrice")}
               control={
                 <Checkbox
                   checked={values.fixed_price}
+                  disabled={values.is_locked}
                   onChange={(evt) => {
                     const checked = evt.target.checked;
                     setFieldValue("fixed_price", checked);
@@ -90,6 +117,8 @@ export function ProductChange<T extends NewProduct>({
                   fullWidth
                   name="price"
                   label={t("productPrice")}
+                  disabled={values.is_locked}
+                  InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
                   error={touched.price && !!errors.price}
                   helperText={(touched.price && errors.price) as string}
                   onChange={(value) => setFieldValue("price", value)}
@@ -101,6 +130,7 @@ export function ProductChange<T extends NewProduct>({
                   fullWidth
                   name="price_in_vouchers"
                   label={t("productPriceInVouchers")}
+                  disabled={values.is_locked}
                   error={touched.price_in_vouchers && !!errors.price_in_vouchers}
                   helperText={(touched.price_in_vouchers && errors.price_in_vouchers) as string}
                   onChange={(value) => setFieldValue("price_in_vouchers", value)}
@@ -114,10 +144,22 @@ export function ProductChange<T extends NewProduct>({
               margin="normal"
               variant="standard"
               label={t("taxRate")}
+              disabled={values.is_locked}
               error={touched.tax_name && !!errors.tax_name}
               helperText={(touched.tax_name && errors.tax_name) as string}
               onChange={(value) => setFieldValue("tax_name", value)}
               value={values.tax_name}
+            />
+
+            <RestrictionSelect
+              label={t("productRestrictions")}
+              margin="normal"
+              variant="standard"
+              value={values.restrictions}
+              disabled={values.is_locked}
+              onChange={(value) => setFieldValue("restrictions", value)}
+              error={touched.restrictions && !!errors.restrictions}
+              helperText={(touched.restrictions && errors.restrictions) as string}
             />
 
             {isSubmitting && <LinearProgress />}

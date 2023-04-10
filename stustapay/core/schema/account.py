@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from stustapay.core.schema.order import OrderType
-from stustapay.core.schema.product import Product
+from stustapay.core.schema.product import Product, ProductRestriction
 
 # Global Account IDs for virtual accounts
 # The virtual accounts are all fixed in the database
@@ -46,9 +46,12 @@ def get_target_account(order_type: OrderType, product: Product, customer_account
 
 class Account(BaseModel):
     id: int
-    user_tag_uid: Optional[int]
     type: AccountType
     name: Optional[str]
     comment: Optional[str]
     balance: float
     vouchers: int
+
+    # metadata relevant to a tag
+    user_tag_uid: Optional[int]
+    restriction: Optional[ProductRestriction]

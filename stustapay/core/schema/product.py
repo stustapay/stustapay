@@ -1,8 +1,15 @@
+import enum
 from typing import Optional
 
 from pydantic import BaseModel
 
+
 DISCOUNT_PRODUCT_ID = 1
+
+
+class ProductRestriction(enum.Enum):
+    under_16 = "under_16"
+    under_18 = "under_18"
 
 
 class NewProduct(BaseModel):
@@ -11,6 +18,10 @@ class NewProduct(BaseModel):
     fixed_price: bool = True
     price_in_vouchers: Optional[int] = None
     tax_name: str
+    restrictions: list[ProductRestriction] = []
+    is_locked: bool = False
+    is_returnable: bool = False
+
     target_account_id: Optional[int] = None
 
     @property
@@ -23,3 +34,4 @@ class NewProduct(BaseModel):
 
 class Product(NewProduct):
     id: int
+    tax_rate: float

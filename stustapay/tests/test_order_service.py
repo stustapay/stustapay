@@ -24,15 +24,28 @@ class OrderLogicTest(BaseTestCase):
             auth_service=self.auth_service,
         )
 
-        self.product = await self.product_service.create_product(
+        self.beer_product = await self.product_service.create_product(
             token=self.admin_token,
             product=NewProduct(
-                name="Test Product",
+                name="Helles 0,5l",
                 price=3,
                 fixed_price=True,
                 tax_name="ust",
                 target_account_id=None,
                 price_in_vouchers=1,
+                is_locked=True,
+            ),
+        )
+        self.deposit_product = await self.product_service.create_product(
+            token=self.admin_token,
+            product=NewProduct(
+                name="Pfand",
+                price=2,
+                fixed_price=True,
+                tax_name="none",
+                target_account_id=None,
+                is_locked=True,
+                is_returnable=True,
             ),
         )
         self.topup_product = await self.product_service.create_product(
@@ -94,7 +107,7 @@ class OrderLogicTest(BaseTestCase):
 
     async def test_basic_order_flow(self):
         new_order = NewOrder(
-            positions=[NewLineItem(product_id=self.product.id, quantity=2)],
+            positions=[NewLineItem(product_id=self.beer_product.id, quantity=2)],
             order_type=OrderType.sale,
             customer_tag_uid=self.customer_uid,
         )
@@ -106,7 +119,51 @@ class OrderLogicTest(BaseTestCase):
         self.assertEqual(pending_order.item_count, 1)
         self.assertEqual(len(pending_order.line_items), 1)
         self.assertEqual(pending_order.line_items[0].quantity, 2)
-        self.assertEqual(pending_order.total_price, 2 * self.product.price)
+        self.assertEqual(pending_order.total_price, 2 * self.beer_product.price)
+        self.assertEqual(pending_order.new_balance, START_BALANCE - pending_order.total_price)
+        completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)
+        self.assertIsNotNone(completed_order)
+
+    async def test_basic_order_flow_with_deposit(self):
+        new_order = NewOrder(
+            positions=[
+                NewLineItem(product_id=self.beer_product.id, quantity=1),
+                NewLineItem(product_id=self.beer_product.id, quantity=1),
+                NewLineItem(product_id=self.deposit_product.id, quantity=1),
+                NewLineItem(product_id=self.deposit_product.id, quantity=1),
+                NewLineItem(product_id=self.deposit_product.id, quantity=-1),
+            ],
+            order_type=OrderType.sale,
+            customer_tag_uid=self.customer_uid,
+        )
+        pending_order = await self.order_service.check_order(
+            token=self.terminal_token,
+            new_order=new_order,
+        )
+        self.assertEqual(pending_order.old_balance, START_BALANCE)
+        # our initial order gets aggregated into one line item for beer and one for deposit
+        self.assertEqual(len(pending_order.line_items), 2)
+        self.assertEqual(pending_order.total_price, 2 * self.beer_product.price + self.deposit_product.price)
+        self.assertEqual(pending_order.new_balance, START_BALANCE - pending_order.total_price)
+        completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)
+        self.assertIsNotNone(completed_order)
+
+    async def test_basic_order_flow_with_only_deposit_return(self):
+        new_order = NewOrder(
+            positions=[
+                NewLineItem(product_id=self.deposit_product.id, quantity=-3),
+            ],
+            order_type=OrderType.sale,
+            customer_tag_uid=self.customer_uid,
+        )
+        pending_order = await self.order_service.check_order(
+            token=self.terminal_token,
+            new_order=new_order,
+        )
+        self.assertEqual(pending_order.old_balance, START_BALANCE)
+        # our initial order gets aggregated into one line item for beer and one for deposit
+        self.assertEqual(len(pending_order.line_items), 1)
+        self.assertEqual(pending_order.total_price, -3 * self.deposit_product.price)
         self.assertEqual(pending_order.new_balance, START_BALANCE - pending_order.total_price)
         completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)
         self.assertIsNotNone(completed_order)
@@ -120,7 +177,7 @@ class OrderLogicTest(BaseTestCase):
             3,
         )
         new_order = NewOrder(
-            positions=[NewLineItem(product_id=self.product.id, quantity=3)],
+            positions=[NewLineItem(product_id=self.beer_product.id, quantity=3)],
             order_type=OrderType.sale,
             customer_tag_uid=customer_uid,
         )
@@ -138,7 +195,7 @@ class OrderLogicTest(BaseTestCase):
     async def test_basic_order_flow_with_uuid(self):
         uid = uuid.uuid4()
         new_order = NewOrder(
-            positions=[NewLineItem(product_id=self.product.id, quantity=2)],
+            positions=[NewLineItem(product_id=self.beer_product.id, quantity=2)],
             order_type=OrderType.sale,
             customer_tag_uid=self.customer_uid,
             uuid=uid,
@@ -155,7 +212,7 @@ class OrderLogicTest(BaseTestCase):
             3,
         )
         new_order = NewOrder(
-            positions=[NewLineItem(product_id=self.product.id, quantity=3)],
+            positions=[NewLineItem(product_id=self.beer_product.id, quantity=3)],
             order_type=OrderType.sale,
             customer_tag_uid=customer_uid,
             used_vouchers=4,
