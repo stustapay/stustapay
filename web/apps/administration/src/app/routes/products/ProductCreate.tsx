@@ -12,6 +12,7 @@ const initialValues: NewProduct = {
   price_in_vouchers: 0,
   restrictions: [],
   is_locked: false,
+  is_returnable: false,
 };
 
 export const ProductCreate: React.FC = () => {

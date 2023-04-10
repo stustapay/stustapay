@@ -91,6 +91,11 @@ export const ProductList: React.FC = () => {
       type: "boolean",
     },
     {
+      field: "is_returnable",
+      headerName: t("isReturnable") as string,
+      type: "boolean",
+    },
+    {
       field: "fixed_price",
       headerName: t("isFixedPrice") as string,
       type: "boolean",

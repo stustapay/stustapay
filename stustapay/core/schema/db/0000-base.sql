@@ -274,6 +274,9 @@ create table if not exists product (
     -- whether the core metadata of this product (price, price_in_vouchers, fixed_price, tax_name and target_account_id) is editable
     is_locked bool not null default false,
 
+    -- whether or not this product
+    is_returnable bool not null default false,
+
     -- if target account is set, the product is booked to this specific account,
     -- e.g. for the deposit account, or a specific exit account (for beer, ...)
     target_account_id int references account(id) on delete restrict,
@@ -424,12 +427,12 @@ create table if not exists ordr (
 create table if not exists line_item (
     order_id bigint not null references ordr(id) on delete cascade,
     item_id int not null,
-    primary key(order_id, item_id),
+    primary key (order_id, item_id),
 
     product_id int not null references product(id) on delete restrict,
 
     quantity int not null default 1,
-    constraint quantity_positive check ( quantity > 0 ),
+    constraint quantity_not_zero check ( quantity != 0 ),
 
     -- price with tax
     price numeric not null,
@@ -437,6 +440,8 @@ create table if not exists line_item (
     -- tax amount
     tax_name text,
     tax_rate numeric
+    -- TODO: constrain that we can only reference locked products
+    -- TODO: constrain that only returnable products lead to a non zero quantity here
 );
 
 create or replace function order_updated() returns trigger as

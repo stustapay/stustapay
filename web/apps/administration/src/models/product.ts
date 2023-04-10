@@ -13,6 +13,7 @@ export const NewProductSchema = z.object({
   price_in_vouchers: z.number().nullable(),
   restrictions: z.array(ProductRestrictionSchema),
   is_locked: z.boolean(),
+  is_returnable: z.boolean(),
   tax_name: z.string().min(1),
 });
 export type NewProduct = z.infer<typeof NewProductSchema>;

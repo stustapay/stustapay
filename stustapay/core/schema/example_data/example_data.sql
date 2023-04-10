@@ -60,30 +60,29 @@ values
 
 
 insert into product (
-    id, name, price, fixed_price, target_account_id, tax_name
+    id, name, price, fixed_price, target_account_id, tax_name, is_returnable
 )
 values
     -- Special Product: id 0-99
     -- Pfand
-    (10, 'Pfand', 2.00, true, 2, 'none'),
-    (11, 'Pfand zurück', -2.00, true, 2, 'none'),
+    (10, 'Pfand', 2.00, true, 2, 'none', true),
     -- Top Up
-    (12, 'Aufladen', null, false, null, 'none'),
-    (13, 'Auszahlen', null, false, null, 'none'),
+    (12, 'Aufladen', null, false, null, 'none', false),
+    (13, 'Auszahlen', null, false, null, 'none', false),
 
     -- Getränke
-    (100, 'Helles 1.0l', 5.00, true, null, 'ust'),
-    (101, 'Helles 0.5l', 3.00, true, null, 'ust'),
-    (102, 'Weißbier 1.0l', 5.00, true, null, 'ust'),
-    (103, 'Weißbier 0.5l', 3.00, true, null, 'ust'),
-    (104, 'Radler 1.0l', 5.00, true, null, 'ust'),
-    (105, 'Radler 0.5l', 3.00, true, null, 'ust'),
-    (106, 'Russ 1.0l', 5.00, true, null, 'ust'),
-    (107, 'Russ 0.5l', 3.00, true, null, 'ust'),
-    (108, 'Limonade 1.0l', 2.00, true, null, 'ust'),
-    (109, 'Whisky 1.0l', 20.00, true, null, 'ust'),
+    (100, 'Helles 1.0l', 5.00, true, null, 'ust', false),
+    (101, 'Helles 0.5l', 3.00, true, null, 'ust', false),
+    (102, 'Weißbier 1.0l', 5.00, true, null, 'ust', false),
+    (103, 'Weißbier 0.5l', 3.00, true, null, 'ust', false),
+    (104, 'Radler 1.0l', 5.00, true, null, 'ust', false),
+    (105, 'Radler 0.5l', 3.00, true, null, 'ust', false),
+    (106, 'Russ 1.0l', 5.00, true, null, 'ust', false),
+    (107, 'Russ 0.5l', 3.00, true, null, 'ust', false),
+    (108, 'Limonade 1.0l', 2.00, true, null, 'ust', false),
+    (109, 'Whisky 1.0l', 20.00, true, null, 'ust', false),
     -- Essen
-    (150, 'Weißwurst', 2.00, true, null, 'eust')
+    (150, 'Weißwurst', 2.00, true, null, 'eust', false)
     on conflict do nothing;
 select setval('product_id_seq', 200);
 

@@ -20,6 +20,7 @@ class NewProduct(BaseModel):
     tax_name: str
     restrictions: list[ProductRestriction] = []
     is_locked: bool = False
+    is_returnable: bool = False
 
     target_account_id: Optional[int] = None
 

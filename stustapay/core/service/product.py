@@ -11,7 +11,7 @@ from stustapay.core.service.common.decorators import with_db_transaction, requir
 from stustapay.core.service.common.error import ServiceException
 
 
-class ProductNotEditableException(ServiceException):
+class ProductIsLockedException(ServiceException):
     id = "ProductNotEditable"
     description = "The product has been marked as not editable, its core metadata is therefore fixed"
 
@@ -32,8 +32,9 @@ class ProductService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def create_product(self, *, conn: asyncpg.Connection, product: NewProduct) -> Product:
         product_id = await conn.fetchval(
-            "insert into product (name, price, tax_name, target_account_id, fixed_price, price_in_vouchers, is_locked) "
-            "values ($1, $2, $3, $4, $5, $6, $7) "
+            "insert into product "
+            "(name, price, tax_name, target_account_id, fixed_price, price_in_vouchers, is_locked, is_returnable) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8) "
             "returning id",
             product.name,
             product.price,
@@ -42,6 +43,7 @@ class ProductService(DBService):
             product.fixed_price,
             product.price_in_vouchers,
             product.is_locked,
+            product.is_returnable,
         )
 
         for restriction in product.restrictions:
@@ -51,7 +53,10 @@ class ProductService(DBService):
 
         if product_id is None:
             raise RuntimeError("product should have been created")
-        return await self._fetch_product(conn=conn, product_id=product_id)
+        created_product = await self._fetch_product(conn=conn, product_id=product_id)
+        if created_product is None:
+            raise RuntimeError("product should have been created")
+        return created_product
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
@@ -86,13 +91,14 @@ class ProductService(DBService):
                     current_product.tax_name != product.tax_name,
                     current_product.restrictions != product.restrictions,
                     current_product.is_locked != product.is_locked,
+                    current_product.is_returnable != product.is_returnable,
                 ]
             ):
-                raise ProductNotEditableException()
+                raise ProductIsLockedException()
 
         row = await conn.fetchrow(
             "update product set name = $2, price = $3, tax_name = $4, target_account_id = $5, fixed_price = $6, "
-            "price_in_vouchers = $7, is_locked = $8 "
+            "price_in_vouchers = $7, is_locked = $8, is_returnable = $9 "
             "where id = $1 "
             "returning id",
             product_id,
@@ -103,6 +109,7 @@ class ProductService(DBService):
             product.fixed_price,
             product.price_in_vouchers,
             product.is_locked,
+            product.is_returnable,
         )
         if row is None:
             raise RuntimeError("product disappeared unexpecteldy within a transaction")

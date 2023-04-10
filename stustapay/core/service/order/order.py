@@ -23,8 +23,9 @@ from stustapay.core.schema.order import (
     OrderType,
     PendingOrder,
     PendingLineItem,
+    NewLineItem,
 )
-from stustapay.core.schema.product import Product, DISCOUNT_PRODUCT_ID
+from stustapay.core.schema.product import Product, DISCOUNT_PRODUCT_ID, ProductRestriction
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.auth import AuthService
@@ -125,6 +126,65 @@ class OrderService(DBService):
             raise RuntimeError("now discount product found in database")
         return product
 
+    async def _preprocess_order_positions(
+        self,
+        *,
+        conn: asyncpg.Connection,
+        customer_restrictions: Optional[ProductRestriction],
+        positions: list[NewLineItem],
+    ) -> list[PendingLineItem]:
+        # we preprocess positions in a new order to group the resulting line items
+        # by product and aggregate their quantity
+        line_items_by_product: dict[int, PendingLineItem] = {}
+        restricted_products = set()
+        for item in positions:
+            product_id = item.product_id
+            item_quantity = item.quantity
+            item_price = item.price
+
+            if product_id in line_items_by_product:
+                current_line_item = line_items_by_product[product_id]
+                if not current_line_item.product.fixed_price:
+                    raise InvalidArgument("Cannot book the same product with different prices")
+
+                if item_quantity is None:
+                    raise RuntimeError("invalid internal line item state, should not happen")
+
+                current_line_item.quantity += item_quantity
+            else:
+                # check product cost
+                product = await self._fetch_product(conn=conn, product_id=product_id)
+                if product is None:
+                    raise NotFound(element_typ="product", element_id=str(product_id))
+                if product.fixed_price and item_price:
+                    raise InvalidArgument("The line item price was set for a fixed price item")
+                # other case (not fixed_price and not item_price) is implicitly checked with the database constraints,
+                # pydantic constraints and previous test
+                price = product.price
+                if not product.fixed_price:
+                    price = item_price
+                    item_quantity = 1
+
+                if price is None or item_quantity is None:
+                    raise RuntimeError("invalid internal price state, should not happen")
+
+                # check age restriction
+                if customer_restrictions is not None and customer_restrictions in product.restrictions:
+                    restricted_products.add(product_id)
+
+                line_items_by_product[product_id] = PendingLineItem(
+                    quantity=item_quantity,
+                    price=price,
+                    tax_rate=product.tax_rate,
+                    tax_name=product.tax_name,
+                    product=product,
+                )
+
+        if len(restricted_products) > 0:
+            raise AgeRestrictionException(restricted_products)
+
+        return list(line_items_by_product.values())
+
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
     async def check_order(self, *, conn: asyncpg.Connection, new_order: NewOrder) -> PendingOrder:
@@ -140,46 +200,9 @@ class OrderService(DBService):
             raise NotFound(element_typ="customer", element_id=str(new_order.customer_tag_uid))
         customer_account = Account.parse_obj(customer)
 
-        line_items: list[PendingLineItem] = []
-        restricted_products = set()
-        for item in new_order.positions:
-            product_id = item.product_id
-            item_quantity = item.quantity
-            item_price = item.price
-
-            # check product cost
-            product = await self._fetch_product(conn=conn, product_id=product_id)
-            if product is None:
-                raise NotFound(element_typ="product", element_id=str(product_id))
-            if product.fixed_price and item_price:
-                raise InvalidArgument("The line item price was set for a fixed price item")
-            # other case (not fixed_price and not item_price) is implicitly checked with the database constraints,
-            # pydantic constraints and previous test
-            price = product.price
-            if not product.fixed_price:
-                price = item_price
-                item_quantity = 1
-
-            if price is None or item_quantity is None:
-                raise RuntimeError("invalid internal price state, should not happen")
-
-            # check age restriction
-            product_restrictions_set = set(x.name for x in product.restrictions)
-            if customer["restriction"] is not None and customer["restriction"] in product_restrictions_set:
-                restricted_products.add(product_id)
-
-            line_items.append(
-                PendingLineItem(
-                    quantity=item_quantity,
-                    price=price,
-                    tax_rate=product.tax_rate,
-                    tax_name=product.tax_name,
-                    product=product,
-                )
-            )
-
-        if len(restricted_products) > 0:
-            raise AgeRestrictionException(restricted_products)
+        line_items = await self._preprocess_order_positions(
+            conn=conn, customer_restrictions=customer_account.restriction, positions=new_order.positions
+        )
 
         order = PendingOrder(
             order_type=new_order.order_type,

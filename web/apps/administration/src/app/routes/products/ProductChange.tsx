@@ -79,6 +79,20 @@ export function ProductChange<T extends NewProduct>({
             />
 
             <FormControlLabel
+              label={t("isReturnable")}
+              control={
+                <Checkbox
+                  checked={values.is_returnable}
+                  disabled={values.is_locked}
+                  onChange={(evt) => {
+                    const checked = evt.target.checked;
+                    setFieldValue("is_returnable", checked);
+                  }}
+                />
+              }
+            />
+
+            <FormControlLabel
               label={t("fixedPrice")}
               control={
                 <Checkbox
