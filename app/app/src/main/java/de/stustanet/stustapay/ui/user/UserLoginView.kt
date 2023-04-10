@@ -49,11 +49,11 @@ fun UserLoginView(
 
         NfcScanDialog(
             scanState,
-            onScan = { uid ->
+            onScan = { tag ->
                 when (target) {
                     ScanTarget.Login -> {
                         scope.launch {
-                            viewModel.login(uid)
+                            viewModel.login(tag)
                         }
                     }
                 }

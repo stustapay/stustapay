@@ -16,7 +16,7 @@ class NfcScanDialogViewModel @Inject constructor(
 ) : ViewModel() {
     private val _scanResult = MutableStateFlow<NfcScanDialogResult>(NfcScanDialogResult.None)
 
-    val uiState: StateFlow<NfcScanDialogUiState> = _scanResult.map { scanResult ->
+    val scanResult: StateFlow<NfcScanDialogUiState> = _scanResult.map { scanResult ->
         NfcScanDialogUiState(scanResult)
     }.stateIn(
         scope = viewModelScope,

@@ -137,7 +137,7 @@ class OrderViewModel @Inject constructor(
         navState.emit(OrderPage.ProductSelect)
     }
 
-    suspend fun submitOrder(uid: ULong) {
+    suspend fun submitOrder(tag: UserTag) {
         // transform buttons to products
         var positions = mutableMapOf<Int, Int>()
         for (selection in order.value.buttonSelections) {
@@ -153,7 +153,7 @@ class OrderViewModel @Inject constructor(
                     NewLineItem(product_id = it.key, quantity = it.value)
                 },
                 order_type = OrderType.sale,
-                customer_tag = uid,
+                customer_tag = tag.uid,
             )
         )
 

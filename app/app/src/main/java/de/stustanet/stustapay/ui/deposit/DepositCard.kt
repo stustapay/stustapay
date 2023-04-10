@@ -4,16 +4,26 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 
 @Composable
-fun DepositCard(goToMethod: () -> Unit, goToSuccess: () -> Unit, goToFailure: () -> Unit, viewModel: DepositViewModel) {
+fun DepositCard(
+    goToMethod: () -> Unit,
+    goToSuccess: () -> Unit,
+    goToFailure: () -> Unit,
+    viewModel: DepositViewModel
+) {
+    val depositState by viewModel.depositState.collectAsStateWithLifecycle()
+
     val haptic = LocalHapticFeedback.current
     val scanState = rememberNfcScanDialogState()
 
@@ -26,9 +36,10 @@ fun DepositCard(goToMethod: () -> Unit, goToSuccess: () -> Unit, goToFailure: ()
     Scaffold(
         content = {
             Box(
-                Modifier
+                modifier = Modifier
                     .fillMaxSize()
-                    .padding(it))
+                    .padding(it)
+            )
         },
         bottomBar = {
             Button(

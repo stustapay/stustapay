@@ -113,14 +113,17 @@ suspend fun <T> Flow<T>.waitFor(predicate: (T) -> Boolean): T {
  * transform a stateflow into another stateflow,
  * since the initial value transformation would suspend,
  * you need to provide the initial value of the new flow manually.
+ *
+ * started: defines when sharing is done, e.g. SharingStarted.Eagerly
  */
 fun <T, K> StateFlow<T>.mapState(
     initialValue: K,
     scope: CoroutineScope,
+    started: SharingStarted = SharingStarted.WhileSubscribed(5_000),
     transform: suspend (T) -> K
 ): StateFlow<K> {
     return mapLatest {
         transform(it)
     }
-        .stateIn(scope, SharingStarted.Eagerly, initialValue)
+        .stateIn(scope, started, initialValue)
 }

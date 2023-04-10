@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.Access
 import de.stustanet.stustapay.model.UserState
+import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.repository.UserRepository
 import de.stustanet.stustapay.util.Result
 import de.stustanet.stustapay.util.asResult
@@ -47,8 +48,8 @@ class UserViewModel @Inject constructor(
         userRepository.fetchLogin()
     }
 
-    suspend fun login(uid: ULong) {
-        userRepository.login(uid)
+    suspend fun login(tag: UserTag) {
+        userRepository.login(tag)
     }
 
     suspend fun logout() {

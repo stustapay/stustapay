@@ -19,7 +19,7 @@ fun DebugNavView(nav: NavHostController) {
         Button(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             onClick = {
-                nav.navigateTo("net")
+                nav.navigateTo(DevelopNavDest.net.route)
             }
         ) {
             Text( "Network", fontSize = 24.sp)
@@ -28,7 +28,7 @@ fun DebugNavView(nav: NavHostController) {
         Button(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             onClick = {
-                nav.navigateTo("nfc")
+                nav.navigateTo(DevelopNavDest.nfc.route)
             }
         ) {
             Text( "NFC", fontSize = 24.sp)
@@ -37,10 +37,19 @@ fun DebugNavView(nav: NavHostController) {
         Button(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             onClick = {
-                nav.navigateTo("qr")
+                nav.navigateTo(DevelopNavDest.qr.route)
             }
         ) {
             Text( "QR Scan", fontSize = 24.sp)
+        }
+
+        Button(
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            onClick = {
+                nav.navigateTo(DevelopNavDest.ec.route)
+            }
+        ) {
+            Text( "EC Payment", fontSize = 24.sp)
         }
     }
 }

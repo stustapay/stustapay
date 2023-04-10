@@ -11,30 +11,37 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
-fun DepositFailure(goToMain: () -> Unit, viewModel: DepositViewModel) {
+fun DepositFailure(
+    onDismiss: () -> Unit,
+    viewModel: DepositViewModel,
+    content: @Composable () -> Unit
+) {
     val haptic = LocalHapticFeedback.current
 
     Scaffold(
         content = {
             Box(
-                modifier = Modifier.fillMaxSize().padding(bottom = it.calculateBottomPadding()),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = it.calculateBottomPadding()),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "transaction failed", fontSize = 48.sp)
+                content()
             }
         },
         bottomBar = {
             Button(
                 onClick = {
                     viewModel.clear()
-                    goToMain()
+                    onDismiss()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
-                modifier = Modifier.fillMaxWidth().height(70.dp).padding(10.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(70.dp)
+                    .padding(10.dp)
             ) {
                 Text(text = "Next")
             }

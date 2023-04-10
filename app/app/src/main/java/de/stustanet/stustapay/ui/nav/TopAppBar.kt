@@ -23,14 +23,13 @@ class TopAppBarIcon(
 fun TopAppBar(
     title: @Composable () -> Unit,
     icon: TopAppBarIcon? = null,
-    onTopLeftIconClick: () -> Unit = {}
 ) {
     MaterialTopAppBar(
         title = title,
         navigationIcon = if (icon != null) {
             {
                 IconButton(onClick = {
-                    onTopLeftIconClick()
+                    icon.onClick()
                 }) {
                     when (icon.type) {
                         TopAppBarIcon.Type.MENU -> {

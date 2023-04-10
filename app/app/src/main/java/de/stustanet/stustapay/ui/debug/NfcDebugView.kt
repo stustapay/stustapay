@@ -29,7 +29,7 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
-    NfcScanDialog(scanState, onScan = { scanViewUid = it })
+    NfcScanDialog(scanState, onScan = { scanViewUid = it.uid })
 
     if (state.isScanning()) {
         Dialog(

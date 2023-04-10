@@ -14,10 +14,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
+import de.stustanet.stustapay.ec.SumUp
 import de.stustanet.stustapay.nfc.NfcHandler
-import de.stustanet.stustapay.repository.SumUpRepository
-import de.stustanet.stustapay.repository.ecPaymentActivityCallbackId
 import de.stustanet.stustapay.ui.Main
+import de.stustanet.stustapay.util.ActivityCallback
 import de.stustanet.stustapay.util.SysUiController
 import javax.inject.Inject
 
@@ -25,10 +25,13 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), SysUiController {
     @Inject
-    lateinit var sumUpRepository : SumUpRepository
+    lateinit var activityCallback: ActivityCallback
 
     @Inject
     lateinit var nfcHandler: NfcHandler
+
+    @Inject
+    lateinit var sumUp: SumUp
 
     val viewModel: MainActivityViewModel by viewModels()
 
@@ -40,9 +43,7 @@ class MainActivity : ComponentActivity(), SysUiController {
 
         // things that need the activity
         nfcHandler.onCreate(this)
-
-        sumUpRepository = SumUpRepository()
-        sumUpRepository.init(this)
+        sumUp.init(activityCallback)
 
         setContent {
             Main(this)
@@ -77,12 +78,10 @@ class MainActivity : ComponentActivity(), SysUiController {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data);
-        when (requestCode) {
-            ecPaymentActivityCallbackId -> {
-                sumUpRepository.paymentResult(resultCode, data!!.extras)
-            }
-        }
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+
+        activityCallback.activityResult(requestCode, resultCode, data)
     }
 
     override fun onAttachedToWindow() {
