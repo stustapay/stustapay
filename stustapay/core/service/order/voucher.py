@@ -44,7 +44,7 @@ class VoucherService(DBService):
                     product=discount_product,
                     tax_rate=current_line_item.tax_rate,
                     tax_name=current_line_item.tax_name,
-                    price=-current_line_item.price,
+                    product_price=-current_line_item.product_price,
                     quantity=vouchers_for_product,
                 )
             )

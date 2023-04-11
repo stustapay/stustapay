@@ -21,14 +21,14 @@ class NewLineItem(BaseModel):
     # for products with a fixed price, the quantity must be specified
     # for products with variable price the used price must be set
     quantity: Optional[int] = None
-    price: Optional[float] = None
+    product_price: Optional[float] = None
 
     # check for new Items if either quantity or price is set
     @root_validator
     def check_quantity_or_price_set(cls, values):  # pylint: disable=no-self-argument
-        quantity, price = values.get("quantity"), values.get("price")
-        if (quantity is None) == (price is None):
-            raise ValueError("either price or quantity must be set")
+        quantity, product_price = values.get("quantity"), values.get("product_price")
+        if (quantity is None) == (product_price is None):
+            raise ValueError("either product_price or quantity must be set")
         return values
 
 
@@ -43,13 +43,14 @@ class NewOrder(BaseModel):
 class PendingLineItem(BaseModel):
     quantity: int
     product: Product
-    price: float
+    # the following members are also in Product, but maybe they were updated in the meantime
+    product_price: float
     tax_name: str
     tax_rate: float
 
     @property
     def total_price(self) -> float:
-        return self.price * self.quantity
+        return self.product_price * self.quantity
 
 
 class PendingOrder(BaseModel):

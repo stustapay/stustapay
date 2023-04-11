@@ -61,7 +61,11 @@ class OrderLogicTest(BaseTestCase):
         cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
         self.cashier = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
-                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag_uid=cashier_tag_uid
+                login="test_cashier",
+                description="",
+                privileges=[Privilege.cashier],
+                user_tag_uid=cashier_tag_uid,
+                display_name="Test Cashier",
             )
         )
         self.till_layout = await self.till_service.layout.create_layout(
@@ -123,6 +127,8 @@ class OrderLogicTest(BaseTestCase):
         self.assertEqual(pending_order.new_balance, START_BALANCE - pending_order.total_price)
         completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)
         self.assertIsNotNone(completed_order)
+        order = await self.order_service.get_order(token=self.admin_token, order_id=completed_order.id)
+        self.assertIsNotNone(order)
 
     async def test_basic_order_flow_with_deposit(self):
         new_order = NewOrder(
@@ -232,7 +238,7 @@ class OrderLogicTest(BaseTestCase):
 
     async def test_topup_cash_order_flow(self):
         new_order = NewOrder(
-            positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
+            positions=[NewLineItem(product_id=self.topup_product.id, product_price=20)],
             order_type=OrderType.topup_cash,
             customer_tag_uid=self.customer_uid,
         )
@@ -241,7 +247,7 @@ class OrderLogicTest(BaseTestCase):
         self.assertEqual(pending_order.item_count, 1)
         self.assertEqual(len(pending_order.line_items), 1)
         self.assertEqual(pending_order.line_items[0].quantity, 1)
-        self.assertEqual(pending_order.line_items[0].price, 20)
+        self.assertEqual(pending_order.line_items[0].product_price, 20)
         self.assertEqual(pending_order.total_price, 20)
         self.assertEqual(pending_order.new_balance, START_BALANCE + pending_order.total_price)
         completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)
@@ -250,7 +256,7 @@ class OrderLogicTest(BaseTestCase):
 
     async def test_topup_sumup_order_flow(self):
         new_order = NewOrder(
-            positions=[NewLineItem(product_id=self.topup_product.id, price=20)],
+            positions=[NewLineItem(product_id=self.topup_product.id, product_price=20)],
             order_type=OrderType.topup_sumup,
             customer_tag_uid=self.customer_uid,
         )
@@ -260,7 +266,7 @@ class OrderLogicTest(BaseTestCase):
         )
         self.assertEqual(pending_order.old_balance, START_BALANCE)
         self.assertEqual(pending_order.line_items[0].quantity, 1)
-        self.assertEqual(pending_order.line_items[0].price, 20)
+        self.assertEqual(pending_order.line_items[0].product_price, 20)
         self.assertEqual(pending_order.total_price, 20)
         self.assertEqual(pending_order.new_balance, START_BALANCE + pending_order.total_price)
         completed_order = await self.order_service.book_order(token=self.terminal_token, new_order=new_order)

@@ -140,7 +140,7 @@ class OrderService(DBService):
         for item in positions:
             product_id = item.product_id
             item_quantity = item.quantity
-            item_price = item.price
+            item_price = item.product_price
 
             if product_id in line_items_by_product:
                 current_line_item = line_items_by_product[product_id]
@@ -174,7 +174,7 @@ class OrderService(DBService):
 
                 line_items_by_product[product_id] = PendingLineItem(
                     quantity=item_quantity,
-                    price=price,
+                    product_price=price,
                     tax_rate=product.tax_rate,
                     tax_name=product.tax_name,
                     product=product,
@@ -236,7 +236,7 @@ class OrderService(DBService):
         elif new_order.order_type == OrderType.topup_sumup or new_order.order_type == OrderType.topup_cash:
             if len(new_order.positions) != 1:
                 raise InvalidArgument("A topup Order must have exactly one position")
-            if order.line_items[0].price < 0:
+            if order.line_items[0].product_price < 0:
                 raise InvalidArgument("A topup Order must have positive price")
             order.new_balance = customer_account.balance + order.total_price
 
@@ -287,13 +287,13 @@ class OrderService(DBService):
 
         for item_id, line_item in enumerate(pending_order.line_items):
             await conn.execute(
-                "insert into line_item (order_id, item_id, product_id, quantity, price, tax_name, tax_rate) "
+                "insert into line_item (order_id, item_id, product_id, quantity, product_price, tax_name, tax_rate) "
                 "values ($1, $2, $3, $4, $5, $6, $7)",
                 order_id,
                 item_id,
                 line_item.product.id,
                 line_item.quantity,
-                line_item.price,
+                line_item.product_price,
                 line_item.tax_name,
                 line_item.tax_rate,
             )
@@ -377,7 +377,7 @@ class OrderService(DBService):
         assert cashier.cashier_account_id is not None
         assert len(order.line_items) == 1
         line_item = order.line_items[0]
-        assert line_item.price >= 0
+        assert line_item.product_price >= 0
 
         prepared_bookings: Dict[BookingIdentifier, float] = {
             BookingIdentifier(source_account_id=ACCOUNT_CASH_VAULT, target_account_id=customer_account_id): float(
@@ -400,7 +400,7 @@ class OrderService(DBService):
         assert order.order_type == OrderType.topup_sumup
         assert len(order.line_items) == 1
         line_item = order.line_items[0]
-        assert line_item.price >= 0
+        assert line_item.product_price >= 0
 
         prepared_bookings = {
             BookingIdentifier(source_account_id=ACCOUNT_SUMUP, target_account_id=customer_account_id): float(

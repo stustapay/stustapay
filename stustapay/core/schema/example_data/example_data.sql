@@ -1,3 +1,5 @@
+-- noinspection SqlInsertIntoGeneratedColumnForFile
+
 -- stustapay example data
 --
 -- Add test data to tables in the base schema
@@ -21,7 +23,7 @@ values
 
 insert into account (
     id, user_tag_uid, type, name, comment, balance
-)
+) overriding system value
 values
     -- virtual accounts are hard coded with ids 0-99
     -- internal
@@ -37,8 +39,8 @@ select setval('account_id_seq', 300);
 
 
 insert into usr (
-    id, name, password, description, transport_account_id, cashier_account_id, user_tag_uid
-)
+    id, login, password, description, transport_account_id, cashier_account_id, user_tag_uid
+) overriding system value
 values
     (0, 'test-cashier', null, 'Some Description', null, 100, 1234),
     -- password is admin
@@ -61,7 +63,7 @@ values
 
 insert into product (
     id, name, price, fixed_price, target_account_id, tax_name, is_returnable
-)
+) overriding system value
 values
     -- Special Product: id 0-99
     -- Pfand
@@ -106,7 +108,8 @@ values
 
 insert into till_button (
     id, name
-) values
+) overriding system value
+values
     (0, 'Helles 0,5l'),
     (1, 'Helles 1,0l')
     on conflict do nothing;
@@ -124,7 +127,7 @@ insert into till_button_product (
 
 insert into till_layout (
     id, name, description
-)
+) overriding system value
 values
     (0, 'Bierkasse', 'Allgemeine Bierkasse')
     on conflict do nothing;
@@ -139,7 +142,7 @@ insert into till_layout_to_button (
 
 insert into till_profile (
     id, name, description, layout_id
-)
+) overriding system value
 values
     (0, 'Pot', 'Allgemeine Pot Bierkasse', 0)
     on conflict do nothing;
@@ -147,7 +150,7 @@ select setval('till_profile_id_seq', 100);
 
 insert into till (
     id, name, description, registration_uuid, session_uuid, tse_id, active_shift, active_profile_id
-)
+) overriding system value
 values
     (0, 'Terminal 0', 'Test Terminal', null, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'tse 0', 'Shift 0', 0)
     on conflict do nothing;
@@ -157,7 +160,7 @@ select setval('till_id_seq', 100);
 insert into ordr (
     id, item_count, booked_at, payment_method, order_type,
     cashier_id, till_id, customer_account_id
-)
+) overriding system value
 values
     -- simple beer with deposit
     (0, 2, '2023-01-01 15:35:02 UTC+1', 'token', 'sale', 0, 0, 200),
@@ -170,7 +173,7 @@ select setval('ordr_id_seq', 100);
 
 
 insert into line_item (
-    order_id, item_id, product_id, quantity, price, tax_name, tax_rate
+    order_id, item_id, product_id, quantity, product_price, tax_name, tax_rate
 )
 values
     -- simple beer with deposit
@@ -186,7 +189,7 @@ values
 
 insert into transaction (
     id, order_id, description, source_account, target_account, booked_at, amount, vouchers
-)
+) overriding system value
 values
     -- simple beer with deposit
     (0, 0, null, 200, 0, '2023-01-01 15:35:01 UTC+1', 5.00, 0),

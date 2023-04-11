@@ -83,16 +83,20 @@ class BaseTestCase(TestCase):
         self.till_service = TillService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
 
         self.admin_user = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(name="test-admin-user", description="", privileges=[Privilege.admin]),
+            new_user=UserWithoutId(
+                login="test-admin-user", description="", privileges=[Privilege.admin], display_name="Admin"
+            ),
             password="asdf",
         )
-        self.admin_token = (await self.user_service.login_user(username=self.admin_user.name, password="asdf")).token
+        self.admin_token = (await self.user_service.login_user(username=self.admin_user.login, password="asdf")).token
         self.cashier_user = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(name="test-cashier-user", description="", privileges=[Privilege.cashier]),
+            new_user=UserWithoutId(
+                login="test-cashier-user", description="", privileges=[Privilege.cashier], display_name="Cashier"
+            ),
             password="asdf",
         )
         self.cashier_token = (
-            await self.user_service.login_user(username=self.cashier_user.name, password="asdf")
+            await self.user_service.login_user(username=self.cashier_user.login, password="asdf")
         ).token
 
     async def asyncTearDown(self) -> None:
