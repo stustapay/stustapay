@@ -30,7 +30,7 @@ class ZXingQRCode(
 
         val bytes = image.planes.first().buffer.toByteArray()
         val source = PlanarYUVLuminanceSource(
-            bytes, image.width, image.height,
+            bytes, image.planes.first().rowStride, image.height,
             0, 0,
             image.width, image.height,
             false
