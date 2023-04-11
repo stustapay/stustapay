@@ -38,7 +38,6 @@ class ZXingQRCode(
         val binaryBmp = BinaryBitmap(HybridBinarizer(source))
 
         try {
-            // maybe in the future use MultiFormatReader
             val result = QRCodeReader().decode(binaryBmp)
             status("found")
             scanned(result.text)
