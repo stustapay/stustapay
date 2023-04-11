@@ -10,7 +10,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.stustanet.stustapay.ui.QRScanView
+import de.stustanet.stustapay.ui.barcode.QRScanView
 import de.stustanet.stustapay.ui.nav.NavDest
 import de.stustanet.stustapay.ui.nav.NavDestinations
 import de.stustanet.stustapay.ui.nav.NavScaffold
