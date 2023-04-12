@@ -40,4 +40,6 @@ sealed interface NfcScanRequest {
         val cmac: Boolean,
         val key: BitVector
     ): NfcScanRequest
+
+    object Test: NfcScanRequest
 }

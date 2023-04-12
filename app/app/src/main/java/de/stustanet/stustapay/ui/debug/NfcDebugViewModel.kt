@@ -107,6 +107,13 @@ class NfcDebugViewModel @Inject constructor(
         }
     }
 
+    suspend fun test() {
+        when (val res = nfcRepository.test()) {
+            is NfcScanResult.Test -> _result.emit(NfcDebugScanResult.Test(res.log))
+            else -> _result.emit(NfcDebugScanResult.None)
+        }
+    }
+
     fun setAuth(enable: Boolean) {
         _enableAuth.update { enable }
     }
@@ -132,5 +139,8 @@ sealed interface NfcDebugScanResult {
     object WriteSuccess: NfcDebugScanResult
     data class Failure(
         val reason: NfcScanFailure
+    ): NfcDebugScanResult
+    data class Test(
+        val log: List<Pair<String, Boolean>>
     ): NfcDebugScanResult
 }

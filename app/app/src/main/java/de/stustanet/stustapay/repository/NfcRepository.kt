@@ -44,4 +44,8 @@ class NfcRepository @Inject constructor(
     suspend fun writeCmac(enable: Boolean, auth: Boolean, cmac: Boolean): NfcScanResult {
         return nfcDataSource.scan(NfcScanRequest.WriteCmac(enable, auth, cmac, authKey.value))
     }
+
+    suspend fun test(): NfcScanResult {
+        return nfcDataSource.scan(NfcScanRequest.Test)
+    }
 }

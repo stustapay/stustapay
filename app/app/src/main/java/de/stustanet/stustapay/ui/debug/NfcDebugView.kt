@@ -7,6 +7,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -170,7 +171,9 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                         state.stop()
                     }
                 },
-                modifier = Modifier.fillMaxWidth(0.5f).padding(end = 5.dp)
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .padding(end = 5.dp)
             ) {
                 Text("Enable Protection")
             }
@@ -182,7 +185,9 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                         state.stop()
                     }
                 },
-                modifier = Modifier.fillMaxWidth().padding(start = 5.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 5.dp)
             ) {
                 Text("Disable Protection")
             }
@@ -199,7 +204,9 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                         state.stop()
                     }
                 },
-                modifier = Modifier.fillMaxWidth(0.5f).padding(end = 5.dp)
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .padding(end = 5.dp)
             ) {
                 Text("Enable CMAC")
             }
@@ -211,10 +218,27 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                         state.stop()
                     }
                 },
-                modifier = Modifier.fillMaxWidth().padding(start = 5.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 5.dp)
             ) {
                 Text("Disable CMAC")
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                scope.launch {
+                    state.start()
+                    viewModel.test()
+                    state.stop()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Production Test")
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -243,6 +267,15 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                         is NfcScanFailure.Incompatible -> Text("Tag incompatible")
                         is NfcScanFailure.Lost -> Text("Tag lost")
                         is NfcScanFailure.Auth -> Text("Authentication failed")
+                    }
+                }
+                is NfcDebugScanResult.Test -> {
+                    for (line in (uiState.result as NfcDebugScanResult.Test).log) {
+                        if (line.second) {
+                            Text(line.first, color = Color.Green)
+                        } else {
+                            Text(line.first, color = Color.Red)
+                        }
                     }
                 }
             }

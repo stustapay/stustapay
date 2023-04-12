@@ -57,14 +57,6 @@ class NfcHandler @Inject constructor(
         val mfUlAesTag = get(tag)
 
         try {
-            mfUlAesTag.connect()
-            while (!mfUlAesTag.isConnected) {}
-        } catch (e: IOException) {
-            dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Incompatible))
-            return
-        }
-
-        try {
             handleMfUlAesTag(mfUlAesTag)
         } catch (e: TagLostException) {
             dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Lost))
@@ -81,6 +73,13 @@ class NfcHandler @Inject constructor(
         if (req != null) {
             when (req) {
                 is NfcScanRequest.Read -> {
+                    try {
+                        tag.connect()
+                        while (!tag.isConnected) {}
+                    } catch (e: IOException) {
+                        dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Incompatible))
+                        return
+                    }
                     if (!authenticate(tag, req.auth, req.cmac, req.key)) { return }
                     val chipProtected = tag.isProtected()
                     val chipUid = tag.readSerialNumber()
@@ -88,6 +87,13 @@ class NfcHandler @Inject constructor(
                     dataSource.setScanResult(NfcScanResult.Read(chipProtected, chipUid, chipContent))
                 }
                 is NfcScanRequest.ReadMultiKey -> {
+                    try {
+                        tag.connect()
+                        while (!tag.isConnected) {}
+                    } catch (e: IOException) {
+                        dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Incompatible))
+                        return
+                    }
                     for (key in req.keys) {
                         println("Try")
                         println(key)
@@ -107,6 +113,13 @@ class NfcHandler @Inject constructor(
                     dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Auth))
                 }
                 is NfcScanRequest.WriteSig -> {
+                    try {
+                        tag.connect()
+                        while (!tag.isConnected) {}
+                    } catch (e: IOException) {
+                        dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Incompatible))
+                        return
+                    }
                     if (!authenticate(tag, req.auth, req.cmac, req.key)) { return }
                     var data = "StuStaPay - built by SSN & friends!\nglhf ;)\n".toByteArray(Charset.forName("UTF-8")).asBitVector()
                     for (i in 0u until 4u) { data += 0.bv }
@@ -115,11 +128,25 @@ class NfcHandler @Inject constructor(
                     dataSource.setScanResult(NfcScanResult.Write)
                 }
                 is NfcScanRequest.WriteKey -> {
+                    try {
+                        tag.connect()
+                        while (!tag.isConnected) {}
+                    } catch (e: IOException) {
+                        dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Incompatible))
+                        return
+                    }
                     if (!authenticate(tag, req.auth, req.cmac, req.key)) { return }
                     tag.writeDataProtKey(req.key)
                     dataSource.setScanResult(NfcScanResult.Write)
                 }
                 is NfcScanRequest.WriteProtect -> {
+                    try {
+                        tag.connect()
+                        while (!tag.isConnected) {}
+                    } catch (e: IOException) {
+                        dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Incompatible))
+                        return
+                    }
                     if (!authenticate(tag, req.auth, req.cmac, req.key)) { return }
                     if (req.enable) {
                         tag.setAuth0(0x10u)
@@ -129,9 +156,21 @@ class NfcHandler @Inject constructor(
                     dataSource.setScanResult(NfcScanResult.Write)
                 }
                 is NfcScanRequest.WriteCmac -> {
+                    try {
+                        tag.connect()
+                        while (!tag.isConnected) {}
+                    } catch (e: IOException) {
+                        dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Incompatible))
+                        return
+                    }
                     if (!authenticate(tag, req.auth, req.cmac, req.key)) { return }
                     tag.setCMAC(req.enable)
                     dataSource.setScanResult(NfcScanResult.Write)
+                }
+                is NfcScanRequest.Test -> {
+                    val log: MutableList<Pair<String, Boolean>> = MutableList(0) { Pair("", true) }
+                    tag.test(log)
+                    dataSource.setScanResult(NfcScanResult.Test(log))
                 }
             }
         }

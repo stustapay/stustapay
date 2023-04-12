@@ -10,6 +10,9 @@ sealed interface NfcScanResult {
     data class Fail(
         val reason: NfcScanFailure
     ): NfcScanResult
+    data class Test(
+        val log: List<Pair<String, Boolean>>
+    ): NfcScanResult
 }
 
 sealed interface NfcScanFailure {
