@@ -118,6 +118,19 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
             Text("Full Program")
         }
 
+        Button(
+            onClick = {
+                scope.launch {
+                    state.start()
+                    viewModel.readMultiKey()
+                    state.stop()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Read Multi Key")
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
