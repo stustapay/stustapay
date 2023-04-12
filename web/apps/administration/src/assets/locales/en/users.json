@@ -1,7 +1,8 @@
 {
   "createUser": "Create User",
   "updateUser": "Update User",
-  "userName": "Name",
+  "userLogin": "Login",
+  "userDisplayName": "Display Name",
   "userPassword": "Password",
   "userDescription": "Description",
   "userPrivileges": "Privileges",

@@ -11,7 +11,8 @@ export const PrivilegeSchema = z.union([z.literal("admin"), z.literal("finanzorg
 export type Privilege = z.infer<typeof PrivilegeSchema>;
 
 export const NewUserSchema = z.object({
-  name: z.string().min(1),
+  login: z.string().min(1),
+  display_name: z.string().min(1),
   description: z.string().optional(),
   privileges: z.array(PrivilegeSchema),
   password: z.string().optional().nullable(),
@@ -24,7 +25,8 @@ export type NewUser = z.infer<typeof NewUserSchema>;
 
 export const UserSchema = z.object({
   id: z.number(),
-  name: z.string().min(1),
+  login: z.string().min(1),
+  display_name: z.string().min(1),
   description: z.string().optional(),
   privileges: z.array(PrivilegeSchema),
 });

@@ -13,7 +13,7 @@
     },
     "item": {
         "product": "Product",
-        "price": "Price",
+        "productPrice": "Product Price",
         "quantity": "Quantity",
         "totalPrice": "Total Price",
         "taxName": "Tax",
