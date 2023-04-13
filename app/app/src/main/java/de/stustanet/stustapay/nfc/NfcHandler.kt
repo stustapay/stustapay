@@ -137,6 +137,7 @@ class NfcHandler @Inject constructor(
                     }
                     if (!authenticate(tag, req.auth, req.cmac, req.key)) { return }
                     tag.writeDataProtKey(req.key)
+                    tag.writeUidRetrKey(req.key)
                     dataSource.setScanResult(NfcScanResult.Write)
                 }
                 is NfcScanRequest.WriteProtect -> {

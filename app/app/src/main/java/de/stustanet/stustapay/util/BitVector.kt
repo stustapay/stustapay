@@ -131,6 +131,34 @@ class BitVector constructor(
         return ret
     }
 
+    fun print() {
+        for (i in 0uL until len) {
+            if (this[len - 1uL - i]) {
+                print("1")
+            } else {
+                print("0")
+            }
+        }
+        println()
+    }
+
+    fun asByteString(): String {
+        var ret = ""
+        val hexChar = "0123456789abcdef"
+        for (i in 0uL until len / 8uL) {
+            val b = this.gbe(i)
+            val l = b.toInt() and 0x0f
+            val h = (b.toInt() shr 4) and 0x0f
+            ret += hexChar[h]
+            ret += hexChar[l]
+        }
+        return ret
+    }
+
+    fun printBytes() {
+        println(this.asByteString())
+    }
+
     operator fun get(i: ULong): Boolean {
         return getBit(i)
     }
@@ -197,14 +225,3 @@ val ULong.bv: BitVector
     get() {
         return this.toUByte().bv
     }
-
-fun println(bv: BitVector) {
-    for (i in 0uL until bv.len) {
-        if (bv[bv.len - 1uL - i]) {
-            print("1")
-        } else {
-            print("0")
-        }
-    }
-    println()
-}
