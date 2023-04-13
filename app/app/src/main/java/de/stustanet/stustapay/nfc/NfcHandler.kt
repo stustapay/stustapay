@@ -62,7 +62,8 @@ class NfcHandler @Inject constructor(
             dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Lost))
         } catch (e: IOException) {
             dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Lost))
-            return
+        } catch (e: AuthenticationRequiredException) {
+            dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Auth))
         }
 
         mfUlAesTag.close()
@@ -95,8 +96,6 @@ class NfcHandler @Inject constructor(
                         return
                     }
                     for (key in req.keys) {
-                        println("Try")
-                        println(key)
                         try {
                             tag.authenticate(key, MifareUltralightAES.KeyType.DATA_PROT_KEY, req.cmac)
                         } catch (e: Exception) {
