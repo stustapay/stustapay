@@ -263,11 +263,13 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     override fun connect() {
         nfcaTag.connect()
 
+        /*
         val resp = cmdGetVersion(nfcaTag)
         if (!(resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x01.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv) ||
                     resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x02.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv))) {
             throw Exception("Not a Mifare Ultralight AES chip")
         }
+        */
 
         chipState = ChipState.ACTIVE
 

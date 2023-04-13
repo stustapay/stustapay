@@ -297,7 +297,7 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
         key1 = tmp1
     }
 
-    if (verCheckSucceeded && key0AuthSucceeded) {
+    if (key0AuthSucceeded) {
         connect()
         while (!isConnected) {}
 
