@@ -3,9 +3,11 @@ package de.stustanet.stustapay.nfc
 import android.nfc.Tag
 import android.nfc.tech.NfcA
 import android.nfc.tech.TagTechnology
-import de.stustanet.stustapay.util.*
+import de.stustanet.stustapay.util.BitVector
+import de.stustanet.stustapay.util.aesDecrypt
+import de.stustanet.stustapay.util.aesEncrypt
+import de.stustanet.stustapay.util.asBitVector
 import java.io.IOException
-import java.nio.charset.Charset
 import java.security.SecureRandom
 
 // https://www.nxp.com/docs/en/application-note/AN13452.pdf
@@ -279,6 +281,8 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
         auth0State = try {
             cmdRead(0x29u, nfcaTag).gbe(3uL)
         } catch (e: IOException) {
+            null
+        } catch (e: ArrayIndexOutOfBoundsException) {
             null
         }
     }

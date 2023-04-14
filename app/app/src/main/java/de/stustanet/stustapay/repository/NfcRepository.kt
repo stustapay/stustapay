@@ -1,15 +1,9 @@
 package de.stustanet.stustapay.repository
 
-import de.stustanet.stustapay.model.NewOrder
 import de.stustanet.stustapay.model.NfcScanRequest
 import de.stustanet.stustapay.model.NfcScanResult
-import de.stustanet.stustapay.model.PendingOrder
-import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.nfc.NfcDataSource
-import de.stustanet.stustapay.util.BitVector
-import de.stustanet.stustapay.util.asBitVector
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableSharedFlow
+import de.stustanet.stustapay.util.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton

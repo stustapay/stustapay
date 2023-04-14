@@ -1,6 +1,5 @@
 package de.stustanet.stustapay
 
-import de.stustanet.stustapay.nfc.*
 import de.stustanet.stustapay.util.BitVector
 import de.stustanet.stustapay.util.bv
 import org.junit.Assert
