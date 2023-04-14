@@ -10,7 +10,8 @@ import { useCreateUserMutation } from "@api";
 import { PrivilegeSelect } from "./PrivilegeSelect";
 
 const initialValues: NewUser = {
-  name: "",
+  login: "",
+  display_name: "",
   description: "",
   password: "",
   privileges: [],
@@ -51,13 +52,27 @@ export const UserCreate: React.FC = () => {
               margin="normal"
               fullWidth
               autoFocus
-              name="name"
-              label={t("userName")}
-              error={touched.name && !!errors.name}
-              helperText={(touched.name && errors.name) as string}
+              name="login"
+              label={t("userLogin")}
+              error={touched.login&& !!errors.login}
+              helperText={(touched.login&& errors.login) as string}
               onBlur={handleBlur}
               onChange={handleChange}
-              value={values.name}
+              value={values.login}
+            />
+
+            <TextField
+              variant="standard"
+              margin="normal"
+              fullWidth
+              autoFocus
+              name="display_name"
+              label={t("userDisplayName")}
+              error={touched.display_name&& !!errors.display_name}
+              helperText={(touched.display_name&& errors.display_name) as string}
+              onBlur={handleBlur}
+              onChange={handleChange}
+              value={values.login}
             />
 
             <TextField

@@ -35,14 +35,20 @@ class AdminCli(SubCommand):
                 print("Error, passwords do not match")
                 return
             privileges = input("Enter privileges (comma separated, choose from 'admin', 'orga', 'cashier':\n")
+            display_name = input("Enter display name:\n")
 
             new_user = UserWithoutId(
-                name=username, description=None, privileges=list(map(lambda x: Privilege[x], privileges.split(",")))
+                login=username,
+                description=None,
+                privileges=list(
+                    map(lambda x: Privilege[x], privileges.split(",")),
+                ),
+                display_name=display_name,
             )
             user = await user_service.create_user_no_auth(  # pylint: disable=missing-kwoa
                 new_user=new_user, password=password
             )
-            print(f"created new user {user.name} with user id {user.id}")
+            print(f"created new user {user.login} with user id {user.id}")
         except KeyboardInterrupt:
             print("Aborting ...")
 

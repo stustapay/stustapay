@@ -44,10 +44,15 @@ export const UserList: React.FC = () => {
 
   const columns: GridColDef<User>[] = [
     {
-      field: "name",
-      headerName: t("userName") as string,
+      field: "login",
+      headerName: t("userLogin") as string,
       flex: 1,
-      renderCell: (params) => <RouterLink to={`/users/${params.row.id}`}>{params.row.name}</RouterLink>,
+      renderCell: (params) => <RouterLink to={`/users/${params.row.id}`}>{params.row.login}</RouterLink>,
+    },
+    {
+      field: "display_name",
+      headerName: t("userDisplayName") as string,
+      flex: 1,
     },
     {
       field: "description",

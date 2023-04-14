@@ -40,11 +40,12 @@ class UserService(DBService):
             hashed_password = self._hash_password(password)
 
         user_id = await conn.fetchval(
-            "insert into usr (name, description, password, user_tag_uid, transport_account_id, cashier_account_id) "
-            "values ($1, $2, $3, $4, $5, $6) returning id",
-            new_user.name,
+            "insert into usr (login, description, password, display_name, user_tag_uid, transport_account_id, cashier_account_id) "
+            "values ($1, $2, $3, $4, $5, $6, $7) returning id",
+            new_user.login,
             new_user.description,
             hashed_password,
+            new_user.display_name,
             new_user.user_tag_uid,
             new_user.transport_account_id,
             new_user.cashier_account_id,
@@ -103,9 +104,10 @@ class UserService(DBService):
             return User.parse_obj(existing_user)
 
         user = UserWithoutId(
-            name=new_user.name,
+            login=new_user.login,
             privileges=[],
             user_tag_uid=user_tag_uid,
+            display_name=new_user.login,
         )
         return await self._create_user(conn=conn, new_user=user)
 
@@ -123,7 +125,7 @@ class UserService(DBService):
         user.cashier_account_id = await conn.fetchval(
             "insert into account (type, name) values ($1, $2) returning id",
             AccountType.internal.value,
-            f"Cashier account for {user.name}",
+            f"Cashier account for {user.display_name}",
         )
         user.privileges.append(Privilege.cashier)
         return await self._update_user(conn=conn, user_id=user.id, user=user)
@@ -142,7 +144,7 @@ class UserService(DBService):
         user.transport_account_id = await conn.fetchval(
             "insert into account (type, name) values ($1, $2) returning id",
             AccountType.internal.value,
-            f"Transport account for finanzorga {user.name}",
+            f"Transport account for finanzorga {user.display_name}",
         )
         user.privileges.append(Privilege.finanzorga)
         return await self._update_user(conn=conn, user_id=user.id, user=user)
@@ -170,11 +172,12 @@ class UserService(DBService):
     async def _update_user(self, *, conn: asyncpg.Connection, user_id: int, user: UserWithoutId) -> User:
         row = await conn.fetchrow(
             "update usr "
-            "set name = $2, description = $3, user_tag_uid = $4, transport_account_id = $5, cashier_account_id = $6 "
+            "set login = $2, description = $3, display_name = $4, user_tag_uid = $5, transport_account_id = $6, cashier_account_id = $7 "
             "where id = $1 returning id",
             user_id,
-            user.name,
+            user.login,
             user.description,
+            user.display_name,
             user.user_tag_uid,
             user.transport_account_id,
             user.cashier_account_id,
@@ -228,7 +231,7 @@ class UserService(DBService):
     @with_db_transaction
     async def login_user(self, *, conn: asyncpg.Connection, username: str, password: str) -> Optional[UserLoginSuccess]:
         row = await conn.fetchrow(
-            "select * from usr_with_privileges where name = $1",
+            "select * from usr_with_privileges where login = $1",
             username,
         )
         if row is None:

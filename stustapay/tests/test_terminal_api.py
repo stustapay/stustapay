@@ -11,13 +11,21 @@ class TerminalAPiTest(BaseTestCase):
         self.cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
         self.cashier = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
-                name="test_cashier", description="", privileges=[Privilege.cashier], user_tag_uid=self.cashier_tag_uid
+                login="test_cashier",
+                description="",
+                privileges=[Privilege.cashier],
+                user_tag_uid=self.cashier_tag_uid,
+                display_name="Test Cashier",
             )
         )
         self.admin_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
         self.admin = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
-                name="Fianazorga", description="", privileges=[Privilege.finanzorga], user_tag_uid=self.admin_tag_uid
+                login="Fianazorga",
+                description="",
+                privileges=[Privilege.finanzorga],
+                user_tag_uid=self.admin_tag_uid,
+                display_name="Finanzorga",
             )
         )
 

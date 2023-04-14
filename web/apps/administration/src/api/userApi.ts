@@ -5,7 +5,7 @@ import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
 
 const userAdapter = createEntityAdapter<User>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+  sortComparer: (a, b) => a.login.toLowerCase().localeCompare(b.login.toLowerCase()),
 });
 
 export const userApi = createApi({
