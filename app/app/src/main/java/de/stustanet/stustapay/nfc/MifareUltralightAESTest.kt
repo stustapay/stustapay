@@ -65,14 +65,15 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
 
         if (rndAResp.equals(rndA.rotl(8uL))) {
             log.add(Pair("Authenticated using key0", true))
+            log.add(Pair("used key0: " + key0.asByteString(), true))
             key0AuthSucceeded = true
         } else {
             log.add(Pair("Authentication using key0 failed", false))
-            log.add(Pair("key: " + key0.asByteString(), false))
+            log.add(Pair("tried key0: " + key0.asByteString(), false))
         }
     } catch (e: Exception) {
         log.add(Pair("Authentication using key0 failed", false))
-        log.add(Pair("key: " + key0.asByteString(), false))
+        log.add(Pair("tried key0: " + key0.asByteString(), false))
     }
 
     if (!key0AuthSucceeded) {
@@ -114,15 +115,16 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
 
             if (rndAResp.equals(rndA.rotl(8uL))) {
                 log.add(Pair("Authenticated using outer reversed key0", true))
+                log.add(Pair("used key: " + testKey.asByteString(), true))
                 key0AuthSucceeded = true
                 keyOuterReversed = true
             } else {
                 log.add(Pair("Authentication using outer reversed key0 also failed", false))
-                log.add(Pair("key: " + testKey.asByteString(), false))
+                log.add(Pair("tried key: " + testKey.asByteString(), false))
             }
         } catch (e: Exception) {
             log.add(Pair("Authentication using outer reversed key0 also failed", false))
-            log.add(Pair("key: " + testKey.asByteString(), false))
+            log.add(Pair("tried key: " + testKey.asByteString(), false))
         }
     }
 
@@ -174,15 +176,16 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
 
             if (rndAResp.equals(rndA.rotl(8uL))) {
                 log.add(Pair("Authenticated using inner reversed key0", true))
+                log.add(Pair("used key: " + testKey.asByteString(), false))
                 key0AuthSucceeded = true
                 keyInnerReversed = true
             } else {
                 log.add(Pair("Authentication using inner reversed key0 also failed", false))
-                log.add(Pair("key: " + testKey.asByteString(), false))
+                log.add(Pair("tried key: " + testKey.asByteString(), false))
             }
         } catch (e: Exception) {
             log.add(Pair("Authentication using inner reversed key0 also failed", false))
-            log.add(Pair("key: " + testKey.asByteString(), false))
+            log.add(Pair("tried key: " + testKey.asByteString(), false))
         }
     }
 
@@ -238,16 +241,17 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
 
             if (rndAResp.equals(rndA.rotl(8uL))) {
                 log.add(Pair("Authenticated using double reversed key0", true))
+                log.add(Pair("used key: " + testKey.asByteString(), false))
                 key0AuthSucceeded = true
                 keyOuterReversed = true
                 keyInnerReversed = true
             } else {
                 log.add(Pair("Authentication using double reversed key0 also failed", false))
-                log.add(Pair("key: " + testKey.asByteString(), false))
+                log.add(Pair("tried key: " + testKey.asByteString(), false))
             }
         } catch (e: Exception) {
             log.add(Pair("Authentication using double reversed key0 also failed", false))
-            log.add(Pair("key: " + testKey.asByteString(), false))
+            log.add(Pair("tried key: " + testKey.asByteString(), false))
         }
     }
 
@@ -305,7 +309,7 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
         try {
             authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, true)
             cmacCheckSucceeded = true
-            log.add(Pair("CMAC enabled", true))
+            log.add(Pair("auth with CMAC ok", true))
         } catch (e: Exception) {
             try {
                 close()
@@ -313,9 +317,9 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
                 while (!isConnected) {}
 
                 authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, false)
-                log.add(Pair("CMAC disabled", false))
+                log.add(Pair("auth without CMAC", false))
             } catch (e: Exception) {
-                log.add(Pair("Failed to test for CMAC", false))
+                log.add(Pair("failed to auth without CMAC", false))
             }
         }
 
@@ -337,42 +341,42 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
             var confCheckSuccessful = true
 
             if (conf.gbe(0uL) == 0x01u.toUByte()) {
-                log.add(Pair("Pages 0x10 and 0x11 locked", true))
+                log.add(Pair("cfg: Pages 0x10 and 0x11 locked", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("Pages 0x10 and 0x11 not locked", false))
+                log.add(Pair("cfg: Pages 0x10 and 0x11 not locked", false))
             }
 
             if (conf.gbe(4uL) == 0x02u.toUByte()) {
-                log.add(Pair("CMAC enabled", true))
+                log.add(Pair("cfg: CMAC enabled", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("CMAC disabled", false))
+                log.add(Pair("cfg: CMAC disabled", false))
             }
 
             if (conf.gbe(7uL) == 0x10u.toUByte()) {
-                log.add(Pair("Pages after 0x10 protected", true))
+                log.add(Pair("cfg: Pages after 0x10 protected", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("Pages after 0x10 not protected", false))
+                log.add(Pair("cfg: Pages after 0x10 not protected", false))
             }
 
             if (conf.gbe(8uL) == 0xe0u.toUByte()) {
-                log.add(Pair("Keys locked", true))
+                log.add(Pair("cfg: Keys locked", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("Keys not locked", false))
+                log.add(Pair("cfg: Keys not locked", false))
             }
 
             if (conf.gbe(12uL) == 0xc0u.toUByte()) {
-                log.add(Pair("Config locked", true))
+                log.add(Pair("cfg: Config locked", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("Config not locked", false))
+                log.add(Pair("cfg: Config not locked", false))
             }
 
             if (!confCheckSuccessful) {
-                log.add(Pair("Config pages:", false))
+                log.add(Pair("Config page content:", false))
                 log.add(Pair("28: " + conf.slice(8uL * 12uL, 8uL * 16uL).asByteString(), false))
                 log.add(Pair("29: " + conf.slice(8uL * 8uL, 8uL * 12uL).asByteString(), false))
                 log.add(Pair("2a: " + conf.slice(8uL * 4uL, 8uL * 8uL).asByteString(), false))
