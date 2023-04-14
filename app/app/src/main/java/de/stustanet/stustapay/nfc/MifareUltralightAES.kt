@@ -104,6 +104,9 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
         if (cmacEnabled) {
             sessionKey = genSessionKey(key, rndA, rndB)
             sessionCounter = 0u
+        } else {
+            sessionKey = null
+            sessionCounter = null
         }
 
         if (type == KeyType.DATA_PROT_KEY) {
@@ -282,6 +285,10 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
 
     override fun close() {
         nfcaTag.close()
+        sessionKey = null
+        sessionCounter = null
+        chipState = ChipState.IDLE
+        auth0State = null
     }
 
     override fun isConnected(): Boolean {

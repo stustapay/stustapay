@@ -308,10 +308,14 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
             log.add(Pair("CMAC enabled", true))
         } catch (e: Exception) {
             try {
+                close()
+                connect()
+                while (!isConnected) {}
+
                 authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, false)
                 log.add(Pair("CMAC disabled", false))
             } catch (e: Exception) {
-                log.add(Pair("Authentication failed (unreachable!)", false))
+                log.add(Pair("Failed to test for CMAC", false))
             }
         }
 
@@ -343,7 +347,7 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
                 log.add(Pair("CMAC enabled", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("CMAC disabled (unreachable)", false))
+                log.add(Pair("CMAC disabled", false))
             }
 
             if (conf.gbe(7uL) == 0x10u.toUByte()) {
