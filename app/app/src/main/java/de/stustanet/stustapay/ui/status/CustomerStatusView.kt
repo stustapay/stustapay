@@ -146,9 +146,9 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                                 Text("Scan", fontSize = 24.sp)
                             }
 
-                            NfcScanDialog(scanState) { tag ->
+                            NfcScanDialog(scanState, onScan = { tag ->
                                 targetId = tag.uid.toString()
-                            }
+                            })
                         }
                         is CustomerStatusRequestState.SwapDone -> {
                             Text("Swapped tag accounts", fontSize = 48.sp)
@@ -187,9 +187,9 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                         }
                     }
 
-                    NfcScanDialog(scanState) { tag ->
+                    NfcScanDialog(scanState, onScan = { tag ->
                         viewModel.completeScan(tag.uid)
-                    }
+                    })
                 }
                 is CustomerStatusRequestState.Swap -> {
                     Button(
@@ -224,9 +224,9 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                         Text("Scan", fontSize = 24.sp)
                     }
 
-                    NfcScanDialog(scanState) { tag ->
+                    NfcScanDialog(scanState, onScan = { tag ->
                         viewModel.completeScan(tag.uid)
-                    }
+                    })
                 }
             }
         }
