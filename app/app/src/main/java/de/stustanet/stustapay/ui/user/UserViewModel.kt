@@ -40,8 +40,6 @@ class UserViewModel @Inject constructor(
             initialValue = UserUIState.Error("Loading..."),
         )
 
-    val userState : StateFlow<UserState> = userRepository.userState
-
     val userUIMessage = userRepository.status
 
     suspend fun fetchLogin() {
