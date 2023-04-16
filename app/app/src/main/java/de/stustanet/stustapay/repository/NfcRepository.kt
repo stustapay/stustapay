@@ -12,8 +12,11 @@ import javax.inject.Singleton
 class NfcRepository @Inject constructor(
     private val nfcDataSource: NfcDataSource
 ) {
+    // these are the "secret" key for our chips:
     private val key0 = MutableStateFlow("000102030405060708090a0b0c0d0e0f".decodeHex())
     private val key1 = MutableStateFlow("000102030405060708090a0b0c0d0e0f".decodeHex())
+
+    val tagContent = "StuStaPay - built by SSN & friends!\nglhf ;)\n"
 
     suspend fun read(auth: Boolean, cmac: Boolean): NfcScanResult {
         return nfcDataSource.scan(NfcScanRequest.Read(auth, cmac, key0.value))
@@ -25,7 +28,7 @@ class NfcRepository @Inject constructor(
     }
 
     suspend fun writeSig(auth: Boolean, cmac: Boolean): NfcScanResult {
-        return nfcDataSource.scan(NfcScanRequest.WriteSig(auth, cmac, key0.value))
+        return nfcDataSource.scan(NfcScanRequest.WriteSig(auth, cmac, key0.value, tagContent))
     }
 
     suspend fun writeKey(auth: Boolean, cmac: Boolean): NfcScanResult {

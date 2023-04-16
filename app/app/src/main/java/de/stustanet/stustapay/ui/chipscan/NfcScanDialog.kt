@@ -1,9 +1,6 @@
 package de.stustanet.stustapay.ui.chipscan
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -23,19 +20,20 @@ import de.stustanet.stustapay.model.UserTag
 fun NfcScanDialog(
     state: NfcScanDialogState,
     viewModel: NfcScanDialogViewModel = hiltViewModel(),
-    text: String = "Scan a Chip!",
     onScan: suspend (UserTag) -> Unit = {},
+    content: @Composable () -> Unit = {
+        // utf8 "satellite antenna"
+        Text("Scan a Chip \uD83D\uDCE1", textAlign = TextAlign.Center, fontSize = 40.sp)
+    },
 ) {
     state.setViewModel(viewModel)
-    val scanResult by viewModel.scanResult.collectAsStateWithLifecycle()
+    val scanResult by viewModel.scanState.collectAsStateWithLifecycle()
 
     LaunchedEffect(scanResult) {
-        when (val res = scanResult.result) {
-            is NfcScanDialogResult.Success -> {
-                onScan(UserTag(res.uid))
-                state.close()
-            }
-            else -> {}
+        val tag = scanResult.scanTag
+        if (tag != null) {
+            state.close()
+            onScan(tag)
         }
     }
 
@@ -45,32 +43,33 @@ fun NfcScanDialog(
                 state.close()
             }
         ) {
-            Box(Modifier.size(300.dp, 300.dp)) {
+            Box(Modifier.size(350.dp, 350.dp)) {
                 Card(modifier = Modifier.padding(20.dp)) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        when (scanResult.result) {
-                            is NfcScanDialogResult.None -> {
-                                Text(text, textAlign = TextAlign.Center, fontSize = 48.sp)
-                            }
-                            is NfcScanDialogResult.Success -> {
-                                Text("Success!", textAlign = TextAlign.Center, fontSize = 48.sp)
-                            }
-                            is NfcScanDialogResult.Incompatible -> {
+                        Column(
+                            modifier = Modifier
+                                .padding(start = 5.dp)
+                                .fillMaxWidth()
+                        ) {
+
+                            val actionMsg = scanResult.action
+                            if (actionMsg == null) {
+                                content()
+                            } else {
                                 Text(
-                                    "Incompatible Tag",
+                                    actionMsg,
                                     textAlign = TextAlign.Center,
-                                    fontSize = 40.sp
+                                    fontSize = 40.sp,
                                 )
                             }
-                            is NfcScanDialogResult.Rescan -> {
-                                Text("Try Again", textAlign = TextAlign.Center, fontSize = 40.sp)
-                            }
-                            is NfcScanDialogResult.Tampered -> {
-                                Text(">:(", textAlign = TextAlign.Center, fontSize = 40.sp)
-                            }
+                            Text(
+                                scanResult.status,
+                                textAlign = TextAlign.Left,
+                                fontSize = 20.sp,
+                            )
                         }
                     }
                 }
