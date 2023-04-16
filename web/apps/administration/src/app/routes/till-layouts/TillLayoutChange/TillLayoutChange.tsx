@@ -1,13 +1,4 @@
-import {
-  Paper,
-  TextField,
-  Button,
-  LinearProgress,
-  Typography,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
-} from "@mui/material";
+import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -87,13 +78,6 @@ export function TillLayoutChange<T extends NewTillLayout>({
               onChange={handleChange}
               value={values.description}
             />
-
-            <FormGroup>
-              <FormControlLabel
-                control={<Checkbox name="allow_top_up" checked={values.allow_top_up} onChange={handleChange} />}
-                label={t("layout.allowTopUp")}
-              />
-            </FormGroup>
           </Paper>
           <Paper sx={{ mt: 2 }}>
             <TillLayoutDesigner

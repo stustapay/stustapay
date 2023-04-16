@@ -1,4 +1,4 @@
-import { Paper, ListItem, IconButton, ListItemText, List, Tooltip } from "@mui/material";
+import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Checkbox } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -66,6 +66,12 @@ export const TillProfileDetail: React.FC = () => {
           </ListItem>
           <ListItem>
             <ListItemText primary={t("profile.description")} secondary={profile.description} />
+          </ListItem>
+          <ListItem secondaryAction={<Checkbox edge="end" checked={profile.allow_top_up} disabled={true} />}>
+            <ListItemText primary={t("profile.allowTopUp")} />
+          </ListItem>
+          <ListItem secondaryAction={<Checkbox edge="end" checked={profile.allow_cash_out} disabled={true} />}>
+            <ListItemText primary={t("profile.allowCashOut")} />
           </ListItem>
         </List>
       </Paper>

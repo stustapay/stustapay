@@ -4,8 +4,14 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.terminal import Terminal, TerminalConfig, TerminalRegistrationSuccess, TerminalSecrets
-from stustapay.core.schema.till import NewTill, Till, TillButton, TillProfile
+from stustapay.core.schema.terminal import (
+    Terminal,
+    TerminalConfig,
+    TerminalRegistrationSuccess,
+    TerminalSecrets,
+    TerminalButton,
+)
+from stustapay.core.schema.till import NewTill, Till, TillProfile
 from stustapay.core.schema.user import Privilege, User, UserTag
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
@@ -62,7 +68,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user_privileges([Privilege.admin])
-    async def update_till(self, *, conn: asyncpg.Connection, till_id: str, till: NewTill) -> Optional[Till]:
+    async def update_till(self, *, conn: asyncpg.Connection, till_id: int, till: NewTill) -> Optional[Till]:
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, tse_id = $4, active_shift = $5, active_profile_id = $6, active_user_id = $7 "
             "where id = $1 returning id, name, description, registration_uuid, tse_id, active_shift, active_profile_id, session_uuid, active_user_id",
@@ -209,14 +215,15 @@ class TillService(DBService):
             "select privileges from usr_with_privileges where id = $1", current_terminal.till.active_user_id
         )
         db_buttons = conn.cursor(
-            "select * from till_button_with_products tlwb "
+            "select tlwb.id, tlwb.name, tlwb.price, tlwb.fixed_price, tlwb.is_returnable "
+            "from till_button_with_products tlwb "
             "join till_layout_to_button tltb on tltb.button_id = tlwb.id "
             "where tltb.layout_id = $1",
             db_profile["layout_id"],
         )
         buttons = []
         async for db_button in db_buttons:
-            buttons.append(TillButton.parse_obj(db_button))
+            buttons.append(TerminalButton.parse_obj(db_button))
         db_profile = await conn.fetchrow(
             "select * from till_profile join till on till_profile.id = till.active_profile_id where till.id = $1",
             current_terminal.till.id,
@@ -233,6 +240,7 @@ class TillService(DBService):
             description=current_terminal.till.description,
             user_privileges=user_privileges,
             allow_top_up=profile.allow_top_up,
+            allow_cash_out=profile.allow_cash_out,
             buttons=buttons,
             secrets=secrets,
         )

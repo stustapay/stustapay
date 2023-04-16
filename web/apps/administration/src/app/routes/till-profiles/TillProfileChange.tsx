@@ -1,4 +1,13 @@
-import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
+import {
+  Paper,
+  TextField,
+  Button,
+  LinearProgress,
+  Typography,
+  FormGroup,
+  Checkbox,
+  FormControlLabel,
+} from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -77,6 +86,20 @@ export function TillProfileChange<T extends NewTillProfile>({
               onChange={handleChange}
               value={values.description}
             />
+
+            <FormGroup>
+              <FormControlLabel
+                control={<Checkbox name="allow_top_up" checked={values.allow_top_up} onChange={handleChange} />}
+                label={t("profile.allowTopUp")}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <FormControlLabel
+                control={<Checkbox name="allow_cash_out" checked={values.allow_cash_out} onChange={handleChange} />}
+                label={t("profile.allowCashOut")}
+              />
+            </FormGroup>
 
             <TillLayoutSelect
               name="layout"

@@ -29,6 +29,7 @@ class NewTillProfile(BaseModel):
     description: Optional[str] = None
     layout_id: int
     allow_top_up: bool
+    allow_cash_out: bool
 
 
 class TillProfile(NewTillProfile):

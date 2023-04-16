@@ -289,7 +289,10 @@ comment on column product.fixed_price is 'price is not fixed, e.g for top up. Th
 
 
 insert into product (id, name, fixed_price, tax_name, is_locked) overriding system value
-values (1, 'Rabatt', false, 'none', true);
+values
+    (1, 'Rabatt', false, 'none', true),
+    (2, 'Aufladen', false, 'none', true),
+    (3, 'Auszahlen', false, 'none', true);
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
@@ -334,28 +337,39 @@ create table if not exists till_button_product (
     product_id bigint not null references product(id) on delete cascade,
     primary key (button_id, product_id)
     -- TODO: constraint that we can only reference non-editable products
+    -- TODO: constraint that a button can only reference ONE variable price product
+    -- TODO: constraint that a button can only reference ONE returnable product
 );
 
 create or replace view till_button_with_products as (
     select
         t.id,
         t.name,
-        coalesce(j_view.price, 0) as price,
+        coalesce(j_view.price, 0) as price, -- sane default for buttons without a product
+        coalesce(j_view.fixed_price, true) as fixed_price, -- sane default for buttons without a product
+        coalesce(j_view.is_returnable, false) as is_returnable, -- sane default for buttons without a product
         coalesce(j_view.product_ids, '{}'::bigint array) as product_ids
     from till_button t
     left join (
-        select tlb.button_id, sum(p.price) as price, array_agg(tlb.product_id) as product_ids
+        select
+            tlb.button_id,
+            sum(p.price) as price,
+            bool_and(p.fixed_price) as fixed_price, -- a constraint assures us that for variable priced products a button can only refer to one product
+            bool_and(p.is_returnable) as is_returnable, -- a constraint assures us that for returnable products a button can only refer to one product
+            array_agg(tlb.product_id) as product_ids
         from till_button_product tlb
         join product_with_tax_and_restrictions p on tlb.product_id = p.id
         group by tlb.button_id
+        window button_window as (partition by tlb.button_id)
     ) j_view on t.id = j_view.button_id
 );
 
 create table if not exists till_layout_to_button (
     layout_id bigint not null references till_layout(id) on delete cascade,
     button_id bigint not null references till_button(id),
-    sequence_number bigint not null unique,
-    primary key (layout_id, button_id)
+    sequence_number bigint not null,
+    primary key (layout_id, button_id),
+    unique (layout_id, button_id, sequence_number)
 );
 
 create or replace view till_layout_with_buttons as (
@@ -375,6 +389,7 @@ create table if not exists till_profile (
     name text not null unique,
     description text,
     allow_top_up boolean not null default false,
+    allow_cash_out boolean not null default false,
     layout_id bigint not null references till_layout(id)
     -- todo: payment_methods?
 );

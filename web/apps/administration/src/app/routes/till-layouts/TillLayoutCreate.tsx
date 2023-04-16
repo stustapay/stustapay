@@ -8,7 +8,6 @@ const initialValues: NewTillLayout = {
   name: "",
   description: "",
   button_ids: null,
-  allow_top_up: false,
 };
 
 export const TillLayoutCreate: React.FC = () => {
@@ -17,7 +16,7 @@ export const TillLayoutCreate: React.FC = () => {
 
   return (
     <TillLayoutChange
-      headerTitle={t("createTillLayout")}
+      headerTitle={t("layout.create")}
       submitLabel={t("add", { ns: "common" })}
       initialValues={initialValues}
       validationSchema={NewTillLayoutSchema}

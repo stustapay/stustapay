@@ -1,4 +1,4 @@
-import { Paper, ListItem, IconButton, Typography, ListItemText, List, Tooltip, Checkbox, Divider } from "@mui/material";
+import { Paper, ListItem, IconButton, Typography, ListItemText, List, Tooltip, Divider } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -77,9 +77,6 @@ export const TillLayoutDetail: React.FC = () => {
           </ListItem>
           <ListItem>
             <ListItemText primary={t("layout.description")} secondary={layout.description} />
-          </ListItem>
-          <ListItem secondaryAction={<Checkbox edge="end" checked={layout.allow_top_up} disabled={true} />}>
-            <ListItemText primary={t("layout.allowTopUp")} />
           </ListItem>
         </List>
       </Paper>
