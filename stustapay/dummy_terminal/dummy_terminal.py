@@ -6,8 +6,8 @@ import random
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.order import NewLineItem, NewOrder, OrderType
-from stustapay.core.schema.till import TillButton
+from stustapay.core.schema.order import Button, NewSale, OrderType
+from stustapay.core.schema.terminal import TerminalButton
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import with_db_connection
 from stustapay.core.service.order import NotEnoughFundsException, OrderService
@@ -39,9 +39,12 @@ class DummyTerminal:
             await self.db_pool.close()
 
     @staticmethod
-    def select_random_products_from_buttons(buttons: list[TillButton]) -> list[int]:
-        button = random.choice(buttons)
-        return button.product_ids
+    def press_random_buttons(buttons: list[TerminalButton]) -> list[Button]:
+        selected_buttons = random.choices(buttons, k=random.randint(1, len(buttons)))
+        pressed_buttons = []
+        for b in selected_buttons:
+            pressed_buttons.append(Button(till_button_id=b.id, quantity=random.randint(1, 4)))
+        return pressed_buttons
 
     @staticmethod
     async def select_random_customer_tag(conn: asyncpg.Connection) -> int:
@@ -70,15 +73,14 @@ class DummyTerminal:
         while True:
             await asyncio.sleep(random.uniform(self.min_interval_between_orders, self.max_interval_between_orders))
 
-            products_to_book = self.select_random_products_from_buttons(terminal_config.buttons)
+            pressed_buttons = self.press_random_buttons(terminal_config.buttons)
             customer_tag_uid = await self.select_random_customer_tag(conn)
-            line_items = [NewLineItem(product_id=product_id, quantity=1) for product_id in products_to_book]
-            new_order = NewOrder(order_type=OrderType.sale, customer_tag_uid=customer_tag_uid, positions=line_items)
-            self.logger.info(f"Creating order {new_order}")
+            new_sale = NewSale(order_type=OrderType.sale, customer_tag_uid=customer_tag_uid, buttons=pressed_buttons)
+            self.logger.info(f"Creating sale {new_sale}")
             try:
-                order = await self.order_service.book_order(
+                order = await self.order_service.book_sale(
                     token=terminal_token,
-                    new_order=new_order,
+                    new_sale=new_sale,
                 )
                 print(order)
             except NotEnoughFundsException as e:

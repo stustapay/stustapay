@@ -115,7 +115,9 @@ class BaseTestCase(TestCase):
         )
         till_profile = await self.till_service.profile.create_profile(
             token=self.admin_token,
-            profile=NewTillProfile(name="test-profile", description="", layout_id=till_layout.id, allow_top_up=False),
+            profile=NewTillProfile(
+                name="test-profile", description="", layout_id=till_layout.id, allow_top_up=True, allow_cash_out=True
+            ),
         )
         self.till = await self.till_service.create_till(
             token=self.admin_token,

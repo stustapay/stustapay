@@ -47,6 +47,7 @@ class TillServiceTest(BaseTestCase):
         self.assertEqual(updated_button.price, 5)
 
         buttons = await self.till_service.layout.list_buttons(token=self.admin_token)
+        print(buttons)
         self.assertEqual(len(buttons), 1)
         self.assertTrue(updated_button in buttons)
 
@@ -69,7 +70,9 @@ class TillServiceTest(BaseTestCase):
         )
         till_profile = await self.till_service.profile.create_profile(
             token=self.admin_token,
-            profile=NewTillProfile(name="profile1", description="", layout_id=till_layout.id, allow_top_up=False),
+            profile=NewTillProfile(
+                name="profile1", description="", layout_id=till_layout.id, allow_top_up=False, allow_cash_out=False
+            ),
         )
         till = await self.till_service.create_till(
             token=self.admin_token,

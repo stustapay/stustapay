@@ -22,11 +22,13 @@ class TillProfileService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def create_profile(self, *, conn: asyncpg.Connection, profile: NewTillProfile) -> TillProfile:
         row = await conn.fetchrow(
-            "insert into till_profile (name, description, allow_top_up, layout_id) values ($1, $2, $3, $4) "
-            "returning id, name, description, allow_top_up, layout_id",
+            "insert into till_profile (name, description, allow_top_up, allow_cash_out, layout_id) "
+            "values ($1, $2, $3, $4, $5) "
+            "returning id, name, description, allow_top_up, allow_cash_out, layout_id",
             profile.name,
             profile.description,
             profile.allow_top_up,
+            profile.allow_cash_out,
             profile.layout_id,
         )
 
@@ -56,12 +58,15 @@ class TillProfileService(DBService):
         self, *, conn: asyncpg.Connection, profile_id: int, profile: NewTillProfile
     ) -> Optional[TillProfile]:
         row = await conn.fetchrow(
-            "update till_profile set name = $2, description = $3, allow_top_up = $4, layout_id = $5 where id = $1 "
-            "returning id, name, description, allow_top_up, layout_id",
+            "update till_profile set name = $2, description = $3, allow_top_up = $4, allow_cash_out = $5, "
+            "   layout_id = $6 "
+            "where id = $1 "
+            "returning id, name, description, allow_top_up, allow_cash_out, layout_id",
             profile_id,
             profile.name,
             profile.description,
             profile.allow_top_up,
+            profile.allow_cash_out,
             profile.layout_id,
         )
         if row is None:

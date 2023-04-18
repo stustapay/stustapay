@@ -68,9 +68,6 @@ values
     -- Special Product: id 0-99
     -- Pfand
     (10, 'Pfand', 2.00, true, 2, 'none', true),
-    -- Top Up
-    (12, 'Aufladen', null, false, null, 'none', false),
-    (13, 'Auszahlen', null, false, null, 'none', false),
 
     -- Getränke
     (100, 'Helles 1.0l', 5.00, true, null, 'ust', false),
@@ -184,7 +181,7 @@ values
     (1, 1, 10, 2, 2.00, 'none', 0.00), -- deposit
     (1, 2, 150, 1, 2.00, 'eust', 0.07), -- other tax rate
     -- Top Up EC
-    (2, 0, 13, 20, 1.00, 'none', 0.00) -- Load 20 Money
+    (2, 0, 3, 20, 1.00, 'none', 0.00) -- Load 20 Money
     on conflict do nothing;
 
 insert into transaction (
