@@ -21,8 +21,8 @@ fun OrderSelection(
     onAbort: () -> Unit,
     onSubmit: () -> Unit,
 ) {
-    val orderConfig by viewModel.orderConfig.collectAsStateWithLifecycle()
-    val order by viewModel.order.collectAsStateWithLifecycle()
+    val orderConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+    val order by viewModel.saleState.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -42,14 +42,14 @@ fun OrderSelection(
                     .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
                 // TODO: voucher amount adjustment when in edit mode
-                for (product in orderConfig.buttons) {
+                for (button in orderConfig.buttons) {
                     item {
                         OrderItem(
-                            caption = product.value.caption,
-                            amount = order.buttonSelections.getOrDefault(product.value.id, 0),
-                            price = product.value.price,
-                            onIncr = { viewModel.incrementOrderProduct(product.value.id) },
-                            onDecr = { viewModel.decrementOrderProduct(product.value.id) }
+                            caption = button.value.caption,
+                            amount = order.fixPricePositions.getOrDefault(button.value.id, 0),
+                            price = button.value.price,
+                            onIncr = { viewModel.incrementButton(button.value.id) },
+                            onDecr = { viewModel.decrementButton(button.value.id) }
                         )
                     }
                 }
@@ -65,7 +65,7 @@ fun OrderSelection(
                         fontFamily = FontFamily.Monospace,
                     )
                 },
-                orderConfig = orderConfig,
+                saleConfig = orderConfig,
                 onAbort = onAbort,
                 onSubmit = onSubmit,
             )

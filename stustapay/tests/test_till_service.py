@@ -47,7 +47,6 @@ class TillServiceTest(BaseTestCase):
         self.assertEqual(updated_button.price, 5)
 
         buttons = await self.till_service.layout.list_buttons(token=self.admin_token)
-        print(buttons)
         self.assertEqual(len(buttons), 1)
         self.assertTrue(updated_button in buttons)
 

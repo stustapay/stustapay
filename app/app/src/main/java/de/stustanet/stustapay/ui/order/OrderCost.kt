@@ -10,9 +10,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun OrderCost(order: Order) {
+fun OrderCost(draftSale: DraftSale) {
     Text(
-        "${"%.02f".format(order.sum).padStart(5)} €",
+        "${"%.02f".format(draftSale.sum).padStart(5)} €",
         modifier = Modifier
             .padding(2.dp)
             .fillMaxWidth(),

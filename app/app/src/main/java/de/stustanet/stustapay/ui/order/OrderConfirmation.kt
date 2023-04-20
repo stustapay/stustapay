@@ -21,9 +21,9 @@ fun OrderConfirmation(
     onAbort: () -> Unit,
     onSubmit: () -> Unit,
 ) {
-    val orderConfig by viewModel.orderConfig.collectAsStateWithLifecycle()
-    val order by viewModel.order.collectAsStateWithLifecycle()
-    val status by viewModel.status.collectAsStateWithLifecycle()
+    val orderConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+    val order by viewModel._orderUIState.collectAsStateWithLifecycle()
+    val status by viewModel._status.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -60,7 +60,7 @@ fun OrderConfirmation(
                         fontFamily = FontFamily.Monospace,
                     )
                 },
-                orderConfig = orderConfig,
+                saleConfig = orderConfig,
                 onAbort = onAbort,
                 onSubmit = onSubmit,
             )

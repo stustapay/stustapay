@@ -228,7 +228,7 @@ class SumUp @Inject constructor(
         // TODO: cache the result :)
         terminalConfigRepository.fetchConfig()
 
-        when (val terminalConfig = terminalConfigRepository.terminalConfigState.value) {
+        when (val terminalConfig = terminalConfigRepository._terminalConfigState.value) {
             is TerminalConfigState.Success -> {
                 val cfg = terminalConfig.config
                 if (cfg.secrets == null) {

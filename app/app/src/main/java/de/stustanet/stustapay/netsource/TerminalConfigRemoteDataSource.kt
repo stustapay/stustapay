@@ -8,7 +8,6 @@ import javax.inject.Inject
 class TerminalConfigRemoteDataSource @Inject constructor(
     private val terminalAPI: TerminalAPI
 ){
-    // TODO call the function from the TerminalConfigRepository
     suspend fun getTerminalConfig(): Response<TerminalConfig> {
         return terminalAPI.getTerminalConfig()
     }
