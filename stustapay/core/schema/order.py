@@ -15,8 +15,53 @@ class OrderType(enum.Enum):
     topup_sumup = "topup_sumup"
 
 
-class NewLineItem(BaseModel):
-    product_id: int
+class TopUpType(enum.Enum):
+    sumup = "sumup"
+    cash = "cash"
+
+    def as_order_type(self):
+        if self == TopUpType.cash:
+            return "topup_cash"
+        elif self == TopUpType.sumup:
+            return "topup_sumup"
+        else:
+            raise RuntimeError("Unknown top up type, probably missed during implementation")
+
+
+class NewTopUp(BaseModel):
+    uuid: Optional[UUID] = None
+    topup_type: TopUpType
+
+    amount: float
+    customer_tag_uid: int
+
+
+class PendingTopUp(NewTopUp):
+    customer_account_id: int
+
+    old_balance: float
+    new_balance: float
+
+
+class CompletedTopUp(BaseModel):
+    topup_type: TopUpType
+
+    customer_tag_uid: int
+    customer_account_id: int
+
+    amount: float
+    old_balance: float
+    new_balance: float
+
+    uuid: UUID
+    booked_at: datetime.datetime
+
+    cashier_id: int
+    till_id: int
+
+
+class Button(BaseModel):
+    till_button_id: int
 
     # for products with a fixed price, the quantity must be specified
     # for products with variable price the used price must be set
@@ -32,28 +77,27 @@ class NewLineItem(BaseModel):
         return values
 
 
-class NewOrder(BaseModel):
-    positions: list[NewLineItem]
-    order_type: OrderType
+class NewSale(BaseModel):
+    buttons: list[Button]
     customer_tag_uid: int
-    uuid: Optional[UUID] = None
     used_vouchers: Optional[int] = None
 
 
 class PendingLineItem(BaseModel):
     quantity: int
     product: Product
-    price: float
+    # the following members are also in Product, but maybe they were updated in the meantime
+    product_price: float
     tax_name: str
     tax_rate: float
 
     @property
     def total_price(self) -> float:
-        return self.price * self.quantity
+        return self.product_price * self.quantity
 
 
-class PendingOrder(BaseModel):
-    order_type: OrderType
+class PendingSale(BaseModel):
+    buttons: list[Button]
 
     old_balance: float
     new_balance: float
@@ -77,7 +121,7 @@ class PendingOrder(BaseModel):
         return agg
 
 
-class CompletedOrder(PendingOrder):
+class CompletedSale(PendingSale):
     id: int
     uuid: UUID
 

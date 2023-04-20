@@ -5,7 +5,7 @@ export const LineItemSchema = z.object({
   item_id: z.number(),
   quantity: z.number(),
   product: ProductSchema,
-  price: z.number(),
+  product_price: z.number(),
   total_price: z.number(),
   tax_name: z.string(),
   tax_rate: z.number(),

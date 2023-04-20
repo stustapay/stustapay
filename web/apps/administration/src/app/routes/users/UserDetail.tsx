@@ -56,13 +56,13 @@ export const UserDetail: React.FC = () => {
             </>
           }
         >
-          <ListItemText primary={user.name} />
+          <ListItemText primary={user.login} />
         </ListItem>
       </Paper>
       <Paper sx={{ mt: 2 }}>
         <List>
           <ListItem>
-            <ListItemText primary={t("userName")} secondary={user.name} />
+            <ListItemText primary={t("userLogin")} secondary={user.login} />
           </ListItem>
           <ListItem>
             <ListItemText primary={t("userDescription")} secondary={user.description} />

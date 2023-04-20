@@ -7,7 +7,15 @@ from fastapi import APIRouter
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextOrderService
-from stustapay.core.schema.order import CompletedOrder, NewOrder, Order, PendingOrder
+from stustapay.core.schema.order import (
+    CompletedSale,
+    NewSale,
+    Order,
+    PendingSale,
+    NewTopUp,
+    PendingTopUp,
+    CompletedTopUp,
+)
 
 router = APIRouter(prefix="/order", tags=["order"])
 
@@ -23,26 +31,40 @@ async def list_orders(
     return await order_service.list_orders_terminal(token=token)
 
 
-@router.post("/check", summary="create a new order and prepare it to be processed", response_model=PendingOrder)
-async def check(
-    order: NewOrder,
+@router.post("/check-sale", summary="check if a sale is valid", response_model=PendingSale)
+async def check_sale(
+    sale: NewSale,
     token: CurrentAuthToken,
     order_service: ContextOrderService,
 ):
-    """
-    Execute the order.
-    returns either the completed order, or an error message, why the order could not be completed
-    """
-    return await order_service.check_order(token=token, new_order=order)
+    return await order_service.check_sale(token=token, new_sale=sale)
 
 
-@router.post("/book", summary="finish the order and book the transactions", response_model=CompletedOrder)
+@router.post("/book-sale", summary="finish the sale and book the transactions", response_model=CompletedSale)
+async def book_sale(
+    sale: NewSale,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+):
+    return await order_service.book_sale(token=token, new_sale=sale)
+
+
+@router.post("/check-topup", summary="check if a top up is valid", response_model=PendingTopUp)
+async def check_topup(
+    topup: NewTopUp,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+):
+    return await order_service.check_topup(token=token, new_topup=topup)
+
+
+@router.post("/book-topup", summary="finish the top up and book the transactions", response_model=CompletedTopUp)
 async def book(
-    order: NewOrder,
+    topup: NewTopUp,
     token: CurrentAuthToken,
     order_service: ContextOrderService,
 ):
-    return await order_service.book_order(token=token, new_order=order)
+    return await order_service.book_topup(token=token, new_topup=topup)
 
 
 @router.get("/{order_id}", summary="get information about an order", response_model=Optional[Order])

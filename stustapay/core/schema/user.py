@@ -12,12 +12,13 @@ class Privilege(enum.Enum):
 
 
 class NewUser(BaseModel):
-    name: str
+    login: str
     user_tag_uid: int
 
 
 class UserWithoutId(BaseModel):
-    name: str
+    login: str
+    display_name: str
     privileges: list[Privilege]
     description: Optional[str] = None
     user_tag_uid: Optional[int] = None

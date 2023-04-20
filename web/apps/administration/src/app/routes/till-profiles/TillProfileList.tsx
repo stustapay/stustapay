@@ -72,6 +72,18 @@ export const TillProfileList: React.FC = () => {
       flex: 2,
     },
     {
+      field: "allow_top_up",
+      headerName: t("profile.allowTopUp") as string,
+      type: "boolean",
+      width: 120,
+    },
+    {
+      field: "allow_cash_out",
+      headerName: t("profile.allowCashOut") as string,
+      type: "boolean",
+      width: 120,
+    },
+    {
       field: "layout",
       headerName: t("profile.layout") as string,
       flex: 0.5,

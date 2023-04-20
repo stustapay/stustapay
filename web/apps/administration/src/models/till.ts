@@ -27,7 +27,6 @@ export const NewTillLayoutSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
   button_ids: z.array(z.number()).nullable(),
-  allow_top_up: z.boolean(),
 });
 
 export type NewTillLayout = z.infer<typeof NewTillLayoutSchema>;
@@ -43,6 +42,8 @@ export const NewTillProfileSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
   layout_id: z.number(),
+  allow_top_up: z.boolean(),
+  allow_cash_out: z.boolean(),
 });
 
 export type NewTillProfile = z.infer<typeof NewTillProfileSchema>;

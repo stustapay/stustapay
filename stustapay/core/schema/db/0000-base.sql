@@ -64,7 +64,7 @@ values
 
 -- some secret about one or many user_tags
 create table if not exists user_tag_secret (
-    id bigserial not null primary key
+    id bigint primary key generated always as identity
 );
 
 -- for wristbands/cards/...
@@ -80,7 +80,7 @@ create table if not exists user_tag (
 
     -- to validate tag authenticity
     -- secret maybe shared with several tags.
-    secret bigint references user_tag_secret(id) on delete restrict
+    secret bigint references user_tag_secret(id)
 );
 
 
@@ -107,9 +107,9 @@ values
 
 -- bookkeeping account
 create table if not exists account (
-    id bigserial not null primary key,
-    user_tag_uid numeric(20) unique references user_tag(uid) on delete cascade,
-    type text not null references account_type(name) on delete restrict,
+    id bigint primary key generated always as identity (start with 1000),
+    user_tag_uid numeric(20) unique references user_tag(uid),
+    type text not null references account_type(name),
     constraint private_account_requires_user_tag check (user_tag_uid is not null = (type = 'private')),
     name text,
     comment text,
@@ -125,7 +125,7 @@ create table if not exists account (
 );
 insert into account (
     id, user_tag_uid, type, name, comment
-)
+) overriding system value
 values
     -- virtual accounts are hard coded with ids 0-99
     (0, null, 'virtual', 'Sale Exit', 'target account for sales of the system'),
@@ -136,32 +136,34 @@ values
     (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement'),
     (6, null, 'virtual', 'Cashing Up', 'Upon cashing up a cashier for a till a 0 transaction will be booked to this account to mark the cashing up time')
     on conflict do nothing;
-select setval('account_id_seq', 100);
 
 
 -- people working with the payment system
 create table if not exists usr (
-    id serial not null primary key,
+    id bigint primary key generated always as identity,
 
-    name text not null unique,
+    login text not null unique,
+    constraint login_encoding check ( login ~ '[a-zA-Z0-9\-_]+' ),
     password text,
+
+    display_name text not null default '',
     description text,
 
     user_tag_uid numeric(20) unique references user_tag(uid) on delete restrict,
 
-    -- account for orgas to transport cash from one location to another
-    transport_account_id bigint references account(id) on delete restrict,
-    -- account for cashiers to store the current cash balance in input or output locations
-    cashier_account_id bigint references account(id) on delete restrict
+    transport_account_id bigint references account(id),
+    cashier_account_id bigint references account(id)
     -- depending on the transfer action, the correct account is booked
 
     constraint password_or_user_tag_id_set check ((user_tag_uid is not null) or (password is not null))
 );
+comment on column usr.transport_account_id is 'account for orgas to transport cash from one location to another';
+comment on column usr.cashier_account_id is 'account for cashiers to store the current cash balance in input or output locations';
 
 
 create table if not exists usr_session (
-    id serial not null primary key,
-    usr int not null references usr(id) on delete cascade
+    id bigint primary key generated always as identity,
+    usr bigint not null references usr(id) on delete cascade
 );
 
 
@@ -183,7 +185,7 @@ values
     on conflict do nothing;
 
 create table if not exists usr_privs (
-    usr int not null references usr(id) on delete cascade,
+    usr bigint not null references usr(id) on delete cascade,
     priv text not null references privilege(name) on delete cascade,
     primary key (usr, priv)
 );
@@ -260,12 +262,11 @@ values
 
 
 create table if not exists product (
-    id serial not null primary key,
+    id bigint primary key generated always as identity (start with 1000),
     -- todo: ean or something for receipt?
     name text not null unique,
-    -- price including tax (what is charged in the end)
+
     price numeric,
-    -- price is not fixed, e.g for top up. Then price=null and set with the api call
     fixed_price boolean not null default true,
     price_in_vouchers bigint, -- will be null if this product cannot be bought with vouchers
     constraint product_vouchers_only_with_fixed_price check ( price_in_vouchers is not null and fixed_price or price_in_vouchers is null ),
@@ -279,20 +280,25 @@ create table if not exists product (
 
     -- if target account is set, the product is booked to this specific account,
     -- e.g. for the deposit account, or a specific exit account (for beer, ...)
-    target_account_id int references account(id) on delete restrict,
+    target_account_id bigint references account(id),
 
-    tax_name text not null references tax(name) on delete restrict
+    tax_name text not null references tax(name)
 );
+comment on column product.price is 'price including tax (what is charged in the end)';
+comment on column product.fixed_price is 'price is not fixed, e.g for top up. Then price=null and set with the api call';
 
-insert into product (id, name, fixed_price, tax_name, is_locked)
-values (1, 'Rabatt', false, 'none', true);
-select setval('product_id_seq', 100);
+
+insert into product (id, name, fixed_price, tax_name, is_locked) overriding system value
+values
+    (1, 'Rabatt', false, 'none', true),
+    (2, 'Aufladen', false, 'none', true),
+    (3, 'Auszahlen', false, 'none', true);
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
-    id          bigint not null references product (id) on delete cascade,
-    restriction text   not null references restriction_type (name) on delete restrict,
-    primary key (id, restriction)
+    id bigint not null references product(id) on delete cascade,
+    restriction text not null references restriction_type(name) on delete cascade,
+    unique (id, restriction)
 );
 
 create or replace view product_with_tax_and_restrictions as (
@@ -316,46 +322,60 @@ create or replace view product_as_json as (
 );
 
 create table if not exists till_layout (
-    id serial not null primary key,
+    id bigint primary key generated always as identity,
     name text not null unique,
     description text
 );
 
 create table if not exists till_button (
-    id serial not null primary key,
+    id bigint primary key generated always as identity,
     name text not null unique
 );
 
 create table if not exists till_button_product (
-    button_id int not null references till_button(id) on delete cascade,
-    product_id int not null references product(id) on delete cascade,
+    button_id bigint not null references till_button(id) on delete cascade,
+    product_id bigint not null references product(id) on delete cascade,
     primary key (button_id, product_id)
     -- TODO: constraint that we can only reference non-editable products
+    -- TODO: constraint that a button can only reference ONE variable price product
+    -- TODO: constraint that a button can only reference ONE returnable product
 );
 
 create or replace view till_button_with_products as (
     select
-        t.*,
-        coalesce(j_view.price, 0) as price,
-        coalesce(j_view.product_ids, '{}'::int array) as product_ids
+        t.id,
+        t.name,
+        coalesce(j_view.price, 0) as price, -- sane default for buttons without a product
+        coalesce(j_view.fixed_price, true) as fixed_price, -- sane default for buttons without a product
+        coalesce(j_view.is_returnable, false) as is_returnable, -- sane default for buttons without a product
+        coalesce(j_view.product_ids, '{}'::bigint array) as product_ids
     from till_button t
     left join (
-        select tlb.button_id, sum(p.price) as price, array_agg(tlb.product_id) as product_ids
+        select
+            tlb.button_id,
+            sum(p.price) as price,
+            bool_and(p.fixed_price) as fixed_price, -- a constraint assures us that for variable priced products a button can only refer to one product
+            bool_and(p.is_returnable) as is_returnable, -- a constraint assures us that for returnable products a button can only refer to one product
+            array_agg(tlb.product_id) as product_ids
         from till_button_product tlb
         join product_with_tax_and_restrictions p on tlb.product_id = p.id
         group by tlb.button_id
+        window button_window as (partition by tlb.button_id)
     ) j_view on t.id = j_view.button_id
 );
 
 create table if not exists till_layout_to_button (
-    layout_id int not null references till_layout(id) on delete cascade,
-    button_id int not null references till_button(id) on delete restrict,
-    sequence_number int not null unique,
-    primary key (layout_id, button_id)
+    layout_id bigint not null references till_layout(id) on delete cascade,
+    button_id bigint not null references till_button(id),
+    sequence_number bigint not null,
+    primary key (layout_id, button_id),
+    unique (layout_id, button_id, sequence_number)
 );
 
 create or replace view till_layout_with_buttons as (
-    select t.*, coalesce(j_view.button_ids, '{}'::int array) as button_ids
+    select
+       t.*,
+       coalesce(j_view.button_ids, '{}'::bigint array) as button_ids
     from till_layout t
     left join (
         select tltb.layout_id, array_agg(tltb.button_id order by tltb.sequence_number) as button_ids
@@ -365,17 +385,18 @@ create or replace view till_layout_with_buttons as (
 );
 
 create table if not exists till_profile (
-    id serial not null primary key,
+    id bigint primary key generated always as identity,
     name text not null unique,
     description text,
     allow_top_up boolean not null default false,
-    layout_id int not null references till_layout(id) on delete restrict
+    allow_cash_out boolean not null default false,
+    layout_id bigint not null references till_layout(id)
     -- todo: payment_methods?
 );
 
 -- which cash desks do we have and in which state are they
 create table if not exists till (
-    id serial not null primary key,
+    id bigint primary key generated always as identity,
     name text not null unique,
     description text,
     registration_uuid uuid unique,
@@ -386,62 +407,74 @@ create table if not exists till (
 
     -- identifies the current active work shift and configuration
     active_shift text,
-    active_profile_id int not null references till_profile(id) on delete restrict,
-    active_user_id int references usr(id) on delete restrict,
+    active_profile_id bigint not null references till_profile(id),
+    active_user_id bigint references usr(id),
 
     constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null))
 );
 
 -- represents an order of an customer, like buying wares or top up
 create table if not exists ordr (
-    id bigserial not null primary key,
+    id bigint primary key generated always as identity,
     uuid uuid not null default gen_random_uuid() unique,
 
     -- order values can be obtained with order_value
 
     -- how many line items does this transaction have
     -- determines the next line_item id
-    item_count int not null default 0,
+    item_count bigint not null default 0,
 
     booked_at timestamptz not null default now(),
 
     -- todo: who triggered the transaction (user)
 
     -- how the order was invoked
-    payment_method text references payment_method(name) on delete restrict,
+    payment_method text references payment_method(name),
     -- todo: method_info references payment_information(id) -> (sumup-id, paypal-id, ...)
     --       or inline-json without separate table?
 
     -- type of the order like, top up, buy beer,
-    order_type text not null references order_type(name) on delete restrict,
+    order_type text not null references order_type(name),
 
     -- who created it
-    cashier_id int not null references usr(id) on delete restrict,
-    till_id int not null references till(id) on delete restrict,
+    cashier_id bigint not null references usr(id),
+    till_id bigint not null references till(id),
     -- customer is allowed to be null, as it is only known on the final booking, not on the creation of the order
     -- canceled orders can have no customer
-    customer_account_id int references account(id) on delete restrict
+    customer_account_id bigint references account(id)
 );
 
 -- all products in a transaction
 create table if not exists line_item (
-    order_id bigint not null references ordr(id) on delete cascade,
-    item_id int not null,
+    order_id bigint not null references ordr(id),
+    item_id bigint not null,
     primary key (order_id, item_id),
 
-    product_id int not null references product(id) on delete restrict,
+    product_id bigint not null references product(id),
+    -- current product price
+    product_price numeric not null,
 
-    quantity int not null default 1,
+    quantity bigint not null default 1,
     constraint quantity_not_zero check ( quantity != 0 ),
-
-    -- price with tax
-    price numeric not null,
 
     -- tax amount
     tax_name text,
-    tax_rate numeric
+    tax_rate numeric,
+    total_price numeric generated always as ( product_price * quantity ) stored,
+    total_tax numeric generated always as (
+        round(product_price * quantity * tax_rate / (1 + tax_rate ), 2)
+    ) stored
+
     -- TODO: constrain that we can only reference locked products
     -- TODO: constrain that only returnable products lead to a non zero quantity here
+);
+
+create or replace view line_item_json as (
+    select
+        l.*,
+        row_to_json(p) as product
+    from line_item as l
+        join product_with_tax_and_restrictions p on l.product_id = p.id
 );
 
 create or replace function order_updated() returns trigger as
@@ -472,14 +505,6 @@ create trigger order_updated_trigger
     for each row
 execute function order_updated();
 
-create or replace view line_item_tax as
-    select
-        l.*,
-        l.price * l.quantity as total_price,
-        round(l.price * l.quantity * l.tax_rate / (1 + l.tax_rate ), 2) as total_tax,
-        p.json as product
-    from line_item l join product_as_json p on l.product_id = p.id;
-
 -- aggregates the line_item's amounts
 create or replace view order_value as
     select
@@ -487,11 +512,11 @@ create or replace view order_value as
         sum(total_price) as total_price,
         sum(total_tax) as total_tax,
         sum(total_price - total_tax) as total_no_tax,
-        json_agg(line_item_tax) as line_items
+        json_agg(line_item_json) as line_items
     from
         ordr
-        left join line_item_tax
-            on (ordr.id = line_item_tax.order_id)
+        left join line_item_json
+            on (ordr.id = line_item_json.order_id)
     group by
         ordr.id;
 
@@ -511,12 +536,12 @@ create or replace view order_tax_rates as
         ordr.*,
         tax_name,
         tax_rate,
-        sum(total_price) as value_sum,
-        sum(total_tax) as value_tax,
-        sum(total_price - total_tax) as value_notax
+        sum(total_price) as total_price,
+        sum(total_tax) as total_tax,
+        sum(total_price - total_tax) as total_no_tax
     from
         ordr
-        left join line_item_tax
+        left join line_item
             on (ordr.id = order_id)
         group by
             ordr.id, tax_rate, tax_name;
@@ -527,14 +552,14 @@ create table if not exists transaction (
     -- one order can consist of multiple transactions, hence the extra table
     --      e.g. wares to the ware output account
     --      and deposit to a specific deposit account
-    id bigserial not null primary key,
-    order_id bigint references ordr(id) on delete restrict,
+    id bigint primary key generated always as identity,
+    order_id bigint references ordr(id),
 
     -- what was booked in this transaction  (backpack, items, ...)
     description text,
 
-    source_account int not null references account(id) on delete restrict,
-    target_account int not null references account(id) on delete restrict,
+    source_account bigint not null references account(id),
+    target_account bigint not null references account(id),
     constraint source_target_account_different check (source_account != target_account),
 
     booked_at timestamptz not null default now(),
@@ -550,7 +575,8 @@ create table if not exists transaction (
 create or replace view cashiers as (
     select
         usr.id,
-        usr.name,
+        usr.login,
+        usr.display_name,
         usr.description,
         usr.user_tag_uid,
         a.balance as cash_drawer_balance,
@@ -580,6 +606,9 @@ begin
     end if;
 
     if amount < 0 then
+        if vouchers_amount != 0 then
+            raise 'if the amount is negative vouchers cannot be used';
+        end if;
         -- swap account on negative amount, as only non-negative transactions are allowed
         temp_account_id = source_account_id;
         source_account_id = target_account_id;
@@ -618,7 +647,7 @@ $$ language plpgsql;
 
 -- requests the tse module to sign something
 create table if not exists tse_signature (
-    id serial not null primary key references ordr(id) on delete cascade,
+    id bigint primary key references ordr(id),
 
     signed bool default false,
     status text,
@@ -635,7 +664,7 @@ create table if not exists tse_signature (
 
 -- requests the bon generator to create a new receipt
 create table if not exists bon (
-    id bigint not null primary key references ordr(id) on delete cascade,
+    id bigint not null primary key references ordr(id),
 
     generated bool default false,
     generated_at timestamptz,
