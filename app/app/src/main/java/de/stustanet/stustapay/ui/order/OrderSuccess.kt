@@ -17,8 +17,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun OrderSuccess(viewModel: OrderViewModel, onConfirm: () -> Unit) {
-    val orderConfig by viewModel.orderConfig.collectAsStateWithLifecycle()
-    val order by viewModel.order.collectAsStateWithLifecycle()
+    val orderConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+    val order by viewModel._orderUIState.collectAsStateWithLifecycle()
 
     val haptic = LocalHapticFeedback.current
 
