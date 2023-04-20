@@ -168,7 +168,7 @@ class NfcHandler @Inject constructor(
                     dataSource.setScanResult(NfcScanResult.Write)
                 }
                 is NfcScanRequest.Test -> {
-                    val log = tag.test()
+                    val log = tag.test(req.key0, req.key1)
                     dataSource.setScanResult(NfcScanResult.Test(log))
                 }
             }

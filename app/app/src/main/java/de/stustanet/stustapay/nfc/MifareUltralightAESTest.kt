@@ -4,13 +4,10 @@ import de.stustanet.stustapay.util.*
 import java.nio.charset.Charset
 import java.security.SecureRandom
 
-fun MifareUltralightAES.test(): MutableList<Pair<String, Boolean>> {
+fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): MutableList<Pair<String, Boolean>> {
     val log: MutableList<Pair<String, Boolean>> = MutableList(0) { Pair("", true) }
-
-    var key0 = 0x00.bv + 0x01.bv + 0x02.bv + 0x03.bv + 0x04.bv + 0x05.bv + 0x06.bv + 0x07.bv +
-            0x08.bv + 0x09.bv + 0x0a.bv + 0x0b.bv + 0x0c.bv + 0x0d.bv + 0x0e.bv + 0x0f.bv
-    var key1 = 0x00.bv + 0x01.bv + 0x02.bv + 0x03.bv + 0x04.bv + 0x05.bv + 0x06.bv + 0x07.bv +
-            0x08.bv + 0x09.bv + 0x0a.bv + 0x0b.bv + 0x0c.bv + 0x0d.bv + 0x0e.bv + 0x0f.bv
+    var key0 = constKey0
+    var key1 = constKey1
 
     log.add(Pair("main: started", true))
 

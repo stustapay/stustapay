@@ -41,5 +41,8 @@ sealed interface NfcScanRequest {
         val key: BitVector
     ): NfcScanRequest
 
-    object Test: NfcScanRequest
+    data class Test(
+        val key0: BitVector,
+        val key1: BitVector
+    ): NfcScanRequest
 }

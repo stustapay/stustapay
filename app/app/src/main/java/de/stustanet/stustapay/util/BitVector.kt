@@ -176,6 +176,14 @@ class BitVector constructor(
     }
 }
 
+fun String.decodeHex(): BitVector {
+    check(length % 2 == 0) { "Must have an even length" }
+
+    return chunked(2)
+        .map { it.toInt(16).toByte() }
+        .toByteArray().asBitVector()
+}
+
 fun ByteArray.asBitVector(): BitVector {
     val ret = BitVector(this.size.toULong() * 8uL)
     for (i in indices) {
