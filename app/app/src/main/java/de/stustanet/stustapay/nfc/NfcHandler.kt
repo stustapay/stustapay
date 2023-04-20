@@ -168,8 +168,7 @@ class NfcHandler @Inject constructor(
                     dataSource.setScanResult(NfcScanResult.Write)
                 }
                 is NfcScanRequest.Test -> {
-                    val log: MutableList<Pair<String, Boolean>> = MutableList(0) { Pair("", true) }
-                    tag.test(log)
+                    val log = tag.test()
                     dataSource.setScanResult(NfcScanResult.Test(log))
                 }
             }

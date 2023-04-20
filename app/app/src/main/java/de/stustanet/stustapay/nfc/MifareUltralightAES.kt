@@ -3,10 +3,7 @@ package de.stustanet.stustapay.nfc
 import android.nfc.Tag
 import android.nfc.tech.NfcA
 import android.nfc.tech.TagTechnology
-import de.stustanet.stustapay.util.BitVector
-import de.stustanet.stustapay.util.aesDecrypt
-import de.stustanet.stustapay.util.aesEncrypt
-import de.stustanet.stustapay.util.asBitVector
+import de.stustanet.stustapay.util.*
 import java.io.IOException
 import java.security.SecureRandom
 
@@ -75,8 +72,8 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun authenticate(key: BitVector, type: KeyType, cmacEnabled: Boolean) {
-        if (!isConnected) { throw Exception("Not connected") }
-        if (key.len != 16uL * 8uL) { throw Exception("Wrong key size") }
+        if (!isConnected) { throw NotConnectedException() }
+        if (key.len != 16uL * 8uL) { throw ParameterSizeException() }
         if (chipState == type.state) { throw Exception("Already authenticated") }
 
         val nonce = ByteArray(16)
@@ -125,8 +122,8 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun writeDataProtKey(key: BitVector) {
-        if (!isConnected) { throw Exception("Not connected") }
-        if (key.len != 16uL * 8uL) { throw Exception("Wrong key size") }
+        if (!isConnected) { throw NotConnectedException() }
+        if (key.len != 16uL * 8uL) { throw ParameterSizeException() }
         if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw AuthenticationRequiredException() }
 
         for (i in 0uL until 4uL) {
@@ -156,8 +153,8 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun writeUidRetrKey(key: BitVector) {
-        if (!isConnected) { throw Exception("Not connected") }
-        if (key.len != 16uL * 8uL) { throw Exception("Wrong key size") }
+        if (!isConnected) { throw NotConnectedException() }
+        if (key.len != 16uL * 8uL) { throw ParameterSizeException() }
         if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw AuthenticationRequiredException() }
 
         for (i in 0uL until 4uL) {
@@ -187,7 +184,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun writeUserMemory(content: BitVector) {
-        if (!isConnected) { throw Exception("Not connected") }
+        if (!isConnected) { throw NotConnectedException() }
         if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw AuthenticationRequiredException() }
 
         val writeBuffer = BitVector(USER_BYTES * 8uL)
@@ -226,7 +223,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun readUserMemory(): BitVector {
-        if (!isConnected) { throw Exception("Not connected") }
+        if (!isConnected) { throw NotConnectedException() }
         if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw AuthenticationRequiredException() }
 
         val readBuffer = BitVector(USER_BYTES * 8uL)
@@ -247,7 +244,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun readSerialNumber(): ULong {
-        if (!isConnected) { throw Exception("Not connected") }
+        if (!isConnected) { throw NotConnectedException() }
 
         val readBuffer = if (sessionKey != null) {
             val ret = cmdRead(0x00u, sessionKey!!, sessionCounter!!, nfcaTag)
@@ -268,13 +265,11 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     override fun connect() {
         nfcaTag.connect()
 
-        /*
         val resp = cmdGetVersion(nfcaTag)
         if (!(resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x01.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv) ||
                     resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x02.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv))) {
-            throw Exception("Not a Mifare Ultralight AES chip")
+            throw IncompatibleTagException()
         }
-        */
 
         chipState = ChipState.ACTIVE
 
@@ -316,4 +311,7 @@ fun get(tag: Tag): MifareUltralightAES {
     return MifareUltralightAES(tag)
 }
 
+class IncompatibleTagException: Exception()
 class AuthenticationRequiredException: Exception()
+class ParameterSizeException: Exception()
+class NotConnectedException: Exception()

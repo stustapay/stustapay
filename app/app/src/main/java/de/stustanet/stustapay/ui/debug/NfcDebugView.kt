@@ -247,7 +247,7 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
         Text(text = "Results", fontSize = 24.sp)
 
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.Start,
             modifier = Modifier.fillMaxWidth()
         ) {
             when (uiState.result) {

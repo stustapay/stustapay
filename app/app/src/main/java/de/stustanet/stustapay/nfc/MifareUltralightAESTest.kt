@@ -4,13 +4,15 @@ import de.stustanet.stustapay.util.*
 import java.nio.charset.Charset
 import java.security.SecureRandom
 
-fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
+fun MifareUltralightAES.test(): MutableList<Pair<String, Boolean>> {
+    val log: MutableList<Pair<String, Boolean>> = MutableList(0) { Pair("", true) }
+
     var key0 = 0x00.bv + 0x01.bv + 0x02.bv + 0x03.bv + 0x04.bv + 0x05.bv + 0x06.bv + 0x07.bv +
             0x08.bv + 0x09.bv + 0x0a.bv + 0x0b.bv + 0x0c.bv + 0x0d.bv + 0x0e.bv + 0x0f.bv
     var key1 = 0x00.bv + 0x01.bv + 0x02.bv + 0x03.bv + 0x04.bv + 0x05.bv + 0x06.bv + 0x07.bv +
             0x08.bv + 0x09.bv + 0x0a.bv + 0x0b.bv + 0x0c.bv + 0x0d.bv + 0x0e.bv + 0x0f.bv
 
-    log.add(Pair("Started test", true))
+    log.add(Pair("main: started", true))
 
     nfcaTag.connect()
     while (!nfcaTag.isConnected) {}
@@ -20,244 +22,26 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
         val ver = cmdGetVersion(nfcaTag)
         if (ver.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x01.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv) ||
             ver.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x02.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv)) {
-            log.add(Pair("Mifare Ultralight AES tag detected", true))
+            log.add(Pair("tag_type: mifare ultralight aes tag detected", true))
             verCheckSucceeded = true
         } else {
-            log.add(Pair("Other NFC tag detected", false))
+            log.add(Pair("tag_type: other nfc tag detected", false))
         }
     } catch (e: Exception) {
-        log.add(Pair("Checking tag type failed", false))
+        log.add(Pair("tag_type: checking tag type failed (retry scan)", false))
     }
 
     nfcaTag.close()
     nfcaTag.connect()
     while (!nfcaTag.isConnected) {}
 
-    var key0AuthSucceeded = false
-    var keyOuterReversed = false
-    var keyInnerReversed = false
-    try {
-        val nonce = ByteArray(16)
-        SecureRandom().nextBytes(nonce)
-
-        val rndA = nonce.asBitVector()
-        val rndB: BitVector
-
-        log.add(Pair("rndA: " + rndA.asByteString(), true))
-
-        val ekRndB = cmdAuthenticate1(0x00u, nfcaTag)
-        rndB = ekRndB.aesDecrypt(key0)
-
-        log.add(Pair("ekRndB: " + ekRndB.asByteString(), true))
-        log.add(Pair("rndB: " + rndB.asByteString(), true))
-
-        val rndAB = rndA + rndB.rotl(8uL)
-        val ekRndAB = rndAB.aesEncrypt(key0)
-
-        log.add(Pair("rndAB: " + rndAB.asByteString(), true))
-        log.add(Pair("ekRndAB: " + ekRndAB.asByteString(), true))
-
-        val ekRndA = cmdAuthenticate2(ekRndAB, nfcaTag)
-        val rndAResp = ekRndA.aesDecrypt(key0)
-
-        log.add(Pair("ekRndA: " + ekRndA.asByteString(), true))
-        log.add(Pair("rndAResp: " + rndAResp.asByteString(), true))
-
-        if (rndAResp.equals(rndA.rotl(8uL))) {
-            log.add(Pair("Authenticated using key0", true))
-            log.add(Pair("used key0: " + key0.asByteString(), true))
-            key0AuthSucceeded = true
-        } else {
-            log.add(Pair("Authentication using key0 failed", false))
-            log.add(Pair("tried key0: " + key0.asByteString(), false))
-        }
-    } catch (e: Exception) {
-        log.add(Pair("Authentication using key0 failed", false))
-        log.add(Pair("tried key0: " + key0.asByteString(), false))
-    }
+    var key0AuthSucceeded = testKey(key0, log)
 
     if (!key0AuthSucceeded) {
         nfcaTag.close()
         nfcaTag.connect()
         while (!nfcaTag.isConnected) {}
 
-        val testKey = BitVector(16uL * 8uL)
-        for (i in 0uL until 16uL) {
-            testKey.sle(i, key0.gbe(i))
-        }
-
-        try {
-            val nonce = ByteArray(16)
-            SecureRandom().nextBytes(nonce)
-
-            val rndA = nonce.asBitVector()
-            val rndB: BitVector
-
-            log.add(Pair("rndA: " + rndA.asByteString(), true))
-
-            val ekRndB = cmdAuthenticate1(0x00u, nfcaTag)
-            rndB = ekRndB.aesDecrypt(testKey)
-
-            log.add(Pair("ekRndB: " + ekRndB.asByteString(), true))
-            log.add(Pair("rndB: " + rndB.asByteString(), true))
-
-            val rndAB = rndA + rndB.rotl(8uL)
-            val ekRndAB = rndAB.aesEncrypt(testKey)
-
-            log.add(Pair("rndAB: " + rndAB.asByteString(), true))
-            log.add(Pair("ekRndAB: " + ekRndAB.asByteString(), true))
-
-            val ekRndA = cmdAuthenticate2(ekRndAB, nfcaTag)
-            val rndAResp = ekRndA.aesDecrypt(testKey)
-
-            log.add(Pair("ekRndA: " + ekRndA.asByteString(), true))
-            log.add(Pair("rndAResp: " + rndAResp.asByteString(), true))
-
-            if (rndAResp.equals(rndA.rotl(8uL))) {
-                log.add(Pair("Authenticated using outer reversed key0", true))
-                log.add(Pair("used key: " + testKey.asByteString(), true))
-                key0AuthSucceeded = true
-                keyOuterReversed = true
-            } else {
-                log.add(Pair("Authentication using outer reversed key0 also failed", false))
-                log.add(Pair("tried key: " + testKey.asByteString(), false))
-            }
-        } catch (e: Exception) {
-            log.add(Pair("Authentication using outer reversed key0 also failed", false))
-            log.add(Pair("tried key: " + testKey.asByteString(), false))
-        }
-    }
-
-    if (!key0AuthSucceeded) {
-        nfcaTag.close()
-        nfcaTag.connect()
-        while (!nfcaTag.isConnected) {}
-
-        val testKey = BitVector(16uL * 8uL)
-        for (i in 0uL until 4uL) {
-            testKey.sle(i, key0.gbe(12uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            testKey.sle(4uL + i, key0.gbe(8uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            testKey.sle(8uL + i, key0.gbe(4uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            testKey.sle(12uL + i, key0.gbe(i))
-        }
-
-        try {
-            val nonce = ByteArray(16)
-            SecureRandom().nextBytes(nonce)
-
-            val rndA = nonce.asBitVector()
-            val rndB: BitVector
-
-            log.add(Pair("rndA: " + rndA.asByteString(), true))
-
-            val ekRndB = cmdAuthenticate1(0x00u, nfcaTag)
-            rndB = ekRndB.aesDecrypt(testKey)
-
-            log.add(Pair("ekRndB: " + ekRndB.asByteString(), true))
-            log.add(Pair("rndB: " + rndB.asByteString(), true))
-
-            val rndAB = rndA + rndB.rotl(8uL)
-            val ekRndAB = rndAB.aesEncrypt(testKey)
-
-            log.add(Pair("rndAB: " + rndAB.asByteString(), true))
-            log.add(Pair("ekRndAB: " + ekRndAB.asByteString(), true))
-
-            val ekRndA = cmdAuthenticate2(ekRndAB, nfcaTag)
-            val rndAResp = ekRndA.aesDecrypt(testKey)
-
-            log.add(Pair("ekRndA: " + ekRndA.asByteString(), true))
-            log.add(Pair("rndAResp: " + rndAResp.asByteString(), true))
-
-            if (rndAResp.equals(rndA.rotl(8uL))) {
-                log.add(Pair("Authenticated using inner reversed key0", true))
-                log.add(Pair("used key: " + testKey.asByteString(), false))
-                key0AuthSucceeded = true
-                keyInnerReversed = true
-            } else {
-                log.add(Pair("Authentication using inner reversed key0 also failed", false))
-                log.add(Pair("tried key: " + testKey.asByteString(), false))
-            }
-        } catch (e: Exception) {
-            log.add(Pair("Authentication using inner reversed key0 also failed", false))
-            log.add(Pair("tried key: " + testKey.asByteString(), false))
-        }
-    }
-
-    if (!key0AuthSucceeded) {
-        nfcaTag.close()
-        nfcaTag.connect()
-        while (!nfcaTag.isConnected) {}
-
-        val tmp = BitVector(16uL * 8uL)
-        for (i in 0uL until 4uL) {
-            tmp.sle(i, key0.gbe(12uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            tmp.sle(4uL + i, key0.gbe(8uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            tmp.sle(8uL + i, key0.gbe(4uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            tmp.sle(12uL + i, key0.gbe(i))
-        }
-        val testKey = BitVector(16uL * 8uL)
-        for (i in 0uL until 16uL) {
-            testKey.sle(i, tmp.gbe(i))
-        }
-
-        try {
-            val nonce = ByteArray(16)
-            SecureRandom().nextBytes(nonce)
-
-            val rndA = nonce.asBitVector()
-            val rndB: BitVector
-
-            log.add(Pair("rndA: " + rndA.asByteString(), true))
-
-            val ekRndB = cmdAuthenticate1(0x00u, nfcaTag)
-            rndB = ekRndB.aesDecrypt(testKey)
-
-            log.add(Pair("ekRndB: " + ekRndB.asByteString(), true))
-            log.add(Pair("rndB: " + rndB.asByteString(), true))
-
-            val rndAB = rndA + rndB.rotl(8uL)
-            val ekRndAB = rndAB.aesEncrypt(testKey)
-
-            log.add(Pair("rndAB: " + rndAB.asByteString(), true))
-            log.add(Pair("ekRndAB: " + ekRndAB.asByteString(), true))
-
-            val ekRndA = cmdAuthenticate2(ekRndAB, nfcaTag)
-            val rndAResp = ekRndA.aesDecrypt(testKey)
-
-            log.add(Pair("ekRndA: " + ekRndA.asByteString(), true))
-            log.add(Pair("rndAResp: " + rndAResp.asByteString(), true))
-
-            if (rndAResp.equals(rndA.rotl(8uL))) {
-                log.add(Pair("Authenticated using double reversed key0", true))
-                log.add(Pair("used key: " + testKey.asByteString(), false))
-                key0AuthSucceeded = true
-                keyOuterReversed = true
-                keyInnerReversed = true
-            } else {
-                log.add(Pair("Authentication using double reversed key0 also failed", false))
-                log.add(Pair("tried key: " + testKey.asByteString(), false))
-            }
-        } catch (e: Exception) {
-            log.add(Pair("Authentication using double reversed key0 also failed", false))
-            log.add(Pair("tried key: " + testKey.asByteString(), false))
-        }
-    }
-
-    nfcaTag.close()
-
-    if (keyOuterReversed) {
         val tmp0 = BitVector(16uL * 8uL)
         for (i in 0uL until 16uL) {
             tmp0.sle(i, key0.gbe(i))
@@ -268,9 +52,15 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
             tmp1.sle(i, key1.gbe(i))
         }
         key1 = tmp1
+
+        key0AuthSucceeded = testKey(key0, log)
     }
 
-    if (keyInnerReversed) {
+    if (!key0AuthSucceeded) {
+        nfcaTag.close()
+        nfcaTag.connect()
+        while (!nfcaTag.isConnected) {}
+
         val tmp0 = BitVector(16uL * 8uL)
         for (i in 0uL until 4uL) {
             tmp0.sle(i, key0.gbe(12uL + i))
@@ -299,9 +89,31 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
             tmp1.sle(12uL + i, key1.gbe(i))
         }
         key1 = tmp1
+
+        key0AuthSucceeded = testKey(key0, log)
     }
 
-    if (key0AuthSucceeded) {
+    if (!key0AuthSucceeded) {
+        nfcaTag.close()
+        nfcaTag.connect()
+        while (!nfcaTag.isConnected) {}
+
+        val tmp0 = BitVector(16uL * 8uL)
+        for (i in 0uL until 16uL) {
+            tmp0.sle(i, key0.gbe(i))
+        }
+        key0 = tmp0
+        val tmp1 = BitVector(16uL * 8uL)
+        for (i in 0uL until 16uL) {
+            tmp1.sle(i, key1.gbe(i))
+        }
+        key1 = tmp1
+
+        key0AuthSucceeded = testKey(key0, log)
+    }
+
+    if (verCheckSucceeded && key0AuthSucceeded) {
+        nfcaTag.close()
         connect()
         while (!isConnected) {}
 
@@ -309,7 +121,7 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
         try {
             authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, true)
             cmacCheckSucceeded = true
-            log.add(Pair("auth with CMAC ok", true))
+            log.add(Pair("cmac: auth with cmac succeeded", true))
         } catch (e: Exception) {
             try {
                 close()
@@ -317,9 +129,9 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
                 while (!isConnected) {}
 
                 authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, false)
-                log.add(Pair("auth without CMAC", false))
+                log.add(Pair("cmac: auth without cmac succeeded", false))
             } catch (e: Exception) {
-                log.add(Pair("failed to auth without CMAC", false))
+                log.add(Pair("cmac: auth with and without cmac failed (retry scan)", false))
             }
         }
 
@@ -341,49 +153,49 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
             var confCheckSuccessful = true
 
             if (conf.gbe(0uL) == 0x01u.toUByte()) {
-                log.add(Pair("cfg: Pages 0x10 and 0x11 locked", true))
+                log.add(Pair("cfg: pages 0x10 and 0x11 locked", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("cfg: Pages 0x10 and 0x11 not locked", false))
+                log.add(Pair("cfg: pages 0x10 and 0x11 not locked", false))
             }
 
             if (conf.gbe(4uL) == 0x02u.toUByte()) {
-                log.add(Pair("cfg: CMAC enabled", true))
+                log.add(Pair("cfg: cmac enabled", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("cfg: CMAC disabled", false))
+                log.add(Pair("cfg: cmac disabled", false))
             }
 
             if (conf.gbe(7uL) == 0x10u.toUByte()) {
-                log.add(Pair("cfg: Pages after 0x10 protected", true))
+                log.add(Pair("cfg: pages after 0x10 protected", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("cfg: Pages after 0x10 not protected", false))
+                log.add(Pair("cfg: pages after 0x10 not protected", false))
             }
 
             if (conf.gbe(8uL) == 0xe0u.toUByte()) {
-                log.add(Pair("cfg: Keys locked", true))
+                log.add(Pair("cfg: keys locked", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("cfg: Keys not locked", false))
+                log.add(Pair("cfg: keys not locked", false))
             }
 
             if (conf.gbe(12uL) == 0xc0u.toUByte()) {
-                log.add(Pair("cfg: Config locked", true))
+                log.add(Pair("cfg: config locked", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("cfg: Config not locked", false))
+                log.add(Pair("cfg: config not locked", false))
             }
 
             if (!confCheckSuccessful) {
-                log.add(Pair("Config page content:", false))
-                log.add(Pair("28: " + conf.slice(8uL * 12uL, 8uL * 16uL).asByteString(), false))
-                log.add(Pair("29: " + conf.slice(8uL * 8uL, 8uL * 12uL).asByteString(), false))
-                log.add(Pair("2a: " + conf.slice(8uL * 4uL, 8uL * 8uL).asByteString(), false))
-                log.add(Pair("2b: " + conf.slice(0uL, 8uL * 4uL).asByteString(), false))
+                log.add(Pair("cfg: config page content:", false))
+                log.add(Pair("cfg: 28: " + conf.slice(8uL * 12uL, 8uL * 16uL).asByteString(), false))
+                log.add(Pair("cfg: 29: " + conf.slice(8uL * 8uL, 8uL * 12uL).asByteString(), false))
+                log.add(Pair("cfg: 2a: " + conf.slice(8uL * 4uL, 8uL * 8uL).asByteString(), false))
+                log.add(Pair("cfg: 2b: " + conf.slice(0uL, 8uL * 4uL).asByteString(), false))
             }
         } catch (e: Exception) {
-            log.add(Pair("Failed to read config", false))
+            log.add(Pair("cfg: failed to read config (retry scan)", false))
         }
 
         close()
@@ -396,23 +208,23 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
             val mem = readUserMemory()
             val sig = mem.slice(mem.len - 44uL * 8uL, mem.len)
             if (sig.equals(expected)) {
-                log.add(Pair("Signature found", true))
+                log.add(Pair("sig: found valid signature", true))
             } else {
-                log.add(Pair("Signature invalid", false))
-                log.add(Pair("sig: " + sig.asByteString(), false))
+                log.add(Pair("sig: wrong signature ", false))
+                log.add(Pair("sig: signature is " + sig.asByteString(), false))
             }
 
             val secret = mem.slice(mem.len - 56uL * 8uL, mem.len - 48uL * 8uL)
             val check = secret.gle(0uL) or secret.gle(1uL) or secret.gle(2uL) or secret.gle(3uL) or secret.gle(4uL) or secret.gle(5uL) or secret.gle(6uL) or secret.gle(7uL)
             if (check != 0x00u.toUByte()) {
-                log.add(Pair("Secret ID found", true))
-                log.add(Pair("secret: " + secret.asByteString(), true))
+                log.add(Pair("secret: random id found", true))
+                log.add(Pair("secret: id is " + secret.asByteString(), true))
             } else {
-                log.add(Pair("Secret ID not found", false))
-                log.add(Pair("secret: " + secret.asByteString(), false))
+                log.add(Pair("secret: no random id", false))
+                log.add(Pair("secret: id is " + secret.asByteString(), false))
             }
         } catch (e: Exception) {
-            log.add(Pair("Failed to read user memory", false))
+            log.add(Pair("main: failed to read user memory (retry scan)", false))
         }
 
         close()
@@ -421,14 +233,71 @@ fun MifareUltralightAES.test(log: MutableList<Pair<String, Boolean>>) {
 
         try {
             authenticate(key1, MifareUltralightAES.KeyType.UID_RETR_KEY, cmacCheckSucceeded)
-            log.add(Pair("Authenticated using key1", true))
+            log.add(Pair("key1_auth: succeeded", true))
         } catch (e: Exception) {
-            log.add(Pair("Authentication using key1 failed", false))
+            log.add(Pair("key1_auth: failed", false))
             e.printStackTrace()
         }
     } else {
-        log.add(Pair("Skipping remaining tests due to auth or version check failure", false))
+        log.add(Pair("main: skipping remaining tests due to auth or tag type check failure", false))
     }
 
-    log.add(Pair("Test completed", true))
+    log.add(Pair("main: completed", true))
+
+    return log
+}
+
+private fun MifareUltralightAES.testKey(key: BitVector, log: MutableList<Pair<String, Boolean>>): Boolean {
+    val nonce = ByteArray(16)
+    SecureRandom().nextBytes(nonce)
+
+    val rndA = nonce.asBitVector()
+    val rndB: BitVector
+    val ekRndB: BitVector
+
+    try {
+        ekRndB = cmdAuthenticate1(0x00u, nfcaTag)
+        rndB = ekRndB.aesDecrypt(key)
+    } catch (e: Exception) {
+        log.add(Pair("key0_auth: failed at step 1 (retry scan)", false))
+        log.add(Pair("key0_auth: tried key " + key.asByteString(), false))
+        log.add(Pair("key0_auth: rndA was " + rndA.asByteString(), true))
+        return false
+    }
+
+    val rndAB: BitVector = rndA + rndB.rotl(8uL)
+    val ekRndAB: BitVector = rndAB.aesEncrypt(key)
+    val ekRndA: BitVector
+    val rndAResp: BitVector
+
+    try {
+        ekRndA = cmdAuthenticate2(ekRndAB, nfcaTag)
+        rndAResp = ekRndA.aesDecrypt(key)
+    } catch (e: Exception) {
+        log.add(Pair("key0_auth: failed at step 2", false))
+        log.add(Pair("key0_auth: tried key " + key.asByteString(), false))
+        log.add(Pair("key0_auth: rndA was " + rndA.asByteString(), true))
+        log.add(Pair("key0_auth: ekRndB was " + ekRndB.asByteString(), true))
+        log.add(Pair("key0_auth: rndB was " + rndB.asByteString(), true))
+        log.add(Pair("key0_auth: rndAB was " + rndAB.asByteString(), true))
+        log.add(Pair("key0_auth: ekRndAB was " + ekRndAB.asByteString(), true))
+        return false
+    }
+
+    return if (rndAResp.equals(rndA.rotl(8uL))) {
+        log.add(Pair("key0_auth: succeeded", true))
+        log.add(Pair("key0_auth: used key " + key.asByteString(), true))
+        true
+    } else {
+        log.add(Pair("key0_auth: failed at final check", false))
+        log.add(Pair("key0_auth: tried key " + key.asByteString(), false))
+        log.add(Pair("key0_auth: rndA was " + rndA.asByteString(), true))
+        log.add(Pair("key0_auth: ekRndB was " + ekRndB.asByteString(), true))
+        log.add(Pair("key0_auth: rndB was " + rndB.asByteString(), true))
+        log.add(Pair("key0_auth: rndAB was " + rndAB.asByteString(), true))
+        log.add(Pair("key0_auth: ekRndAB was " + ekRndAB.asByteString(), true))
+        log.add(Pair("key0_auth: ekRndA was " + ekRndA.asByteString(), true))
+        log.add(Pair("key0_auth: rndAResp was " + rndAResp.asByteString(), true))
+        false
+    }
 }
