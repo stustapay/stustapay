@@ -148,7 +148,6 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
             }
 
             val keyLock = if (cmacCheckSucceeded) {
-                authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, true)
                 val keyLock = cmdRead(0x2du, sessionKey!!, sessionCounter!!, nfcaTag)
                 sessionCounter = (sessionCounter!! + 2u).toUShort()
                 keyLock
