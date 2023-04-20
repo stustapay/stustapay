@@ -147,6 +147,16 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
                 cmdRead(0x28u, nfcaTag)
             }
 
+            val keyLock = if (cmacCheckSucceeded) {
+                authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, true)
+                val keyLock = cmdRead(0x2du, sessionKey!!, sessionCounter!!, nfcaTag)
+                sessionCounter = (sessionCounter!! + 2u).toUShort()
+                keyLock
+            } else {
+                authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, false)
+                cmdRead(0x2du, nfcaTag)
+            }
+
             var confCheckSuccessful = true
 
             if (conf.gbe(0uL) == 0x01u.toUByte()) {
@@ -170,14 +180,14 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
                 log.add(Pair("cfg: pages after 0x10 not protected", false))
             }
 
-            if (conf.gbe(8uL) == 0xe0u.toUByte()) {
+            if (keyLock.gbe(0uL) == 0xe0u.toUByte()) {
                 log.add(Pair("cfg: keys locked", true))
             } else {
                 confCheckSuccessful = false
                 log.add(Pair("cfg: keys not locked", false))
             }
 
-            if (conf.gbe(12uL) == 0xc0u.toUByte()) {
+            if (conf.gbe(8uL) == 0xc0u.toUByte()) {
                 log.add(Pair("cfg: config locked", true))
             } else {
                 confCheckSuccessful = false
@@ -189,7 +199,7 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
                 log.add(Pair("cfg: 28: " + conf.slice(8uL * 12uL, 8uL * 16uL).asByteString(), false))
                 log.add(Pair("cfg: 29: " + conf.slice(8uL * 8uL, 8uL * 12uL).asByteString(), false))
                 log.add(Pair("cfg: 2a: " + conf.slice(8uL * 4uL, 8uL * 8uL).asByteString(), false))
-                log.add(Pair("cfg: 2b: " + conf.slice(0uL, 8uL * 4uL).asByteString(), false))
+                log.add(Pair("cfg: 2d: " + keyLock.slice(8uL * 12uL, 8uL * 16uL).asByteString(), false))
             }
         } catch (e: Exception) {
             log.add(Pair("cfg: failed to read config (retry scan)", false))
