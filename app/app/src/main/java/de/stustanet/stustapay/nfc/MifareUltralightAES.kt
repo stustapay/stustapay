@@ -14,15 +14,15 @@ import java.security.SecureRandom
 // https://www.cs.ru.nl/~rverdult/Ciphertext-only_Cryptanalysis_on_Hardened_Mifare_Classic_Cards-CCS_2015.pdf
 
 class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
-    private val nfcaTag = NfcA.get(rawTag)
+    val nfcaTag: NfcA = NfcA.get(rawTag)
 
     private var chipState = ChipState.IDLE
     private var auth0State: UByte? = null
-    private var sessionKey: BitVector? = null
-    private var sessionCounter: UShort? = null
+    var sessionKey: BitVector? = null
+    var sessionCounter: UShort? = null
 
     fun setAuth0(page: UByte) {
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw Exception("Authentication required") }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw AuthenticationRequiredException() }
 
         val buf = if (sessionKey != null) {
             val ret = cmdRead(0x29u, sessionKey!!, sessionCounter!!, nfcaTag)
@@ -43,7 +43,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun setCMAC(enable: Boolean) {
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw Exception("Authentication required") }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw AuthenticationRequiredException() }
 
         val buf = if (sessionKey != null) {
             val ret = cmdRead(0x29u, sessionKey!!, sessionCounter!!, nfcaTag)
@@ -72,8 +72,8 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun authenticate(key: BitVector, type: KeyType, cmacEnabled: Boolean) {
-        if (!isConnected) { throw Exception("Not connected") }
-        if (key.len != 16uL * 8uL) { throw Exception("Wrong key size") }
+        if (!isConnected) { throw NotConnectedException() }
+        if (key.len != 16uL * 8uL) { throw ParameterSizeException() }
         if (chipState == type.state) { throw Exception("Already authenticated") }
 
         val nonce = ByteArray(16)
@@ -100,24 +100,31 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
         }
 
         chipState = type.state
-
-        val cfg0 = if (cmacEnabled) {
+        if (cmacEnabled) {
             sessionKey = genSessionKey(key, rndA, rndB)
             sessionCounter = 0u
-            val ret = cmdRead(0x29u, sessionKey!!, sessionCounter!!, nfcaTag)
-            sessionCounter = (sessionCounter!! + 2u).toUShort()
-            ret
         } else {
-            cmdRead(0x29u, nfcaTag)
+            sessionKey = null
+            sessionCounter = null
         }
 
-        auth0State = cfg0.gbe(3uL)
+        if (type == KeyType.DATA_PROT_KEY) {
+            val cfg0 = if (cmacEnabled) {
+                val ret = cmdRead(0x29u, sessionKey!!, sessionCounter!!, nfcaTag)
+                sessionCounter = (sessionCounter!! + 2u).toUShort()
+                ret
+            } else {
+                cmdRead(0x29u, nfcaTag)
+            }
+
+            auth0State = cfg0.gbe(3uL)
+        }
     }
 
     fun writeDataProtKey(key: BitVector) {
-        if (!isConnected) { throw Exception("Not connected") }
-        if (key.len != 16uL * 8uL) { throw Exception("Wrong key size") }
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw Exception("Authentication required") }
+        if (!isConnected) { throw NotConnectedException() }
+        if (key.len != 16uL * 8uL) { throw ParameterSizeException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw AuthenticationRequiredException() }
 
         for (i in 0uL until 4uL) {
             if (sessionKey != null) {
@@ -145,9 +152,40 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
         }
     }
 
+    fun writeUidRetrKey(key: BitVector) {
+        if (!isConnected) { throw NotConnectedException() }
+        if (key.len != 16uL * 8uL) { throw ParameterSizeException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw AuthenticationRequiredException() }
+
+        for (i in 0uL until 4uL) {
+            if (sessionKey != null) {
+                cmdWrite(
+                    (i + 0x34u).toUByte(),
+                    key.gle(i * 4uL),
+                    key.gle(i * 4uL + 1uL),
+                    key.gle(i * 4uL + 2uL),
+                    key.gle(i * 4uL + 3uL),
+                    sessionKey!!,
+                    sessionCounter!!,
+                    nfcaTag
+                )
+                sessionCounter = (sessionCounter!! + 2u).toUShort()
+            } else {
+                cmdWrite(
+                    (i + 0x34u).toUByte(),
+                    key.gle(i * 4uL),
+                    key.gle(i * 4uL + 1uL),
+                    key.gle(i * 4uL + 2uL),
+                    key.gle(i * 4uL + 3uL),
+                    nfcaTag
+                )
+            }
+        }
+    }
+
     fun writeUserMemory(content: BitVector) {
-        if (!isConnected) { throw Exception("Not connected") }
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw Exception("Authentication required") }
+        if (!isConnected) { throw NotConnectedException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw AuthenticationRequiredException() }
 
         val writeBuffer = BitVector(USER_BYTES * 8uL)
         for (i in 0uL until USER_BYTES) {
@@ -185,8 +223,8 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun readUserMemory(): BitVector {
-        if (!isConnected) { throw Exception("Not connected") }
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw Exception("Authentication required") }
+        if (!isConnected) { throw NotConnectedException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw AuthenticationRequiredException() }
 
         val readBuffer = BitVector(USER_BYTES * 8uL)
         for (i in 0uL until USER_BYTES / 16uL) {
@@ -206,7 +244,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun readSerialNumber(): ULong {
-        if (!isConnected) { throw Exception("Not connected") }
+        if (!isConnected) { throw NotConnectedException() }
 
         val readBuffer = if (sessionKey != null) {
             val ret = cmdRead(0x00u, sessionKey!!, sessionCounter!!, nfcaTag)
@@ -230,7 +268,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
         val resp = cmdGetVersion(nfcaTag)
         if (!(resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x01.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv) ||
                     resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x02.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv))) {
-            throw Exception("Not a Mifare Ultralight AES chip")
+            throw IncompatibleTagException()
         }
 
         chipState = ChipState.ACTIVE
@@ -239,11 +277,17 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
             cmdRead(0x29u, nfcaTag).gbe(3uL)
         } catch (e: IOException) {
             null
+        } catch (e: ArrayIndexOutOfBoundsException) {
+            null
         }
     }
 
     override fun close() {
         nfcaTag.close()
+        sessionKey = null
+        sessionCounter = null
+        chipState = ChipState.IDLE
+        auth0State = null
     }
 
     override fun isConnected(): Boolean {
@@ -266,3 +310,8 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
 fun get(tag: Tag): MifareUltralightAES {
     return MifareUltralightAES(tag)
 }
+
+class IncompatibleTagException: Exception()
+class AuthenticationRequiredException: Exception()
+class ParameterSizeException: Exception()
+class NotConnectedException: Exception()

@@ -63,6 +63,18 @@ class NfcDebugViewModel @Inject constructor(
         nfcRepository.writeCmac(true, true, requiresCmac)
     }
 
+    suspend fun readMultiKey() {
+        when (val res = nfcRepository.readMultiKey(_enableAuth.value, _enableCmac.value)) {
+            is NfcScanResult.Read -> _result.emit(NfcDebugScanResult.ReadSuccess(
+                res.chipProtected,
+                res.chipUid,
+                res.chipContent
+            ))
+            is NfcScanResult.Fail -> _result.emit(NfcDebugScanResult.Failure(res.reason))
+            else -> _result.emit(NfcDebugScanResult.None)
+        }
+    }
+
     suspend fun writeSig() {
         when (val res = nfcRepository.writeSig(_enableAuth.value, _enableCmac.value)) {
             is NfcScanResult.Write -> _result.emit(NfcDebugScanResult.WriteSuccess)
@@ -95,6 +107,13 @@ class NfcDebugViewModel @Inject constructor(
         }
     }
 
+    suspend fun test() {
+        when (val res = nfcRepository.test()) {
+            is NfcScanResult.Test -> _result.emit(NfcDebugScanResult.Test(res.log))
+            else -> _result.emit(NfcDebugScanResult.None)
+        }
+    }
+
     fun setAuth(enable: Boolean) {
         _enableAuth.update { enable }
     }
@@ -120,5 +139,8 @@ sealed interface NfcDebugScanResult {
     object WriteSuccess: NfcDebugScanResult
     data class Failure(
         val reason: NfcScanFailure
+    ): NfcDebugScanResult
+    data class Test(
+        val log: List<Pair<String, Boolean>>
     ): NfcDebugScanResult
 }
