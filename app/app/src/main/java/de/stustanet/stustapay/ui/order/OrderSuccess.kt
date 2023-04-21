@@ -17,8 +17,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun OrderSuccess(viewModel: OrderViewModel, onConfirm: () -> Unit) {
-    val orderConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
-    val order by viewModel._orderUIState.collectAsStateWithLifecycle()
+    val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+    val saleDraft by viewModel.saleDraft.collectAsStateWithLifecycle()
 
     val haptic = LocalHapticFeedback.current
 
@@ -31,10 +31,10 @@ fun OrderSuccess(viewModel: OrderViewModel, onConfirm: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    OrderCost(order)
+                    OrderCost(saleDraft)
 
-                    for (product in order.buttonSelections) {
-                        val name = orderConfig.buttons[product.key]!!.caption
+                    for (product in saleDraft.buttonSelection) {
+                        val name = saleConfig.buttons[product.key]!!.caption
                         val amount = product.value
                         Text(text = "$amount $name", fontSize = 24.sp)
                     }

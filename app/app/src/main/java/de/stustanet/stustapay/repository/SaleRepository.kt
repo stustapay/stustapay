@@ -12,7 +12,7 @@ import javax.inject.Singleton
 class SaleRepository @Inject constructor(
     private val saleRemoteDataSource: SaleRemoteDataSource,
 ) {
-    suspend fun createSale(newSale: NewSale): Response<PendingSale> {
+    suspend fun checkSale(newSale: NewSale): Response<PendingSale> {
         return saleRemoteDataSource.checkSale(newSale)
     }
 

@@ -73,8 +73,8 @@ data class CompletedTopUp(
 @Serializable
 data class Button(
     val till_button_id: Int,
-    val quantity: Int? = null,
-    val price: Double? = null,
+    var quantity: Int? = null,
+    var price: Double? = null,
 ) {
     init {
         require((quantity != null) != (price != null)) {

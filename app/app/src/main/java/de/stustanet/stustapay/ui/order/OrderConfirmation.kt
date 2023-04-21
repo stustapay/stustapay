@@ -22,8 +22,8 @@ fun OrderConfirmation(
     onSubmit: () -> Unit,
 ) {
     val orderConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
-    val order by viewModel._orderUIState.collectAsStateWithLifecycle()
-    val status by viewModel._status.collectAsStateWithLifecycle()
+    val saleDraft by viewModel.saleDraft.collectAsStateWithLifecycle()
+    val status by viewModel.status.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -31,7 +31,7 @@ fun OrderConfirmation(
                 TopAppBar(title = { Text(orderConfig.tillName) })
 
                 Row(horizontalArrangement = Arrangement.Start) {
-                    OrderCost(order)
+                    OrderCost(saleDraft)
                 }
             }
         },
@@ -41,11 +41,15 @@ fun OrderConfirmation(
                     .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
-                for (product in order.buttonSelections) {
+                for (button in saleDraft.buttonSelection) {
                     // TODO: use serverOrder's product names here
                     //       not just the button captions
                     item {
-                        OrderConfirmItem("Bla: ${product.key}", 13.37, product.value)
+                        OrderConfirmItem(
+                            "ButtonID: ${button.key}",
+                            button.value.price ?: 0.0,
+                            button.value.quantity ?: 0,
+                        )
                     }
                 }
             }

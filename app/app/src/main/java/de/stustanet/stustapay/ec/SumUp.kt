@@ -7,8 +7,8 @@ import com.sumup.merchant.reader.api.SumUpAPI
 import com.sumup.merchant.reader.api.SumUpLogin
 import com.sumup.merchant.reader.api.SumUpPayment
 import com.sumup.merchant.reader.models.TransactionInfo
-import de.stustanet.stustapay.model.TerminalConfigState
 import de.stustanet.stustapay.repository.TerminalConfigRepository
+import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.util.ActivityCallback
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -228,7 +228,7 @@ class SumUp @Inject constructor(
         // TODO: cache the result :)
         terminalConfigRepository.fetchConfig()
 
-        when (val terminalConfig = terminalConfigRepository._terminalConfigState.value) {
+        when (val terminalConfig = terminalConfigRepository.terminalConfigState.value) {
             is TerminalConfigState.Success -> {
                 val cfg = terminalConfig.config
                 if (cfg.secrets == null) {
