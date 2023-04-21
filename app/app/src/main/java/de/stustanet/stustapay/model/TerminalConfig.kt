@@ -11,6 +11,9 @@ data class TerminalSecrets(
     val sumup_affiliate_key: String,
 )
 
+/**
+ * TerminalButton from core model.
+ */
 @Serializable
 data class TerminalButton(
     val id: Int,

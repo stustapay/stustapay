@@ -17,10 +17,9 @@ import androidx.compose.ui.unit.sp
  * one buyable entry in the ordering overview.
  */
 @Composable
-fun OrderItem(
+fun SaleItem(
     caption: String,
-    price: Double,
-    amount: Int,
+    amount: SaleItemAmount,
     onIncr: () -> Unit,
     onDecr: () -> Unit
 ) {
@@ -31,11 +30,21 @@ fun OrderItem(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        // TODO: highlight background color if amount > 0
+
+        val amountText = when (amount) {
+            is SaleItemAmount.FixedPrice -> {
+                "%.02f x %2d".format(amount.price, amount.amount)
+            }
+            is SaleItemAmount.FreePrice -> {
+                amount.price.toString()
+            }
+        }
+
+        // TODO: highlight background if not 0
         Text(
-            text = "%.02f x %2d".format(price, amount),
+            text = amountText,
             modifier = Modifier.fillMaxWidth(0.25f),
-            fontSize = 24.sp
+            fontSize = 24.sp,
         )
 
         Box(modifier = Modifier.fillMaxWidth()) {

@@ -37,8 +37,8 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
         viewModel.fetchConfig()
     }
 
-    NavHost(navController = nav, startDestination = OrderPage.ProductSelect.route) {
-        composable(OrderPage.ProductSelect.route) {
+    NavHost(navController = nav, startDestination = SalePage.ProductSelect.route) {
+        composable(SalePage.ProductSelect.route) {
             val scanState = rememberNfcScanDialogState()
 
             OrderSelection(
@@ -50,7 +50,7 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                 },
                 onSubmit = {
                     scope.launch {
-                        // TODO: no new scan in refine-state - then viewModel.submitOrder()
+                        // TODO: no new scan in refine-state - call viewModel.checkSale() directly
                         scanState.open()
                     }
                 },
@@ -60,14 +60,14 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                 scanState,
                 onScan = { uid ->
                     scope.launch {
-                        viewModel.submitOrder(uid)
+                        viewModel.checkSale(uid)
                     }
                 },
             )
         }
 
         // what would be booked, from there one can get back to edit-mode
-        composable(OrderPage.Confirm.route) {
+        composable(SalePage.Confirm.route) {
             OrderConfirmation(
                 viewModel,
                 onAbort = {
@@ -77,14 +77,14 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                 },
                 onSubmit = {
                     scope.launch {
-                        viewModel.bookOrder()
+                        viewModel.bookSale()
                     }
                 },
             )
         }
 
         // the order was booked successfully.
-        composable(OrderPage.Done.route) {
+        composable(SalePage.Done.route) {
             OrderSuccess(
                 viewModel,
                 onConfirm = {
@@ -96,7 +96,7 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
         }
 
         // order was aborted
-        composable(OrderPage.Aborted.route) {
+        composable(SalePage.Aborted.route) {
             OrderFailure(onDismiss = {
                 scope.launch {
                     viewModel.clearOrder()
