@@ -465,7 +465,6 @@ class OrderService(DBService):
             buttons=pending_sale.buttons,
             id=order_id,
             uuid=order_uuid,
-            order_type=order_type,
             old_balance=pending_sale.old_balance,
             new_balance=pending_sale.new_balance,
             old_voucher_balance=pending_sale.old_voucher_balance,

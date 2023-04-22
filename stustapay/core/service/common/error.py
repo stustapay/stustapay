@@ -1,3 +1,6 @@
+from typing import Union
+
+
 class ServiceException(Exception):
     id: str
 
@@ -9,7 +12,7 @@ class NotFound(ServiceException):
 
     id = "NotFound"
 
-    def __init__(self, element_typ: str, element_id: str):
+    def __init__(self, element_typ: str, element_id: Union[str, int]):
         self.element_typ = element_typ  # eg. order
         self.element_id = element_id  # e.g. 5
 
