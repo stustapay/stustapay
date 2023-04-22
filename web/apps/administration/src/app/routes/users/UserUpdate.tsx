@@ -7,7 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useGetUserByIdQuery, useUpdateUserMutation, selectUserById } from "@api";
-import { Loading } from "@components";
+import { Loading } from "@stustapay/components";
 import { PrivilegeSelect } from "./PrivilegeSelect";
 
 export const UserUpdate: React.FC = () => {
@@ -57,8 +57,8 @@ export const UserUpdate: React.FC = () => {
                 autoFocus
                 name="login"
                 label={t("userLogin")}
-                error={touched.login&& !!errors.login}
-                helperText={(touched.login&& errors.login) as string}
+                error={touched.login && !!errors.login}
+                helperText={(touched.login && errors.login) as string}
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.login}
@@ -71,8 +71,8 @@ export const UserUpdate: React.FC = () => {
                 autoFocus
                 name="display_name"
                 label={t("userDisplayName")}
-                error={touched.display_name&& !!errors.display_name}
-                helperText={(touched.display_name&& errors.display_name) as string}
+                error={touched.display_name && !!errors.display_name}
+                helperText={(touched.display_name && errors.display_name) as string}
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.display_name}

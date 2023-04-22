@@ -8,6 +8,7 @@
     "baseUrl": ".",
     "paths": {
       "@stustapay/utils": ["../../libs/utils/src/index.ts"],
+      "@stustapay/components": ["../../libs/components/src/index.ts"],
       "@components": ["src/components/index.ts"],
       "@components/*": ["src/components/*"],
       "@store": ["src/store/index.ts"],

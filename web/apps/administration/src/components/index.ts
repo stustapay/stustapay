@@ -4,7 +4,6 @@ export * from "./NumericInput";
 export * from "./IconButtonLink";
 export * from "./ConfirmDialog";
 export * from "./SearchInput";
-export * from "./Loading";
 export * from "./EditableListItem";
 export * from "./layout";
 export * from "./OrderTable";

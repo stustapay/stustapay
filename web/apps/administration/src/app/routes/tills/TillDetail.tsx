@@ -12,7 +12,7 @@ import {
   useGetOrderByTillQuery,
   selectOrderAll,
 } from "@api";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import QRCode from "react-qr-code";
 import { encodeTillRegistrationQrCode } from "@core";
 import { config } from "@api/common";

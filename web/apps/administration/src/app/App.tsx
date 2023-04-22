@@ -4,7 +4,7 @@ import { Router } from "./Router";
 import { toast, ToastContainer } from "react-toastify";
 import { useAppSelector } from "@store";
 import { selectTheme } from "@store/uiSlice";
-import { Loading } from "@components";
+import { Loading } from "@stustapay/components";
 import { fetchConfig } from "@api/common";
 
 export function App() {

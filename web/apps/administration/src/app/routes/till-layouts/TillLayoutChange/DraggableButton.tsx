@@ -71,6 +71,7 @@ export const DraggableButton: React.FC<DraggableButtonProps> = ({ button, moveBu
     item: () => {
       return { id: button.id };
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),
     }),

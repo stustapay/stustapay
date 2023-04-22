@@ -69,6 +69,7 @@ export interface TillButtonChangeProps<T extends NewTillButton> {
   submitLabel: string;
   initialValues: T;
   validationSchema: z.ZodSchema<T>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (t: T) => MutationActionCreatorResult<any>;
 }
 

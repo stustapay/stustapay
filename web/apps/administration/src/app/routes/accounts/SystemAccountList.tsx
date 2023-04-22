@@ -2,7 +2,7 @@ import * as React from "react";
 import { Paper, ListItem, ListItemText } from "@mui/material";
 import { selectAccountAll, useGetSystemAccountsQuery } from "@api";
 import { useTranslation } from "react-i18next";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import { AccountTable } from "./components/AccountTable";
 
 export const SystemAccountList: React.FC = () => {

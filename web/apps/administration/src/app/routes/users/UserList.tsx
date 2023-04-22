@@ -6,7 +6,8 @@ import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { User } from "@models";
-import { Loading, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
+import { ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
+import { Loading } from "@stustapay/components";
 
 export const UserList: React.FC = () => {
   const { t } = useTranslation(["users", "common"]);

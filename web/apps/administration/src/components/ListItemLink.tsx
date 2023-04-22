@@ -10,6 +10,7 @@ type Props = {
 
 export const ListItemLink: React.FC<Props> = ({ to, children, selected = false, ...props }) => {
   return (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <ListItemButton component={RouterLink as any} selected={selected} to={to} {...props}>
       {children}
     </ListItemButton>

@@ -10,7 +10,7 @@ import {
   useGetTillsQuery,
   useGetCashierShiftsQuery,
 } from "@api";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import { ButtonLink, IconButtonLink, ListItemLink } from "@components";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
