@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { useNavigate } from "react-router-dom";
 import { TillButton } from "@models";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 
 export const TillButtonList: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);

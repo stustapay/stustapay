@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { useNavigate } from "react-router-dom";
 import { TaxRate } from "@models";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 
 export const TaxRateList: React.FC = () => {
   const { t } = useTranslation(["taxRates", "common"]);

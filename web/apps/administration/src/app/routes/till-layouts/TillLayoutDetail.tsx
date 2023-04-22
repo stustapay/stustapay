@@ -11,7 +11,7 @@ import {
   selectTillLayoutById,
   selectTillButtonById,
 } from "@api";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import { TillButton } from "@models";
 
 export const TillLayoutDetail: React.FC = () => {

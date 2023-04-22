@@ -26,6 +26,7 @@ export interface ProductChangeProps<T extends NewProduct> {
   submitLabel: string;
   initialValues: T;
   validationSchema: z.ZodSchema<T>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (p: T) => MutationActionCreatorResult<any>;
 }
 

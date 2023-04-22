@@ -1,10 +1,10 @@
 import * as React from "react";
 import { Tooltip } from "@mui/material";
-import { DataGrid, GridColDef, gridColumnsTotalWidthSelector } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { selectProductById, useGetProductsQuery, selectTaxRateById, useGetTaxRatesQuery } from "@api";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import { LineItem } from "@models";
 import { useCurrencyFormatter } from "src/hooks";
 

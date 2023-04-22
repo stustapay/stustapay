@@ -17,7 +17,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import { selectCashierById, useCloseOutCashierMutation, useGetCashierByIdQuery } from "@api";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
 import { NumericInput } from "@components";
 import { toFormikValidationSchema } from "@stustapay/utils";

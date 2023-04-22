@@ -10,7 +10,7 @@ export interface EmptyDragProps {
 }
 
 export const DragArea: React.FC<EmptyDragProps> = ({ moveButton, children }) => {
-  const [{ handlerId }, drop] = useDrop<DragButton, void, { handlerId: Identifier | null }>({
+  const [, drop] = useDrop<DragButton, void, { handlerId: Identifier | null }>({
     accept: DraggableItemTypes.TILL_BUTTON,
     collect(monitor) {
       return {

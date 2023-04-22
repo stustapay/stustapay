@@ -1,5 +1,6 @@
 import { useGetConfigEntriesQuery, useSetConfigEntryMutation, selectConfigEntryAll } from "@api";
-import { Loading, EditableListItem } from "@components";
+import { EditableListItem } from "@components";
+import { Loading } from "@stustapay/components";
 import { List, ListItem, ListItemText, Paper, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import * as React from "react";

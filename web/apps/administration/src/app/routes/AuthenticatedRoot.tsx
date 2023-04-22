@@ -30,12 +30,13 @@ import {
   Search as SearchIcon,
 } from "@mui/icons-material";
 import { Outlet, Navigate, useLocation, Link as RouterLink } from "react-router-dom";
-import { ExpandableLinkMenu, ListItemLink, Loading } from "@components";
+import { ExpandableLinkMenu, ListItemLink } from "@components";
 import { useTranslation } from "react-i18next";
 import { useAppSelector, selectCurrentUser } from "@store";
 import { AppBar, Main, DrawerHeader, drawerWidth } from "@components";
 import { PrivilegeAdmin } from "@models";
 import { useGetConfigEntriesQuery } from "@api";
+import { Loading } from "@stustapay/components";
 
 const AdminMenu: React.FC = () => {
   const { t } = useTranslation(["common"]);

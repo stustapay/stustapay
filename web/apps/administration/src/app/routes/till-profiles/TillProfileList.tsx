@@ -13,7 +13,7 @@ import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { TillProfile } from "@models";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 
 export const TillProfileList: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);

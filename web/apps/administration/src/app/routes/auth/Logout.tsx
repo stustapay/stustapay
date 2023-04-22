@@ -1,5 +1,5 @@
 import { useLogoutMutation } from "@api/authApi";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import { selectIsAuthenticated, useAppSelector } from "@store";
 import * as React from "react";
 import { Navigate } from "react-router-dom";

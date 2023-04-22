@@ -6,7 +6,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { selectCashierAll, selectTillById, useGetCashiersQuery, useGetTillsQuery } from "@api";
 import { Cashier } from "@models";
-import { Loading } from "@components";
+import { Loading } from "@stustapay/components";
 
 export const CashierList: React.FC = () => {
   const { t } = useTranslation(["cashiers", "common"]);

@@ -4,7 +4,7 @@ import { TillLayoutSchema } from "@models";
 import { useParams, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TillLayoutChange } from "./TillLayoutChange";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 
 export const TillLayoutUpdate: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);

@@ -4,7 +4,7 @@ import { TaxRateSchema } from "@models/taxRate";
 import { useParams, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TaxRateChange } from "./TaxRateChange";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 
 export const TaxRateUpdate: React.FC = () => {
   const { t } = useTranslation(["taxRates", "common"]);
