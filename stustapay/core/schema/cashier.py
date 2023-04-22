@@ -1,12 +1,25 @@
+from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from stustapay.core.util import BaseModel
 
 
 class Cashier(BaseModel):
     id: int
-    name: str
-    description: Optional[str]
-    user_tag_id: int
+    login: str
+    display_name: str
+    description: Optional[str] = None
+    user_tag_uid: Optional[int] = None
+    transport_account_id: Optional[int] = None
+    cashier_account_id: Optional[int] = None
     cash_drawer_balance: float
     till_id: Optional[int]
+
+
+class CashierShift(BaseModel):
+    id: int
+    comment: str
+    final_cash_drawer_balance: float
+    final_cash_drawer_imbalance: float
+    started_at: datetime
+    ended_at: datetime

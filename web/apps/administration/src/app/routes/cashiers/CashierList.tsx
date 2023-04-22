@@ -38,9 +38,14 @@ export const CashierList: React.FC = () => {
 
   const columns: GridColDef<Cashier>[] = [
     {
-      field: "name",
+      field: "login",
+      headerName: t("cashier.login") as string,
+      renderCell: (params) => <RouterLink to={`/cashiers/${params.row.id}`}>{params.row.login}</RouterLink>,
+      flex: 1,
+    },
+    {
+      field: "display_name",
       headerName: t("cashier.name") as string,
-      renderCell: (params) => <RouterLink to={`/cashiers/${params.row.id}`}>{params.row.name}</RouterLink>,
       flex: 1,
     },
     {
@@ -50,7 +55,7 @@ export const CashierList: React.FC = () => {
       flex: 2,
     },
     {
-      field: "user_tag_id",
+      field: "user_tag_uid",
       headerName: t("cashier.tagId") as string,
       type: "number",
       valueFormatter: ({ value }) => value ?? "",

@@ -133,8 +133,7 @@ values
     (2, null, 'virtual', 'Deposit', 'Deposit currently at the customers'),
     (3, null, 'virtual', 'Sumup', 'source account for sumup top up '),
     (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here'),
-    (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement'),
-    (6, null, 'virtual', 'Cashing Up', 'Upon cashing up a cashier for a till a 0 transaction will be booked to this account to mark the cashing up time')
+    (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement')
     on conflict do nothing;
 
 
@@ -571,14 +570,27 @@ create table if not exists transaction (
     constraint vouchers_positive check (vouchers >= 0)
 );
 
+create table if not exists cashier_shift (
+    id bigint primary key generated always as identity,
+    -- TODO: constraint that we can only reference users with a cashier account id
+    cashier_id bigint references usr(id),
+    started_at timestamptz not null,
+    ended_at timestamptz not null,
+    final_cash_drawer_balance numeric not null,
+    final_cash_drawer_imbalance numeric not null,
+    comment text not null,
+    close_out_transaction_id bigint not null references transaction(id)
+);
 
-create or replace view cashiers as (
+create or replace view cashier as (
     select
         usr.id,
         usr.login,
         usr.display_name,
         usr.description,
         usr.user_tag_uid,
+        usr.transport_account_id,
+        usr.cashier_account_id,
         a.balance as cash_drawer_balance,
         t.id as till_id
     from usr
@@ -594,7 +606,8 @@ create or replace function book_transaction (
     source_account_id bigint,
     target_account_id bigint,
     amount numeric,
-    vouchers_amount bigint
+    vouchers_amount bigint,
+    booked_at timestamptz default now()
 )
     returns bigint as $$
 <<locals>> declare
@@ -618,7 +631,7 @@ begin
 
     -- add new transaction
     insert into transaction (
-        order_id, description, source_account, target_account, amount, vouchers
+        order_id, description, source_account, target_account, amount, vouchers, booked_at
     )
     values (
         book_transaction.order_id,
@@ -626,7 +639,8 @@ begin
         book_transaction.source_account_id,
         book_transaction.target_account_id,
         book_transaction.amount,
-        book_transaction.vouchers_amount
+        book_transaction.vouchers_amount,
+        book_transaction.booked_at
     ) returning id into locals.transaction_id;
 
     -- update account values
