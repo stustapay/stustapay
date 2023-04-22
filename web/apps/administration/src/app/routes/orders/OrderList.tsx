@@ -2,7 +2,7 @@ import * as React from "react";
 import { Paper, ListItem, ListItemText } from "@mui/material";
 import { selectOrderAll, useGetOrdersQuery } from "@api";
 import { useTranslation } from "react-i18next";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import { OrderTable } from "@components";
 
 export const OrderList: React.FC = () => {

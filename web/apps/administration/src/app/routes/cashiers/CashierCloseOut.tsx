@@ -9,21 +9,21 @@ import {
   TableContainer,
   TableRow,
   TableCell,
+  LinearProgress,
   InputAdornment,
-  Typography,
   TextField,
   Button,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
-import { selectCashierById, useGetCashierByIdQuery } from "@api";
-import { Loading } from "@components/Loading";
-import { toast } from "react-toastify";
+import { useParams, useNavigate } from "react-router-dom";
+import { selectCashierById, useCloseOutCashierMutation, useGetCashierByIdQuery } from "@api";
+import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
 import { NumericInput } from "@components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { Formik, FormikHelpers } from "formik";
+import { toast } from "react-toastify";
 
 const CloseOutDataSchema = z.object({
   comment: z.string(),
@@ -67,11 +67,13 @@ const computeDifference = (values: CloseOutData, targetBalance: number): number 
 export const CashierCloseOut: React.FC = () => {
   const { t } = useTranslation(["cashiers", "common"]);
   const { cashierId } = useParams();
+  const navigate = useNavigate();
 
   const formatCurrency = useCurrencyFormatter();
   const currencySymbol = useCurrencySymbol();
 
-  const { cashier, error, isLoading } = useGetCashierByIdQuery(Number(cashierId), {
+  const [closeOut] = useCloseOutCashierMutation();
+  const { cashier, isLoading } = useGetCashierByIdQuery(Number(cashierId), {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       cashier: data ? selectCashierById(data, Number(cashierId)) : undefined,
@@ -84,13 +86,28 @@ export const CashierCloseOut: React.FC = () => {
 
   const handleSubmit = (values: CloseOutData, { setSubmitting }: FormikHelpers<CloseOutData>) => {
     setSubmitting(true);
+    closeOut({
+      comment: values.comment,
+      cashier_id: Number(cashierId),
+      actual_cash_drawer_balance: computeSum(values),
+    })
+      .unwrap()
+      .then(() => {
+        setSubmitting(false);
+        navigate(`/cashiers/${cashierId}`);
+      })
+      .catch((err) => {
+        setSubmitting(false);
+        console.log(err);
+        toast.error(`Error while closing out cashier: ${err.toString()}`);
+      });
   };
 
   return (
     <>
       <Paper>
         <ListItem>
-          <ListItemText primary={cashier.name} />
+          <ListItemText primary={cashier.display_name} />
         </ListItem>
       </Paper>
 
@@ -206,7 +223,12 @@ export const CashierCloseOut: React.FC = () => {
                     <TableCell colSpan={2} />
                     <TableCell align="right">{formatCurrency(computeSum(values))}</TableCell>
                     <TableCell align="right">
-                      {formatCurrency(computeDifference(values, cashier.cash_drawer_balance))}
+                      {formatCurrency(computeDifference(values, cashier.cash_drawer_balance))} (
+                      {(
+                        Math.abs(computeDifference(values, cashier.cash_drawer_balance) / cashier.cash_drawer_balance) *
+                        100
+                      ).toFixed(2)}
+                      %)
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -222,7 +244,10 @@ export const CashierCloseOut: React.FC = () => {
                 onChange={handleChange}
                 onBlur={handleBlur}
               />
-              <Button>{t("submit", { ns: "common" })}</Button>
+              {isSubmitting && <LinearProgress />}
+              <Button type="submit" onClick={() => handleSubmit()} disabled={isSubmitting}>
+                {t("submit", { ns: "common" })}
+              </Button>
             </Paper>
           </>
         )}

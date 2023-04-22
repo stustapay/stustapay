@@ -4,7 +4,7 @@ import { selectProductById, useGetProductByIdQuery, useUpdateProductMutation } f
 import { Navigate, useParams } from "react-router-dom";
 import { ProductChange } from "./ProductChange";
 import { ProductSchema } from "@models/product";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 
 export const ProductUpdate: React.FC = () => {
   const { t } = useTranslation(["products", "common"]);

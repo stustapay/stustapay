@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
 import { Product } from "@models";
 import { useNavigate } from "react-router-dom";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "src/hooks";
 
 export const ProductList: React.FC = () => {

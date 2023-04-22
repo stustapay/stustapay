@@ -6,7 +6,7 @@ import random
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.order import Button, NewSale, OrderType
+from stustapay.core.schema.order import Button, NewSale
 from stustapay.core.schema.terminal import TerminalButton
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import with_db_connection
@@ -75,7 +75,7 @@ class DummyTerminal:
 
             pressed_buttons = self.press_random_buttons(terminal_config.buttons)
             customer_tag_uid = await self.select_random_customer_tag(conn)
-            new_sale = NewSale(order_type=OrderType.sale, customer_tag_uid=customer_tag_uid, buttons=pressed_buttons)
+            new_sale = NewSale(customer_tag_uid=customer_tag_uid, buttons=pressed_buttons)
             self.logger.info(f"Creating sale {new_sale}")
             try:
                 order = await self.order_service.book_sale(

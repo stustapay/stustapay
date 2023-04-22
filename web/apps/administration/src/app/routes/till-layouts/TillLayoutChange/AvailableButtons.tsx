@@ -1,7 +1,7 @@
 import * as React from "react";
 import { List, Typography } from "@mui/material";
 import { selectTillButtonAll, useGetTillButtonsQuery } from "@api";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import { useTranslation } from "react-i18next";
 import { DraggableButton } from "./DraggableButton";
 import { DragArea } from "./DragArea";

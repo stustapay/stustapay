@@ -1,11 +1,21 @@
 {
     "cashier": {
+        "login": "Login",
         "name": "Name",
         "description": "Description",
         "cashDrawerBalance": "Cash Drawer",
         "tagId": "Tag ID",
         "till": "Till",
+        "shifts": "Shifts",
         "closeOut": "Close Out"
+    },
+    "shift": {
+        "id": "ID",
+        "comment": "Comment",
+        "startedAt": "Started At",
+        "endedAt": "Ended At",
+        "finalCashDrawerBalance": "Final Cash Drawer Balance",
+        "finalCashDrawerImbalance": "Final Cash Drawer Imbalance"
     },
     "closeOut": {
         "start": "Start",

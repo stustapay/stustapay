@@ -1,11 +1,11 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { Cashier } from "@models/cashiers";
+import { Cashier, CashierCloseOutResult, CashierShift, NewCashierCloseOut } from "@models/cashiers";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
 
 const cashierAdapter = createEntityAdapter<Cashier>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+  sortComparer: (a, b) => a.display_name.toLowerCase().localeCompare(b.display_name.toLowerCase()),
 });
 
 export const cashierApi = createApi({
@@ -28,10 +28,18 @@ export const cashierApi = createApi({
       },
       providesTags: (result, error, arg) => ["cashier", { type: "cashier" as const, id: arg }],
     }),
+    getCashierShifts: builder.query<CashierShift[], number>({
+      query: (id) => `/cashiers/${id}/shifts`,
+    }),
+    closeOutCashier: builder.mutation<CashierCloseOutResult, NewCashierCloseOut>({
+      query: (closeOut) => ({ url: `/cashiers/${closeOut.cashier_id}/close-out`, method: "POST", body: closeOut }),
+      invalidatesTags: ["cashier"],
+    }),
   }),
 });
 
 export const { selectCashierAll, selectCashierById, selectCashierEntities, selectCashierIds, selectCashierTotal } =
   convertEntityAdaptorSelectors("Cashier", cashierAdapter.getSelectors());
 
-export const { useGetCashiersQuery, useGetCashierByIdQuery } = cashierApi;
+export const { useGetCashiersQuery, useGetCashierByIdQuery, useGetCashierShiftsQuery, useCloseOutCashierMutation } =
+  cashierApi;

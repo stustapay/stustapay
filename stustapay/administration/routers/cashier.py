@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextCashierService
-from stustapay.core.schema.cashier import Cashier
+from stustapay.core.schema.cashier import Cashier, CashierShift
+from stustapay.core.service.cashier import CloseOutResult, CloseOut
 
 router = APIRouter(
     prefix="/cashiers",
@@ -22,3 +23,15 @@ async def get_cashier(token: CurrentAuthToken, cashier_id: int, cashier_service:
     if not cashier:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return cashier
+
+
+@router.get("/{cashier_id}/shifts", response_model=list[CashierShift])
+async def get_cashier_shifts(token: CurrentAuthToken, cashier_id: int, cashier_service: ContextCashierService):
+    return await cashier_service.get_cashier_shifts(token=token, cashier_id=cashier_id)
+
+
+@router.post("/{cashier_id}/close-out", response_model=CloseOutResult)
+async def close_out_cashier(
+    token: CurrentAuthToken, cashier_id: int, close_out: CloseOut, cashier_service: ContextCashierService
+):
+    return await cashier_service.close_out_cashier(token=token, cashier_id=cashier_id, close_out=close_out)

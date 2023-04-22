@@ -4,7 +4,7 @@ import { TillProfileSchema } from "@models";
 import { useParams, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TillProfileChange } from "./TillProfileChange";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 
 export const TillProfileUpdate: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);

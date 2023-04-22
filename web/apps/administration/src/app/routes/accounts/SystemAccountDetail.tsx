@@ -3,7 +3,7 @@ import { Paper, ListItem, ListItemText, List } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { selectAccountById, useGetAccountByIdQuery } from "@api";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 import { toast } from "react-toastify";
 import { useCurrencyFormatter } from "@hooks";
 

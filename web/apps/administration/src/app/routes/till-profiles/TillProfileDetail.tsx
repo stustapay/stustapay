@@ -5,7 +5,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useGetTillProfileByIdQuery, useDeleteTillProfileMutation, selectTillProfileById } from "@api";
-import { Loading } from "@components/Loading";
+import { Loading } from "@stustapay/components";
 
 export const TillProfileDetail: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
