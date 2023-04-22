@@ -1,20 +1,43 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useCurrencyFormatter } from "@hooks";
-import { Paper, ListItem, ListItemText } from "@mui/material";
+import { Paper, ListItem, FormControlLabel, Checkbox, ListItemText } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { selectCashierAll, selectTillById, useGetCashiersQuery, useGetTillsQuery } from "@api";
 import { Cashier } from "@models";
 import { Loading } from "@stustapay/components";
+import { z } from "zod";
+import { StringyBoolean, useQueryState } from "@stustapay/utils";
+
+const FilterOptionsSchema = z.object({
+  showZeroBalance: StringyBoolean,
+  showWithoutTill: StringyBoolean,
+});
 
 export const CashierList: React.FC = () => {
   const { t } = useTranslation(["cashiers", "common"]);
   const formatCurrency = useCurrencyFormatter();
+
+  const [filterOptions, setFilterOptions] = useQueryState(
+    { showZeroBalance: true, showWithoutTill: true },
+    FilterOptionsSchema
+  );
+
   const { cashiers, isLoading: isCashiersLoading } = useGetCashiersQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
-      cashiers: data ? selectCashierAll(data) : undefined,
+      cashiers: data
+        ? selectCashierAll(data).filter((cashier) => {
+            if (!filterOptions.showWithoutTill && cashier.till_id == null) {
+              return false;
+            }
+            if (!filterOptions.showZeroBalance && cashier.cash_drawer_balance === 0) {
+              return false;
+            }
+            return true;
+          })
+        : undefined,
     }),
   });
   const { data: tills, isLoading: isTillsLoading } = useGetTillsQuery();
@@ -55,17 +78,17 @@ export const CashierList: React.FC = () => {
       flex: 2,
     },
     {
+      field: "till_id",
+      headerName: t("cashier.till") as string,
+      flex: 0.5,
+      renderCell: (params) => renderTill(params.row.till_id),
+    },
+    {
       field: "user_tag_uid",
       headerName: t("cashier.tagId") as string,
       type: "number",
       valueFormatter: ({ value }) => value ?? "",
       width: 150,
-    },
-    {
-      field: "till_id",
-      headerName: t("cashier.till") as string,
-      flex: 0.5,
-      renderCell: (params) => renderTill(params.row.till_id),
     },
     {
       field: "cash_drawer_balance",
@@ -82,6 +105,26 @@ export const CashierList: React.FC = () => {
         <ListItem>
           <ListItemText primary={t("cashiers", { ns: "common" })} />
         </ListItem>
+      </Paper>
+      <Paper sx={{ mt: 2, p: 1 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={filterOptions.showZeroBalance}
+              onChange={(evt) => setFilterOptions({ ...filterOptions, showZeroBalance: evt.target.checked })}
+            />
+          }
+          label={t("cashier.showZeroBalance")}
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={filterOptions.showWithoutTill}
+              onChange={(evt) => setFilterOptions({ ...filterOptions, showWithoutTill: evt.target.checked })}
+            />
+          }
+          label={t("cashier.showWithoutTill")}
+        />
       </Paper>
       <DataGrid
         autoHeight
