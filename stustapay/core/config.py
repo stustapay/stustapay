@@ -14,6 +14,12 @@ class AdministrationApiConfig(HTTPServerConfig):
     host: str = "localhost"
     port: int = 8081
 
+    
+class CustomerPortalApiConfig(HTTPServerConfig):
+    base_url: str
+    host: str = "localhost"
+    port: int = 8082
+
 
 class TerminalApiConfig(HTTPServerConfig):
     base_url: str
@@ -37,6 +43,7 @@ class CoreConfig(BaseModel):
 
 class Config(BaseModel):
     administration: AdministrationApiConfig
+    customer_portal: CustomerPortalApiConfig
     terminalserver: TerminalApiConfig
     database: DatabaseConfig
     core: CoreConfig

@@ -165,6 +165,11 @@ create table if not exists usr_session (
     usr bigint not null references usr(id) on delete cascade
 );
 
+create table if not exists customer_session (
+    id bigint primary key generated always as identity,
+    customer bigint not null references account(id) on delete cascade
+);
+
 
 create table if not exists privilege (
     name text not null primary key
