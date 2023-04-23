@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 
-@router.get("{customer_tag_uid}", summary="Obtain a customer by tag uid", response_model=Customer)
+@router.get("/{customer_tag_uid}", summary="Obtain a customer by tag uid", response_model=Customer)
 async def get_customer(
     token: CurrentAuthToken,
     customer_tag_uid: int,
