@@ -12,7 +12,7 @@ from stustapay.core.service.order import OrderService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
-from stustapay.terminalserver.router import auth, base, live, order, user
+from stustapay.terminalserver.router import auth, base, order, user
 
 
 class Api(SubCommand):
@@ -40,7 +40,6 @@ class Api(SubCommand):
 
         # endpoints available in the terminal server.
         self.server.add_router(base.router)
-        self.server.add_router(live.router)
         self.server.add_router(order.router)
         self.server.add_router(auth.router)
         self.server.add_router(user.router)
