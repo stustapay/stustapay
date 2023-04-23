@@ -7,7 +7,7 @@ from stustapay.core.schema.account import Account
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user_privileges, requires_terminal
+from stustapay.core.service.common.decorators import with_db_transaction, requires_user_privileges
 
 
 class AccountService(DBService):
@@ -28,14 +28,6 @@ class AccountService(DBService):
     @requires_user_privileges([Privilege.admin])
     async def get_account(self, *, conn: asyncpg.Connection, account_id: int) -> Optional[Account]:
         row = await conn.fetchrow("select * from account where id = $1", account_id)
-        if row is None:
-            return None
-        return Account.parse_obj(row)
-
-    @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
-    async def get_account_by_user_tag(self, *, conn: asyncpg.Connection, user_tag_uid: int) -> Optional[Account]:
-        row = await conn.fetchrow("select * from account where user_tag_uid = $1", user_tag_uid)
         if row is None:
             return None
         return Account.parse_obj(row)
