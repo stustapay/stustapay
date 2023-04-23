@@ -6,6 +6,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import kotlinx.coroutines.launch
 
 @Composable
 fun DepositCash(
@@ -25,10 +27,13 @@ fun DepositCash(
     val depositState by viewModel.depositState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     val scanState = rememberNfcScanDialogState()
+    val scope = rememberCoroutineScope()
 
     NfcScanDialog(scanState, onScan = {
-        viewModel.cashFinished(it)
-        onSuccess()
+        scope.launch{
+            viewModel.cashFinished(it)
+            onSuccess()
+        }
     })
 
     Scaffold(

@@ -23,7 +23,7 @@ enum class TopUpType {
 @Serializable
 data class NewTopUp(
     val amount: Double,
-    val customer_tag_uid: Int,
+    val customer_tag_uid: ULong,
     val topup_type: TopUpType,
     val uuid: String? = null,
 )
@@ -35,7 +35,7 @@ data class NewTopUp(
 data class PendingTopUp(
     // NewTopUp
     val amount: Double,
-    val customer_tag_uid: Int,
+    val customer_tag_uid: ULong,
     val topup_type: TopUpType,
     val uuid: String? = null,
     // PendingTopUp
@@ -51,7 +51,7 @@ data class PendingTopUp(
 data class CompletedTopUp(
     val topup_type: TopUpType,
 
-    val customer_tag_uid: Int,
+    val customer_tag_uid: ULong,
     val customer_account_id: Int,
 
     val amount: Double,

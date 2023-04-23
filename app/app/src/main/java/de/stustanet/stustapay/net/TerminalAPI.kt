@@ -52,7 +52,7 @@ interface TerminalAPI {
     /**
      * Get infos about a single order.
      */
-    suspend fun checkTopUp(newTopUp: NewTopUp): Response<CompletedTopUp>
+    suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp>
 
     /**
      * Book a new order - this transfers the money between accounts.
