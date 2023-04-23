@@ -98,4 +98,14 @@ interface TerminalAPI {
      * Get the account status for a customer tag.
      */
     suspend fun getCustomer(id: ULong): Response<Account>
+
+    /**
+     * Create a user with cashier privileges.
+     */
+    suspend fun userCreateCashier(newUser: NewUser): Response<User>
+
+    /**
+     * Create a user with Finanzorga privileges.
+     */
+    suspend fun userCreateFinanzorga(newUser: NewUser): Response<User>
 }

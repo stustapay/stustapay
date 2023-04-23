@@ -1,5 +1,7 @@
 package de.stustanet.stustapay.repository
 
+import de.stustanet.stustapay.model.NewUser
+import de.stustanet.stustapay.model.UserKind
 import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.netsource.UserRemoteDataSource
@@ -39,5 +41,10 @@ class UserRepository @Inject constructor(
             status.update { "Logged out." }
             userState.update { UserState.NoLogin }
         }
+    }
+
+    suspend fun create(login: String, userTag: UserTag, userKind: UserKind) {
+        // TODO: Error handling
+        userRemoteDataSource.userCreate(NewUser(login, userTag.uid), userKind)
     }
 }
