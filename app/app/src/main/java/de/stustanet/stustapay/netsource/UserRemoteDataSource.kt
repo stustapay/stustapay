@@ -1,8 +1,7 @@
 package de.stustanet.stustapay.netsource
 
 
-import de.stustanet.stustapay.model.UserState
-import de.stustanet.stustapay.model.UserTag
+import de.stustanet.stustapay.model.*
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.net.TerminalAPI
 import javax.inject.Inject
@@ -18,8 +17,7 @@ class UserRemoteDataSource @Inject constructor(
                     UserState.LoggedIn(
                         user = user,
                     )
-                }
-                else {
+                } else {
                     UserState.NoLogin
                 }
             }
@@ -59,6 +57,29 @@ class UserRemoteDataSource @Inject constructor(
             }
             is Response.Error -> {
                 userLogoutResponse.msg()
+            }
+        }
+    }
+
+    /**
+     * Create a new user of any type.
+     */
+    suspend fun userCreate(newUser: NewUser, userKind: UserKind): UserCreateState {
+        val res = when (userKind) {
+            UserKind.Cashier -> {
+                terminalAPI.userCreateCashier(newUser)
+            }
+            UserKind.Finanzorga -> {
+                terminalAPI.userCreateFinanzorga(newUser)
+            }
+        }
+
+        return when (res) {
+            is Response.OK -> {
+                UserCreateState.Created
+            }
+            is Response.Error -> {
+                UserCreateState.Error(res.msg())
             }
         }
     }

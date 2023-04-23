@@ -101,4 +101,12 @@ class TerminalHTTPAPI @Inject constructor(
     override suspend fun getCustomer(id: ULong): Response<Account> {
         return client.get("customer/$id")
     }
+
+    override suspend fun userCreateCashier(newUser: NewUser): Response<User> {
+        return client.post("user/create_cashier") { newUser }
+    }
+
+    override suspend fun userCreateFinanzorga(newUser: NewUser): Response<User> {
+        return client.post("user/create_finanzorga") { newUser }
+    }
 }
