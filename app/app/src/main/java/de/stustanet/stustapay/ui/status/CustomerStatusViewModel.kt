@@ -13,7 +13,8 @@ import javax.inject.Inject
 class CustomerStatusViewModel @Inject constructor(
     private val customerRepository: CustomerRepository
 ) : ViewModel() {
-    private val _requestState = MutableStateFlow<CustomerStatusRequestState>(CustomerStatusRequestState.Fetching)
+    private val _requestState =
+        MutableStateFlow<CustomerStatusRequestState>(CustomerStatusRequestState.Fetching)
 
     val uiState: StateFlow<CustomerStatusUiState> = _requestState.map { result ->
         CustomerStatusUiState(result)
@@ -37,6 +38,14 @@ class CustomerStatusViewModel @Inject constructor(
             }
         }
     }
+
+    fun startSwap(id: ULong) {
+        _requestState.update { CustomerStatusRequestState.Swap(id) }
+    }
+
+    fun completeSwap(a: ULong, b: ULong) {
+        _requestState.update { CustomerStatusRequestState.SwapDone }
+    }
 }
 
 data class CustomerStatusUiState(
@@ -44,7 +53,9 @@ data class CustomerStatusUiState(
 )
 
 sealed interface CustomerStatusRequestState {
-    object Fetching: CustomerStatusRequestState
-    data class Done(val customer: Account): CustomerStatusRequestState
-    object Failed: CustomerStatusRequestState
+    object Fetching : CustomerStatusRequestState
+    data class Done(val customer: Account) : CustomerStatusRequestState
+    object Failed : CustomerStatusRequestState
+    data class Swap(val id: ULong) : CustomerStatusRequestState
+    object SwapDone : CustomerStatusRequestState
 }

@@ -1,14 +1,15 @@
 package de.stustanet.stustapay.ui.status
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.material.TextField
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,10 +23,7 @@ import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scanState = rememberNfcScanDialogState()
-
-    NfcScanDialog(scanState) { tag ->
-        viewModel.completeScan(tag.uid)
-    }
+    var targetId by remember { mutableStateOf("") }
 
     LaunchedEffect(scanState) {
         viewModel.startScan()
@@ -35,22 +33,23 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
     Scaffold(
         content = {
             Box(modifier = Modifier.padding(it)) {
-                Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(10.dp)
+                ) {
                     when (uiState.state) {
                         is CustomerStatusRequestState.Fetching -> {
-                            Row (
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text("Fetching status...", fontSize = 48.sp)
-                            }
+                            Text("Fetching status...", fontSize = 48.sp)
                         }
                         is CustomerStatusRequestState.Done -> {
-                            val customer = (uiState.state as CustomerStatusRequestState.Done).customer
+                            val customer =
+                                (uiState.state as CustomerStatusRequestState.Done).customer
 
-                            Row (
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -58,8 +57,10 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                                 Text(customer.id.toString(), fontSize = 24.sp)
                             }
 
-                            Row (
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -67,8 +68,10 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                                 Text(customer.name, fontSize = 24.sp)
                             }
 
-                            Row (
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -76,8 +79,10 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                                 Text("${customer.balance}€", fontSize = 24.sp)
                             }
 
-                            Row (
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -85,16 +90,20 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                                 Text(customer.vouchers.toString(), fontSize = 24.sp)
                             }
 
-                            Row (
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text("Comment", fontSize = 48.sp)
                             }
 
-                            Row (
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -102,27 +111,123 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                             }
                         }
                         is CustomerStatusRequestState.Failed -> {
-                            Row (
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                            Text("Request failed", fontSize = 48.sp)
+                        }
+                        is CustomerStatusRequestState.Swap -> {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Failed to fetch status", fontSize = 48.sp)
+                                Text(
+                                    "ID",
+                                    fontSize = 48.sp,
+                                    modifier = Modifier.padding(end = 20.dp)
+                                )
+                                TextField(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    value = targetId,
+                                    onValueChange = { id -> targetId = id },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                )
                             }
+
+                            Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp),
+                                onClick = {
+                                    scanState.open()
+                                }
+                            ) {
+                                Text("Scan", fontSize = 24.sp)
+                            }
+
+                            NfcScanDialog(scanState) { tag ->
+                                targetId = tag.uid.toString()
+                            }
+                        }
+                        is CustomerStatusRequestState.SwapDone -> {
+                            Text("Swapped tag accounts", fontSize = 48.sp)
                         }
                     }
                 }
             }
         },
         bottomBar = {
-            Button(
-                modifier = Modifier.fillMaxWidth().padding(10.dp),
-                onClick = {
-                    viewModel.startScan()
-                    scanState.open()
+            when (uiState.state) {
+                is CustomerStatusRequestState.Done -> {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                    ) {
+                        Button(
+                            modifier = Modifier
+                                .fillMaxWidth(0.75f)
+                                .padding(end = 10.dp),
+                            onClick = {
+                                viewModel.startScan()
+                                scanState.open()
+                            }
+                        ) {
+                            Text("Scan", fontSize = 24.sp)
+                        }
+                        Button(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            onClick = {
+                                viewModel.startSwap((uiState.state as CustomerStatusRequestState.Done).customer.id)
+                            }
+                        ) {
+                            Text("Swap", fontSize = 24.sp)
+                        }
+                    }
+
+                    NfcScanDialog(scanState) { tag ->
+                        viewModel.completeScan(tag.uid)
+                    }
                 }
-            ) {
-                Text("Scan", fontSize = 24.sp)
+                is CustomerStatusRequestState.Swap -> {
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        onClick = {
+                            try {
+                                viewModel.completeSwap(
+                                    (uiState.state as CustomerStatusRequestState.Swap).id,
+                                    targetId.toULong()
+                                )
+                                targetId = ""
+                            } catch (e: java.lang.NumberFormatException) {
+                                e.printStackTrace()
+                            }
+                        }
+                    ) {
+                        Text("Confirm Swap", fontSize = 24.sp)
+                    }
+                }
+                else -> {
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        onClick = {
+                            viewModel.startScan()
+                            scanState.open()
+                        }
+                    ) {
+                        Text("Scan", fontSize = 24.sp)
+                    }
+
+                    NfcScanDialog(scanState) { tag ->
+                        viewModel.completeScan(tag.uid)
+                    }
+                }
             }
         }
     )
