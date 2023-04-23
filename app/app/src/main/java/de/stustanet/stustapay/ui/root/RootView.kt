@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.ui.debug.DebugView
 import de.stustanet.stustapay.ui.deposit.DepositView
+import de.stustanet.stustapay.ui.history.SaleHistoryView
 import de.stustanet.stustapay.ui.nav.NavChangeHandler
 import de.stustanet.stustapay.ui.nav.navigateDestination
 import de.stustanet.stustapay.ui.sale.SaleView
@@ -55,6 +56,9 @@ fun RootView(uictrl: SysUiController? = null) {
         }
         composable(RootNavDests.development.route) {
             DebugView(leaveView = { navController.navigateUp() })
+        }
+        composable(RootNavDests.history.route) {
+            SaleHistoryView()
         }
     }
 }
