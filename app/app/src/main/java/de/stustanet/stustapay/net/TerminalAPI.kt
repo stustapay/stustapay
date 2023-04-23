@@ -42,12 +42,12 @@ interface TerminalAPI {
     /**
      * Create a new order, which is not yet booked.
      */
-    suspend fun checkSale(newOrder: NewSale): Response<PendingSale>
+    suspend fun checkSale(newSale: NewSale): Response<PendingSale>
 
     /**
      * Book a new order - this transfers the money between accounts.
      */
-    suspend fun bookSale(newOrder: NewSale): Response<CompletedSale>
+    suspend fun bookSale(newSale: NewSale): Response<CompletedSale>
 
     /**
      * Get infos about a single order.

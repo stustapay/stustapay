@@ -65,8 +65,8 @@ private fun loginProfileUiState(
                     when (val userState = userStateResult.data) {
                         is UserState.LoggedIn -> {
                             LoginProfileUIState.LoggedIn(
-                                username = userState.user.display_name,
-                                privileges = userState.user.privileges.map { it.id }.joinToString(),
+                                username = userState.user.login,
+                                privileges = userState.user.privileges.joinToString { it.name },
                             )
                         }
                         is UserState.NoLogin -> {

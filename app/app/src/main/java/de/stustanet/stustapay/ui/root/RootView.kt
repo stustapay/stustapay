@@ -8,7 +8,7 @@ import de.stustanet.stustapay.ui.debug.DebugView
 import de.stustanet.stustapay.ui.deposit.DepositView
 import de.stustanet.stustapay.ui.nav.NavChangeHandler
 import de.stustanet.stustapay.ui.nav.navigateDestination
-import de.stustanet.stustapay.ui.order.OrderView
+import de.stustanet.stustapay.ui.sale.SaleView
 import de.stustanet.stustapay.ui.settings.SettingsView
 import de.stustanet.stustapay.ui.status.CustomerStatusView
 import de.stustanet.stustapay.ui.user.UserView
@@ -39,7 +39,7 @@ fun RootView(uictrl: SysUiController? = null) {
             )
         }
         composable(RootNavDests.ordering.route) {
-            OrderView()
+            SaleView()
         }
         composable(RootNavDests.deposit.route) {
             DepositView()

@@ -1,6 +1,7 @@
 package de.stustanet.stustapay.util
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
@@ -116,6 +117,7 @@ suspend fun <T> Flow<T>.waitFor(predicate: (T) -> Boolean): T {
  *
  * started: defines when sharing is done, e.g. SharingStarted.Eagerly
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 fun <T, K> StateFlow<T>.mapState(
     initialValue: K,
     scope: CoroutineScope,

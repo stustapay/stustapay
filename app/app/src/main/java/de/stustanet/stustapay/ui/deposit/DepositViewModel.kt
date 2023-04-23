@@ -32,14 +32,11 @@ class DepositViewModel @Inject constructor() : ViewModel() {
     private val _depositState = MutableStateFlow(DepositState())
     val depositState = _depositState.asStateFlow()
 
-
-    fun inputDigit(d: UInt) {
+    fun setAmount(amount: UInt) {
         _depositState.update {
-            val state = it.copy()
-            state.status = ""
-            state.currentAmount *= 10u
-            state.currentAmount += (d % 10u)
-            state
+            val cpy = it.copy()
+            cpy.currentAmount = amount
+            cpy
         }
     }
 

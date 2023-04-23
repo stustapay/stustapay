@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.order
+package de.stustanet.stustapay.ui.sale
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun OrderBottomBar(
+fun SaleBottomBar(
     status: @Composable () -> Unit,
     saleConfig: SaleConfig,
     onAbort: () -> Unit,

@@ -21,6 +21,7 @@ fun NfcScanDialog(
     state: NfcScanDialogState,
     viewModel: NfcScanDialogViewModel = hiltViewModel(),
     onScan: suspend (UserTag) -> Unit = {},
+    onDismiss: () -> Unit = {},
     content: @Composable () -> Unit = {
         // utf8 "satellite antenna"
         Text("Scan a Chip \uD83D\uDCE1", textAlign = TextAlign.Center, fontSize = 40.sp)
@@ -41,6 +42,7 @@ fun NfcScanDialog(
         Dialog(
             onDismissRequest = {
                 state.close()
+                onDismiss()
             }
         ) {
             Box(Modifier.size(350.dp, 350.dp)) {

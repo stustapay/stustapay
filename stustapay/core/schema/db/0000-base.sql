@@ -64,8 +64,11 @@ values
 
 -- some secret about one or many user_tags
 create table if not exists user_tag_secret (
-    id bigint primary key generated always as identity
+    id bigint primary key generated always as identity,
+    key0 bytea not null,
+    key1 bytea not null
 );
+
 
 -- for wristbands/cards/...
 create table if not exists user_tag (
@@ -73,7 +76,7 @@ create table if not exists user_tag (
     uid numeric(20) primary key,
     -- printed on the back
     pin text,
-    -- produced by wristband vendor
+    -- custom serial number secretly stored on each chip
     serial text,
     -- age restriction information
     restriction text references restriction_type(name),
@@ -119,8 +122,6 @@ create table if not exists account (
     -- current number of vouchers, updated on each transaction
     vouchers bigint not null default 0
 
-
-    -- todo: voucher
     -- todo: topup-config
 );
 insert into account (
@@ -154,7 +155,7 @@ create table if not exists usr (
     cashier_account_id bigint references account(id)
     -- depending on the transfer action, the correct account is booked
 
-    constraint password_or_user_tag_id_set check ((user_tag_uid is not null) or (password is not null))
+    constraint password_or_user_tag_uid_set check ((user_tag_uid is not null) or (password is not null))
 );
 comment on column usr.transport_account_id is 'account for orgas to transport cash from one location to another';
 comment on column usr.cashier_account_id is 'account for cashiers to store the current cash balance in input or output locations';
@@ -260,7 +261,10 @@ values
 
     -- normal sales tax
     -- umsatzsteuer in deutschland
-    ('ust', 0.19, 'normale Umsatzsteuer')
+    ('ust', 0.19, 'normale Umsatzsteuer'),
+
+    -- no tax, when we're the payment system of another legal entity.
+    ('transparent', 0.0, 'abgeführt von Begünstigtem')
 
     on conflict do nothing;
 
@@ -275,6 +279,7 @@ create table if not exists product (
     price_in_vouchers bigint, -- will be null if this product cannot be bought with vouchers
     constraint product_vouchers_only_with_fixed_price check ( price_in_vouchers is not null and fixed_price or price_in_vouchers is null ),
     constraint product_not_fixed_or_price check ( price is not null = fixed_price),
+    constraint product_price_in_vouchers_not_zero check ( price_in_vouchers <> 0 ),  -- should be null to avoid divbyzero then
 
     -- whether the core metadata of this product (price, price_in_vouchers, fixed_price, tax_name and target_account_id) is editable
     is_locked bool not null default false,
@@ -308,6 +313,8 @@ create table if not exists product_restriction (
 create or replace view product_with_tax_and_restrictions as (
     select
         p.*,
+        -- price_in_vouchers is never 0 due to constraint product_price_in_vouchers_not_zero
+        p.price / p.price_in_vouchers as price_per_voucher,
         tax.rate as tax_rate,
         coalesce(pr.restrictions, '{}'::text array) as restrictions
     from product p
@@ -343,13 +350,16 @@ create table if not exists till_button_product (
     -- TODO: constraint that we can only reference non-editable products
     -- TODO: constraint that a button can only reference ONE variable price product
     -- TODO: constraint that a button can only reference ONE returnable product
+    -- TODO: constraint that a button can only reference ONE product with voucher value
 );
 
 create or replace view till_button_with_products as (
     select
         t.id,
         t.name,
-        coalesce(j_view.price, 0) as price, -- sane default for buttons without a product
+        j_view.price as price, -- sane default for buttons without a product
+        j_view.price_in_vouchers as price_in_vouchers,
+        j_view.price_per_voucher as price_per_voucher,
         coalesce(j_view.fixed_price, true) as fixed_price, -- sane default for buttons without a product
         coalesce(j_view.is_returnable, false) as is_returnable, -- sane default for buttons without a product
         coalesce(j_view.product_ids, '{}'::bigint array) as product_ids
@@ -357,7 +367,14 @@ create or replace view till_button_with_products as (
     left join (
         select
             tlb.button_id,
-            sum(p.price) as price,
+            sum(coalesce(p.price, 0)) as price,
+
+            -- this assumes that only one product can have a voucher value
+            -- because we'd need the products individual voucher prices
+            -- and start applying vouchers to the highest price_per_voucher product first.
+            sum(coalesce(p.price_in_vouchers, 0)) as price_in_vouchers,
+            sum(coalesce(p.price_per_voucher, 0)) as price_per_voucher,
+
             bool_and(p.fixed_price) as fixed_price, -- a constraint assures us that for variable priced products a button can only refer to one product
             bool_and(p.is_returnable) as is_returnable, -- a constraint assures us that for returnable products a button can only refer to one product
             array_agg(tlb.product_id) as product_ids
