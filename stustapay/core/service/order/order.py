@@ -670,7 +670,7 @@ class OrderService(DBService):
     @with_db_transaction
     @requires_terminal([Privilege.cashier])
     async def list_orders_terminal(self, *, conn: asyncpg.Connection, current_user: User) -> list[Order]:
-        cursor = conn.cursor("select * from order_value where ordr.cashier_id = $1", current_user.id)
+        cursor = conn.cursor("select * from order_value where cashier_id = $1", current_user.id)
         result = []
         async for row in cursor:
             result.append(Order.parse_obj(row))
