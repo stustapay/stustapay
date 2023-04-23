@@ -215,10 +215,11 @@ class TillService(DBService):
             "select privileges from usr_with_privileges where id = $1", current_terminal.till.active_user_id
         )
         db_buttons = conn.cursor(
-            "select tlwb.id, tlwb.name, tlwb.price, tlwb.fixed_price, tlwb.is_returnable "
+            "select tlwb.* "
             "from till_button_with_products tlwb "
             "join till_layout_to_button tltb on tltb.button_id = tlwb.id "
-            "where tltb.layout_id = $1",
+            "where tltb.layout_id = $1 "
+            "order by tltb.sequence_number asc",
             db_profile["layout_id"],
         )
         buttons = []

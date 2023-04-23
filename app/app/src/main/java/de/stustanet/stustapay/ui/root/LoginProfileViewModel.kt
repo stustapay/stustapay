@@ -66,7 +66,7 @@ private fun loginProfileUiState(
                         is UserState.LoggedIn -> {
                             LoginProfileUIState.LoggedIn(
                                 username = userState.user.login,
-                                privileges = userState.user.privileges.map { it.id }.joinToString(),
+                                privileges = userState.user.privileges.joinToString { it.name },
                             )
                         }
                         is UserState.NoLogin -> {

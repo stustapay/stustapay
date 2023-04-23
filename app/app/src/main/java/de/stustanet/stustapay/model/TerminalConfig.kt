@@ -19,6 +19,8 @@ data class TerminalButton(
     val id: Int,
     val name: String,
     val price: Double?,
+    val price_in_vouchers: Int?,
+    val price_per_voucher: Double?,
     val default_price: Double?,
     val is_returnable: Boolean,
     val fixed_price: Boolean,

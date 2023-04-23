@@ -1,23 +1,21 @@
-package de.stustanet.stustapay.ui.order
+package de.stustanet.stustapay.ui.sale
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustanet.stustapay.model.PendingLineItem
+
 
 /**
  * line item on the order confirm view
  */
 @Composable
-fun OrderConfirmItem(
-    caption: String,
-    price: Double,
-    amount: Int,
+fun SaleConfirmItem(
+    lineItem: PendingLineItem,
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -25,7 +23,7 @@ fun OrderConfirmItem(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "%.02f x %2d".format(price, amount),
+            text = "%.02f x %2d".format(lineItem.product_price, lineItem.quantity),
             modifier = Modifier.fillMaxWidth(0.25f),
             fontSize = 24.sp
         )
@@ -33,7 +31,7 @@ fun OrderConfirmItem(
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(horizontalArrangement = Arrangement.SpaceEvenly) {
                 Text(
-                    text = caption,
+                    text = lineItem.product.name,
                     fontSize = 24.sp,
                     modifier = Modifier
                         .padding(5.dp)

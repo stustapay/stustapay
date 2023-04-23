@@ -11,6 +11,12 @@ sealed class Response<out T> {
     sealed class Error : Response<Nothing>() {
         abstract fun msg(): String
 
+        data class Service(val msg: String) : Error() {
+            override fun msg(): String {
+                return msg
+            }
+        }
+
         data class Server(val msg: String, val code: Int) : Error() {
             override fun msg(): String {
                 return "server error $code: $msg"

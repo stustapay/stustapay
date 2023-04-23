@@ -109,7 +109,7 @@ data class PendingLineItem(
 
 /**
  * Returned once we create an order.
- * PendingOrder class defined in core model.
+ * PendingSale class defined in core model.
  */
 @Serializable
 data class PendingSale(
@@ -120,12 +120,15 @@ data class PendingSale(
     val new_voucher_balance: Int,
     val customer_account_id: Int,
     val line_items: List<PendingLineItem>,
+    val used_vouchers: Int,
+    val item_count: Int,
+    val total_price: Double,
 )
 
 
 /**
  * Returned once the order is booked.
- * CompletedOrder class defined in core model.
+ * CompletedSale class defined in core model.
  */
 @Serializable
 data class CompletedSale(
@@ -137,6 +140,9 @@ data class CompletedSale(
     val new_voucher_balance: Int,
     val customer_account_id: Int,
     val line_items: List<PendingLineItem>,
+    val used_vouchers: Int,
+    val item_count: Int,
+    val total_price: Double,
 
     // CompletedSale
     val id: Int,

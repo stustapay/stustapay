@@ -110,6 +110,10 @@ class PendingSale(BaseModel):
     line_items: list[PendingLineItem]
 
     @property
+    def used_vouchers(self) -> int:
+        return self.old_voucher_balance - self.new_voucher_balance
+
+    @property
     def item_count(self) -> int:
         return len(self.line_items)
 
