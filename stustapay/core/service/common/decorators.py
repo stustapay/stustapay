@@ -91,6 +91,51 @@ def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
     return f
 
 
+def requires_customer(func):
+    """
+    Check if a customer is logged in via a customer jwt token
+    If the current_customer is already know from a previous authentication, it can be used the check the privileges
+    Sets the arguments current_customer in the wrapped function
+    """
+
+    @wraps(func)
+    async def wrapper(self, **kwargs):
+        if "token" not in kwargs and "current_customer" not in kwargs:
+            raise RuntimeError("token or customer was not provided to service function call")
+
+        if "conn" not in kwargs:
+            raise RuntimeError(
+                "requires_customer_privileges needs a database connection, "
+                "with_db_transaction needs to be put before this decorator"
+            )
+
+        token = kwargs["token"] if "token" in kwargs else None
+        customer = kwargs["current_customer"] if "current_customer" in kwargs else None
+        conn = kwargs["conn"]
+        if customer is None:
+            if self.__class__.__name__ == "AuthService":
+                customer = await self.get_customer_from_token(conn=conn, token=token)
+            elif hasattr(self, "auth_service"):
+                customer = await self.auth_service.get_customer_from_token(conn=conn, token=token)
+            else:
+                raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
+
+        if customer is None:
+            raise AccessDenied("invalid customer token")
+
+        if "current_customer" in signature(func).parameters:
+            kwargs["current_customer"] = customer
+        elif "current_customer" in kwargs:
+            kwargs.pop("current_customer")
+
+        if "token" not in signature(func).parameters and "token" in kwargs:
+            kwargs.pop("token")
+
+        return await func(self, **kwargs)
+
+    return wrapper
+
+
 def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
     """
     Check if a terminal is logged in via a provided terminal jwt token

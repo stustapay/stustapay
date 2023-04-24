@@ -89,7 +89,7 @@ export const Login: React.FC = () => {
                 required
                 fullWidth
                 type="password"
-                name="userTagUid"
+                name="userTagPin"
                 label={t("userTagPin")}
                 onBlur={handleBlur}
                 onChange={handleChange}
