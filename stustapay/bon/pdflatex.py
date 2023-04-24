@@ -20,12 +20,15 @@ LatexEncoder = UnicodeToLatexEncoder(
             rule_type=RULE_REGEX,
             rule=[
                 # format newlines really as line breaks. Needed in the address Field
-                (re.compile(r"\n"), r"\newline"),
+                (re.compile(r"\n"), r"\\newline"),
+                # remove nullbytes
+                (re.compile("\0"), r""),
             ],
         ),
         "defaults",
     ],
     unknown_char_policy="unihex",
+    # unknown_char_policy="keep",
 )
 
 TEX_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tex")
@@ -37,7 +40,7 @@ def jfilter_money(value: float):
 
 
 def jfilter_percent(value: float):
-    # format percentages as ' 7,00'
+    # format percentages as ' 7,00%'
     return f"{value * 100:5.2f}\\%".replace(".", ",")
 
 

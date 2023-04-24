@@ -85,7 +85,7 @@ class Generator(SubCommand):
         Then saves the result back to the database
         """
         order_id = bon["id"]
-        self.logger.info(f"Generating Bon {order_id}")
+        self.logger.info(f"Collecting information for Bon {order_id}")
 
         order = await self.order_service.show_order(order_id=order_id)
         # for now do a direct database request for tax rates
@@ -100,6 +100,7 @@ class Generator(SubCommand):
         out_file = self.config.bon.output_folder.joinpath(file_name)
 
         # Generate the PDF and store the result back in the database
+        self.logger.info(f"Generating Bon for order {order_id}...")
         success, msg = await pdflatex("bon.tex", context, out_file)
         self.logger.info(f"Bon {order_id} generated with result {success}, {msg}")
         if success:

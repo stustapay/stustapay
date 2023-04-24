@@ -1,8 +1,26 @@
-\documentclass{article}
+\documentclass[a4paper]{article}
 \usepackage{tabularx}
 \usepackage[table]{xcolor}
 \usepackage{graphicx}
 \usepackage{datetime}
+\usepackage{libertine}
+
+\usepackage[xetex,%
+            colorlinks=true,linkcolor=blue,citecolor=blue,%
+            anchorcolor=red,urlcolor=blue,bookmarks=true,%
+            bookmarksopen=true,bookmarksopenlevel=0,plainpages=false,%
+            bookmarksnumbered=true,hyperindex=false,pdfstartview=,%
+            pdfauthor={StuStaPay},%
+            pdftitle={StuStaPay Bon},%
+            %pdfsubject={StuStaPay Beleg}%
+]{hyperref}
+
+
+% for deterministic build
+\special{pdf:trailerid [
+    <00112233445566778899aabbccddeeff>
+    <00112233445566778899aabbccddeeff>
+]}
 
 \begin{document}
 
@@ -22,12 +40,11 @@
     \vspace{1cm}
     \textit{TEST \today - \currenttime } % for testing, to see if a new bon was created
 
-    \textbf{Rechnung Nr. \VAR["{:010}".format(order.id)]} \hspace{\fill}  \VAR[order.finished_at.date()]
+    \textbf{Rechnung Nr. \VAR["{:010}".format(order.id)]} \hspace{\fill}  \VAR[order.booked_at.date()]
 
     % Addresse und Steuer ID
     \begin{flushright}
         \VAR[issuer|latex] \\
-        % \VAR[address.strip().replace("\n", "\\\\")|latex] \\
         \VAR[address.strip()|latex] \\
         USt-IdNr. \VAR[ust_id|latex] \\
     \end{flushright}
@@ -40,14 +57,14 @@
         ~                    & \textbf{Produkt}        & \textbf{Einzelpreis}   & \textbf{Gesamt}              &                       \\
         \hline
         \BLOCK[ for item in order.line_items ]
-        \VAR[item.quantity]x & \VAR[item.product.name] & \VAR[item.price|money] & \VAR[item.total_price|money] & [\VAR[item.tax_name]] \\
+        \VAR[item.quantity]x & \VAR[item.product.name] & \VAR[item.product.price|money] & \VAR[item.total_price|money] & [\VAR[item.tax_name]] \\
         \BLOCK[endfor]
     \end{tabularx}
 
 
     % Gesamtsumme
     \vspace{1cm}
-    \hspace{\fill} \textbf{Summe EUR} \textbf{\VAR[order.value_sum|money]€}
+    \hspace{\fill} \textbf{Summe EUR} \textbf{\VAR[order.total_price|money]€}
 
     %Steuerstatz
     \vspace{1cm}
@@ -56,18 +73,17 @@
         \textbf{MwSt.\%}                                         & \textbf{Brutto}                & \textbf{Netto}                   & \textbf{MwSt.}                 \\
         \hline
         \BLOCK[ for tax_rate in tax_rates ]
-        \VAR[tax_rate.tax_name]=\VAR[ tax_rate.tax_rate|percent] & \VAR[tax_rate.value_sum|money] & \VAR[tax_rate.value_notax|money] & \VAR[tax_rate.value_tax|money] \\
+        \VAR[tax_rate.tax_name]=\VAR[ tax_rate.tax_rate|percent] & \VAR[tax_rate.total_price|money] & \VAR[tax_rate.total_no_tax|money] & \VAR[tax_rate.total_tax|money] \\
         \BLOCK[endfor]
         \hline
-        ~                                                        & \VAR[order.value_sum|money]    & \VAR[order.value_notax|money]    & \VAR[order.value_tax|money]    \\
+        ~                                                        & \VAR[order.total_price|money]    & \VAR[order.total_no_tax|money]    & \VAR[order.total_tax|money]    \\
     \end{tabularx}
 
     % sonstige Infos
     \vspace{1cm}
     \begin{tabularx}{0.8\textwidth}{ RX }
-        Zahlmethode:        & \VAR[order.txmethod]    \\
-        Vorgangsbeginn:     & \VAR[order.created_at.astimezone()]  \\
-        Vorgangsende:       & \VAR[order.finished_at.astimezone()] \\
+        Zahlmethode:        & \VAR[order.payment_method]    \\
+        Vorgangszeitpunkt:  & \VAR[order.booked_at.astimezone()]  \\
         Kasse:              & Festzelt 1              \\
         Kassierer:          & 1337                    \\
         TSE Seriennummer:   & asdfqwer                \\
