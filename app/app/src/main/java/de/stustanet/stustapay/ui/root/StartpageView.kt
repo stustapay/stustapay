@@ -48,6 +48,13 @@ private fun getNavItems(): List<NavMenuItem> {
     )
     itemsList.add(
         NavMenuItem(
+            icon = Icons.Filled.Info,
+            label = "Account Status",
+            navDestination = RootNavDests.status,
+        )
+    )
+    itemsList.add(
+        NavMenuItem(
             icon = Icons.Filled.List,
             label = "Transaction History",
         )

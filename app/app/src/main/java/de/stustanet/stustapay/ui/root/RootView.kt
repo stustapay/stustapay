@@ -10,6 +10,7 @@ import de.stustanet.stustapay.ui.nav.NavChangeHandler
 import de.stustanet.stustapay.ui.nav.navigateDestination
 import de.stustanet.stustapay.ui.order.OrderView
 import de.stustanet.stustapay.ui.settings.SettingsView
+import de.stustanet.stustapay.ui.status.CustomerStatusView
 import de.stustanet.stustapay.ui.user.UserView
 import de.stustanet.stustapay.util.SysUiController
 
@@ -42,6 +43,9 @@ fun RootView(uictrl: SysUiController? = null) {
         }
         composable(RootNavDests.deposit.route) {
             DepositView()
+        }
+        composable(RootNavDests.status.route) {
+            CustomerStatusView()
         }
         composable(RootNavDests.user.route) {
             UserView(leaveView = { navController.navigateUp() })

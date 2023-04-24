@@ -75,7 +75,7 @@ private fun userUiState(
                     when (val userState = userStateResult.data) {
                         is UserState.LoggedIn -> {
                             UserUIState.LoggedIn(
-                                username = userState.user.name,
+                                username = userState.user.display_name,
                                 privileges = userState.user.privileges.joinToString { it.id }.ifEmpty { "no privileges" },
                                 showCreateUser = Access.canCreateUser(userState.user),
                             )

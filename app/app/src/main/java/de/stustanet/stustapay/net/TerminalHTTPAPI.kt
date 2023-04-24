@@ -75,4 +75,8 @@ class TerminalHTTPAPI @Inject constructor(
     override suspend fun userLogout(): Response<Unit> {
         return client.post<Unit, Unit>("user/logout")
     }
+
+    override suspend fun getCustomer(id: ULong): Response<Account> {
+        return client.get("customer/$id")
+    }
 }
