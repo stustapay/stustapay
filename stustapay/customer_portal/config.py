@@ -2,11 +2,7 @@ from typing import Optional
 
 import yaml
 from pydantic import BaseModel
-
-
-class HTTPServerConfig(BaseModel):
-    host: str
-    port: int
+from stustapay.core.config import HTTPServerConfig
 
 
 class CustomerPortalApiConfig(HTTPServerConfig):
