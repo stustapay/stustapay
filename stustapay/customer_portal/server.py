@@ -1,15 +1,13 @@
 import logging
 
-from stustapay.core.config import Config
 from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer import CustomerService
-from stustapay.core.service.user import AuthService, UserService
+from stustapay.core.service.user import AuthService
 from stustapay.core.subcommand import SubCommand
-from .routers import (
-    auth,
-)
+from .routers import auth
+from .config import Config
 
 
 class Api(SubCommand):
@@ -37,7 +35,6 @@ class Api(SubCommand):
         context = Context(
             config=self.cfg,
             db_pool=db_pool,
-            user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             config_service=ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             customer_service=CustomerService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
