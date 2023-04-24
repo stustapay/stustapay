@@ -18,8 +18,10 @@ class PriceSelectionViewModel @Inject constructor() : ViewModel() {
     fun inputDigit(d: UInt): UInt {
         _amount.update {
             var new = it
-            new *= 10u
-            new += (d % 10u)
+            if (new + (d % 10u) < UInt.MAX_VALUE / 10u) {
+                new *= 10u
+                new += (d % 10u)
+            }
             new
         }
 

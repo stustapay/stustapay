@@ -21,8 +21,12 @@ class PriceSelectionState {
 }
 
 @Composable
-fun rememberPriceSelectionState(): PriceSelectionState {
+fun rememberPriceSelectionState(initiallyOpen: Boolean = false): PriceSelectionState {
     return remember {
-        PriceSelectionState()
+        val ret = PriceSelectionState()
+        if (initiallyOpen) {
+            ret.open()
+        }
+        ret
     }
 }

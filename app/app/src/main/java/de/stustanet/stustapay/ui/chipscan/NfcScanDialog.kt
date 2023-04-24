@@ -1,6 +1,7 @@
 package de.stustanet.stustapay.ui.chipscan
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -45,34 +46,36 @@ fun NfcScanDialog(
                 onDismiss()
             }
         ) {
-            Box(Modifier.size(350.dp, 350.dp)) {
-                Card(modifier = Modifier.padding(20.dp)) {
-                    Box(
+            Card(
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.size(350.dp, 350.dp),
+                elevation = 8.dp,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(start = 5.dp)
-                                .fillMaxWidth()
-                        ) {
-
-                            val actionMsg = scanResult.action
-                            if (actionMsg == null) {
-                                content()
-                            } else {
-                                Text(
-                                    actionMsg,
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 40.sp,
-                                )
-                            }
+                        val actionMsg = scanResult.action
+                        if (actionMsg == null) {
+                            content()
+                        } else {
                             Text(
-                                scanResult.status,
-                                textAlign = TextAlign.Left,
-                                fontSize = 20.sp,
+                                actionMsg,
+                                textAlign = TextAlign.Center,
+                                fontSize = 40.sp,
                             )
                         }
+                        Text(
+                            scanResult.status,
+                            textAlign = TextAlign.Left,
+                            fontSize = 20.sp,
+                        )
                     }
                 }
             }
