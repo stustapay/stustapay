@@ -17,8 +17,9 @@ export const authApi = createApi({
     login: builder.mutation<UserResponse, LoginRequest>({
       query: (credentials) => {
         const formData = new FormData();
-        formData.append("user_tag_uid", credentials.userTagUid);
-        formData.append("user_tag_pin", credentials.userTagPin);
+        // for OAuth compatibility
+        formData.append("username", credentials.userTagUid);
+        formData.append("password", credentials.userTagPin);
         return {
           url: "/auth/login/",
           method: "POST",
