@@ -352,11 +352,11 @@ create or replace view till_button_with_products as (
     select
         t.id,
         t.name,
-        j_view.price as price, -- sane default for buttons without a product
-        j_view.price_in_vouchers as price_in_vouchers,
-        j_view.price_per_voucher as price_per_voucher,
-        coalesce(j_view.fixed_price, true) as fixed_price, -- sane default for buttons without a product
-        coalesce(j_view.is_returnable, false) as is_returnable, -- sane default for buttons without a product
+        coalesce(j_view.price, 0) as price, -- sane defaults for buttons without a product
+        coalesce(j_view.price_in_vouchers, 0) as price_in_vouchers,
+        coalesce(j_view.price_per_voucher, 0) as price_per_voucher,
+        coalesce(j_view.fixed_price, true) as fixed_price,
+        coalesce(j_view.is_returnable, false) as is_returnable,
         coalesce(j_view.product_ids, '{}'::bigint array) as product_ids
     from till_button t
     left join (
