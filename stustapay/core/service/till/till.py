@@ -4,6 +4,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
+from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.terminal import (
     Terminal,
     TerminalConfig,
@@ -244,3 +245,11 @@ class TillService(DBService):
             buttons=buttons,
             secrets=secrets,
         )
+
+    @with_db_transaction
+    @requires_terminal()
+    async def get_customer(self, *, conn: asyncpg.Connection, customer_tag_uid: int) -> Optional[Customer]:
+        customer = await conn.fetchrow("select * from account a where a.user_tag_uid = $1", customer_tag_uid)
+        if customer is None:
+            return None
+        return Customer.parse_obj(customer)
