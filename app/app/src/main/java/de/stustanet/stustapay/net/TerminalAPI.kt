@@ -69,4 +69,9 @@ interface TerminalAPI {
      * Logout the current user.
      */
     suspend fun userLogout(): Response<Unit>
+
+    /**
+     * Get the account status for a customer tag.
+     */
+    suspend fun getCustomer(id: ULong): Response<Account>
 }

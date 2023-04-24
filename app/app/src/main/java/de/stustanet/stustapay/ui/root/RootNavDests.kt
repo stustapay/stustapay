@@ -9,6 +9,7 @@ object RootNavDests : NavDestinations() {
     val startpage = NavDest("startpage")
     val ordering = NavDest("ordering", showSystemUI = false)
     val deposit = NavDest("deposit", showSystemUI = false)
+    val status = NavDest("status")
     val user = NavDest("user")
     val settings = NavDest("settings")
     val development = NavDest("development")

@@ -12,7 +12,7 @@ from stustapay.core.service.order import OrderService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
-from stustapay.terminalserver.router import auth, base, order, user
+from stustapay.terminalserver.router import auth, base, order, user, customer
 
 
 class Api(SubCommand):
@@ -43,6 +43,7 @@ class Api(SubCommand):
         self.server.add_router(order.router)
         self.server.add_router(auth.router)
         self.server.add_router(user.router)
+        self.server.add_router(customer.router)
 
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)
