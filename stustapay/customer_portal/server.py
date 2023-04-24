@@ -1,17 +1,10 @@
-import asyncio
 import logging
 
 from stustapay.core.config import Config
 from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
-from stustapay.core.service.account import AccountService
-from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer import CustomerService
-from stustapay.core.service.order import OrderService
-from stustapay.core.service.product import ProductService
-from stustapay.core.service.tax_rate import TaxRateService
-from stustapay.core.service.till import TillService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.subcommand import SubCommand
 from .routers import (

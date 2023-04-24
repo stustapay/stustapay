@@ -14,7 +14,7 @@ class AdministrationApiConfig(HTTPServerConfig):
     host: str = "localhost"
     port: int = 8081
 
-    
+
 class CustomerPortalApiConfig(HTTPServerConfig):
     base_url: str
     host: str = "localhost"

@@ -5,9 +5,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
-from stustapay.core.http.context import ContextCustomerService, ContextUserService
+from stustapay.core.http.context import ContextCustomerService
 from stustapay.core.schema.customer import Customer
-from stustapay.core.schema.user import User, UserTag
 
 router = APIRouter(
     prefix="/auth",

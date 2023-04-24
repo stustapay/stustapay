@@ -132,6 +132,7 @@ def get_tax_rate_service(request: Request) -> TaxRateService:
 def get_user_service(request: Request) -> UserService:
     return request.state.context.user_service
 
+
 def get_customer_service(request: Request) -> CustomerService:
     return request.state.context.customer_service
 

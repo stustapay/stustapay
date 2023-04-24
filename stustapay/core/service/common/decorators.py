@@ -90,12 +90,14 @@ def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
 
     return f
 
+
 def requires_customer(func):
     """
     Check if a customer is logged in via a customer jwt token
     If the current_customer is already know from a previous authentication, it can be used the check the privileges
     Sets the arguments current_customer in the wrapped function
     """
+
     @wraps(func)
     async def wrapper(self, **kwargs):
         if "token" not in kwargs and "current_customer" not in kwargs:
