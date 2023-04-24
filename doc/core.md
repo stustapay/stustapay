@@ -30,3 +30,8 @@
   python -m stustapay.terminalserver -c config.yml -vvv api
   ```
   You can check out the api documentation at `http://localhost:8082/docs`, (port subject to change depending on your dev config)
+
+## VS Code
+When using DevContainer make sure to forward the port globally. Otherwise the till will not be able to connect.
+In the VSCode Settings set Remote: Local Port Host to `allInterfaces`
+![https://stackoverflow.com/a/67997839](https://i.stack.imgur.com/oM0zl.png)
