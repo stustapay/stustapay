@@ -9,16 +9,10 @@ class HTTPServerConfig(BaseModel):
     port: int
 
 
-class AdministrationApiConfig(HTTPServerConfig):
+class CustomerPortalApiConfig(HTTPServerConfig):
     base_url: str
     host: str = "localhost"
-    port: int = 8081
-
-
-class TerminalApiConfig(HTTPServerConfig):
-    base_url: str
-    host: str = "localhost"
-    port: int = 8080
+    port: int = 8082
 
 
 class DatabaseConfig(BaseModel):
@@ -29,17 +23,9 @@ class DatabaseConfig(BaseModel):
     dbname: str
 
 
-class CoreConfig(BaseModel):
-    secret_key: str
-    jwt_token_algorithm: str = "HS256"
-    sumup_affiliate_key: str = "unset"
-
-
 class Config(BaseModel):
-    administration: AdministrationApiConfig
-    terminalserver: TerminalApiConfig
+    customer_portal: CustomerPortalApiConfig
     database: DatabaseConfig
-    core: CoreConfig
 
 
 def read_config(config_path: str) -> Config:

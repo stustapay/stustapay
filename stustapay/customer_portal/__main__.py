@@ -1,9 +1,9 @@
 import asyncio
 
-from stustapay.core.config import read_config
 from stustapay.core.args import Parser
 
 from . import server
+from .config import read_config
 
 
 def main():
