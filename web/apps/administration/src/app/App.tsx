@@ -33,6 +33,7 @@ export function App() {
         setLoading(false);
       })
       .catch((e) => {
+        console.log(e);
         toast.error(`Error while fetching config: ${e}`);
       });
   }, []);

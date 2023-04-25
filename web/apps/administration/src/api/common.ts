@@ -52,6 +52,9 @@ const fetchTerminalApiEndpoint = async (clientConfig: ClientConfig) => {
 
 export const fetchConfig = async (): Promise<Config> => {
   const resp = await fetch(`http://${siteHost}/assets/config.json`);
+  if (resp.status !== 200) {
+    throw new Error("error while fetching config");
+  }
   const respJson = await resp.json();
   const clientConfig = ClientConfigSchema.parse(respJson);
   const terminalApiEndpoint = await fetchTerminalApiEndpoint(clientConfig);
