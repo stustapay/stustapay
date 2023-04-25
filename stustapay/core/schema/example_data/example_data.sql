@@ -24,7 +24,7 @@ values
     (1234, 'pin', null, null, null),
     (13876489173, null, null, null, null),
     (5424726191074820, 'LOL-tag2', 'serial2', null, 0),
-    (5223726016640516, 'LOL-tag3', 'serial3', null, 0),
+    (5424726016640516, 'LOL-tag3', 'serial3', null, 0),
     (5424726268326916, 'LOL-tag4', 'serial4', null, 0)
     on conflict do nothing;
 
@@ -43,7 +43,7 @@ values
     (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 30000000.20, 0),
     (201, 5424726191074820, 'private', 'test-tag2', 'test token 2', 30.00, 5),
     (202, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0),
-    (203, 5223726016640516, 'private', 'test-tag3', 'test token 3', 15.00, 2),
+    (203, 5424726016640516, 'private', 'test-tag3', 'test token 3', 15.00, 2),
     (204, 5424726268326916, 'private', 'test-tag4', 'test token 4', 20.00, 2)
     on conflict do nothing;
 select setval('account_id_seq', 300);
