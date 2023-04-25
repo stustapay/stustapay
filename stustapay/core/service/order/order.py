@@ -99,8 +99,11 @@ class TillPermissionException(ServiceException):
 
     id = "TillPermission"
 
+    def __init__(self, msg):
+        self.msg = msg
+
     def __str__(self):
-        return f"Operation denied for current till profile"
+        return self.msg
 
 
 class InvalidSaleException(ServiceException):
@@ -110,8 +113,11 @@ class InvalidSaleException(ServiceException):
 
     id = "InvalidSale"
 
+    def __init__(self, msg):
+        self.msg = msg
+
     def __str__(self):
-        return f"Operation denied for current till profile"
+        return self.msg
 
 
 class BookedProduct(BaseModel):
