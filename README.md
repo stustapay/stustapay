@@ -42,20 +42,20 @@ All transactions need to be signed by a [federally approved security module](htt
 
 ### App
 - Operated at points of sale
-- Is connected via websocket to StuStaPay core
+- Is connected via HTTP calls to StuStaPay core
 - Registers customer's orders
 - Can scan and validate NFC tags
 
 
 ### Webapps
-Each one run on separate Python webserver, which talks to the core database.
+Each one runs on separate Python webserver, which talks to the core database.
 
 #### Administration site
 Configuration of products, cash desks, accounts, ...
 
 #### User Self Service Portal
 - Top up account with online payment
-- Get payment reciepes
+- Get payment receipts
 - Pay back money after the event
 
 

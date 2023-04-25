@@ -1,9 +1,0 @@
-diff a/stustapay/core/schema/customer.py b/stustapay/core/schema/customer.py	(rejected hunks)
-@@ -1,4 +1,5 @@
- from stustapay.core.schema.account import Account
- 
-+
- class Customer(Account):
--    pass
-\ No newline at end of file
-+    pass

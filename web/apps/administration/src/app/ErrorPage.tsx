@@ -8,7 +8,7 @@ export const ErrorPage: React.FC = () => {
   return (
     <div>
       <h1>Oops!</h1>
-      <p>Sorry, an unexpected error has occured.</p>
+      <p>Sorry, an unexpected error has occurred.</p>
       <p>
         {isRouteErrorResponse(error) ? (
           <i>{error.statusText}</i>
