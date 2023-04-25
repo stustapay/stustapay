@@ -344,14 +344,95 @@ create table if not exists till_button (
     name text not null unique
 );
 
+create or replace function check_button_references_locked_products(
+    product_id bigint
+) returns boolean as
+$$
+<<locals>> declare
+    is_locked boolean;
+begin
+    select product.is_locked into locals.is_locked
+    from product
+    where id = check_button_references_locked_products.product_id;
+    return locals.is_locked;
+end
+$$ language plpgsql;
+
+create or replace function check_button_references_max_one_non_fixed_price_product(
+    button_id bigint,
+    product_id bigint
+) returns boolean as
+$$
+<<locals>> declare
+    n_variable_price_products int;
+    new_product_is_fixed_price boolean;
+begin
+    select count(*) into locals.n_variable_price_products
+    from till_button_product tlb
+    join product p on tlb.product_id = p.id
+    where tlb.button_id = check_button_references_max_one_non_fixed_price_product.button_id and not p.fixed_price;
+
+    select product.fixed_price into locals.new_product_is_fixed_price
+    from product
+    where id = check_button_references_max_one_non_fixed_price_product.product_id;
+
+    return (locals.n_variable_price_products + (not locals.new_product_is_fixed_price)::int) <= 1;
+end
+$$ language plpgsql;
+
+create or replace function check_button_references_max_one_returnable_product(
+    button_id bigint,
+    product_id bigint
+) returns boolean as
+$$
+<<locals>> declare
+    n_returnable_products int;
+    new_product_is_returnable boolean;
+begin
+    select count(*) into locals.n_returnable_products
+    from till_button_product tlb
+        join product p on tlb.product_id = p.id
+    where tlb.button_id = check_button_references_max_one_returnable_product.button_id and p.is_returnable;
+
+    select product.is_returnable into locals.new_product_is_returnable
+    from product
+    where id = check_button_references_max_one_returnable_product.product_id;
+
+    return (locals.n_returnable_products + locals.new_product_is_returnable::int) <= 1;
+end
+$$ language plpgsql;
+
+create or replace function check_button_references_max_one_voucher_product(
+    button_id bigint,
+    product_id bigint
+) returns boolean as
+$$
+<<locals>> declare
+    n_voucher_products int;
+    new_product_has_vouchers boolean;
+begin
+    select count(*) into locals.n_voucher_products
+    from till_button_product tlb
+        join product p on tlb.product_id = p.id
+    where tlb.button_id = check_button_references_max_one_voucher_product.button_id and p.price_in_vouchers is not null;
+
+    select product.price_in_vouchers is not null into locals.new_product_has_vouchers
+    from product
+    where id = check_button_references_max_one_voucher_product.product_id;
+
+    return (locals.n_voucher_products + locals.new_product_has_vouchers::int) <= 1;
+end
+$$ language plpgsql;
+
 create table if not exists till_button_product (
     button_id bigint not null references till_button(id) on delete cascade,
     product_id bigint not null references product(id) on delete cascade,
-    primary key (button_id, product_id)
-    -- TODO: constraint that we can only reference non-editable products
-    -- TODO: constraint that a button can only reference ONE variable price product
-    -- TODO: constraint that a button can only reference ONE returnable product
-    -- TODO: constraint that a button can only reference ONE product with voucher value
+    primary key (button_id, product_id),
+
+    constraint references_only_locked_products check (check_button_references_locked_products(product_id)),
+    constraint references_max_one_variable_price_product check (check_button_references_max_one_non_fixed_price_product(button_id, product_id)),
+    constraint references_max_one_returnable_product check (check_button_references_max_one_returnable_product(button_id, product_id)),
+    constraint references_max_one_voucher_product check (check_button_references_max_one_voucher_product(button_id, product_id))
 );
 
 create or replace view till_button_with_products as (

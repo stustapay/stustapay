@@ -16,13 +16,13 @@ class TillServiceTest(BaseTestCase):
 
     async def test_basic_till_button_workflow(self):
         product1 = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="Helles 0,5l", price=3, tax_name="ust")
+            token=self.admin_token, product=NewProduct(name="Helles 0,5l", price=3, tax_name="ust", is_locked=True)
         )
         product2 = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="Radler 0,5l", price=2.5, tax_name="ust")
+            token=self.admin_token, product=NewProduct(name="Radler 0,5l", price=2.5, tax_name="ust", is_locked=True)
         )
         product_pfand = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="Pfand", price=2.5, tax_name="ust")
+            token=self.admin_token, product=NewProduct(name="Pfand", price=2.5, tax_name="ust", is_locked=True)
         )
 
         button = await self.till_service.layout.create_button(
@@ -140,3 +140,83 @@ class TillServiceTest(BaseTestCase):
         await self.till_service.register_terminal(registration_uuid=till.registration_uuid)
         logged_out = await self.till_service.logout_terminal_id(token=self.admin_token, till_id=till.id)
         self.assertTrue(logged_out)
+
+    async def test_button_references_locked_products(self):
+        product = await self.product_service.create_product(
+            token=self.admin_token, product=NewProduct(name="foo", is_locked=False, price=5, tax_name="ust")
+        )
+        with self.assertRaises(Exception):
+            await self.till_service.layout.create_button(
+                token=self.admin_token, button=NewTillButton(name="foo", product_ids=[product.id])
+            )
+
+        product = await self.product_service.update_product(
+            token=self.admin_token,
+            product_id=product.id,
+            product=NewProduct(name="foo", is_locked=True, price=5, tax_name="ust"),
+        )
+        button = await self.till_service.layout.create_button(
+            token=self.admin_token, button=NewTillButton(name="foo", product_ids=[product.id])
+        )
+        self.assertIsNotNone(button)
+
+    async def test_button_references_max_one_variable_price_product(self):
+        product1 = await self.product_service.create_product(
+            token=self.admin_token, product=NewProduct(name="p1", is_locked=True, fixed_price=False, tax_name="ust")
+        )
+        product2 = await self.product_service.create_product(
+            token=self.admin_token, product=NewProduct(name="p2", is_locked=True, fixed_price=False, tax_name="ust")
+        )
+        button = await self.till_service.layout.create_button(
+            token=self.admin_token, button=NewTillButton(name="foo", product_ids=[product1.id])
+        )
+        self.assertIsNotNone(button)
+
+        with self.assertRaises(Exception):
+            await self.till_service.layout.update_button(
+                token=self.admin_token,
+                button_id=button.id,
+                button=NewTillButton(name="foo", product_ids=[product1.id, product2.id]),
+            )
+
+    async def test_button_references_max_one_returnable_product(self):
+        product1 = await self.product_service.create_product(
+            token=self.admin_token,
+            product=NewProduct(name="p1", is_locked=True, price=5, is_returnable=True, tax_name="ust"),
+        )
+        product2 = await self.product_service.create_product(
+            token=self.admin_token,
+            product=NewProduct(name="p2", is_locked=True, price=3, is_returnable=True, tax_name="ust"),
+        )
+        button = await self.till_service.layout.create_button(
+            token=self.admin_token, button=NewTillButton(name="foo", product_ids=[product1.id])
+        )
+        self.assertIsNotNone(button)
+
+        with self.assertRaises(Exception):
+            await self.till_service.layout.update_button(
+                token=self.admin_token,
+                button_id=button.id,
+                button=NewTillButton(name="foo", product_ids=[product1.id, product2.id]),
+            )
+
+    async def test_button_references_max_one_voucher_product(self):
+        product1 = await self.product_service.create_product(
+            token=self.admin_token,
+            product=NewProduct(name="p1", is_locked=True, price=5, price_in_vouchers=3, tax_name="ust"),
+        )
+        product2 = await self.product_service.create_product(
+            token=self.admin_token,
+            product=NewProduct(name="p2", is_locked=True, price=3, price_in_vouchers=2.4, tax_name="ust"),
+        )
+        button = await self.till_service.layout.create_button(
+            token=self.admin_token, button=NewTillButton(name="foo", product_ids=[product1.id])
+        )
+        self.assertIsNotNone(button)
+
+        with self.assertRaises(Exception):
+            await self.till_service.layout.update_button(
+                token=self.admin_token,
+                button_id=button.id,
+                button=NewTillButton(name="foo", product_ids=[product1.id, product2.id]),
+            )
