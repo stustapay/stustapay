@@ -21,7 +21,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun DepositCash(
     goBack: () -> Unit,
-    onSuccess: () -> Unit,
     viewModel: DepositViewModel
 ) {
     val depositState by viewModel.depositState.collectAsStateWithLifecycle()
@@ -32,7 +31,6 @@ fun DepositCash(
     NfcScanDialog(scanState, onScan = {
         scope.launch{
             viewModel.cashFinished(it)
-            onSuccess()
         }
     })
 
