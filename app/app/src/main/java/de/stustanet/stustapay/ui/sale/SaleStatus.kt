@@ -12,13 +12,14 @@ import java.lang.Integer.min
 sealed interface SaleItemPrice {
     data class FixedPrice(val price: Double) : SaleItemPrice
     data class FreePrice(val defaultPrice: Double?) : SaleItemPrice
+    data class Returnable(val price: Double?) : SaleItemPrice
 
     companion object {
         fun fromTerminalButton(button: TerminalButton): SaleItemPrice {
-            return if (button.fixed_price) {
-                FixedPrice(
-                    price = button.price ?: 0.0,
-                )
+            return if (button.is_returnable) {
+                Returnable(price = button.price ?: 0.0)
+            } else if (button.fixed_price) {
+                FixedPrice(price = button.price ?: 0.0)
             } else {
                 FreePrice(defaultPrice = button.default_price)
             }
@@ -75,11 +76,24 @@ data class SaleStatus(
      * if we have used the server for checking the sale, this is what it returned to us.
      */
     var checkedSale: PendingSale? = null,
+
+    /**
+     * serial number so sale status doesn't equal - so the flow will always update...
+     * otherwise this SaleStatus would == the updated one.
+     * i'm really sorry for this.
+     */
+    var statusSerial: ULong = 0u,
 ) {
 
     /** when the server reports back from the newsale check */
     fun updateWithPendingSale(pendingSale: PendingSale) {
+        // vouchers for adjustment
         voucherAmount = pendingSale.used_vouchers
+
+        // remember what the check was
+        checkedSale = pendingSale
+
+        // update button selections
         buttonSelection = pendingSale.buttons.mapNotNull {
             val quantity = it.quantity
             val price = it.price
@@ -94,6 +108,7 @@ data class SaleStatus(
         }.associate {
             it
         }.toMutableMap()
+        statusSerial += 1u
     }
 
     fun incrementVouchers() {
@@ -116,25 +131,30 @@ data class SaleStatus(
 
     fun incrementButton(buttonId: Int, saleConfig: SaleConfig) {
         val current = buttonSelection[buttonId]
-        val price = saleConfig.buttons[buttonId]?.price ?: return
-        when (price) {
-            is SaleItemPrice.FixedPrice -> {
+        val button = saleConfig.buttons[buttonId] ?: return
+        when (button.price) {
+            is SaleItemPrice.FixedPrice,
+            is SaleItemPrice.Returnable -> {
                 if (current is SaleItemAmount.FixedPrice) {
                     current.amount = current.amount + 1
                 } else {
-                    buttonSelection += Pair(buttonId, SaleItemAmount.FixedPrice(amount = 1))
+                    buttonSelection += Pair(
+                        buttonId,
+                        SaleItemAmount.FixedPrice(amount = 1)
+                    )
                 }
             }
             is SaleItemPrice.FreePrice -> {
                 Log.e("StuStaPay", "increment on free price item invalid!")
             }
         }
+        statusSerial += 1u
     }
 
     fun decrementButton(buttonId: Int, saleConfig: SaleConfig) {
         val current = buttonSelection[buttonId]
-        val price = saleConfig.buttons[buttonId]?.price ?: return
-        when (price) {
+        val button = saleConfig.buttons[buttonId] ?: return
+        when (button.price) {
             is SaleItemPrice.FixedPrice -> {
                 if (current is SaleItemAmount.FixedPrice) {
                     val newAmount = max(0, current.amount - 1)
@@ -147,16 +167,27 @@ data class SaleStatus(
                     // ignore decrement on onset button
                 }
             }
+            is SaleItemPrice.Returnable -> {
+                if (current is SaleItemAmount.FixedPrice) {
+                    current.amount = current.amount - 1
+                } else {
+                    buttonSelection += Pair(
+                        buttonId,
+                        SaleItemAmount.FixedPrice(amount = -1)
+                    )
+                }
+            }
             is SaleItemPrice.FreePrice -> {
                 Log.e("StuStaPay", "decrement on free price item invalid!")
             }
         }
+        statusSerial += 1u
     }
 
     fun adjustPrice(buttonId: Int, setPrice: FreePrice, saleConfig: SaleConfig) {
         val current = buttonSelection[buttonId]
-        val price = saleConfig.buttons[buttonId]?.price ?: return
-        when (price) {
+        val button = saleConfig.buttons[buttonId] ?: return
+        when (button.price) {
             is SaleItemPrice.FreePrice -> {
                 when (setPrice) {
                     is FreePrice.Set -> {
@@ -180,10 +211,12 @@ data class SaleStatus(
                     }
                 }
             }
-            is SaleItemPrice.FixedPrice -> {
-                Log.e("StuStaPay", "adjustprice on fixed price item invalid!")
+            is SaleItemPrice.FixedPrice,
+            is SaleItemPrice.Returnable -> {
+                Log.e("StuStaPay", "adjustprice on non-free-price item invalid!")
             }
         }
+        statusSerial += 1u
     }
 
     fun getNewSale(tag: UserTag): NewSale {
@@ -191,6 +224,7 @@ data class SaleStatus(
             buttons = buttonSelection.map {
                 when (val amount = it.value) {
                     is SaleItemAmount.FixedPrice -> {
+                        // regular or returnable purchase product
                         Button(
                             till_button_id = it.key,
                             quantity = amount.amount,

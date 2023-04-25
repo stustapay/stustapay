@@ -1,5 +1,7 @@
 package de.stustanet.stustapay.net
 
+import kotlinx.serialization.Serializable
+
 
 /**
  * communication api response result type.
@@ -11,10 +13,19 @@ sealed class Response<out T> {
     sealed class Error : Response<Nothing>() {
         abstract fun msg(): String
 
-        data class Service(val msg: String) : Error() {
+        @Serializable
+        sealed class Service(val msg: String) : Error() {
             override fun msg(): String {
                 return msg
             }
+
+            class Generic(msg: String) : Service(msg)
+
+            @Serializable
+            data class NotEnoughFunds(
+                val needed_fund: Double,
+                val available_fund: Double
+            ) : Service("not enough funds. needed: $needed_fund available: $available_fund")
         }
 
         data class Server(val msg: String, val code: Int) : Error() {
@@ -41,6 +52,7 @@ sealed class Response<out T> {
                     "either message or throwable must be set"
                 }
             }
+
             override fun msg(): String {
                 return if (throwable != null) {
                     "request error: ${throwable.localizedMessage}"

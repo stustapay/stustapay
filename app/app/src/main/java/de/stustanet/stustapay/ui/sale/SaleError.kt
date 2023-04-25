@@ -13,6 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
@@ -42,10 +44,13 @@ fun SaleError(
                     Image(
                         imageVector = Icons.Filled.Warning,
                         modifier = Modifier
-                            .size(size = 40.dp)
+                            .size(size = 60.dp)
                             .padding(top = 2.dp),
                         contentDescription = "Error!",
+                        colorFilter = ColorFilter.tint(Color.White),
                     )
+
+                    Text(text = "Error in sale check:", fontSize = 30.sp)
 
                     Row {
                         Text(status, fontSize = 24.sp)

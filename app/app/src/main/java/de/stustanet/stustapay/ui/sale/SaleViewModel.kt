@@ -84,9 +84,6 @@ class SaleViewModel @Inject constructor(
     }
 
     fun incrementButton(buttonId: Int) {
-
-        _status.update { "increment ${buttonId}" }
-
         _saleStatus.update { sale ->
             val newSale = sale.copy()
             newSale.incrementButton(buttonId, saleConfig.value)
@@ -95,9 +92,6 @@ class SaleViewModel @Inject constructor(
     }
 
     fun decrementButton(buttonId: Int) {
-
-        _status.update { "decrement ${buttonId}" }
-
         _saleStatus.update { sale ->
             val newSale = sale.copy()
             newSale.decrementButton(buttonId, saleConfig.value)
@@ -106,11 +100,16 @@ class SaleViewModel @Inject constructor(
     }
 
     fun adjustPrice(buttonId: Int, newPrice: FreePrice) {
+        var setPrice = newPrice
+        if (newPrice is FreePrice.Set && newPrice.price == 0u) {
+            setPrice = FreePrice.Unset
+        }
+
         _saleStatus.update { sale ->
             val newSale = sale.copy()
             newSale.adjustPrice(
                 buttonId = buttonId,
-                setPrice = newPrice,
+                setPrice = setPrice,
                 saleConfig = saleConfig.value
             )
             newSale

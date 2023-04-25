@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -23,7 +25,6 @@ sealed interface SaleSelectionItemType {
 
     data class FreePrice(
         val onPriceEdit: (clear: Boolean) -> Unit,
-        val price: SaleItemPrice.FreePrice,
         val amount: SaleItemAmount.FreePrice?
     ) : SaleSelectionItemType
 
@@ -33,6 +34,28 @@ sealed interface SaleSelectionItemType {
         val amount: Int,
         val maxAmount: Int,
     ) : SaleSelectionItemType
+
+    data class Returnable(
+        val onIncr: () -> Unit,
+        val onDecr: () -> Unit,
+        val price: SaleItemPrice.Returnable,
+        val amount: SaleItemAmount.FixedPrice?,
+        val incrementText: String,
+    ) : SaleSelectionItemType
+}
+
+@Preview
+@Composable
+fun PreviewSaleSelectionItem() {
+    SaleSelectionItem(
+        caption = "Robbenfutter",
+        SaleSelectionItemType.FixedPrice(
+            onIncr = {},
+            onDecr = {},
+            price = SaleItemPrice.FixedPrice(13.37),
+            amount = SaleItemAmount.FixedPrice(42),
+        )
+    )
 }
 
 /**
@@ -41,7 +64,7 @@ sealed interface SaleSelectionItemType {
 @Composable
 fun SaleSelectionItem(
     caption: String,
-    variant: SaleSelectionItemType,
+    type: SaleSelectionItemType,
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -50,47 +73,83 @@ fun SaleSelectionItem(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
+        var sameSizeButtons = false
 
-        val itemStatus = when (variant) {
+        val itemPrice: String
+        val itemAmount: String
+
+        when (type) {
             is SaleSelectionItemType.FixedPrice -> {
-                val itemAmount: Int = variant.amount?.amount ?: 0
-                "%.02f x %2d".format(variant.price.price, itemAmount).padStart(11)
+                val amount: Int = type.amount?.amount ?: 0
+                itemPrice = "%.02f".format(type.price.price)
+                itemAmount = "×%2d".format(amount)
+            }
+            is SaleSelectionItemType.Returnable -> {
+                sameSizeButtons = true
+                val amount: Int = type.amount?.amount ?: 0
+                itemPrice = "%.02f".format(type.price.price)
+                itemAmount = "×%2d".format(amount)
             }
             is SaleSelectionItemType.FreePrice -> {
-                val itemPrice: Double = variant.amount?.price ?: 0.0
-                "%.02f".format(itemPrice).padStart(11)
+                val price: Double = type.amount?.price ?: 0.0
+                itemPrice = "%.02f".format(price)
+                itemAmount = ""
             }
             is SaleSelectionItemType.Vouchers -> {
-                "%2d of %2d".format(variant.amount, variant.maxAmount).padStart(11)
+                itemPrice = "%2d".format(type.amount)
+                itemAmount = "of %2d".format(type.maxAmount)
             }
         }
 
-        // TODO: highlight background if not 0
-        Text(
-            text = itemStatus,
-            modifier = Modifier.fillMaxWidth(0.25f),
-            fontSize = 24.sp,
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp).weight(0.25f),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            // TODO: highlight background if not 0
 
-        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = itemPrice.replace('.', ','),
+                textAlign = TextAlign.Right,
+                modifier = Modifier.weight(1f),
+                fontSize = 24.sp,
+            )
+
+            Text(
+                text = itemAmount,
+                textAlign = TextAlign.Right,
+                modifier = Modifier.weight(1f),
+                fontSize = 24.sp,
+            )
+        }
+
+        Box(modifier = Modifier.weight(0.75f)) {
             Row(horizontalArrangement = Arrangement.SpaceEvenly) {
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        when (variant) {
+                        when (type) {
                             is SaleSelectionItemType.FixedPrice -> {
-                                variant.onIncr()
+                                type.onIncr()
+                            }
+                            is SaleSelectionItemType.Returnable -> {
+                                type.onDecr()
                             }
                             is SaleSelectionItemType.FreePrice -> {
-                                variant.onPriceEdit(false)
+                                type.onPriceEdit(false)
                             }
                             is SaleSelectionItemType.Vouchers -> {
-                                variant.onIncr()
+                                type.onIncr()
                             }
                         }
                     },
                     modifier = Modifier
-                        .fillMaxWidth(0.7f)
+                        .fillMaxWidth(
+                            if (sameSizeButtons) {
+                                0.6f
+                            } else {
+                                0.7f
+                            }
+                        )
                         .height(90.dp)
                         .padding(5.dp)
                 ) {
@@ -99,15 +158,18 @@ fun SaleSelectionItem(
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        when (variant) {
+                        when (type) {
                             is SaleSelectionItemType.FixedPrice -> {
-                                variant.onDecr()
+                                type.onDecr()
+                            }
+                            is SaleSelectionItemType.Returnable -> {
+                                type.onIncr()
                             }
                             is SaleSelectionItemType.FreePrice -> {
-                                variant.onPriceEdit(true)
+                                type.onPriceEdit(true)
                             }
                             is SaleSelectionItemType.Vouchers -> {
-                                variant.onDecr()
+                                type.onDecr()
                             }
                         }
                     },
@@ -115,18 +177,31 @@ fun SaleSelectionItem(
                         .fillMaxWidth()
                         .height(90.dp)
                         .padding(5.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
+                    colors = if (sameSizeButtons) {
+                        ButtonDefaults.buttonColors()
+                    } else {
+                        ButtonDefaults.buttonColors(backgroundColor = Color.Red)
+                    }
                 ) {
+                    val text: String
+                    var fontSize = 50.sp
+                    when (type) {
+                        is SaleSelectionItemType.FixedPrice,
+                        is SaleSelectionItemType.Vouchers -> {
+                            text = "-"
+                        }
+                        is SaleSelectionItemType.Returnable -> {
+                            text = type.incrementText
+                            fontSize = 24.sp
+                        }
+                        is SaleSelectionItemType.FreePrice -> {
+                            // unicode: erase to the left
+                            text = "⌫"
+                            fontSize = 30.sp
+                        }
+                    }
                     Text(
-                        text = when (variant) {
-                            is SaleSelectionItemType.FixedPrice, is SaleSelectionItemType.Vouchers -> {
-                                "-"
-                            }
-                            is SaleSelectionItemType.FreePrice -> {
-                                // unicode: erase to the left
-                                "⌫"
-                            }
-                        }, fontSize = 50.sp, color = Color.Black
+                        text = text, fontSize = fontSize, color = Color.Black
                     )
                 }
             }

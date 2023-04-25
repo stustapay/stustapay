@@ -21,7 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @Preview
 @Composable
-fun PriceSelectionDialogPreview() {
+fun PreviewPriceSelectionDialog() {
     val state = rememberPriceSelectionState()
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -29,7 +29,6 @@ fun PriceSelectionDialogPreview() {
     ) {
         PriceSelectionCard(state = state, viewModel = PriceSelectionDialogViewModel())
     }
-
 }
 
 @Composable

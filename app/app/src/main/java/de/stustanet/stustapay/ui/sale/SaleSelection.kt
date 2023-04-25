@@ -64,9 +64,9 @@ fun SaleSelection(
                     item {
                         SaleSelectionItem(
                             caption = "Vouchers",
-                            variant = SaleSelectionItemType.Vouchers(
+                            type = SaleSelectionItemType.Vouchers(
                                 amount = saleDraft.voucherAmount ?: 0,
-                                maxAmount = saleDraft.checkedSale?.old_voucher_balance ?: 0,
+                                maxAmount = saleDraft.checkedSale?.old_voucher_balance ?: -1,
                                 onIncr = { viewModel.incrementVouchers() },
                                 onDecr = { viewModel.decrementVouchers() },
                             )
@@ -78,7 +78,7 @@ fun SaleSelection(
                     item {
                         SaleSelectionItem(
                             caption = button.value.caption,
-                            variant = when (val price = button.value.price) {
+                            type = when (val price = button.value.price) {
                                 is SaleItemPrice.FixedPrice -> {
                                     SaleSelectionItemType.FixedPrice(
                                         price = price,
@@ -87,9 +87,20 @@ fun SaleSelection(
                                         onDecr = { viewModel.decrementButton(button.value.id) },
                                     )
                                 }
+                                is SaleItemPrice.Returnable -> {
+                                    // returnable items can become negative and positive.
+                                    SaleSelectionItemType.Returnable(
+                                        price = price,
+                                        amount = (saleDraft.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
+                                        onIncr = { viewModel.incrementButton(button.value.id) },
+                                        onDecr = { viewModel.decrementButton(button.value.id) },
+                                        // TODO: i'd like a customizable text here :)
+                                        incrementText = "Extra Krug",
+                                    )
+                                }
                                 is SaleItemPrice.FreePrice -> {
                                     SaleSelectionItemType.FreePrice(
-                                        price = price,
+                                        // todo: preselect default price.defaultPrice when no freeprice is set yet
                                         amount = (saleDraft.buttonSelection[button.value.id] as? SaleItemAmount.FreePrice),
                                         onPriceEdit = { clear ->
                                             if (clear) {
@@ -98,6 +109,8 @@ fun SaleSelection(
                                                     newPrice = FreePrice.Unset
                                                 )
                                             } else {
+                                                // after the price was edited, where do we want to set it to?
+                                                // we could add this mechanism to the PriceSelectionState.
                                                 priceTargetButtonId.update { button.value.id }
                                                 priceSelectionState.open()
                                             }

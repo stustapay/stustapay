@@ -54,7 +54,7 @@ fun SaleConfirm(
                         Text(
                             text = "Vouchers: ${checkedSale.used_vouchers}",
                             modifier = Modifier.fillMaxWidth(),
-                            fontSize = 20.sp,
+                            fontSize = 30.sp,
                         )
                     }
                 }
@@ -70,6 +70,7 @@ fun SaleConfirm(
         },
         bottomBar = {
             SaleBottomBar(
+                abortText = "↢ Edit",
                 status = {
                     Column {
                         if (checkedSale.new_voucher_balance > 0) {

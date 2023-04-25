@@ -18,6 +18,8 @@ fun SaleBottomBar(
     saleConfig: SaleConfig,
     onAbort: () -> Unit,
     onSubmit: () -> Unit,
+    // WASTEBASKET symbol
+    abortText: String = "\uD83D\uDDD1",
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -38,8 +40,8 @@ fun SaleBottomBar(
                     .height(70.dp)
                     .padding(10.dp)
             ) {
-                // WASTEBASKET symbol
-                Text(text = "\uD83D\uDDD1", fontSize = 24.sp)
+
+                Text(text = abortText, fontSize = 24.sp)
             }
             Button(
                 enabled = saleConfig.ready,
