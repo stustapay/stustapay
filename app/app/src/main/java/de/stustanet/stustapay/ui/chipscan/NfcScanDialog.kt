@@ -21,8 +21,8 @@ import de.stustanet.stustapay.model.UserTag
 fun NfcScanDialog(
     state: NfcScanDialogState,
     viewModel: NfcScanDialogViewModel = hiltViewModel(),
-    onScan: (UserTag) -> Unit = {},
     onDismiss: () -> Unit = {},
+    onScan: (UserTag) -> Unit = {},
     content: @Composable () -> Unit = {
         // utf8 "satellite antenna"
         Text("Scan a Chip \uD83D\uDCE1", textAlign = TextAlign.Center, fontSize = 40.sp)
