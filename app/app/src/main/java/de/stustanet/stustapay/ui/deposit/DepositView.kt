@@ -36,7 +36,6 @@ fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
         composable(DepositPage.Cash.route) {
             DepositCash(
                 goBack = { nav.navigateTo(DepositPage.Amount.route) },
-                onSuccess = { nav.navigateTo(DepositPage.Done.route) },
                 viewModel
             )
         }

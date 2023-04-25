@@ -3,13 +3,10 @@ package de.stustanet.stustapay.nfc
 import android.util.Log
 import de.stustanet.stustapay.model.NfcScanRequest
 import de.stustanet.stustapay.model.NfcScanResult
-import de.stustanet.stustapay.util.BitVector
-import de.stustanet.stustapay.util.asBitVector
 import de.stustanet.stustapay.util.waitFor
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 
 sealed interface NfcScanRequestState {
