@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction } from "@mui/material";
+import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, Typography } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,6 +16,7 @@ import { Edit as EditIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { useCurrencyFormatter } from "@hooks";
 import { CashierShift } from "@models";
+import { formatDate } from "@stustapay/utils";
 
 export const CashierDetail: React.FC = () => {
   const { t } = useTranslation(["cashiers", "common"]);
@@ -67,11 +68,13 @@ export const CashierDetail: React.FC = () => {
     {
       field: "started_at",
       headerName: t("shift.startedAt") as string,
+      valueGetter: ({ value }) => formatDate(value),
       flex: 1,
     },
     {
       field: "ended_at",
       headerName: t("shift.endedAt") as string,
+      valueGetter: ({ value }) => formatDate(value),
       flex: 1,
     },
     {
@@ -142,13 +145,18 @@ export const CashierDetail: React.FC = () => {
           </ListItem>
         </List>
       </Paper>
-      <DataGrid
-        autoHeight
-        rows={cashierShifts}
-        columns={columns}
-        disableRowSelectionOnClick
-        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
+      <Paper sx={{ mt: 2, p: 1 }}>
+        <Typography variant="body1" sx={{ p: 1 }}>
+          {t("cashier.shifts")}
+        </Typography>
+        <DataGrid
+          autoHeight
+          rows={cashierShifts}
+          columns={columns}
+          disableRowSelectionOnClick
+          sx={{ border: "none" }}
+        />
+      </Paper>
     </>
   );
 };

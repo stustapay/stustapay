@@ -129,6 +129,10 @@ class OrderLogicTest(BaseTestCase):
         order = await self.order_service.get_order(token=self.admin_token, order_id=completed_sale.id)
         self.assertIsNotNone(order)
 
+        # test that we can cancel this order
+        success = await self.order_service.cancel_sale(token=self.terminal_token, order_id=order.id)
+        self.assertTrue(success)
+
     async def test_returnable_products(self):
         new_sale = NewSale(
             buttons=[Button(till_button_id=self.beer_button.id, quantity=-1)],

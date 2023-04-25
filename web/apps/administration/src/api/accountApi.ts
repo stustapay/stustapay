@@ -30,10 +30,32 @@ export const accountApi = createApi({
     findAccounts: builder.mutation<Account[], string>({
       query: (searchTerm) => ({ url: "/accounts/find-accounts/", method: "POST", body: { search_term: searchTerm } }),
     }),
+    updateBalance: builder.mutation<void, { accountId: number; newBalance: number }>({
+      query: ({ accountId, newBalance }) => ({
+        url: `/accounts/${accountId}/update-balance`,
+        method: "POST",
+        body: { new_balance: newBalance },
+      }),
+      invalidatesTags: ["account"],
+    }),
+    updateVoucherAmount: builder.mutation<void, { accountId: number; newVoucherAmount: number }>({
+      query: ({ accountId, newVoucherAmount }) => ({
+        url: `/accounts/${accountId}/update-voucher-amount`,
+        method: "POST",
+        body: { new_voucher_amount: newVoucherAmount },
+      }),
+      invalidatesTags: ["account"],
+    }),
   }),
 });
 
 export const { selectAccountAll, selectAccountById, selectAccountEntities, selectAccountIds, selectAccountTotal } =
   convertEntityAdaptorSelectors("account", accountAdapter.getSelectors());
 
-export const { useGetSystemAccountsQuery, useGetAccountByIdQuery, useFindAccountsMutation } = accountApi;
+export const {
+  useGetSystemAccountsQuery,
+  useGetAccountByIdQuery,
+  useFindAccountsMutation,
+  useUpdateBalanceMutation,
+  useUpdateVoucherAmountMutation,
+} = accountApi;

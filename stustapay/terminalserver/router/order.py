@@ -3,7 +3,7 @@ purchase ordering.
 """
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextOrderService
@@ -65,6 +65,17 @@ async def book(
     order_service: ContextOrderService,
 ):
     return await order_service.book_topup(token=token, new_topup=topup)
+
+
+@router.post("/{order_id}/cancel", summary="cancel information about an order")
+async def cancel_order(
+    order_id: int,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+):
+    success = await order_service.cancel_sale(token=token, order_id=order_id)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
 
 @router.get("/{order_id}", summary="get information about an order", response_model=Optional[Order])

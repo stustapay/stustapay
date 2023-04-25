@@ -15,6 +15,7 @@ from stustapay.core.schema.account import (
     Account,
     get_source_account,
     get_target_account,
+    ACCOUNT_SALE_EXIT,
 )
 from stustapay.core.schema.order import (
     CompletedSale,
@@ -521,6 +522,22 @@ class OrderService(DBService):
                 BookingIdentifier(source_account_id=source_acc_id, target_account_id=target_acc_id)
             ] += float(line_item.total_price)
 
+        if completed_order.used_vouchers > 0:
+            await conn.fetchval(
+                "select * from book_transaction("
+                "   order_id => $1,"
+                "   description => $2,"
+                "   source_account_id => $3,"
+                "   target_account_id => $4,"
+                "   amount => 0,"
+                "   vouchers_amount => $5)",
+                order_id,
+                "",
+                completed_order.customer_account_id,
+                ACCOUNT_SALE_EXIT,
+                completed_order.used_vouchers,
+            )
+
         await self._book_prepared_bookings(conn=conn, order_id=completed_order.id, bookings=prepared_bookings)
 
         await self._finish_order(conn=conn, order=completed_order)
@@ -583,6 +600,64 @@ class OrderService(DBService):
             return None
 
         return Order.parse_obj(row)
+
+    @with_db_transaction
+    @requires_terminal(user_privileges=[Privilege.cashier])
+    async def cancel_sale(
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, order_id: int
+    ) -> bool:
+        order = await self._fetch_order(conn=conn, order_id=order_id)
+        if order is None:
+            return False
+        if order.order_type != OrderType.sale:
+            return False
+        if order.payment_method is not None and order.payment_method != "token":
+            return False
+
+        order_row = await conn.fetchrow(
+            "insert into ordr (item_count, order_type, cashier_id, till_id, customer_account_id, cancels_order) "
+            "values ($1, $2, $3, $4, $5, $6) "
+            "returning id, uuid, booked_at",
+            len(order.line_items),
+            OrderType.cancel_sale.name,
+            current_user.id,
+            current_terminal.till.id,
+            order.customer_account_id,
+            order.id,
+        )
+        order_id = order_row["id"]
+
+        for line_item in order.line_items:
+            await conn.execute(
+                "insert into line_item (order_id, item_id, product_id, quantity, product_price, tax_name, tax_rate) "
+                "values ($1, $2, $3, $4, $5, $6, $7)",
+                order_id,
+                line_item.item_id,
+                line_item.product.id,
+                -line_item.quantity,
+                line_item.product_price,
+                line_item.tax_name,
+                line_item.tax_rate,
+            )
+        transactions = await conn.fetch("select * from transaction where order_id = $1", order.id)
+        for transaction in transactions:
+            await conn.fetchval(
+                "select * from book_transaction("
+                "   order_id => $1,"
+                "   description => $2,"
+                "   source_account_id => $3,"
+                "   target_account_id => $4,"
+                "   amount => $5,"
+                "   vouchers_amount => $6)",
+                order_id,
+                transaction["description"],
+                transaction["source_account"],
+                transaction["target_account"],
+                transaction["amount"],
+                transaction["vouchers"],
+            )
+
+        return True
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])

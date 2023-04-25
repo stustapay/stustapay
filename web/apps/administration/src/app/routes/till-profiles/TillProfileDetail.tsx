@@ -3,8 +3,14 @@ import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@compo
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useGetTillProfileByIdQuery, useDeleteTillProfileMutation, selectTillProfileById } from "@api";
+import { Navigate, useNavigate, useParams, Link as RouterLink } from "react-router-dom";
+import {
+  useGetTillProfileByIdQuery,
+  useDeleteTillProfileMutation,
+  selectTillProfileById,
+  selectTillLayoutById,
+  useGetTillLayoutsQuery,
+} from "@api";
 import { Loading } from "@stustapay/components";
 
 export const TillProfileDetail: React.FC = () => {
@@ -18,9 +24,11 @@ export const TillProfileDetail: React.FC = () => {
       profile: data ? selectTillProfileById(data, Number(profileId)) : undefined,
     }),
   });
+
+  const { data: layouts, error: layoutError } = useGetTillLayoutsQuery();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
-  if (error) {
+  if (error || layoutError) {
     return <Navigate to="/till-profiles" />;
   }
 
@@ -35,9 +43,11 @@ export const TillProfileDetail: React.FC = () => {
     setShowConfirmDelete(false);
   };
 
-  if (profile === undefined) {
+  if (profile === undefined || layouts === undefined) {
     return <Loading />;
   }
+
+  const layout = selectTillLayoutById(layouts, profile.layout_id);
 
   return (
     <>
@@ -73,6 +83,14 @@ export const TillProfileDetail: React.FC = () => {
           <ListItem secondaryAction={<Checkbox edge="end" checked={profile.allow_cash_out} disabled={true} />}>
             <ListItemText primary={t("profile.allowCashOut")} />
           </ListItem>
+          {layout && (
+            <ListItem>
+              <ListItemText
+                primary={t("profile.layout")}
+                secondary={<RouterLink to={`/till-layouts/${layout.id}`}>{layout.name}</RouterLink>}
+              />
+            </ListItem>
+          )}
         </List>
       </Paper>
       <ConfirmDialog

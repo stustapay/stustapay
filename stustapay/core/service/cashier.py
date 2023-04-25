@@ -121,7 +121,7 @@ class CashierService(DBService):
             "Cashier close out imbalance booking",
             cashier.cashier_account_id,
             ACCOUNT_IMBALANCE,
-            imbalance,
+            -imbalance,
             shift_end,
         )
         await conn.execute(

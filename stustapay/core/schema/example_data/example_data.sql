@@ -75,28 +75,28 @@ values
 
 
 insert into product (
-    id, name, price, price_in_vouchers, fixed_price, target_account_id, tax_name, is_returnable
+    id, name, price, price_in_vouchers, fixed_price, target_account_id, tax_name, is_returnable, is_locked
 ) overriding system value
 values
     -- Special Product: id 0-99
     -- Pfand
-    (10, 'Pfand', 2.00, null, true, 2, 'none', true),
+    (10, 'Pfand', 2.00, null, true, 2, 'none', true, true),
 
     -- Getränke
-    (100, 'Helles 1.0l', 5.00, 2, true, null, 'ust', false),
-    (101, 'Helles 0.5l', 3.00, 1, true, null, 'ust', false),
-    (102, 'Weißbier 1.0l', 5.00, 2, true, null, 'ust', false),
-    (103, 'Weißbier 0.5l', 3.00, 1, true, null, 'ust', false),
-    (104, 'Radler 1.0l', 5.00, 2, true, null, 'ust', false),
-    (105, 'Radler 0.5l', 3.00, 1, true, null, 'ust', false),
-    (106, 'Russ 1.0l', 5.00, 2, true, null, 'ust', false),
-    (107, 'Russ 0.5l', 3.00, 1, true, null, 'ust', false),
-    (108, 'Limonade 1.0l', 2.00, 2, true, null, 'ust', false),
-    (109, 'Whisky 1.0l', 20.00, 10, true, null, 'ust', false),
+    (100, 'Helles 1.0l', 5.00, 2, true, null, 'ust', false, true),
+    (101, 'Helles 0.5l', 3.00, 1, true, null, 'ust', false, true),
+    (102, 'Weißbier 1.0l', 5.00, 2, true, null, 'ust', false, true),
+    (103, 'Weißbier 0.5l', 3.00, 1, true, null, 'ust', false, true),
+    (104, 'Radler 1.0l', 5.00, 2, true, null, 'ust', false, true),
+    (105, 'Radler 0.5l', 3.00, 1, true, null, 'ust', false, true),
+    (106, 'Russ 1.0l', 5.00, 2, true, null, 'ust', false, true),
+    (107, 'Russ 0.5l', 3.00, 1, true, null, 'ust', false, true),
+    (108, 'Limonade 1.0l', 2.00, 2, true, null, 'ust', false, true),
+    (109, 'Whisky 1.0l', 20.00, 10, true, null, 'ust', false, true),
     -- Essen
-    (150, 'Weißwurst', 2.00, null, true, null, 'eust', false),
+    (150, 'Weißwurst', 2.00, null, true, null, 'eust', false, true),
     -- Freipreis
-    (1000, 'Brotladen', null, null, false, null, 'transparent', false)
+    (1000, 'Brotladen', null, null, false, null, 'transparent', false, true)
     on conflict do nothing;
 select setval('product_id_seq', 200);
 
