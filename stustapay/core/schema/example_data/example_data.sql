@@ -41,7 +41,8 @@ values
     -- guests (which would need token IDs)
     (200, 1234, 'private', 'Guest 0', 'Token Balance of Guest 0', 2000000.00, 0),
     (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 30000000.20, 0),
-    (202, 5424726191074820, 'private', 'test-tag2', 'test token 2', 30.00, 5),
+    (201, 5424726191074820, 'private', 'test-tag2', 'test token 2', 30.00, 5),
+    (202, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0),
     (203, 5223726016640516, 'private', 'test-tag3', 'test token 3', 15.00, 2),
     (204, 5424726268326916, 'private', 'test-tag4', 'test token 4', 20.00, 2)
     on conflict do nothing;
@@ -54,8 +55,8 @@ insert into usr (
 values
     (0, 'test-cashier', null, 'Some Description', null, 100, 1234),
     -- password is admin
-    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W' , null, null, null, null),
-    (2, 'tag2', null, null, null, null, 5424726191074820),
+    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null),
+    (2, 'tag2', null, null, null, 202, 5424726191074820),
     (4, 'tag4', null, null, null, null, 5424726268326916)
     on conflict do nothing;
 select setval('usr_id_seq', 100);
@@ -124,7 +125,8 @@ values
     (0, 'Helles 0,5l'),
     (1, 'Helles 1,0l'),
     (2, 'Russ 0,5l'),
-    (3, 'Brotladen')
+    (3, 'Pfand zurück'),
+    (4, 'Brotladen')
     on conflict do nothing;
 select setval('till_button_id_seq', 100);
 
@@ -137,7 +139,8 @@ insert into till_button_product (
     (1, 10),
     (2, 107),
     (2, 10),
-    (3, 1000)
+    (3, 10),
+    (4, 1000)
     on conflict do nothing;
 
 
@@ -145,7 +148,8 @@ insert into till_layout (
     id, name, description
 ) overriding system value
 values
-    (0, 'Bierkasse', 'Allgemeine Bierkasse')
+    (0, 'Bierkasse', 'Allgemeine Bierkasse'),
+    (1, 'Aufladekasse', 'Allgemeine Aufladekasse')
     on conflict do nothing;
 select setval('till_layout_id_seq', 100);
 
@@ -155,14 +159,16 @@ insert into till_layout_to_button (
     (0, 0, 0),
     (0, 1, 1),
     (0, 2, 2),
-    (0, 3, 3)
+    (0, 3, 3),
+    (0, 4, 4)
     on conflict do nothing;
 
 insert into till_profile (
-    id, name, description, layout_id
+    id, name, description, layout_id, allow_top_up, allow_cash_out
 ) overriding system value
 values
-    (0, 'Pot', 'Allgemeine Pot Bierkasse', 0)
+    (0, 'Pot', 'Allgemeine Pot Bierkasse', 0, false, false),
+    (1, 'Festzelt Aufladung', 'Aufladekasse', 1, true, true)
     on conflict do nothing;
 select setval('till_profile_id_seq', 100);
 
@@ -170,7 +176,8 @@ insert into till (
     id, name, description, registration_uuid, session_uuid, tse_id, active_shift, active_profile_id
 ) overriding system value
 values
-    (0, 'Terminal 0', 'Test Terminal', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', null, 'tse 0', 'Shift 0', 0)
+    (0, 'ssc-pot-1', 'Pot Bierkasse', '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, 'tse 0', null, 0),
+    (1, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, 'tse 0', null, 1)
     on conflict do nothing;
 select setval('till_id_seq', 100);
 
