@@ -9,7 +9,7 @@ data class User(
     val display_name: String,
     val privileges: List<Privilege>,
     val description: String?,
-    val user_tag: ULong? = null,
+    val user_tag_uid: ULong? = null,
     val transport_account_id: Int? = null,
     val cashier_account_id: Int? = null,
 )

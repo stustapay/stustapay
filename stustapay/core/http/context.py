@@ -13,6 +13,7 @@ from stustapay.core.config import Config
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
+from stustapay.core.service.customer import CustomerService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
@@ -33,6 +34,7 @@ class Context:
     product_service: Optional[ProductService] = None
     tax_rate_service: Optional[TaxRateService] = None
     user_service: Optional[UserService] = None
+    customer_service: Optional[CustomerService] = None
     till_service: Optional[TillService] = None
     config_service: Optional[ConfigService] = None
     account_service: Optional[AccountService] = None
@@ -131,6 +133,10 @@ def get_user_service(request: Request) -> UserService:
     return request.state.context.user_service
 
 
+def get_customer_service(request: Request) -> CustomerService:
+    return request.state.context.customer_service
+
+
 def get_till_service(request: Request) -> TillService:
     return request.state.context.till_service
 
@@ -151,6 +157,7 @@ ContextOrderService = Annotated[OrderService, Depends(get_order_service)]
 ContextProductService = Annotated[ProductService, Depends(get_product_service)]
 ContextTaxRateService = Annotated[TaxRateService, Depends(get_tax_rate_service)]
 ContextUserService = Annotated[UserService, Depends(get_user_service)]
+ContextCustomerService = Annotated[CustomerService, Depends(get_customer_service)]
 ContextTillService = Annotated[TillService, Depends(get_till_service)]
 ContextConfigService = Annotated[ConfigService, Depends(get_config_service)]
 ContextAccountService = Annotated[AccountService, Depends(get_account_service)]

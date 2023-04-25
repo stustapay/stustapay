@@ -7,7 +7,11 @@
         "tagId": "Tag ID",
         "till": "Till",
         "shifts": "Shifts",
-        "closeOut": "Close Out"
+        "closeOut": "Close Out",
+        "showWithoutTill": "Show without till",
+        "showZeroBalance": "Show with zero balance",
+        "notLoggedInAtTill": "Cashier is not logged at a terminal",
+        "closeOuts": "Close outs"
     },
     "shift": {
         "id": "ID",

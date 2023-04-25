@@ -59,31 +59,17 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
         while (!nfcaTag.isConnected) {}
 
         val tmp0 = BitVector(16uL * 8uL)
-        for (i in 0uL until 4uL) {
-            tmp0.sle(i, key0.gbe(12uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            tmp0.sle(4uL + i, key0.gbe(8uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            tmp0.sle(8uL + i, key0.gbe(4uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            tmp0.sle(12uL + i, key0.gbe(i))
+        for (j in 0uL until 4uL) {
+            for (i in 0uL until 4uL) {
+                tmp0.sle((4uL * j) + i, key0.gbe(12uL - (4uL * j) + i))
+            }
         }
         key0 = tmp0
         val tmp1 = BitVector(16uL * 8uL)
-        for (i in 0uL until 4uL) {
-            tmp1.sle(i, key1.gbe(12uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            tmp1.sle(4uL + i, key1.gbe(8uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            tmp1.sle(8uL + i, key1.gbe(4uL + i))
-        }
-        for (i in 0uL until 4uL) {
-            tmp1.sle(12uL + i, key1.gbe(i))
+        for (j in 0uL until 4uL) {
+            for (i in 0uL until 4uL) {
+                tmp1.sle((4uL * j) + i, key1.gbe(12uL - (4uL * j) + i))
+            }
         }
         key1 = tmp1
 

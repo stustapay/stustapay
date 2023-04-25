@@ -19,7 +19,7 @@ pip install -e '.[dev,test]'
 Setup for each component:
 - [core server](core.md#setup)
 - [web uis](web.md#setup)
-- TODO...
+- [customer portal](customerportal.md#setup)
 
 ## Production setup
 

@@ -19,8 +19,11 @@ export const configApi = createApi({
       transformResponse: (response: ConfigEntry[]) => {
         return configAdaptor.addMany(configAdaptor.getInitialState(), response);
       },
-      providesTags: (result, error, arg) =>
+      providesTags: (result) =>
         result ? [...result.ids.map((id) => ({ type: "config" as const, id })), "config"] : ["config"],
+      transformErrorResponse: (baseQueryReturnValue) => {
+        return baseQueryReturnValue;
+      },
     }),
     setConfigEntry: builder.mutation<ConfigEntry, ConfigEntry>({
       query: (configEntry) => ({ url: "/config/", method: "POST", body: configEntry }),

@@ -21,7 +21,7 @@ insert into user_tag (
     uid, pin, serial, restriction, secret
 )
 values
-    (1234, null, null, null, null),
+    (1234, 'pin', null, null, null),
     (13876489173, null, null, null, null),
     (5424726191074820, 'LOL-tag2', 'serial2', null, 0),
     (5223726016640516, 'LOL-tag3', 'serial3', null, 0),
