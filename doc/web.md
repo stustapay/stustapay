@@ -7,11 +7,14 @@ For the backend we assume you have got stustapay core running with a database.
   ```shell
   cd web
   npm install
-  npx nx serve administration
   ```
 
 ### Running
 - To start the administration web interface run
   ```shell
   npx nx serve administration
+  ```
+- To start the customer portal web interface run
+  ```shell
+  npx nx serve customer-portal
   ```
