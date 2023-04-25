@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.model.OrderType
 import kotlinx.coroutines.launch
 
 @Composable
@@ -35,6 +36,7 @@ fun SaleHistoryView(viewModel: SaleHistoryViewModel = hiltViewModel()) {
         Button(modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 10.dp),
+            enabled = sales.isNotEmpty() && sales.first().type == OrderType.Sale,
             onClick = {
                 scope.launch {
                     if (sales.isNotEmpty()) {

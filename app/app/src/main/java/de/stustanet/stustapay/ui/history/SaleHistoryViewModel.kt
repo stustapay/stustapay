@@ -2,6 +2,7 @@ package de.stustanet.stustapay.ui.history
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustanet.stustapay.model.OrderType
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.SaleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,8 @@ class SaleHistoryViewModel @Inject constructor(
                         SaleHistoryEntry(
                             id = it.id,
                             timestamp = ZonedDateTime.parse(it.booked_at).toLocalDateTime(),
-                            amount = it.total_price
+                            amount = it.total_price,
+                            type = it.order_type
                         )
                     }.sortedBy { it.timestamp }.reversed()
                 }
@@ -36,12 +38,14 @@ class SaleHistoryViewModel @Inject constructor(
     }
 
     suspend fun cancelSale(id: Int) {
-        // TODO: Reverse the order in the backend
+        saleRepository.cancelSale(id)
+        fetchHistory()
     }
 }
 
 data class SaleHistoryEntry(
     val id: Int = 0,
     val timestamp: LocalDateTime = LocalDateTime.MIN,
-    val amount: Double = 0.0
+    val amount: Double = 0.0,
+    val type: OrderType = OrderType.Sale
 )

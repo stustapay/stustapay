@@ -24,4 +24,8 @@ class SaleRepository @Inject constructor(
     suspend fun listSales(): Response<List<Order>> {
         return saleRemoteDataSource.listSales()
     }
+
+    suspend fun cancelSale(id: Int): Response<Unit> {
+        return saleRemoteDataSource.cancelSale(id)
+    }
 }

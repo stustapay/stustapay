@@ -23,4 +23,8 @@ class SaleRemoteDataSource @Inject constructor(
     suspend fun listSales(): Response<List<Order>> {
         return terminalAPI.listOrders()
     }
+
+    suspend fun cancelSale(id: Int): Response<Unit> {
+        return terminalAPI.cancelSale(id)
+    }
 }

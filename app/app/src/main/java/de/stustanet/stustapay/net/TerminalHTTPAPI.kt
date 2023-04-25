@@ -45,6 +45,10 @@ class TerminalHTTPAPI @Inject constructor(
         return client.post("order/book-sale") { newSale }
     }
 
+    override suspend fun cancelSale(id: Int): Response<Unit> {
+        return client.post<Unit, Unit>("order/$id/cancel")
+    }
+
     override suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp> {
         return client.post("order/check-topup") { newTopUp }
     }

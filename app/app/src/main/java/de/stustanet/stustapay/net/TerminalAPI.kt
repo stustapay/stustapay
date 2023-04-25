@@ -50,6 +50,11 @@ interface TerminalAPI {
     suspend fun bookSale(newSale: NewSale): Response<CompletedSale>
 
     /**
+     * Book a new order - this transfers the money between accounts.
+     */
+    suspend fun cancelSale(id: Int): Response<Unit>
+
+    /**
      * Get infos about a single order.
      */
     suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp>
