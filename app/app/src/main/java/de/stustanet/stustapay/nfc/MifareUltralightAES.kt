@@ -22,7 +22,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     var sessionCounter: UShort? = null
 
     fun setAuth0(page: UByte) {
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw AuthenticationRequiredException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw TagAuthException("Authentication required") }
 
         val buf = if (sessionKey != null) {
             val ret = cmdRead(0x29u, sessionKey!!, sessionCounter!!, nfcaTag)
@@ -43,7 +43,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun setCMAC(enable: Boolean) {
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw AuthenticationRequiredException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw TagAuthException("Authentication required") }
 
         val buf = if (sessionKey != null) {
             val ret = cmdRead(0x29u, sessionKey!!, sessionCounter!!, nfcaTag)
@@ -72,8 +72,8 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun authenticate(key: BitVector, type: KeyType, cmacEnabled: Boolean) {
-        if (!isConnected) { throw NotConnectedException() }
-        if (key.len != 16uL * 8uL) { throw ParameterSizeException() }
+        if (!isConnected) { throw TagConnectionException() }
+        if (key.len != 16uL * 8uL) { throw IllegalArgumentException() }
         if (chipState == type.state) { throw Exception("Already authenticated") }
 
         val nonce = ByteArray(16)
@@ -93,10 +93,10 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
             val rndAResp = ekRndA.aesDecrypt(key)
 
             if (!rndAResp.equals(rndA.rotl(8uL))) {
-                throw Exception("Key mismatch")
+                throw TagAuthException("Key mismatch")
             }
         } catch (e: IOException) {
-            throw Exception("Auth failed")
+            throw TagAuthException("Auth failed")
         }
 
         chipState = type.state
@@ -122,9 +122,9 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun writeDataProtKey(key: BitVector) {
-        if (!isConnected) { throw NotConnectedException() }
-        if (key.len != 16uL * 8uL) { throw ParameterSizeException() }
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw AuthenticationRequiredException() }
+        if (!isConnected) { throw TagConnectionException() }
+        if (key.len != 16uL * 8uL) { throw IllegalArgumentException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw TagAuthException("Authentication required") }
 
         for (i in 0uL until 4uL) {
             if (sessionKey != null) {
@@ -153,9 +153,9 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun writeUidRetrKey(key: BitVector) {
-        if (!isConnected) { throw NotConnectedException() }
-        if (key.len != 16uL * 8uL) { throw ParameterSizeException() }
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw AuthenticationRequiredException() }
+        if (!isConnected) { throw TagConnectionException() }
+        if (key.len != 16uL * 8uL) { throw IllegalArgumentException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw TagAuthException("writing uid retrieval key needs authentication") }
 
         for (i in 0uL until 4uL) {
             if (sessionKey != null) {
@@ -184,8 +184,8 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun writeUserMemory(content: BitVector) {
-        if (!isConnected) { throw NotConnectedException() }
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw AuthenticationRequiredException() }
+        if (!isConnected) { throw TagConnectionException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw TagAuthException("Authentication required") }
 
         val writeBuffer = BitVector(USER_BYTES * 8uL)
         for (i in 0uL until USER_BYTES) {
@@ -223,8 +223,8 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun readUserMemory(): BitVector {
-        if (!isConnected) { throw NotConnectedException() }
-        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw AuthenticationRequiredException() }
+        if (!isConnected) { throw TagConnectionException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw TagAuthException("read authentication required") }
 
         val readBuffer = BitVector(USER_BYTES * 8uL)
         for (i in 0uL until USER_BYTES / 16uL) {
@@ -244,7 +244,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     fun readSerialNumber(): ULong {
-        if (!isConnected) { throw NotConnectedException() }
+        if (!isConnected) { throw TagConnectionException() }
 
         val readBuffer = if (sessionKey != null) {
             val ret = cmdRead(0x00u, sessionKey!!, sessionCounter!!, nfcaTag)
@@ -268,7 +268,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
         val resp = cmdGetVersion(nfcaTag)
         if (!(resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x01.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv) ||
                     resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x02.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv))) {
-            throw IncompatibleTagException()
+            throw TagIncompatibleException("Not a Mifare Ultralight AES chip")
         }
 
         chipState = ChipState.ACTIVE
@@ -306,12 +306,3 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
 
     enum class ChipState { IDLE, ACTIVE, TRACEABLE, AUTHENTICATED }
 }
-
-fun get(tag: Tag): MifareUltralightAES {
-    return MifareUltralightAES(tag)
-}
-
-class IncompatibleTagException: Exception()
-class AuthenticationRequiredException: Exception()
-class ParameterSizeException: Exception()
-class NotConnectedException: Exception()

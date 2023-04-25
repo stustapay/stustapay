@@ -11,6 +11,20 @@ data class TerminalSecrets(
     val sumup_affiliate_key: String,
 )
 
+/**
+ * TerminalButton from core model.
+ */
+@Serializable
+data class TerminalButton(
+    val id: Int,
+    val name: String,
+    val price: Double?,
+    val price_in_vouchers: Int?,
+    val price_per_voucher: Double?,
+    val default_price: Double?,
+    val is_returnable: Boolean,
+    val fixed_price: Boolean,
+)
 
 /**
  * TerminalConfig from core model.
@@ -22,21 +36,7 @@ data class TerminalConfig(
     val description: String?,
     val user_privileges: List<Privilege>?,
     val allow_top_up: Boolean,
-    val buttons: List<TillButton>?,
+    val allow_cash_out: Boolean,
+    val buttons: List<TerminalButton>?,
     val secrets: TerminalSecrets?,
 )
-
-/**
- * Terminal configuration including validity state.
- */
-sealed interface TerminalConfigState {
-    object Loading : TerminalConfigState
-
-    data class Success(
-        var config: TerminalConfig
-    ) : TerminalConfigState
-
-    data class Error(
-        val message: String
-    ) : TerminalConfigState
-}

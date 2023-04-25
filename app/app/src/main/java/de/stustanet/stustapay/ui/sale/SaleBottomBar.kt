@@ -1,29 +1,25 @@
-package de.stustanet.stustapay.ui.order
+package de.stustanet.stustapay.ui.sale
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustanet.stustapay.ui.nav.TopAppBar
 
 @Composable
-fun OrderBottomBar(
+fun SaleBottomBar(
     status: @Composable () -> Unit,
-    orderConfig: OrderConfig,
+    saleConfig: SaleConfig,
     onAbort: () -> Unit,
     onSubmit: () -> Unit,
+    // WASTEBASKET symbol
+    abortText: String = "\uD83D\uDDD1",
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -33,7 +29,7 @@ fun OrderBottomBar(
         }
         Row(horizontalArrangement = Arrangement.SpaceEvenly) {
             Button(
-                enabled = orderConfig.ready,
+                enabled = saleConfig.ready,
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -44,11 +40,11 @@ fun OrderBottomBar(
                     .height(70.dp)
                     .padding(10.dp)
             ) {
-                // WASTEBASKET symbol
-                Text(text = "\uD83D\uDDD1", fontSize = 24.sp)
+
+                Text(text = abortText, fontSize = 24.sp)
             }
             Button(
-                enabled = orderConfig.ready,
+                enabled = saleConfig.ready,
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onSubmit()

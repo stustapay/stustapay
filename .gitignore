@@ -29,6 +29,7 @@ dist/
 \#*
 .#*
 flycheck_*
+.auctex-auto
 
 # project specific
 config.yaml

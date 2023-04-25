@@ -17,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import kotlinx.coroutines.launch
 
 @Preview
 @Composable
@@ -24,6 +25,8 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scanState = rememberNfcScanDialogState()
     var targetId by remember { mutableStateOf("") }
+
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(scanState) {
         viewModel.startScan()
@@ -146,9 +149,9 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                                 Text("Scan", fontSize = 24.sp)
                             }
 
-                            NfcScanDialog(scanState) { tag ->
+                            NfcScanDialog(scanState, onScan = { tag ->
                                 targetId = tag.uid.toString()
-                            }
+                            })
                         }
                         is CustomerStatusRequestState.SwapDone -> {
                             Text("Swapped tag accounts", fontSize = 48.sp)
@@ -187,9 +190,11 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                         }
                     }
 
-                    NfcScanDialog(scanState) { tag ->
-                        viewModel.completeScan(tag.uid)
-                    }
+                    NfcScanDialog(scanState, onScan = { tag ->
+                        scope.launch {
+                            viewModel.completeScan(tag.uid)
+                        }
+                    })
                 }
                 is CustomerStatusRequestState.Swap -> {
                     Button(
@@ -224,9 +229,14 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                         Text("Scan", fontSize = 24.sp)
                     }
 
-                    NfcScanDialog(scanState) { tag ->
-                        viewModel.completeScan(tag.uid)
-                    }
+                    NfcScanDialog(
+                        scanState,
+                        onScan = { tag ->
+                            scope.launch {
+                                viewModel.completeScan(tag.uid)
+                            }
+                        }
+                    )
                 }
             }
         }

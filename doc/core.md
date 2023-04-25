@@ -15,7 +15,7 @@
   ```shell
   python -m stustapay.core -c server.conf -vvv database add_data
   ```
- 
+
 
 ## Operation
 

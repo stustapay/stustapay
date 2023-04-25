@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.order
+package de.stustanet.stustapay.ui.sale
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,11 +20,13 @@ import kotlinx.coroutines.launch
  */
 @Preview
 @Composable
-fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
+fun SaleView(viewModel: SaleViewModel = hiltViewModel()) {
     val scope = rememberCoroutineScope()
     val nav = rememberNavController()
+    val scanState = rememberNfcScanDialogState()
 
     val navTarget by viewModel.navState.collectAsStateWithLifecycle()
+    val enableScan by viewModel.enableScan.collectAsStateWithLifecycle()
 
     LaunchedEffect(navTarget) {
         if (nav.currentDestination?.route != navTarget.route) {
@@ -37,38 +39,48 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
         viewModel.fetchConfig()
     }
 
-    NavHost(navController = nav, startDestination = OrderPage.ProductSelect.route) {
-        composable(OrderPage.ProductSelect.route) {
-            val scanState = rememberNfcScanDialogState()
+    LaunchedEffect(enableScan) {
+        if (enableScan) {
+            scanState.open()
+        }
+        else {
+            scanState.close()
+        }
+    }
 
-            OrderSelection(
+    NfcScanDialog(
+        scanState,
+        onScan = { uid ->
+            scope.launch {
+                viewModel.tagScanned(uid)
+            }
+        },
+        onDismiss = {
+            viewModel.tagScanDismissed()
+        }
+    )
+
+    NavHost(navController = nav, startDestination = SalePage.ProductSelect.route) {
+        composable(SalePage.ProductSelect.route) {
+
+            SaleSelection(
                 viewModel,
                 onAbort = {
                     scope.launch {
-                        viewModel.clearOrder()
+                        viewModel.clearSale()
                     }
                 },
                 onSubmit = {
                     scope.launch {
-                        // TODO: no new scan in refine-state - then viewModel.submitOrder()
-                        scanState.open()
-                    }
-                },
-            )
-
-            NfcScanDialog(
-                scanState,
-                onScan = { uid ->
-                    scope.launch {
-                        viewModel.submitOrder(uid)
+                        viewModel.checkSale()
                     }
                 },
             )
         }
 
         // what would be booked, from there one can get back to edit-mode
-        composable(OrderPage.Confirm.route) {
-            OrderConfirmation(
+        composable(SalePage.Confirm.route) {
+            SaleConfirm(
                 viewModel,
                 onAbort = {
                     scope.launch {
@@ -77,31 +89,34 @@ fun OrderView(viewModel: OrderViewModel = hiltViewModel()) {
                 },
                 onSubmit = {
                     scope.launch {
-                        viewModel.bookOrder()
+                        viewModel.bookSale()
                     }
                 },
             )
         }
 
         // the order was booked successfully.
-        composable(OrderPage.Done.route) {
-            OrderSuccess(
+        composable(SalePage.Success.route) {
+            SaleSuccess(
                 viewModel,
                 onConfirm = {
                     scope.launch {
-                        viewModel.clearOrder()
+                        viewModel.clearSale()
                     }
                 }
             )
         }
 
-        // order was aborted
-        composable(OrderPage.Aborted.route) {
-            OrderFailure(onDismiss = {
-                scope.launch {
-                    viewModel.clearOrder()
-                }
-            })
+        // something failed when validating or booking the order
+        composable(SalePage.Error.route) {
+            SaleError(
+                onDismiss = {
+                    scope.launch {
+                        viewModel.errorDismissed()
+                    }
+                },
+                viewModel = viewModel,
+            )
         }
     }
 }

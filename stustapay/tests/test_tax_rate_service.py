@@ -15,7 +15,7 @@ class TaxRateServiceTest(BaseTestCase):
 
     async def test_basic_tax_rate_workflow(self):
         tax_rates = await self.tax_rate_service.list_tax_rates(token=self.admin_token)
-        self.assertEqual(len(tax_rates), 3)
+        self.assertEqual(len(tax_rates), 4)
 
         tax_rate = await self.tax_rate_service.create_tax_rate(
             token=self.admin_token, tax_rate=TaxRate(name="krass", rate=0.5, description="Krasse UST")
@@ -36,7 +36,7 @@ class TaxRateServiceTest(BaseTestCase):
         self.assertEqual(updated_tax_rate.description, "Noch Krassere UST")
 
         tax_rates = await self.tax_rate_service.list_tax_rates(token=self.admin_token)
-        self.assertEqual(len(tax_rates), 4)
+        self.assertEqual(len(tax_rates), 5)
         self.assertTrue(updated_tax_rate in tax_rates)
 
         with self.assertRaises(AccessDenied):

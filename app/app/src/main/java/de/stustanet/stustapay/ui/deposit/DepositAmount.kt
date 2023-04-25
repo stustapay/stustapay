@@ -6,6 +6,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -13,8 +14,9 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustanet.stustapay.ui.common.DepositKeyboard
+import de.stustanet.stustapay.ui.priceselect.PriceSelection
 import de.stustanet.stustapay.ui.ec.ECButton
+import kotlinx.coroutines.launch
 
 @Composable
 fun DepositAmount(
@@ -24,29 +26,17 @@ fun DepositAmount(
 
     val depositState by viewModel.depositState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         content = { paddingValues ->
-            Column(
+            PriceSelection(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Box(
-                    modifier = Modifier.height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "%.2f€".format(depositState.currentAmount.toFloat() / 100),
-                        fontSize = 72.sp
+                onEnter = { viewModel.setAmount(it) },
+                onClear = { viewModel.clear() },
                     )
-                }
-                DepositKeyboard(
-                    onDigit = { viewModel.inputDigit(it) },
-                    onClear = { viewModel.clear() }
-                )
-            }
         },
         bottomBar = {
             Column {
@@ -58,8 +48,10 @@ fun DepositAmount(
                             .padding(20.dp),
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            if (viewModel.checkAmount()) {
+                            scope.launch {
+                                if (true){// (viewModel.checkAmount()) {
                                 goToCash()
+                                }
                             }
                         }
                     ) {
@@ -68,7 +60,11 @@ fun DepositAmount(
                     }
 
                     ECButton(
-                        onClickCheck = { viewModel.checkAmount() },
+                        onClickCheck = {
+                            scope.launch {
+                                viewModel.checkAmount()
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp),

@@ -22,7 +22,43 @@ class TerminalHTTPAPI @Inject constructor(
         regLocalStatus.registrationState.first()
     }
 
+    // base
+    override suspend fun getTerminalConfig(): Response<TerminalConfig> {
+        return client.get("config")
+    }
 
+    override suspend fun getHealthStatus(apiUrl: String): Response<HealthStatus> {
+        return client.get("health", basePath = apiUrl)
+    }
+
+
+    // order
+    override suspend fun listOrders(): Response<List<Order>> {
+        return client.get("order")
+    }
+
+    override suspend fun checkSale(newSale: NewSale): Response<PendingSale> {
+        return client.post("order/check-sale") { newSale }
+    }
+
+    override suspend fun bookSale(newSale: NewSale): Response<CompletedSale> {
+        return client.post("order/book-sale") { newSale }
+    }
+
+    override suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp> {
+        return client.post("order/check-topup") { newTopUp }
+    }
+
+    override suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp> {
+        return client.post("order/book-topup") { newTopUp }
+    }
+
+    override suspend fun getOrder(orderId: Int): Response<Order> {
+        return client.get("order/$orderId")
+    }
+
+
+    // auth
     /**
      * register the terminal at the till.
      * special implementation: we don't have an api endpoint or key yet,
@@ -48,22 +84,8 @@ class TerminalHTTPAPI @Inject constructor(
         return client.post<Unit, Unit>("auth/logout_terminal")
     }
 
-    override suspend fun getHealthStatus(apiUrl: String): Response<HealthStatus> {
-        return client.get("health", basePath = apiUrl)
-    }
 
-    override suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder> {
-        return client.post("order") { newOrder }
-    }
-
-    override suspend fun processOrder(id: Int): Response<CompletedOrder> {
-        return client.post<Unit, CompletedOrder>("order/$id/process")
-    }
-
-    override suspend fun getTerminalConfig(): Response<TerminalConfig> {
-        return client.get("config")
-    }
-
+    // user
     override suspend fun currentUser(): Response<User?> {
         return client.get("user")
     }

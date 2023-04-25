@@ -1,6 +1,5 @@
 # Administration
 
-
 ## Setup
 - Follow the [core setup](core.md#setup) to initiate the database
 

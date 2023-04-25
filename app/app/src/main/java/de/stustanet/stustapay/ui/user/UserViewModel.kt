@@ -40,8 +40,6 @@ class UserViewModel @Inject constructor(
             initialValue = UserUIState.Error("Loading..."),
         )
 
-    val userState : StateFlow<UserState> = userRepository.userState
-
     val userUIMessage = userRepository.status
 
     suspend fun fetchLogin() {
@@ -75,8 +73,8 @@ private fun userUiState(
                     when (val userState = userStateResult.data) {
                         is UserState.LoggedIn -> {
                             UserUIState.LoggedIn(
-                                username = userState.user.display_name,
-                                privileges = userState.user.privileges.joinToString { it.id }.ifEmpty { "no privileges" },
+                                username = userState.user.login,
+                                privileges = userState.user.privileges.joinToString { it.name }.ifEmpty { "no privileges" },
                                 showCreateUser = Access.canCreateUser(userState.user),
                             )
                         }

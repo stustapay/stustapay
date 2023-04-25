@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
@@ -17,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -50,35 +50,42 @@ fun LoginProfile(
         is LoginProfileUIState.LoggedIn -> {
             Text(
                 modifier = Modifier.padding(top = 12.dp),
+                textAlign = TextAlign.Center,
                 text = login.username,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Color.White,
             )
             Text(
                 modifier = Modifier.padding(top = 8.dp, bottom = 30.dp),
                 text = login.privileges,
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
-                color = Color.White
+                color = Color.White,
             )
         }
         is LoginProfileUIState.NotLoggedIn -> {
             Text(
                 modifier = Modifier.padding(top = 8.dp, bottom = 30.dp),
+                textAlign = TextAlign.Center,
                 text = "No Login",
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
-                color = Color.White
+                color = Color.White,
             )
         }
         is LoginProfileUIState.Error -> {
             Text(
-                modifier = Modifier.padding(top = 8.dp, bottom = 30.dp),
+                modifier = Modifier.padding(
+                    start = 10.dp,
+                    end = 10.dp,
+                    top = 8.dp,
+                    bottom = 30.dp,
+                ),
                 text = login.message,
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
-                color = Color.White
+                color = Color.White,
             )
         }
     }

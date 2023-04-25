@@ -18,7 +18,8 @@ sealed interface NfcScanRequest {
     data class WriteSig(
         val auth: Boolean,
         val cmac: Boolean,
-        val key: BitVector
+        val key: BitVector,
+        val signature: String,
     ): NfcScanRequest
 
     data class WriteKey(

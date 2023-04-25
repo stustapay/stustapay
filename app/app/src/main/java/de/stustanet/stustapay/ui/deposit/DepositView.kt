@@ -18,7 +18,7 @@ import de.stustanet.stustapay.ui.nav.navigateTo
 fun DepositView(viewModel: DepositViewModel = hiltViewModel()) {
     val nav = rememberNavController()
     val depositState by viewModel.depositState.collectAsStateWithLifecycle()
-    val navTarget by viewModel.navState.collectAsStateWithLifecycle()
+    val navTarget by viewModel._navState.collectAsStateWithLifecycle()
 
     LaunchedEffect(navTarget) {
         if (nav.currentDestination?.route != navTarget.route) {

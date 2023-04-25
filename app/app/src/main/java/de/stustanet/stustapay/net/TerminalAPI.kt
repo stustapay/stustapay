@@ -22,11 +22,49 @@ object TerminalAPIModule {
 
 
 interface TerminalAPI {
+    // base
+    /**
+     * configuration values for the terminal.
+     */
+    suspend fun getTerminalConfig(): Response<TerminalConfig>
+
     /**
      * get health information at this api url.
      */
     suspend fun getHealthStatus(apiUrl: String): Response<HealthStatus>
 
+    // order
+    /**
+     * List orders of this till.
+     */
+    suspend fun listOrders(): Response<List<Order>>
+
+    /**
+     * Create a new order, which is not yet booked.
+     */
+    suspend fun checkSale(newSale: NewSale): Response<PendingSale>
+
+    /**
+     * Book a new order - this transfers the money between accounts.
+     */
+    suspend fun bookSale(newSale: NewSale): Response<CompletedSale>
+
+    /**
+     * Get infos about a single order.
+     */
+    suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp>
+
+    /**
+     * Book a new order - this transfers the money between accounts.
+     */
+    suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp>
+
+    /**
+     * Get infos about a single order.
+     */
+    suspend fun getOrder(orderId: Int): Response<Order>
+
+    // auth
     /**
      * Register this terminal to the core.
      */
@@ -40,21 +78,7 @@ interface TerminalAPI {
      */
     suspend fun deregister(): Response<Unit>
 
-    /**
-     * Create a new order, which is not yet booked.
-     */
-    suspend fun createOrder(newOrder: NewOrder): Response<PendingOrder>
-
-    /**
-     * Book a new order - this transfers the money between accounts.
-     */
-    suspend fun processOrder(id: Int): Response<CompletedOrder>
-
-    /**
-     * Get the button configuration of the terminal.
-     */
-    suspend fun getTerminalConfig(): Response<TerminalConfig>
-
+    // user
     /**
      * Get the currently logged in user.
      */

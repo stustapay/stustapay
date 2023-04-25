@@ -28,7 +28,7 @@ def get_test_db_config() -> dict:
 
 # input structure for core.config.Config
 TEST_CONFIG = {
-    "core": {"secret_key": "asdf1234"},
+    "core": {"secret_key": "stuff1234"},
     "administration": {
         "base_url": "http://localhost:8081",
         "host": "localhost",
@@ -86,17 +86,17 @@ class BaseTestCase(TestCase):
             new_user=UserWithoutId(
                 login="test-admin-user", description="", privileges=[Privilege.admin], display_name="Admin"
             ),
-            password="asdf",
+            password="rolf",
         )
-        self.admin_token = (await self.user_service.login_user(username=self.admin_user.login, password="asdf")).token
+        self.admin_token = (await self.user_service.login_user(username=self.admin_user.login, password="rolf")).token
         self.cashier_user = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
                 login="test-cashier-user", description="", privileges=[Privilege.cashier], display_name="Cashier"
             ),
-            password="asdf",
+            password="rolf",
         )
         self.cashier_token = (
-            await self.user_service.login_user(username=self.cashier_user.login, password="asdf")
+            await self.user_service.login_user(username=self.cashier_user.login, password="rolf")
         ).token
 
     async def asyncTearDown(self) -> None:

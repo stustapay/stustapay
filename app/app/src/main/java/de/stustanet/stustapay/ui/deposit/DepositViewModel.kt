@@ -1,9 +1,15 @@
 package de.stustanet.stustapay.ui.deposit
 
+import android.media.MediaDrm.LogMessage
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.ec.ECPayment
+import de.stustanet.stustapay.model.NewTopUp
+import de.stustanet.stustapay.model.TopUpType
 import de.stustanet.stustapay.model.UserTag
+import de.stustanet.stustapay.net.Response
+import de.stustanet.stustapay.repository.TopUpRepository
 import de.stustanet.stustapay.ui.ec.ECState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,24 +28,25 @@ enum class DepositPage(val route: String) {
 data class DepositState(
     /** desired deposit amount in cents */
     var currentAmount: UInt = 0u,
+    var currentTagId: UserTag? = null,
+    var topUpType: TopUpType? = null,
     var status: String = "ready",
 )
 
 @HiltViewModel
-class DepositViewModel @Inject constructor() : ViewModel() {
-    val navState = MutableStateFlow(DepositPage.Amount)
+class DepositViewModel @Inject constructor(
+    private val topUpRepository: TopUpRepository
+) : ViewModel() {
+    val _navState = MutableStateFlow(DepositPage.Amount)
 
     private val _depositState = MutableStateFlow(DepositState())
     val depositState = _depositState.asStateFlow()
 
-
-    fun inputDigit(d: UInt) {
+    fun setAmount(amount: UInt) {
         _depositState.update {
-            val state = it.copy()
-            state.status = ""
-            state.currentAmount *= 10u
-            state.currentAmount += (d % 10u)
-            state
+            val cpy = it.copy()
+            cpy.currentAmount = amount
+            cpy
         }
     }
 
@@ -50,11 +57,43 @@ class DepositViewModel @Inject constructor() : ViewModel() {
     }
 
     /** validates the amount so we can continue to checkout */
-    fun checkAmount(): Boolean {
+    suspend fun checkAmount(): Boolean {
         val minimum = 100U
         if (_depositState.value.currentAmount < minimum) {
             _depositState.update { it.copy(status = "at least ${minimum.toFloat() / 100} needed") }
             return false
+        }else {
+            val uid = _depositState.value.currentTagId?.uid
+            val type = _depositState.value.topUpType
+            if (uid == null) {
+                return false
+            }
+            if (type == null){
+                return false
+            }
+            var newTopUp = NewTopUp(_depositState.value.currentAmount.toDouble(),
+                                    uid,
+                                    type)
+            val response = topUpRepository.checkTopUp(newTopUp)
+            Log.e("Stustapay", "checkamount finished?")
+            when (response) {
+                is Response.OK -> {
+                    _depositState.update { it.copy(
+                        status = "validated")
+                    }
+                   // _navState.update { SalePage.Confirm }
+                }
+//                is Response.Error.Service -> {
+//                    // maybe only clear tag for some errors.
+//                    clearScannedTag()
+//                    _navState.update { SalePage.Error }
+//                    _status.update { response.msg() }
+//                }
+                is Response.Error -> {
+                    return false;
+                   // _status.update { response.msg() }
+                }
+            }
         }
         return true
     }
@@ -70,12 +109,37 @@ class DepositViewModel @Inject constructor() : ViewModel() {
         )
     }
 
-    fun cashFinished(tag: UserTag) {
-        // TODO: send to backend
-        _depositState.update {
-            it.copy(status = "cash for $tag not yet booked :)")
+    suspend fun cashFinished(tag: UserTag){
+        _depositState.update{
+            it.copy(currentTagId = tag, topUpType = TopUpType.Cash)
         }
-        navState.update { DepositPage.Done }
+
+        val uid = _depositState.value.currentTagId?.uid
+        val type = _depositState.value.topUpType
+        if (uid == null) {
+            return
+        }
+        if (type == null){
+            return
+        }
+
+        var newTopUp = NewTopUp(_depositState.value.currentAmount.toDouble(),
+            uid,
+            type)
+        val response = topUpRepository.bookTopUp(newTopUp)
+        when (response) {
+            is Response.OK -> {
+                _depositState.update {
+                    it.copy(status = "cash for $tag booked :)")
+                }
+            }
+            is Response.Error -> {
+                _depositState.update {
+                    it.copy(status = "cash topup for $tag failed")
+                }
+            }
+        }
+        _navState.update { DepositPage.Done }
     }
 
     fun ecFinished(ecState: ECState) {
@@ -86,13 +150,13 @@ class DepositViewModel @Inject constructor() : ViewModel() {
                 _depositState.update {
                     it.copy(status = "error: ${ecState.msg}")
                 }
-                navState.update { DepositPage.Done }
+                _navState.update { DepositPage.Done }
             }
             is ECState.Error -> {
                 _depositState.update {
                     it.copy(status = "error: ${ecState.msg}")
                 }
-                navState.update { DepositPage.Failure }
+                _navState.update { DepositPage.Failure }
             }
         }
     }

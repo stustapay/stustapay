@@ -51,38 +51,73 @@ class BookingIdentifier:
 
 
 class NotEnoughFundsException(ServiceException):
+    """
+    The customer has not enough funds on his account to complete the order
+    """
+
     id = "NotEnoughFunds"
-    description = "The customer has not enough funds on his account to complete the order"
 
     def __init__(self, needed_fund: float, available_fund: float):
         self.needed_fund = needed_fund
         self.available_fund = available_fund
 
+    def __str__(self):
+        return f"Not enough funds available:\nNeeded: {self.needed_fund}\nAvailable: {self.available_fund}"
+
 
 class NotEnoughVouchersException(ServiceException):
     id = "NotEnoughVouchers"
-    description = "The customer has not enough vouchers on his account to complete the order"
+    """
+    The customer has not enough vouchers on his account to complete the order
+    """
 
     def __init__(self, available_vouchers: int):
         self.available_vouchers = available_vouchers
 
+    def __str__(self):
+        return f"Not enough vouchers. Available: {self.available_vouchers}"
+
 
 class AgeRestrictionException(ServiceException):
+    """
+    The customer is too young the buy the respective products
+    """
+
     id = "AgeRestriction"
-    description = "The customer is too young the buy the respective products"
 
     def __init__(self, product_ids: Set[int]):
         self.product_ids = product_ids
 
+    def __str__(self):
+        return f"Too young for product: {', '.join(self.product_ids)}"
+
 
 class TillPermissionException(ServiceException):
+    """
+    The assigned till profile does not allow this operation
+    """
+
     id = "TillPermission"
-    description = "The assigned till profile does not allow this operation"
+
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
 
 
 class InvalidSaleException(ServiceException):
+    """
+    The sale is invalid
+    """
+
     id = "InvalidSale"
-    description = "The sale is invalid"
+
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
 
 
 class BookedProduct(BaseModel):

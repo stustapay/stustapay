@@ -16,13 +16,14 @@ import de.stustanet.stustapay.ec.ECPayment
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @Composable
 fun ECButton(
     ecPayment: (UserTag) -> ECPayment,
     onECResult: (ECState) -> Unit,
-    onClickCheck: () -> Boolean = { true },
+    onClickCheck: () -> Job = { Job() },
     modifier: Modifier = Modifier,
     viewModel: ECButtonViewModel = hiltViewModel(),
     content: @Composable () -> Unit,
@@ -49,10 +50,10 @@ fun ECButton(
     Button(
         onClick = {
             // only if the pre-check succeeds
-            if (onClickCheck()) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                scanState.open()
-            }
+//            if (onClickCheck()) {
+//                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+//                scanState.open()
+//            }
         },
         modifier = modifier,
     ) {
