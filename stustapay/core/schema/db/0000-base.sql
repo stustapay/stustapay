@@ -134,7 +134,8 @@ values
     (2, null, 'virtual', 'Deposit', 'Deposit currently at the customers'),
     (3, null, 'virtual', 'Sumup', 'source account for sumup top up '),
     (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here'),
-    (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement')
+    (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement'),
+    (6, null, 'virtual', 'Money / Voucher create', 'Account which will be charged on manual account balance updates and voucher top ups')
     on conflict do nothing;
 
 
@@ -636,19 +637,17 @@ create or replace function book_transaction (
     transaction_id bigint;
     temp_account_id bigint;
 begin
-    if vouchers_amount < 0 then
-        raise 'vouchers cannot be negative';
+    if vouchers_amount * amount < 0 then
+        raise 'vouchers_amount and amount must have the same sign';
     end if;
 
-    if amount < 0 then
-        if vouchers_amount != 0 then
-            raise 'if the amount is negative vouchers cannot be used';
-        end if;
+    if amount < 0 or vouchers_amount < 0 then
         -- swap account on negative amount, as only non-negative transactions are allowed
         temp_account_id = source_account_id;
         source_account_id = target_account_id;
         target_account_id = temp_account_id;
         amount = -amount;
+        vouchers_amount = -vouchers_amount;
     end if;
 
     -- add new transaction

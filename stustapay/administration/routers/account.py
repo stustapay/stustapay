@@ -32,3 +32,30 @@ async def get_account(token: CurrentAuthToken, account_service: ContextAccountSe
     if not account:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return account
+
+
+class UpdateBalancePayload(BaseModel):
+    new_balance: float
+
+
+@router.post("/accounts/{account_id}/update-balance")
+async def update_balance(
+    token: CurrentAuthToken, account_service: ContextAccountService, account_id: int, payload: UpdateBalancePayload
+):
+    await account_service.update_account_balance(token=token, account_id=account_id, new_balance=payload.new_balance)
+
+
+class UpdateVoucherAmountPayload(BaseModel):
+    new_voucher_amount: int
+
+
+@router.post("/accounts/{account_id}/update-voucher-amount")
+async def update_voucher_amount(
+    token: CurrentAuthToken,
+    account_service: ContextAccountService,
+    account_id: int,
+    payload: UpdateVoucherAmountPayload,
+):
+    await account_service.update_account_vouchers(
+        token=token, account_id=account_id, new_voucher_amount=payload.new_voucher_amount
+    )

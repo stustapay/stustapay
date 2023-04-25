@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List } from "@mui/material";
+import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, IconButton } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { selectAccountById, selectOrderAll, useGetAccountByIdQuery, useGetOrderByCustomerQuery } from "@api";
@@ -7,6 +7,11 @@ import { Loading } from "@stustapay/components";
 import { toast } from "react-toastify";
 import { OrderTable } from "@components";
 import { useCurrencyFormatter } from "@hooks";
+import { Edit as EditIcon } from "@mui/icons-material";
+import { EditAccountBalanceModal } from "./components/EditAccountBalanceModal";
+import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAmountModal";
+import { selectCurrentUser, useAppSelector } from "@store";
+import { PrivilegeAdmin } from "@models";
 
 export const CustomerAccountDetail: React.FC = () => {
   const { t } = useTranslation(["accounts", "common"]);
@@ -14,6 +19,11 @@ export const CustomerAccountDetail: React.FC = () => {
   const navigate = useNavigate();
 
   const formatCurrency = useCurrencyFormatter();
+
+  const [balanceModalOpen, setBalanceModalOpen] = React.useState(false);
+  const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
+  const user = useAppSelector(selectCurrentUser);
+  const isAdmin = user.privileges.includes(PrivilegeAdmin);
 
   const {
     account,
@@ -72,12 +82,38 @@ export const CustomerAccountDetail: React.FC = () => {
           </ListItem>
           <ListItem>
             <ListItemText primary={t("account.balance")} secondary={formatCurrency(account.balance)} />
+            {/* {isAdmin && (
+              <ListItemSecondaryAction>
+                <IconButton color="primary" onClick={() => setBalanceModalOpen(true)}>
+                  <EditIcon />
+                </IconButton>
+              </ListItemSecondaryAction>
+            )} */}
           </ListItem>
           <ListItem>
             <ListItemText primary={t("account.vouchers")} secondary={account.vouchers} />
+            <ListItemSecondaryAction>
+              <IconButton color="primary" onClick={() => setVoucherModalOpen(true)}>
+                <EditIcon />
+              </IconButton>
+            </ListItemSecondaryAction>
           </ListItem>
         </List>
       </Paper>
+      {account && (
+        <>
+          <EditAccountBalanceModal
+            account={account}
+            open={balanceModalOpen}
+            handleClose={() => setBalanceModalOpen(false)}
+          />
+          <EditAccountVoucherAmountModal
+            account={account}
+            open={voucherModalOpen}
+            handleClose={() => setVoucherModalOpen(false)}
+          />
+        </>
+      )}
       <OrderTable orders={orders} />
     </>
   );

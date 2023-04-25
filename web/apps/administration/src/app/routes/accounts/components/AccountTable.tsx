@@ -49,6 +49,12 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       width: 250,
       valueFormatter: ({ value }) => value && formatCurrency(value),
     },
+    {
+      field: "vouchers",
+      headerName: t("account.vouchers") as string,
+      type: "number",
+      width: 200,
+    },
   ];
 
   return (

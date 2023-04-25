@@ -49,6 +49,12 @@ const AdminMenu: React.FC = () => {
           </ListItemIcon>
           <ListItemText primary={t("users")} />
         </ListItemLink>
+        <ListItemLink to="/tax-rates">
+          <ListItemIcon>
+            <PercentIcon />
+          </ListItemIcon>
+          <ListItemText primary={t("taxRates")} />
+        </ListItemLink>
         <ListItemLink to="/settings">
           <ListItemIcon>
             <SettingsIcon />
@@ -141,12 +147,6 @@ export const AuthenticatedRoot: React.FC = () => {
               <PersonIcon />
             </ListItemIcon>
             <ListItemText primary={t("cashiers")} />
-          </ListItemLink>
-          <ListItemLink to="/tax-rates">
-            <ListItemIcon>
-              <PercentIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("taxRates")} />
           </ListItemLink>
           <ListItemLink to="/products">
             <ListItemIcon>

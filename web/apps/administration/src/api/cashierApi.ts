@@ -11,7 +11,7 @@ const cashierAdapter = createEntityAdapter<Cashier>({
 export const cashierApi = createApi({
   reducerPath: "cashierApi",
   baseQuery: adminApiBaseQuery,
-  tagTypes: ["cashier"],
+  tagTypes: ["cashier", "cashierShift"],
   endpoints: (builder) => ({
     getCashiers: builder.query<EntityState<Cashier>, void>({
       query: () => "/cashiers/",
@@ -30,10 +30,11 @@ export const cashierApi = createApi({
     }),
     getCashierShifts: builder.query<CashierShift[], number>({
       query: (id) => `/cashiers/${id}/shifts`,
+      providesTags: (result, error, arg) => [{ type: "cashierShift" as const, cashierId: arg }],
     }),
     closeOutCashier: builder.mutation<CashierCloseOutResult, NewCashierCloseOut>({
       query: (closeOut) => ({ url: `/cashiers/${closeOut.cashier_id}/close-out`, method: "POST", body: closeOut }),
-      invalidatesTags: ["cashier"],
+      invalidatesTags: ["cashier", "cashierShift"],
     }),
   }),
 });

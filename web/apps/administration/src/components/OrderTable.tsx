@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { useCurrencyFormatter } from "@hooks";
 import { Order } from "@models";
+import { formatDate } from "@stustapay/utils";
 
 export interface OrderListProps {
   orders: Order[];
@@ -52,10 +53,10 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
       width: 100,
     },
     {
-      field: "bookedAt",
+      field: "booked_at",
       headerName: t("order.bookedAt") as string,
       type: "string",
-      valueGetter: ({ value }) => value && new Date(value).toLocaleString("de-DE"),
+      valueGetter: ({ value }) => formatDate(value),
       flex: 1,
     },
   ];
