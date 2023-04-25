@@ -31,9 +31,11 @@ class VoucherService(DBService):
         line_items_by_price_per_voucher = list(
             sorted(line_items, key=lambda x: (x.product.price_per_voucher is None, x.product.price_per_voucher))
         )
-        while used_vouchers < max_vouchers:
+        for current_line_item in line_items_by_price_per_voucher:
+            if used_vouchers < max_vouchers:
+                break
             remaining_vouchers = max_vouchers - used_vouchers
-            current_line_item = line_items_by_price_per_voucher.pop(0)
+
             if current_line_item.product.price_in_vouchers is None:
                 continue
             vouchers_for_product = min(
