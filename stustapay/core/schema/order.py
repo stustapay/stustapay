@@ -11,6 +11,7 @@ from stustapay.core.util import BaseModel
 
 class OrderType(enum.Enum):
     sale = "sale"
+    cancel_sale = "cancel_sale"
     topup_cash = "topup_cash"
     topup_sumup = "topup_sumup"
 

@@ -240,7 +240,8 @@ values
     -- load token with sumup
     ('topup_sumup'),
     -- buy items to consume
-    ('sale')
+    ('sale'),
+    ('cancel_sale')
     on conflict do nothing;
 
 
@@ -538,6 +539,8 @@ create table if not exists ordr (
 
     -- type of the order like, top up, buy beer,
     order_type text not null references order_type(name),
+    cancels_order bigint references ordr(id),
+    constraint only_cancel_orders_can_reference_orders check((order_type != 'cancel_sale') = (cancels_order is null)),
 
     -- who created it
     cashier_id bigint not null references usr(id),
