@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.sale
+package de.stustanet.stustapay.ui.topup
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -18,19 +18,20 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
+import de.stustanet.stustapay.ui.nav.TopAppBar
 
 @Composable
-fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
-    val saleCompleted by viewModel.saleCompleted.collectAsStateWithLifecycle()
+fun TopUpSuccess(onDismiss: () -> Unit, viewModel: DepositViewModel) {
+    val topUpCompleted by viewModel.topUpCompleted.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
-    val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+    val saleConfig by viewModel.topUpConfig.collectAsStateWithLifecycle()
+    val haptic = LocalHapticFeedback.current
 
     // so we have a regular variable..
-    val completedSale = saleCompleted
-    if (completedSale == null) {
+    val completedTopUp = topUpCompleted
+    if (completedTopUp == null) {
         Text(
-            text = "no completed sale information available",
+            text = "no completed TopUp information available",
             modifier = Modifier
                 .fillMaxSize()
                 .padding(10.dp),
@@ -39,11 +40,11 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
         return
     }
 
-    val haptic = LocalHapticFeedback.current
-
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(saleConfig.tillName) })
+            Column(modifier = Modifier.fillMaxWidth()) {
+                TopAppBar(title = { Text(saleConfig.tillName) })
+            }
         },
         content = { padding ->
             Box(
@@ -66,36 +67,24 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                         contentDescription = "Success!",
                     )
 
-
-                    SaleConfirmItem(
-                        name = "Preis",
-                        price = completedSale.total_price,
-                        fontSize = 40.sp,
+                    TopUpConfirmItem(
+                        name = "Altes Guthaben",
+                        price = completedTopUp.old_balance,
+                        fontSize = 30.sp,
                     )
-
-                    SaleConfirmItem(
-                        name = "neues Guthaben",
-                        price = completedSale.new_balance,
+                    TopUpConfirmItem(
+                        name = "Aufladung",
+                        price = completedTopUp.amount,
                         fontSize = 30.sp,
                     )
 
-                    if (completedSale.used_vouchers > 0 || completedSale.new_voucher_balance > 0) {
-                        Divider(modifier = Modifier.padding(bottom = 10.dp))
+                    Divider(modifier = Modifier.padding(vertical = 10.dp))
 
-                        if (completedSale.used_vouchers > 0) {
-                            SaleConfirmItem(
-                                name = "Gutscheine",
-                                quantity = completedSale.used_vouchers,
-                            )
-                        }
-
-                        if (completedSale.new_voucher_balance > 0) {
-                            SaleConfirmItem(
-                                name = "übrige Gutscheine",
-                                quantity = completedSale.new_voucher_balance,
-                            )
-                        }
-                    }
+                    TopUpConfirmItem(
+                        name = "Neues Guthaben",
+                        price = completedTopUp.new_balance,
+                        fontSize = 40.sp,
+                    )
                 }
             }
         },
@@ -112,7 +101,7 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onConfirm()
+                        onDismiss()
                     },
                     modifier = Modifier
                         .fillMaxWidth()

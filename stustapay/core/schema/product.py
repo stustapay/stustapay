@@ -19,7 +19,7 @@ class NewProduct(BaseModel):
     price: Optional[float]
     fixed_price: bool = True
     price_in_vouchers: Optional[int] = None
-    price_per_voucher: Optional[int] = None
+    price_per_voucher: Optional[float] = None
     tax_name: str
     restrictions: list[ProductRestriction] = []
     is_locked: bool = False

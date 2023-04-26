@@ -87,11 +87,16 @@ data class SaleStatus(
 
     /** when the server reports back from the newsale check */
     fun updateWithPendingSale(pendingSale: PendingSale) {
-        // vouchers for adjustment
-        voucherAmount = pendingSale.used_vouchers
-
         // remember what the check was
+        // it contains the used vouchers.
+        // only if we adjust it, update this.voucherAmount.
         checkedSale = pendingSale
+
+        // set the custom amount to the "optimum" calculated by server
+        // only if we did customize the amount
+        if (voucherAmount != null) {
+            voucherAmount = pendingSale.used_vouchers
+        }
 
         // update button selections
         buttonSelection = pendingSale.buttons.mapNotNull {
@@ -112,21 +117,23 @@ data class SaleStatus(
     }
 
     fun incrementVouchers() {
-        val check = checkedSale
-        val amount = voucherAmount
-        if (amount == null || check == null) {
-            return
+        val check = checkedSale ?: return
+        val newAmount = (voucherAmount ?: check.used_vouchers) + 1
+
+        // only set voucherAmount if we actually change it
+        if (newAmount <= check.old_voucher_balance) {
+            voucherAmount = newAmount
         }
-        voucherAmount = min(check.old_voucher_balance, amount + 1)
     }
 
     fun decrementVouchers() {
-        val check = checkedSale
-        val amount = voucherAmount
-        if (amount == null || check == null) {
-            return
+        val check = checkedSale ?: return
+        val newAmount = (voucherAmount ?: check.used_vouchers) - 1
+
+        // only set voucherAmount if we actually change it
+        if (newAmount >= 0) {
+            voucherAmount = newAmount
         }
-        voucherAmount = max(0, amount - 1)
     }
 
     fun incrementButton(buttonId: Int, saleConfig: SaleConfig) {
@@ -239,6 +246,7 @@ data class SaleStatus(
                 }
             }.toList(),
             customer_tag_uid = tag.uid,
+            used_vouchers = voucherAmount,
         )
     }
 }

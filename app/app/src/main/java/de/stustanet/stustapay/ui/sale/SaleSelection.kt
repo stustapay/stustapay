@@ -1,6 +1,5 @@
 package de.stustanet.stustapay.ui.sale
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -38,9 +37,7 @@ fun SaleSelection(
 
     Scaffold(
         topBar = {
-            Column {
-                TopAppBar(title = { Text(saleConfig.tillName) })
-            }
+            TopAppBar(title = { Text(saleConfig.tillName) })
         },
         content = { paddingValues ->
             PriceSelectionDialog(
@@ -58,14 +55,15 @@ fun SaleSelection(
                     .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
-                if (saleDraft.voucherAmount != null) {
+                val vouchers = saleDraft.voucherAmount ?: saleDraft.checkedSale?.used_vouchers
+                if (vouchers != null && (saleDraft.checkedSale?.old_voucher_balance ?: 0) > 0) {
                     // if the server says we used vouchers,
                     // allow adjustment here
                     item {
                         SaleSelectionItem(
-                            caption = "Vouchers",
+                            caption = "Gutschein",
                             type = SaleSelectionItemType.Vouchers(
-                                amount = saleDraft.voucherAmount ?: 0,
+                                amount = vouchers,
                                 maxAmount = saleDraft.checkedSale?.old_voucher_balance ?: -1,
                                 onIncr = { viewModel.incrementVouchers() },
                                 onDecr = { viewModel.decrementVouchers() },

@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.sale
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,7 +21,10 @@ import kotlinx.coroutines.launch
  */
 @Preview
 @Composable
-fun SaleView(viewModel: SaleViewModel = hiltViewModel()) {
+fun SaleView(
+    leaveView: () -> Unit = {},
+    viewModel: SaleViewModel = hiltViewModel()
+) {
     val scope = rememberCoroutineScope()
     val nav = rememberNavController()
     val scanState = rememberNfcScanDialogState()
@@ -42,8 +46,7 @@ fun SaleView(viewModel: SaleViewModel = hiltViewModel()) {
     LaunchedEffect(enableScan) {
         if (enableScan) {
             scanState.open()
-        }
-        else {
+        } else {
             scanState.close()
         }
     }
@@ -60,9 +63,15 @@ fun SaleView(viewModel: SaleViewModel = hiltViewModel()) {
         }
     )
 
-    NavHost(navController = nav, startDestination = SalePage.ProductSelect.route) {
-        composable(SalePage.ProductSelect.route) {
+    BackHandler {
+        leaveView()
+    }
 
+    NavHost(
+        navController = nav,
+        startDestination = SalePage.ProductSelect.route
+    ) {
+        composable(SalePage.ProductSelect.route) {
             SaleSelection(
                 viewModel,
                 onAbort = {
@@ -82,12 +91,12 @@ fun SaleView(viewModel: SaleViewModel = hiltViewModel()) {
         composable(SalePage.Confirm.route) {
             SaleConfirm(
                 viewModel,
-                onAbort = {
+                onEdit = {
                     scope.launch {
                         viewModel.editOrder()
                     }
                 },
-                onSubmit = {
+                onConfirm = {
                     scope.launch {
                         viewModel.bookSale()
                     }

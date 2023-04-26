@@ -15,6 +15,10 @@ class PriceSelectionViewModel @Inject constructor() : ViewModel() {
     private val _amount = MutableStateFlow(0u)
     val amount = _amount.asStateFlow()
 
+    fun setAmount(amount: UInt) {
+        _amount.update { amount }
+    }
+
     fun inputDigit(d: UInt): UInt {
         _amount.update {
             var new = it

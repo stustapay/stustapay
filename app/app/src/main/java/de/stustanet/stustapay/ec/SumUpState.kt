@@ -1,11 +1,13 @@
 package de.stustanet.stustapay.ec
 
+import com.sumup.merchant.reader.models.TransactionInfo
+
 sealed interface SumUpState {
     fun msg(): String
 
     object None : SumUpState {
         override fun msg(): String {
-            return "no state"
+            return "idle"
         }
     }
 
@@ -26,10 +28,12 @@ sealed interface SumUpState {
     }
 
     data class Success(
-        val transactionId: String
+        val msg: String,
+        val txCode: String,
+        val txInfo: TransactionInfo?,
     ) : SumUpState {
         override fun msg(): String {
-            return "transaction success: $transactionId"
+            return "transaction success: $msg"
         }
     }
 

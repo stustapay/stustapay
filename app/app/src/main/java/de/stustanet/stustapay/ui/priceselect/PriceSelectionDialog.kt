@@ -82,6 +82,7 @@ fun PriceSelectionCard(
                 modifier = Modifier.fillMaxSize(),
                 content = { paddingValues ->
                     PriceSelection(
+                        state = state,
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(bottom = paddingValues.calculateBottomPadding()),

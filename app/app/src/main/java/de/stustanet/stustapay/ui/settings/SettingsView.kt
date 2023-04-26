@@ -9,6 +9,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import de.stustanet.stustapay.ui.nav.NavScaffold
 object SettingsNavDest {
     val root = NavDest("root")
     val connection = NavDest("connection")
+    val ecreader = NavDest("ecreader")
     val about = NavDest("about")
 }
 
@@ -47,6 +49,19 @@ fun SettingsRootView(navController: NavHostController) {
                 subtitle = { Text(text = "Server settings") },
             ) {
                 navController.navigate(SettingsNavDest.connection.route)
+            }
+        }
+        item {
+            PrefLink(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = "EC Settings"
+                    )
+                },
+                title = { Text(text = "EC Card Reader") },
+            ) {
+                navController.navigate(SettingsNavDest.ecreader.route)
             }
         }
         item {
@@ -89,7 +104,7 @@ fun SettingsView(leaveView: () -> Unit = {}) {
         ) {
             composable(SettingsNavDest.root.route) { SettingsRootView(navController) }
             composable(SettingsNavDest.connection.route) { RegistrationView() }
-            composable(SettingsNavDest.connection.route) { RegistrationView() }
+            composable(SettingsNavDest.ecreader.route) { ECSettingsView() }
             composable(SettingsNavDest.about.route) { AboutView() }
         }
     }

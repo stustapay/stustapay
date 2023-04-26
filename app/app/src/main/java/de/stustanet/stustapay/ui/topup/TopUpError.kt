@@ -1,8 +1,7 @@
-package de.stustanet.stustapay.ui.sale
+package de.stustanet.stustapay.ui.topup
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
@@ -10,8 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -20,17 +17,17 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
-fun SaleError(
+fun TopUpError(
     onDismiss: () -> Unit,
-    viewModel: SaleViewModel,
+    viewModel: DepositViewModel
 ) {
     val status by viewModel.status.collectAsStateWithLifecycle()
-    val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+    val topUpConfig by viewModel.topUpConfig.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(saleConfig.tillName) })
+            TopAppBar(title = { Text(topUpConfig.tillName) })
         },
         content = { padding ->
             Box(
@@ -52,7 +49,7 @@ fun SaleError(
                         colorFilter = ColorFilter.tint(MaterialTheme.colors.onError),
                     )
 
-                    Text(text = "Error in sale check:", fontSize = 30.sp)
+                    Text(text = "Error in TopUp:", fontSize = 30.sp)
 
                     Text(status, fontSize = 24.sp)
                 }

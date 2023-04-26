@@ -3,11 +3,13 @@ package de.stustanet.stustapay.ui.sale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Scaffold
+import androidx.compose.material.TabRowDefaults.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.nav.TopAppBar
@@ -18,12 +20,13 @@ import de.stustanet.stustapay.ui.nav.TopAppBar
 @Composable
 fun SaleConfirm(
     viewModel: SaleViewModel,
-    onAbort: () -> Unit,
-    onSubmit: () -> Unit,
+    onEdit: () -> Unit,
+    onConfirm: () -> Unit,
 ) {
     val orderConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
     val saleDraft by viewModel.saleStatus.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
+    val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
 
     val checkedSale = saleDraft.checkedSale
     if (checkedSale == null) {
@@ -36,10 +39,15 @@ fun SaleConfirm(
 
     Scaffold(
         topBar = {
-            Column {
-                TopAppBar(title = { Text(orderConfig.tillName) })
+            Column(modifier = Modifier.fillMaxWidth()) {
+                TopAppBar(title = { Text(saleConfig.tillName) })
 
-                SalePrice(checkedSale.total_price)
+                SaleConfirmItem(
+                    name = "Preis",
+                    price = checkedSale.total_price,
+                    fontSize = 35.sp,
+                )
+                Divider(modifier = Modifier.padding(bottom = 10.dp))
             }
         },
         content = { paddingValues ->
@@ -51,17 +59,16 @@ fun SaleConfirm(
 
                 if (checkedSale.used_vouchers > 0) {
                     item {
-                        Text(
-                            text = "Vouchers: ${checkedSale.used_vouchers}",
-                            modifier = Modifier.fillMaxWidth(),
-                            fontSize = 30.sp,
+                        SaleConfirmItem(
+                            name = "Gutscheine",
+                            quantity = checkedSale.used_vouchers,
                         )
                     }
                 }
 
                 for (lineItem in checkedSale.line_items) {
                     item {
-                        SaleConfirmItem(
+                        SaleConfirmLineItem(
                             lineItem = lineItem
                         )
                     }
@@ -72,19 +79,18 @@ fun SaleConfirm(
             SaleBottomBar(
                 abortText = "↢ Edit",
                 status = {
-                    Column {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         if (checkedSale.new_voucher_balance > 0) {
-                            Text(
-                                text = "Vouchers left: ${checkedSale.new_voucher_balance.toString().padStart(5)}",
-                                modifier = Modifier.fillMaxWidth(),
-                                fontSize = 20.sp,
+                            SaleConfirmItem(
+                                name = "übrige Gutscheine",
+                                quantity = checkedSale.new_voucher_balance,
                             )
                         }
-                        Text(
-                            text = "Money left: ${"%.02f".format(checkedSale.new_balance).padStart(5)}",
-                            modifier = Modifier.fillMaxWidth(),
-                            fontSize = 20.sp,
+                        SaleConfirmItem(
+                            name = "neues Guthaben",
+                            price = checkedSale.new_balance,
                         )
+                        Divider(modifier = Modifier.padding(top = 10.dp))
                         Text(
                             text = status,
                             modifier = Modifier.fillMaxWidth(),
@@ -94,8 +100,8 @@ fun SaleConfirm(
                     }
                 },
                 saleConfig = orderConfig,
-                onAbort = onAbort,
-                onSubmit = onSubmit,
+                onAbort = onEdit,
+                onSubmit = onConfirm,
             )
         }
     )

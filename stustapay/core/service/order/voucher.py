@@ -41,13 +41,16 @@ class VoucherService(DBService):
             vouchers_for_product = min(
                 remaining_vouchers, current_line_item.product.price_in_vouchers * current_line_item.quantity
             )
+
+            price_deduction = current_line_item.product.price_per_voucher * vouchers_for_product
+
             additional_line_items.append(
                 PendingLineItem(
                     product=discount_product,
                     tax_rate=current_line_item.tax_rate,
                     tax_name=current_line_item.tax_name,
-                    product_price=-current_line_item.product_price,
-                    quantity=vouchers_for_product,
+                    product_price=-price_deduction,
+                    quantity=1,
                 )
             )
             used_vouchers += vouchers_for_product

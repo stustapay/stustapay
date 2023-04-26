@@ -7,6 +7,8 @@ import androidx.compose.runtime.*
 class PriceSelectionState {
     private var open by mutableStateOf(false)
 
+    var amount by mutableStateOf(0u)
+
     fun close() {
         open = false
     }
