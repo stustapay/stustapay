@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -92,7 +93,7 @@ fun StartpageView(
 ) {
 
     val navItems = getNavItems()
-    val gradientColors = listOf(Color(0xFFF70A74), Color(0xFFF59118))
+    val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
 
     Column(
         modifier = Modifier
@@ -103,7 +104,6 @@ fun StartpageView(
         Text(
             text = "StuStaPay",
             fontSize = 30.sp,
-            color = Color.White,
             modifier = Modifier.padding(top = 10.dp)
         )
 
@@ -124,7 +124,7 @@ fun StartpageView(
 @Composable
 private fun StartpageEntry(
     item: NavMenuItem,
-    unreadBadgeColor: Color = Color(0xFF0FFF93),
+    unreadBadgeColor: Color = MaterialTheme.colors.secondary,
     navigateTo: (NavDest) -> Unit
 ) {
     Row(
@@ -146,7 +146,7 @@ private fun StartpageEntry(
                     .padding(all = 2.dp)
                     .size(size = 28.dp),
                 contentDescription = null,
-                tint = Color.White
+                tint = MaterialTheme.colors.primary
             )
             if (item.isUnread) {
                 Box(
@@ -163,7 +163,6 @@ private fun StartpageEntry(
             text = item.label,
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
-            color = Color.White
         )
     }
 }

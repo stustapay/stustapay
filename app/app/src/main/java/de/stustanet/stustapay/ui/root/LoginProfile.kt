@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
@@ -13,7 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,7 +44,9 @@ fun LoginProfile(
             .size(size = 120.dp)
             .clip(shape = CircleShape)
             .padding(top = 2.dp),
-        contentDescription = "Avatar"
+        contentDescription = "Avatar",
+        colorFilter = ColorFilter.tint(MaterialTheme.colors.primary)
+
     )
 
     when (val login = loginProfileUiState) {
@@ -54,14 +57,12 @@ fun LoginProfile(
                 text = login.username,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
             )
             Text(
                 modifier = Modifier.padding(top = 8.dp, bottom = 30.dp),
                 text = login.privileges,
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
-                color = Color.White,
             )
         }
         is LoginProfileUIState.NotLoggedIn -> {
@@ -71,7 +72,6 @@ fun LoginProfile(
                 text = "No Login",
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
-                color = Color.White,
             )
         }
         is LoginProfileUIState.Error -> {
@@ -85,7 +85,6 @@ fun LoginProfile(
                 text = login.message,
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
-                color = Color.White,
             )
         }
     }
