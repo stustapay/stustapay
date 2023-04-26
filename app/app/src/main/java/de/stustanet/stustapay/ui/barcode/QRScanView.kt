@@ -13,6 +13,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,7 +36,6 @@ import androidx.core.content.ContextCompat
 import de.stustanet.stustapay.barcode.ZXingQRCode
 import androidx.camera.core.Preview as CameraPreview
 import androidx.compose.ui.geometry.Size as geomSize
-import de.stustanet.stustapay.ui.theme.Color as ThemeColor
 
 @Composable
 fun CameraOverlay(
@@ -206,9 +206,9 @@ fun QRScanView(onScanSuccess: (String) -> Unit = {}) {
                 height = 300.dp,
                 offsetY = 200.dp,
                 color = if (code != null) {
-                    ThemeColor.Ok
+                    MaterialTheme.colors.primary
                 } else {
-                    ThemeColor.Error
+                    MaterialTheme.colors.error
                 }
             )
         }
