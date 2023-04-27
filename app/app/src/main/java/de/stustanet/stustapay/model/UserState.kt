@@ -11,3 +11,11 @@ sealed interface UserState {
         var msg: String,
     ) : UserState
 }
+
+sealed interface UserCreateState {
+    object Created : UserCreateState
+
+    data class Error(
+        var msg: String,
+    ) : UserCreateState
+}

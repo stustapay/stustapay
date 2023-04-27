@@ -23,7 +23,8 @@ private enum class ScanTarget {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun UserLoginView(
-    viewModel: UserViewModel
+    viewModel: UserViewModel,
+    goToUserCreateView: () -> Unit
 ) {
 
     val scope = rememberCoroutineScope()
@@ -127,6 +128,7 @@ fun UserLoginView(
 
         Divider()
 
+        /*
         var newUserUnavailableHint by remember { mutableStateOf(false) }
         if (newUserUnavailableHint) {
             AlertDialog(
@@ -148,6 +150,7 @@ fun UserLoginView(
                 },
             )
         }
+        */
 
         Spacer(modifier = Modifier.height(15.dp))
 
@@ -173,9 +176,7 @@ fun UserLoginView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                onClick = {
-                    newUserUnavailableHint = true
-                }
+                onClick = { goToUserCreateView() }
             ) {
                 Text("Create new user", fontSize = 24.sp)
             }

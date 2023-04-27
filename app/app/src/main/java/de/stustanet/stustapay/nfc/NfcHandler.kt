@@ -77,7 +77,6 @@ class NfcHandler @Inject constructor(
             when (req) {
                 is NfcScanRequest.Read -> {
                     tag.connect()
-                    while (!tag.isConnected) {}
 
                     if (!authenticate(tag, req.auth, req.cmac, req.key)) { return }
                     val chipProtected = tag.isProtected()
@@ -87,7 +86,6 @@ class NfcHandler @Inject constructor(
                 }
                 is NfcScanRequest.ReadMultiKey -> {
                     tag.connect()
-                    while (!tag.isConnected) {}
 
                     for (key in req.keys) {
                         try {
@@ -107,7 +105,6 @@ class NfcHandler @Inject constructor(
                 }
                 is NfcScanRequest.WriteSig -> {
                     tag.connect()
-                    while (!tag.isConnected) {}
 
                     if (!authenticate(tag, req.auth, req.cmac, req.key)) { return }
                     var data = req.signature.toByteArray(Charset.forName("UTF-8")).asBitVector()
@@ -119,7 +116,6 @@ class NfcHandler @Inject constructor(
                 is NfcScanRequest.WriteKey -> {
                     try {
                         tag.connect()
-                        while (!tag.isConnected) {}
                     } catch (e: TagIncompatibleException) {
                         dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Incompatible(e.message ?: "unknown reason")))
                         return
@@ -132,7 +128,6 @@ class NfcHandler @Inject constructor(
                 is NfcScanRequest.WriteProtect -> {
                     try {
                         tag.connect()
-                        while (!tag.isConnected) {}
                     } catch (e: TagIncompatibleException) {
                         dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Incompatible(e.message ?: "unknown reason")))
                         return
@@ -148,7 +143,6 @@ class NfcHandler @Inject constructor(
                 is NfcScanRequest.WriteCmac -> {
                     try {
                         tag.connect()
-                        while (!tag.isConnected) {}
                     } catch (e: TagIncompatibleException) {
                         dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Incompatible(e.message ?: "unknown reason")))
                         return

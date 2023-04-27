@@ -13,10 +13,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.ui.nav.NavDest
 import de.stustanet.stustapay.ui.nav.NavScaffold
+import de.stustanet.stustapay.ui.nav.navigateTo
 
 
 object UserNavDest {
     val info = NavDest("info")
+    val create = NavDest("create")
 }
 
 
@@ -25,8 +27,10 @@ object UserNavDest {
  */
 @Preview
 @Composable
-fun UserView(leaveView: () -> Unit = {},
-             viewModel : UserViewModel = hiltViewModel()) {
+fun UserView(
+    leaveView: () -> Unit = {},
+    viewModel: UserViewModel = hiltViewModel()
+) {
 
     val navController = rememberNavController()
     val scaffoldState = rememberScaffoldState()
@@ -49,7 +53,20 @@ fun UserView(leaveView: () -> Unit = {},
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
-            composable(UserNavDest.info.route) { UserLoginView(viewModel) }
+            composable(UserNavDest.info.route) {
+                UserLoginView(viewModel) {
+                    navController.navigateTo(
+                        UserNavDest.create.route
+                    )
+                }
+            }
+            composable(UserNavDest.create.route) {
+                UserCreateView(viewModel) {
+                    navController.navigateTo(
+                        UserNavDest.info.route
+                    )
+                }
+            }
         }
     }
 

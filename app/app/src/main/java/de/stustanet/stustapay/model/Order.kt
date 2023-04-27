@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 
 /**
- * TopOpType enum from core model.
+ * TopUpType enum from core model.
  */
 @Serializable
 enum class TopUpType {
@@ -172,6 +172,22 @@ data class LineItem(
 
 
 /**
+ * OrderType enum from core model.
+ */
+@Serializable
+enum class OrderType {
+    @SerialName("sale")
+    Sale,
+    @SerialName("cancel_sale")
+    CancelSale,
+    @SerialName("topup_cash")
+    TopupCash,
+    @SerialName("topup_sumup")
+    TopupSumup,
+}
+
+
+/**
  * Returned when listing past orders.
  * Order from core model.
  */
@@ -184,7 +200,7 @@ data class Order(
     val total_no_tax: Double,
     val booked_at: String,
     val payment_method: String?,
-    //val order_type: OrderType, // TODO unify topup and orders?
+    val order_type: OrderType,
     val cashier_id: Int,
     val till_id: Int,
     val customer_account_id: Int,

@@ -2,6 +2,7 @@ package de.stustanet.stustapay.repository
 
 import de.stustanet.stustapay.model.CompletedSale
 import de.stustanet.stustapay.model.NewSale
+import de.stustanet.stustapay.model.Order
 import de.stustanet.stustapay.model.PendingSale
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.netsource.SaleRemoteDataSource
@@ -18,5 +19,13 @@ class SaleRepository @Inject constructor(
 
     suspend fun bookSale(newSale: NewSale): Response<CompletedSale> {
         return saleRemoteDataSource.bookSale(newSale)
+    }
+
+    suspend fun listSales(): Response<List<Order>> {
+        return saleRemoteDataSource.listSales()
+    }
+
+    suspend fun cancelSale(id: Int): Response<Unit> {
+        return saleRemoteDataSource.cancelSale(id)
     }
 }

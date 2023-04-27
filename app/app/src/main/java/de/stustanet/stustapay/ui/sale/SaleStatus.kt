@@ -228,14 +228,18 @@ data class SaleStatus(
 
     fun getNewSale(tag: UserTag): NewSale {
         return NewSale(
-            buttons = buttonSelection.map {
+            buttons = buttonSelection.mapNotNull {
                 when (val amount = it.value) {
                     is SaleItemAmount.FixedPrice -> {
                         // regular or returnable purchase product
-                        Button(
-                            till_button_id = it.key,
-                            quantity = amount.amount,
-                        )
+                        if (amount.amount != 0) {
+                            Button(
+                                till_button_id = it.key,
+                                quantity = amount.amount,
+                            )
+                        } else {
+                            null
+                        }
                     }
                     is SaleItemAmount.FreePrice -> {
                         Button(

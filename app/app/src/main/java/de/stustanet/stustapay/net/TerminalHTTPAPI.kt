@@ -45,6 +45,10 @@ class TerminalHTTPAPI @Inject constructor(
         return client.post("order/book-sale") { newSale }
     }
 
+    override suspend fun cancelSale(id: Int): Response<Unit> {
+        return client.post<Unit, Unit>("order/$id/cancel")
+    }
+
     override suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp> {
         return client.post("order/check-topup") { newTopUp }
     }
@@ -100,5 +104,13 @@ class TerminalHTTPAPI @Inject constructor(
 
     override suspend fun getCustomer(id: ULong): Response<Account> {
         return client.get("customer/$id")
+    }
+
+    override suspend fun userCreateCashier(newUser: NewUser): Response<User> {
+        return client.post("user/create_cashier") { newUser }
+    }
+
+    override suspend fun userCreateFinanzorga(newUser: NewUser): Response<User> {
+        return client.post("user/create_finanzorga") { newUser }
     }
 }
