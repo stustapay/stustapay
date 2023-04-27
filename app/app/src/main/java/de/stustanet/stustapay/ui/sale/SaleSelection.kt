@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.nav.TopAppBar
@@ -52,8 +53,9 @@ fun SaleSelection(
 
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding())
+                    .padding(horizontal = 10.dp)
+                    .fillMaxSize()
             ) {
                 val vouchers = saleDraft.voucherAmount ?: saleDraft.checkedSale?.used_vouchers
                 if (vouchers != null && (saleDraft.checkedSale?.old_voucher_balance ?: 0) > 0) {

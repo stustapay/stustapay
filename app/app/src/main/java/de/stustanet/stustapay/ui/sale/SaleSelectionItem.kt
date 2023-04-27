@@ -103,7 +103,7 @@ fun SaleSelectionItem(
         }
 
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp).weight(0.3f),
+            modifier = Modifier.weight(0.3f),
             horizontalArrangement = Arrangement.End,
         ) {
             // TODO: highlight background if not 0

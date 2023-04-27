@@ -53,8 +53,9 @@ fun SaleConfirm(
         content = { paddingValues ->
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding())
+                    .padding(horizontal = 10.dp)
+                    .fillMaxSize()
             ) {
 
                 if (checkedSale.used_vouchers > 0) {
