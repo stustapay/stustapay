@@ -36,7 +36,10 @@ class VoucherService(DBService):
                 break
             remaining_vouchers = max_vouchers - used_vouchers
 
-            if current_line_item.product.price_in_vouchers is None:
+            if (
+                current_line_item.product.price_in_vouchers is None
+                or current_line_item.product.price_per_voucher is None
+            ):
                 continue
             vouchers_for_product = min(
                 remaining_vouchers, current_line_item.product.price_in_vouchers * current_line_item.quantity

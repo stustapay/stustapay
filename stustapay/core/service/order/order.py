@@ -37,7 +37,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
-from stustapay.core.service.common.error import InvalidArgument, NotFound, ServiceException
+from stustapay.core.service.common.error import InvalidArgument, ServiceException
 from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.util import BaseModel
 from .voucher import VoucherService
