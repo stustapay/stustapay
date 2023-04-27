@@ -12,7 +12,6 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
     log.add(Pair("main: started", true))
 
     nfcaTag.connect()
-    while (!nfcaTag.isConnected) {}
 
     var verCheckSucceeded = false
     try {
@@ -30,14 +29,12 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
 
     nfcaTag.close()
     nfcaTag.connect()
-    while (!nfcaTag.isConnected) {}
 
     var key0AuthSucceeded = testKey(key0, log)
 
     if (!key0AuthSucceeded) {
         nfcaTag.close()
         nfcaTag.connect()
-        while (!nfcaTag.isConnected) {}
 
         val tmp0 = BitVector(16uL * 8uL)
         for (i in 0uL until 16uL) {
@@ -56,7 +53,6 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
     if (!key0AuthSucceeded) {
         nfcaTag.close()
         nfcaTag.connect()
-        while (!nfcaTag.isConnected) {}
 
         val tmp0 = BitVector(16uL * 8uL)
         for (j in 0uL until 4uL) {
@@ -79,7 +75,6 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
     if (!key0AuthSucceeded) {
         nfcaTag.close()
         nfcaTag.connect()
-        while (!nfcaTag.isConnected) {}
 
         val tmp0 = BitVector(16uL * 8uL)
         for (i in 0uL until 16uL) {
@@ -98,7 +93,6 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
     if (verCheckSucceeded && key0AuthSucceeded) {
         nfcaTag.close()
         connect()
-        while (!isConnected) {}
 
         var cmacCheckSucceeded = false
         try {
@@ -109,7 +103,6 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
             try {
                 close()
                 connect()
-                while (!isConnected) {}
 
                 authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, false)
                 log.add(Pair("cmac: auth without cmac succeeded", false))
@@ -120,7 +113,6 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
 
         close()
         connect()
-        while (!isConnected) {}
 
         try {
             val conf = if (cmacCheckSucceeded) {
@@ -192,7 +184,6 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
 
         close()
         connect()
-        while (!isConnected) {}
 
         try {
             authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, cmacCheckSucceeded)
@@ -221,7 +212,6 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
 
         close()
         connect()
-        while (!isConnected) {}
 
         try {
             authenticate(key1, MifareUltralightAES.KeyType.UID_RETR_KEY, cmacCheckSucceeded)

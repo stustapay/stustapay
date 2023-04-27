@@ -18,11 +18,15 @@ fun BitVector.cmacMfulaes(k: BitVector, ctr: UShort): BitVector {
 }
 
 fun BitVector.verifyCmacMfulaes(k: BitVector, ctr: UShort): Boolean {
-    val respCmac = this.slice(0uL, 8uL * 8uL)
-    val respM = this.slice(8uL * 8uL, this.len)
+    try {
+        val respCmac = this.slice(0uL, 8uL * 8uL)
+        val respM = this.slice(8uL * 8uL, this.len)
 
-    val cmac = respM.cmacMfulaes(k, ctr)
-    return respCmac.equals(cmac)
+        val cmac = respM.cmacMfulaes(k, ctr)
+        return respCmac.equals(cmac)
+    } catch (e: ArrayIndexOutOfBoundsException) {
+        return false
+    }
 }
 
 fun genSessionKey(k: BitVector, rndA: BitVector, rndB: BitVector): BitVector {

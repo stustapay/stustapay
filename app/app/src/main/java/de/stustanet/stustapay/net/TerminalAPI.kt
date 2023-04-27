@@ -50,6 +50,11 @@ interface TerminalAPI {
     suspend fun bookSale(newSale: NewSale): Response<CompletedSale>
 
     /**
+     * Book a new order - this transfers the money between accounts.
+     */
+    suspend fun cancelSale(id: Int): Response<Unit>
+
+    /**
      * Get infos about a single order.
      */
     suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp>
@@ -98,4 +103,14 @@ interface TerminalAPI {
      * Get the account status for a customer tag.
      */
     suspend fun getCustomer(id: ULong): Response<Account>
+
+    /**
+     * Create a user with cashier privileges.
+     */
+    suspend fun userCreateCashier(newUser: NewUser): Response<User>
+
+    /**
+     * Create a user with Finanzorga privileges.
+     */
+    suspend fun userCreateFinanzorga(newUser: NewUser): Response<User>
 }

@@ -18,3 +18,15 @@ data class User(
 data class UserTag(
     val uid: ULong,
 )
+
+@Serializable
+data class NewUser(
+    val login: String,
+    val user_tag_uid: ULong
+)
+
+@Serializable
+enum class UserKind(val label: String) {
+    Cashier("Cashier"),
+    Finanzorga("Finanzorga")
+}
