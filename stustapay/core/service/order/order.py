@@ -279,7 +279,14 @@ class OrderService(DBService):
         if len(restricted_products) > 0:
             raise AgeRestrictionException(restricted_products)
 
-        return list(line_items_by_product.values())
+        line_items = list()
+        for line_item in line_items_by_product.values():
+            if line_item.quantity == 0:
+                # quantity_not_zero constraint - skip empty items!
+                continue
+            line_items.append(line_item)
+
+        return line_items
 
     async def _fetch_account(self, conn: asyncpg.Connection, account_id: int) -> Optional[Account]:
         account = await conn.fetchrow(
@@ -464,6 +471,7 @@ class OrderService(DBService):
             customer_account_id=customer_account.id,
         )
 
+        # if an explicit voucher amount was requested - use that as the maximum.
         vouchers_to_use = customer_account.vouchers
         if new_sale.used_vouchers is not None:
             if new_sale.used_vouchers > customer_account.vouchers:
