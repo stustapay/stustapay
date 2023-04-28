@@ -59,7 +59,7 @@ class SaleViewModel @Inject constructor(
     val status = _status.asStateFlow()
 
     // configuration infos from backend
-    val saleConfig: StateFlow<SaleConfig> = mapSaleState(
+    val saleConfig: StateFlow<SaleConfig> = mapSaleConfig(
         terminalConfigRepository.terminalConfigState
     )
 
@@ -148,7 +148,7 @@ class SaleViewModel @Inject constructor(
         }
     }
 
-    fun clearScannedTag() {
+    private fun clearScannedTag() {
         _saleStatus.update { sale ->
             val newSale = sale.copy()
             newSale.tag = null
@@ -166,6 +166,11 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun checkSale() {
+        if (_saleStatus.value.buttonSelection.isEmpty()) {
+            _status.update { "Nothing ordered!" }
+            return
+        }
+
         val tag = _saleStatus.value.tag
         if (tag == null) {
             _status.update { "Scanning tag..." }
@@ -194,8 +199,8 @@ class SaleViewModel @Inject constructor(
             is Response.Error.Service -> {
                 // maybe only clear tag for some errors.
                 clearScannedTag()
-                _navState.update { SalePage.Error }
                 _status.update { response.msg() }
+                _navState.update { SalePage.Error }
             }
             is Response.Error -> {
                 _status.update { response.msg() }
@@ -204,13 +209,13 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun bookSale() {
-        _saleCompleted.update { null }
-
         val tag = _saleStatus.value.tag
         if (tag == null) {
             _status.update { "No tag scan information" }
             return
         }
+
+        _saleCompleted.update { null }
 
         val response = saleRepository.bookSale(
             newSale = _saleStatus.value.getNewSale(tag)
@@ -218,9 +223,11 @@ class SaleViewModel @Inject constructor(
 
         when (response) {
             is Response.OK -> {
-                _status.update { "Success!" }
-                _saleCompleted.update { response.data }
+                // delete the sale draft
                 clearSale()
+                _status.update { "Order booked!" }
+                // now we have a completed sale
+                _saleCompleted.update { response.data }
                 _navState.update { SalePage.Success }
             }
             is Response.Error.Service -> {
@@ -234,7 +241,7 @@ class SaleViewModel @Inject constructor(
         }
     }
 
-    private fun mapSaleState(
+    private fun mapSaleConfig(
         terminalConfigFlow: StateFlow<TerminalConfigState>,
     ): StateFlow<SaleConfig> {
 

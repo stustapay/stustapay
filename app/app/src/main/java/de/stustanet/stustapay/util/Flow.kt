@@ -91,10 +91,8 @@ suspend fun <T> Flow<T>.waitFor(predicate: (T) -> Boolean): T {
     coroutineScope {
         val done = Channel<T>()
         val job = launch {
-            // wait until we get a valid url.
-            // otherwise requests don't make sense anyway.
-            val urlUpdates = this@waitFor.stateIn(this)
-            urlUpdates.collect() {
+            // consume events until the predicate is true
+            this@waitFor.stateIn(this).collect {
                 if (predicate(it)) {
                     done.send(it)
                 }

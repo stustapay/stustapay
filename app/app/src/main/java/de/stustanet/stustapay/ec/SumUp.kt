@@ -265,6 +265,13 @@ class SumUp @Inject constructor(
     }
 
     /**
+     * logout from sumup account.
+     */
+    suspend fun logout() {
+        SumUpAPI.logout()
+    }
+
+    /**
      * initiates a ec payment.
      *
      * first, creates the payment definition,
@@ -388,9 +395,9 @@ class SumUp @Inject constructor(
             .currency(SumUpPayment.Currency.EUR)
             // optional: include a tip amount in addition to the total
             .tip(payment.tip)
-            .title("StuStaPay Test")
-            .receiptEmail("dummy@sft.lol")
-            .receiptSMS("+00000000000")
+            .title("StuStaCulum")
+            //.receiptEmail("dummy@sft.lol")
+            //.receiptSMS("+00000000000")
             .addAdditionalInfo("Terminal", cfg.terminal.name)
             .addAdditionalInfo("TerminalID", cfg.terminal.id)
             // TODO convert UID to hex
@@ -427,21 +434,29 @@ class SumUp @Inject constructor(
             SumUpResultCode.SUCCESSFUL -> {
                 val resultString = extras.getString(SumUpAPI.Response.MESSAGE)
                 val txCode = extras.getString(SumUpAPI.Response.TX_CODE)
-                val receiptSent = extras.getBoolean(SumUpAPI.Response.RECEIPT_SENT)
+                // val receiptSent = extras.getBoolean(SumUpAPI.Response.RECEIPT_SENT)
+
                 // TODO: when we have apilevel 33:
                 // val txInfo = extras.getParcelable(SumUpAPI.Response.TX_INFO, TransactionInfo::class.java)
-
                 @Suppress("DEPRECATION")
                 val txInfo = extras.getParcelable<TransactionInfo>(SumUpAPI.Response.TX_INFO)
-                _paymentStatus.update { SumUpState.Success("transaction success: $resultMsg: ${txInfo.toString()}") }
+                _paymentStatus.update {
+                    SumUpState.Success(
+                        msg = resultString ?: "no info",
+                        txCode = txCode ?: "no transaction code",
+                        txInfo = txInfo,
+                    )
+                }
+
                 // TODO log the payment locally on the terminal,
                 //      and maybe sync it back to the core
-                // TODO contact core to confirm the payment
 
                 nextAction(context)
             }
             else -> {
-                _paymentStatus.update { SumUpState.Error("checkout result: $result: $resultMsg") }
+                _paymentStatus.update {
+                    SumUpState.Error("checkout result: $result: $resultMsg")
+                }
             }
         }
     }

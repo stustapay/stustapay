@@ -45,16 +45,16 @@ private fun getNavItems(): List<NavMenuItem> {
     itemsList.add(
         NavMenuItem(
             icon = Icons.Filled.ShoppingCart,
-            label = "Process Orders",
-            navDestination = RootNavDests.ordering,
+            label = "Product Sale",
+            navDestination = RootNavDests.sale,
             canAccess = { u, _ -> Access.canSell(u) }
         )
     )
     itemsList.add(
         NavMenuItem(
             icon = Icons.Filled.Add,
-            label = "Process Deposits",
-            navDestination = RootNavDests.deposit,
+            label = "Account TopUp",
+            navDestination = RootNavDests.topup,
             canAccess = { _, t -> Access.canTopUp(t) }
         )
     )

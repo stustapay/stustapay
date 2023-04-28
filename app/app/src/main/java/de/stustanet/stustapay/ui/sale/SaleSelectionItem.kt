@@ -3,6 +3,7 @@ package de.stustanet.stustapay.ui.sale
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -96,13 +97,13 @@ fun SaleSelectionItem(
                 itemAmount = ""
             }
             is SaleSelectionItemType.Vouchers -> {
-                itemPrice = "%2d".format(type.amount)
+                itemPrice = "%2d ".format(type.amount)
                 itemAmount = "of %2d".format(type.maxAmount)
             }
         }
 
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp).weight(0.25f),
+            modifier = Modifier.weight(0.3f),
             horizontalArrangement = Arrangement.End,
         ) {
             // TODO: highlight background if not 0
@@ -122,7 +123,7 @@ fun SaleSelectionItem(
             )
         }
 
-        Box(modifier = Modifier.weight(0.75f)) {
+        Box(modifier = Modifier.weight(0.7f)) {
             Row(horizontalArrangement = Arrangement.SpaceEvenly) {
                 Button(
                     onClick = {
@@ -185,6 +186,7 @@ fun SaleSelectionItem(
                 ) {
                     val text: String
                     var fontSize = 50.sp
+                    var color = MaterialTheme.colors.onPrimary
                     when (type) {
                         is SaleSelectionItemType.FixedPrice,
                         is SaleSelectionItemType.Vouchers -> {
@@ -201,7 +203,7 @@ fun SaleSelectionItem(
                         }
                     }
                     Text(
-                        text = text, fontSize = fontSize, color = Color.Black
+                        text = text, fontSize = fontSize, color = color
                     )
                 }
             }

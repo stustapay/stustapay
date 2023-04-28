@@ -37,7 +37,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
-from stustapay.core.service.common.error import InvalidArgument, NotFound, ServiceException
+from stustapay.core.service.common.error import InvalidArgument, ServiceException
 from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.util import BaseModel
 from .voucher import VoucherService
@@ -119,6 +119,20 @@ class InvalidSaleException(ServiceException):
 
     def __str__(self):
         return self.msg
+
+
+class CustomerNotFound(ServiceException):
+    """
+    This customer was not found
+    """
+
+    id = "CustomerNotFound"
+
+    def __init__(self, uid: int):
+        self.uid = uid
+
+    def __str__(self):
+        return f"Customer not found: {self.uid}"
 
 
 class BookedProduct(BaseModel):
@@ -265,7 +279,14 @@ class OrderService(DBService):
         if len(restricted_products) > 0:
             raise AgeRestrictionException(restricted_products)
 
-        return list(line_items_by_product.values())
+        line_items = list()
+        for line_item in line_items_by_product.values():
+            if line_item.quantity == 0:
+                # quantity_not_zero constraint - skip empty items!
+                continue
+            line_items.append(line_item)
+
+        return line_items
 
     async def _fetch_account(self, conn: asyncpg.Connection, account_id: int) -> Optional[Account]:
         account = await conn.fetchrow(
@@ -282,7 +303,7 @@ class OrderService(DBService):
             customer_tag_uid,
         )
         if customer is None:
-            raise NotFound(element_typ="customer", element_id=str(customer_tag_uid))
+            raise CustomerNotFound(uid=customer_tag_uid)
         return Account.parse_obj(customer)
 
     @with_db_transaction
@@ -290,7 +311,7 @@ class OrderService(DBService):
     async def check_topup(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_topup: NewTopUp
     ) -> PendingTopUp:
-        if new_topup.amount <= 0:
+        if new_topup.amount <= 0.0:
             raise InvalidArgument("Only topups with a positive amount are allowed")
 
         can_top_up = await conn.fetchval(
@@ -299,9 +320,25 @@ class OrderService(DBService):
         if not can_top_up:
             raise TillPermissionException("This terminal is not allowed to top up customers")
 
+        # amount enforcement
+        if new_topup.amount <= 1.00:
+            raise InvalidArgument("Minimum TopUp is 1.00€")
+
+        max_limit = 150.00
+        if new_topup.amount > max_limit:
+            raise InvalidArgument(f"Maximum TopUp amount is {max_limit:.02f}€")
+
         customer_account = await self._fetch_customer_by_user_tag(
             conn=conn, customer_tag_uid=new_topup.customer_tag_uid
         )
+
+        new_balance = customer_account.balance + new_topup.amount
+        if new_balance > max_limit:
+            too_much = new_balance - max_limit
+            raise InvalidArgument(
+                f"More than {max_limit:.02f}€ on account is disallowed! "
+                f"New balance would be {new_balance:.02f}€, which is {too_much:.02f}€ too much."
+            )
 
         return PendingTopUp(
             amount=new_topup.amount,
@@ -310,7 +347,7 @@ class OrderService(DBService):
             uuid=new_topup.uuid,
             customer_account_id=customer_account.id,
             old_balance=customer_account.balance,
-            new_balance=customer_account.balance + new_topup.amount,
+            new_balance=new_balance,
         )
 
     async def _book_topup_cash_order(
@@ -434,6 +471,7 @@ class OrderService(DBService):
             customer_account_id=customer_account.id,
         )
 
+        # if an explicit voucher amount was requested - use that as the maximum.
         vouchers_to_use = customer_account.vouchers
         if new_sale.used_vouchers is not None:
             if new_sale.used_vouchers > customer_account.vouchers:

@@ -14,8 +14,7 @@ fun SalePrice(price: Double) {
         Text(
             text = "${"%.02f".format(price).padStart(5)} €",
             modifier = Modifier
-                .padding(2.dp)
-                .fillMaxWidth(),
+                .padding(2.dp),
             fontSize = 26.sp,
             fontFamily = FontFamily.Monospace,
         )

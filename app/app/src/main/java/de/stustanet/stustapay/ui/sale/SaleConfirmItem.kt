@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustanet.stustapay.model.PendingLineItem
@@ -14,8 +15,8 @@ import de.stustanet.stustapay.model.Product
 
 @Preview
 @Composable
-fun PreviewSaleConfirmItem() {
-    SaleConfirmItem(
+fun PreviewSaleConfirmLineItem() {
+    SaleConfirmLineItem(
         PendingLineItem(
             quantity = 12,
             product = Product(
@@ -32,44 +33,87 @@ fun PreviewSaleConfirmItem() {
     )
 }
 
+@Composable
+fun SaleConfirmLineItem(
+    lineItem: PendingLineItem,
+) {
+    SaleConfirmItem(
+        name = lineItem.product.name,
+        quantity = lineItem.quantity,
+        price = lineItem.product_price,
+    )
+}
+
+@Preview
+@Composable
+fun PreviewSaleConfirmItem() {
+    SaleConfirmItem(
+        name = "Drahtlose Erdbeeren",
+        price = 52.20,
+        fontSize = 40.sp,
+    )
+}
+
 /**
  * line item on the order confirm view
  */
 @Composable
 fun SaleConfirmItem(
-    lineItem: PendingLineItem,
+    modifier: Modifier = Modifier,
+    name: String,
+    price: Double? = null,
+    quantity: Int? = null,
+    fontSize: TextUnit = 24.sp,
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().height(50.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp)
     ) {
 
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp).weight(0.4f),
+            modifier = Modifier
+                .padding(horizontal = 10.dp)
+                .weight(0.45f),
             horizontalArrangement = Arrangement.End,
         ) {
             Text(
-                text = "%.02f".format(lineItem.product_price).replace('.', ','),
+                text = if (price != null) {
+                    "%.02f".format(price).replace('.', ',')
+                } else {
+                    ""
+                },
                 textAlign = TextAlign.Right,
-                modifier = Modifier.weight(0.25f),
-                fontSize = 24.sp
+                modifier = Modifier.weight(0.6f),
+                fontSize = fontSize
             )
 
             Text(
-                text = "×%2d".format(lineItem.quantity),
+                text = if (quantity != null) {
+                    "%s%2d".format(
+                        if (price != null) {
+                            "×"
+                        } else {
+                            ""
+                        }, quantity
+                    )
+                } else {
+                    ""
+                },
                 textAlign = TextAlign.Right,
-                modifier = Modifier.weight(0.25f),
-                fontSize = 24.sp
+                modifier = Modifier.weight(0.4f),
+                fontSize = fontSize
             )
         }
 
         Row(
-            modifier = Modifier.weight(0.6f),
+            modifier = Modifier.weight(0.55f),
         ) {
             Text(
-                text = lineItem.product.name,
-                fontSize = 24.sp,
+                text = name,
+                fontSize = fontSize,
                 modifier = Modifier
                     .padding(5.dp)
             )

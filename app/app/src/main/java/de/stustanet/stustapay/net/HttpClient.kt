@@ -39,9 +39,9 @@ class HttpClient(
         }
 
         install(HttpTimeout) {
-            connectTimeoutMillis = 400
+            connectTimeoutMillis = 2000
             requestTimeoutMillis = 3000
-            socketTimeoutMillis = 1000
+            socketTimeoutMillis = 3000
         }
 
         if (logRequests) {

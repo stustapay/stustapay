@@ -23,7 +23,7 @@ fun SaleBottomBar(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    Column {
+    Column(modifier = Modifier.padding(horizontal = 10.dp)) {
         Row(horizontalArrangement = Arrangement.SpaceEvenly) {
             status()
         }
@@ -38,7 +38,7 @@ fun SaleBottomBar(
                 modifier = Modifier
                     .fillMaxWidth(0.5f)
                     .height(70.dp)
-                    .padding(10.dp)
+                    .padding(end = 5.dp)
             ) {
 
                 Text(text = abortText, fontSize = 24.sp)
@@ -52,7 +52,7 @@ fun SaleBottomBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(70.dp)
-                    .padding(10.dp)
+                    .padding(start = 5.dp)
             ) {
                 Text(text = "✓")
             }
