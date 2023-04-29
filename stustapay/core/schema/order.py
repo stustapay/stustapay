@@ -152,6 +152,7 @@ class Order(BaseModel):
     total_price: float
     total_tax: float
     total_no_tax: float
+    cancels_order: Optional[int]
 
     booked_at: datetime.datetime
     payment_method: Optional[str]

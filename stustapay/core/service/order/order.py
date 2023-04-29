@@ -689,8 +689,8 @@ class OrderService(DBService):
                 "   vouchers_amount => $6)",
                 order_id,
                 transaction["description"],
-                transaction["source_account"],
                 transaction["target_account"],
+                transaction["source_account"],
                 transaction["amount"],
                 transaction["vouchers"],
             )
