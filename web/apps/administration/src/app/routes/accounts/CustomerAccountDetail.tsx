@@ -10,8 +10,7 @@ import { useCurrencyFormatter } from "@hooks";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { EditAccountBalanceModal } from "./components/EditAccountBalanceModal";
 import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAmountModal";
-import { selectCurrentUser, useAppSelector } from "@store";
-import { PrivilegeAdmin } from "@models";
+import { EditAccountTagModal } from "./components/EditAccountTagModal";
 
 export const CustomerAccountDetail: React.FC = () => {
   const { t } = useTranslation(["accounts", "common"]);
@@ -22,8 +21,7 @@ export const CustomerAccountDetail: React.FC = () => {
 
   const [balanceModalOpen, setBalanceModalOpen] = React.useState(false);
   const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
-  const user = useAppSelector(selectCurrentUser);
-  const isAdmin = user.privileges.includes(PrivilegeAdmin);
+  const [tagModalOpen, setTagModalOpen] = React.useState(false);
 
   const {
     account,
@@ -73,6 +71,11 @@ export const CustomerAccountDetail: React.FC = () => {
           </ListItem>
           <ListItem>
             <ListItemText primary={t("account.user_tag_uid")} secondary={account.user_tag_uid} />
+            <ListItemSecondaryAction>
+              <IconButton color="primary" onClick={() => setTagModalOpen(true)}>
+                <EditIcon />
+              </IconButton>
+            </ListItemSecondaryAction>
           </ListItem>
           <ListItem>
             <ListItemText primary={t("account.name")} secondary={account.name} />
@@ -112,6 +115,7 @@ export const CustomerAccountDetail: React.FC = () => {
             open={voucherModalOpen}
             handleClose={() => setVoucherModalOpen(false)}
           />
+          <EditAccountTagModal account={account} open={tagModalOpen} handleClose={() => setTagModalOpen(false)} />
         </>
       )}
       <OrderTable orders={orders} />

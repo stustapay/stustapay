@@ -10,7 +10,7 @@ from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.user import NewUser, Privilege, User, UserWithoutId
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
+from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
 from stustapay.core.service.common.error import NotFound
 
 
@@ -64,7 +64,7 @@ class UserService(DBService):
         return await self._create_user(conn=conn, new_user=new_user, password=password)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def create_user(
         self, *, conn: asyncpg.Connection, new_user: UserWithoutId, password: Optional[str] = None
     ) -> User:
@@ -86,7 +86,7 @@ class UserService(DBService):
         return user
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def create_user_with_tag(self, *, conn: asyncpg.Connection, new_user: NewUser) -> User:
         """
         Create a user at a Terminal, where a name and the user tag must be provided
@@ -112,7 +112,7 @@ class UserService(DBService):
         return await self._create_user(conn=conn, new_user=user)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def promote_to_cashier(self, *, conn: asyncpg.Connection, user_id: int) -> User:
         user = await self._get_user(conn=conn, user_id=user_id)
         if user is None:
@@ -131,7 +131,7 @@ class UserService(DBService):
         return await self._update_user(conn=conn, user_id=user.id, user=user)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def promote_to_finanzorga(self, *, conn: asyncpg.Connection, user_id: int) -> User:
         user = await self._get_user(conn=conn, user_id=user_id)
         if user is None:
@@ -150,7 +150,7 @@ class UserService(DBService):
         return await self._update_user(conn=conn, user_id=user.id, user=user)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def list_users(self, *, conn: asyncpg.Connection) -> list[User]:
         cursor = conn.cursor("select * from usr_with_privileges")
         result = []
@@ -165,7 +165,7 @@ class UserService(DBService):
         return User.parse_obj(row)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def get_user(self, *, conn: asyncpg.Connection, user_id: int) -> Optional[User]:
         return await self._get_user(conn, user_id)
 
@@ -193,12 +193,12 @@ class UserService(DBService):
         return await self._get_user(conn, user_id)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def update_user(self, *, conn: asyncpg.Connection, user_id: int, user: UserWithoutId) -> Optional[User]:
         return await self._update_user(conn=conn, user_id=user_id, user=user)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def delete_user(self, *, conn: asyncpg.Connection, user_id: int) -> bool:
         result = await conn.execute(
             "delete from usr where id = $1",
@@ -207,7 +207,7 @@ class UserService(DBService):
         return result != "DELETE 0"
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def link_user_to_cashier_account(self, *, conn: asyncpg.Connection, user_id: int, account_id: int) -> bool:
         # TODO: FIXME: is this the way it's going to stay?
         result = await conn.fetchval(
@@ -218,7 +218,7 @@ class UserService(DBService):
         return result is not None
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def link_user_to_transport_account(self, *, conn: asyncpg.Connection, user_id: int, account_id: int) -> bool:
         # TODO: FIXME: is this the way it's going to stay?
         result = await conn.fetchval(
@@ -250,7 +250,7 @@ class UserService(DBService):
         )
 
     @with_db_transaction
-    @requires_user_privileges()
+    @requires_user()
     async def logout_user(self, *, conn: asyncpg.Connection, current_user: User, token: str) -> bool:
         token_payload = self.auth_service.decode_user_jwt_payload(token)
         if token_payload is None:

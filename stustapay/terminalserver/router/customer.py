@@ -1,14 +1,36 @@
 from fastapi import APIRouter, status, HTTPException
 
 from stustapay.core.http.auth_till import CurrentAuthToken
-from stustapay.core.http.context import ContextTillService
+from stustapay.core.http.context import ContextTillService, ContextAccountService
 from stustapay.core.schema.customer import Customer
+from stustapay.core.util import BaseModel
 
 router = APIRouter(
     prefix="/customer",
     tags=["customer"],
     responses={404: {"description": "Not found"}},
 )
+
+
+class SwitchTagPayload(BaseModel):
+    customer_id: int
+    new_user_tag_uid: str
+
+
+@router.post("/switch_tag", summary="")
+async def switch_tag(
+    token: CurrentAuthToken,
+    payload: SwitchTagPayload,
+    account_service: ContextAccountService,
+):
+    if not payload.new_user_tag_uid.isnumeric():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+    success = await account_service.switch_account_tag_uid_terminal(
+        token=token, account_id=payload.customer_id, new_user_tag_uid=int(payload.new_user_tag_uid)
+    )
+    if not success:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
 
 @router.get("/{customer_tag_uid}", summary="Obtain a customer by tag uid", response_model=Customer)

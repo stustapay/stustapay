@@ -9,7 +9,7 @@ from stustapay.core.schema.till import (
 )
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user_privileges
+from stustapay.core.service.common.decorators import with_db_transaction, requires_user
 from stustapay.core.service.user import AuthService
 
 
@@ -19,7 +19,7 @@ class TillProfileService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def create_profile(self, *, conn: asyncpg.Connection, profile: NewTillProfile) -> TillProfile:
         row = await conn.fetchrow(
             "insert into till_profile (name, description, allow_top_up, allow_cash_out, layout_id) "
@@ -35,7 +35,7 @@ class TillProfileService(DBService):
         return TillProfile.parse_obj(row)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def list_profiles(self, *, conn: asyncpg.Connection) -> list[TillProfile]:
         cursor = conn.cursor("select * from till_profile")
         result = []
@@ -44,7 +44,7 @@ class TillProfileService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def get_profile(self, *, conn: asyncpg.Connection, profile_id: int) -> Optional[TillProfile]:
         row = await conn.fetchrow("select * from till_profile where id = $1", profile_id)
         if row is None:
@@ -53,7 +53,7 @@ class TillProfileService(DBService):
         return TillProfile.parse_obj(row)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def update_profile(
         self, *, conn: asyncpg.Connection, profile_id: int, profile: NewTillProfile
     ) -> Optional[TillProfile]:
@@ -75,7 +75,7 @@ class TillProfileService(DBService):
         return TillProfile.parse_obj(row)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def delete_profile(self, *, conn: asyncpg.Connection, till_profile_id: int) -> bool:
         result = await conn.execute(
             "delete from till_profile where id = $1",

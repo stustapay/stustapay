@@ -16,7 +16,7 @@ from stustapay.core.schema.till import NewTill, Till, TillProfile
 from stustapay.core.schema.user import Privilege, User, UserTag
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
+from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
 from stustapay.core.service.common.error import AccessDenied, NotFound
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
@@ -32,7 +32,7 @@ class TillService(DBService):
         self.layout = TillLayoutService(db_pool, config, auth_service)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def create_till(self, *, conn: asyncpg.Connection, till: NewTill) -> Till:
         row = await conn.fetchrow(
             "insert into till (name, description, registration_uuid, tse_id, active_shift, active_profile_id, active_user_id) "
@@ -50,7 +50,7 @@ class TillService(DBService):
         return Till.parse_obj(row)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def list_tills(self, *, conn: asyncpg.Connection) -> list[Till]:
         cursor = conn.cursor("select * from till")
         result = []
@@ -59,7 +59,7 @@ class TillService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def get_till(self, *, conn: asyncpg.Connection, till_id: str) -> Optional[Till]:
         row = await conn.fetchrow("select * from till where id = $1", till_id)
         if row is None:
@@ -68,7 +68,7 @@ class TillService(DBService):
         return Till.parse_obj(row)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def update_till(self, *, conn: asyncpg.Connection, till_id: int, till: NewTill) -> Optional[Till]:
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, tse_id = $4, active_shift = $5, active_profile_id = $6, active_user_id = $7 "
@@ -87,7 +87,7 @@ class TillService(DBService):
         return Till.parse_obj(row)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def delete_till(self, *, conn: asyncpg.Connection, till_id: int) -> bool:
         result = await conn.execute(
             "delete from till where id = $1",
@@ -114,7 +114,7 @@ class TillService(DBService):
         return TerminalRegistrationSuccess(till=till, token=token)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def logout_terminal_id(self, *, conn: asyncpg.Connection, till_id: int) -> bool:
         id_ = await conn.fetchval(
             "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
