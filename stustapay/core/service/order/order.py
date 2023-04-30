@@ -36,7 +36,7 @@ from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_terminal, requires_user_privileges, with_db_transaction
+from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
 from stustapay.core.service.common.error import InvalidArgument, ServiceException
 from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.util import BaseModel
@@ -173,7 +173,7 @@ class OrderService(DBService):
             return
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def register_for_order_updates(self, conn: asyncpg.Connection) -> Subscription:
         del conn  # unused
 
@@ -689,8 +689,8 @@ class OrderService(DBService):
                 "   vouchers_amount => $6)",
                 order_id,
                 transaction["description"],
-                transaction["source_account"],
                 transaction["target_account"],
+                transaction["source_account"],
                 transaction["amount"],
                 transaction["vouchers"],
             )
@@ -715,7 +715,7 @@ class OrderService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def list_orders(self, *, conn: asyncpg.Connection, customer_account_id: Optional[int] = None) -> list[Order]:
         if customer_account_id is not None:
             cursor = conn.cursor("select * from order_value where customer_account_id = $1", customer_account_id)
@@ -727,7 +727,7 @@ class OrderService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def list_orders_by_till(self, *, conn: asyncpg.Connection, till_id: int) -> list[Order]:
         cursor = conn.cursor("select * from order_value where till_id = $1", till_id)
         result = []
@@ -736,6 +736,6 @@ class OrderService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def get_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
         return await self._fetch_order(conn=conn, order_id=order_id)

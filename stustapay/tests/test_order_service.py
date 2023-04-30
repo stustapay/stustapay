@@ -9,6 +9,7 @@ from stustapay.core.service.order import OrderService, NotEnoughVouchersExceptio
 from stustapay.core.service.product import ProductService
 from .common import BaseTestCase
 from ..core.service.order.order import TillPermissionException, InvalidSaleException
+from ..core.service.till import TillService
 
 START_BALANCE = 100
 
@@ -19,6 +20,7 @@ class OrderLogicTest(BaseTestCase):
         self.product_service = ProductService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
+        self.till_service = TillService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
         self.order_service = OrderService(
             db_pool=self.db_pool,
             config=self.test_config,
@@ -111,6 +113,11 @@ class OrderLogicTest(BaseTestCase):
         self.till = await self.till_service.get_till(token=self.admin_token, till_id=self.till.id)
 
     async def test_basic_sale_flow(self):
+        customer_acc = await self.till_service.get_customer(
+            token=self.terminal_token, customer_tag_uid=self.customer_uid
+        )
+        self.assertIsNotNone(customer_acc)
+        starting_balance = customer_acc.balance
         new_sale = NewSale(
             buttons=[Button(till_button_id=self.beer_button.id, quantity=2)],
             customer_tag_uid=self.customer_uid,
@@ -132,6 +139,11 @@ class OrderLogicTest(BaseTestCase):
         # test that we can cancel this order
         success = await self.order_service.cancel_sale(token=self.terminal_token, order_id=order.id)
         self.assertTrue(success)
+        customer_acc = await self.till_service.get_customer(
+            token=self.terminal_token, customer_tag_uid=self.customer_uid
+        )
+        self.assertIsNotNone(customer_acc)
+        self.assertEqual(starting_balance, customer_acc.balance)
 
     async def test_returnable_products(self):
         new_sale = NewSale(

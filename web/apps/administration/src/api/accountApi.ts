@@ -3,7 +3,6 @@ import { Account } from "@models/account";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
-
 const accountAdapter = createEntityAdapter<Account>();
 
 export const accountApi = createApi({
@@ -46,6 +45,14 @@ export const accountApi = createApi({
       }),
       invalidatesTags: ["account"],
     }),
+    updateTagUid: builder.mutation<void, { accountId: number; newTagUid: string }>({
+      query: ({ accountId, newTagUid }) => ({
+        url: `/accounts/${accountId}/update-tag-uid`,
+        method: "POST",
+        body: { new_tag_uid: newTagUid },
+      }),
+      invalidatesTags: ["account"],
+    }),
   }),
 });
 
@@ -58,4 +65,5 @@ export const {
   useFindAccountsMutation,
   useUpdateBalanceMutation,
   useUpdateVoucherAmountMutation,
+  useUpdateTagUidMutation,
 } = accountApi;

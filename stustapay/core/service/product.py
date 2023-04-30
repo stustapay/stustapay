@@ -7,7 +7,7 @@ from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user_privileges
+from stustapay.core.service.common.decorators import with_db_transaction, requires_user
 from stustapay.core.service.common.error import ServiceException
 
 
@@ -29,7 +29,7 @@ class ProductService(DBService):
         return Product.parse_obj(result)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def create_product(self, *, conn: asyncpg.Connection, product: NewProduct) -> Product:
         product_id = await conn.fetchval(
             "insert into product "
@@ -59,7 +59,7 @@ class ProductService(DBService):
         return created_product
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def list_products(self, *, conn: asyncpg.Connection) -> list[Product]:
         cursor = conn.cursor("select * from product_with_tax_and_restrictions")
         result = []
@@ -68,12 +68,12 @@ class ProductService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def get_product(self, *, conn: asyncpg.Connection, product_id: int) -> Optional[Product]:
         return await self._fetch_product(conn=conn, product_id=product_id)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def update_product(
         self, *, conn: asyncpg.Connection, product_id: int, product: NewProduct
     ) -> Optional[Product]:
@@ -123,7 +123,7 @@ class ProductService(DBService):
         return await self._fetch_product(conn=conn, product_id=product_id)
 
     @with_db_transaction
-    @requires_user_privileges([Privilege.admin])
+    @requires_user([Privilege.admin])
     async def delete_product(self, *, conn: asyncpg.Connection, product_id: int) -> bool:
         result = await conn.execute(
             "delete from product where id = $1",

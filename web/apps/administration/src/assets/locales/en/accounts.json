@@ -12,7 +12,10 @@
         "newBalance": "New Balance",
         "changeVoucherAmount": "Change Voucher Amount",
         "oldVoucherAmount": "Old Voucher Amount",
-        "newVoucherAmount": "New Voucher Amount"
+        "newVoucherAmount": "New Voucher Amount",
+        "changeTag": "Change associated tag",
+        "oldTagUid": "UID of old tag",
+        "newTagUid": "UID of new tag"
     },
     "findAccounts": "Find Accounts",
     "searchTerm": "Search Term"

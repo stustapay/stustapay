@@ -39,7 +39,7 @@ def with_db_transaction(func):
     return wrapper
 
 
-def requires_user_privileges(privileges: Optional[list[Privilege]] = None):
+def requires_user(privileges: Optional[list[Privilege]] = None):
     """
     Check if a user is logged in via a user jwt token and has ALL provided privileges.
     If the current_user is already know from a previous authentication, it can be used the check the privileges

@@ -106,8 +106,6 @@ values
     -- todo: cash_drawer, deposit,
     on conflict do nothing;
 
-
-
 -- bookkeeping account
 create table if not exists account (
     id bigint primary key generated always as identity (start with 1000),
@@ -138,6 +136,31 @@ values
     (6, null, 'virtual', 'Money / Voucher create', 'Account which will be charged on manual account balance updates and voucher top ups')
     on conflict do nothing;
 
+create table if not exists account_tag_association_history (
+    account_id bigint not null references account(id),
+    user_tag_uid numeric(20) references user_tag(uid),
+    mapping_was_valid_until timestamptz not null default now(),
+    primary key (account_id, user_tag_uid, mapping_was_valid_until)
+);
+
+create or replace function update_tag_association_history() returns trigger as
+$$
+begin
+    -- this check is already done in the trigger definition but still included here as to not forget it in the future
+    if NEW.user_tag_uid = OLD.user_tag_uid or OLD.user_tag_uid is null then
+        return NEW;
+    end if;
+    insert into account_tag_association_history (account_id, user_tag_uid)
+    values (NEW.id, OLD.user_tag_uid);
+    return NEW;
+end
+$$ language plpgsql;
+
+create trigger update_tag_association_history_trigger
+    after update of user_tag_uid on account
+    for each row
+    when (OLD.user_tag_uid is distinct from NEW.user_tag_uid and OLD.user_tag_uid is not null)
+    execute function update_tag_association_history();
 
 -- people working with the payment system
 create table if not exists usr (
