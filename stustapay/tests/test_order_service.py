@@ -1,15 +1,15 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import uuid
 
-from stustapay.core.schema.order import NewSale, Button, NewTopUp, TopUpType
+from stustapay.core.schema.order import NewSale, Button, NewTopUp, TopUpType, NewPayOut
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile, NewTillButton
 from stustapay.core.schema.user import Privilege, UserWithoutId
 from stustapay.core.service.order import OrderService, NotEnoughVouchersException
+from stustapay.core.service.order.order import TillPermissionException, InvalidSaleException, NotEnoughFundsException
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.till import TillService
 from .common import BaseTestCase
-from ..core.service.order.order import TillPermissionException, InvalidSaleException
-from ..core.service.till import TillService
 
 START_BALANCE = 100
 
@@ -316,3 +316,32 @@ class OrderLogicTest(BaseTestCase):
         self.assertIsNotNone(completed_topup)
         self.assertEqual(completed_topup.uuid, new_topup.uuid)
         # todo check cashier account balance
+
+    async def test_cash_pay_out_flow_no_amount(self):
+        new_pay_out = NewPayOut(customer_tag_uid=self.customer_uid)
+        pending_pay_out = await self.order_service.check_pay_out(token=self.terminal_token, new_pay_out=new_pay_out)
+        self.assertEqual(pending_pay_out.old_balance, START_BALANCE)
+        self.assertEqual(pending_pay_out.new_balance, 0)
+        self.assertEqual(pending_pay_out.amount, -START_BALANCE)
+        completed_pay_out = await self.order_service.book_pay_out(token=self.terminal_token, new_pay_out=new_pay_out)
+        self.assertIsNotNone(completed_pay_out)
+
+        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.customer_uid)
+        self.assertEqual(0, customer.balance)
+
+    async def test_cash_pay_out_flow_with_amount(self):
+        new_pay_out = NewPayOut(customer_tag_uid=self.customer_uid, amount=-2 * START_BALANCE)
+        with self.assertRaises(NotEnoughFundsException):
+            await self.order_service.check_pay_out(token=self.terminal_token, new_pay_out=new_pay_out)
+
+        new_pay_out = NewPayOut(customer_tag_uid=self.customer_uid, amount=-20)
+        pending_pay_out = await self.order_service.check_pay_out(token=self.terminal_token, new_pay_out=new_pay_out)
+        self.assertEqual(pending_pay_out.old_balance, START_BALANCE)
+        self.assertEqual(pending_pay_out.new_balance, START_BALANCE - 20)
+        self.assertEqual(pending_pay_out.amount, -20)
+
+        completed_pay_out = await self.order_service.book_pay_out(token=self.terminal_token, new_pay_out=new_pay_out)
+        self.assertIsNotNone(completed_pay_out)
+
+        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.customer_uid)
+        self.assertEqual(START_BALANCE - 20, customer.balance)

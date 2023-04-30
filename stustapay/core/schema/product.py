@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 DISCOUNT_PRODUCT_ID = 1
 TOP_UP_PRODUCT_ID = 2
-CASH_OUT_PRODUCT_ID = 3
+PAY_OUT_PRODUCT_ID = 3
 
 
 class ProductRestriction(enum.Enum):
