@@ -133,7 +133,8 @@ values
     (3, null, 'virtual', 'Sumup', 'source account for sumup top up '),
     (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here'),
     (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement'),
-    (6, null, 'virtual', 'Money / Voucher create', 'Account which will be charged on manual account balance updates and voucher top ups')
+    (6, null, 'virtual', 'Money / Voucher create', 'Account which will be charged on manual account balance updates and voucher top ups'),
+    (7, null, 'virtual', 'Cash Exit', 'target account when cash exists the system, e.g. cash pay outs')
     on conflict do nothing;
 
 create table if not exists account_tag_association_history (
@@ -264,7 +265,10 @@ values
     ('topup_sumup'),
     -- buy items to consume
     ('sale'),
-    ('cancel_sale')
+    -- cancel a sale
+    ('cancel_sale'),
+    -- pay out remaining balance on a tag
+    ('pay_out')
     on conflict do nothing;
 
 

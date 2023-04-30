@@ -14,6 +14,7 @@ class OrderType(enum.Enum):
     cancel_sale = "cancel_sale"
     topup_cash = "topup_cash"
     topup_sumup = "topup_sumup"
+    pay_out = "pay_out"
 
 
 class TopUpType(enum.Enum):
@@ -130,6 +131,36 @@ class CompletedSale(PendingSale):
     id: int
     uuid: UUID
 
+    booked_at: datetime.datetime
+
+    cashier_id: int
+    till_id: int
+
+
+class NewPayOut(BaseModel):
+    # if no amount is passed, the current customer account balance is assumed as payout
+    customer_tag_uid: int
+    amount: Optional[float] = None
+
+
+class PendingPayOut(NewPayOut):
+    amount: float
+
+    customer_account_id: int
+
+    old_balance: float
+    new_balance: float
+
+
+class CompletedPayOut(BaseModel):
+    customer_tag_uid: int
+    customer_account_id: int
+
+    amount: float
+    old_balance: float
+    new_balance: float
+
+    uuid: UUID
     booked_at: datetime.datetime
 
     cashier_id: int

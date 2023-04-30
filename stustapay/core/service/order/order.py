@@ -16,6 +16,7 @@ from stustapay.core.schema.account import (
     get_source_account,
     get_target_account,
     ACCOUNT_SALE_EXIT,
+    ACCOUNT_CASH_EXIT,
 )
 from stustapay.core.schema.order import (
     CompletedSale,
@@ -29,8 +30,17 @@ from stustapay.core.schema.order import (
     CompletedTopUp,
     Button,
     TopUpType,
+    NewPayOut,
+    PendingPayOut,
+    CompletedPayOut,
 )
-from stustapay.core.schema.product import Product, DISCOUNT_PRODUCT_ID, ProductRestriction, TOP_UP_PRODUCT_ID
+from stustapay.core.schema.product import (
+    Product,
+    DISCOUNT_PRODUCT_ID,
+    ProductRestriction,
+    TOP_UP_PRODUCT_ID,
+    PAY_OUT_PRODUCT_ID,
+)
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.auth import AuthService
@@ -696,6 +706,96 @@ class OrderService(DBService):
             )
 
         return True
+
+    @with_db_transaction
+    @requires_terminal(user_privileges=[Privilege.cashier])
+    async def check_pay_out(
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_pay_out: NewPayOut
+    ) -> PendingPayOut:
+        if new_pay_out.amount is not None and new_pay_out.amount > 0.0:
+            raise InvalidArgument("Only payouts with a negative amount are allowed")
+
+        can_pay_out = await conn.fetchval(
+            "select allow_cash_out from till_profile where id = $1", current_terminal.till.active_profile_id
+        )
+        if not can_pay_out:
+            raise TillPermissionException("This terminal is not allowed to pay out customers")
+
+        customer_account = await self._fetch_customer_by_user_tag(
+            conn=conn, customer_tag_uid=new_pay_out.customer_tag_uid
+        )
+
+        if new_pay_out.amount is None:
+            new_pay_out.amount = -customer_account.balance
+
+        new_balance = customer_account.balance + new_pay_out.amount
+
+        if new_balance < 0:
+            raise NotEnoughFundsException(needed_fund=abs(new_pay_out.amount), available_fund=customer_account.balance)
+
+        return PendingPayOut(
+            amount=new_pay_out.amount,
+            customer_tag_uid=new_pay_out.customer_tag_uid,
+            customer_account_id=customer_account.id,
+            old_balance=customer_account.balance,
+            new_balance=new_balance,
+        )
+
+    @with_db_transaction
+    @requires_terminal(user_privileges=[Privilege.cashier])
+    async def book_pay_out(
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_pay_out: NewPayOut
+    ) -> CompletedPayOut:
+        pending_pay_out: PendingPayOut = await self.check_pay_out(  # pylint: disable=unexpected-keyword-arg
+            conn=conn, current_terminal=current_terminal, current_user=current_user, new_pay_out=new_pay_out
+        )
+
+        order_row = await conn.fetchrow(
+            "insert into ordr (item_count, order_type, cashier_id, till_id, customer_account_id) "
+            "values (1, 'pay_out', $1, $2, $3) "
+            "returning id, uuid, booked_at",
+            current_user.id,
+            current_terminal.till.id,
+            pending_pay_out.customer_account_id,
+        )
+        order_id = order_row["id"]
+        order_uuid = order_row["uuid"]
+        booked_at = order_row["booked_at"]
+
+        await conn.execute(
+            "insert into line_item (order_id, item_id, product_id, quantity, product_price, tax_name, tax_rate) "
+            "values ($1, $2, $3, $4, $5, $6, $7)",
+            order_id,
+            1,  # item_id
+            PAY_OUT_PRODUCT_ID,
+            1,  # quantity
+            pending_pay_out.amount,
+            "none",
+            0,
+        )
+
+        prepared_bookings: Dict[BookingIdentifier, float] = {
+            BookingIdentifier(
+                source_account_id=pending_pay_out.customer_account_id, target_account_id=ACCOUNT_CASH_VAULT
+            ): -pending_pay_out.amount,
+            BookingIdentifier(
+                source_account_id=ACCOUNT_CASH_VAULT, target_account_id=ACCOUNT_CASH_EXIT
+            ): -pending_pay_out.amount,
+        }
+
+        await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
+
+        return CompletedPayOut(
+            amount=pending_pay_out.amount,
+            customer_tag_uid=pending_pay_out.customer_tag_uid,
+            customer_account_id=pending_pay_out.customer_account_id,
+            old_balance=pending_pay_out.old_balance,
+            new_balance=pending_pay_out.new_balance,
+            uuid=order_uuid,
+            booked_at=booked_at,
+            cashier_id=current_user.id,
+            till_id=current_terminal.till.id,
+        )
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
