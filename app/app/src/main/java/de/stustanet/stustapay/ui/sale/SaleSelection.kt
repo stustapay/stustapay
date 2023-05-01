@@ -125,6 +125,9 @@ fun SaleSelection(
         },
         bottomBar = {
             SaleBottomBar(
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .padding(bottom = 5.dp),
                 status = {
                     Text(
                         text = status,

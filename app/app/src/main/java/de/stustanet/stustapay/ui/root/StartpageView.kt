@@ -1,106 +1,42 @@
 package de.stustanet.stustapay.ui.root
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.model.Access
-import de.stustanet.stustapay.model.TerminalConfig
-import de.stustanet.stustapay.model.User
 import de.stustanet.stustapay.ui.nav.NavDest
+import kotlinx.coroutines.launch
 
-data class NavMenuItem(
-    val icon: ImageVector,
-    val label: String,
-    val navDestination: NavDest? = null,
-    val isUnread: Boolean = false,
-    val dividePrevious: Boolean = false,
-    val canAccess: (User, TerminalConfig) -> Boolean = { _, _ -> false },
-    val alwaysShow: Boolean = false
-)
-
+@Preview
 @Composable
-private fun getNavItems(): List<NavMenuItem> {
-    val itemsList = arrayListOf<NavMenuItem>()
-
-    itemsList.add(
-        NavMenuItem(
-            icon = Icons.Filled.ShoppingCart,
-            label = "Product Sale",
-            navDestination = RootNavDests.sale,
-            canAccess = { u, _ -> Access.canSell(u) }
-        )
-    )
-    itemsList.add(
-        NavMenuItem(
-            icon = Icons.Filled.Add,
-            label = "Account TopUp",
-            navDestination = RootNavDests.topup,
-            canAccess = { _, t -> Access.canTopUp(t) }
-        )
-    )
-    itemsList.add(
-        NavMenuItem(
-            icon = Icons.Filled.Info,
-            label = "Account Status",
-            navDestination = RootNavDests.status,
-            canAccess = { u, _ -> Access.canSell(u) }
-        )
-    )
-    itemsList.add(
-        NavMenuItem(
-            icon = Icons.Filled.List,
-            label = "Transaction History",
-            navDestination = RootNavDests.history,
-            canAccess = { u, _ -> Access.canSell(u) }
-        )
-    )
-    itemsList.add(
-        NavMenuItem(
-            icon = Icons.Filled.Person,
-            navDestination = RootNavDests.user,
-            label = "User",
-            alwaysShow = true
-        )
-    )
-    itemsList.add(
-        NavMenuItem(
-            icon = Icons.Filled.Settings,
-            label = "Settings",
-            navDestination = RootNavDests.settings,
-            dividePrevious = true,
-            alwaysShow = true
-        )
-    )
-    itemsList.add(
-        NavMenuItem(
-            icon = Icons.Filled.Send,
-            label = "Development",
-            navDestination = RootNavDests.development,
-            canAccess = { u, _ -> Access.canHackTheSystem(u) }
-        )
-    )
-
-    return itemsList
+fun PreviewStartpageView() {
+    StartpageView(viewModel = hiltViewModel())
 }
 
 
@@ -110,83 +46,88 @@ fun StartpageView(
     viewModel: StartpageViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val navItems = getNavItems()
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(null) {
+    LaunchedEffect(Unit) {
         viewModel.fetchAccessData()
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(brush = Brush.verticalGradient(colors = gradientColors)),
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = "StuStaPay",
-            fontSize = 30.sp,
-            modifier = Modifier.padding(top = 10.dp)
-        )
-
-        LoginProfile()
-
-        for (item in navItems) {
-            if (item.dividePrevious) {
-                Spacer(modifier = Modifier.weight(1.0f))
-                Divider()
-            }
-
-            if (item.alwaysShow || uiState.checkAccess(item.canAccess)) {
-                StartpageEntry(item = item, navigateTo = navigateTo)
-            }
-        }
-    }
-}
-
-
-@Composable
-private fun StartpageEntry(
-    item: NavMenuItem,
-    unreadBadgeColor: Color = MaterialTheme.colors.secondary,
-    navigateTo: (NavDest) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                if (item.navDestination != null) {
-                    navigateTo(item.navDestination)
+        IconButton(
+            modifier = Modifier
+                .align(alignment = Alignment.TopEnd)
+                .padding(top = 15.dp, end = 20.dp)
+                .size(30.dp),
+            onClick = {
+                scope.launch {
+                    viewModel.fetchAccessData()
                 }
             }
-            .padding(horizontal = 24.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+        ) {
+            Icon(Icons.Filled.Refresh, "Refresh")
+        }
 
-        Box {
-            Icon(
-                imageVector = item.icon,
-                modifier = Modifier
-                    .padding(all = 2.dp)
-                    .size(size = 28.dp),
-                contentDescription = null,
-                tint = MaterialTheme.colors.primary
+        Column(
+            modifier = Modifier.fillMaxSize().padding(top = 5.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            val title = uiState.title()
+            Text(
+                text = title.title,
+                fontSize = 30.sp,
+                modifier = Modifier.padding(top = 10.dp)
             )
-            if (item.isUnread) {
-                Box(
-                    modifier = Modifier
-                        .size(size = 8.dp)
-                        .align(alignment = Alignment.TopEnd)
-                        .background(color = unreadBadgeColor, shape = CircleShape)
+            if (title.subtitle != null) {
+                Text(
+                    text = title.subtitle,
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(top = 10.dp)
+                )
+            }
+
+            LoginProfile(viewModel)
+
+            for (item in startpageItems) {
+                if (uiState.checkAccess(item.canAccess)) {
+                    StartpageEntry(item = item, navigateTo = navigateTo)
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1.0f))
+            Divider()
+
+            StartpageEntry(
+                item = StartpageItem(
+                    icon = Icons.Filled.Person,
+                    navDestination = RootNavDests.user,
+                    label = "User",
+                ),
+                navigateTo = navigateTo
+            )
+            StartpageEntry(
+                item = StartpageItem(
+                    icon = Icons.Filled.Settings,
+                    label = "Settings",
+                    navDestination = RootNavDests.settings,
+                ),
+                navigateTo = navigateTo
+            )
+
+            if (uiState.checkAccess { u, _ -> Access.canHackTheSystem(u) }) {
+                StartpageEntry(
+                    item = StartpageItem(
+                        icon = Icons.Filled.Send,
+                        label = "Development",
+                        navDestination = RootNavDests.development,
+                    ),
+                    navigateTo = navigateTo
                 )
             }
         }
-
-        Text(
-            modifier = Modifier.padding(start = 16.dp),
-            text = item.label,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Medium,
-        )
     }
 }

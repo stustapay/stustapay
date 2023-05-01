@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,18 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun LoginProfile(
-    viewModel: LoginProfileViewModel = hiltViewModel()
+    viewModel: StartpageViewModel
 ) {
     val loginProfileUiState: LoginProfileUIState by viewModel.loginProfileUIState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(true) {
-        viewModel.fetchLogin()
-    }
 
     var image: ImageVector = Icons.Filled.Person
     if (loginProfileUiState is LoginProfileUIState.NotLoggedIn) {
@@ -46,7 +40,6 @@ fun LoginProfile(
             .padding(top = 2.dp),
         contentDescription = "Avatar",
         colorFilter = ColorFilter.tint(MaterialTheme.colors.primary)
-
     )
 
     when (val login = loginProfileUiState) {

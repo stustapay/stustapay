@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun SaleBottomBar(
+    modifier: Modifier = Modifier,
     status: @Composable () -> Unit,
     saleConfig: SaleConfig,
     onAbort: () -> Unit,
@@ -23,11 +24,17 @@ fun SaleBottomBar(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    Column(modifier = Modifier.padding(horizontal = 10.dp)) {
+    Column(
+        modifier = modifier
+            .height(70.dp)
+    ) {
         Row(horizontalArrangement = Arrangement.SpaceEvenly) {
             status()
         }
-        Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.padding(vertical = 3.dp)
+        ) {
             Button(
                 enabled = saleConfig.ready,
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
@@ -37,7 +44,6 @@ fun SaleBottomBar(
                 },
                 modifier = Modifier
                     .fillMaxWidth(0.5f)
-                    .height(70.dp)
                     .padding(end = 5.dp)
             ) {
 
@@ -51,7 +57,6 @@ fun SaleBottomBar(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(70.dp)
                     .padding(start = 5.dp)
             ) {
                 Text(text = "✓")
