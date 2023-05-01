@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NewTillLayout, NewTillLayoutSchema } from "@models";
+import { NewTillLayout, NewTillLayoutSchema } from "@stustapay/models";
 import { useCreateTillLayoutMutation } from "@api";
 import { useTranslation } from "react-i18next";
 import { TillLayoutChange } from "./TillLayoutChange";

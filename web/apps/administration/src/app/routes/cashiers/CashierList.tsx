@@ -5,7 +5,7 @@ import { Paper, ListItem, FormControlLabel, Checkbox, ListItemText } from "@mui/
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { selectCashierAll, selectTillById, useGetCashiersQuery, useGetTillsQuery } from "@api";
-import { Cashier } from "@models";
+import { Cashier } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 import { z } from "zod";
 import { StringyBoolean, useQueryState } from "@stustapay/utils";

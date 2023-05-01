@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { NumericInput } from "@components";
 import { useTranslation } from "react-i18next";
-import { Account } from "@models";
+import { Account } from "@stustapay/models";
 import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
 import { useUpdateBalanceMutation } from "@api";
 import { toast } from "react-toastify";

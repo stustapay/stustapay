@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
-import { NewProduct } from "@models";
+import { NewProduct } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";

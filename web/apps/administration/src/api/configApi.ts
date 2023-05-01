@@ -1,8 +1,8 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { ConfigEntry } from "@models";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
+import { ConfigEntry } from "@stustapay/models";
 
 const configAdaptor = createEntityAdapter<ConfigEntry>({
   selectId: (entry) => entry.key,

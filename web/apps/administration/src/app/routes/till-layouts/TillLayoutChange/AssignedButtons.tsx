@@ -5,7 +5,7 @@ import { Loading } from "@stustapay/components";
 import { useTranslation } from "react-i18next";
 import { DraggableButton } from "./DraggableButton";
 import { DragArea } from "./DragArea";
-import { TillButton } from "@models";
+import { TillButton } from "@stustapay/models";
 
 export interface AssignedButtonsProps {
   assignedButtonIds: number[];

@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTillButton, Product } from "@models";
+import { NewTillButton, Product } from "@stustapay/models";
 import { selectProductById, useGetProductsQuery } from "@api";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { ProductSelect } from "./ProductSelect";

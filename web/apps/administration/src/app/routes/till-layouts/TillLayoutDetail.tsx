@@ -12,7 +12,7 @@ import {
   selectTillButtonById,
 } from "@api";
 import { Loading } from "@stustapay/components";
-import { TillButton } from "@models";
+import { TillButton } from "@stustapay/models";
 
 export const TillLayoutDetail: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);

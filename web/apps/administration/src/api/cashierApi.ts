@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { Cashier, CashierCloseOutResult, CashierShift, NewCashierCloseOut } from "@models/cashiers";
+import { Cashier, CashierCloseOutResult, CashierShift, NewCashierCloseOut } from "@stustapay/models";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";

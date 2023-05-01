@@ -1,8 +1,8 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { NewProduct, Product } from "@models/product";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
+import { NewProduct, Product } from "@stustapay/models";
 
 const productAdapter = createEntityAdapter<Product>({
   sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),

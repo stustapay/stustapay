@@ -1,7 +1,7 @@
 import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
-import { NewUser, NewUserSchema } from "@models";
+import { NewUser, NewUserSchema } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";

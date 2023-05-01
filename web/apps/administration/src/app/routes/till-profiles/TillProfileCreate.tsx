@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NewTillProfile, NewTillProfileSchema } from "@models";
+import { NewTillProfile, NewTillProfileSchema } from "@stustapay/models";
 import { useCreateTillProfileMutation } from "@api";
 import { useTranslation } from "react-i18next";
 import { TillProfileChange } from "./TillProfileChange";

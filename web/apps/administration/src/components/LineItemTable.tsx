@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { selectProductById, useGetProductsQuery, selectTaxRateById, useGetTaxRatesQuery } from "@api";
 import { Loading } from "@stustapay/components";
-import { LineItem } from "@models";
+import { LineItem } from "@stustapay/models";
 import { useCurrencyFormatter } from "src/hooks";
 
 export interface LineItemTableProps {

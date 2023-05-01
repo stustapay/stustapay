@@ -15,7 +15,7 @@ import { ButtonLink, IconButtonLink, ListItemLink } from "@components";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { useCurrencyFormatter } from "@hooks";
-import { CashierShift } from "@models";
+import { CashierShift } from "@stustapay/models";
 import { formatDate } from "@stustapay/utils";
 
 export const CashierDetail: React.FC = () => {

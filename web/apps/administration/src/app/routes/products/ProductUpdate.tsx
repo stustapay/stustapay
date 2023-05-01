@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { selectProductById, useGetProductByIdQuery, useUpdateProductMutation } from "@api";
 import { Navigate, useParams } from "react-router-dom";
 import { ProductChange } from "./ProductChange";
-import { ProductSchema } from "@models/product";
+import { ProductSchema } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 
 export const ProductUpdate: React.FC = () => {

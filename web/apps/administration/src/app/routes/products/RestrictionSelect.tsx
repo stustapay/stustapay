@@ -10,7 +10,7 @@ import {
   Checkbox,
   ListItemText,
 } from "@mui/material";
-import { ProductRestriction, ProductRestrictions } from "@models";
+import { ProductRestriction, ProductRestrictions } from "@stustapay/models";
 
 export interface RestrictionSelectProps
   extends Omit<SelectProps, "value" | "onChange" | "margin" | "multiple" | "renderValue"> {

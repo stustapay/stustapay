@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { TillProfile } from "@models";
+import { TillProfile } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 
 export const TillProfileList: React.FC = () => {

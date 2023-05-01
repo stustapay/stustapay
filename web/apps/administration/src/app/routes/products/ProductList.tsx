@@ -19,7 +19,7 @@ import {
 } from "@api";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
-import { Product } from "@models";
+import { Product } from "@stustapay/models";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "src/hooks";

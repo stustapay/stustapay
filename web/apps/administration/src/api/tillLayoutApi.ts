@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { NewTillLayout, TillLayout, TillButton, NewTillButton, UpdateTillButton } from "@models/till";
+import { NewTillLayout, TillLayout, TillButton, NewTillButton, UpdateTillButton } from "@stustapay/models";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";

@@ -4,7 +4,7 @@ import { ListItem, ListItemText, useTheme } from "@mui/material";
 import { useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { DraggableItemTypes } from "@core/draggable";
-import { TillButton } from "@models";
+import { TillButton } from "@stustapay/models";
 
 export interface DraggableButtonProps {
   button: TillButton;

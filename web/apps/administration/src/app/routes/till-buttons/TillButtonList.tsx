@@ -6,7 +6,7 @@ import { selectTillButtonAll, useDeleteTillButtonMutation, useGetTillButtonsQuer
 import { useTranslation } from "react-i18next";
 import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { useNavigate } from "react-router-dom";
-import { TillButton } from "@models";
+import { TillButton } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 
 export const TillButtonList: React.FC = () => {
