@@ -34,6 +34,13 @@ async def get_account(token: CurrentAuthToken, account_service: ContextAccountSe
     return account
 
 
+@router.post("/accounts/{account_id}/disable")
+async def disable_account(token: CurrentAuthToken, account_service: ContextAccountService, account_id: int):
+    success = await account_service.disable_account(token=token, account_id=account_id)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+
 class UpdateBalancePayload(BaseModel):
     new_balance: float
 

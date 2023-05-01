@@ -59,6 +59,15 @@ class AccountService(DBService):
         return result
 
     @with_db_transaction
+    @requires_user([Privilege.admin, Privilege.finanzorga])
+    async def disable_account(self, *, conn: asyncpg.Connection, account_id: int) -> bool:
+        row = await conn.fetchval("update account set user_tag_uid = null where id = $1 returning id", account_id)
+        if row is None:
+            raise NotFound(element_typ="account", element_id=str(account_id))
+
+        return True
+
+    @with_db_transaction
     @requires_user([Privilege.admin])
     async def update_account_balance(
         self, *, conn: asyncpg.Connection, current_user: User, account_id: int, new_balance: float

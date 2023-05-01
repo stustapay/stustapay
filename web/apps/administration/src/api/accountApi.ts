@@ -31,6 +31,13 @@ export const accountApi = createApi({
     findAccounts: builder.mutation<Account[], string>({
       query: (searchTerm) => ({ url: "/accounts/find-accounts/", method: "POST", body: { search_term: searchTerm } }),
     }),
+    disableAccount: builder.mutation<void, { accountId: number }>({
+      query: ({ accountId }) => ({
+        url: `/accounts/${accountId}/disable`,
+        method: "POST",
+      }),
+      invalidatesTags: ["account"],
+    }),
     updateBalance: builder.mutation<void, { accountId: number; newBalance: number }>({
       query: ({ accountId, newBalance }) => ({
         url: `/accounts/${accountId}/update-balance`,
@@ -68,4 +75,5 @@ export const {
   useUpdateBalanceMutation,
   useUpdateVoucherAmountMutation,
   useUpdateTagUidMutation,
+  useDisableAccountMutation,
 } = accountApi;

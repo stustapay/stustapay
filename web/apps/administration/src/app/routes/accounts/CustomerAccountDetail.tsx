@@ -1,8 +1,14 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, IconButton } from "@mui/material";
+import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, IconButton, Button } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { selectAccountById, selectOrderAll, useGetAccountByIdQuery, useGetOrderByCustomerQuery } from "@api";
+import {
+  selectAccountById,
+  selectOrderAll,
+  useDisableAccountMutation,
+  useGetAccountByIdQuery,
+  useGetOrderByCustomerQuery,
+} from "@api";
 import { Loading } from "@stustapay/components";
 import { toast } from "react-toastify";
 import { OrderTable } from "@components";
@@ -18,6 +24,7 @@ export const CustomerAccountDetail: React.FC = () => {
   const navigate = useNavigate();
 
   const formatCurrency = useCurrencyFormatter();
+  const [disableAccount] = useDisableAccountMutation();
 
   const [balanceModalOpen, setBalanceModalOpen] = React.useState(false);
   const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
@@ -54,11 +61,28 @@ export const CustomerAccountDetail: React.FC = () => {
     return null;
   }
 
+  const handleDisableAccount = () => {
+    disableAccount({ accountId: Number(accountId) })
+      .unwrap()
+      .then(() => {
+        toast.success(t("account.disableSuccess"));
+      })
+      .catch((e) => {
+        console.error("Error while disabling account", e);
+        toast.error(`Error while disabling account`);
+      });
+  };
+
   return (
     <>
       <Paper>
         <ListItem>
           <ListItemText primary={account.id} />
+          <ListItemSecondaryAction>
+            <Button color="error" onClick={handleDisableAccount}>
+              {t("account.disable")}
+            </Button>
+          </ListItemSecondaryAction>
         </ListItem>
       </Paper>
       <Paper sx={{ mt: 2 }}>
