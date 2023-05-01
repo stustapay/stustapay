@@ -51,7 +51,7 @@ export const SystemAccountDetail: React.FC = () => {
             <ListItemText primary={t("account.type")} secondary={account.type} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("account.user_tag_uid")} secondary={account.user_tag_uid} />
+            <ListItemText primary={t("account.user_tag_uid")} secondary={String(account.user_tag_uid)} />
           </ListItem>
           <ListItem>
             <ListItemText primary={t("account.name")} secondary={account.name} />

@@ -47,7 +47,7 @@ export const accountApi = createApi({
       }),
       invalidatesTags: ["account"],
     }),
-    updateTagUid: builder.mutation<void, { accountId: number; newTagUid: string }>({
+    updateTagUid: builder.mutation<void, { accountId: number; newTagUid: bigint }>({
       query: ({ accountId, newTagUid }) => ({
         url: `/accounts/${accountId}/update-tag-uid`,
         method: "POST",

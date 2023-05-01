@@ -16,7 +16,7 @@ export const NewUserSchema = z.object({
   description: z.string().optional(),
   privileges: z.array(PrivilegeSchema),
   password: z.string().optional().nullable(),
-  user_tag_uid: z.number().optional().nullable(),
+  user_tag_uid: z.bigint().optional().nullable(),
   transport_account_id: z.number().optional().nullable(),
   cashier_account_id: z.number().optional().nullable(),
 });

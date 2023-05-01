@@ -70,7 +70,7 @@ export const CustomerAccountDetail: React.FC = () => {
             <ListItemText primary={t("account.type")} secondary={account.type} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("account.user_tag_uid")} secondary={account.user_tag_uid} />
+            <ListItemText primary={t("account.user_tag_uid")} secondary={String(account.user_tag_uid)} />
             <ListItemSecondaryAction>
               <IconButton color="primary" onClick={() => setTagModalOpen(true)}>
                 <EditIcon />

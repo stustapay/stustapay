@@ -32,7 +32,7 @@ export const EditAccountTagModal: React.FC<EditAccountTagModalProps> = ({ accoun
   }, [account]);
 
   const handleConfirm = () => {
-    updateTagUid({ accountId: account.id, newTagUid: tagUid })
+    updateTagUid({ accountId: account.id, newTagUid: BigInt(tagUid) })
       .unwrap()
       .then(() => {
         handleClose();
@@ -47,7 +47,7 @@ export const EditAccountTagModal: React.FC<EditAccountTagModalProps> = ({ accoun
       <DialogTitle>{t("account.changeTag")}</DialogTitle>
       <DialogContent>
         <ListItem sx={{ pl: 0 }}>
-          <ListItemText primary={t("account.oldTagUid")} secondary={account.user_tag_uid} />
+          <ListItemText primary={t("account.oldTagUid")} secondary={String(account.user_tag_uid)} />
         </ListItem>
         <TextField
           inputProps={{ pattern: "[1-9][0-9]*" }}
