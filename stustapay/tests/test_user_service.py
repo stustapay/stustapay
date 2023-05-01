@@ -8,7 +8,7 @@ class UserServiceTest(BaseTestCase):
         await super().asyncSetUp()
         await self.create_terminal_token()
 
-        self.cashier_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
+        self.cashier_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (654321) returning uid")
         self.finanzorga_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (1337) returning uid")
         admin_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
         self.admin = await self.user_service.create_user_no_auth(

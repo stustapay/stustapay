@@ -20,15 +20,13 @@ from stustapay.core.schema.order import (
 )
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile, NewTillButton
-from stustapay.core.schema.user import Privilege, UserWithoutId
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.order import OrderService, NotEnoughVouchersException
-from stustapay.core.service.order.order import TillPermissionException, InvalidSaleException, NotEnoughFundsException
+from stustapay.core.service.order.order import NotEnoughFundsException
+from stustapay.core.service.order.order import TillPermissionException, InvalidSaleException
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 from .common import BaseTestCase
-from ..core.service.order.order import TillPermissionException, InvalidSaleException
-from ..core.service.till import TillService
 
 START_BALANCE = 100
 
@@ -81,16 +79,6 @@ class OrderLogicTest(BaseTestCase):
             token=self.admin_token,
             button=NewTillButton(name="Pfand", product_ids=[self.deposit_product.id]),
         )
-        cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
-        self.cashier = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(
-                login="test_cashier",
-                description="",
-                privileges=[Privilege.cashier],
-                user_tag_uid=cashier_tag_uid,
-                display_name="Test Cashier",
-            )
-        )
         self.till_layout = await self.till_service.layout.create_layout(
             token=self.admin_token,
             layout=NewTillLayout(name="layout1", description="", button_ids=None),
@@ -121,13 +109,6 @@ class OrderLogicTest(BaseTestCase):
         self.terminal_token = (
             await self.till_service.register_terminal(registration_uuid=self.till.registration_uuid)
         ).token
-        cashier_account_id = await self.db_conn.fetchval(
-            "insert into account (type, balance) values ('internal', $1) returning id",
-            0,
-        )
-        await self.user_service.link_user_to_cashier_account(
-            token=self.admin_token, user_id=self.cashier.id, account_id=cashier_account_id
-        )
         self.cashier = await self.user_service.get_user(token=self.admin_token, user_id=self.cashier.id)
         # add customer
         self.customer_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (1234) returning uid")

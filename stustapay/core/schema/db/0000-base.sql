@@ -214,10 +214,53 @@ values
     ('cashier')
     on conflict do nothing;
 
+create or replace function check_cashier_needs_cashier_account(
+    user_id bigint,
+    privilege text
+) returns boolean as
+$$
+<<locals>> declare
+    cashier_account_id bigint;
+begin
+    if check_cashier_needs_cashier_account.privilege != 'cashier' then
+        return true;
+    end if;
+
+    select usr.cashier_account_id into locals.cashier_account_id
+    from usr
+    where id = check_cashier_needs_cashier_account.user_id;
+
+    return locals.cashier_account_id is not null;
+end
+$$ language plpgsql;
+
+create or replace function check_finanzorga_needs_transport_account(
+    user_id bigint,
+    privilege text
+) returns boolean as
+$$
+<<locals>> declare
+    transport_account_id bigint;
+begin
+    if check_finanzorga_needs_transport_account.privilege != 'finanzorga' then
+        return true;
+    end if;
+
+    select usr.transport_account_id into locals.transport_account_id
+    from usr
+    where id = check_finanzorga_needs_transport_account.user_id;
+
+    return locals.transport_account_id is not null;
+end
+$$ language plpgsql;
+
 create table if not exists usr_privs (
     usr bigint not null references usr(id) on delete cascade,
     priv text not null references privilege(name) on delete cascade,
-    primary key (usr, priv)
+    primary key (usr, priv),
+
+    constraint cashiers_need_accounts check (check_cashier_needs_cashier_account(usr, priv)),
+    constraint finanzorgas_need_accounts check (check_finanzorga_needs_transport_account(usr, priv))
 );
 
 create or replace view usr_with_privileges as (

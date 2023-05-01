@@ -89,15 +89,21 @@ class BaseTestCase(TestCase):
             password="rolf",
         )
         self.admin_token = (await self.user_service.login_user(username=self.admin_user.login, password="rolf")).token
-        self.cashier_user = await self.user_service.create_user_no_auth(
+        self.cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
+        self.cashier = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
-                login="test-cashier-user", description="", privileges=[Privilege.cashier], display_name="Cashier"
+                login="test-cashier-user",
+                user_tag_uid=self.cashier_tag_uid,
+                description="",
+                privileges=[],
+                display_name="Cashier",
             ),
             password="rolf",
         )
-        self.cashier_token = (
-            await self.user_service.login_user(username=self.cashier_user.login, password="rolf")
-        ).token
+        await self.user_service.promote_to_cashier(current_user=self.admin_user, user_id=self.cashier.id)
+        self.cashier = await self.user_service.get_user(token=self.admin_token, user_id=self.cashier.id)
+
+        self.cashier_token = (await self.user_service.login_user(username=self.cashier.login, password="rolf")).token
 
     async def asyncTearDown(self) -> None:
         await self.db_conn.close()

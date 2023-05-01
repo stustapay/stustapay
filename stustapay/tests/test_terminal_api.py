@@ -7,27 +7,18 @@ from stustapay.tests.common import BaseTestCase
 class TerminalAPiTest(BaseTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
-
-        self.cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
-        self.cashier = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(
-                login="test_cashier",
-                description="",
-                privileges=[Privilege.cashier],
-                user_tag_uid=self.cashier_tag_uid,
-                display_name="Test Cashier",
-            )
-        )
-        self.admin_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
-        self.admin = await self.user_service.create_user_no_auth(
+        self.finanzorga_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
+        self.finanzorga = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
                 login="Fianazorga",
                 description="",
-                privileges=[Privilege.finanzorga],
-                user_tag_uid=self.admin_tag_uid,
+                privileges=[],
+                user_tag_uid=self.finanzorga_tag_uid,
                 display_name="Finanzorga",
             )
         )
+        await self.user_service.promote_to_finanzorga(token=self.admin_token, user_id=self.finanzorga.id)
+        self.finanzorga = await self.user_service.get_user(token=self.admin_token, user_id=self.finanzorga.id)
 
         await self.create_terminal_token()
 
@@ -36,9 +27,11 @@ class TerminalAPiTest(BaseTestCase):
         with self.assertRaises(AccessDenied):
             await self.till_service.login_user(token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid))
         # Admins can login
-        admin = await self.till_service.login_user(token=self.terminal_token, user_tag=UserTag(uid=self.admin_tag_uid))
-        self.assertIsNotNone(admin)
-        self.assertEqual(admin, self.admin)
+        orga = await self.till_service.login_user(
+            token=self.terminal_token, user_tag=UserTag(uid=self.finanzorga_tag_uid)
+        )
+        self.assertIsNotNone(orga)
+        self.assertEqual(self.finanzorga, orga)
         # Now Cashiers can login
         cashier = await self.till_service.login_user(
             token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid)

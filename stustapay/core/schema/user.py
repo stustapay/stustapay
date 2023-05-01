@@ -13,6 +13,7 @@ class Privilege(enum.Enum):
 
 class NewUser(BaseModel):
     login: str
+    display_name: str = ""
     user_tag_uid: int
 
 
