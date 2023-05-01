@@ -6,8 +6,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
-from stustapay.core.http.context import ContextOrderService, ContextTillService
-from stustapay.core.schema.customer import Customer
+from stustapay.core.http.context import ContextOrderService
 from stustapay.core.schema.order import (
     CompletedSale,
     NewSale,
@@ -22,7 +21,6 @@ from stustapay.core.schema.order import (
     PendingTicketSale,
     NewTicketSale,
     CompletedTicketSale,
-    NewFreeTicketGrant,
 )
 
 router = APIRouter(prefix="/order", tags=["order"])

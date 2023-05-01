@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
-from stustapay.core.http.context import ContextTillService, ContextUserService, ContextOrderService
+from stustapay.core.http.context import ContextTillService, ContextUserService, ContextAccountService
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.user import NewUser, User, UserTag
@@ -61,7 +61,7 @@ async def create_finanzorga(
 async def grant_free_ticket(
     grant: NewFreeTicketGrant,
     token: CurrentAuthToken,
-    account_service: ContextOrderService,
+    account_service: ContextAccountService,
     till_service: ContextTillService,
 ):
     success = await account_service.grant_free_tickets(token=token, new_free_ticket_grant=grant)
@@ -79,7 +79,7 @@ class GrantVoucherPayload(BaseModel):
 async def grant_vouchers(
     grant: GrantVoucherPayload,
     token: CurrentAuthToken,
-    account_service: ContextOrderService,
+    account_service: ContextAccountService,
     till_service: ContextTillService,
 ):
     success = await account_service.grant_vouchers(

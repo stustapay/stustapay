@@ -213,8 +213,9 @@ values
     ('cashier'),
     -- can hand out free tickets
     ('grant_free_tickets'),
-    -- can hand vouchers
-    ('grant_vouchers')
+    -- can hand out vouchers
+    ('grant_vouchers'),
+    ('can_login_cashiers')
     on conflict do nothing;
 
 create or replace function check_cashier_needs_cashier_account(

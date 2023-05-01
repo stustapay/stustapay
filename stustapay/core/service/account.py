@@ -159,7 +159,7 @@ class AccountService(DBService):
                 current_user.id,
             )
         except Exception as e:  # pylint: disable=bare-except
-            raise InvalidArgument(f"Error while granting vouchers {str(e)}")
+            raise InvalidArgument(f"Error while granting vouchers {str(e)}") from e
 
         account = await self._get_account_by_tag_uid(conn=conn, user_tag_uid=user_tag_uid)
         assert account is not None
