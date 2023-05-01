@@ -32,6 +32,7 @@ class TerminalConfig(BaseModel):
     user_privileges: Optional[list[Privilege]]
     allow_top_up: bool
     allow_cash_out: bool
+    allow_ticket_sale: bool
     buttons: Optional[list[TerminalButton]]
     secrets: Optional[TerminalSecrets]
 

@@ -1,5 +1,6 @@
 import datetime
 import enum
+import typing
 from typing import Optional
 from uuid import UUID
 
@@ -12,27 +13,20 @@ from stustapay.core.util import BaseModel
 class OrderType(enum.Enum):
     sale = "sale"
     cancel_sale = "cancel_sale"
-    topup_cash = "topup_cash"
-    topup_sumup = "topup_sumup"
+    top_up = "top_up"
     pay_out = "pay_out"
+    ticket = "ticket"
 
 
-class TopUpType(enum.Enum):
-    sumup = "sumup"
+class PaymentMethod(enum.Enum):
     cash = "cash"
-
-    def as_order_type(self):
-        if self == TopUpType.cash:
-            return "topup_cash"
-        elif self == TopUpType.sumup:
-            return "topup_sumup"
-        else:
-            raise RuntimeError("Unknown top up type, probably missed during implementation")
+    sumup = "sumup"
+    tag = "tag"
 
 
 class NewTopUp(BaseModel):
     uuid: Optional[UUID] = None
-    topup_type: TopUpType
+    payment_method: typing.Literal[PaymentMethod.cash, PaymentMethod.sumup]
 
     amount: float
     customer_tag_uid: int
@@ -46,8 +40,38 @@ class PendingTopUp(NewTopUp):
 
 
 class CompletedTopUp(BaseModel):
-    topup_type: TopUpType
+    payment_method: typing.Literal[PaymentMethod.cash, PaymentMethod.sumup]
 
+    customer_tag_uid: int
+    customer_account_id: int
+
+    amount: float
+    old_balance: float
+    new_balance: float
+
+    uuid: UUID
+    booked_at: datetime.datetime
+
+    cashier_id: int
+    till_id: int
+
+
+class NewPayOut(BaseModel):
+    # if no amount is passed, the current customer account balance is assumed as payout
+    customer_tag_uid: int
+    amount: Optional[float] = None
+
+
+class PendingPayOut(NewPayOut):
+    amount: float
+
+    customer_account_id: int
+
+    old_balance: float
+    new_balance: float
+
+
+class CompletedPayOut(BaseModel):
     customer_tag_uid: int
     customer_account_id: int
 
@@ -137,31 +161,37 @@ class CompletedSale(PendingSale):
     till_id: int
 
 
-class NewPayOut(BaseModel):
-    # if no amount is passed, the current customer account balance is assumed as payout
+class NewTicketSale(BaseModel):
+    uuid: Optional[UUID] = None
     customer_tag_uid: int
-    amount: Optional[float] = None
+    initial_top_up_amount: float
+
+    payment_method: typing.Literal[PaymentMethod.cash, PaymentMethod.sumup]
 
 
-class PendingPayOut(NewPayOut):
-    amount: float
+class PendingTicketSale(NewTicketSale):
+    initial_top_up_amount: float
 
-    customer_account_id: int
+    line_items: list[PendingLineItem]
 
-    old_balance: float
-    new_balance: float
+    @property
+    def item_count(self) -> int:
+        return len(self.line_items)
+
+    @property
+    def total_price(self) -> float:
+        agg = 0.0
+        for line_item in self.line_items:
+            agg += line_item.total_price
+        return agg
 
 
-class CompletedPayOut(BaseModel):
-    customer_tag_uid: int
-    customer_account_id: int
-
-    amount: float
-    old_balance: float
-    new_balance: float
-
+class CompletedTicketSale(PendingTicketSale):
+    id: int
     uuid: UUID
     booked_at: datetime.datetime
+
+    customer_account_id: int
 
     cashier_id: int
     till_id: int
@@ -186,7 +216,7 @@ class Order(BaseModel):
     cancels_order: Optional[int]
 
     booked_at: datetime.datetime
-    payment_method: Optional[str]
+    payment_method: PaymentMethod
     order_type: OrderType
 
     # foreign keys

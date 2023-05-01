@@ -102,6 +102,15 @@ export function TillProfileChange<T extends NewTillProfile>({
               />
             </FormGroup>
 
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox name="allow_ticket_sale" checked={values.allow_ticket_sale} onChange={handleChange} />
+                }
+                label={t("profile.allowTicketSale")}
+              />
+            </FormGroup>
+
             <TillLayoutSelect
               name="layout"
               margin="normal"

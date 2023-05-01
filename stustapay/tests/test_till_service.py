@@ -70,7 +70,12 @@ class TillServiceTest(BaseTestCase):
         till_profile = await self.till_service.profile.create_profile(
             token=self.admin_token,
             profile=NewTillProfile(
-                name="profile1", description="", layout_id=till_layout.id, allow_top_up=False, allow_cash_out=False
+                name="profile1",
+                description="",
+                layout_id=till_layout.id,
+                allow_top_up=False,
+                allow_cash_out=False,
+                allow_ticket_sale=False,
             ),
         )
         till = await self.till_service.create_till(

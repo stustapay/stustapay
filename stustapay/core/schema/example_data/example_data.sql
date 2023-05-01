@@ -188,11 +188,11 @@ insert into ordr (
 ) overriding system value
 values
     -- simple beer with deposit
-    (0, 2, '2023-01-01 15:35:02 UTC+1', 'token', 'sale', 0, 0, 200),
+    (0, 2, '2023-01-01 15:35:02 UTC+1', 'tag', 'sale', 0, 0, 200),
     -- items with different tax rates
-    (1, 3, '2023-01-02 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201),
+    (1, 3, '2023-01-02 17:00:07 UTC+1', 'tag', 'sale', 0, 0, 201),
     -- Top Up EC
-    (2, 1, '2023-01-01 17:00:07 UTC+1', 'token', 'sale', 0, 0, 201)
+    (2, 1, '2023-01-01 17:00:07 UTC+1', 'tag', 'sale', 0, 0, 201)
     on conflict do nothing;
 select setval('ordr_id_seq', 100);
 

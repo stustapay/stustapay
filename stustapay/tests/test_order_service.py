@@ -1,15 +1,34 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import uuid
 
-from stustapay.core.schema.order import NewSale, Button, NewTopUp, TopUpType, NewPayOut
+from stustapay.core.schema.account import (
+    ACCOUNT_SALE_EXIT,
+    ACCOUNT_CASH_VAULT,
+    ACCOUNT_CASH_ENTRY,
+    ACCOUNT_SUMUP,
+    ACCOUNT_CASH_EXIT,
+)
+from stustapay.core.schema.order import (
+    NewSale,
+    Button,
+    NewTopUp,
+    PaymentMethod,
+    NewPayOut,
+    Order,
+    NewTicketSale,
+    PendingTicketSale,
+)
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile, NewTillButton
 from stustapay.core.schema.user import Privilege, UserWithoutId
+from stustapay.core.service.account import AccountService
 from stustapay.core.service.order import OrderService, NotEnoughVouchersException
 from stustapay.core.service.order.order import TillPermissionException, InvalidSaleException, NotEnoughFundsException
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 from .common import BaseTestCase
+from ..core.service.order.order import TillPermissionException, InvalidSaleException
+from ..core.service.till import TillService
 
 START_BALANCE = 100
 
@@ -21,6 +40,9 @@ class OrderLogicTest(BaseTestCase):
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
         self.till_service = TillService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
+        self.account_service = AccountService(
+            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
+        )
         self.order_service = OrderService(
             db_pool=self.db_pool,
             config=self.test_config,
@@ -76,7 +98,12 @@ class OrderLogicTest(BaseTestCase):
         self.till_profile = await self.till_service.profile.create_profile(
             token=self.admin_token,
             profile=NewTillProfile(
-                name="profile1", description="", layout_id=self.till_layout.id, allow_top_up=True, allow_cash_out=True
+                name="profile1",
+                description="",
+                layout_id=self.till_layout.id,
+                allow_top_up=True,
+                allow_cash_out=True,
+                allow_ticket_sale=True,
             ),
         )
         self.till = await self.till_service.create_till(
@@ -101,16 +128,25 @@ class OrderLogicTest(BaseTestCase):
         await self.user_service.link_user_to_cashier_account(
             token=self.admin_token, user_id=self.cashier.id, account_id=cashier_account_id
         )
+        self.cashier = await self.user_service.get_user(token=self.admin_token, user_id=self.cashier.id)
         # add customer
         self.customer_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (1234) returning uid")
-        await self.db_conn.fetchval(
-            "insert into account (user_tag_uid, type, balance) values ($1, 'private', $2);",
+        self.customer_account_id = await self.db_conn.fetchval(
+            "insert into account (user_tag_uid, type, balance) values ($1, 'private', $2) returning id",
             self.customer_uid,
             START_BALANCE,
         )
+        self.unused_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
 
         # fetch new till
         self.till = await self.till_service.get_till(token=self.admin_token, till_id=self.till.id)
+
+        self.ticket_price = 12  # TODO: remove ugly hardcoding
+
+    async def _assert_account_balance(self, account_id: int, balance: float):
+        account = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
+        self.assertIsNotNone(account)
+        self.assertEqual(balance, account.balance)
 
     async def test_basic_sale_flow(self):
         customer_acc = await self.till_service.get_customer(
@@ -133,17 +169,17 @@ class OrderLogicTest(BaseTestCase):
         self.assertEqual(pending_sale.new_balance, START_BALANCE - pending_sale.total_price)
         completed_sale = await self.order_service.book_sale(token=self.terminal_token, new_sale=new_sale)
         self.assertIsNotNone(completed_sale)
-        order = await self.order_service.get_order(token=self.admin_token, order_id=completed_sale.id)
+        order: Order = await self.order_service.get_order(token=self.admin_token, order_id=completed_sale.id)
         self.assertIsNotNone(order)
+        await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, balance=order.total_price)
 
         # test that we can cancel this order
         success = await self.order_service.cancel_sale(token=self.terminal_token, order_id=order.id)
         self.assertTrue(success)
-        customer_acc = await self.till_service.get_customer(
-            token=self.terminal_token, customer_tag_uid=self.customer_uid
-        )
-        self.assertIsNotNone(customer_acc)
-        self.assertEqual(starting_balance, customer_acc.balance)
+        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.customer_uid)
+        self.assertIsNotNone(customer)
+        self.assertEqual(starting_balance, customer.balance)
+        await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, balance=0)
 
     async def test_returnable_products(self):
         new_sale = NewSale(
@@ -210,18 +246,12 @@ class OrderLogicTest(BaseTestCase):
         self.assertIsNotNone(completed_sale)
 
     async def test_basic_sale_flow_with_vouchers(self):
-        customer_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
-        await self.db_conn.fetchval(
-            "insert into account (user_tag_uid, type, balance, vouchers) values ($1, 'private', $2, $3);",
-            customer_uid,
-            100,
-            3,
-        )
+        await self.db_conn.execute("update account set vouchers = 3 where id = $1", self.customer_account_id)
         new_sale = NewSale(
             buttons=[
                 Button(till_button_id=self.beer_button.id, quantity=3),
             ],
-            customer_tag_uid=customer_uid,
+            customer_tag_uid=self.customer_uid,
         )
         pending_sale = await self.order_service.check_sale(
             token=self.terminal_token,
@@ -237,18 +267,12 @@ class OrderLogicTest(BaseTestCase):
         self.assertIsNotNone(completed_sale)
 
     async def test_basic_sale_flow_with_fixed_vouchers(self):
-        customer_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
-        await self.db_conn.fetchval(
-            "insert into account (user_tag_uid, type, balance, vouchers) values ($1, 'private', $2, $3);",
-            customer_uid,
-            100,
-            3,
-        )
+        await self.db_conn.execute("update account set vouchers = 3 where id = $1", self.customer_account_id)
         new_sale = NewSale(
             buttons=[
                 Button(till_button_id=self.beer_button.id, quantity=3),
             ],
-            customer_tag_uid=customer_uid,
+            customer_tag_uid=self.customer_uid,
             used_vouchers=4,
         )
         with self.assertRaises(NotEnoughVouchersException):
@@ -270,7 +294,12 @@ class OrderLogicTest(BaseTestCase):
         profile = await self.till_service.profile.create_profile(
             token=self.admin_token,
             profile=NewTillProfile(
-                name="profile2", description="", layout_id=self.till_layout.id, allow_top_up=False, allow_cash_out=False
+                name="profile2",
+                description="",
+                layout_id=self.till_layout.id,
+                allow_top_up=False,
+                allow_cash_out=False,
+                allow_ticket_sale=False,
             ),
         )
         self.till.active_profile_id = profile.id
@@ -279,7 +308,7 @@ class OrderLogicTest(BaseTestCase):
         with self.assertRaises(TillPermissionException):
             new_topup = NewTopUp(
                 amount=20,
-                topup_type=TopUpType.cash,
+                payment_method=PaymentMethod.cash,
                 customer_tag_uid=self.customer_uid,
             )
             await self.order_service.check_topup(token=self.terminal_token, new_topup=new_topup)
@@ -287,7 +316,7 @@ class OrderLogicTest(BaseTestCase):
     async def test_topup_cash_order_flow(self):
         new_topup = NewTopUp(
             amount=20,
-            topup_type=TopUpType.cash,
+            payment_method=PaymentMethod.cash,
             customer_tag_uid=self.customer_uid,
         )
         pending_top_up = await self.order_service.check_topup(token=self.terminal_token, new_topup=new_topup)
@@ -296,13 +325,18 @@ class OrderLogicTest(BaseTestCase):
         self.assertEqual(pending_top_up.new_balance, START_BALANCE + pending_top_up.amount)
         completed_topup = await self.order_service.book_topup(token=self.terminal_token, new_topup=new_topup)
         self.assertIsNotNone(completed_topup)
-        # todo check cashier account balance
+        self.assertEqual(completed_topup.old_balance, START_BALANCE)
+        self.assertEqual(completed_topup.amount, 20)
+        self.assertEqual(completed_topup.new_balance, START_BALANCE + completed_topup.amount)
+        await self._assert_account_balance(account_id=self.cashier.cashier_account_id, balance=20)
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_ENTRY, balance=-20)
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_VAULT, balance=-20)
 
     async def test_topup_sumup_order_flow(self):
         new_topup = NewTopUp(
             uuid=uuid.uuid4(),
             amount=20,
-            topup_type=TopUpType.sumup,
+            payment_method=PaymentMethod.sumup,
             customer_tag_uid=self.customer_uid,
         )
         pending_topup = await self.order_service.check_topup(
@@ -315,7 +349,31 @@ class OrderLogicTest(BaseTestCase):
         completed_topup = await self.order_service.book_topup(token=self.terminal_token, new_topup=new_topup)
         self.assertIsNotNone(completed_topup)
         self.assertEqual(completed_topup.uuid, new_topup.uuid)
-        # todo check cashier account balance
+        self.assertEqual(completed_topup.old_balance, START_BALANCE)
+        self.assertEqual(completed_topup.amount, 20)
+        self.assertEqual(completed_topup.new_balance, START_BALANCE + completed_topup.amount)
+        await self._assert_account_balance(account_id=ACCOUNT_SUMUP, balance=-20)
+
+    async def test_only_payout_till_profiles_can_payout(self):
+        profile = await self.till_service.profile.create_profile(
+            token=self.admin_token,
+            profile=NewTillProfile(
+                name="profile2",
+                description="",
+                layout_id=self.till_layout.id,
+                allow_top_up=False,
+                allow_cash_out=False,
+                allow_ticket_sale=False,
+            ),
+        )
+        self.till.active_profile_id = profile.id
+        await self.till_service.update_till(token=self.admin_token, till_id=self.till.id, till=self.till)
+
+        with self.assertRaises(TillPermissionException):
+            new_pay_out = NewPayOut(
+                customer_tag_uid=self.customer_uid,
+            )
+            await self.order_service.check_pay_out(token=self.terminal_token, new_pay_out=new_pay_out)
 
     async def test_cash_pay_out_flow_no_amount(self):
         new_pay_out = NewPayOut(customer_tag_uid=self.customer_uid)
@@ -328,6 +386,9 @@ class OrderLogicTest(BaseTestCase):
 
         customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.customer_uid)
         self.assertEqual(0, customer.balance)
+        await self._assert_account_balance(account_id=self.cashier.cashier_account_id, balance=-START_BALANCE)
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_VAULT, balance=START_BALANCE)
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_EXIT, balance=START_BALANCE)
 
     async def test_cash_pay_out_flow_with_amount(self):
         new_pay_out = NewPayOut(customer_tag_uid=self.customer_uid, amount=-2 * START_BALANCE)
@@ -345,3 +406,94 @@ class OrderLogicTest(BaseTestCase):
 
         customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.customer_uid)
         self.assertEqual(START_BALANCE - 20, customer.balance)
+        await self._assert_account_balance(account_id=self.cashier.cashier_account_id, balance=-20)
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_VAULT, balance=20)
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_EXIT, balance=20)
+
+    async def test_only_ticket_till_profiles_can_sell_tickets(self):
+        profile = await self.till_service.profile.create_profile(
+            token=self.admin_token,
+            profile=NewTillProfile(
+                name="profile2",
+                description="",
+                layout_id=self.till_layout.id,
+                allow_top_up=False,
+                allow_cash_out=False,
+                allow_ticket_sale=False,
+            ),
+        )
+        self.till.active_profile_id = profile.id
+        await self.till_service.update_till(token=self.admin_token, till_id=self.till.id, till=self.till)
+
+        with self.assertRaises(TillPermissionException):
+            new_ticket_sale = NewTicketSale(
+                customer_tag_uid=self.customer_uid, initial_top_up_amount=0, payment_method=PaymentMethod.cash
+            )
+            await self.order_service.check_ticket_sale(token=self.terminal_token, new_ticket_sale=new_ticket_sale)
+
+    async def test_ticket_flow_no_initial_topup_cash(self):
+        new_ticket = NewTicketSale(
+            customer_tag_uid=self.unused_tag_uid, initial_top_up_amount=0, payment_method=PaymentMethod.cash
+        )
+        pending_ticket: PendingTicketSale = await self.order_service.check_ticket_sale(
+            token=self.terminal_token, new_ticket_sale=new_ticket
+        )
+        self.assertEqual(0, pending_ticket.initial_top_up_amount)
+        self.assertEqual(1, pending_ticket.item_count)
+        self.assertEqual(self.ticket_price, pending_ticket.total_price)
+        completed_ticket = await self.order_service.book_ticket_sale(
+            token=self.terminal_token, new_ticket_sale=new_ticket
+        )
+        self.assertIsNotNone(completed_ticket)
+
+        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.unused_tag_uid)
+        self.assertEqual(0, customer.balance)
+        await self._assert_account_balance(
+            account_id=self.cashier.cashier_account_id, balance=completed_ticket.total_price
+        )
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_ENTRY, balance=-completed_ticket.total_price)
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_VAULT, balance=-completed_ticket.total_price)
+
+    async def test_ticket_flow_with_initial_topup_cash(self):
+        new_ticket = NewTicketSale(
+            customer_tag_uid=self.unused_tag_uid, initial_top_up_amount=8, payment_method=PaymentMethod.cash
+        )
+        pending_ticket: PendingTicketSale = await self.order_service.check_ticket_sale(
+            token=self.terminal_token, new_ticket_sale=new_ticket
+        )
+        self.assertEqual(8, pending_ticket.initial_top_up_amount)
+        self.assertEqual(2, pending_ticket.item_count)
+        self.assertEqual(self.ticket_price + 8, pending_ticket.total_price)
+        completed_ticket = await self.order_service.book_ticket_sale(
+            token=self.terminal_token, new_ticket_sale=new_ticket
+        )
+        self.assertIsNotNone(completed_ticket)
+
+        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.unused_tag_uid)
+        self.assertEqual(8, customer.balance)
+        await self._assert_account_balance(
+            account_id=self.cashier.cashier_account_id, balance=completed_ticket.total_price
+        )
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_ENTRY, balance=-completed_ticket.total_price)
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_VAULT, balance=-completed_ticket.total_price)
+        await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, balance=self.ticket_price)
+
+    async def test_ticket_flow_with_initial_topup_sumup(self):
+        new_ticket = NewTicketSale(
+            customer_tag_uid=self.unused_tag_uid, initial_top_up_amount=8, payment_method=PaymentMethod.sumup
+        )
+        pending_ticket: PendingTicketSale = await self.order_service.check_ticket_sale(
+            token=self.terminal_token, new_ticket_sale=new_ticket
+        )
+        self.assertEqual(8, pending_ticket.initial_top_up_amount)
+        self.assertEqual(2, pending_ticket.item_count)
+        self.assertEqual(self.ticket_price + 8, pending_ticket.total_price)
+        completed_ticket = await self.order_service.book_ticket_sale(
+            token=self.terminal_token, new_ticket_sale=new_ticket
+        )
+        self.assertIsNotNone(completed_ticket)
+
+        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.unused_tag_uid)
+        self.assertEqual(8, customer.balance)
+        await self._assert_account_balance(account_id=ACCOUNT_SUMUP, balance=-completed_ticket.total_price)
+        await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, balance=self.ticket_price)

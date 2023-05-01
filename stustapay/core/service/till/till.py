@@ -243,6 +243,7 @@ class TillService(DBService):
             user_privileges=user_privileges,
             allow_top_up=profile.allow_top_up,
             allow_cash_out=profile.allow_cash_out,
+            allow_ticket_sale=profile.allow_ticket_sale,
             buttons=buttons,
             secrets=secrets,
         )
