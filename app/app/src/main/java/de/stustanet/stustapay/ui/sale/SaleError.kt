@@ -65,9 +65,9 @@ fun SaleError(
                     onDismiss()
                 },
                 modifier = Modifier
+                    .padding(10.dp)
                     .fillMaxWidth()
                     .height(70.dp)
-                    .padding(10.dp)
             ) {
                 Text(text = "Back")
             }

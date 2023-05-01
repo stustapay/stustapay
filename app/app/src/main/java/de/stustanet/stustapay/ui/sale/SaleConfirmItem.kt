@@ -92,7 +92,7 @@ fun SaleConfirmItem(
 
             Text(
                 text = if (quantity != null) {
-                    "%s%2d".format(
+                    "%s%3d".format(
                         if (price != null) {
                             "×"
                         } else {

@@ -126,6 +126,7 @@ class SaleViewModel @Inject constructor(
         scanTarget.update { ScanTarget.None }
         _navState.update { SalePage.ProductSelect }
         _saleCompleted.update { null }
+        _status.update { "Order cleared" }
     }
 
     suspend fun tagScanned(tag: UserTag) {

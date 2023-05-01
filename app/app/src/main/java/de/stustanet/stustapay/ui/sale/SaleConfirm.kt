@@ -47,7 +47,18 @@ fun SaleConfirm(
                     price = checkedSale.total_price,
                     fontSize = 35.sp,
                 )
-                Divider(modifier = Modifier.padding(bottom = 10.dp))
+                Divider(thickness = 2.dp)
+                SaleConfirmItem(
+                    name = "übriges Guthaben",
+                    price = checkedSale.new_balance,
+                )
+                if (checkedSale.new_voucher_balance > 0) {
+                    SaleConfirmItem(
+                        name = "übrige Gutscheine",
+                        quantity = checkedSale.new_voucher_balance,
+                    )
+                }
+                Divider(thickness = 2.dp)
             }
         },
         content = { paddingValues ->
@@ -81,17 +92,6 @@ fun SaleConfirm(
                 abortText = "↢ Edit",
                 status = {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        if (checkedSale.new_voucher_balance > 0) {
-                            SaleConfirmItem(
-                                name = "übrige Gutscheine",
-                                quantity = checkedSale.new_voucher_balance,
-                            )
-                        }
-                        SaleConfirmItem(
-                            name = "neues Guthaben",
-                            price = checkedSale.new_balance,
-                        )
-                        Divider(modifier = Modifier.padding(top = 10.dp))
                         Text(
                             text = status,
                             modifier = Modifier.fillMaxWidth(),

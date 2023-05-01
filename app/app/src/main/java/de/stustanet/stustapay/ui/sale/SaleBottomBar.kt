@@ -42,7 +42,10 @@ fun SaleBottomBar(
     val haptic = LocalHapticFeedback.current
 
     Column(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .padding(horizontal = 10.dp)
+            .padding(bottom = 5.dp)
+            .fillMaxWidth()
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,

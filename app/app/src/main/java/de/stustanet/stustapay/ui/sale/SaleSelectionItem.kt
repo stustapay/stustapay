@@ -172,6 +172,7 @@ fun SaleSelectionItem(
                     Text(text = caption, fontSize = 24.sp)
                 }
                 Spacer(modifier = Modifier.padding(horizontal = 2.dp))
+
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -202,12 +203,12 @@ fun SaleSelectionItem(
                     }
                 ) {
                     val text: String
-                    var fontSize = 50.sp
+                    var fontSize = 40.sp
                     val color = MaterialTheme.colors.onPrimary
                     when (type) {
                         is SaleSelectionItemType.FixedPrice,
                         is SaleSelectionItemType.Vouchers -> {
-                            text = "-"
+                            text = "‒"
                         }
 
                         is SaleSelectionItemType.Returnable -> {
@@ -222,7 +223,7 @@ fun SaleSelectionItem(
                         }
                     }
                     Text(
-                        text = text, fontSize = fontSize, color = color
+                        text = text, fontSize = fontSize, color = color,
                     )
                 }
             }
