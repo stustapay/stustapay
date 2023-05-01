@@ -15,7 +15,9 @@
         "newVoucherAmount": "New Voucher Amount",
         "changeTag": "Change associated tag",
         "oldTagUid": "UID of old tag",
-        "newTagUid": "UID of new tag"
+        "newTagUid": "UID of new tag",
+        "disable": "Disable",
+        "disableSuccess": "Successfully disabled account"
     },
     "findAccounts": "Find Accounts",
     "searchTerm": "Search Term"

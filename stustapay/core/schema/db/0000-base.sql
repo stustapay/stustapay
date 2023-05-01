@@ -111,7 +111,6 @@ create table if not exists account (
     id bigint primary key generated always as identity (start with 1000),
     user_tag_uid numeric(20) unique references user_tag(uid),
     type text not null references account_type(name),
-    constraint private_account_requires_user_tag check (user_tag_uid is not null = (type = 'private')),
     name text,
     comment text,
 
@@ -213,7 +212,10 @@ values
     -- Helfer
     ('cashier'),
     -- can hand out free tickets
-    ('grant_free_tickets')
+    ('grant_free_tickets'),
+    -- can hand out vouchers
+    ('grant_vouchers'),
+    ('can_login_cashiers')
     on conflict do nothing;
 
 create or replace function check_cashier_needs_cashier_account(

@@ -1,6 +1,5 @@
 import datetime
 import enum
-import typing
 from typing import Optional
 from uuid import UUID
 
@@ -24,12 +23,20 @@ class PaymentMethod(enum.Enum):
     tag = "tag"
 
 
+def is_non_tag_payment_method(payment_method: PaymentMethod):
+    if payment_method == PaymentMethod.tag:
+        raise ValueError("payment method cannot be 'tag'")
+    return payment_method
+
+
 class NewTopUp(BaseModel):
     uuid: Optional[UUID] = None
-    payment_method: typing.Literal[PaymentMethod.cash, PaymentMethod.sumup]
+    payment_method: PaymentMethod
 
     amount: float
     customer_tag_uid: int
+
+    _validate_payment_method = validator("payment_method", allow_reuse=True)(is_non_tag_payment_method)
 
 
 class PendingTopUp(NewTopUp):
@@ -40,7 +47,7 @@ class PendingTopUp(NewTopUp):
 
 
 class CompletedTopUp(BaseModel):
-    payment_method: typing.Literal[PaymentMethod.cash, PaymentMethod.sumup]
+    payment_method: PaymentMethod
 
     customer_tag_uid: int
     customer_account_id: int
@@ -95,7 +102,7 @@ class Button(BaseModel):
     price: Optional[float] = None
 
     # check for new Items if either quantity or price is set
-    @root_validator
+    @root_validator()
     def check_quantity_or_price_set(cls, values):  # pylint: disable=no-self-argument
         quantity, price = values.get("quantity"), values.get("price")
         if (quantity is None) == (price is None):
@@ -166,7 +173,9 @@ class NewTicketSale(BaseModel):
     customer_tag_uid: int
     initial_top_up_amount: float
 
-    payment_method: typing.Literal[PaymentMethod.cash, PaymentMethod.sumup]
+    payment_method: PaymentMethod
+
+    _validate_payment_method = validator("payment_method", allow_reuse=True)(is_non_tag_payment_method)
 
 
 class PendingTicketSale(NewTicketSale):
