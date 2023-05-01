@@ -64,11 +64,13 @@ class AccountService(DBService):
         #         "   source_account_id => $2,"
         #         "   target_account_id => $3,"
         #         "   amount => $4,"
-        #         "   vouchers_amount => 0)",
+        #         "   vouchers_amount => 0,
+        #         "   conducting_user_id => $5)",
         #         "Admin override for account balance",
         #         ACCOUNT_MONEY_VOUCHER_CREATE,
         #         account.id,
         #         imbalance,
+        #         current_user.id,
         #     )
         # except:  # pylint: disable=bare-except
         #     return False
@@ -94,11 +96,13 @@ class AccountService(DBService):
                 "   source_account_id => $2,"
                 "   target_account_id => $3,"
                 "   amount => 0,"
-                "   vouchers_amount => $4)",
+                "   vouchers_amount => $4,"
+                "   conducting_user_id => $5)",
                 "Admin override for account voucher amount",
                 ACCOUNT_MONEY_VOUCHER_CREATE,
                 account.id,
                 imbalance,
+                current_user.id,
             )
         except:  # pylint: disable=bare-except
             return False

@@ -44,7 +44,8 @@ values
     (201, 5424726191074820, 'private', 'test-tag2', 'test token 2', 30.00, 5),
     (202, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0),
     (203, 5424726016640516, 'private', 'test-tag3', 'test token 3', 15.00, 2),
-    (204, 5424726268326916, 'private', 'test-tag4', 'test token 4', 20.00, 2)
+    (204, 5424726268326916, 'private', 'test-tag4', 'test token 4', 20.00, 2),
+    (205, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0)
     on conflict do nothing;
 select setval('account_id_seq', 300);
 
@@ -57,7 +58,7 @@ values
     -- password is admin
     (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null),
     (2, 'tag2', null, null, null, 202, 5424726191074820),
-    (4, 'tag4', null, null, null, null, 5424726268326916)
+    (4, 'tag4', null, null, null, 205, 5424726268326916)
     on conflict do nothing;
 select setval('usr_id_seq', 100);
 

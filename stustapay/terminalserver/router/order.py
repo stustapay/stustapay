@@ -6,7 +6,8 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
-from stustapay.core.http.context import ContextOrderService
+from stustapay.core.http.context import ContextOrderService, ContextTillService
+from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import (
     CompletedSale,
     NewSale,
@@ -21,9 +22,23 @@ from stustapay.core.schema.order import (
     PendingTicketSale,
     NewTicketSale,
     CompletedTicketSale,
+    NewFreeTicketGrant,
 )
 
 router = APIRouter(prefix="/order", tags=["order"])
+
+
+@router.post("/grant-free-ticket", summary="grant a free ticket, e.g. to a volunteer", response_model=Customer)
+async def grant_free_ticket(
+    grant: NewFreeTicketGrant,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+    till_service: ContextTillService,
+):
+    success = await order_service.grant_free_tickets(token=token, new_free_ticket_grant=grant)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    return till_service.get_customer(token=token, customer_uid=grant.user_tag_uid)
 
 
 @router.get("", summary="list all orders", response_model=list[Order])

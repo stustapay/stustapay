@@ -71,14 +71,14 @@ class UserService(DBService):
         return await self._create_user(conn=conn, new_user=new_user, password=password)
 
     @with_db_transaction
-    @requires_terminal([Privilege.admin])
+    @requires_terminal([Privilege.admin, Privilege.finanzorga])
     async def create_cashier(self, *, conn: asyncpg.Connection, current_user: User, new_user: NewUser) -> User:
         user = await self.create_user_with_tag(current_user=current_user, conn=conn, new_user=new_user)
         user = await self.promote_to_cashier(current_user=current_user, conn=conn, user_id=user.id)
         return user
 
     @with_db_transaction
-    @requires_terminal([Privilege.admin])
+    @requires_terminal([Privilege.admin, Privilege.finanzorga])
     async def create_finanzorga(self, *, conn: asyncpg.Connection, current_user: User, new_user: NewUser) -> User:
         user = await self.create_user_with_tag(current_user=current_user, conn=conn, new_user=new_user)
         user = await self.promote_to_cashier(current_user=current_user, conn=conn, user_id=user.id)
@@ -86,7 +86,7 @@ class UserService(DBService):
         return user
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.admin, Privilege.finanzorga])
     async def create_user_with_tag(self, *, conn: asyncpg.Connection, new_user: NewUser) -> User:
         """
         Create a user at a Terminal, where a name and the user tag must be provided
@@ -107,12 +107,12 @@ class UserService(DBService):
             login=new_user.login,
             privileges=[],
             user_tag_uid=user_tag_uid,
-            display_name=new_user.login,
+            display_name=new_user.display_name,
         )
         return await self._create_user(conn=conn, new_user=user)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.admin, Privilege.finanzorga])
     async def promote_to_cashier(self, *, conn: asyncpg.Connection, user_id: int) -> User:
         user = await self._get_user(conn=conn, user_id=user_id)
         if user is None:
@@ -131,7 +131,7 @@ class UserService(DBService):
         return await self._update_user(conn=conn, user_id=user.id, user=user)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.admin, Privilege.finanzorga])
     async def promote_to_finanzorga(self, *, conn: asyncpg.Connection, user_id: int) -> User:
         user = await self._get_user(conn=conn, user_id=user_id)
         if user is None:
@@ -165,14 +165,15 @@ class UserService(DBService):
         return User.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.admin, Privilege.finanzorga])
     async def get_user(self, *, conn: asyncpg.Connection, user_id: int) -> Optional[User]:
         return await self._get_user(conn, user_id)
 
     async def _update_user(self, *, conn: asyncpg.Connection, user_id: int, user: UserWithoutId) -> User:
         row = await conn.fetchrow(
             "update usr "
-            "set login = $2, description = $3, display_name = $4, user_tag_uid = $5, transport_account_id = $6, cashier_account_id = $7 "
+            "set login = $2, description = $3, display_name = $4, user_tag_uid = $5, transport_account_id = $6, "
+            "   cashier_account_id = $7 "
             "where id = $1 returning id",
             user_id,
             user.login,
@@ -193,7 +194,21 @@ class UserService(DBService):
         return await self._get_user(conn, user_id)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.admin, Privilege.finanzorga])
+    async def update_user_privileges(
+        self, *, conn: asyncpg.Connection, user_id: int, privileges: list[Privilege]
+    ) -> Optional[User]:
+        found = await conn.fetchval("select true from usr where id = $1", user_id)
+        if not found:
+            raise NotFound(element_typ="user", element_id=str(user_id))
+
+        await conn.execute("delete from usr_privs where usr = $1", user_id)
+        for privilege in privileges:
+            await conn.execute("insert into usr_privs (usr, priv) values ($1, $2)", user_id, privilege.value)
+        return await self._get_user(conn=conn, user_id=user_id)
+
+    @with_db_transaction
+    @requires_user([Privilege.admin, Privilege.finanzorga])
     async def update_user(self, *, conn: asyncpg.Connection, user_id: int, user: UserWithoutId) -> Optional[User]:
         return await self._update_user(conn=conn, user_id=user_id, user=user)
 
@@ -205,28 +220,6 @@ class UserService(DBService):
             user_id,
         )
         return result != "DELETE 0"
-
-    @with_db_transaction
-    @requires_user([Privilege.admin])
-    async def link_user_to_cashier_account(self, *, conn: asyncpg.Connection, user_id: int, account_id: int) -> bool:
-        # TODO: FIXME: is this the way it's going to stay?
-        result = await conn.fetchval(
-            "update usr set cashier_account_id = $2 where id = $1 returning id",
-            user_id,
-            account_id,
-        )
-        return result is not None
-
-    @with_db_transaction
-    @requires_user([Privilege.admin])
-    async def link_user_to_transport_account(self, *, conn: asyncpg.Connection, user_id: int, account_id: int) -> bool:
-        # TODO: FIXME: is this the way it's going to stay?
-        result = await conn.fetchval(
-            "update usr set transport_account_id = $2 where id = $1 returning id",
-            user_id,
-            account_id,
-        )
-        return result is not None
 
     @with_db_transaction
     async def login_user(self, *, conn: asyncpg.Connection, username: str, password: str) -> Optional[UserLoginSuccess]:

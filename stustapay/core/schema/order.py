@@ -4,7 +4,7 @@ import typing
 from typing import Optional
 from uuid import UUID
 
-from pydantic import root_validator
+from pydantic import root_validator, validator
 
 from stustapay.core.schema.product import Product
 from stustapay.core.util import BaseModel
@@ -225,3 +225,14 @@ class Order(BaseModel):
     customer_account_id: int
 
     line_items: list[LineItem]
+
+
+class NewFreeTicketGrant(BaseModel):
+    user_tag_uid: int
+    initial_voucher_amount: int = 0
+
+    @validator("initial_voucher_amount")
+    def initial_voucher_amount_is_positive(cls, v):  # pylint: disable=no-self-argument
+        if v < 0:
+            raise ValueError("initial voucher amount must be positive")
+        return v

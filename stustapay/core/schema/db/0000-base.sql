@@ -211,13 +211,58 @@ values
     -- Standleiter
     -- ('orga'),
     -- Helfer
-    ('cashier')
+    ('cashier'),
+    -- can hand out free tickets
+    ('grant_free_tickets')
     on conflict do nothing;
+
+create or replace function check_cashier_needs_cashier_account(
+    user_id bigint,
+    privilege text
+) returns boolean as
+$$
+<<locals>> declare
+    cashier_account_id bigint;
+begin
+    if check_cashier_needs_cashier_account.privilege != 'cashier' then
+        return true;
+    end if;
+
+    select usr.cashier_account_id into locals.cashier_account_id
+    from usr
+    where id = check_cashier_needs_cashier_account.user_id;
+
+    return locals.cashier_account_id is not null;
+end
+$$ language plpgsql;
+
+create or replace function check_finanzorga_needs_transport_account(
+    user_id bigint,
+    privilege text
+) returns boolean as
+$$
+<<locals>> declare
+    transport_account_id bigint;
+begin
+    if check_finanzorga_needs_transport_account.privilege != 'finanzorga' then
+        return true;
+    end if;
+
+    select usr.transport_account_id into locals.transport_account_id
+    from usr
+    where id = check_finanzorga_needs_transport_account.user_id;
+
+    return locals.transport_account_id is not null;
+end
+$$ language plpgsql;
 
 create table if not exists usr_privs (
     usr bigint not null references usr(id) on delete cascade,
     priv text not null references privilege(name) on delete cascade,
-    primary key (usr, priv)
+    primary key (usr, priv),
+
+    constraint cashiers_need_accounts check (check_cashier_needs_cashier_account(usr, priv)),
+    constraint finanzorgas_need_accounts check (check_finanzorga_needs_transport_account(usr, priv))
 );
 
 create or replace view usr_with_privileges as (
@@ -694,6 +739,9 @@ create table if not exists transaction (
     --      and deposit to a specific deposit account
     id bigint primary key generated always as identity,
     order_id bigint references ordr(id),
+    -- for transactions without an associated order we want to track who caused this transaction
+    conducting_user_id bigint references usr(id),
+    constraint conducting_user_id_or_order_is_set check ((order_id is null) != (conducting_user_id is null)),
 
     -- what was booked in this transaction  (backpack, items, ...)
     description text,
@@ -748,7 +796,8 @@ create or replace function book_transaction (
     target_account_id bigint,
     amount numeric,
     vouchers_amount bigint,
-    booked_at timestamptz default now()
+    booked_at timestamptz default now(),
+    conducting_user_id bigint default null
 )
     returns bigint as $$
 <<locals>> declare
@@ -770,7 +819,7 @@ begin
 
     -- add new transaction
     insert into transaction (
-        order_id, description, source_account, target_account, amount, vouchers, booked_at
+        order_id, description, source_account, target_account, amount, vouchers, booked_at, conducting_user_id
     )
     values (
         book_transaction.order_id,
@@ -779,7 +828,8 @@ begin
         book_transaction.target_account_id,
         book_transaction.amount,
         book_transaction.vouchers_amount,
-        book_transaction.booked_at
+        book_transaction.booked_at,
+        book_transaction.conducting_user_id
     ) returning id into locals.transaction_id;
 
     -- update account values

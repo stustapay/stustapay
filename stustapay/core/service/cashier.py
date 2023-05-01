@@ -102,12 +102,14 @@ class CashierService(DBService):
             "   target_account_id => $3,"
             "   amount => $4,"
             "   vouchers_amount => 0,"
-            "   booked_at => $5)",
+            "   booked_at => $5,"
+            "   conducting_user_id => $6)",
             "Cashier close out cash vault booking",
             cashier.cashier_account_id,
             ACCOUNT_CASH_VAULT,
             close_out.actual_cash_drawer_balance,
             shift_end,
+            current_user.id,
         )
         close_out_transaction_id = await conn.fetchval(
             "select * from book_transaction("
@@ -117,12 +119,14 @@ class CashierService(DBService):
             "   target_account_id => $3,"
             "   amount => $4,"
             "   vouchers_amount => 0,"
-            "   booked_at => $5)",
+            "   booked_at => $5,"
+            "   conducting_user_id => $6)",
             "Cashier close out imbalance booking",
             cashier.cashier_account_id,
             ACCOUNT_IMBALANCE,
             -imbalance,
             shift_end,
+            current_user.id,
         )
         await conn.execute(
             "insert into cashier_shift ("

@@ -62,7 +62,7 @@ async def update_voucher_amount(
 
 
 class UpdateTagUidPayload(BaseModel):
-    new_tag_uid: str
+    new_tag_uid: int
 
 
 @router.post("/accounts/{account_id}/update-tag_uid")
@@ -72,11 +72,8 @@ async def update_tag_uid(
     account_id: int,
     payload: UpdateTagUidPayload,
 ):
-    if not payload.new_tag_uid.isnumeric():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-
     success = await account_service.switch_account_tag_uid_admin(
-        token=token, account_id=account_id, new_user_tag_uid=int(payload.new_tag_uid)
+        token=token, account_id=account_id, new_user_tag_uid=payload.new_tag_uid
     )
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)

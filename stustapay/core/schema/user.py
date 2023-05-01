@@ -9,10 +9,12 @@ class Privilege(enum.Enum):
     # orga = "orga"
     finanzorga = "finanzorga"
     cashier = "cashier"
+    grant_free_tickets = "grant_free_tickets"
 
 
 class NewUser(BaseModel):
     login: str
+    display_name: str = ""
     user_tag_uid: int
 
 

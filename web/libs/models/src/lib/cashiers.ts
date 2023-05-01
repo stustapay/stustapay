@@ -6,7 +6,7 @@ export const CashierSchema = z.object({
   display_name: z.string().min(1),
   description: z.string().optional(),
   cash_drawer_balance: z.number(),
-  user_tag_uid: z.number().optional().nullable(),
+  user_tag_uid: z.bigint(),
   till_id: z.number().optional(),
 });
 
