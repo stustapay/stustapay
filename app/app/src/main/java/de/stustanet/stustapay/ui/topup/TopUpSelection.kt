@@ -13,11 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import de.stustanet.stustapay.ui.nav.TopAppBar
+import de.stustanet.stustapay.ui.nav.TopAppBarIcon
 import de.stustanet.stustapay.ui.priceselect.PriceSelection
 import de.stustanet.stustapay.ui.priceselect.rememberPriceSelectionState
 import kotlinx.coroutines.launch
@@ -25,7 +28,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun TopUpSelection(
     goToCash: () -> Unit,
-    viewModel: DepositViewModel
+    viewModel: DepositViewModel,
+    leaveView: () -> Unit = {},
 ) {
     val status by viewModel.status.collectAsStateWithLifecycle()
     val topUpState by viewModel.topUpState.collectAsStateWithLifecycle()
@@ -36,6 +40,14 @@ fun TopUpSelection(
     val priceState = rememberPriceSelectionState()
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(topUpConfig.tillName) },
+                icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
+                    leaveView()
+                },
+            )
+        },
         content = { paddingValues ->
             PriceSelection(
                 modifier = Modifier
@@ -69,7 +81,10 @@ fun TopUpSelection(
                         enabled = topUpConfig.ready,
                     ) {
                         // unicode "Coin"
-                        Text("\uD83E\uDE99 cash", fontSize = 48.sp)
+                        Text(
+                            "\uD83E\uDE99 cash", fontSize = 48.sp,
+                            textAlign = TextAlign.Center,
+                        )
                     }
 
                     // EC Flow
@@ -95,7 +110,10 @@ fun TopUpSelection(
                         enabled = topUpConfig.ready,
                     ) {
                         // unicode "Credit Card"
-                        Text("\uD83D\uDCB3 card", fontSize = 48.sp)
+                        Text(
+                            "\uD83D\uDCB3 card", fontSize = 48.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }

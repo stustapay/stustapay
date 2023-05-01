@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.nav.TopAppBar
+import de.stustanet.stustapay.ui.nav.TopAppBarIcon
 import de.stustanet.stustapay.ui.priceselect.PriceSelectionDialog
 import de.stustanet.stustapay.ui.priceselect.rememberPriceSelectionState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +29,7 @@ fun SaleSelection(
     viewModel: SaleViewModel,
     onAbort: () -> Unit,
     onSubmit: () -> Unit,
+    leaveView: () -> Unit = {},
 ) {
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
     val saleDraft by viewModel.saleStatus.collectAsStateWithLifecycle()
@@ -38,7 +40,12 @@ fun SaleSelection(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(saleConfig.tillName) })
+            TopAppBar(
+                title = { Text(saleConfig.tillName) },
+                icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
+                    leaveView()
+                },
+            )
         },
         content = { paddingValues ->
             PriceSelectionDialog(
@@ -87,6 +94,7 @@ fun SaleSelection(
                                         onDecr = { viewModel.decrementButton(button.value.id) },
                                     )
                                 }
+
                                 is SaleItemPrice.Returnable -> {
                                     // returnable items can become negative and positive.
                                     SaleSelectionItemType.Returnable(
@@ -98,6 +106,7 @@ fun SaleSelection(
                                         incrementText = "Extra Krug",
                                     )
                                 }
+
                                 is SaleItemPrice.FreePrice -> {
                                     SaleSelectionItemType.FreePrice(
                                         // todo: preselect default price.defaultPrice when no freeprice is set yet

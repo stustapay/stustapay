@@ -121,12 +121,16 @@ class SaleViewModel @Inject constructor(
         _navState.update { SalePage.ProductSelect }
     }
 
-    suspend fun clearSale() {
+    suspend fun clearSale(success: Boolean = false) {
         _saleStatus.update { SaleStatus() }
         scanTarget.update { ScanTarget.None }
         _navState.update { SalePage.ProductSelect }
         _saleCompleted.update { null }
-        _status.update { "Order cleared" }
+        if (success) {
+            _status.update { "Order cleared" }
+        } else {
+            _status.update { "Order cleared" }
+        }
     }
 
     suspend fun tagScanned(tag: UserTag) {

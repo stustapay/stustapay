@@ -43,7 +43,8 @@ fun TopUpView(
         composable(TopUpPage.Amount.route) {
             TopUpSelection(
                 goToCash = { nav.navigateTo(TopUpPage.Cash.route) },
-                viewModel
+                viewModel = viewModel,
+                leaveView = leaveView,
             )
         }
         composable(TopUpPage.Cash.route) {
