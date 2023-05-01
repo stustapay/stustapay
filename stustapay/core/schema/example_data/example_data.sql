@@ -129,13 +129,15 @@ values
     (1, 'Helles 1,0l'),
     (2, 'Russ 0,5l'),
     (3, 'Pfand zurück'),
-    (4, 'Brotladen')
+    (4, 'Brotladen'),
+    (5, 'Weißwurst')
     on conflict do nothing;
 select setval('till_button_id_seq', 100);
 
 insert into till_button_product (
     button_id, product_id
 )  values
+    -- getränke + pfand
     (0, 101),
     (0, 10),
     (1, 100),
@@ -143,7 +145,10 @@ insert into till_button_product (
     (2, 107),
     (2, 10),
     (3, 10),
-    (4, 1000)
+    -- brotladen
+    (4, 1000),
+    -- weißwurst
+    (5, 150)
     on conflict do nothing;
 
 
@@ -151,36 +156,46 @@ insert into till_layout (
     id, name, description
 ) overriding system value
 values
-    (0, 'Bierkasse', 'Allgemeine Bierkasse'),
-    (1, 'Aufladekasse', 'Allgemeine Aufladekasse')
+    (0, 'Alles', 'Alle Features zum Testen'),
+    (1, 'Bierkasse', 'Allgemeine Bierkasse'),
+    (2, 'Aufladekasse', 'Allgemeine Aufladekasse')
     on conflict do nothing;
 select setval('till_layout_id_seq', 100);
 
 insert into till_layout_to_button (
     layout_id, button_id, sequence_number
 ) values
+    -- dev
     (0, 0, 0),
     (0, 1, 1),
     (0, 2, 2),
     (0, 3, 3),
-    (0, 4, 4)
+    (0, 4, 4),
+    (0, 5, 5),
+    -- pot
+    (1, 0, 0),
+    (1, 1, 1),
+    (1, 2, 2),
+    (1, 3, 3)
     on conflict do nothing;
 
 insert into till_profile (
-    id, name, description, layout_id, allow_top_up, allow_cash_out
+    id, name, description, layout_id, allow_top_up, allow_cash_out, allow_ticket_sale
 ) overriding system value
 values
-    (0, 'Pot', 'Allgemeine Pot Bierkasse', 0, false, false),
-    (1, 'Festzelt Aufladung', 'Aufladekasse', 1, true, true)
+    (0, 'Develop', 'Allmächtige Kasse', 0, true, true, true),
+    (1, 'Pot', 'Allgemeine Pot Bierkasse', 1, false, false, false),
+    (2, 'Festzelt Aufladung', 'Aufladekasse', 2, true, true, false)
     on conflict do nothing;
 select setval('till_profile_id_seq', 100);
 
 insert into till (
-    id, name, description, registration_uuid, session_uuid, tse_id, active_shift, active_profile_id
+    id, name, description, active_profile_id, active_user_id, registration_uuid, session_uuid, tse_id, active_shift
 ) overriding system value
 values
-    (0, 'ssc-pot-1', 'Pot Bierkasse', '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, 'tse 0', null, 0),
-    (1, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, 'tse 0', null, 1)
+    (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, 'tse 0', null),
+    (1, 'ssc-pot-1', 'Pot Bierkasse', 1, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, 'tse 0', null),
+    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, 'tse 0', null)
     on conflict do nothing;
 select setval('till_id_seq', 100);
 
@@ -191,11 +206,11 @@ insert into ordr (
 ) overriding system value
 values
     -- simple beer with deposit
-    (0, 2, '2023-01-01 15:35:02 UTC+1', 'tag', 'sale', 0, 0, 200),
+    (0, 2, '2023-01-01 15:35:02 UTC+1', 'tag', 'sale', 0, 1, 200),
     -- items with different tax rates
-    (1, 3, '2023-01-02 17:00:07 UTC+1', 'tag', 'sale', 0, 0, 201),
+    (1, 3, '2023-01-02 17:00:07 UTC+1', 'tag', 'sale', 0, 1, 201),
     -- Top Up EC
-    (2, 1, '2023-01-01 17:00:07 UTC+1', 'tag', 'sale', 0, 0, 201)
+    (2, 1, '2023-01-01 17:00:07 UTC+1', 'tag', 'sale', 0, 1, 201)
     on conflict do nothing;
 select setval('ordr_id_seq', 100);
 
