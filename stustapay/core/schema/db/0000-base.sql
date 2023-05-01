@@ -242,11 +242,11 @@ values
     -- when topping up with cash
     ('cash'),
 
-    -- when topping up with ec
-    ('ec'),
+    -- when topping up with sumup
+    ('sumup'),
 
-    -- payment with token
-    ('token')
+    -- payment with tag
+    ('tag')
 
     -- todo: paypal
 
@@ -259,16 +259,16 @@ insert into order_type (
     name
 )
 values
-    -- load token with cash
-    ('topup_cash'),
-    -- load token with sumup
-    ('topup_sumup'),
+    -- top up customer account
+    ('top_up'),
     -- buy items to consume
     ('sale'),
     -- cancel a sale
     ('cancel_sale'),
     -- pay out remaining balance on a tag
-    ('pay_out')
+    ('pay_out'),
+    -- sale of a ticket in combination with an initial top up
+    ('ticket')
     on conflict do nothing;
 
 
@@ -326,11 +326,12 @@ comment on column product.price is 'price including tax (what is charged in the 
 comment on column product.fixed_price is 'price is not fixed, e.g for top up. Then price=null and set with the api call';
 
 
-insert into product (id, name, fixed_price, tax_name, is_locked) overriding system value
+insert into product (id, name, fixed_price, price, tax_name, is_locked) overriding system value
 values
-    (1, 'Rabatt', false, 'none', true),
-    (2, 'Aufladen', false, 'none', true),
-    (3, 'Auszahlen', false, 'none', true);
+    (1, 'Rabatt', false, null, 'none', true),
+    (2, 'Aufladen', false, null, 'none', true),
+    (3, 'Auszahlen', false, null, 'none', true),
+    (4, 'Eintritt', true, 12, 'ust', true);  -- TODO: correct tax for ticket?
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
@@ -521,6 +522,7 @@ create table if not exists till_profile (
     description text,
     allow_top_up boolean not null default false,
     allow_cash_out boolean not null default false,
+    allow_ticket_sale boolean not null default false,
     layout_id bigint not null references till_layout(id)
     -- todo: payment_methods?
 );
@@ -560,7 +562,7 @@ create table if not exists ordr (
     -- todo: who triggered the transaction (user)
 
     -- how the order was invoked
-    payment_method text references payment_method(name),
+    payment_method text not null references payment_method(name),
     -- todo: method_info references payment_information(id) -> (sumup-id, paypal-id, ...)
     --       or inline-json without separate table?
 
@@ -610,13 +612,18 @@ create or replace view line_item_json as (
         join product_with_tax_and_restrictions p on l.product_id = p.id
 );
 
-create or replace function order_updated() returns trigger as
+create or replace function new_order_added() returns trigger as
 $$
 begin
-    -- A deletion should only be able to occur for uncommitted revisions
     if NEW is null then
         return null;
     end if;
+
+    -- insert a new tse signing request and notify for it
+    insert into bon(id) values (NEW.id);
+    perform pg_notify('bon', NEW.id::text);
+
+    -- send general notifications, used e.g. for instant UI updates
     perform pg_notify(
         'order',
         json_build_object(
@@ -627,16 +634,16 @@ begin
         )::text
     );
 
-    return null;
+    return NEW;
 end;
 $$ language plpgsql;
 
-drop trigger if exists order_updated_trigger on ordr;
-create trigger order_updated_trigger
-    after insert or update
+drop trigger if exists new_order_trigger on ordr;
+create trigger new_order_trigger
+    after insert
     on ordr
     for each row
-execute function order_updated();
+execute function new_order_added();
 
 -- aggregates the line_item's amounts
 create or replace view order_value as

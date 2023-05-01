@@ -78,7 +78,11 @@ class Api(SubCommand):
             cashier_service=CashierService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             order_service=order_service,
         )
+        tasks = [asyncio.create_task(self.server.run(self.cfg, context)), asyncio.create_task(order_service.run())]
         try:
-            await asyncio.gather(self.server.run(self.cfg, context), order_service.run())
+            await asyncio.gather(*tasks)
+        except:  # pylint: disable=bare-except
+            for task in tasks:
+                task.cancel()
         finally:
             await db_pool.close()

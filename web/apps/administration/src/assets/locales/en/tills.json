@@ -31,6 +31,7 @@
     "create": "Add a new profile",
     "allowTopUp": "Allow top up",
     "allowCashOut": "Allow cash out",
+    "allowTicketSale": "Allow ticket sales",
     "layout": "Layout",
     "update": "Update profile",
     "delete": "Delete profile",

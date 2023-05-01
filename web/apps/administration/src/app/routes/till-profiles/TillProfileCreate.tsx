@@ -10,6 +10,7 @@ const initialValues: NewTillProfile = {
   layout_id: undefined as unknown as number, // TODO
   allow_cash_out: false,
   allow_top_up: false,
+  allow_ticket_sale: false,
 };
 
 export const TillProfileCreate: React.FC = () => {

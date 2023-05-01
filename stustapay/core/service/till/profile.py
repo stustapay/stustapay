@@ -22,13 +22,14 @@ class TillProfileService(DBService):
     @requires_user([Privilege.admin])
     async def create_profile(self, *, conn: asyncpg.Connection, profile: NewTillProfile) -> TillProfile:
         row = await conn.fetchrow(
-            "insert into till_profile (name, description, allow_top_up, allow_cash_out, layout_id) "
-            "values ($1, $2, $3, $4, $5) "
-            "returning id, name, description, allow_top_up, allow_cash_out, layout_id",
+            "insert into till_profile (name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id) "
+            "values ($1, $2, $3, $4, $5, $6) "
+            "returning id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id",
             profile.name,
             profile.description,
             profile.allow_top_up,
             profile.allow_cash_out,
+            profile.allow_ticket_sale,
             profile.layout_id,
         )
 
@@ -59,14 +60,15 @@ class TillProfileService(DBService):
     ) -> Optional[TillProfile]:
         row = await conn.fetchrow(
             "update till_profile set name = $2, description = $3, allow_top_up = $4, allow_cash_out = $5, "
-            "   layout_id = $6 "
+            "   allow_ticket_sale = $6, layout_id = $7 "
             "where id = $1 "
-            "returning id, name, description, allow_top_up, allow_cash_out, layout_id",
+            "returning id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id",
             profile_id,
             profile.name,
             profile.description,
             profile.allow_top_up,
             profile.allow_cash_out,
+            profile.allow_ticket_sale,
             profile.layout_id,
         )
         if row is None:

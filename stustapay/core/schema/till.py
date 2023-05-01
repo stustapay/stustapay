@@ -30,6 +30,7 @@ class NewTillProfile(BaseModel):
     layout_id: int
     allow_top_up: bool
     allow_cash_out: bool
+    allow_ticket_sale: bool
 
 
 class TillProfile(NewTillProfile):

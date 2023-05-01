@@ -61,7 +61,7 @@ disable = [
     "logging-fstring-interpolation",
     "unspecified-encoding",
     "broad-exception-raised",
-    "broad-except"
+    "broad-exception-caught"
 ]
 
 [tool.black]

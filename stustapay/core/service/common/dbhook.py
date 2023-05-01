@@ -4,11 +4,10 @@ database notification subscriber
 
 import asyncio
 import inspect
+import logging
+from typing import Callable, Optional, Awaitable, Union, Type
 
 import asyncpg
-import logging
-
-from typing import Callable, Optional, Awaitable, Union, Type
 
 
 class DBHook:
@@ -53,6 +52,13 @@ class DBHook:
         self.connection.remove_termination_listener(self.terminate_callback)
         self.hooks_active = False
 
+    def stop(self):
+        # proper way of clearing asyncio queue
+        for _ in range(self.events.qsize()):
+            self.events.get_nowait()
+            self.events.task_done()
+        self.events.put_nowait(StopIteration)
+
     async def run(self):
         await self.register()
 
@@ -88,8 +94,4 @@ class DBHook:
         assert connection is self.connection
         self.logger.info("psql connection closed")
 
-        # proper way of clearing asyncio queue
-        for _ in range(self.events.qsize()):
-            self.events.get_nowait()
-            self.events.task_done()
-        self.events.put_nowait(StopIteration)
+        self.stop()
