@@ -13,6 +13,7 @@ import de.stustanet.stustapay.model.UserKind
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import de.stustanet.stustapay.ui.common.TagTextField
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -22,7 +23,7 @@ fun UserCreateView(
     goBack: () -> Unit
 ) {
     val scanState = rememberNfcScanDialogState()
-    var login by remember { mutableStateOf("user") }
+    var login by remember { mutableStateOf("") }
     var kind by remember { mutableStateOf(UserKind.Cashier) }
     var newTagId by remember { mutableStateOf<ULong?>(null) }
     val scope = rememberCoroutineScope()
@@ -40,14 +41,12 @@ fun UserCreateView(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text("ID", fontSize = 48.sp, modifier = Modifier.padding(end = 20.dp))
-            TextField(
-                value = newTagId?.toString() ?: "",
-                onValueChange = { newTagId = it.toULongOrNull() },
+            TagTextField(
+                newTagId,
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                isError = newTagId == null,
-            )
+            ) {
+                newTagId = it
+            }
         }
 
         Button(modifier = Modifier
@@ -70,6 +69,7 @@ fun UserCreateView(
             Text("Login", fontSize = 48.sp, modifier = Modifier.padding(end = 20.dp))
             TextField(
                 value = login,
+                placeholder = { Text("Username") },
                 onValueChange = { login = it },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true

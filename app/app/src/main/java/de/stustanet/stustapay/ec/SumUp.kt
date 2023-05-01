@@ -395,13 +395,13 @@ class SumUp @Inject constructor(
             .currency(SumUpPayment.Currency.EUR)
             // optional: include a tip amount in addition to the total
             .tip(payment.tip)
-            .title("StuStaCulum")
+            .title("StuStaCulum ${payment.tag.uid.toString(16)}")
             //.receiptEmail("dummy@sft.lol")
             //.receiptSMS("+00000000000")
             .addAdditionalInfo("Terminal", cfg.terminal.name)
             .addAdditionalInfo("TerminalID", cfg.terminal.id)
             // TODO convert UID to hex
-            .addAdditionalInfo("Tag UID", payment.tag.uid.toString())
+            .addAdditionalInfo("Tag UID", payment.tag.uid.toString(16))
             // stustapay order uuid
             .foreignTransactionId(payment.id)
             // optional: skip the success screen
