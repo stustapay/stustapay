@@ -1,8 +1,8 @@
 import * as React from "react";
-import { NewProduct, NewProductSchema } from "../../../models/product";
 import { useCreateProductMutation } from "../../../api";
 import { useTranslation } from "react-i18next";
 import { ProductChange } from "./ProductChange";
+import { NewProduct, NewProductSchema } from "@stustapay/models";
 
 const initialValues: NewProduct = {
   name: "",

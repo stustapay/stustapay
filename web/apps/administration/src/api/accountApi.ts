@@ -1,8 +1,10 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { Account } from "@models/account";
+// import { Account } from "@models/account";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
+import { Account } from "@stustapay/models";
+
 const accountAdapter = createEntityAdapter<Account>();
 
 export const accountApi = createApi({

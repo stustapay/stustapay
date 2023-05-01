@@ -4,7 +4,7 @@ import { useParams, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Loading } from "@stustapay/components";
 import { TillButtonChange } from "./TillButtonChange";
-import { UpdateTillButtonSchema } from "@models";
+import { UpdateTillButtonSchema } from "@stustapay/models";
 
 export const TillButtonUpdate: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);

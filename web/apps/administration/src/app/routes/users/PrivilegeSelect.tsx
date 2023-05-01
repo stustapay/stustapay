@@ -1,4 +1,4 @@
-import { PossiblePrivileges, Privilege, PrivilegeSchema } from "@models";
+import { PossiblePrivileges, Privilege, PrivilegeSchema } from "@stustapay/models";
 import {
   SelectProps,
   SelectChangeEvent,

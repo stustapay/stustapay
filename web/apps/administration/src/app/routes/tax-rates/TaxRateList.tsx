@@ -6,7 +6,7 @@ import { selectTaxRateAll, useDeleteTaxRateMutation, useGetTaxRatesQuery } from 
 import { useTranslation } from "react-i18next";
 import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { useNavigate } from "react-router-dom";
-import { TaxRate } from "@models";
+import { TaxRate } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 
 export const TaxRateList: React.FC = () => {

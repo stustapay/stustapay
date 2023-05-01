@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NewTill, NewTillSchema } from "@models";
+import { NewTill, NewTillSchema } from "@stustapay/models";
 import { useCreateTillMutation } from "@api";
 import { useTranslation } from "react-i18next";
 import { TillChange } from "./TillChange";

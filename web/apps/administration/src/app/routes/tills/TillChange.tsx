@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTill } from "@models";
+import { NewTill } from "@stustapay/models";
 import { TillProfileSelect } from "./TillProfileSelect";
 
 export interface TillChangeProps<T extends NewTill> {

@@ -10,7 +10,7 @@ import {
   TextField,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { Account } from "@models";
+import { Account } from "@stustapay/models";
 import { toast } from "react-toastify";
 import { useUpdateTagUidMutation } from "@api";
 

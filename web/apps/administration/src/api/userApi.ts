@@ -1,8 +1,8 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { User, NewUser } from "../models/user";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
+import { NewUser, User } from "@stustapay/models";
 
 const userAdapter = createEntityAdapter<User>({
   sortComparer: (a, b) => a.login.toLowerCase().localeCompare(b.login.toLowerCase()),

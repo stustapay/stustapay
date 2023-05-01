@@ -1,6 +1,6 @@
 import { useUpdateTaxRateMutation, useGetTaxRateByNameQuery, selectTaxRateById } from "@api";
 import * as React from "react";
-import { TaxRateSchema } from "@models/taxRate";
+import { TaxRateSchema } from "@stustapay/models";
 import { useParams, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TaxRateChange } from "./TaxRateChange";

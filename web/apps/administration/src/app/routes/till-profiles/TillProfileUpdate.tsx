@@ -1,6 +1,6 @@
 import { useUpdateTillProfileMutation, useGetTillProfileByIdQuery, selectTillProfileById } from "@api";
 import * as React from "react";
-import { TillProfileSchema } from "@models";
+import { TillProfileSchema } from "@stustapay/models";
 import { useParams, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TillProfileChange } from "./TillProfileChange";

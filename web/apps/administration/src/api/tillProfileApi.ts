@@ -1,8 +1,8 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { NewTillProfile, TillProfile } from "@models/till";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
+import { NewTillProfile, TillProfile } from "@stustapay/models";
 
 const tillProfileAdapter = createEntityAdapter<TillProfile>({
   sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),

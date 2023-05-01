@@ -1,8 +1,8 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { TaxRate } from "../models/taxRate";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
+import { TaxRate } from "@stustapay/models";
 
 const taxRateAdapter = createEntityAdapter<TaxRate>({
   selectId: (taxRate) => taxRate.name,

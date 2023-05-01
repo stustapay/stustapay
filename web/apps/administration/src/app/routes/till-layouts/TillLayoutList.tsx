@@ -6,7 +6,7 @@ import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/ico
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { TillLayout } from "@models";
+import { TillLayout } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 
 export const TillLayoutList: React.FC = () => {

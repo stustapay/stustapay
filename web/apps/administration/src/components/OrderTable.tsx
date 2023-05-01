@@ -3,7 +3,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { useCurrencyFormatter } from "@hooks";
-import { Order } from "@models";
+import { Order } from "@stustapay/models";
 import { formatDate } from "@stustapay/utils";
 
 export interface OrderListProps {

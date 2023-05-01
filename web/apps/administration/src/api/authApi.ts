@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { User } from "@models";
+import { User } from "@stustapay/models";
 import { adminApiBaseQuery } from "./common";
 
 export interface UserResponse {

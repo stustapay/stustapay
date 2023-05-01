@@ -1,5 +1,5 @@
 import * as React from "react";
-import { TaxRate, TaxRateSchema } from "@models/taxRate";
+import { TaxRate, TaxRateSchema } from "@stustapay/models";
 import { useCreateTaxRateMutation } from "@api";
 import { useTranslation } from "react-i18next";
 import { TaxRateChange } from "./TaxRateChange";

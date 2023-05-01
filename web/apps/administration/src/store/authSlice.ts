@@ -1,8 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { User } from "@models";
 import { RootState } from "./store";
 import { authApi } from "@api/authApi";
 import { configApi } from "@api";
+import { User } from "@stustapay/models";
 
 interface AuthState {
   user: User | null;

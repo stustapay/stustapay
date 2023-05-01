@@ -1,9 +1,9 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { Order, OrderSchema } from "@models/order";
 import { config, adminApiBaseQuery } from "./common";
 import { RootState, selectAuthToken } from "@store";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
+import { Order, OrderSchema } from "@stustapay/models";
 
 const orderAdapter = createEntityAdapter<Order>({ sortComparer: (a, b) => b.id - a.id });
 

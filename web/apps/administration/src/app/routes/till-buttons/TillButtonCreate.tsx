@@ -1,5 +1,5 @@
 import { useCreateTillButtonMutation } from "@api";
-import { NewTillButton, NewTillButtonSchema } from "@models";
+import { NewTillButton, NewTillButtonSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { TillButtonChange } from "./TillButtonChange";

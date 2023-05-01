@@ -1,6 +1,6 @@
 import { useUpdateTillMutation, useGetTillByIdQuery, selectTillById } from "@api";
 import * as React from "react";
-import { UpdateTillSchema } from "@models";
+import { UpdateTillSchema } from "@stustapay/models";
 import { useParams, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TillChange } from "./TillChange";
