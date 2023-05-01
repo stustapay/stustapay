@@ -333,6 +333,9 @@ class OrderService(DBService):
         if new_topup.amount <= 0.0:
             raise InvalidArgument("Only topups with a positive amount are allowed")
 
+        if new_topup.payment_method == PaymentMethod.tag:
+            raise InvalidArgument("Cannot pay with tag for top ups")
+
         can_top_up = await conn.fetchval(
             "select allow_top_up from till_profile where id = $1", current_terminal.till.active_profile_id
         )
@@ -801,6 +804,9 @@ class OrderService(DBService):
     async def check_ticket_sale(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_ticket_sale: NewTicketSale
     ) -> PendingTicketSale:
+        if new_ticket_sale.payment_method == PaymentMethod.tag:
+            raise InvalidArgument("Cannot pay with tag for a ticket")
+
         if new_ticket_sale.initial_top_up_amount < 0.0:
             raise InvalidArgument("Only initial top ups with a positive amount are allowed")
 
