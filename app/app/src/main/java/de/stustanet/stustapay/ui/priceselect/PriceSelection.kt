@@ -33,12 +33,12 @@ fun PriceSelection(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier.height(200.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 "%.2f€".format(keyboardState.toFloat() / 100),
-                fontSize = 72.sp
+                fontSize = 72.sp,
+                modifier = Modifier.padding(vertical = 15.dp),
             )
         }
         NumberKeyboard(

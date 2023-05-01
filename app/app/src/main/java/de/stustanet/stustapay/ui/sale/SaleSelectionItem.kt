@@ -103,7 +103,9 @@ fun SaleSelectionItem(
         }
 
         Row(
-            modifier = Modifier.weight(0.3f),
+            modifier = Modifier
+                .weight(0.3f)
+                .padding(end = 5.dp),
             horizontalArrangement = Arrangement.End,
         ) {
             // TODO: highlight background if not 0
@@ -111,20 +113,27 @@ fun SaleSelectionItem(
             Text(
                 text = itemPrice.replace('.', ','),
                 textAlign = TextAlign.Right,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.6f),
                 fontSize = 24.sp,
             )
 
             Text(
                 text = itemAmount,
                 textAlign = TextAlign.Right,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.4f),
                 fontSize = 24.sp,
             )
         }
 
-        Box(modifier = Modifier.weight(0.7f)) {
-            Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+        Box(
+            modifier = Modifier
+                .weight(0.7f)
+                .padding(vertical = 2.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.height(75.dp)
+            ) {
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -151,11 +160,11 @@ fun SaleSelectionItem(
                                 0.7f
                             }
                         )
-                        .height(90.dp)
-                        .padding(5.dp)
+                        .fillMaxHeight()
                 ) {
                     Text(text = caption, fontSize = 24.sp)
                 }
+                Spacer(modifier = Modifier.padding(horizontal = 2.dp))
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -175,9 +184,7 @@ fun SaleSelectionItem(
                         }
                     },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(90.dp)
-                        .padding(5.dp),
+                        .fillMaxSize(),
                     colors = if (sameSizeButtons) {
                         ButtonDefaults.buttonColors()
                     } else {

@@ -22,9 +22,9 @@ fun UserCreateView(
     goBack: () -> Unit
 ) {
     val scanState = rememberNfcScanDialogState()
-    var id by remember { mutableStateOf("0") }
     var login by remember { mutableStateOf("user") }
     var kind by remember { mutableStateOf(UserKind.Cashier) }
+    var newTagId by remember { mutableStateOf<ULong?>(null) }
     val scope = rememberCoroutineScope()
 
     Column(
@@ -41,11 +41,12 @@ fun UserCreateView(
         ) {
             Text("ID", fontSize = 48.sp, modifier = Modifier.padding(end = 20.dp))
             TextField(
-                value = id,
-                onValueChange = { id = it },
+                value = newTagId?.toString() ?: "",
+                onValueChange = { newTagId = it.toULongOrNull() },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = newTagId == null,
             )
         }
 
@@ -56,7 +57,7 @@ fun UserCreateView(
         }
 
         NfcScanDialog(state = scanState, onScan = { tag ->
-            id = tag.uid.toString()
+            newTagId = tag.uid
         })
 
         Row(
@@ -115,8 +116,11 @@ fun UserCreateView(
             .padding(bottom = 10.dp),
             onClick = {
                 scope.launch {
-                    viewModel.create(login, UserTag(id.toULong()), kind)
-                    goBack()
+                    val id = newTagId
+                    if (id != null) {
+                        viewModel.create(login, UserTag(id), kind)
+                        goBack()
+                    }
                 }
             }) {
             Text(text = "Create", fontSize = 24.sp)
