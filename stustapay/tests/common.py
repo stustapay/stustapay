@@ -135,6 +135,7 @@ class BaseTestCase(TestCase):
             till=NewTill(
                 name="test-till",
                 active_profile_id=till_profile.id,
+                active_user_id=self.cashier.id,
             ),
         )
         self.terminal_token = (

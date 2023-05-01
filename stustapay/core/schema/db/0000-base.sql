@@ -213,7 +213,9 @@ values
     -- Helfer
     ('cashier'),
     -- can hand out free tickets
-    ('grant_free_tickets')
+    ('grant_free_tickets'),
+    -- can hand vouchers
+    ('grant_vouchers')
     on conflict do nothing;
 
 create or replace function check_cashier_needs_cashier_account(

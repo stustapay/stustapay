@@ -17,7 +17,6 @@ from stustapay.core.schema.account import (
     get_target_account,
     ACCOUNT_SALE_EXIT,
     ACCOUNT_CASH_EXIT,
-    ACCOUNT_MONEY_VOUCHER_CREATE,
 )
 from stustapay.core.schema.order import (
     CompletedSale,
@@ -37,7 +36,6 @@ from stustapay.core.schema.order import (
     PendingTicketSale,
     CompletedTicketSale,
     PaymentMethod,
-    NewFreeTicketGrant,
 )
 from stustapay.core.schema.product import (
     Product,
@@ -53,7 +51,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
-from stustapay.core.service.common.error import InvalidArgument, ServiceException, NotFound
+from stustapay.core.service.common.error import InvalidArgument, ServiceException
 from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.util import BaseModel
 from .voucher import VoucherService
@@ -938,42 +936,6 @@ class OrderService(DBService):
             cashier_id=current_user.id,
             till_id=current_terminal.till.id,
         )
-
-    @with_db_transaction
-    @requires_terminal([Privilege.admin, Privilege.grant_free_tickets])
-    async def grant_free_tickets(
-        self, *, conn: asyncpg.Connection, current_user: User, new_free_ticket_grant: NewFreeTicketGrant
-    ) -> bool:
-        user_tag_found = await conn.fetchval(
-            "select true from user_tag where uid = $1", new_free_ticket_grant.user_tag_uid
-        )
-        if user_tag_found is None:
-            raise NotFound(element_typ="user_tag", element_id=str(new_free_ticket_grant.user_tag_uid))
-
-        # create a new customer account for the given tag
-        account_id = await conn.fetchval(
-            "insert into account (user_tag_uid, type) values ($1, 'private') returning id",
-            new_free_ticket_grant.user_tag_uid,
-        )
-
-        if new_free_ticket_grant.initial_voucher_amount > 0:
-            await conn.fetchval(
-                "select * from book_transaction("
-                "   order_id => null,"
-                "   description => $1,"
-                "   source_account_id => $2,"
-                "   target_account_id => $3,"
-                "   amount => 0,"
-                "   vouchers_amount => $4,"
-                "   conducting_user_id => $5)",
-                "Initial voucher amount for volunteer ticket",
-                ACCOUNT_MONEY_VOUCHER_CREATE,
-                account_id,
-                new_free_ticket_grant.initial_voucher_amount,
-                current_user.id,
-            )
-
-        return True
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.cashier])
