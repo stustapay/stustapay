@@ -195,6 +195,20 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.admin, Privilege.finanzorga])
+    async def update_user_privileges(
+        self, *, conn: asyncpg.Connection, user_id: int, privileges: list[Privilege]
+    ) -> Optional[User]:
+        found = await conn.fetchval("select true from usr where id = $1", user_id)
+        if not found:
+            raise NotFound(element_typ="user", element_id=str(user_id))
+
+        await conn.execute("delete from usr_privs where usr = $1", user_id)
+        for privilege in privileges:
+            await conn.execute("insert into usr_privs (usr, priv) values ($1, $2)", user_id, privilege.value)
+        return await self._get_user(conn=conn, user_id=user_id)
+
+    @with_db_transaction
+    @requires_user([Privilege.admin, Privilege.finanzorga])
     async def update_user(self, *, conn: asyncpg.Connection, user_id: int, user: UserWithoutId) -> Optional[User]:
         return await self._update_user(conn=conn, user_id=user_id, user=user)
 

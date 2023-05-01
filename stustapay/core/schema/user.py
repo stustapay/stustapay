@@ -9,6 +9,7 @@ class Privilege(enum.Enum):
     # orga = "orga"
     finanzorga = "finanzorga"
     cashier = "cashier"
+    grant_free_tickets = "grant_free_tickets"
 
 
 class NewUser(BaseModel):

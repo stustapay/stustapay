@@ -17,6 +17,7 @@ from stustapay.core.schema.order import (
     Order,
     NewTicketSale,
     PendingTicketSale,
+    NewFreeTicketGrant,
 )
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile, NewTillButton
@@ -27,6 +28,8 @@ from stustapay.core.service.order.order import TillPermissionException, InvalidS
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 from .common import BaseTestCase
+from ..core.schema.user import Privilege
+from ..core.service.common.error import AccessDenied
 
 START_BALANCE = 100
 
@@ -478,3 +481,33 @@ class OrderLogicTest(BaseTestCase):
         self.assertEqual(8, customer.balance)
         await self._assert_account_balance(account_id=ACCOUNT_SUMUP, balance=-completed_ticket.total_price)
         await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, balance=self.ticket_price)
+
+    async def test_free_ticket_grant_without_vouchers(self):
+        volunteer_tag = await self.db_conn.fetchval("insert into user_tag (uid) values (1337) returning uid")
+        grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag)
+
+        with self.assertRaises(AccessDenied):
+            await self.order_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)
+
+        await self.user_service.update_user_privileges(
+            token=self.admin_token,
+            user_id=self.cashier.id,
+            privileges=[Privilege.grant_free_tickets, Privilege.cashier],
+        )
+        success = await self.order_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)
+        self.assertTrue(success)
+        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=volunteer_tag)
+        self.assertEqual(customer.vouchers, 0)
+
+    async def test_free_ticket_grant_with_vouchers(self):
+        await self.user_service.update_user_privileges(
+            token=self.admin_token,
+            user_id=self.cashier.id,
+            privileges=[Privilege.grant_free_tickets, Privilege.cashier],
+        )
+        volunteer_tag = await self.db_conn.fetchval("insert into user_tag (uid) values (1337) returning uid")
+        grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag, initial_voucher_amount=3)
+        success = await self.order_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)
+        self.assertTrue(success)
+        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=volunteer_tag)
+        self.assertEqual(customer.vouchers, 3)

@@ -211,7 +211,9 @@ values
     -- Standleiter
     -- ('orga'),
     -- Helfer
-    ('cashier')
+    ('cashier'),
+    -- can hand out free tickets
+    ('grant_free_tickets')
     on conflict do nothing;
 
 create or replace function check_cashier_needs_cashier_account(
@@ -737,6 +739,9 @@ create table if not exists transaction (
     --      and deposit to a specific deposit account
     id bigint primary key generated always as identity,
     order_id bigint references ordr(id),
+    -- for transactions without an associated order we want to track who caused this transaction
+    conducting_user_id bigint references usr(id),
+    constraint conducting_user_id_or_order_is_set check ((order_id is null) != (conducting_user_id is null)),
 
     -- what was booked in this transaction  (backpack, items, ...)
     description text,
@@ -791,7 +796,8 @@ create or replace function book_transaction (
     target_account_id bigint,
     amount numeric,
     vouchers_amount bigint,
-    booked_at timestamptz default now()
+    booked_at timestamptz default now(),
+    conducting_user_id bigint default null
 )
     returns bigint as $$
 <<locals>> declare
@@ -813,7 +819,7 @@ begin
 
     -- add new transaction
     insert into transaction (
-        order_id, description, source_account, target_account, amount, vouchers, booked_at
+        order_id, description, source_account, target_account, amount, vouchers, booked_at, conducting_user_id
     )
     values (
         book_transaction.order_id,
@@ -822,7 +828,8 @@ begin
         book_transaction.target_account_id,
         book_transaction.amount,
         book_transaction.vouchers_amount,
-        book_transaction.booked_at
+        book_transaction.booked_at,
+        book_transaction.conducting_user_id
     ) returning id into locals.transaction_id;
 
     -- update account values
