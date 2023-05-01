@@ -77,11 +77,17 @@ export const TillProfileDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("profile.description")} secondary={profile.description} />
           </ListItem>
-          <ListItem secondaryAction={<Checkbox edge="end" checked={profile.allow_top_up} disabled={true} />}>
+          <ListItem>
+            <Checkbox edge="end" checked={profile.allow_top_up} disabled={true} sx={{ mr: 1 }} />
             <ListItemText primary={t("profile.allowTopUp")} />
           </ListItem>
-          <ListItem secondaryAction={<Checkbox edge="end" checked={profile.allow_cash_out} disabled={true} />}>
+          <ListItem>
+            <Checkbox edge="end" checked={profile.allow_cash_out} disabled={true} sx={{ mr: 1 }} />
             <ListItemText primary={t("profile.allowCashOut")} />
+          </ListItem>
+          <ListItem>
+            <Checkbox edge="end" checked={profile.allow_ticket_sale} disabled={true} sx={{ mr: 1 }} />
+            <ListItemText primary={t("profile.allowTicketSale")} />
           </ListItem>
           {layout && (
             <ListItem>
