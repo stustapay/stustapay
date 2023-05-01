@@ -8,12 +8,15 @@ import kotlinx.serialization.Serializable
  * TopUpType enum from core model.
  */
 @Serializable
-enum class TopUpType {
+enum class PaymentMethod {
     @SerialName("cash")
     Cash,
 
     @SerialName("sumup")
     SumUp,
+
+    @SerialName("tag")
+    Tag,
 }
 
 
@@ -24,7 +27,7 @@ enum class TopUpType {
 data class NewTopUp(
     val amount: Double,
     val customer_tag_uid: ULong,
-    val topup_type: TopUpType,
+    val payment_method: PaymentMethod,
     val uuid: String? = null,
 )
 
@@ -36,7 +39,7 @@ data class PendingTopUp(
     // NewTopUp
     val amount: Double,
     val customer_tag_uid: ULong,
-    val topup_type: TopUpType,
+    val payment_method: PaymentMethod,
     val uuid: String? = null,
     // PendingTopUp
     val old_balance: Double,
@@ -49,7 +52,7 @@ data class PendingTopUp(
  */
 @Serializable
 data class CompletedTopUp(
-    val topup_type: TopUpType,
+    val payment_method: PaymentMethod,
 
     val customer_tag_uid: ULong,
     val customer_account_id: Int,

@@ -57,6 +57,7 @@ fun TopUpSelection(
                 state = priceState,
                 onEnter = { viewModel.setAmount(it) },
                 onClear = { viewModel.clearDraft() },
+                allowCents = false,
             )
         },
         bottomBar = {
