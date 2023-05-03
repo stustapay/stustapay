@@ -35,7 +35,7 @@ class CashierService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.cashier_management])
     async def list_cashiers(self, *, conn: asyncpg.Connection) -> list[Cashier]:
         cursor = conn.cursor("select * from cashier")
         result = []
@@ -44,7 +44,7 @@ class CashierService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.cashier_management])
     async def get_cashier(self, *, conn: asyncpg.Connection, cashier_id: int) -> Optional[Cashier]:
         row = await conn.fetchrow("select * from cashier where id = $1", cashier_id)
         if not row:
@@ -52,7 +52,7 @@ class CashierService(DBService):
         return Cashier.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.cashier_management])
     async def get_cashier_shifts(
         self, *, conn: asyncpg.Connection, current_user: User, cashier_id: int
     ) -> list[CashierShift]:
@@ -79,7 +79,7 @@ class CashierService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.cashier_management])
     async def close_out_cashier(
         self, *, conn: asyncpg.Connection, current_user: User, cashier_id: int, close_out: CloseOut
     ) -> CloseOutResult:

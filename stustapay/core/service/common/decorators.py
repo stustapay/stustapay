@@ -3,9 +3,9 @@ from functools import wraps
 from inspect import signature
 from typing import Optional
 
-from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.schema.terminal import Terminal
-from stustapay.core.schema.user import User, Privilege
+from stustapay.core.schema.user import Privilege, CurrentUser
+from stustapay.core.service.common.error import AccessDenied
 
 
 def with_db_connection(func):
@@ -84,6 +84,9 @@ def requires_user(privileges: Optional[list[Privilege]] = None):
             if "token" not in signature(func).parameters and "token" in kwargs:
                 kwargs.pop("token")
 
+            if "conn" not in signature(func).parameters:
+                kwargs.pop("conn")
+
             return await func(self, **kwargs)
 
         return wrapper
@@ -131,6 +134,9 @@ def requires_customer(func):
         if "token" not in signature(func).parameters and "token" in kwargs:
             kwargs.pop("token")
 
+        if "conn" not in signature(func).parameters:
+            kwargs.pop("conn")
+
         return await func(self, **kwargs)
 
     return wrapper
@@ -169,26 +175,36 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
             if terminal is None:
                 raise AccessDenied("invalid terminal token")
 
+            current_user_row = await kwargs["conn"].fetchrow(
+                "select "
+                "   usr.*, "
+                "   urwp.privileges as privileges, "
+                "   $2::bigint as active_role_id, "
+                "   urwp.name as active_role_name "
+                "from usr "
+                "join user_to_role utr on utr.user_id = usr.id "
+                "join user_role_with_privileges urwp on urwp.id = utr.role_id "
+                "where usr.id = $1 and utr.role_id = $2",
+                terminal.till.active_user_id,
+                terminal.till.active_user_role_id,
+            )
+
+            logged_in_user = CurrentUser.parse_obj(current_user_row) if current_user_row is not None else None
+
             if user_privileges is not None:
-                if terminal.till.active_user_id is None:
+                if terminal.till.active_user_id is None or logged_in_user is None:
                     raise AccessDenied(
                         f"no user is logged into this terminal but "
                         f"the following privileges are required {user_privileges}"
                     )
 
-                logged_in_user = User.parse_obj(
-                    await kwargs["conn"].fetchrow(
-                        "select * from usr_with_privileges where id = $1", terminal.till.active_user_id
-                    )
-                )
-
                 if not any([p in user_privileges for p in logged_in_user.privileges]):
                     raise AccessDenied(f"user does not have any of the required privileges: {user_privileges}")
 
-                if "current_user" in signature(func).parameters:
-                    kwargs["current_user"] = logged_in_user
-                elif "current_user" in kwargs:
-                    kwargs.pop("current_user")
+            if "current_user" in signature(func).parameters:
+                kwargs["current_user"] = logged_in_user
+            elif "current_user" in kwargs:
+                kwargs.pop("current_user")
 
             if "current_terminal" in signature(func).parameters:
                 kwargs["current_terminal"] = terminal
@@ -197,6 +213,9 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
 
             if "token" not in signature(func).parameters and "token" in kwargs:
                 kwargs.pop("token")
+
+            if "conn" not in signature(func).parameters:
+                kwargs.pop("conn")
 
             return await func(self, **kwargs)
 

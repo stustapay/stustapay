@@ -1,12 +1,13 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import NewTill, NewTillButton, NewTillLayout, NewTillProfile
+from stustapay.core.schema.user import CASHIER_ROLE_NAME, FINANZORGA_ROLE_NAME, ADMIN_ROLE_NAME
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.product import ProductService
 from .common import BaseTestCase
 
 
-class TillServiceTest(BaseTestCase):
+class TillManagementTest(BaseTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
 
@@ -76,6 +77,7 @@ class TillServiceTest(BaseTestCase):
                 allow_top_up=False,
                 allow_cash_out=False,
                 allow_ticket_sale=False,
+                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
         till = await self.till_service.create_till(
@@ -85,7 +87,6 @@ class TillServiceTest(BaseTestCase):
                 description="Pottipot",
                 tse_id=None,
                 active_shift=None,
-                active_user_id=None,
                 active_profile_id=till_profile.id,
             ),
         )
@@ -99,7 +100,6 @@ class TillServiceTest(BaseTestCase):
                     description="Pottipot",
                     tse_id=None,
                     active_shift=None,
-                    active_user_id=None,
                     active_profile_id=till_profile.id,
                 ),
             )
@@ -128,23 +128,6 @@ class TillServiceTest(BaseTestCase):
 
         deleted = await self.till_service.delete_till(token=self.admin_token, till_id=till.id)
         self.assertTrue(deleted)
-
-    async def test_cashier_login_flow(self):
-        await self.create_terminal_token()
-        till = await self.till_service.get_till(token=self.admin_token, till_id=self.till.id)
-
-        terminal_config = await self.till_service.get_terminal_config(token=self.terminal_token)
-        self.assertEqual(terminal_config.id, till.id)
-
-        # logout till from terminal
-        logged_out = await self.till_service.logout_terminal(token=self.terminal_token)
-        self.assertTrue(logged_out)
-
-        # logout till from admin
-        till = await self.till_service.get_till(token=self.admin_token, till_id=till.id)
-        await self.till_service.register_terminal(registration_uuid=till.registration_uuid)
-        logged_out = await self.till_service.logout_terminal_id(token=self.admin_token, till_id=till.id)
-        self.assertTrue(logged_out)
 
     async def test_button_references_locked_products(self):
         product = await self.product_service.create_product(

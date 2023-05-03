@@ -16,7 +16,7 @@ class TaxRateService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.tax_rate_management])
     async def create_tax_rate(self, *, conn: asyncpg.Connection, tax_rate: TaxRate) -> TaxRate:
         row = await conn.fetchrow(
             "insert into tax (name, rate, description) values ($1, $2, $3) returning name, rate, description",
@@ -28,7 +28,7 @@ class TaxRateService(DBService):
         return TaxRate.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user()
     async def list_tax_rates(self, *, conn: asyncpg.Connection) -> list[TaxRate]:
         cursor = conn.cursor("select * from tax")
         result = []
@@ -37,7 +37,7 @@ class TaxRateService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user()
     async def get_tax_rate(self, *, conn: asyncpg.Connection, tax_rate_name: str) -> Optional[TaxRate]:
         row = await conn.fetchrow("select * from tax where name = $1", tax_rate_name)
         if row is None:
@@ -46,7 +46,7 @@ class TaxRateService(DBService):
         return TaxRate.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.tax_rate_management])
     async def update_tax_rate(
         self, *, conn: asyncpg.Connection, tax_rate_name: str, tax_rate: TaxRateWithoutName
     ) -> Optional[TaxRate]:
@@ -62,7 +62,7 @@ class TaxRateService(DBService):
         return TaxRate.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.tax_rate_management])
     async def delete_tax_rate(self, *, conn: asyncpg.Connection, tax_rate_name: str) -> bool:
         result = await conn.execute(
             "delete from tax where name = $1",

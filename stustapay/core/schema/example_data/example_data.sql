@@ -62,18 +62,16 @@ values
     on conflict do nothing;
 select setval('usr_id_seq', 100);
 
-
-insert into usr_privs (
-    usr, priv
+insert into user_to_role (
+    user_id, role_id
 )
 values
-    (1, 'admin'),
-    (0, 'cashier'),
-    (2, 'admin'), -- tag #2
-    (2, 'cashier'),
-    (4, 'cashier') -- tag #4
+    (0, 2), -- cashier
+    (1, 0), -- admin
+    (2, 0), -- tag #2, admin
+    (2, 2), -- tag #2, cashier
+    (4, 2) -- tag #4, cashier
     on conflict do nothing;
-
 
 insert into product (
     id, name, price, price_in_vouchers, fixed_price, target_account_id, tax_name, is_returnable, is_locked

@@ -4,11 +4,11 @@ from typing import Optional
 import asyncpg
 from jose import JWTError, jwt
 from pydantic import BaseModel, ValidationError
-from stustapay.core.schema.customer import Customer
 
+from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.till import Till
-from stustapay.core.schema.user import User
+from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction
 
@@ -65,14 +65,14 @@ class AuthService(DBService):
         return encoded_jwt
 
     @with_db_transaction
-    async def get_user_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[User]:
+    async def get_user_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[CurrentUser]:
         token_payload = self.decode_user_jwt_payload(token)
         if token_payload is None:
             return None
 
         row = await conn.fetchrow(
-            "select u.*, s.id as session_id "
-            "from usr_with_privileges u join usr_session s on u.id = s.usr "
+            "select u.*, null as active_role_id "
+            "from user_with_privileges u join usr_session s on u.id = s.usr "
             "where u.id = $1 and s.id = $2",
             token_payload.user_id,
             token_payload.session_id,
@@ -80,7 +80,7 @@ class AuthService(DBService):
         if row is None:
             return None
 
-        return User.parse_obj(row)
+        return CurrentUser.parse_obj(row)
 
     @with_db_transaction
     async def get_customer_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[Customer]:

@@ -4,13 +4,45 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+ADMIN_ROLE_ID = 0
+ADMIN_ROLE_NAME = "admin"
+FINANZORGA_ROLE_ID = 1
+FINANZORGA_ROLE_NAME = "finanzorga"
+CASHIER_ROLE_ID = 2
+CASHIER_ROLE_NAME = "cashier"
+STANDLEITER_ROLE_ID = 3
+INFOZELT_ROLE_ID = 4
+
+
 class Privilege(enum.Enum):
-    admin = "admin"
-    # orga = "orga"
-    finanzorga = "finanzorga"
-    cashier = "cashier"
+    # general management privileges
+    account_management = "account_management"
+    cashier_management = "cashier_management"
+    config_management = "config_management"
+    product_management = "product_management"
+    tax_rate_management = "tax_rate_management"
+    user_management = "user_management"
+    till_management = "till_management"
+    order_management = "order_management"
+
+    # festival workflow privileges
+    terminal_login = "terminal_login"
+    supervised_terminal_login = "supervised_terminal_login"
+
+    # festival order / ticket / voucher flow privileges
+    # which orders are available (sale, ticket, ...) is determined by the terminal profile
+    can_book_orders = "can_book_orders"
     grant_free_tickets = "grant_free_tickets"
     grant_vouchers = "grant_vouchers"
+
+
+class NewUserRole(BaseModel):
+    name: str
+    privileges: list[Privilege]
+
+
+class UserRole(NewUserRole):
+    id: int
 
 
 class NewUser(BaseModel):
@@ -22,7 +54,7 @@ class NewUser(BaseModel):
 class UserWithoutId(BaseModel):
     login: str
     display_name: str
-    privileges: list[Privilege]
+    role_names: list[str]
     description: Optional[str] = None
     user_tag_uid: Optional[int] = None
     transport_account_id: Optional[int] = None
@@ -35,6 +67,23 @@ class User(UserWithoutId):
 
 class UserWithPassword(User):
     password: str
+
+
+class CurrentUser(BaseModel):
+    """
+    Describes a logged-in user in the system
+    """
+
+    id: int
+    login: str
+    display_name: str
+    active_role_id: Optional[int]
+    active_role_name: Optional[str]
+    privileges: list[Privilege]
+    description: Optional[str] = None
+    user_tag_uid: Optional[int] = None
+    transport_account_id: Optional[int] = None
+    cashier_account_id: Optional[int] = None
 
 
 class UserTag(BaseModel):

@@ -1,13 +1,14 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.till import NewTillProfile
+from stustapay.core.schema.user import Privilege, NewUserRole
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied
-from .common import BaseTestCase
+from .common import TerminalTestCase
 
 
-class AccountServiceTest(BaseTestCase):
+class AccountServiceTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
 
@@ -19,7 +20,6 @@ class AccountServiceTest(BaseTestCase):
         self.account_id = await self.db_conn.fetchval(
             "insert into account(user_tag_uid, type, name) values (1, 'private', 'account-1') returning id"
         )
-        await self.create_terminal_token()
 
     async def test_switch_user_tag(self):
         acc = await self.account_service.get_account(token=self.admin_token, account_id=self.account_id)
@@ -38,17 +38,44 @@ class AccountServiceTest(BaseTestCase):
         self.assertEqual(1, n_history_entries)
 
     async def test_free_ticket_grant_without_vouchers(self):
+        voucher_role = await self.user_service.create_user_role(
+            token=self.admin_token,
+            new_role=NewUserRole(name="test-role", privileges=[Privilege.supervised_terminal_login]),
+        )
+        await self.user_service.update_user_roles(
+            token=self.admin_token,
+            user_id=self.cashier.id,
+            role_names=[voucher_role.name],
+        )
+        await self.till_service.profile.update_profile(
+            token=self.admin_token,
+            profile_id=self.till.active_profile_id,
+            profile=NewTillProfile(
+                name="test-profile",
+                description="",
+                layout_id=self.till_layout.id,
+                allow_top_up=True,
+                allow_cash_out=True,
+                allow_ticket_sale=True,
+                allowed_role_names=["test-role"],
+            ),
+        )
+
+        # after updating the cashier roles we need to log out and log in with the new role
+        await super()._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=voucher_role.id)
+
         volunteer_tag = await self.db_conn.fetchval("insert into user_tag (uid) values (1337) returning uid")
         grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag)
 
         with self.assertRaises(AccessDenied):
             await self.account_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)
 
-        await self.user_service.update_user_privileges(
+        await self.user_service.update_user_role_privileges(
             token=self.admin_token,
-            user_id=self.cashier.id,
-            privileges=[Privilege.grant_free_tickets, Privilege.cashier],
+            role_id=voucher_role.id,
+            privileges=[Privilege.grant_free_tickets],
         )
+
         success = await self.account_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)
         self.assertTrue(success)
         customer = await self.account_service.get_account_by_tag_uid(token=self.admin_token, user_tag_uid=volunteer_tag)
@@ -57,13 +84,13 @@ class AccountServiceTest(BaseTestCase):
         with self.assertRaises(AccessDenied):
             await self.account_service.grant_vouchers(token=self.terminal_token, user_tag_uid=volunteer_tag, vouchers=3)
 
-        await self.user_service.update_user_privileges(
+        await self.user_service.update_user_role_privileges(
             token=self.admin_token,
-            user_id=self.cashier.id,
-            privileges=[Privilege.grant_free_tickets, Privilege.cashier, Privilege.grant_vouchers],
+            role_id=voucher_role.id,
+            privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets, Privilege.grant_vouchers],
         )
 
-        # lets grant the new volunteer tickets via the extra api
+        # let's grant the new volunteer tickets via the extra api
         account = await self.account_service.grant_vouchers(
             token=self.terminal_token, user_tag_uid=volunteer_tag, vouchers=3
         )
@@ -71,11 +98,34 @@ class AccountServiceTest(BaseTestCase):
         self.assertEqual(3, account.vouchers)
 
     async def test_free_ticket_grant_with_vouchers(self):
-        await self.user_service.update_user_privileges(
+        voucher_role = await self.user_service.create_user_role(
+            token=self.admin_token,
+            new_role=NewUserRole(
+                name="test-role", privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets]
+            ),
+        )
+        await self.till_service.profile.update_profile(
+            token=self.admin_token,
+            profile_id=self.till.active_profile_id,
+            profile=NewTillProfile(
+                name="test-profile",
+                description="",
+                layout_id=self.till_layout.id,
+                allow_top_up=True,
+                allow_cash_out=True,
+                allow_ticket_sale=True,
+                allowed_role_names=["test-role"],
+            ),
+        )
+
+        await self.user_service.update_user_roles(
             token=self.admin_token,
             user_id=self.cashier.id,
-            privileges=[Privilege.grant_free_tickets, Privilege.cashier],
+            role_names=[voucher_role.name],
         )
+        # after updating the cashier roles we need to log out and log in with the new role
+        await super()._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=voucher_role.id)
+
         volunteer_tag = await self.db_conn.fetchval("insert into user_tag (uid) values (1337) returning uid")
         grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag, initial_voucher_amount=3)
         success = await self.account_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)

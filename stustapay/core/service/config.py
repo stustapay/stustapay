@@ -15,7 +15,7 @@ class ConfigService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.config_management])
     async def list_config_entries(self, *, conn: asyncpg.Connection) -> list[ConfigEntry]:
         cursor = conn.cursor("select * from config")
         result = []
@@ -24,7 +24,7 @@ class ConfigService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.config_management])
     async def set_config_entry(self, *, conn: asyncpg.Connection, entry: ConfigEntry) -> ConfigEntry:
         row = await conn.fetchrow(
             "update config set value = $2 where key = $1 returning key, value", entry.key, entry.value

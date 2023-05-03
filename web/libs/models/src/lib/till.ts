@@ -45,6 +45,7 @@ export const NewTillProfileSchema = z.object({
   allow_top_up: z.boolean(),
   allow_cash_out: z.boolean(),
   allow_ticket_sale: z.boolean(),
+  allowed_role_names: z.array(z.string()),
 });
 
 export type NewTillProfile = z.infer<typeof NewTillProfileSchema>;

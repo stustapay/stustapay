@@ -11,6 +11,7 @@ const initialValues: NewTillProfile = {
   allow_cash_out: false,
   allow_top_up: false,
   allow_ticket_sale: false,
+  allowed_role_names: [],
 };
 
 export const TillProfileCreate: React.FC = () => {

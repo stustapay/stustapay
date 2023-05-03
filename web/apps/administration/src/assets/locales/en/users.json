@@ -7,7 +7,20 @@
   "userDescription": "Description",
   "userPrivileges": "Privileges",
   "userCreateError": "Error while creating user: {{what}}",
-  "userUpdateError": "Error while creating user: {{what}}",
+  "userUpdateError": "Error while updating user: {{what}}",
   "deleteUser": "Delete User",
-  "deleteUserDescription": "Confirm user deletion"
+  "deleteUserDescription": "Confirm user deletion",
+  "user": {
+    "roles": "Roles"
+  },
+  "userRole": {
+    "name": "Name",
+    "create": "Create new user role",
+    "update": "Update user role",
+    "createError": "Error while creating user role: {{what}}",
+    "updateError": "Error while updating user role: {{what}}",
+    "privileges": "Privileges",
+    "delete": "Delete user role",
+    "deleteDescription": "Confirm user role deletion"
+  }
 }

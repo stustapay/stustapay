@@ -26,12 +26,13 @@ from stustapay.core.service.order.order import NotEnoughFundsException
 from stustapay.core.service.order.order import TillPermissionException, InvalidSaleException
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
-from .common import BaseTestCase
+from .common import TerminalTestCase
+from ..core.schema.user import ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME
 
 START_BALANCE = 100
 
 
-class OrderLogicTest(BaseTestCase):
+class OrderLogicTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
         self.product_service = ProductService(
@@ -92,24 +93,17 @@ class OrderLogicTest(BaseTestCase):
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
+                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
-        self.till = await self.till_service.create_till(
+        self.till = await self.till_service.update_till(
             token=self.admin_token,
+            till_id=self.till.id,
             till=NewTill(
-                name="test_till",
-                description="",
-                tse_id=None,
-                active_shift=None,
+                name="test-till",
                 active_profile_id=self.till_profile.id,
-                active_user_id=self.cashier.id,
             ),
         )
-        # login in cashier to till
-        self.terminal_token = (
-            await self.till_service.register_terminal(registration_uuid=self.till.registration_uuid)
-        ).token
-        self.cashier = await self.user_service.get_user(token=self.admin_token, user_id=self.cashier.id)
         # add customer
         self.customer_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (1234) returning uid")
         self.customer_account_id = await self.db_conn.fetchval(
@@ -118,9 +112,6 @@ class OrderLogicTest(BaseTestCase):
             START_BALANCE,
         )
         self.unused_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
-
-        # fetch new till
-        self.till = await self.till_service.get_till(token=self.admin_token, till_id=self.till.id)
 
         self.ticket_price = 12  # TODO: remove ugly hardcoding
 
@@ -281,6 +272,7 @@ class OrderLogicTest(BaseTestCase):
                 allow_top_up=False,
                 allow_cash_out=False,
                 allow_ticket_sale=False,
+                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
         self.till.active_profile_id = profile.id
@@ -345,6 +337,7 @@ class OrderLogicTest(BaseTestCase):
                 allow_top_up=False,
                 allow_cash_out=False,
                 allow_ticket_sale=False,
+                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
         self.till.active_profile_id = profile.id
@@ -401,6 +394,7 @@ class OrderLogicTest(BaseTestCase):
                 allow_top_up=False,
                 allow_cash_out=False,
                 allow_ticket_sale=False,
+                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
         self.till.active_profile_id = profile.id

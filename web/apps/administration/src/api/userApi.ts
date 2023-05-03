@@ -2,16 +2,20 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
-import { NewUser, User } from "@stustapay/models";
+import { NewUser, NewUserRole, Privilege, User, UserRole } from "@stustapay/models";
 
 const userAdapter = createEntityAdapter<User>({
   sortComparer: (a, b) => a.login.toLowerCase().localeCompare(b.login.toLowerCase()),
 });
 
+const userRoleAdapter = createEntityAdapter<UserRole>({
+  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+});
+
 export const userApi = createApi({
   reducerPath: "userApi",
   baseQuery: adminApiBaseQuery,
-  tagTypes: ["user"],
+  tagTypes: ["user", "userRole"],
   endpoints: (builder) => ({
     getUserById: builder.query<EntityState<User>, number>({
       query: (id) => `/users/${id}/`,
@@ -40,11 +44,34 @@ export const userApi = createApi({
       query: (id) => ({ url: `/users/${id}/`, method: "DELETE" }),
       invalidatesTags: ["user"],
     }),
+    getUserRoles: builder.query<EntityState<UserRole>, void>({
+      query: () => "/user_roles/",
+      transformResponse: (response: UserRole[]) => {
+        return userRoleAdapter.addMany(userRoleAdapter.getInitialState(), response);
+      },
+      providesTags: (result) =>
+        result ? [...result.ids.map((id) => ({ type: "userRole" as const, id })), "userRole"] : ["userRole"],
+    }),
+    createUserRole: builder.mutation<UserRole, NewUserRole>({
+      query: (userRole) => ({ url: "/user_roles/", method: "POST", body: userRole }),
+      invalidatesTags: ["userRole"],
+    }),
+    updateUserRole: builder.mutation<UserRole, { id: number; privileges: Privilege[] }>({
+      query: ({ id, ...role }) => ({ url: `/users_roles/${id}/`, method: "POST", body: role }),
+      invalidatesTags: (result, error, { id }) => [{ type: "userRole", id }],
+    }),
+    deleteUserRole: builder.mutation<void, number>({
+      query: (id) => ({ url: `/user_roles/${id}/`, method: "DELETE" }),
+      invalidatesTags: ["userRole"],
+    }),
   }),
 });
 
 export const { selectUserAll, selectUserById, selectUserEntities, selectUserIds, selectUserTotal } =
   convertEntityAdaptorSelectors("User", userAdapter.getSelectors());
+
+export const { selectUserRoleAll, selectUserRoleById, selectUserRoleEntities, selectUserRoleIds, selectUserRoleTotal } =
+  convertEntityAdaptorSelectors("UserRole", userRoleAdapter.getSelectors());
 
 export const {
   useCreateUserMutation,
@@ -52,4 +79,8 @@ export const {
   useGetUserByIdQuery,
   useGetUsersQuery,
   useUpdateUserMutation,
+  useCreateUserRoleMutation,
+  useDeleteUserRoleMutation,
+  useGetUserRolesQuery,
+  useUpdateUserRoleMutation,
 } = userApi;

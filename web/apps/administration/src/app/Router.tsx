@@ -22,13 +22,21 @@ import { TillProfileDetail } from "./routes/till-profiles/TillProfileDetail";
 import { TillButtonUpdate } from "./routes/till-buttons/TillButtonUpdate";
 import { TillButtonCreate } from "./routes/till-buttons/TillButtonCreate";
 import { TillButtonList } from "./routes/till-buttons/TillButtonList";
-import { UserUpdate, UserDetail, UserList, UserCreate } from "./routes/users";
+import {
+  UserUpdate,
+  UserDetail,
+  UserList,
+  UserCreate,
+  UserRoleCreate,
+  UserRoleList,
+  UserRoleUpdate,
+} from "./routes/users";
 import { SystemAccountList, CustomerAccountDetail, SystemAccountDetail, FindAccounts } from "./routes/accounts";
 import { OrderList } from "./routes/orders/OrderList";
-import { AdminRoot } from "./routes/AdminRoot";
 import { OrderDetail } from "./routes/orders/OrderDetail";
 import { CashierList, CashierDetail } from "./routes/cashiers";
 import { CashierCloseOut } from "./routes/cashiers/CashierCloseOut";
+import { PrivilegeGuard } from "./routes/PrivilegeGuard";
 
 const router = createBrowserRouter([
   {
@@ -42,147 +50,237 @@ const router = createBrowserRouter([
       },
       {
         path: "products",
-        element: <ProductList />,
-      },
-      {
-        path: "products/new",
-        element: <ProductCreate />,
-      },
-      {
-        path: "products/:productId/edit",
-        element: <ProductUpdate />,
+        element: <PrivilegeGuard privilege="product_management" />,
+        children: [
+          {
+            path: "",
+            element: <ProductList />,
+          },
+          {
+            path: "new",
+            element: <ProductCreate />,
+          },
+          {
+            path: ":productId/edit",
+            element: <ProductUpdate />,
+          },
+        ],
       },
       {
         path: "cashiers",
-        element: <CashierList />,
-      },
-      {
-        path: "cashiers/:cashierId",
-        element: <CashierDetail />,
-      },
-      {
-        path: "cashiers/:cashierId/close-out",
-        element: <CashierCloseOut />,
+        element: <PrivilegeGuard privilege="cashier_management" />,
+        children: [
+          {
+            path: "",
+            element: <CashierList />,
+          },
+          {
+            path: ":cashierId",
+            element: <CashierDetail />,
+          },
+          {
+            path: ":cashierId/close-out",
+            element: <CashierCloseOut />,
+          },
+        ],
       },
       {
         path: "tax-rates",
-        element: <TaxRateList />,
-      },
-      {
-        path: "tax-rates/new",
-        element: <TaxRateCreate />,
-      },
-      {
-        path: "tax-rates/:taxRateName/edit",
-        element: <TaxRateUpdate />,
+        element: <PrivilegeGuard privilege="tax_rate_management" />,
+        children: [
+          {
+            path: "",
+            element: <TaxRateList />,
+          },
+          {
+            path: "new",
+            element: <TaxRateCreate />,
+          },
+          {
+            path: ":taxRateName/edit",
+            element: <TaxRateUpdate />,
+          },
+        ],
       },
       {
         path: "tills",
-        element: <TillList />,
-      },
-      {
-        path: "tills/new",
-        element: <TillCreate />,
-      },
-      {
-        path: "tills/:tillId/edit",
-        element: <TillUpdate />,
-      },
-      {
-        path: "tills/:tillId",
-        element: <TillDetail />,
+        element: <PrivilegeGuard privilege="till_management" />,
+        children: [
+          {
+            path: "",
+            element: <TillList />,
+          },
+          {
+            path: "new",
+            element: <TillCreate />,
+          },
+          {
+            path: ":tillId/edit",
+            element: <TillUpdate />,
+          },
+          {
+            path: ":tillId",
+            element: <TillDetail />,
+          },
+        ],
       },
       {
         path: "till-buttons",
-        element: <TillButtonList />,
-      },
-      {
-        path: "till-buttons/new",
-        element: <TillButtonCreate />,
-      },
-      {
-        path: "till-buttons/:buttonId/edit",
-        element: <TillButtonUpdate />,
+        element: <PrivilegeGuard privilege="till_management" />,
+        children: [
+          {
+            path: "",
+            element: <TillButtonList />,
+          },
+          {
+            path: "new",
+            element: <TillButtonCreate />,
+          },
+          {
+            path: ":buttonId/edit",
+            element: <TillButtonUpdate />,
+          },
+        ],
       },
       {
         path: "till-layouts",
-        element: <TillLayoutList />,
-      },
-      {
-        path: "till-layouts/new",
-        element: <TillLayoutCreate />,
-      },
-      {
-        path: "till-layouts/:layoutId/edit",
-        element: <TillLayoutUpdate />,
-      },
-      {
-        path: "till-layouts/:layoutId",
-        element: <TillLayoutDetail />,
+        element: <PrivilegeGuard privilege="till_management" />,
+        children: [
+          {
+            path: "",
+            element: <TillLayoutList />,
+          },
+          {
+            path: "new",
+            element: <TillLayoutCreate />,
+          },
+          {
+            path: ":layoutId/edit",
+            element: <TillLayoutUpdate />,
+          },
+          {
+            path: ":layoutId",
+            element: <TillLayoutDetail />,
+          },
+        ],
       },
       {
         path: "till-profiles",
-        element: <TillProfileList />,
-      },
-      {
-        path: "till-profiles/new",
-        element: <TillProfileCreate />,
-      },
-      {
-        path: "till-profiles/:profileId/edit",
-        element: <TillProfileUpdate />,
-      },
-      {
-        path: "till-profiles/:profileId",
-        element: <TillProfileDetail />,
-      },
-      {
-        path: "users",
-        element: <UserList />,
+        element: <PrivilegeGuard privilege="till_management" />,
+        children: [
+          {
+            path: "",
+            element: <TillProfileList />,
+          },
+          {
+            path: "new",
+            element: <TillProfileCreate />,
+          },
+          {
+            path: ":profileId/edit",
+            element: <TillProfileUpdate />,
+          },
+          {
+            path: ":profileId",
+            element: <TillProfileDetail />,
+          },
+        ],
       },
       {
         path: "system-accounts",
-        element: <SystemAccountList />,
+        element: <PrivilegeGuard privilege="account_management" />,
+        children: [
+          {
+            path: "",
+            element: <SystemAccountList />,
+          },
+          {
+            path: ":accountId",
+            element: <SystemAccountDetail />,
+          },
+        ],
       },
       {
-        path: "system-accounts/:accountId",
-        element: <SystemAccountDetail />,
-      },
-      {
-        path: "customer-accounts/:accountId",
-        element: <CustomerAccountDetail />,
+        path: "customer-accounts",
+        element: <PrivilegeGuard privilege="account_management" />,
+        children: [
+          {
+            path: ":accountId",
+            element: <CustomerAccountDetail />,
+          },
+        ],
       },
       {
         path: "find-accounts",
-        element: <FindAccounts />,
+        element: <PrivilegeGuard privilege="account_management" />,
+        children: [
+          {
+            path: "",
+            element: <FindAccounts />,
+          },
+        ],
       },
       {
         path: "orders",
-        element: <OrderList />,
-      },
-      {
-        path: "orders/:orderId",
-        element: <OrderDetail />,
+        element: <PrivilegeGuard privilege="order_management" />,
+        children: [
+          {
+            path: "",
+            element: <OrderList />,
+          },
+          {
+            path: ":orderId",
+            element: <OrderDetail />,
+          },
+        ],
       },
       {
         path: "settings",
-        element: <Settings />,
-      },
-      {
-        path: "admin",
-        element: <AdminRoot />,
+        element: <PrivilegeGuard privilege="config_management" />,
         children: [
           {
-            path: "users/new",
+            path: "",
+            element: <Settings />,
+          },
+        ],
+      },
+      {
+        path: "users",
+        element: <PrivilegeGuard privilege="user_management" />,
+        children: [
+          {
+            path: "",
+            element: <UserList />,
+          },
+          {
+            path: "new",
             element: <UserCreate />,
           },
           {
-            path: "users/:userId/edit",
+            path: ":userId/edit",
             element: <UserUpdate />,
           },
           {
-            path: "users/:userId",
+            path: ":userId",
             element: <UserDetail />,
+          },
+        ],
+      },
+      {
+        path: "user-roles",
+        element: <PrivilegeGuard privilege="user_management" />,
+        children: [
+          {
+            path: "",
+            element: <UserRoleList />,
+          },
+          {
+            path: "new",
+            element: <UserRoleCreate />,
+          },
+          {
+            path: ":userId/edit",
+            element: <UserRoleUpdate />,
           },
         ],
       },

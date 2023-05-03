@@ -4,7 +4,7 @@ import asyncpg
 
 from . import database
 from .config import Config
-from .schema.user import Privilege, UserWithoutId
+from .schema.user import UserWithoutId
 from .service.auth import AuthService
 from .service.user import UserService
 from .subcommand import SubCommand
@@ -34,15 +34,13 @@ class AdminCli(SubCommand):
             if password != confirm_password:
                 print("Error, passwords do not match")
                 return
-            privileges = input("Enter privileges (comma separated, choose from 'admin', 'orga', 'cashier':\n")
+            role_names = input("Enter roles (comma separated, choose from 'admin', 'finanzorga', 'cashier':\n")
             display_name = input("Enter display name:\n")
 
             new_user = UserWithoutId(
                 login=username,
                 description=None,
-                privileges=list(
-                    map(lambda x: Privilege[x], privileges.split(",")),
-                ),
+                role_names=role_names.split(","),
                 display_name=display_name,
             )
             user = await user_service.create_user_no_auth(  # pylint: disable=missing-kwoa
