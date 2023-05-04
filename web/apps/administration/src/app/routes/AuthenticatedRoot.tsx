@@ -34,33 +34,47 @@ import { ExpandableLinkMenu, ListItemLink } from "@components";
 import { useTranslation } from "react-i18next";
 import { useAppSelector, selectCurrentUser } from "@store";
 import { AppBar, Main, DrawerHeader, drawerWidth } from "@components";
-import { PrivilegeAdmin } from "@stustapay/models";
 import { useGetConfigEntriesQuery } from "@api";
 import { Loading } from "@stustapay/components";
+import { CurrentUser } from "@stustapay/models";
 
-const AdminMenu: React.FC = () => {
+const AdvancedMenu: React.FC<{ user: CurrentUser }> = ({ user }) => {
   const { t } = useTranslation(["common"]);
   return (
     <ExpandableLinkMenu label={t("advanced")}>
       <List sx={{ pl: 2 }}>
-        <ListItemLink to="/users">
-          <ListItemIcon>
-            <PersonIcon />
-          </ListItemIcon>
-          <ListItemText primary={t("users")} />
-        </ListItemLink>
-        <ListItemLink to="/tax-rates">
-          <ListItemIcon>
-            <PercentIcon />
-          </ListItemIcon>
-          <ListItemText primary={t("taxRates")} />
-        </ListItemLink>
-        <ListItemLink to="/settings">
-          <ListItemIcon>
-            <SettingsIcon />
-          </ListItemIcon>
-          <ListItemText primary={t("settings")} />
-        </ListItemLink>
+        {user.privileges.includes("user_management") && (
+          <>
+            <ListItemLink to="/users">
+              <ListItemIcon>
+                <PersonIcon />
+              </ListItemIcon>
+              <ListItemText primary={t("users")} />
+            </ListItemLink>
+            <ListItemLink to="/user-roles">
+              <ListItemIcon>
+                <PersonIcon />
+              </ListItemIcon>
+              <ListItemText primary={t("userRoles")} />
+            </ListItemLink>
+          </>
+        )}
+        {user.privileges.includes("tax_rate_management") && (
+          <ListItemLink to="/tax-rates">
+            <ListItemIcon>
+              <PercentIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("taxRates")} />
+          </ListItemLink>
+        )}
+        {user.privileges.includes("config_management") && (
+          <ListItemLink to="/settings">
+            <ListItemIcon>
+              <SettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("settings")} />
+          </ListItemLink>
+        )}
       </List>
     </ExpandableLinkMenu>
   );
@@ -82,7 +96,6 @@ export const AuthenticatedRoot: React.FC = () => {
     const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
     return <Navigate to={`/login${next}`} />;
   }
-  const isAdmin = user.privileges.includes(PrivilegeAdmin);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -142,65 +155,77 @@ export const AuthenticatedRoot: React.FC = () => {
             </ListItemIcon>
             <ListItemText primary={t("overview")} />
           </ListItemLink>
-          <ListItemLink to="/cashiers">
-            <ListItemIcon>
-              <PersonIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("cashiers")} />
-          </ListItemLink>
-          <ListItemLink to="/products">
-            <ListItemIcon>
-              <ShoppingCartIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("products")} />
-          </ListItemLink>
-          <ListItemLink to="/till-buttons">
-            <ListItemIcon>
-              <PointOfSaleIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("tillButtons")} />
-          </ListItemLink>
-          <ListItemLink to="/till-layouts">
-            <ListItemIcon>
-              <PointOfSaleIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("tillLayouts")} />
-          </ListItemLink>
-          <ListItemLink to="/till-profiles">
-            <ListItemIcon>
-              <PointOfSaleIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("tillProfiles")} />
-          </ListItemLink>
-          <ListItemLink to="/tills">
-            <ListItemIcon>
-              <PointOfSaleIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("tills")} />
-          </ListItemLink>
-          <ExpandableLinkMenu label={t("accounts")}>
-            <List sx={{ pl: 2 }}>
-              <ListItemLink to="/find-accounts">
+          {user.privileges.includes("cashier_management") && (
+            <ListItemLink to="/cashiers">
+              <ListItemIcon>
+                <PersonIcon />
+              </ListItemIcon>
+              <ListItemText primary={t("cashiers")} />
+            </ListItemLink>
+          )}
+          {user.privileges.includes("product_management") && (
+            <ListItemLink to="/products">
+              <ListItemIcon>
+                <ShoppingCartIcon />
+              </ListItemIcon>
+              <ListItemText primary={t("products")} />
+            </ListItemLink>
+          )}
+          {user.privileges.includes("till_management") && (
+            <>
+              <ListItemLink to="/till-buttons">
                 <ListItemIcon>
-                  <SearchIcon />
+                  <PointOfSaleIcon />
                 </ListItemIcon>
-                <ListItemText primary={t("findAccounts")} />
+                <ListItemText primary={t("tillButtons")} />
               </ListItemLink>
-              <ListItemLink to="/system-accounts">
+              <ListItemLink to="/till-layouts">
                 <ListItemIcon>
-                  <AccountBalanceIcon />
+                  <PointOfSaleIcon />
                 </ListItemIcon>
-                <ListItemText primary={t("systemAccounts")} />
+                <ListItemText primary={t("tillLayouts")} />
               </ListItemLink>
-            </List>
-          </ExpandableLinkMenu>
-          <ListItemLink to="/orders">
-            <ListItemIcon>
-              <AddShoppingCartIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("orders")} />
-          </ListItemLink>
-          {isAdmin && <AdminMenu />}
+              <ListItemLink to="/till-profiles">
+                <ListItemIcon>
+                  <PointOfSaleIcon />
+                </ListItemIcon>
+                <ListItemText primary={t("tillProfiles")} />
+              </ListItemLink>
+              <ListItemLink to="/tills">
+                <ListItemIcon>
+                  <PointOfSaleIcon />
+                </ListItemIcon>
+                <ListItemText primary={t("tills")} />
+              </ListItemLink>
+            </>
+          )}
+          {user.privileges.includes("account_management") && (
+            <ExpandableLinkMenu label={t("accounts")}>
+              <List sx={{ pl: 2 }}>
+                <ListItemLink to="/find-accounts">
+                  <ListItemIcon>
+                    <SearchIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={t("findAccounts")} />
+                </ListItemLink>
+                <ListItemLink to="/system-accounts">
+                  <ListItemIcon>
+                    <AccountBalanceIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={t("systemAccounts")} />
+                </ListItemLink>
+              </List>
+            </ExpandableLinkMenu>
+          )}
+          {user.privileges.includes("order_management") && (
+            <ListItemLink to="/orders">
+              <ListItemIcon>
+                <AddShoppingCartIcon />
+              </ListItemIcon>
+              <ListItemText primary={t("orders")} />
+            </ListItemLink>
+          )}
+          <AdvancedMenu user={user} />
         </List>
       </Drawer>
       <Main open={open}>

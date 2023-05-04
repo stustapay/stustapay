@@ -203,79 +203,122 @@ insert into privilege (
     name
 )
 values
-    -- Super Use
-    ('admin'),
-    -- Finanzorga
-    ('finanzorga'),
-    -- Standleiter
-    -- ('orga'),
-    -- Helfer
-    ('cashier'),
-    -- can hand out free tickets
+    ('account_management'),
+    ('cashier_management'),
+    ('config_management'),
+    ('product_management'),
+    ('tax_rate_management'),
+    ('user_management'),
+    ('till_management'),
+    ('order_management'),
+    ('terminal_login'),
+    ('supervised_terminal_login'),
+    ('can_book_orders'),
     ('grant_free_tickets'),
-    -- can hand out vouchers
-    ('grant_vouchers'),
-    ('can_login_cashiers')
+    ('grant_vouchers')
     on conflict do nothing;
 
-create or replace function check_cashier_needs_cashier_account(
-    user_id bigint,
-    privilege text
-) returns boolean as
-$$
-<<locals>> declare
-    cashier_account_id bigint;
-begin
-    if check_cashier_needs_cashier_account.privilege != 'cashier' then
-        return true;
-    end if;
-
-    select usr.cashier_account_id into locals.cashier_account_id
-    from usr
-    where id = check_cashier_needs_cashier_account.user_id;
-
-    return locals.cashier_account_id is not null;
-end
-$$ language plpgsql;
-
-create or replace function check_finanzorga_needs_transport_account(
-    user_id bigint,
-    privilege text
-) returns boolean as
-$$
-<<locals>> declare
-    transport_account_id bigint;
-begin
-    if check_finanzorga_needs_transport_account.privilege != 'finanzorga' then
-        return true;
-    end if;
-
-    select usr.transport_account_id into locals.transport_account_id
-    from usr
-    where id = check_finanzorga_needs_transport_account.user_id;
-
-    return locals.transport_account_id is not null;
-end
-$$ language plpgsql;
-
-create table if not exists usr_privs (
-    usr bigint not null references usr(id) on delete cascade,
-    priv text not null references privilege(name) on delete cascade,
-    primary key (usr, priv),
-
-    constraint cashiers_need_accounts check (check_cashier_needs_cashier_account(usr, priv)),
-    constraint finanzorgas_need_accounts check (check_finanzorga_needs_transport_account(usr, priv))
+create table if not exists user_role (
+    id bigint primary key generated always as identity (start with 1000),
+    name text not null unique
 );
 
-create or replace view usr_with_privileges as (
+create table if not exists user_to_role (
+    user_id bigint not null references usr(id) on delete cascade,
+    role_id bigint not null references user_role(id),
+    primary key (user_id, role_id)
+);
+
+create table if not exists user_role_to_privilege (
+    role_id bigint not null references user_role(id) on delete cascade,
+    privilege text not null references privilege(name),
+    primary key (role_id, privilege)
+);
+
+insert into user_role (
+    id, name
+) overriding system value
+values
+    (0, 'admin'),
+    (1, 'finanzorga'),
+    (2, 'cashier'),
+    (3, 'standleiter'),
+    (4, 'infozelt helfer')
+on conflict do nothing;
+
+insert into user_role_to_privilege (
+    role_id, privilege
+)
+values
+    -- admin
+    (0, 'account_management'),
+    (0, 'cashier_management'),
+    (0, 'config_management'),
+    (0, 'product_management'),
+    (0, 'tax_rate_management'),
+    (0, 'user_management'),
+    (0, 'till_management'),
+    (0, 'order_management'),
+    (0, 'terminal_login'),
+    (0, 'grant_free_tickets'),
+    (0, 'grant_vouchers'),
+    -- finanzorga
+    (1, 'account_management'),
+    (1, 'cashier_management'),
+    (1, 'product_management'),
+    (1, 'user_management'),
+    (1, 'till_management'),
+    (1, 'order_management'),
+    (1, 'terminal_login'),
+    (1, 'grant_free_tickets'),
+    (1, 'grant_vouchers'),
+    -- cashier
+    (2, 'supervised_terminal_login'),
+    (2, 'can_book_orders'),
+    -- standleiter
+    (3, 'terminal_login'),
+    (3, 'grant_free_tickets'),
+    (3, 'grant_vouchers'),
+    -- infozelt helfer
+    (4, 'supervised_terminal_login'),
+    (4, 'grant_free_tickets'),
+    (4, 'grant_vouchers');
+
+create or replace view user_role_with_privileges as (
+    select
+        r.*,
+        coalesce(privs.privileges, '{}'::text array) as privileges
+    from user_role r
+    left join (
+        select ur.role_id, array_agg(ur.privilege) as privileges
+        from user_role_to_privilege ur
+        group by ur.role_id
+    ) privs on r.id = privs.role_id
+);
+
+create or replace view user_with_roles as (
     select
         usr.*,
-        coalesce(privs.privs, '{}'::text array) as privileges
+        coalesce(roles.roles, '{}'::text array) as role_names
     from usr
     left join (
-        select p.usr as user_id, array_agg(p.priv) as privs
-        from usr_privs p
-        group by p.usr
+        select utr.user_id as user_id, array_agg(ur.name) as roles
+        from user_to_role utr
+        join user_role ur on utr.role_id = ur.id
+        group by utr.user_id
+    ) roles on usr.id = roles.user_id
+);
+
+create or replace view user_with_privileges as (
+    select
+        usr.*,
+        coalesce(privs.privileges, '{}'::text array) as privileges
+    from usr
+    left join (
+        select utr.user_id, array_agg(urtp.privilege) as privileges
+        from user_to_role utr
+        join user_role_to_privilege urtp on utr.role_id = urtp.role_id
+        group by utr.user_id
     ) privs on usr.id = privs.user_id
 );
 
@@ -574,6 +617,26 @@ create table if not exists till_profile (
     -- todo: payment_methods?
 );
 
+create table if not exists allowed_user_roles_for_till_profile (
+    profile_id bigint not null references till_profile(id) on delete cascade,
+    role_id bigint not null references user_role(id),
+    primary key (profile_id, role_id)
+);
+
+create or replace view till_profile_with_allowed_roles as (
+    select
+        p.*,
+        coalesce(roles.role_ids, '{}'::bigint array) as allowed_role_ids,
+        coalesce(roles.role_names, '{}'::text array) as allowed_role_names
+    from till_profile p
+    left join (
+        select a.profile_id, array_agg(ur.id) as role_ids, array_agg(ur.name) as role_names
+        from allowed_user_roles_for_till_profile a
+        join user_role ur on a.role_id = ur.id
+        group by a.profile_id
+    ) roles on roles.profile_id = p.id
+);
+
 -- which cash desks do we have and in which state are they
 create table if not exists till (
     id bigint primary key generated always as identity,
@@ -589,6 +652,8 @@ create table if not exists till (
     active_shift text,
     active_profile_id bigint not null references till_profile(id),
     active_user_id bigint references usr(id),
+    active_user_role_id bigint references user_role(id),
+    constraint user_requires_role check ((active_user_id is null) = (active_user_role_id is null)),
 
     constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null))
 );

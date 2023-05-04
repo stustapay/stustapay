@@ -7,14 +7,14 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useCreateUserMutation } from "@api";
-import { PrivilegeSelect } from "./PrivilegeSelect";
+import { RoleSelect } from "./RoleSelect";
 
 const initialValues: NewUser = {
   login: "",
   display_name: "",
   description: "",
   password: "",
-  privileges: [],
+  role_names: [],
 };
 
 export const UserCreate: React.FC = () => {
@@ -54,8 +54,8 @@ export const UserCreate: React.FC = () => {
               autoFocus
               name="login"
               label={t("userLogin")}
-              error={touched.login&& !!errors.login}
-              helperText={(touched.login&& errors.login) as string}
+              error={touched.login && !!errors.login}
+              helperText={(touched.login && errors.login) as string}
               onBlur={handleBlur}
               onChange={handleChange}
               value={values.login}
@@ -65,14 +65,13 @@ export const UserCreate: React.FC = () => {
               variant="standard"
               margin="normal"
               fullWidth
-              autoFocus
               name="display_name"
               label={t("userDisplayName")}
-              error={touched.display_name&& !!errors.display_name}
-              helperText={(touched.display_name&& errors.display_name) as string}
+              error={touched.display_name && !!errors.display_name}
+              helperText={(touched.display_name && errors.display_name) as string}
               onBlur={handleBlur}
               onChange={handleChange}
-              value={values.login}
+              value={values.display_name}
             />
 
             <TextField
@@ -102,14 +101,14 @@ export const UserCreate: React.FC = () => {
               value={values.password}
             />
 
-            <PrivilegeSelect
-              label={t("userPrivileges")}
+            <RoleSelect
+              label={t("user.roles")}
               variant="standard"
               margin="normal"
-              value={values.privileges}
-              onChange={(val) => setFieldValue("privileges", val)}
-              error={touched.privileges && !!errors.privileges}
-              helperText={(touched.privileges && errors.privileges) as string}
+              value={values.role_names}
+              onChange={(val) => setFieldValue("role_names", val)}
+              error={touched.role_names && !!errors.role_names}
+              helperText={(touched.role_names && errors.role_names) as string}
             />
 
             {isSubmitting && <LinearProgress />}

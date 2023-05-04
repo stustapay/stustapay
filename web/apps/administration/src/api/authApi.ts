@@ -1,9 +1,9 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { User } from "@stustapay/models";
+import { CurrentUser } from "@stustapay/models";
 import { adminApiBaseQuery } from "./common";
 
 export interface UserResponse {
-  user: User;
+  user: CurrentUser;
   access_token: string;
 }
 

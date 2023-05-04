@@ -13,7 +13,7 @@ from stustapay.core.schema.terminal import (
     TerminalButton,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile
-from stustapay.core.schema.user import Privilege, User, UserTag
+from stustapay.core.schema.user import Privilege, UserTag, UserRole, CurrentUser
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
@@ -32,25 +32,25 @@ class TillService(DBService):
         self.layout = TillLayoutService(db_pool, config, auth_service)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def create_till(self, *, conn: asyncpg.Connection, till: NewTill) -> Till:
         row = await conn.fetchrow(
-            "insert into till (name, description, registration_uuid, tse_id, active_shift, active_profile_id, active_user_id) "
-            "values ($1, $2, $3, $4, $5, $6, $7) returning id, name, description, registration_uuid, session_uuid, "
-            "tse_id, active_shift, active_profile_id, active_user_id",
+            "insert into till "
+            "   (name, description, registration_uuid, tse_id, active_shift, active_profile_id) "
+            "values ($1, $2, $3, $4, $5, $6) returning id, name, description, registration_uuid, session_uuid, "
+            "   tse_id, active_shift, active_profile_id",
             till.name,
             till.description,
             uuid.uuid4(),
             till.tse_id,
             till.active_shift,
             till.active_profile_id,
-            till.active_user_id,
         )
 
         return Till.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def list_tills(self, *, conn: asyncpg.Connection) -> list[Till]:
         cursor = conn.cursor("select * from till")
         result = []
@@ -59,7 +59,7 @@ class TillService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def get_till(self, *, conn: asyncpg.Connection, till_id: str) -> Optional[Till]:
         row = await conn.fetchrow("select * from till where id = $1", till_id)
         if row is None:
@@ -68,18 +68,18 @@ class TillService(DBService):
         return Till.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def update_till(self, *, conn: asyncpg.Connection, till_id: int, till: NewTill) -> Optional[Till]:
         row = await conn.fetchrow(
-            "update till set name = $2, description = $3, tse_id = $4, active_shift = $5, active_profile_id = $6, active_user_id = $7 "
-            "where id = $1 returning id, name, description, registration_uuid, tse_id, active_shift, active_profile_id, session_uuid, active_user_id",
+            "update till set name = $2, description = $3, tse_id = $4, active_shift = $5, active_profile_id = $6 "
+            "where id = $1 returning id, name, description, registration_uuid, tse_id, active_shift, "
+            "   active_profile_id, session_uuid",
             till_id,
             till.name,
             till.description,
             till.tse_id,
             till.active_shift,
             till.active_profile_id,
-            till.active_user_id,
         )
         if row is None:
             return None
@@ -87,7 +87,7 @@ class TillService(DBService):
         return Till.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def delete_till(self, *, conn: asyncpg.Connection, till_id: int) -> bool:
         result = await conn.execute(
             "delete from till where id = $1",
@@ -114,7 +114,7 @@ class TillService(DBService):
         return TerminalRegistrationSuccess(till=till, token=token)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def logout_terminal_id(self, *, conn: asyncpg.Connection, till_id: int) -> bool:
         id_ = await conn.fetchval(
             "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
@@ -135,7 +135,54 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def login_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal, user_tag: UserTag) -> User:
+    async def check_user_login(
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, user_tag: UserTag
+    ) -> list[UserRole]:
+        """
+        Check if a user can log in to the terminal and return the available roles he can log in as
+        """
+
+        # we fetch all roles that contain either the terminal login or supervised terminal login privilege
+        rows = await conn.fetch(
+            "select urwp.* "
+            "from user_role_with_privileges urwp "
+            "join user_to_role urt on urwp.id = urt.role_id "
+            "join usr on urt.user_id = usr.id "
+            "where usr.user_tag_uid = $1 and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges))",
+            user_tag.uid,
+            Privilege.terminal_login.name,
+            Privilege.supervised_terminal_login.name,
+        )
+        if rows is None or len(rows) == 0:
+            raise AccessDenied(
+                "User is not known or does not have any assigned roles or the user does not "
+                "have permission to login at a terminal"
+            )
+        available_roles = [UserRole.parse_obj(x) for x in rows]
+
+        new_user_is_supervisor = await conn.fetchval(
+            "select true from user_with_privileges where user_tag_uid = $1 and $2 = any(privileges)",
+            user_tag.uid,
+            Privilege.terminal_login.name,
+        )
+        if new_user_is_supervisor:
+            pass
+        else:
+            current_user_is_supervisor = await conn.fetchval(
+                "select true from user_with_privileges uwp where id = $1 and $2 = any(uwp.privileges)",
+                current_terminal.till.active_user_id,
+                Privilege.terminal_login.name,
+            )
+            if not current_user_is_supervisor:
+                raise AccessDenied("You can only be logged in by a supervisor")
+
+        return available_roles
+
+    @with_db_transaction
+    @requires_terminal()
+    async def login_user(
+        self, *, conn: asyncpg.Connection, token: str, current_terminal: Terminal, user_tag: UserTag, user_role_id: int
+    ) -> CurrentUser:
         """
         Login a User to the terminal, but only if the correct permissions exists:
         wants to login | allowed to log in
@@ -146,49 +193,31 @@ class TillService(DBService):
 
         returns the newly logged-in User if successful
         """
-        row = await conn.fetchrow(
-            "select u.* from usr_with_privileges as u where u.user_tag_uid = $1",
-            user_tag.uid,
+        available_roles = await self.check_user_login(  # pylint: disable=missing-kwoa
+            conn=conn, current_terminal=current_terminal, user_tag=user_tag
         )
-        if row is None:
-            raise NotFound(element_typ="user_tag", element_id=str(user_tag.uid))
-        new_user = User.parse_obj(row)
+        if not any(x.id == user_role_id for x in available_roles):
+            raise AccessDenied("The user does not have the requested role")
 
-        row = await conn.fetchrow(
-            "select * from usr_with_privileges where id = $1",
-            current_terminal.till.active_user_id,
-        )
-        current_user = None if row is None else User.parse_obj(row)
-
-        # check if login allowed
-        officials = {Privilege.admin, Privilege.finanzorga}
-        if officials & set(new_user.privileges):
-            # Admin and Finanzorga can always log in
-            pass
-        elif Privilege.cashier in new_user.privileges:
-            if not current_user or not {Privilege.admin, Privilege.finanzorga} & set(current_user.privileges):
-                raise AccessDenied("You can only be logged in by an orga")
-        else:
-            raise AccessDenied("No cashier privilege")
+        user_id = await conn.fetchval("select usr.id from usr where user_tag_uid = $1", user_tag.uid)
+        assert user_id is not None
 
         t_id = await conn.fetchval(
-            "update till set active_user_id = $1 where id = $2 returning id", new_user.id, current_terminal.till.id
+            "update till set active_user_id = $1, active_user_role_id = $2 where id = $3 returning id",
+            user_id,
+            user_role_id,
+            current_terminal.till.id,
         )
-        if t_id is None:
-            # should not happen
-            raise NotFound(element_typ="till", element_id=str(current_terminal.till.id))
-        return new_user
+        assert t_id is not None
+        # instead of manually redoing the necessary queries we simply reuse the normal auth decorator
+        return await self.get_current_user(  # pylint: disable=missing-kwoa,unexpected-keyword-arg
+            conn=conn, token=token
+        )
 
     @with_db_transaction
     @requires_terminal()
-    async def get_current_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal) -> Optional[User]:
-        row = await conn.fetchrow(
-            "select * from usr_with_privileges where id = $1",
-            current_terminal.till.active_user_id,
-        )
-        if row is None:
-            return None
-        return User.parse_obj(row)
+    async def get_current_user(self, *, current_user: Optional[CurrentUser]) -> Optional[CurrentUser]:
+        return current_user
 
     @with_db_transaction
     @requires_terminal()
@@ -198,7 +227,8 @@ class TillService(DBService):
         """
 
         t_id = await conn.fetchval(
-            "update till set active_user_id = null where id = $1 returning id", current_terminal.till.id
+            "update till set active_user_id = null, active_user_role_id = null where id = $1 returning id",
+            current_terminal.till.id,
         )
         return t_id is not None
 
@@ -213,7 +243,7 @@ class TillService(DBService):
         if db_profile is None:
             return None
         user_privileges = await conn.fetchval(
-            "select privileges from usr_with_privileges where id = $1", current_terminal.till.active_user_id
+            "select privileges from user_with_privileges where id = $1", current_terminal.till.active_user_id
         )
         db_buttons = conn.cursor(
             "select tlwb.* "
@@ -227,7 +257,8 @@ class TillService(DBService):
         async for db_button in db_buttons:
             buttons.append(TerminalButton.parse_obj(db_button))
         db_profile = await conn.fetchrow(
-            "select * from till_profile join till on till_profile.id = till.active_profile_id where till.id = $1",
+            "select * from till_profile_with_allowed_roles tp join till on tp.id = till.active_profile_id "
+            "where till.id = $1",
             current_terminal.till.id,
         )
         profile = TillProfile.parse_obj(db_profile)

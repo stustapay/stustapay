@@ -1,68 +1,57 @@
 import * as React from "react";
 import { Paper, Button, Typography, ListItem, ListItemText } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { selectUserAll, useDeleteUserMutation, useGetUsersQuery } from "@api";
+import { selectUserRoleAll, useDeleteUserRoleMutation, useGetUserRolesQuery } from "@api";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
-import { User } from "@stustapay/models";
+import { useNavigate } from "react-router-dom";
+import { UserRole } from "@stustapay/models";
 import { ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Loading } from "@stustapay/components";
 
-export const UserList: React.FC = () => {
+export const UserRoleList: React.FC = () => {
   const { t } = useTranslation(["users", "common"]);
   const navigate = useNavigate();
 
-  const { users, isLoading } = useGetUsersQuery(undefined, {
+  const { userRoles, isLoading } = useGetUserRolesQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
-      users: data ? selectUserAll(data) : undefined,
+      userRoles: data ? selectUserRoleAll(data) : undefined,
     }),
   });
-  const [deleteUser] = useDeleteUserMutation();
-  const [userToDelete, setUserToDelete] = React.useState<number | null>(null);
+  const [deleteUserRole] = useDeleteUserRoleMutation();
+  const [userRoleToDelete, setUserRoleToDelete] = React.useState<number | null>(null);
 
   if (isLoading) {
     return <Loading />;
   }
 
-  const addUser = () => {
-    navigate("/users/new");
+  const addUserRole = () => {
+    navigate("/user-roles/new");
   };
 
   const openConfirmDeleteDialog = (userId: number) => {
-    setUserToDelete(userId);
+    setUserRoleToDelete(userId);
   };
 
   const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && userToDelete !== null) {
-      deleteUser(userToDelete)
+    if (reason === "confirm" && userRoleToDelete !== null) {
+      deleteUserRole(userRoleToDelete)
         .unwrap()
         .catch(() => undefined);
     }
-    setUserToDelete(null);
+    setUserRoleToDelete(null);
   };
 
-  const columns: GridColDef<User>[] = [
+  const columns: GridColDef<UserRole>[] = [
     {
-      field: "login",
-      headerName: t("userLogin") as string,
-      flex: 1,
-      renderCell: (params) => <RouterLink to={`/users/${params.row.id}`}>{params.row.login}</RouterLink>,
-    },
-    {
-      field: "display_name",
-      headerName: t("userDisplayName") as string,
+      field: "name",
+      headerName: t("userRole.name") as string,
       flex: 1,
     },
     {
-      field: "description",
-      headerName: t("userDescription") as string,
-      flex: 2,
-    },
-    {
-      field: "role_names",
-      headerName: t("user.roles") as string,
+      field: "privileges",
+      headerName: t("userPrivileges") as string,
       flex: 1,
     },
     {
@@ -75,7 +64,7 @@ export const UserList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit", { ns: "common" })}
-          onClick={() => navigate(`/users/${params.row.id}/edit`)}
+          onClick={() => navigate(`/user-roles/${params.row.id}/edit`)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
@@ -92,26 +81,26 @@ export const UserList: React.FC = () => {
       <Paper>
         <ListItem
           secondaryAction={
-            <Button onClick={addUser} endIcon={<AddIcon />} variant="contained" color="primary">
+            <Button onClick={addUserRole} endIcon={<AddIcon />} variant="contained" color="primary">
               {t("add", { ns: "common" })}
             </Button>
           }
         >
-          <ListItemText primary={t("users", { ns: "common" })} />
+          <ListItemText primary={t("userRoles", { ns: "common" })} />
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>
       <DataGrid
         autoHeight
-        rows={users ?? []}
+        rows={userRoles ?? []}
         columns={columns}
         disableRowSelectionOnClick
         sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
-        title={t("deleteUser")}
-        body={t("deleteUserDescription")}
-        show={userToDelete !== null}
+        title={t("userRole.delete")}
+        body={t("userRole.deleteDescription")}
+        show={userRoleToDelete !== null}
         onClose={handleConfirmDeleteUser}
       />
     </>

@@ -189,7 +189,7 @@ class OrderService(DBService):
             return
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.order_management])
     async def register_for_order_updates(self, conn: asyncpg.Connection) -> Subscription:
         del conn  # unused
 
@@ -326,7 +326,7 @@ class OrderService(DBService):
         return Account.parse_obj(customer)
 
     @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_topup(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_topup: NewTopUp
     ) -> PendingTopUp:
@@ -403,7 +403,7 @@ class OrderService(DBService):
         await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
 
     @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_topup(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_topup: NewTopUp
     ) -> CompletedTopUp:
@@ -471,7 +471,7 @@ class OrderService(DBService):
         )
 
     @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_sale(self, *, conn: asyncpg.Connection, new_sale: NewSale) -> PendingSale:
         """
         prepare the given order: checks all requirements.
@@ -515,7 +515,7 @@ class OrderService(DBService):
         return order
 
     @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_sale(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_sale: NewSale
     ) -> CompletedSale:
@@ -648,7 +648,7 @@ class OrderService(DBService):
         return Order.parse_obj(row)
 
     @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def cancel_sale(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, order_id: int
     ) -> bool:
@@ -708,7 +708,7 @@ class OrderService(DBService):
         return True
 
     @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_pay_out(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_pay_out: NewPayOut
     ) -> PendingPayOut:
@@ -742,7 +742,7 @@ class OrderService(DBService):
         )
 
     @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_pay_out(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_pay_out: NewPayOut
     ) -> CompletedPayOut:
@@ -800,7 +800,7 @@ class OrderService(DBService):
         )
 
     @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_ticket_sale(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_ticket_sale: NewTicketSale
     ) -> PendingTicketSale:
@@ -851,7 +851,7 @@ class OrderService(DBService):
         )
 
     @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_ticket_sale(
         self,
         *,
@@ -944,7 +944,7 @@ class OrderService(DBService):
         )
 
     @with_db_transaction
-    @requires_terminal(user_privileges=[Privilege.cashier])
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def show_order(self, *, conn: asyncpg.Connection, current_user: User, order_id: int) -> Optional[Order]:
         order = await self._fetch_order(conn=conn, order_id=order_id)
         if order is not None and order.cashier_id == current_user.id:
@@ -952,7 +952,7 @@ class OrderService(DBService):
         return None
 
     @with_db_transaction
-    @requires_terminal([Privilege.cashier])
+    @requires_terminal([Privilege.can_book_orders])
     async def list_orders_terminal(self, *, conn: asyncpg.Connection, current_user: User) -> list[Order]:
         cursor = conn.cursor("select * from order_value where cashier_id = $1", current_user.id)
         result = []
@@ -961,7 +961,7 @@ class OrderService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.order_management])
     async def list_orders(self, *, conn: asyncpg.Connection, customer_account_id: Optional[int] = None) -> list[Order]:
         if customer_account_id is not None:
             cursor = conn.cursor("select * from order_value where customer_account_id = $1", customer_account_id)
@@ -973,7 +973,7 @@ class OrderService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.order_management])
     async def list_orders_by_till(self, *, conn: asyncpg.Connection, till_id: int) -> list[Order]:
         cursor = conn.cursor("select * from order_value where till_id = $1", till_id)
         result = []
@@ -982,6 +982,6 @@ class OrderService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.order_management])
     async def get_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
         return await self._fetch_order(conn=conn, order_id=order_id)

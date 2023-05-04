@@ -1,80 +1,81 @@
-import { Privilege, PrivilegeSchema } from "@stustapay/models";
 import {
-  SelectProps,
-  SelectChangeEvent,
-  FormControl,
   Select,
   MenuItem,
+  FormControl,
   InputLabel,
+  SelectChangeEvent,
+  SelectProps,
   FormHelperText,
   Box,
   Chip,
   Checkbox,
 } from "@mui/material";
+import { useGetUserRolesQuery, selectUserRoleAll } from "@api";
 import * as React from "react";
-import { useTranslation } from "react-i18next";
 
-export interface PrivilegeSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
+export interface RoleSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
   label: string;
-  value: Privilege[];
+  value: string[];
   helperText?: string;
   margin?: SelectProps["margin"] | "normal";
-  onChange: (val: Privilege[]) => void;
+  onChange: (names: string[]) => void;
 }
 
-export const PrivilegeSelect: React.FC<PrivilegeSelectProps> = ({
+export const RoleSelect: React.FC<RoleSelectProps> = ({
   label,
   value,
-  helperText,
-  margin,
   onChange,
   error,
+  helperText,
+  margin,
   ...props
 }) => {
-  const { t } = useTranslation(["users", "common"]);
+  const { roles } = useGetUserRolesQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      roles: data ? selectUserRoleAll(data) : [],
+    }),
+  });
+
   const handleChange = (evt: SelectChangeEvent<unknown>) => {
     const newVal = evt.target.value;
     if (typeof newVal !== "string") {
       return;
     }
     if (newVal.includes(",")) {
-      onChange(newVal.split(",") as Privilege[]);
+      onChange(newVal.split(","));
       return;
     }
 
-    if (!PrivilegeSchema.safeParse(newVal).success) {
-      return;
-    }
-
-    if (value.includes(newVal as Privilege)) {
+    if (value.includes(newVal)) {
       onChange(value.filter((v) => v !== newVal));
     } else {
-      onChange([...value, newVal] as Privilege[]);
+      onChange([...value, newVal]);
     }
   };
 
   return (
     <FormControl fullWidth margin={margin} error={error}>
-      <InputLabel variant={props.variant} id="privilegeSelectLabel">
+      <InputLabel variant={props.variant} id="roleSelectLabel">
         {label}
       </InputLabel>
       <Select
-        labelId="privilegeSelectLabel"
-        value={value ?? ""}
+        labelId="roleSelectLabel"
+        value={value}
         onChange={handleChange}
         renderValue={(selected) => (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
             {value.map((v) => (
-              <Chip key={v} label={t(v)} />
+              <Chip key={v} label={v} />
             ))}
           </Box>
         )}
         {...props}
       >
-        {PrivilegeSchema.options.map((p) => (
-          <MenuItem key={p} value={p}>
-            <Checkbox checked={value.includes(p)} />
-            {t(p)}
+        {roles.map((role) => (
+          <MenuItem key={role.id} value={role.name}>
+            <Checkbox checked={value.includes(role.name)} />
+            {role.name}
           </MenuItem>
         ))}
       </Select>

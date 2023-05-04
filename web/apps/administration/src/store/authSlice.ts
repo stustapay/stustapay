@@ -2,10 +2,10 @@ import { createSlice } from "@reduxjs/toolkit";
 import { RootState } from "./store";
 import { authApi } from "@api/authApi";
 import { configApi } from "@api";
-import { User } from "@stustapay/models";
+import { CurrentUser } from "@stustapay/models";
 
 interface AuthState {
-  user: User | null;
+  user: CurrentUser | null;
   token: string | null;
 }
 

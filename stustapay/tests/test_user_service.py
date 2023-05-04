@@ -1,12 +1,19 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
-from stustapay.core.schema.user import NewUser, Privilege, UserWithoutId, UserTag
-from stustapay.tests.common import BaseTestCase
+from stustapay.core.schema.user import (
+    NewUser,
+    UserWithoutId,
+    UserTag,
+    ADMIN_ROLE_NAME,
+    CASHIER_ROLE_NAME,
+    FINANZORGA_ROLE_NAME,
+    ADMIN_ROLE_ID,
+)
+from stustapay.tests.common import TerminalTestCase
 
 
-class UserServiceTest(BaseTestCase):
+class UserServiceTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
-        await self.create_terminal_token()
 
         self.cashier_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (654321) returning uid")
         self.finanzorga_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (1337) returning uid")
@@ -15,12 +22,14 @@ class UserServiceTest(BaseTestCase):
             new_user=UserWithoutId(
                 login="terminal_admin",
                 description="",
-                privileges=[Privilege.admin],
+                role_names=[ADMIN_ROLE_NAME],
                 user_tag_uid=admin_tag_uid,
                 display_name="Terminal",
             )
         )
-        await self.till_service.login_user(token=self.terminal_token, user_tag=UserTag(uid=admin_tag_uid))
+        await self.till_service.login_user(
+            token=self.terminal_token, user_tag=UserTag(uid=admin_tag_uid), user_role_id=ADMIN_ROLE_ID
+        )
 
     async def test_user_creation(self):
         cashier = await self.user_service.create_cashier(
@@ -28,7 +37,7 @@ class UserServiceTest(BaseTestCase):
         )
         self.assertIsNotNone(cashier)
         self.assertEqual(cashier.login, "test-cashier")
-        self.assertListEqual(cashier.privileges, [Privilege.cashier])
+        self.assertListEqual(cashier.role_names, [CASHIER_ROLE_NAME])
         self.assertIsNotNone(cashier.cashier_account_id)
         self.assertIsNone(cashier.transport_account_id)
         self.assertEqual(cashier.user_tag_uid, self.cashier_uid)
@@ -42,6 +51,6 @@ class UserServiceTest(BaseTestCase):
         )
         self.assertIsNotNone(finanzorga)
         self.assertEqual(finanzorga.login, "test-finanzorga")
-        self.assertSetEqual(set(finanzorga.privileges), {Privilege.cashier, Privilege.finanzorga})
+        self.assertSetEqual(set(finanzorga.role_names), {CASHIER_ROLE_NAME, FINANZORGA_ROLE_NAME})
         self.assertIsNotNone(finanzorga.transport_account_id)
         self.assertEqual(finanzorga.user_tag_uid, self.finanzorga_uid)

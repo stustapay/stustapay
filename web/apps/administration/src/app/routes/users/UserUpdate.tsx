@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useGetUserByIdQuery, useUpdateUserMutation, selectUserById } from "@api";
 import { Loading } from "@stustapay/components";
-import { PrivilegeSelect } from "./PrivilegeSelect";
+import { RoleSelect } from "./RoleSelect";
 
 export const UserUpdate: React.FC = () => {
   const { t } = useTranslation(["users", "common"]);
@@ -91,14 +91,14 @@ export const UserUpdate: React.FC = () => {
                 value={values.description}
               />
 
-              <PrivilegeSelect
-                label={t("userPrivileges")}
+              <RoleSelect
+                label={t("user.roles")}
                 margin="normal"
                 variant="standard"
-                value={values.privileges}
-                onChange={(val) => setFieldValue("privileges", val)}
-                error={touched.privileges && !!errors.privileges}
-                helperText={(touched.privileges && errors.privileges) as string}
+                value={values.role_names}
+                onChange={(val) => setFieldValue("role_names", val)}
+                error={touched.role_names && !!errors.role_names}
+                helperText={(touched.role_names && errors.role_names) as string}
               />
 
               {isSubmitting && <LinearProgress />}

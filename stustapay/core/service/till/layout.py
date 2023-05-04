@@ -21,7 +21,7 @@ class TillLayoutService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def create_button(self, *, conn: asyncpg.Connection, button: NewTillButton) -> TillButton:
         row = await conn.fetchrow(
             "insert into till_button (name) values ($1) returning id, name",
@@ -40,7 +40,7 @@ class TillLayoutService(DBService):
         return TillButton.parse_obj(result)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def list_buttons(self, *, conn: asyncpg.Connection) -> list[TillButton]:
         cursor = conn.cursor("select * from till_button_with_products")
         result = []
@@ -50,7 +50,7 @@ class TillLayoutService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def get_button(self, *, conn: asyncpg.Connection, button_id: int) -> Optional[TillButton]:
         row = await conn.fetchrow("select * from till_button_with_products where id = $1", button_id)
         if row is None:
@@ -59,7 +59,7 @@ class TillLayoutService(DBService):
         return TillButton.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def update_button(
         self, *, conn: asyncpg.Connection, button_id: int, button: NewTillButton
     ) -> Optional[TillButton]:
@@ -82,7 +82,7 @@ class TillLayoutService(DBService):
         return TillButton.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def delete_button(self, *, conn: asyncpg.Connection, button_id: int) -> bool:
         result = await conn.execute(
             "delete from till_button where id = $1",
@@ -91,7 +91,7 @@ class TillLayoutService(DBService):
         return result != "DELETE 0"
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def create_layout(self, *, conn: asyncpg.Connection, layout: NewTillLayout) -> TillLayout:
         row = await conn.fetchrow(
             "insert into till_layout (name, description) values ($1, $2) returning id, name, description",
@@ -112,7 +112,7 @@ class TillLayoutService(DBService):
         return TillLayout.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def list_layouts(self, *, conn: asyncpg.Connection) -> list[TillLayout]:
         cursor = conn.cursor("select * from till_layout_with_buttons")
         result = []
@@ -121,7 +121,7 @@ class TillLayoutService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def get_layout(self, *, conn: asyncpg.Connection, layout_id: int) -> Optional[TillLayout]:
         row = await conn.fetchrow("select * from till_layout_with_buttons where id = $1", layout_id)
         if row is None:
@@ -130,7 +130,7 @@ class TillLayoutService(DBService):
         return TillLayout.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def update_layout(
         self, *, conn: asyncpg.Connection, layout_id: int, layout: NewTillLayout
     ) -> Optional[TillLayout]:
@@ -155,7 +155,7 @@ class TillLayoutService(DBService):
         return TillLayout.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.till_management])
     async def delete_layout(self, *, conn: asyncpg.Connection, layout_id: int) -> bool:
         result = await conn.execute(
             "delete from till_layout where id = $1",

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
-from stustapay.core.schema.user import User
+from stustapay.core.schema.user import CurrentUser
 
 router = APIRouter(
     prefix="/auth",
@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 class LoginResponse(BaseModel):
-    user: User
+    user: CurrentUser
     access_token: str
     grant_type = "bearer"
 

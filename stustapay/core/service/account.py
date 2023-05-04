@@ -25,7 +25,7 @@ class AccountService(DBService):
         return Account.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.account_management])
     async def list_system_accounts(self, *, conn: asyncpg.Connection) -> list[Account]:
         cursor = conn.cursor("select * from account where type != 'private'")
         result = []
@@ -34,7 +34,7 @@ class AccountService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.account_management])
     async def get_account(self, *, conn: asyncpg.Connection, account_id: int) -> Optional[Account]:
         row = await conn.fetchrow("select * from account where id = $1", account_id)
         if row is None:
@@ -42,12 +42,12 @@ class AccountService(DBService):
         return Account.parse_obj(row)
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.account_management])
     async def get_account_by_tag_uid(self, *, conn: asyncpg.Connection, user_tag_uid: int) -> Optional[Account]:
         return await self._get_account_by_tag_uid(conn=conn, user_tag_uid=user_tag_uid)
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.account_management])
     async def find_accounts(self, *, conn: asyncpg.Connection, search_term: str) -> list[Account]:
         cursor = conn.cursor(
             "select * from account where name like $1 or comment like $1 or user_tag_uid::text like $1",
@@ -59,7 +59,7 @@ class AccountService(DBService):
         return result
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.account_management])
     async def disable_account(self, *, conn: asyncpg.Connection, account_id: int) -> bool:
         row = await conn.fetchval("update account set user_tag_uid = null where id = $1 returning id", account_id)
         if row is None:
@@ -68,7 +68,7 @@ class AccountService(DBService):
         return True
 
     @with_db_transaction
-    @requires_user([Privilege.admin])
+    @requires_user([Privilege.account_management])
     async def update_account_balance(
         self, *, conn: asyncpg.Connection, current_user: User, account_id: int, new_balance: float
     ) -> bool:
@@ -99,7 +99,7 @@ class AccountService(DBService):
         # return True
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.account_management])
     async def update_account_vouchers(
         self, *, conn: asyncpg.Connection, current_user: User, account_id: int, new_voucher_amount: int
     ) -> bool:
@@ -131,7 +131,7 @@ class AccountService(DBService):
         return True
 
     @with_db_transaction
-    @requires_terminal([Privilege.admin, Privilege.grant_vouchers])
+    @requires_terminal([Privilege.grant_vouchers])
     async def grant_vouchers(
         self, *, conn: asyncpg.Connection, current_user: User, user_tag_uid: int, vouchers: int
     ) -> Account:
@@ -166,7 +166,7 @@ class AccountService(DBService):
         return account
 
     @with_db_transaction
-    @requires_terminal([Privilege.admin, Privilege.grant_free_tickets])
+    @requires_terminal([Privilege.grant_free_tickets])
     async def grant_free_tickets(
         self, *, conn: asyncpg.Connection, current_user: User, new_free_ticket_grant: NewFreeTicketGrant
     ) -> bool:
@@ -212,14 +212,14 @@ class AccountService(DBService):
         return True
 
     @with_db_transaction
-    @requires_user([Privilege.admin, Privilege.finanzorga])
+    @requires_user([Privilege.account_management])
     async def switch_account_tag_uid_admin(
         self, *, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int
     ) -> bool:
         return await self._switch_account_tag_uid(conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid)
 
     @with_db_transaction
-    @requires_terminal([Privilege.admin, Privilege.finanzorga])
+    @requires_terminal([Privilege.account_management])
     async def switch_account_tag_uid_terminal(
         self, *, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int
     ) -> bool:

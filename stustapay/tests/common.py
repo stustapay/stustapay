@@ -10,7 +10,15 @@ from asyncpg.pool import Pool
 from stustapay.core import database
 from stustapay.core.config import Config
 from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile
-from stustapay.core.schema.user import Privilege, UserWithoutId
+from stustapay.core.schema.user import (
+    UserWithoutId,
+    ADMIN_ROLE_NAME,
+    CASHIER_ROLE_ID,
+    ADMIN_ROLE_ID,
+    UserTag,
+    FINANZORGA_ROLE_NAME,
+    CASHIER_ROLE_NAME,
+)
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
@@ -82,9 +90,14 @@ class BaseTestCase(TestCase):
         self.user_service = UserService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
         self.till_service = TillService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
 
+        self.admin_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (13131313) returning uid")
         self.admin_user = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(
-                login="test-admin-user", description="", privileges=[Privilege.admin], display_name="Admin"
+                login="test-admin-user",
+                description="",
+                role_names=[ADMIN_ROLE_NAME],
+                display_name="Admin",
+                user_tag_uid=self.admin_tag_uid,
             ),
             password="rolf",
         )
@@ -95,12 +108,12 @@ class BaseTestCase(TestCase):
                 login="test-cashier-user",
                 user_tag_uid=self.cashier_tag_uid,
                 description="",
-                privileges=[],
+                role_names=[],
                 display_name="Cashier",
             ),
             password="rolf",
         )
-        await self.user_service.promote_to_cashier(current_user=self.admin_user, user_id=self.cashier.id)
+        await self.user_service.promote_to_cashier(token=self.admin_token, user_id=self.cashier.id)
         self.cashier = await self.user_service.get_user(token=self.admin_token, user_id=self.cashier.id)
 
         self.cashier_token = (await self.user_service.login_user(username=self.cashier.login, password="rolf")).token
@@ -111,33 +124,46 @@ class BaseTestCase(TestCase):
 
         testing_lock.release()
 
-    async def create_terminal_token(self) -> None:
-        """
-        creates a basic terminal login
-        """
-        till_layout = await self.till_service.layout.create_layout(
+
+class TerminalTestCase(BaseTestCase):
+    async def _login_supervised_user(self, user_tag_uid: int, user_role_id: int):
+        await self.till_service.logout_user(token=self.terminal_token)
+        await self.till_service.login_user(
+            token=self.terminal_token, user_tag=UserTag(uid=self.admin_tag_uid), user_role_id=ADMIN_ROLE_ID
+        )
+        await self.till_service.login_user(
+            token=self.terminal_token, user_tag=UserTag(uid=user_tag_uid), user_role_id=user_role_id
+        )
+
+    async def asyncSetUp(self) -> None:
+        await super().asyncSetUp()
+
+        self.till_layout = await self.till_service.layout.create_layout(
             token=self.admin_token,
             layout=NewTillLayout(name="test-layout", description="", button_ids=[]),
         )
-        till_profile = await self.till_service.profile.create_profile(
+        self.till_profile = await self.till_service.profile.create_profile(
             token=self.admin_token,
             profile=NewTillProfile(
                 name="test-profile",
                 description="",
-                layout_id=till_layout.id,
+                layout_id=self.till_layout.id,
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
+                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
         self.till = await self.till_service.create_till(
             token=self.admin_token,
             till=NewTill(
                 name="test-till",
-                active_profile_id=till_profile.id,
-                active_user_id=self.cashier.id,
+                active_profile_id=self.till_profile.id,
             ),
         )
         self.terminal_token = (
             await self.till_service.register_terminal(registration_uuid=self.till.registration_uuid)
         ).token
+
+        # log in the cashier user
+        await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=CASHIER_ROLE_ID)
