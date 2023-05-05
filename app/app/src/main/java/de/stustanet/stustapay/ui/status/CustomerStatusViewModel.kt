@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.status
 
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,13 +40,20 @@ class CustomerStatusViewModel @Inject constructor(
         }
     }
 
-    fun startSwap(customer: Account) {
-        _requestState.update { CustomerStatusRequestState.Swap(customer) }
+    fun startSwap(newTagId: ULong) {
+        _requestState.update { CustomerStatusRequestState.Swap(newTagId) }
     }
 
-    suspend fun completeSwap(customer: Account, newTagId: ULong) {
-        customerRepository.switchTag(customer.id, newTagId)
-        _requestState.update { CustomerStatusRequestState.SwapDone }
+    suspend fun completeSwap(customerTagId: ULong, newTagId: ULong) {
+        val customer = customerRepository.getCustomer(customerTagId)
+        if (customer is Response.OK) {
+            if (customerRepository.switchTag(customer.data.id, newTagId) is Response.OK) {
+                _requestState.update { CustomerStatusRequestState.SwapDone }
+                return
+            }
+        }
+
+        _requestState.update { CustomerStatusRequestState.Failed }
     }
 }
 
@@ -57,6 +65,6 @@ sealed interface CustomerStatusRequestState {
     object Fetching : CustomerStatusRequestState
     data class Done(val customer: Account) : CustomerStatusRequestState
     object Failed : CustomerStatusRequestState
-    data class Swap(val customer: Account) : CustomerStatusRequestState
+    data class Swap(val newTagId: ULong) : CustomerStatusRequestState
     object SwapDone : CustomerStatusRequestState
 }

@@ -139,6 +139,6 @@ class TerminalHTTPAPI @Inject constructor(
     }
 
     override suspend fun switchTag(switch: SwitchTag): Response<Unit> {
-        return client.get("customer/switch_tag")
+        return client.post("customer/switch_tag") { switch }
     }
 }
