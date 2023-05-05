@@ -23,9 +23,6 @@ async def switch_tag(
     payload: SwitchTagPayload,
     account_service: ContextAccountService,
 ):
-    if not payload.new_user_tag_uid.isnumeric():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-
     success = await account_service.switch_account_tag_uid_terminal(
         token=token, account_id=payload.customer_id, new_user_tag_uid=payload.new_user_tag_uid
     )
