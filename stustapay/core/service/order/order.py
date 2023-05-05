@@ -57,6 +57,7 @@ from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.util import BaseModel
 from .voucher import VoucherService
 from ..product import ProductService
+from ..transaction import book_transaction
 
 logger = logging.getLogger(__name__)
 
@@ -374,7 +375,7 @@ class OrderService(DBService):
         await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
 
     async def _book_topup_sumup_order(
-        self, *, conn: asyncpg.Connection, order_id: int, amount: float, customer_account_id: int
+        self, *, conn: asyncpg.Connection, order_id: int, amount: float, customer_account_id: int, cashier_id: int
     ):
         """
         The customer pays ec money (via sumup) to get funds on the customer account
@@ -436,6 +437,7 @@ class OrderService(DBService):
                 order_id=order_id,
                 amount=pending_top_up.amount,
                 customer_account_id=pending_top_up.customer_account_id,
+                cashier_id=current_user.id,
             )
         else:
             raise NotImplementedError()
@@ -567,19 +569,12 @@ class OrderService(DBService):
             ] += float(line_item.total_price)
 
         if completed_order.used_vouchers > 0:
-            await conn.fetchval(
-                "select * from book_transaction("
-                "   order_id => $1,"
-                "   description => $2,"
-                "   source_account_id => $3,"
-                "   target_account_id => $4,"
-                "   amount => 0,"
-                "   vouchers_amount => $5)",
-                order_id,
-                "",
-                completed_order.customer_account_id,
-                ACCOUNT_SALE_EXIT,
-                completed_order.used_vouchers,
+            await book_transaction(
+                conn=conn,
+                order_id=order_id,
+                source_account_id=completed_order.customer_account_id,
+                target_account_id=ACCOUNT_SALE_EXIT,
+                voucher_amount=completed_order.used_vouchers,
             )
 
         await self._book_prepared_bookings(conn=conn, order_id=completed_order.id, bookings=prepared_bookings)
@@ -596,31 +591,25 @@ class OrderService(DBService):
 
         return completed_order
 
+    @staticmethod
     async def _book_prepared_bookings(
-        self, conn: asyncpg.Connection, order_id: int, bookings: Dict[BookingIdentifier, float]
+        *, conn: asyncpg.Connection, order_id: int, bookings: Dict[BookingIdentifier, float]
     ):
         """
         insert the selected bookings into the database.
         bookings are (source, target, tax) -> amount
         """
         for booking_identifier, amount in bookings.items():
-            await conn.fetchval(
-                "select * from book_transaction("
-                "   order_id => $1,"
-                "   description => $2,"
-                "   source_account_id => $3,"
-                "   target_account_id => $4,"
-                "   amount => $5,"
-                "   vouchers_amount => $6)",
-                order_id,
-                "",
-                booking_identifier.source_account_id,
-                booking_identifier.target_account_id,
-                amount,
-                0,  # TODO: add vouchers here
+            await book_transaction(
+                conn=conn,
+                order_id=order_id,
+                source_account_id=booking_identifier.source_account_id,
+                target_account_id=booking_identifier.target_account_id,
+                amount=amount,
             )
 
-    async def _fetch_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
+    @staticmethod
+    async def _fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
         """
         get all info about an order.
         """

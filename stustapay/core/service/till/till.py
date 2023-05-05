@@ -30,7 +30,11 @@ from stustapay.core.service.user import AuthService
 
 class TillService(DBService):
     def __init__(
-        self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, product_service: ProductService
+        self,
+        db_pool: asyncpg.Pool,
+        config: Config,
+        auth_service: AuthService,
+        product_service: ProductService,
     ):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
