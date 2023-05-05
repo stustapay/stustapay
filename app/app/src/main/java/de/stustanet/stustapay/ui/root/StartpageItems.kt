@@ -36,4 +36,10 @@ val startpageItems = listOf(
         navDestination = RootNavDests.history,
         canAccess = { u, _ -> Access.canSell(u) }
     ),
+    StartpageItem(
+        icon = Icons.Filled.Favorite,
+        label = "Helper Vouchers",
+        navDestination = RootNavDests.vouchers,
+        canAccess = { _, _ -> true }
+    )
 )

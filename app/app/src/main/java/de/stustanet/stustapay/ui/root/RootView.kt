@@ -14,6 +14,7 @@ import de.stustanet.stustapay.ui.status.CustomerStatusView
 import de.stustanet.stustapay.ui.ticket.TicketView
 import de.stustanet.stustapay.ui.topup.TopUpView
 import de.stustanet.stustapay.ui.user.UserView
+import de.stustanet.stustapay.ui.vouchers.VouchersView
 import de.stustanet.stustapay.util.SysUiController
 
 
@@ -63,6 +64,9 @@ fun RootView(uictrl: SysUiController? = null) {
         }
         composable(RootNavDests.history.route) {
             SaleHistoryView()
+        }
+        composable(RootNavDests.vouchers.route) {
+            VouchersView()
         }
     }
 }

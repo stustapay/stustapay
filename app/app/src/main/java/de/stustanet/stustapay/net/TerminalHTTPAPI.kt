@@ -132,4 +132,8 @@ class TerminalHTTPAPI @Inject constructor(
     override suspend fun userCreateFinanzorga(newUser: NewUser): Response<CurrentUser> {
         return client.post("user/create_finanzorga") { newUser }
     }
+
+    override suspend fun grantVouchers(grant: GrantVouchers): Response<Account> {
+        return client.post("user/grant-vouchers") { grant }
+    }
 }

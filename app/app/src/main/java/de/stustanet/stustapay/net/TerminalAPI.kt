@@ -138,4 +138,9 @@ interface TerminalAPI {
      * Create a user with Finanzorga privileges.
      */
     suspend fun userCreateFinanzorga(newUser: NewUser): Response<CurrentUser>
+
+    /**
+     * Grant drink vouchers to a customer tag
+     */
+    suspend fun grantVouchers(grant: GrantVouchers): Response<Account>
 }
