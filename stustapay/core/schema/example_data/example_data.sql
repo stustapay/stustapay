@@ -74,8 +74,16 @@ values
     (2, 1), -- tag #2, finanzorga
     (2, 2), -- tag #2, cashier
     (4, 2), -- tag #4, cashier
-    (5, 1) -- tag #4, cashier
+    (5, 1)  -- tag #4, cashier
     on conflict do nothing;
+
+insert into user_role_to_privilege (
+    role_id, privilege
+)
+values
+    (0, 'can_book_orders')
+    on conflict do nothing;
+
 
 insert into product (
     id, name, price, price_in_vouchers, fixed_price, target_account_id, tax_name, is_returnable, is_locked
@@ -190,12 +198,12 @@ values
 select setval('till_profile_id_seq', 100);
 
 insert into till (
-    id, name, description, active_profile_id, active_user_id, registration_uuid, session_uuid, tse_id, active_shift
+    id, name, description, active_profile_id, active_user_id, active_user_role_id, registration_uuid, session_uuid, tse_id, active_shift
 ) overriding system value
 values
-    (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, 'tse 0', null),
-    (1, 'ssc-pot-1', 'Pot Bierkasse', 1, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, 'tse 0', null),
-    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, 'tse 0', null)
+    (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, 'tse 0', null),
+    (1, 'ssc-pot-1', 'Pot Bierkasse', 1, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, 'tse 0', null),
+    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, 'tse 0', null)
     on conflict do nothing;
 select setval('till_id_seq', 100);
 

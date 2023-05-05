@@ -11,11 +11,11 @@ import javax.inject.Inject
 class TopUpRemoteDataSource @Inject constructor(
     private val terminalAPI: TerminalAPI,
 ) {
-    suspend fun checkTopUp(newOrder: NewTopUp): Response<PendingTopUp> {
-        return terminalAPI.checkTopUp(newOrder)
+    suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp> {
+        return terminalAPI.checkTopUp(newTopUp)
     }
 
-    suspend fun bookTopUp(newOrder: NewTopUp): Response<CompletedTopUp> {
-        return terminalAPI.bookTopUp(newOrder)
+    suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp> {
+        return terminalAPI.bookTopUp(newTopUp)
     }
 }

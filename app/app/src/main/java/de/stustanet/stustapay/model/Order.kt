@@ -31,6 +31,7 @@ data class NewTopUp(
     val uuid: String? = null,
 )
 
+
 /**
  * PendingTopUp class from core model.
  */
@@ -47,6 +48,7 @@ data class PendingTopUp(
     val customer_account_id: Int,
 )
 
+
 /**
  * CompletedTopUp class from core model.
  */
@@ -55,6 +57,53 @@ data class CompletedTopUp(
     val payment_method: PaymentMethod,
 
     val customer_tag_uid: ULong,
+    val customer_account_id: Int,
+
+    val amount: Double,
+    val old_balance: Double,
+    val new_balance: Double,
+
+    val uuid: String,
+    val booked_at: String,
+
+    val cashier_id: Int,
+    val till_id: Int,
+)
+
+
+/**
+ * NewPayOut class from core model.
+ */
+@Serializable
+data class NewPayOut(
+    val customer_tag_uid: Int,
+    // if no amount is passed, the current customer account balance is assumed as payout
+    val amount: Double? = null,
+)
+
+
+/**
+ * PendingPayOut class from core model.
+ */
+@Serializable
+data class PendingPayOut(
+    // NewPayOut
+    val customer_tag_uid: Int,
+
+    // PendingPayOut
+    val amount: Double,
+    val customer_account_id: Int,
+    val old_balance: Double,
+    val new_balance: Double,
+)
+
+
+/**
+ * CompletedPayOut class from core model.
+ */
+@Serializable
+data class CompletedPayOut(
+    val customer_tag_uid: Int,
     val customer_account_id: Int,
 
     val amount: Double,
@@ -86,6 +135,7 @@ data class Button(
     }
 }
 
+
 /**
  * NewSale class defined in core model.
  */
@@ -95,6 +145,7 @@ data class NewSale(
     val customer_tag_uid: ULong,
     val used_vouchers: Int? = null,
 )
+
 
 /**
  * PendingLineItem from core model.
@@ -155,6 +206,60 @@ data class CompletedSale(
     val till_id: Int,
 )
 
+/**
+ * To create a new ticket.
+ * NewTicketSale class from core model.
+ */
+@Serializable
+data class NewTicketSale(
+    val uuid: String? = null,
+    val customer_tag_uid: Int,
+    val initial_top_up_amount: Double,
+    val payment_method: PaymentMethod,
+)
+
+
+/**
+ * When a new ticket sale was checked.
+ * PendingTicketSale class from core model.
+ */
+@Serializable
+data class PendingTicketSale(
+    // NewTicketSale
+    val uuid: String? = null,
+    val customer_tag_uid: Int,
+    val initial_top_up_amount: Double,
+    val payment_method: PaymentMethod,
+    // PendingTicketSale
+    val line_items: List<PendingLineItem>,
+    val total_price: Double,
+)
+
+/**
+ * When a ticket was sold.
+ * CompletedTicketSale
+ */
+@Serializable
+data class CompletedTicketSale(
+    // NewTicketSale
+    // val uuid: String? = null, // not null below
+    val customer_tag_uid: Int,
+    val initial_top_up_amount: Double,
+    val payment_method: PaymentMethod,
+
+    // PendingTicketSale
+    val line_items: List<PendingLineItem>,
+    val total_price: Double,
+
+    // CompletedTicketSale
+    val id: Int,
+    val uuid: String,
+    val booked_at: String,
+    val customer_account_id: Int,
+    val cashier_id: Int,
+    val till_id: Int,
+)
+
 
 /**
  * LineItem from core model.
@@ -181,10 +286,13 @@ data class LineItem(
 enum class OrderType {
     @SerialName("sale")
     Sale,
+
     @SerialName("cancel_sale")
     CancelSale,
+
     @SerialName("topup_cash")
     TopupCash,
+
     @SerialName("topup_sumup")
     TopupSumup,
 }

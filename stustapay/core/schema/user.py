@@ -14,6 +14,10 @@ STANDLEITER_ROLE_ID = 3
 INFOZELT_ROLE_ID = 4
 
 
+class UserTag(BaseModel):
+    uid: int
+
+
 class Privilege(enum.Enum):
     # general management privileges
     account_management = "account_management"
@@ -43,6 +47,16 @@ class NewUserRole(BaseModel):
 
 class UserRole(NewUserRole):
     id: int
+
+
+class CheckLoginResult(BaseModel):
+    user_tag: UserTag
+    roles: list[UserRole]
+
+
+class LoginPayload(BaseModel):
+    user_tag: UserTag
+    user_role_id: int
 
 
 class NewUser(BaseModel):
@@ -84,7 +98,3 @@ class CurrentUser(BaseModel):
     user_tag_uid: Optional[int] = None
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None
-
-
-class UserTag(BaseModel):
-    uid: int

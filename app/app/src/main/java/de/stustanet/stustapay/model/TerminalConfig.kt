@@ -37,6 +37,7 @@ data class TerminalConfig(
     val user_privileges: List<Privilege>?,
     val allow_top_up: Boolean,
     val allow_cash_out: Boolean,
+    val allow_ticket_sale: Boolean,
     val buttons: List<TerminalButton>?,
     val secrets: TerminalSecrets?,
 )

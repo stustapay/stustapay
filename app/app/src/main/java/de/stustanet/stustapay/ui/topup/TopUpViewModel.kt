@@ -26,8 +26,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 enum class TopUpPage(val route: String) {
-    Amount("amount"),
-    Cash("cash"),
+    Selection("amount"),
     Done("done"),
     Failure("aborted"),
 }
@@ -36,9 +35,6 @@ enum class TopUpPage(val route: String) {
 data class TopUpState(
     /** desired deposit amount in cents */
     var currentAmount: UInt = 0u,
-
-    /** is the topup currently in progress */
-    var inProgress: Boolean = false,
 )
 
 
@@ -48,7 +44,7 @@ class DepositViewModel @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
     private val sumUp: SumUp,
 ) : ViewModel() {
-    private val _navState = MutableStateFlow(TopUpPage.Amount)
+    private val _navState = MutableStateFlow(TopUpPage.Selection)
     val navState = _navState.asStateFlow()
 
     private val _status = MutableStateFlow("")
@@ -94,7 +90,7 @@ class DepositViewModel @Inject constructor(
     /**
      * validates the amount so we can continue to checkout
      */
-    private suspend fun checkAmount(newTopUp: NewTopUp): Boolean {
+    private suspend fun checkTopUp(newTopUp: NewTopUp): Boolean {
         // device-local checks
         if (!checkAmountLocal(newTopUp.amount)) {
             return false
@@ -143,7 +139,7 @@ class DepositViewModel @Inject constructor(
             uuid = UUID.randomUUID().toString(),
         )
 
-        if (!checkAmount(newTopUp)) {
+        if (!checkTopUp(newTopUp)) {
             // it already updates the status message
             return
         }
@@ -218,7 +214,7 @@ class DepositViewModel @Inject constructor(
             uuid = UUID.randomUUID().toString(),
         )
 
-        if (!checkAmount(newTopUp)) {
+        if (!checkTopUp(newTopUp)) {
             // it already updates the status message
             return
         }

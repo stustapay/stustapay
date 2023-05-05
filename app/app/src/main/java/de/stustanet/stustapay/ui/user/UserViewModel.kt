@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.Access
 import de.stustanet.stustapay.model.UserKind
+import de.stustanet.stustapay.model.UserRole
 import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.repository.UserRepository
@@ -16,7 +17,7 @@ import javax.inject.Inject
 sealed interface UserUIState {
     data class LoggedIn(
         val username: String,
-        val privileges: String,
+        val activeRole: String,
         val showCreateUser: Boolean,
     ) : UserUIState
 
@@ -42,13 +43,18 @@ class UserViewModel @Inject constructor(
         )
 
     val userUIMessage = userRepository.status
+    val userRoles = userRepository.userRoles
 
     suspend fun fetchLogin() {
         userRepository.fetchLogin()
     }
 
-    suspend fun login(tag: UserTag) {
-        userRepository.login(tag)
+    suspend fun checkLogin(tag: UserTag) {
+        userRepository.checkLogin(tag)
+    }
+
+    suspend fun login(tag: UserTag, roleID: Int) {
+        userRepository.login(tag, roleID)
     }
 
     suspend fun logout() {
@@ -79,7 +85,7 @@ private fun userUiState(
                         is UserState.LoggedIn -> {
                             UserUIState.LoggedIn(
                                 username = userState.user.login,
-                                privileges = userState.user.privileges.joinToString { it.name }.ifEmpty { "no privileges" },
+                                activeRole = userState.user.active_role_name,
                                 showCreateUser = Access.canCreateUser(userState.user),
                             )
                         }

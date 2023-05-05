@@ -179,8 +179,6 @@ class NewTicketSale(BaseModel):
 
 
 class PendingTicketSale(NewTicketSale):
-    initial_top_up_amount: float
-
     line_items: list[PendingLineItem]
 
     @property

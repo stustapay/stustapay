@@ -37,6 +37,10 @@ class TerminalHTTPAPI @Inject constructor(
         return client.get("order")
     }
 
+    override suspend fun getOrder(orderId: Int): Response<Order> {
+        return client.get("order/$orderId")
+    }
+
     override suspend fun checkSale(newSale: NewSale): Response<PendingSale> {
         return client.post("order/check-sale") { newSale }
     }
@@ -57,10 +61,21 @@ class TerminalHTTPAPI @Inject constructor(
         return client.post("order/book-topup") { newTopUp }
     }
 
-    override suspend fun getOrder(orderId: Int): Response<Order> {
-        return client.get("order/$orderId")
+    override suspend fun checkTicketSale(newTicketSale: NewTicketSale): Response<PendingTicketSale> {
+        return client.post("order/check-ticket-sale") { newTicketSale }
     }
 
+    override suspend fun bookTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
+        return client.post("order/book-ticket-sale") { newTicketSale }
+    }
+
+    override suspend fun checkPayOut(newPayOut: NewPayOut): Response<PendingPayOut> {
+        return client.post("order/check-payout") { newPayOut }
+    }
+
+    override suspend fun bookPayOut(newPayOut: NewPayOut): Response<CompletedPayOut> {
+        return client.post("order/book-payout") { newPayOut }
+    }
 
     // auth
     /**
@@ -90,12 +105,16 @@ class TerminalHTTPAPI @Inject constructor(
 
 
     // user
-    override suspend fun currentUser(): Response<User?> {
+    override suspend fun currentUser(): Response<CurrentUser?> {
         return client.get("user")
     }
 
-    override suspend fun userLogin(userTag: UserTag): Response<User> {
-        return client.post("user/login") { userTag }
+    override suspend fun checkLogin(userTag: UserTag): Response<CheckLoginResult> {
+        return client.post("user/check-login") { userTag }
+    }
+
+    override suspend fun userLogin(payload: LoginPayload): Response<CurrentUser> {
+        return client.post("user/login") { payload }
     }
 
     override suspend fun userLogout(): Response<Unit> {
@@ -106,11 +125,11 @@ class TerminalHTTPAPI @Inject constructor(
         return client.get("customer/$id")
     }
 
-    override suspend fun userCreateCashier(newUser: NewUser): Response<User> {
+    override suspend fun userCreateCashier(newUser: NewUser): Response<CurrentUser> {
         return client.post("user/create_cashier") { newUser }
     }
 
-    override suspend fun userCreateFinanzorga(newUser: NewUser): Response<User> {
+    override suspend fun userCreateFinanzorga(newUser: NewUser): Response<CurrentUser> {
         return client.post("user/create_finanzorga") { newUser }
     }
 }

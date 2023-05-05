@@ -53,7 +53,7 @@ fun LoginProfile(
             )
             Text(
                 modifier = Modifier.padding(top = 8.dp, bottom = 30.dp),
-                text = login.privileges,
+                text = login.role,
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
             )

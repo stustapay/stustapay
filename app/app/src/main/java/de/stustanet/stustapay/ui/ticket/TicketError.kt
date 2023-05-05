@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.topup
+package de.stustanet.stustapay.ui.ticket
 
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -8,18 +8,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.common.pay.ErrorScreen
 
 @Composable
-fun TopUpError(
+fun TicketError(
     onDismiss: () -> Unit,
-    viewModel: DepositViewModel
+    viewModel: TicketViewModel
 ) {
     val status by viewModel.status.collectAsStateWithLifecycle()
-    val topUpConfig by viewModel.topUpConfig.collectAsStateWithLifecycle()
+    val ticketConfig by viewModel.ticketConfig.collectAsStateWithLifecycle()
 
     ErrorScreen(
         onDismiss = onDismiss,
-        topBarTitle = topUpConfig.tillName,
+        topBarTitle = ticketConfig.tillName,
     ) {
-        Text(text = "Error in TopUp:", fontSize = 30.sp)
+        Text(text = "Error buying ticket:", fontSize = 30.sp)
         Text(status, fontSize = 24.sp)
     }
 }

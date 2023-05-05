@@ -30,10 +30,29 @@ class UserRemoteDataSource @Inject constructor(
     }
 
     /**
-     * Login a user by token.
+     * Login a user by token and desired role.
      */
-    suspend fun userLogin(userTag: UserTag): UserState {
-        return when (val userLoginResponse = terminalAPI.userLogin(userTag)) {
+    suspend fun checkLogin(tag: UserTag): UserRolesState {
+        return when (val checkLoginResponse = terminalAPI.checkLogin(tag)) {
+            is Response.OK -> {
+                UserRolesState.OK(
+                    roles = checkLoginResponse.data.roles,
+                    tag = checkLoginResponse.data.user_tag,
+                )
+            }
+            is Response.Error -> {
+                UserRolesState.Error(
+                    msg = checkLoginResponse.msg(),
+                )
+            }
+        }
+    }
+
+    /**
+     * Login a user by token and desired role.
+     */
+    suspend fun userLogin(loginPayload: LoginPayload): UserState {
+        return when (val userLoginResponse = terminalAPI.userLogin(loginPayload)) {
             is Response.OK -> {
                 UserState.LoggedIn(
                     user = userLoginResponse.data,

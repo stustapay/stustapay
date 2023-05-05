@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.TerminalConfig
-import de.stustanet.stustapay.model.User
+import de.stustanet.stustapay.model.CurrentUser
 import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TerminalConfigState
@@ -27,7 +27,7 @@ class StartPageUiState(
             StartTitle("StuStaPay")
         }
     }
-    fun checkAccess(access: (User, TerminalConfig) -> Boolean): Boolean {
+    fun checkAccess(access: (CurrentUser, TerminalConfig) -> Boolean): Boolean {
         return if (user is UserState.LoggedIn && terminal is TerminalConfigState.Success) {
             access(user.user, terminal.config)
         } else {
@@ -40,7 +40,7 @@ class StartPageUiState(
 sealed interface LoginProfileUIState {
     data class LoggedIn(
         val username: String,
-        val privileges: String,
+        val role: String,
     ) : LoginProfileUIState
 
     object NotLoggedIn : LoginProfileUIState
@@ -99,7 +99,7 @@ private fun loginProfileUiState(
                         is UserState.LoggedIn -> {
                             LoginProfileUIState.LoggedIn(
                                 username = state.user.login,
-                                privileges = state.user.privileges.joinToString { it.name },
+                                role = state.user.active_role_name
                             )
                         }
                         is UserState.NoLogin -> {
