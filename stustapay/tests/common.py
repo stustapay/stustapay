@@ -21,7 +21,6 @@ from stustapay.core.schema.user import (
 )
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 
@@ -93,14 +92,10 @@ class BaseTestCase(TestCase):
         self.account_service = AccountService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
-        self.product_service = ProductService(
-            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
-        )
         self.till_service = TillService(
             db_pool=self.db_pool,
             config=self.test_config,
             auth_service=self.auth_service,
-            product_service=self.product_service,
         )
 
         self.admin_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (13131313) returning uid")
@@ -115,6 +110,19 @@ class BaseTestCase(TestCase):
             password="rolf",
         )
         self.admin_token = (await self.user_service.login_user(username=self.admin_user.login, password="rolf")).token
+        self.finanzorga_tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (uid) values (1313131313) returning uid"
+        )
+        self.finanzorga_user = await self.user_service.create_user_no_auth(
+            new_user=UserWithoutId(
+                login="test-finanzorga-user",
+                description="",
+                role_names=[FINANZORGA_ROLE_NAME],
+                display_name="Finanzorga",
+                user_tag_uid=self.finanzorga_tag_uid,
+            ),
+            password="rolf",
+        )
         self.cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
         self.cashier = await self.user_service.create_user_no_auth(
             new_user=UserWithoutId(

@@ -64,12 +64,8 @@ class Api(SubCommand):
 
         auth_service = AuthService(db_pool=db_pool, config=self.cfg)
         product_service = ProductService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
-        till_service = TillService(
-            db_pool=db_pool, config=self.cfg, auth_service=auth_service, product_service=product_service
-        )
-        order_service = OrderService(
-            db_pool=db_pool, config=self.cfg, auth_service=auth_service, product_service=product_service
-        )
+        till_service = TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
+        order_service = OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
 
         context = Context(
             config=self.cfg,

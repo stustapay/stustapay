@@ -54,9 +54,18 @@ from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
 from stustapay.core.service.common.error import InvalidArgument, ServiceException
 from stustapay.core.service.common.notifications import Subscription
+from stustapay.core.service.product import (
+    fetch_discount_product,
+    fetch_ticket_product,
+    fetch_ticket_product_u16,
+    fetch_ticket_product_u18,
+    fetch_top_up_product,
+    fetch_initial_topup_amount,
+)
+from stustapay.core.service.transaction import book_transaction
 from stustapay.core.util import BaseModel
 from .voucher import VoucherService
-from ..product import ProductService
+from ..account import get_account_by_id
 
 logger = logging.getLogger(__name__)
 
@@ -158,12 +167,9 @@ class BookedProduct(BaseModel):
 
 
 class OrderService(DBService):
-    def __init__(
-        self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, product_service: ProductService
-    ):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
-        self.product_service = product_service
         self.voucher_service = VoucherService(db_pool=db_pool, config=config, auth_service=auth_service)
 
         self.admin_order_update_queues: set[Subscription] = set()
@@ -205,8 +211,8 @@ class OrderService(DBService):
         self.admin_order_update_queues.add(subscription)
         return subscription
 
+    @staticmethod
     async def _get_products_from_buttons(
-        self,
         *,
         conn: asyncpg.Connection,
         buttons: list[Button],
@@ -229,8 +235,8 @@ class OrderService(DBService):
                 booked_products.append(BookedProduct(product=product, quantity=button.quantity, price=button.price))
         return booked_products
 
+    @staticmethod
     async def _preprocess_order_positions(
-        self,
         *,
         customer_restrictions: Optional[ProductRestriction],
         booked_products: list[BookedProduct],
@@ -289,15 +295,6 @@ class OrderService(DBService):
             line_items.append(line_item)
 
         return line_items
-
-    async def _fetch_account(self, conn: asyncpg.Connection, account_id: int) -> Optional[Account]:
-        account = await conn.fetchrow(
-            "select * from account where id=$1",
-            account_id,
-        )
-        if account is None:
-            return None
-        return Account.parse_obj(account)
 
     async def _fetch_customer_by_user_tag(self, conn: asyncpg.Connection, customer_tag_uid: int) -> Account:
         customer = await conn.fetchrow(
@@ -483,7 +480,7 @@ class OrderService(DBService):
             if new_sale.used_vouchers > customer_account.vouchers:
                 raise NotEnoughVouchersException(available_vouchers=customer_account.vouchers)
             vouchers_to_use = new_sale.used_vouchers
-        discount_product = await self.product_service.fetch_discount_product(conn=conn)
+        discount_product = await fetch_discount_product(conn=conn)
         voucher_usage = self.voucher_service.compute_optimal_voucher_usage(
             max_vouchers=vouchers_to_use, line_items=order.line_items, discount_product=discount_product
         )
@@ -567,24 +564,17 @@ class OrderService(DBService):
             ] += float(line_item.total_price)
 
         if completed_order.used_vouchers > 0:
-            await conn.fetchval(
-                "select * from book_transaction("
-                "   order_id => $1,"
-                "   description => $2,"
-                "   source_account_id => $3,"
-                "   target_account_id => $4,"
-                "   amount => 0,"
-                "   vouchers_amount => $5)",
-                order_id,
-                "",
-                completed_order.customer_account_id,
-                ACCOUNT_SALE_EXIT,
-                completed_order.used_vouchers,
+            await book_transaction(
+                conn=conn,
+                order_id=order_id,
+                source_account_id=completed_order.customer_account_id,
+                target_account_id=ACCOUNT_SALE_EXIT,
+                voucher_amount=completed_order.used_vouchers,
             )
 
         await self._book_prepared_bookings(conn=conn, order_id=completed_order.id, bookings=prepared_bookings)
 
-        customer_account_after_booking = await self._fetch_account(
+        customer_account_after_booking = await get_account_by_id(
             conn=conn, account_id=completed_order.customer_account_id
         )
         if customer_account_after_booking is None:
@@ -596,31 +586,25 @@ class OrderService(DBService):
 
         return completed_order
 
+    @staticmethod
     async def _book_prepared_bookings(
-        self, conn: asyncpg.Connection, order_id: int, bookings: Dict[BookingIdentifier, float]
+        *, conn: asyncpg.Connection, order_id: int, bookings: Dict[BookingIdentifier, float]
     ):
         """
         insert the selected bookings into the database.
         bookings are (source, target, tax) -> amount
         """
         for booking_identifier, amount in bookings.items():
-            await conn.fetchval(
-                "select * from book_transaction("
-                "   order_id => $1,"
-                "   description => $2,"
-                "   source_account_id => $3,"
-                "   target_account_id => $4,"
-                "   amount => $5,"
-                "   vouchers_amount => $6)",
-                order_id,
-                "",
-                booking_identifier.source_account_id,
-                booking_identifier.target_account_id,
-                amount,
-                0,  # TODO: add vouchers here
+            await book_transaction(
+                conn=conn,
+                order_id=order_id,
+                source_account_id=booking_identifier.source_account_id,
+                target_account_id=booking_identifier.target_account_id,
+                amount=amount,
             )
 
-    async def _fetch_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
+    @staticmethod
+    async def _fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
         """
         get all info about an order.
         """
@@ -834,7 +818,7 @@ class OrderService(DBService):
 
         line_items = []
         if expected_tag_counts[None] != 0:
-            ticket_product = await self.product_service.fetch_ticket_product(conn=conn)
+            ticket_product = await fetch_ticket_product(conn=conn)
             assert ticket_product.price is not None
             line_items.append(
                 PendingLineItem(
@@ -846,7 +830,7 @@ class OrderService(DBService):
                 )
             )
         if expected_tag_counts[ProductRestriction.under_16.name] != 0:
-            ticket_product = await self.product_service.fetch_ticket_product_u16(conn=conn)
+            ticket_product = await fetch_ticket_product_u16(conn=conn)
             assert ticket_product.price is not None
             line_items.append(
                 PendingLineItem(
@@ -858,7 +842,7 @@ class OrderService(DBService):
                 )
             )
         if expected_tag_counts[ProductRestriction.under_18.name] != 0:
-            ticket_product = await self.product_service.fetch_ticket_product_u18(conn=conn)
+            ticket_product = await fetch_ticket_product_u18(conn=conn)
             assert ticket_product.price is not None
             line_items.append(
                 PendingLineItem(
@@ -870,8 +854,8 @@ class OrderService(DBService):
                 )
             )
 
-        top_up_product = await self.product_service.fetch_top_up_product(conn=conn)
-        initial_topup_amount = await self.product_service.fetch_initial_topup_amount(conn=conn)
+        top_up_product = await fetch_top_up_product(conn=conn)
+        initial_topup_amount = await fetch_initial_topup_amount(conn=conn)
         line_items.append(
             PendingLineItem(
                 quantity=1,
@@ -971,7 +955,7 @@ class OrderService(DBService):
         for line_item in pending_ticket_sale.line_items:
             if line_item.product.id in {TICKET_PRODUCT_ID, TICKET_U18_PRODUCT_ID, TICKET_U16_PRODUCT_ID}:
                 total_ticket_price += line_item.total_price
-        initial_top_up_amount = await self.product_service.fetch_initial_topup_amount(conn=conn)
+        initial_top_up_amount = await fetch_initial_topup_amount(conn=conn)
 
         prepared_bookings: dict[BookingIdentifier, float] = {}
         if pending_ticket_sale.payment_method == PaymentMethod.cash:

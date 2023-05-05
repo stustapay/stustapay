@@ -6,10 +6,16 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT
 from stustapay.core.schema.till import CashRegisterStocking, NewCashRegisterStocking
 from stustapay.core.schema.user import Privilege, CurrentUser
+from stustapay.core.service.account import (
+    get_cashier_account_by_tag_uid,
+    get_account_by_id,
+    get_transport_account_by_tag_uid,
+)
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction, requires_user, requires_terminal
 from stustapay.core.service.common.error import NotFound, InvalidArgument
+from stustapay.core.service.transaction import book_transaction
 
 
 class TillRegisterService(DBService):
@@ -131,19 +137,69 @@ class TillRegisterService(DBService):
         if cashier_account_id is None:
             raise InvalidArgument("Cashier does not have a cash register")
 
-        await conn.fetchval(
-            "select * from book_transaction("
-            "   order_id => null,"
-            "   description => $1,"
-            "   source_account_id => $2,"
-            "   target_account_id => $3,"
-            "   amount => $4,"
-            "   vouchers_amount => 0,"
-            "   conducting_user_id => $5)",
-            f"cash register stock up using template: {register_stocking.name}",
-            ACCOUNT_CASH_VAULT,
-            cashier_account_id,
-            register_stocking.total,
-            current_user.id,
+        await book_transaction(
+            conn=conn,
+            description=f"cash register stock up using template: {register_stocking.name}",
+            source_account_id=ACCOUNT_CASH_VAULT,
+            target_account_id=cashier_account_id,
+            amount=register_stocking.total,
+            conducting_user_id=current_user.id,
+        )
+        return True
+
+    @with_db_transaction
+    @requires_terminal([Privilege.cashier_management])
+    async def modify_cashier_account_balance(
+        self, *, conn: asyncpg.Connection, current_user: CurrentUser, cashier_tag_uid: int, amount: float
+    ) -> bool:
+        cashier_account = await get_cashier_account_by_tag_uid(conn=conn, cashier_tag_uid=cashier_tag_uid)
+        if cashier_account is None:
+            raise InvalidArgument("Cashier could not be found")
+
+        if cashier_account.balance + amount < 0:
+            raise InvalidArgument(
+                f"Insufficient balance on cashier account. Current balance is {cashier_account.balance}."
+            )
+
+        assert current_user.transport_account_id is not None
+        transport_account = await get_account_by_id(conn=conn, account_id=current_user.transport_account_id)
+        assert transport_account is not None
+
+        if transport_account.balance - amount < 0:
+            raise InvalidArgument(
+                f"Insufficient balance on transport account. Current balance is {transport_account.balance}"
+            )
+
+        await book_transaction(
+            conn=conn,
+            description="cash drawer balance modification",
+            source_account_id=transport_account.id,
+            target_account_id=cashier_account.id,
+            amount=amount,
+            conducting_user_id=current_user.id,
+        )
+        return True
+
+    @with_db_transaction
+    @requires_terminal([Privilege.cashier_management])
+    async def modify_transport_account_balance(
+        self, *, conn: asyncpg.Connection, current_user: CurrentUser, orga_tag_uid: int, amount: float
+    ) -> bool:
+        transport_account = await get_transport_account_by_tag_uid(conn=conn, orga_tag_uid=orga_tag_uid)
+        if transport_account is None:
+            raise InvalidArgument("Transport account could not be found")
+
+        if transport_account.balance + amount < 0:
+            raise InvalidArgument(
+                f"Insufficient balance on transport account. Current balance is {transport_account.balance}."
+            )
+
+        await book_transaction(
+            conn=conn,
+            description="transport account balance modification",
+            source_account_id=ACCOUNT_CASH_VAULT,
+            target_account_id=transport_account.id,
+            amount=amount,
+            conducting_user_id=current_user.id,
         )
         return True

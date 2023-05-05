@@ -1,8 +1,14 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import NewTill, NewTillButton, NewTillLayout, NewTillProfile, NewCashRegisterStocking
-from stustapay.core.schema.user import CASHIER_ROLE_NAME, FINANZORGA_ROLE_NAME, ADMIN_ROLE_NAME, ADMIN_ROLE_ID
-from stustapay.core.service.common.error import AccessDenied
+from stustapay.core.schema.user import (
+    CASHIER_ROLE_NAME,
+    FINANZORGA_ROLE_NAME,
+    ADMIN_ROLE_NAME,
+    ADMIN_ROLE_ID,
+    FINANZORGA_ROLE_ID,
+)
+from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.product import ProductService
 from .common import TerminalTestCase
 from ..core.schema.account import ACCOUNT_CASH_VAULT
@@ -53,6 +59,41 @@ class TillManagementTest(TerminalTestCase):
 
         await self._assert_account_balance(self.cashier.cashier_account_id, stocking.total)
         await self._assert_account_balance(ACCOUNT_CASH_VAULT, -stocking.total)
+
+    async def test_transport_and_cashier_account_management(self):
+        await self._login_supervised_user(user_tag_uid=self.finanzorga_tag_uid, user_role_id=FINANZORGA_ROLE_ID)
+        await self.till_service.register.modify_transport_account_balance(
+            token=self.terminal_token, orga_tag_uid=self.finanzorga_tag_uid, amount=100
+        )
+
+        await self._assert_account_balance(self.finanzorga_user.transport_account_id, 100)
+        await self._assert_account_balance(ACCOUNT_CASH_VAULT, -100)
+
+        with self.assertRaises(InvalidArgument):
+            await self.till_service.register.modify_cashier_account_balance(
+                token=self.terminal_token, cashier_tag_uid=self.cashier_tag_uid, amount=120
+            )
+
+        await self.till_service.register.modify_cashier_account_balance(
+            token=self.terminal_token, cashier_tag_uid=self.cashier_tag_uid, amount=60
+        )
+        await self._assert_account_balance(self.finanzorga_user.transport_account_id, 40)
+        await self._assert_account_balance(self.cashier.cashier_account_id, 60)
+        await self.till_service.register.modify_cashier_account_balance(
+            token=self.terminal_token, cashier_tag_uid=self.cashier_tag_uid, amount=-30
+        )
+        await self._assert_account_balance(self.finanzorga_user.transport_account_id, 70)
+        await self._assert_account_balance(self.cashier.cashier_account_id, 30)
+
+        with self.assertRaises(InvalidArgument):
+            await self.till_service.register.modify_transport_account_balance(
+                token=self.terminal_token, orga_tag_uid=self.finanzorga_tag_uid, amount=-100
+            )
+        await self.till_service.register.modify_transport_account_balance(
+            token=self.terminal_token, orga_tag_uid=self.finanzorga_tag_uid, amount=-70
+        )
+        await self._assert_account_balance(self.finanzorga_user.transport_account_id, 0)
+        await self._assert_account_balance(ACCOUNT_CASH_VAULT, -30)
 
     async def test_basic_till_button_workflow(self):
         product1 = await self.product_service.create_product(
