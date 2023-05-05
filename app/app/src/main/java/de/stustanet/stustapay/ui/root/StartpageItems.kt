@@ -28,7 +28,7 @@ val startpageItems = listOf(
         icon = Icons.Filled.Info,
         label = "Account Status",
         navDestination = RootNavDests.status,
-        canAccess = { u, _ -> Access.canSell(u) }
+        canAccess = { _, _ -> true }
     ),
     StartpageItem(
         icon = Icons.Filled.List,

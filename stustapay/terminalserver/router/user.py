@@ -87,7 +87,7 @@ async def grant_free_ticket(
     success = await account_service.grant_free_tickets(token=token, new_free_ticket_grant=grant)
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-    return till_service.get_customer(token=token, customer_uid=grant.user_tag_uid)
+    return await till_service.get_customer(token=token, customer_tag_uid=grant.user_tag_uid)
 
 
 class GrantVoucherPayload(BaseModel):
@@ -107,4 +107,4 @@ async def grant_vouchers(
     )
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-    return till_service.get_customer(token=token, customer_uid=grant.user_tag_uid)
+    return await till_service.get_customer(token=token, customer_tag_uid=grant.user_tag_uid)

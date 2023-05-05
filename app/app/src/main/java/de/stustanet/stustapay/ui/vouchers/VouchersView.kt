@@ -27,7 +27,8 @@ fun VouchersView(viewModel: VouchersViewModel = hiltViewModel()) {
 
     NfcScanDialog(state = scanState, onScan = { tag ->
         scope.launch {
-            viewModel.giveVouchers(tag.uid, 0)
+            viewModel.giveVouchers(tag.uid, vouchers)
+            vouchers = 0
         }
     })
 
@@ -65,7 +66,9 @@ fun VouchersView(viewModel: VouchersViewModel = hiltViewModel()) {
                     .fillMaxWidth()
                     .padding(10.dp),
                 onClick = {
-                    scanState.open()
+                    if (vouchers in 1 until MAX_VOUCHERS) {
+                        scanState.open()
+                    }
                 }
             ) {
                 Text("Grant Vouchers", fontSize = 24.sp)
