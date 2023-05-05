@@ -9,17 +9,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustanet.stustapay.model.UserKind
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun CashierManagementEquipView(viewModel: CashierManagementViewModel, navigateBack: () -> Unit) {
+fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
+    val scope = rememberCoroutineScope()
     val scanState = rememberNfcScanDialogState()
+    val stockings by viewModel.stockings.collectAsStateWithLifecycle()
+    var selected by remember { mutableStateOf(0) }
 
     NfcScanDialog(state = scanState, onScan = {
-        navigateBack()
+        scope.launch {
+            viewModel.equip(it.uid, stockings[selected].id)
+        }
     })
 
     Scaffold(
@@ -34,7 +40,7 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel, navigateBa
                     ) {
                         TextField(
                             readOnly = true,
-                            value = "",
+                            value = stockings.getOrNull(selected)?.name.orEmpty(),
                             onValueChange = {},
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(
@@ -49,11 +55,12 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel, navigateBa
                             onDismissRequest = { expanded = false },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            for (k in UserKind.values()) {
+                            for (i in stockings.indices) {
                                 DropdownMenuItem(onClick = {
+                                    selected = i
                                     expanded = false
                                 }, modifier = Modifier.fillMaxWidth()) {
-                                    Text(k.label)
+                                    Text(stockings[i].name)
                                 }
                             }
                         }
@@ -67,7 +74,9 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel, navigateBa
                     .fillMaxWidth()
                     .padding(10.dp),
                 onClick = {
-                    scanState.open()
+                    if (0 < selected && selected < stockings.size) {
+                        scanState.open()
+                    }
                 }
             ) {
                 Text("Equip", fontSize = 24.sp)

@@ -31,6 +31,13 @@ class TerminalHTTPAPI @Inject constructor(
         return client.get("health", basePath = apiUrl)
     }
 
+    override suspend fun getCashierStockings(): Response<List<CashierStocking>> {
+        return client.get("cash-register-stockings")
+    }
+
+    override suspend fun equipCashier(equip: CashierEquip): Response<Unit> {
+        return client.post("stock-up-cash-register") { equip }
+    }
 
     // order
     override suspend fun listOrders(): Response<List<Order>> {

@@ -33,6 +33,16 @@ interface TerminalAPI {
      */
     suspend fun getHealthStatus(apiUrl: String): Response<HealthStatus>
 
+    /**
+     * Get possible cashier stockings.
+     */
+    suspend fun getCashierStockings(): Response<List<CashierStocking>>
+
+    /**
+     * Equip a cashier with a specific stocking.
+     */
+    suspend fun equipCashier(equip: CashierEquip): Response<Unit>
+
     // order
     /**
      * List orders of this till.

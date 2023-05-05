@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -17,6 +18,10 @@ import de.stustanet.stustapay.ui.nav.navigateTo
 @Composable
 fun CashierManagementView(viewModel: CashierManagementViewModel = hiltViewModel()) {
     val nav = rememberNavController()
+
+    LaunchedEffect(nav) {
+        viewModel.getStockings()
+    }
 
     NavHost(navController = nav, startDestination = CashierManagementNavDests.Main.route) {
         composable(CashierManagementNavDests.Main.route) {
@@ -38,9 +43,7 @@ fun CashierManagementView(viewModel: CashierManagementViewModel = hiltViewModel(
                 title = { Text("Equip Cashier") },
                 navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) }) {
                 Box(modifier = Modifier.padding(it)) {
-                    CashierManagementEquipView(
-                        viewModel = viewModel,
-                        navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) })
+                    CashierManagementEquipView(viewModel = viewModel)
                 }
             }
         }
