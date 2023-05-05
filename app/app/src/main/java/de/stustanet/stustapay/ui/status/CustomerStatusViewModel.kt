@@ -39,11 +39,12 @@ class CustomerStatusViewModel @Inject constructor(
         }
     }
 
-    fun startSwap(id: ULong) {
-        _requestState.update { CustomerStatusRequestState.Swap(id) }
+    fun startSwap(customer: Account) {
+        _requestState.update { CustomerStatusRequestState.Swap(customer) }
     }
 
-    fun completeSwap(a: ULong, b: ULong) {
+    suspend fun completeSwap(customer: Account, newTagId: ULong) {
+        customerRepository.switchTag(customer.id, newTagId)
         _requestState.update { CustomerStatusRequestState.SwapDone }
     }
 }
@@ -56,6 +57,6 @@ sealed interface CustomerStatusRequestState {
     object Fetching : CustomerStatusRequestState
     data class Done(val customer: Account) : CustomerStatusRequestState
     object Failed : CustomerStatusRequestState
-    data class Swap(val id: ULong) : CustomerStatusRequestState
+    data class Swap(val customer: Account) : CustomerStatusRequestState
     object SwapDone : CustomerStatusRequestState
 }

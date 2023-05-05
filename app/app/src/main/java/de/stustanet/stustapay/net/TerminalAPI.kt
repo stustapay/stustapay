@@ -125,11 +125,6 @@ interface TerminalAPI {
     suspend fun userLogout(): Response<Unit>
 
     /**
-     * Get the account status for a customer tag.
-     */
-    suspend fun getCustomer(id: ULong): Response<Account>
-
-    /**
      * Create a user with cashier privileges.
      */
     suspend fun userCreateCashier(newUser: NewUser): Response<CurrentUser>
@@ -143,4 +138,15 @@ interface TerminalAPI {
      * Grant drink vouchers to a customer tag
      */
     suspend fun grantVouchers(grant: GrantVouchers): Response<Account>
+
+    // customer
+    /**
+     * Get the account status for a customer tag.
+     */
+    suspend fun getCustomer(id: ULong): Response<Account>
+
+    /**
+     * Move customer account to a new tag.
+     */
+    suspend fun switchTag(switch: SwitchTag): Response<Unit>
 }

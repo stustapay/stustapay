@@ -17,4 +17,8 @@ class CustomerRepository @Inject constructor(
     suspend fun grantVouchers(id: ULong, vouchers: Int): Response<Account> {
         return customerRemoteDataSource.grantVouchers(id, vouchers)
     }
+
+    suspend fun switchTag(customerId: ULong, newTagId: ULong): Response<Unit> {
+        return customerRemoteDataSource.switchTag(customerId, newTagId)
+    }
 }

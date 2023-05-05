@@ -14,7 +14,7 @@ router = APIRouter(
 
 class SwitchTagPayload(BaseModel):
     customer_id: int
-    new_user_tag_uid: str
+    new_user_tag_uid: int
 
 
 @router.post("/switch_tag", summary="")
@@ -27,7 +27,7 @@ async def switch_tag(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
     success = await account_service.switch_account_tag_uid_terminal(
-        token=token, account_id=payload.customer_id, new_user_tag_uid=int(payload.new_user_tag_uid)
+        token=token, account_id=payload.customer_id, new_user_tag_uid=payload.new_user_tag_uid
     )
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)

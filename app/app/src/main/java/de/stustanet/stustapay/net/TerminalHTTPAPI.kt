@@ -121,10 +121,6 @@ class TerminalHTTPAPI @Inject constructor(
         return client.post<Unit, Unit>("user/logout")
     }
 
-    override suspend fun getCustomer(id: ULong): Response<Account> {
-        return client.get("customer/$id")
-    }
-
     override suspend fun userCreateCashier(newUser: NewUser): Response<CurrentUser> {
         return client.post("user/create_cashier") { newUser }
     }
@@ -135,5 +131,14 @@ class TerminalHTTPAPI @Inject constructor(
 
     override suspend fun grantVouchers(grant: GrantVouchers): Response<Account> {
         return client.post("user/grant-vouchers") { grant }
+    }
+
+    // customer
+    override suspend fun getCustomer(id: ULong): Response<Account> {
+        return client.get("customer/$id")
+    }
+
+    override suspend fun switchTag(switch: SwitchTag): Response<Unit> {
+        return client.get("customer/switch_tag")
     }
 }
