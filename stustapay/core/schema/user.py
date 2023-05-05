@@ -3,7 +3,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-
 ADMIN_ROLE_ID = 0
 ADMIN_ROLE_NAME = "admin"
 FINANZORGA_ROLE_ID = 1
@@ -12,6 +11,7 @@ CASHIER_ROLE_ID = 2
 CASHIER_ROLE_NAME = "cashier"
 STANDLEITER_ROLE_ID = 3
 INFOZELT_ROLE_ID = 4
+INFOZELT_ROLE_NAME = "infozelt helfer"
 
 
 class UserTag(BaseModel):
@@ -42,6 +42,7 @@ class Privilege(enum.Enum):
 
 class NewUserRole(BaseModel):
     name: str
+    is_privileged: bool = False
     privileges: list[Privilege]
 
 
@@ -63,6 +64,8 @@ class NewUser(BaseModel):
     login: str
     display_name: str = ""
     user_tag_uid: int
+    role_names: list[str]
+    description: Optional[str] = None
 
 
 class UserWithoutId(BaseModel):

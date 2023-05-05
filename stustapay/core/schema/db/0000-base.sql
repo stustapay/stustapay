@@ -221,6 +221,7 @@ values
 
 create table if not exists user_role (
     id bigint primary key generated always as identity (start with 1000),
+    is_privileged boolean not null default false,
     name text not null unique
 );
 
@@ -282,14 +283,14 @@ create table if not exists user_role_to_privilege (
 );
 
 insert into user_role (
-    id, name
+    id, name, is_privileged
 ) overriding system value
 values
-    (0, 'admin'),
-    (1, 'finanzorga'),
-    (2, 'cashier'),
-    (3, 'standleiter'),
-    (4, 'infozelt helfer')
+    (0, 'admin', true),
+    (1, 'finanzorga', true),
+    (2, 'cashier', false),
+    (3, 'standleiter', false),
+    (4, 'infozelt helfer', false)
 on conflict do nothing;
 
 insert into user_role_to_privilege (

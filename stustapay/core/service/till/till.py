@@ -30,7 +30,7 @@ from stustapay.core.service.product import (
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.till.register import TillRegisterService
-from stustapay.core.service.user import AuthService
+from stustapay.core.service.user import AuthService, list_user_roles
 
 
 class TillService(DBService):
@@ -329,6 +329,8 @@ class TillService(DBService):
         secrets = TerminalSecrets(sumup_affiliate_key=self.cfg.core.sumup_affiliate_key)
         ticket_buttons = await self._construct_ticket_buttons(conn=conn)
 
+        available_roles = await list_user_roles(conn=conn)
+
         return TerminalConfig(
             id=current_terminal.till.id,
             name=current_terminal.till.name,
@@ -340,6 +342,7 @@ class TillService(DBService):
             ticket_buttons=ticket_buttons,
             buttons=buttons,
             secrets=secrets,
+            available_roles=available_roles,
         )
 
     @with_db_transaction

@@ -56,22 +56,25 @@ async def logout_user(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
 
-@router.post("/create_cashier", summary="Create a New Account with cashier privilege", response_model=User)
-async def create_cashier(
+@router.post("/create-user", summary="Create a new user with the given roles", response_model=User)
+async def create_user(
     token: CurrentAuthToken,
     user_service: ContextUserService,
     new_user: NewUser,
 ):
-    return await user_service.create_cashier(token=token, new_user=new_user)
+    return await user_service.create_user_terminal(token=token, new_user=new_user)
 
 
-@router.post("/create_finanzorga", summary="Create a New Account with finanzorga privilege", response_model=User)
-async def create_finanzorga(
-    token: CurrentAuthToken,
-    user_service: ContextUserService,
-    new_user: NewUser,
-):
-    return await user_service.create_finanzorga(token=token, new_user=new_user)
+class UpdateUserPayload(BaseModel):
+    user_tag_uid: int
+    role_names: list[str]
+
+
+@router.post("/update-user-roles", summary="Update roles of a given user", response_model=User)
+async def create_finanzorga(token: CurrentAuthToken, user_service: ContextUserService, payload: UpdateUserPayload):
+    return await user_service.update_user_roles_terminal(
+        token=token, user_tag_uid=payload.user_tag_uid, role_names=payload.role_names
+    )
 
 
 @router.post("/grant-free-ticket", summary="grant a free ticket, e.g. to a volunteer", response_model=Customer)
