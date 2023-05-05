@@ -1,7 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootState } from "./store";
 import { authApi } from "@api/authApi";
-import { configApi } from "@api";
 import { CurrentUser } from "@stustapay/models";
 
 interface AuthState {
@@ -31,12 +30,6 @@ export const authSlice = createSlice({
     builder.addMatcher(authApi.endpoints.logout.matchRejected, (state) => {
       state.user = null;
       state.token = null;
-    });
-    builder.addMatcher(configApi.endpoints.getConfigEntries.matchRejected, (state, action) => {
-      if (action.payload?.status === 403) {
-        state.user = null;
-        state.token = null;
-      }
     });
   },
 });
