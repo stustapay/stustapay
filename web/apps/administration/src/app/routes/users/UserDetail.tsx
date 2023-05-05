@@ -1,4 +1,4 @@
-import { Paper, ListItem, IconButton, ListItemText, List, Tooltip } from "@mui/material";
+import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Chip } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -66,6 +66,14 @@ export const UserDetail: React.FC = () => {
           </ListItem>
           <ListItem>
             <ListItemText primary={t("userDescription")} secondary={user.description} />
+          </ListItem>
+          <ListItem>
+            <ListItemText
+              primary={t("user.roles")}
+              secondary={user.role_names.map((role) => (
+                <Chip variant="outlined" sx={{ mr: 1 }} key={role} label={role} />
+              ))}
+            />
           </ListItem>
         </List>
       </Paper>

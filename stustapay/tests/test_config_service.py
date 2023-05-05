@@ -22,3 +22,7 @@ class ConfigServiceTest(BaseTestCase):
         entries = await self.config_service.list_config_entries(token=self.admin_token)
         self.assertEqual(len(list(filter(lambda x: x.key == "bon.issuer", entries))), 1)
         self.assertEqual(list(filter(lambda x: x.key == "bon.issuer", entries))[0].value, "foobar")
+
+    async def test_get_public_config(self):
+        public_config = await self.config_service.get_public_config()
+        self.assertIsNotNone(public_config)

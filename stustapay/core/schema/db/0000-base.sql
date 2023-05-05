@@ -830,6 +830,7 @@ create table if not exists cashier_shift (
     id bigint primary key generated always as identity,
     -- TODO: constraint that we can only reference users with a cashier account id
     cashier_id bigint references usr(id),
+    closing_out_user_id bigint references usr(id),
     started_at timestamptz not null,
     ended_at timestamptz not null,
     final_cash_drawer_balance numeric not null,

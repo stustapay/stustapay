@@ -25,7 +25,6 @@ from .routers import (
     till_layout,
     till_profile,
     user,
-    endpoints,
     cashier,
 )
 
@@ -56,7 +55,6 @@ class Api(SubCommand):
         self.server.add_router(config_router.router)
         self.server.add_router(account.router)
         self.server.add_router(order.router)
-        self.server.add_router(endpoints.router)
         self.server.add_router(cashier.router)
 
     async def run(self):

@@ -16,6 +16,7 @@ export const NewCashierCloseOutSchema = z.object({
   cashier_id: z.number(),
   comment: z.string(),
   actual_cash_drawer_balance: z.number(),
+  closing_out_user_id: z.number(),
 });
 
 export type NewCashierCloseOut = z.infer<typeof NewCashierCloseOutSchema>;
@@ -34,6 +35,7 @@ export const CashierShiftSchema = z.object({
   ended_at: z.string().datetime(),
   final_cash_drawer_balance: z.number(),
   final_cash_drawer_imbalance: z.number(),
+  closing_out_user_id: z.number(),
 });
 
 export type CashierShift = z.infer<typeof CashierShiftSchema>;

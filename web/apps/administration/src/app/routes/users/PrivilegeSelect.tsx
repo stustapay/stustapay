@@ -12,7 +12,6 @@ import {
   Checkbox,
 } from "@mui/material";
 import * as React from "react";
-import { useTranslation } from "react-i18next";
 
 export interface PrivilegeSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
   label: string;
@@ -31,26 +30,14 @@ export const PrivilegeSelect: React.FC<PrivilegeSelectProps> = ({
   error,
   ...props
 }) => {
-  const { t } = useTranslation(["users", "common"]);
   const handleChange = (evt: SelectChangeEvent<unknown>) => {
     const newVal = evt.target.value;
-    if (typeof newVal !== "string") {
-      return;
-    }
-    if (newVal.includes(",")) {
+    if (typeof newVal === "string") {
       onChange(newVal.split(",") as Privilege[]);
       return;
     }
 
-    if (!PrivilegeSchema.safeParse(newVal).success) {
-      return;
-    }
-
-    if (value.includes(newVal as Privilege)) {
-      onChange(value.filter((v) => v !== newVal));
-    } else {
-      onChange([...value, newVal] as Privilege[]);
-    }
+    onChange(newVal as Privilege[]);
   };
 
   return (
@@ -61,11 +48,12 @@ export const PrivilegeSelect: React.FC<PrivilegeSelectProps> = ({
       <Select
         labelId="privilegeSelectLabel"
         value={value ?? ""}
+        multiple
         onChange={handleChange}
         renderValue={(selected) => (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
             {value.map((v) => (
-              <Chip key={v} label={t(v)} />
+              <Chip key={v} label={v} />
             ))}
           </Box>
         )}
@@ -74,7 +62,7 @@ export const PrivilegeSelect: React.FC<PrivilegeSelectProps> = ({
         {PrivilegeSchema.options.map((p) => (
           <MenuItem key={p} value={p}>
             <Checkbox checked={value.includes(p)} />
-            {t(p)}
+            {p}
           </MenuItem>
         ))}
       </Select>

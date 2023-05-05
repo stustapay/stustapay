@@ -9,13 +9,15 @@ import {
   selectTillById,
   useGetTillsQuery,
   useGetCashierShiftsQuery,
+  selectUserById,
+  useGetUsersQuery,
 } from "@api";
 import { Loading } from "@stustapay/components";
 import { ButtonLink, IconButtonLink, ListItemLink } from "@components";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { useCurrencyFormatter } from "@hooks";
-import { CashierShift } from "@stustapay/models";
+import { CashierShift, getUserName } from "@stustapay/models";
 import { formatDate } from "@stustapay/utils";
 
 export const CashierDetail: React.FC = () => {
@@ -36,14 +38,15 @@ export const CashierDetail: React.FC = () => {
     isLoading: isShiftsLoading,
   } = useGetCashierShiftsQuery(Number(cashierId));
   const { data: tills, isLoading: isTillsLoading, error: tillError } = useGetTillsQuery();
+  const { data: users, isLoading: isUsersLoading, error: userError } = useGetUsersQuery();
 
-  if (error || tillError || shiftsError) {
+  if (error || tillError || shiftsError || userError) {
     navigate(-1);
     toast.error("Error while loading cashier");
     return null;
   }
 
-  if (!cashier || !cashierShifts || isLoading || isTillsLoading || isShiftsLoading) {
+  if (!cashier || !cashierShifts || isLoading || isTillsLoading || isShiftsLoading || isUsersLoading) {
     return <Loading />;
   }
 
@@ -52,6 +55,19 @@ export const CashierDetail: React.FC = () => {
       return undefined;
     }
     return selectTillById(tills, id);
+  };
+
+  const renderUser = (id?: number | null) => {
+    if (!id || !users) {
+      return "";
+    }
+
+    const user = selectUserById(users, id);
+    if (!user) {
+      return "";
+    }
+
+    return getUserName(user);
   };
 
   const columns: GridColDef<CashierShift>[] = [
@@ -64,6 +80,13 @@ export const CashierDetail: React.FC = () => {
       field: "comment",
       headerName: t("shift.comment") as string,
       flex: 2,
+    },
+    {
+      field: "closing_out_user_id",
+      headerName: t("closeOut.closingOutUser") as string,
+      type: "string",
+      renderCell: (params) => renderUser(params.row.closing_out_user_id),
+      width: 200,
     },
     {
       field: "started_at",
@@ -106,7 +129,7 @@ export const CashierDetail: React.FC = () => {
             </>
           }
         >
-          <ListItemText primary={cashier.display_name} />
+          <ListItemText primary={getUserName(cashier)} />
         </ListItem>
       </Paper>
       <Paper sx={{ mt: 2 }}>
