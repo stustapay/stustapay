@@ -39,19 +39,12 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
 
   const handleChange = (evt: SelectChangeEvent<unknown>) => {
     const newVal = evt.target.value;
-    if (typeof newVal !== "string") {
-      return;
-    }
-    if (newVal.includes(",")) {
+    if (typeof newVal === "string") {
       onChange(newVal.split(","));
       return;
     }
 
-    if (value.includes(newVal)) {
-      onChange(value.filter((v) => v !== newVal));
-    } else {
-      onChange([...value, newVal]);
-    }
+    onChange(newVal as string[]);
   };
 
   return (
@@ -62,6 +55,7 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
       <Select
         labelId="roleSelectLabel"
         value={value}
+        multiple
         onChange={handleChange}
         renderValue={(selected) => (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>

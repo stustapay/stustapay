@@ -24,9 +24,11 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { Formik, FormikHelpers } from "formik";
 import { toast } from "react-toastify";
+import { UserSelect } from "@components/UserSelect";
 
 const CloseOutDataSchema = z.object({
   comment: z.string(),
+  closingOutUserId: z.number(),
   coins: z.number(),
   bill5Euro: z.number(),
   bill10Euro: z.number(),
@@ -39,6 +41,7 @@ type CloseOutData = z.infer<typeof CloseOutDataSchema>;
 
 const initialValues: CloseOutData = {
   comment: "",
+  closingOutUserId: null as unknown as number,
   coins: 0,
   bill5Euro: 0,
   bill10Euro: 0,
@@ -90,6 +93,7 @@ export const CashierCloseOut: React.FC = () => {
       comment: values.comment,
       cashier_id: Number(cashierId),
       actual_cash_drawer_balance: computeSum(values),
+      closing_out_user_id: values.closingOutUserId,
     })
       .unwrap()
       .then(() => {
@@ -235,6 +239,17 @@ export const CashierCloseOut: React.FC = () => {
               </Table>
             </TableContainer>
             <Paper sx={{ mt: 2, p: 3 }}>
+              <UserSelect
+                fullWidth
+                variant="standard"
+                margin="normal"
+                name="closingOutUserId"
+                label={t("closeOut.closingOutUser")}
+                value={values.closingOutUserId}
+                onBlur={handleBlur}
+                filterRole="finanzorga"
+                onChange={(val) => setFieldValue("closingOutUserId", val)}
+              />
               <TextField
                 multiline
                 fullWidth

@@ -68,14 +68,13 @@ export const UserUpdate: React.FC = () => {
                 variant="standard"
                 margin="normal"
                 fullWidth
-                autoFocus
                 name="display_name"
                 label={t("userDisplayName")}
                 error={touched.display_name && !!errors.display_name}
                 helperText={(touched.display_name && errors.display_name) as string}
                 onBlur={handleBlur}
                 onChange={handleChange}
-                value={values.display_name}
+                value={values.display_name ?? ""}
               />
 
               <TextField
@@ -88,7 +87,7 @@ export const UserUpdate: React.FC = () => {
                 helperText={(touched.description && errors.description) as string}
                 onBlur={handleBlur}
                 onChange={handleChange}
-                value={values.description}
+                value={values.description ?? ""}
               />
 
               <RoleSelect

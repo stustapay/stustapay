@@ -58,7 +58,8 @@ values
     -- password is admin
     (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null),
     (2, 'tag2', null, null, null, 202, 5424726191074820),
-    (4, 'tag4', null, null, null, 205, 5424726268326916)
+    (4, 'tag4', null, null, null, 205, 5424726268326916),
+    (5, 'finanzorga' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null)
     on conflict do nothing;
 select setval('usr_id_seq', 100);
 
@@ -68,9 +69,12 @@ insert into user_to_role (
 values
     (0, 2), -- cashier
     (1, 0), -- admin
+    (1, 1), -- finanzorga
     (2, 0), -- tag #2, admin
+    (2, 1), -- tag #2, finanzorga
     (2, 2), -- tag #2, cashier
-    (4, 2) -- tag #4, cashier
+    (4, 2), -- tag #4, cashier
+    (5, 1) -- tag #4, cashier
     on conflict do nothing;
 
 insert into product (

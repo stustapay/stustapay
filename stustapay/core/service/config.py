@@ -1,7 +1,7 @@
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.config import ConfigEntry
+from stustapay.core.schema.config import ConfigEntry, PublicConfig
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -13,6 +13,16 @@ class ConfigService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
+
+    @with_db_transaction
+    async def get_public_config(self, *, conn: asyncpg.Connection) -> PublicConfig:
+        row = await conn.fetchrow(
+            "select "
+            "   (select value from config where key = 'currency.symbol') as currency_symbol,"
+            "   (select value from config where key = 'currency.identifier') as currency_identifier"
+        )
+
+        return PublicConfig.parse_obj(row)
 
     @with_db_transaction
     @requires_user([Privilege.config_management])

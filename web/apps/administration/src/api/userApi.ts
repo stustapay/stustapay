@@ -57,7 +57,7 @@ export const userApi = createApi({
       invalidatesTags: ["userRole"],
     }),
     updateUserRole: builder.mutation<UserRole, { id: number; privileges: Privilege[] }>({
-      query: ({ id, ...role }) => ({ url: `/users_roles/${id}/`, method: "POST", body: role }),
+      query: ({ id, ...role }) => ({ url: `/user_roles/${id}/`, method: "POST", body: role }),
       invalidatesTags: (result, error, { id }) => [{ type: "userRole", id }],
     }),
     deleteUserRole: builder.mutation<void, number>({

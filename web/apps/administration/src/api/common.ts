@@ -16,18 +16,28 @@ export const prepareAuthHeaders = (
   return headers;
 };
 
-export const ClientConfigSchema = z.object({
+export const StaticAdminConfigSchema = z.object({
   adminApiEndpoint: z.string(),
 });
 
-export type ClientConfig = z.infer<typeof ClientConfigSchema>;
+export type StaticAdminConfig = z.infer<typeof StaticAdminConfigSchema>;
 
-export const ConfigSchema = ClientConfigSchema.merge(
+export const PublicApiConfigSchema = z.object({
+  terminal_api_endpoint: z.string(),
+  currency_symbol: z.string(),
+  currency_identifier: z.string(),
+});
+
+export type PublicApiConfig = z.infer<typeof PublicApiConfigSchema>;
+
+export const ConfigSchema = StaticAdminConfigSchema.merge(
   z.object({
     adminApiEndpoint: z.string(),
     adminApiBaseUrl: z.string(),
     adminApiBaseWebsocketUrl: z.string(),
     terminalApiBaseUrl: z.string(),
+    currencySymbol: z.string(),
+    currencyIdentifier: z.string(),
   })
 );
 
@@ -35,19 +45,21 @@ export type Config = z.infer<typeof ConfigSchema>;
 
 export let config: Config;
 
-const generateConfig = (clientConfig: ClientConfig, terminalApiEndpoint: string): Config => {
+const generateConfig = (staticConfig: StaticAdminConfig, publicApiConfig: PublicApiConfig): Config => {
   return {
-    ...clientConfig,
-    terminalApiBaseUrl: `http://${terminalApiEndpoint}`,
-    adminApiBaseUrl: `http://${clientConfig.adminApiEndpoint}`,
-    adminApiBaseWebsocketUrl: `ws://${clientConfig.adminApiEndpoint}`,
+    ...staticConfig,
+    terminalApiBaseUrl: `http://${publicApiConfig.terminal_api_endpoint}`,
+    adminApiBaseUrl: `http://${staticConfig.adminApiEndpoint}`,
+    adminApiBaseWebsocketUrl: `ws://${staticConfig.adminApiEndpoint}`,
+    currencyIdentifier: publicApiConfig.currency_identifier,
+    currencySymbol: publicApiConfig.currency_symbol,
   };
 };
 
-const fetchTerminalApiEndpoint = async (clientConfig: ClientConfig) => {
-  const resp = await fetch(`http://${clientConfig.adminApiEndpoint}/api-endpoints`);
+const fetchPublicConfig = async (clientConfig: StaticAdminConfig): Promise<PublicApiConfig> => {
+  const resp = await fetch(`http://${clientConfig.adminApiEndpoint}/public-config`);
   const respJson = await resp.json();
-  return respJson["terminal_api_endpoint"];
+  return PublicApiConfigSchema.parse(respJson);
 };
 
 export const fetchConfig = async (): Promise<Config> => {
@@ -56,9 +68,9 @@ export const fetchConfig = async (): Promise<Config> => {
     throw new Error("error while fetching config");
   }
   const respJson = await resp.json();
-  const clientConfig = ClientConfigSchema.parse(respJson);
-  const terminalApiEndpoint = await fetchTerminalApiEndpoint(clientConfig);
-  const c = generateConfig(clientConfig, terminalApiEndpoint);
+  const staticConfig = StaticAdminConfigSchema.parse(respJson);
+  const publicConfig = await fetchPublicConfig(staticConfig);
+  const c = generateConfig(staticConfig, publicConfig);
   config = c;
   return c;
 };

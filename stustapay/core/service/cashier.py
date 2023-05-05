@@ -22,6 +22,7 @@ class InvalidCloseOutException(ServiceException):
 class CloseOut(BaseModel):
     comment: str
     actual_cash_drawer_balance: float
+    closing_out_user_id: int
 
 
 class CloseOutResult(BaseModel):
@@ -131,8 +132,8 @@ class CashierService(DBService):
         await conn.execute(
             "insert into cashier_shift ("
             "   cashier_id, started_at, ended_at, final_cash_drawer_balance, final_cash_drawer_imbalance, "
-            "   comment, close_out_transaction_id) "
-            "values ($1, $2, $3, $4, $5, $6, $7)",
+            "   comment, close_out_transaction_id, closing_out_user_id) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8)",
             cashier.id,
             shift_start,
             shift_end,
@@ -140,6 +141,7 @@ class CashierService(DBService):
             imbalance,
             close_out.comment,
             close_out_transaction_id,
+            close_out.closing_out_user_id,
         )
 
         return CloseOutResult(cashier_id=cashier.id, imbalance=imbalance)

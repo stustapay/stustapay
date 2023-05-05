@@ -40,7 +40,7 @@ export const UserRoleUpdate: React.FC = () => {
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/user-roless");
+        navigate("/user-roles");
       })
       .catch((err) => {
         setSubmitting(false);

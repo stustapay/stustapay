@@ -6,13 +6,13 @@ from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService, ContextUserService, ContextAccountService
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.user import NewUser, User, UserTag
+from stustapay.core.schema.user import NewUser, User, UserTag, CurrentUser, UserRole
 from stustapay.core.util import BaseModel
 
 router = APIRouter(prefix="/user", tags=["user"])
 
 
-@router.get("", summary="Get the currently logged in User", response_model=Optional[User])
+@router.get("", summary="Get the currently logged in User", response_model=Optional[CurrentUser])
 async def get_current_user(
     token: CurrentAuthToken,
     till_service: ContextTillService,
@@ -20,13 +20,31 @@ async def get_current_user(
     return await till_service.get_current_user(token=token)
 
 
-@router.post("/login", summary="Login User", response_model=User)
-async def login_user(
+@router.post(
+    "/check-login",
+    summary="Check if a user can login to the terminal and return his roles",
+    response_model=list[UserRole],
+)
+async def check_login_user(
     user_tag: UserTag,
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    return await till_service.login_user(token=token, user_tag=user_tag)
+    return await till_service.check_user_login(token=token, user_tag=user_tag)
+
+
+class LoginPayload(BaseModel):
+    user_tag: UserTag
+    user_role_id: int
+
+
+@router.post("/login", summary="Login User", response_model=CurrentUser)
+async def login_user(
+    payload: LoginPayload,
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
+):
+    return await till_service.login_user(token=token, user_tag=payload.user_tag, user_role_id=payload.user_role_id)
 
 
 @router.post("/logout", summary="Logout the current user", status_code=status.HTTP_204_NO_CONTENT)

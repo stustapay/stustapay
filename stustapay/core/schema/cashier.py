@@ -19,6 +19,7 @@ class Cashier(BaseModel):
 class CashierShift(BaseModel):
     id: int
     comment: str
+    closing_out_user_id: int
     final_cash_drawer_balance: float
     final_cash_drawer_imbalance: float
     started_at: datetime

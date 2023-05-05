@@ -20,7 +20,11 @@ class CashierServiceTest(BaseTestCase):
         close_out_result = await self.cashier_service.close_out_cashier(
             token=self.admin_token,
             cashier_id=0,
-            close_out=CloseOut(comment="Some comment", actual_cash_drawer_balance=actual_balance),
+            close_out=CloseOut(
+                comment="Some comment",
+                actual_cash_drawer_balance=actual_balance,
+                closing_out_user_id=self.admin_user.id,
+            ),
         )
         self.assertEqual(close_out_result.imbalance, actual_balance - cashier.cash_drawer_balance)
 
