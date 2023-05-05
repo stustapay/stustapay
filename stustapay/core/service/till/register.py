@@ -172,7 +172,7 @@ class TillRegisterService(DBService):
 
         await book_transaction(
             conn=conn,
-            description=f"cash drawer balance modification",
+            description="cash drawer balance modification",
             source_account_id=transport_account.id,
             target_account_id=cashier_account.id,
             amount=amount,
@@ -196,7 +196,7 @@ class TillRegisterService(DBService):
 
         await book_transaction(
             conn=conn,
-            description=f"transport account balance modification",
+            description="transport account balance modification",
             source_account_id=ACCOUNT_CASH_VAULT,
             target_account_id=transport_account.id,
             amount=amount,

@@ -19,6 +19,44 @@ from stustapay.core.service.common.decorators import with_db_transaction, requir
 from stustapay.core.service.common.error import ServiceException
 
 
+async def fetch_product(*, conn: asyncpg.Connection, product_id: int) -> Optional[Product]:
+    result = await conn.fetchrow("select * from product_with_tax_and_restrictions where id = $1", product_id)
+    if result is None:
+        return None
+    return Product.parse_obj(result)
+
+
+async def fetch_constant_product(*, conn: asyncpg.Connection, product_id: int) -> Product:
+    product = await fetch_product(conn=conn, product_id=product_id)
+    if product is None:
+        raise RuntimeError("no product found in database")
+    return product
+
+
+async def fetch_discount_product(*, conn: asyncpg.Connection) -> Product:
+    return await fetch_constant_product(conn=conn, product_id=DISCOUNT_PRODUCT_ID)
+
+
+async def fetch_top_up_product(*, conn: asyncpg.Connection) -> Product:
+    return await fetch_constant_product(conn=conn, product_id=TOP_UP_PRODUCT_ID)
+
+
+async def fetch_ticket_product(*, conn: asyncpg.Connection) -> Product:
+    return await fetch_constant_product(conn=conn, product_id=TICKET_PRODUCT_ID)
+
+
+async def fetch_ticket_product_u18(*, conn: asyncpg.Connection) -> Product:
+    return await fetch_constant_product(conn=conn, product_id=TICKET_U18_PRODUCT_ID)
+
+
+async def fetch_ticket_product_u16(*, conn: asyncpg.Connection) -> Product:
+    return await fetch_constant_product(conn=conn, product_id=TICKET_U16_PRODUCT_ID)
+
+
+async def fetch_initial_topup_amount(conn: asyncpg.Connection) -> float:
+    return float(await conn.fetchval("select value from config where key = 'entry.initial_topup_amount'"))
+
+
 class ProductIsLockedException(ServiceException):
     id = "ProductNotEditable"
     description = "The product has been marked as not editable, its core metadata is therefore fixed"
@@ -28,38 +66,6 @@ class ProductService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
-
-    @staticmethod
-    async def fetch_product(*, conn: asyncpg.Connection, product_id: int) -> Optional[Product]:
-        result = await conn.fetchrow("select * from product_with_tax_and_restrictions where id = $1", product_id)
-        if result is None:
-            return None
-        return Product.parse_obj(result)
-
-    async def fetch_constant_product(self, *, conn: asyncpg.Connection, product_id: int) -> Product:
-        product = await self.fetch_product(conn=conn, product_id=product_id)
-        if product is None:
-            raise RuntimeError("no product found in database")
-        return product
-
-    async def fetch_discount_product(self, *, conn: asyncpg.Connection) -> Product:
-        return await self.fetch_constant_product(conn=conn, product_id=DISCOUNT_PRODUCT_ID)
-
-    async def fetch_top_up_product(self, *, conn: asyncpg.Connection) -> Product:
-        return await self.fetch_constant_product(conn=conn, product_id=TOP_UP_PRODUCT_ID)
-
-    async def fetch_ticket_product(self, *, conn: asyncpg.Connection) -> Product:
-        return await self.fetch_constant_product(conn=conn, product_id=TICKET_PRODUCT_ID)
-
-    async def fetch_ticket_product_u18(self, *, conn: asyncpg.Connection) -> Product:
-        return await self.fetch_constant_product(conn=conn, product_id=TICKET_U18_PRODUCT_ID)
-
-    async def fetch_ticket_product_u16(self, *, conn: asyncpg.Connection) -> Product:
-        return await self.fetch_constant_product(conn=conn, product_id=TICKET_U16_PRODUCT_ID)
-
-    @staticmethod
-    async def fetch_initial_topup_amount(conn: asyncpg.Connection) -> float:
-        return float(await conn.fetchval("select value from config where key = 'entry.initial_topup_amount'"))
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
@@ -86,7 +92,7 @@ class ProductService(DBService):
 
         if product_id is None:
             raise RuntimeError("product should have been created")
-        created_product = await self.fetch_product(conn=conn, product_id=product_id)
+        created_product = await fetch_product(conn=conn, product_id=product_id)
         if created_product is None:
             raise RuntimeError("product should have been created")
         return created_product
@@ -103,14 +109,14 @@ class ProductService(DBService):
     @with_db_transaction
     @requires_user()
     async def get_product(self, *, conn: asyncpg.Connection, product_id: int) -> Optional[Product]:
-        return await self.fetch_product(conn=conn, product_id=product_id)
+        return await fetch_product(conn=conn, product_id=product_id)
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
     async def update_product(
         self, *, conn: asyncpg.Connection, product_id: int, product: NewProduct
     ) -> Optional[Product]:
-        current_product = await self.fetch_product(conn=conn, product_id=product_id)
+        current_product = await fetch_product(conn=conn, product_id=product_id)
         if current_product is None:
             return None
 
@@ -153,7 +159,7 @@ class ProductService(DBService):
                 "insert into product_restriction (id, restriction) values ($1, $2)", product_id, restriction.name
             )
 
-        return await self.fetch_product(conn=conn, product_id=product_id)
+        return await fetch_product(conn=conn, product_id=product_id)
 
     @with_db_transaction
     @requires_user([Privilege.product_management])

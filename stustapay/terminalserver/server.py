@@ -9,7 +9,6 @@ from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.order import OrderService
-from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
@@ -51,18 +50,13 @@ class Api(SubCommand):
         db_pool = await self.server.db_connect(self.cfg.database)
 
         auth_service = AuthService(db_pool=db_pool, config=self.cfg)
-        product_service = ProductService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
 
         context = Context(
             config=self.cfg,
             db_pool=db_pool,
-            order_service=OrderService(
-                db_pool=db_pool, config=self.cfg, auth_service=auth_service, product_service=product_service
-            ),
+            order_service=OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
-            till_service=TillService(
-                db_pool=db_pool, config=self.cfg, auth_service=auth_service, product_service=product_service
-            ),
+            till_service=TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
         try:
             await self.server.run(self.cfg, context)

@@ -29,7 +29,7 @@ from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.order import OrderService, NotEnoughVouchersException
 from stustapay.core.service.order.order import NotEnoughFundsException
 from stustapay.core.service.order.order import TillPermissionException, InvalidSaleException
-from stustapay.core.service.product import ProductService
+from stustapay.core.service.product import ProductService, fetch_initial_topup_amount
 from stustapay.core.service.till import TillService
 from .common import TerminalTestCase
 
@@ -46,7 +46,6 @@ class OrderLogicTest(TerminalTestCase):
             db_pool=self.db_pool,
             config=self.test_config,
             auth_service=self.auth_service,
-            product_service=self.product_service,
         )
         self.account_service = AccountService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
@@ -55,7 +54,6 @@ class OrderLogicTest(TerminalTestCase):
             db_pool=self.db_pool,
             config=self.test_config,
             auth_service=self.auth_service,
-            product_service=self.product_service,
         )
 
         self.beer_product = await self.product_service.create_product(
@@ -126,9 +124,7 @@ class OrderLogicTest(TerminalTestCase):
             "select price::double precision from product where id = $1", TICKET_PRODUCT_ID
         )
 
-        self.initial_topup_amount = float(
-            await self.db_conn.fetchval("select value from config where key ='entry.initial_topup_amount'")
-        )
+        self.initial_topup_amount = await fetch_initial_topup_amount(conn=self.db_conn)
 
     async def test_basic_sale_flow(self):
         customer_acc = await self.till_service.get_customer(

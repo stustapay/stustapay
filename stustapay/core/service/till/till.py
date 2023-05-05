@@ -21,7 +21,12 @@ from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
 from stustapay.core.service.common.error import AccessDenied, NotFound
-from stustapay.core.service.product import ProductService
+from stustapay.core.service.product import (
+    fetch_ticket_product_u18,
+    fetch_ticket_product_u16,
+    fetch_ticket_product,
+    fetch_initial_topup_amount,
+)
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.till.register import TillRegisterService
@@ -34,11 +39,9 @@ class TillService(DBService):
         db_pool: asyncpg.Pool,
         config: Config,
         auth_service: AuthService,
-        product_service: ProductService,
     ):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
-        self.product_service = product_service
 
         self.profile = TillProfileService(db_pool, config, auth_service)
         self.layout = TillLayoutService(db_pool, config, auth_service)
@@ -257,13 +260,14 @@ class TillService(DBService):
         )
         return t_id is not None
 
-    async def _construct_ticket_buttons(self, *, conn: asyncpg.Connection) -> list[TerminalButton]:
-        initial_topup_amount = await self.product_service.fetch_initial_topup_amount(conn=conn)
-        ticket_product = await self.product_service.fetch_ticket_product(conn=conn)
+    @staticmethod
+    async def _construct_ticket_buttons(*, conn: asyncpg.Connection) -> list[TerminalButton]:
+        initial_topup_amount = await fetch_initial_topup_amount(conn=conn)
+        ticket_product = await fetch_ticket_product(conn=conn)
         assert ticket_product.price is not None
-        ticket_u16_product = await self.product_service.fetch_ticket_product_u16(conn=conn)
+        ticket_u16_product = await fetch_ticket_product_u16(conn=conn)
         assert ticket_u16_product.price is not None
-        ticket_u18_product = await self.product_service.fetch_ticket_product_u18(conn=conn)
+        ticket_u18_product = await fetch_ticket_product_u18(conn=conn)
         assert ticket_u18_product.price is not None
         return [
             TerminalButton(
