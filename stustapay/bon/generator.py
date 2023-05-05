@@ -15,6 +15,7 @@ from stustapay.core.database import create_db_pool
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.order import OrderService
+from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
@@ -47,9 +48,14 @@ class Generator(SubCommand):
         self.logger.info("Starting Bon Generator")
         self.pool = await create_db_pool(self.config.database)
         auth_service = AuthService(db_pool=self.pool, config=self.config)
+        self.product_service = ProductService(db_pool=self.pool, config=self.config, auth_service=auth_service)
         self.user_service = UserService(db_pool=self.pool, config=self.config, auth_service=auth_service)
-        self.till_service = TillService(db_pool=self.pool, config=self.config, auth_service=auth_service)
-        self.order_service = OrderService(db_pool=self.pool, config=self.config, auth_service=auth_service)
+        self.till_service = TillService(
+            db_pool=self.pool, config=self.config, auth_service=auth_service, product_service=self.product_service
+        )
+        self.order_service = OrderService(
+            db_pool=self.pool, config=self.config, auth_service=auth_service, product_service=self.product_service
+        )
 
         async with AsyncExitStack() as stack:
             self.psql = await stack.enter_async_context(self.pool.acquire())

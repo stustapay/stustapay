@@ -1,4 +1,4 @@
-import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Checkbox } from "@mui/material";
+import { Paper, ListItem, Chip, IconButton, ListItemText, List, Tooltip, Checkbox } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -88,6 +88,14 @@ export const TillProfileDetail: React.FC = () => {
           <ListItem>
             <Checkbox edge="end" checked={profile.allow_ticket_sale} disabled={true} sx={{ mr: 1 }} />
             <ListItemText primary={t("profile.allowTicketSale")} />
+          </ListItem>
+          <ListItem>
+            <ListItemText
+              primary={t("profile.allowedUserRoles")}
+              secondary={profile.allowed_role_names.map((roleName) => (
+                <Chip key={roleName} variant="outlined" label={roleName} sx={{ mr: 1 }} />
+              ))}
+            />
           </ListItem>
           {layout && (
             <ListItem>

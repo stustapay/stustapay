@@ -197,6 +197,19 @@ values
     on conflict do nothing;
 select setval('till_profile_id_seq', 100);
 
+insert into allowed_user_roles_for_till_profile (profile_id, role_id)
+values
+    (0, 0),
+    (0, 1),
+    (0, 2),
+    (0, 3),
+    (0, 4),
+    (1, 0),
+    (1, 1),
+    (1, 2),
+    (1, 3),
+    (1, 4);
+
 insert into till (
     id, name, description, active_profile_id, active_user_id, active_user_role_id, registration_uuid, session_uuid, tse_id, active_shift
 ) overriding system value

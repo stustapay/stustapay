@@ -24,7 +24,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
           return <RouterLink to={`/system-accounts/${params.row.id}`}>{params.row.name}</RouterLink>;
         }
       },
-      flex: 1,
+      width: 200,
     },
     {
       field: "type",
@@ -35,12 +35,12 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       field: "user_tag_uid",
       headerName: t("account.user_tag_uid") as string,
       align: "right",
-      width: 200,
+      width: 100,
     },
     {
       field: "comment",
       headerName: t("account.comment") as string,
-      flex: 4,
+      flex: 1,
     },
     {
       field: "balance",

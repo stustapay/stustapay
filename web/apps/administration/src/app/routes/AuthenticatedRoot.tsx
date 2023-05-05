@@ -13,7 +13,6 @@ import {
   Box,
   CircularProgress,
   Button,
-  Alert,
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -34,8 +33,6 @@ import { ExpandableLinkMenu, ListItemLink } from "@components";
 import { useTranslation } from "react-i18next";
 import { useAppSelector, selectCurrentUser } from "@store";
 import { AppBar, Main, DrawerHeader, drawerWidth } from "@components";
-import { useGetConfigEntriesQuery } from "@api";
-import { Loading } from "@stustapay/components";
 import { CurrentUser } from "@stustapay/models";
 
 const AdvancedMenu: React.FC<{ user: CurrentUser }> = ({ user }) => {
@@ -87,10 +84,6 @@ export const AuthenticatedRoot: React.FC = () => {
   const location = useLocation();
 
   const user = useAppSelector(selectCurrentUser);
-  const { error: configLoadingError, isLoading: isConfigLoading } = useGetConfigEntriesQuery();
-
-  const isLoading = isConfigLoading;
-  const isError = configLoadingError;
 
   if (!user) {
     const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
@@ -197,6 +190,12 @@ export const AuthenticatedRoot: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText primary={t("tills")} />
               </ListItemLink>
+              <ListItemLink to="/till-register-stockings">
+                <ListItemIcon>
+                  <PointOfSaleIcon />
+                </ListItemIcon>
+                <ListItemText primary={t("registerStockings")} />
+              </ListItemLink>
             </>
           )}
           {user.privileges.includes("account_management") && (
@@ -230,15 +229,9 @@ export const AuthenticatedRoot: React.FC = () => {
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
-        {isLoading ? (
-          <Loading />
-        ) : isError ? (
-          <Alert color="error">{t("configLoadingError")}</Alert>
-        ) : (
-          <React.Suspense fallback={<CircularProgress />}>
-            <Outlet />
-          </React.Suspense>
-        )}
+        <React.Suspense fallback={<CircularProgress />}>
+          <Outlet />
+        </React.Suspense>
       </Main>
     </Box>
   );

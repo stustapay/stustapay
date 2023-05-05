@@ -1,19 +1,58 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 from stustapay.core.schema.product import NewProduct
-from stustapay.core.schema.till import NewTill, NewTillButton, NewTillLayout, NewTillProfile
-from stustapay.core.schema.user import CASHIER_ROLE_NAME, FINANZORGA_ROLE_NAME, ADMIN_ROLE_NAME
+from stustapay.core.schema.till import NewTill, NewTillButton, NewTillLayout, NewTillProfile, NewCashRegisterStocking
+from stustapay.core.schema.user import CASHIER_ROLE_NAME, FINANZORGA_ROLE_NAME, ADMIN_ROLE_NAME, ADMIN_ROLE_ID
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.product import ProductService
-from .common import BaseTestCase
+from .common import TerminalTestCase
+from ..core.schema.account import ACCOUNT_CASH_VAULT
 
 
-class TillManagementTest(BaseTestCase):
+class TillManagementTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
 
         self.product_service = ProductService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
+
+    async def test_basic_till_register_stocking(self):
+        stocking = await self.till_service.register.create_cash_register_stockings(
+            token=self.admin_token,
+            stocking=NewCashRegisterStocking(name="Dummy", euro20=2),
+        )
+        self.assertEqual("Dummy", stocking.name)
+        self.assertEqual(40, stocking.total)
+
+        stocking = await self.till_service.register.update_cash_register_stockings(
+            token=self.admin_token,
+            stocking_id=stocking.id,
+            stocking=NewCashRegisterStocking(name="Dummy", euro20=2, euro5=10),
+        )
+        self.assertEqual(90, stocking.total)
+
+        stockings = await self.till_service.register.list_cash_register_stockings_admin(token=self.admin_token)
+        self.assertEqual(len(stockings), 1)
+        self.assertTrue(stocking in stockings)
+
+        deleted = await self.till_service.register.delete_cash_register_stockings(
+            token=self.admin_token, stocking_id=stocking.id
+        )
+        self.assertTrue(deleted)
+
+    async def test_stock_up_cashier(self):
+        await self._login_supervised_user(user_tag_uid=self.admin_tag_uid, user_role_id=ADMIN_ROLE_ID)
+        stocking = await self.till_service.register.create_cash_register_stockings(
+            token=self.admin_token,
+            stocking=NewCashRegisterStocking(name="My fancy stocking", euro20=2),
+        )
+        success = await self.till_service.register.stock_up_cash_register(
+            token=self.terminal_token, cashier_tag_uid=self.cashier_tag_uid, stocking_id=stocking.id
+        )
+        self.assertTrue(success)
+
+        await self._assert_account_balance(self.cashier.cashier_account_id, stocking.total)
+        await self._assert_account_balance(ACCOUNT_CASH_VAULT, -stocking.total)
 
     async def test_basic_till_button_workflow(self):
         product1 = await self.product_service.create_product(
@@ -120,8 +159,7 @@ class TillManagementTest(BaseTestCase):
         self.assertEqual(updated_till.description, "Pottipot - new")
 
         tills = await self.till_service.list_tills(token=self.admin_token)
-        self.assertEqual(len(tills), 1)
-        self.assertEqual(tills[0].name, "Pot 2")
+        self.assertEqual(len(tills), 2)
 
         with self.assertRaises(AccessDenied):
             await self.till_service.delete_till(token=self.cashier_token, till_id=till.id)

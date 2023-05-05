@@ -80,3 +80,40 @@ export const TillSchema = UpdateTillSchema.merge(
 );
 
 export type Till = z.infer<typeof TillSchema>;
+
+export const NewTillRegisterStockingSchema = z.object({
+  name: z.string(),
+  euro200: z.number().int(),
+  euro100: z.number().int(),
+  euro50: z.number().int(),
+  euro20: z.number().int(),
+  euro10: z.number().int(),
+  euro5: z.number().int(),
+  euro2: z.number().int(),
+  euro1: z.number().int(),
+  cent50: z.number().int(),
+  cent20: z.number().int(),
+  cent10: z.number().int(),
+  cent5: z.number().int(),
+  cent2: z.number().int(),
+  cent1: z.number().int(),
+  variable_in_euro: z.number(),
+});
+
+export type NewTillRegisterStocking = z.infer<typeof NewTillRegisterStockingSchema>;
+
+export const UpdateTillRegisterStockingSchema = NewTillRegisterStockingSchema.merge(
+  z.object({
+    id: z.number().int(),
+  })
+);
+
+export type UpdateTillRegisterStocking = z.infer<typeof UpdateTillRegisterStockingSchema>;
+
+export const TillRegisterStockingSchema = UpdateTillRegisterStockingSchema.merge(
+  z.object({
+    total: z.number(),
+  })
+);
+
+export type TillRegisterStocking = z.infer<typeof TillRegisterStockingSchema>;

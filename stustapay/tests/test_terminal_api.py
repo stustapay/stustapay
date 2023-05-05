@@ -6,6 +6,7 @@ from stustapay.core.schema.user import (
     UserRole,
     CurrentUser,
     CASHIER_ROLE_ID,
+    INFOZELT_ROLE_ID,
 )
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.tests.common import TerminalTestCase
@@ -36,6 +37,10 @@ class TerminalAPiTest(TerminalTestCase):
         with self.assertRaises(AccessDenied):
             await self.till_service.login_user(
                 token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid), user_role_id=CASHIER_ROLE_ID
+            )
+        with self.assertRaises(AccessDenied):
+            await self.till_service.login_user(
+                token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid), user_role_id=INFOZELT_ROLE_ID
             )
 
         # Admins can login

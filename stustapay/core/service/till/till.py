@@ -11,6 +11,9 @@ from stustapay.core.schema.terminal import (
     TerminalRegistrationSuccess,
     TerminalSecrets,
     TerminalButton,
+    ENTRY_BUTTON_ID,
+    ENTRY_U18_BUTTON_ID,
+    ENTRY_U16_BUTTON_ID,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile
 from stustapay.core.schema.user import Privilege, UserTag, UserRole, CurrentUser
@@ -18,18 +21,24 @@ from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
 from stustapay.core.service.common.error import AccessDenied, NotFound
+from stustapay.core.service.product import ProductService
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
+from stustapay.core.service.till.register import TillRegisterService
 from stustapay.core.service.user import AuthService
 
 
 class TillService(DBService):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
+    def __init__(
+        self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, product_service: ProductService
+    ):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
+        self.product_service = product_service
 
         self.profile = TillProfileService(db_pool, config, auth_service)
         self.layout = TillLayoutService(db_pool, config, auth_service)
+        self.register = TillRegisterService(db_pool, config, auth_service)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
@@ -148,10 +157,14 @@ class TillService(DBService):
             "from user_role_with_privileges urwp "
             "join user_to_role urt on urwp.id = urt.role_id "
             "join usr on urt.user_id = usr.id "
-            "where usr.user_tag_uid = $1 and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges))",
+            "join allowed_user_roles_for_till_profile aurftp on urt.role_id = aurftp.role_id "
+            "where usr.user_tag_uid = $1 "
+            "   and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges)) "
+            "   and aurftp.profile_id = $4",
             user_tag.uid,
             Privilege.terminal_login.name,
             Privilege.supervised_terminal_login.name,
+            current_terminal.till.active_profile_id,
         )
         if rows is None or len(rows) == 0:
             raise AccessDenied(
@@ -202,6 +215,14 @@ class TillService(DBService):
         user_id = await conn.fetchval("select usr.id from usr where user_tag_uid = $1", user_tag.uid)
         assert user_id is not None
 
+        is_role_allowed = await conn.fetchval(
+            "select true from allowed_user_roles_for_till_profile where role_id = $1 and profile_id = $2",
+            user_role_id,
+            current_terminal.till.active_profile_id,
+        )
+        if not is_role_allowed:
+            raise AccessDenied("This till does not allow login with this role")
+
         t_id = await conn.fetchval(
             "update till set active_user_id = $1, active_user_role_id = $2 where id = $3 returning id",
             user_id,
@@ -231,6 +252,38 @@ class TillService(DBService):
             current_terminal.till.id,
         )
         return t_id is not None
+
+    async def _construct_ticket_buttons(self, *, conn: asyncpg.Connection) -> list[TerminalButton]:
+        initial_topup_amount = await self.product_service.fetch_initial_topup_amount(conn=conn)
+        ticket_product = await self.product_service.fetch_ticket_product(conn=conn)
+        assert ticket_product.price is not None
+        ticket_u16_product = await self.product_service.fetch_ticket_product_u16(conn=conn)
+        assert ticket_u16_product.price is not None
+        ticket_u18_product = await self.product_service.fetch_ticket_product_u18(conn=conn)
+        assert ticket_u18_product.price is not None
+        return [
+            TerminalButton(
+                id=ENTRY_BUTTON_ID,
+                name=ticket_product.name,
+                price=ticket_product.price + initial_topup_amount,
+                is_returnable=False,
+                fixed_price=True,
+            ),
+            TerminalButton(
+                id=ENTRY_U16_BUTTON_ID,
+                name=ticket_u16_product.name,
+                price=ticket_u16_product.price + initial_topup_amount,
+                is_returnable=False,
+                fixed_price=True,
+            ),
+            TerminalButton(
+                id=ENTRY_U18_BUTTON_ID,
+                name=ticket_u18_product.name,
+                price=ticket_u18_product.price + initial_topup_amount,
+                is_returnable=False,
+                fixed_price=True,
+            ),
+        ]
 
     @with_db_transaction
     @requires_terminal()
@@ -266,6 +319,7 @@ class TillService(DBService):
         secrets = None
         # TODO: only send secrets if profile.allow_top_up:
         secrets = TerminalSecrets(sumup_affiliate_key=self.cfg.core.sumup_affiliate_key)
+        ticket_buttons = await self._construct_ticket_buttons(conn=conn)
 
         return TerminalConfig(
             id=current_terminal.till.id,
@@ -275,6 +329,7 @@ class TillService(DBService):
             allow_top_up=profile.allow_top_up,
             allow_cash_out=profile.allow_cash_out,
             allow_ticket_sale=profile.allow_ticket_sale,
+            ticket_buttons=ticket_buttons,
             buttons=buttons,
             secrets=secrets,
         )

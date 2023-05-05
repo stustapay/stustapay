@@ -84,6 +84,13 @@ export const TillProfileList: React.FC = () => {
       width: 120,
     },
     {
+      field: "allowed_role_names",
+      headerName: t("profile.allowedUserRoles") as string,
+      type: "string",
+      flex: 1,
+      valueFormatter: ({ value }) => value.join(", "),
+    },
+    {
       field: "layout",
       headerName: t("profile.layout") as string,
       flex: 0.5,

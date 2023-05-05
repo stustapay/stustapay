@@ -168,10 +168,15 @@ class CompletedSale(PendingSale):
     till_id: int
 
 
+class Ticket(BaseModel):
+    till_button_id: int
+    quantity: int
+
+
 class NewTicketSale(BaseModel):
     uuid: Optional[UUID] = None
-    customer_tag_uid: int
-    initial_top_up_amount: float
+    customer_tag_uids: list[int]
+    tickets: list[Ticket]
 
     payment_method: PaymentMethod
 
