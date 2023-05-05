@@ -9,7 +9,7 @@ import de.stustanet.stustapay.ec.SumUp
 import de.stustanet.stustapay.ec.SumUpState
 import de.stustanet.stustapay.model.CompletedTopUp
 import de.stustanet.stustapay.model.NewTopUp
-import de.stustanet.stustapay.model.TopUpType
+import de.stustanet.stustapay.model.PaymentMethod
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.TerminalConfigRepository
@@ -22,12 +22,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.math.BigDecimal
-import java.util.*
+import java.util.UUID
 import javax.inject.Inject
 
 enum class TopUpPage(val route: String) {
-    Amount("amount"),
-    Cash("cash"),
+    Selection("amount"),
     Done("done"),
     Failure("aborted"),
 }
@@ -36,9 +35,6 @@ enum class TopUpPage(val route: String) {
 data class TopUpState(
     /** desired deposit amount in cents */
     var currentAmount: UInt = 0u,
-
-    /** is the topup currently in progress */
-    var inProgress: Boolean = false,
 )
 
 
@@ -48,7 +44,7 @@ class DepositViewModel @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
     private val sumUp: SumUp,
 ) : ViewModel() {
-    private val _navState = MutableStateFlow(TopUpPage.Amount)
+    private val _navState = MutableStateFlow(TopUpPage.Selection)
     val navState = _navState.asStateFlow()
 
     private val _status = MutableStateFlow("")
@@ -94,7 +90,7 @@ class DepositViewModel @Inject constructor(
     /**
      * validates the amount so we can continue to checkout
      */
-    private suspend fun checkAmount(newTopUp: NewTopUp): Boolean {
+    private suspend fun checkTopUp(newTopUp: NewTopUp): Boolean {
         // device-local checks
         if (!checkAmountLocal(newTopUp.amount)) {
             return false
@@ -106,11 +102,13 @@ class DepositViewModel @Inject constructor(
                 _status.update { "TopUp possible" }
                 true
             }
+
             is Response.Error.Service -> {
                 // TODO: if we remember the scanned tag, clear it here.
                 _status.update { response.msg() }
                 false
             }
+
             is Response.Error -> {
                 _status.update { response.msg() }
                 false
@@ -136,12 +134,12 @@ class DepositViewModel @Inject constructor(
         val newTopUp = NewTopUp(
             amount = _topUpState.value.currentAmount.toDouble() / 100,
             customer_tag_uid = tag.uid,
-            topup_type = TopUpType.SumUp,
+            payment_method = PaymentMethod.SumUp,
             // we generate the topup transaction identifier here
             uuid = UUID.randomUUID().toString(),
         )
 
-        if (!checkAmount(newTopUp)) {
+        if (!checkTopUp(newTopUp)) {
             // it already updates the status message
             return
         }
@@ -158,6 +156,7 @@ class DepositViewModel @Inject constructor(
                 is SumUpState.Failed -> {
                     true
                 }
+
                 else -> {
                     false
                 }
@@ -171,11 +170,13 @@ class DepositViewModel @Inject constructor(
                 _status.update { "SumUp not finished? ${sumUpState.msg()}" }
                 return
             }
+
             is SumUpState.Failed,
             is SumUpState.Error -> {
                 _status.update { "SumUp failed: ${sumUpState.msg()}" }
                 return
             }
+
             is SumUpState.Success -> {
                 _status.update { "SumUp success: ${sumUpState.msg()}" }
                 // continue
@@ -193,6 +194,7 @@ class DepositViewModel @Inject constructor(
                 _status.update { "Card TopUp successful" }
                 _navState.update { TopUpPage.Done }
             }
+
             is Response.Error -> {
                 _status.update { "Card TopUp failed! ${response.msg()}" }
                 _navState.update { TopUpPage.Failure }
@@ -207,12 +209,12 @@ class DepositViewModel @Inject constructor(
         val newTopUp = NewTopUp(
             amount = _topUpState.value.currentAmount.toDouble() / 100,
             customer_tag_uid = tag.uid,
-            topup_type = TopUpType.Cash,
+            payment_method = PaymentMethod.Cash,
             // we generate the topup transaction identifier here
             uuid = UUID.randomUUID().toString(),
         )
 
-        if (!checkAmount(newTopUp)) {
+        if (!checkTopUp(newTopUp)) {
             // it already updates the status message
             return
         }
@@ -224,6 +226,7 @@ class DepositViewModel @Inject constructor(
                 _status.update { "Cash TopUp successful" }
                 _navState.update { TopUpPage.Done }
             }
+
             is Response.Error -> {
                 _status.update { "Cash TopUp failed! ${response.msg()}" }
                 _navState.update { TopUpPage.Failure }
@@ -246,10 +249,12 @@ class DepositViewModel @Inject constructor(
                             tillName = terminalConfig.config.name,
                         )
                     }
+
                     is TerminalConfigState.Error -> {
                         _status.update { terminalConfig.message }
                         TopUpConfig()
                     }
+
                     is TerminalConfigState.Loading -> {
                         _status.update { "Loading config..." }
                         TopUpConfig()

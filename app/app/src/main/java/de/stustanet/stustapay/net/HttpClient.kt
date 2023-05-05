@@ -89,6 +89,7 @@ class HttpClient(
                         token = regState.token
                     }
                 }
+
                 is RegistrationState.Error -> {
                     if (apiBasePath == null) {
                         return Response.Error.Request(regState.message)
@@ -96,6 +97,7 @@ class HttpClient(
                         apiBase = apiBasePath
                     }
                 }
+
                 is RegistrationState.NotRegistered -> {
                     if (apiBasePath == null) {
                         return Response.Error.Access("terminal not registered: ${regState.message}")

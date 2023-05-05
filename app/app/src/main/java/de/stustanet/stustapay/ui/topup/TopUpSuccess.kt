@@ -89,7 +89,12 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: DepositViewModel) {
             }
         },
         bottomBar = {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .padding(bottom = 5.dp)
+                    .fillMaxWidth()
+            ) {
                 Divider(modifier = Modifier.padding(top = 10.dp))
                 Text(
                     text = status,
@@ -106,7 +111,6 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: DepositViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(70.dp)
-                        .padding(10.dp)
                 ) {
                     Text(text = "Done")
                 }

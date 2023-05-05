@@ -19,6 +19,7 @@ fun PriceSelection(
     modifier: Modifier = Modifier,
     onEnter: (UInt) -> Unit,
     onClear: () -> Unit,
+    allowCents: Boolean = true,
     state: PriceSelectionState = PriceSelectionState(),
     viewModel: PriceSelectionViewModel = hiltViewModel(),
 ) {
@@ -26,6 +27,10 @@ fun PriceSelection(
 
     LaunchedEffect(state.amount) {
         viewModel.setAmount(state.amount)
+    }
+
+    LaunchedEffect(allowCents) {
+        viewModel.allowCents(allowCents)
     }
 
     Column(

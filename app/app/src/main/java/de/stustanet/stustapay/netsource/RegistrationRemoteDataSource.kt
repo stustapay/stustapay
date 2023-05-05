@@ -23,6 +23,7 @@ class RegistrationRemoteDataSource @Inject constructor(
                     message = "success",
                 )
             }
+
             is Response.Error -> {
                 RegistrationState.Error(
                     message = registrationResponse.msg(),
@@ -36,6 +37,7 @@ class RegistrationRemoteDataSource @Inject constructor(
             is Response.OK -> {
                 DeregistrationState.Deregistered
             }
+
             is Response.Error -> {
                 DeregistrationState.Error(deregistrationResponse.msg())
             }

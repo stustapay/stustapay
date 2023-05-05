@@ -1,40 +1,52 @@
-package de.stustanet.stustapay.ui.topup
+package de.stustanet.stustapay.ui.common.pay
 
-import androidx.compose.foundation.layout.*
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import kotlinx.coroutines.launch
 
+/**
+ * To confirm one has received cash.
+ * Then requests a tag scan, and returns its result in "onConfirm".
+ */
 @Composable
-fun TopUpCashConfirm(
+fun CashConfirmView(
     goBack: () -> Unit,
-    viewModel: DepositViewModel
+    getAmount: () -> Double,
+    status: String,
+    onConfirm: (UserTag) -> Unit,
 ) {
-    val topUpState by viewModel.topUpState.collectAsStateWithLifecycle()
-    val status by viewModel.status.collectAsStateWithLifecycle()
-
     val haptic = LocalHapticFeedback.current
     val scanState = rememberNfcScanDialogState()
     val scope = rememberCoroutineScope()
 
     NfcScanDialog(scanState, onScan = {
-        scope.launch{
+        scope.launch {
             scanState.close()
-            viewModel.topUpWithCash(it)
+            onConfirm(it)
         }
     })
 
@@ -47,18 +59,26 @@ fun TopUpCashConfirm(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("%.2f€".format(topUpState.currentAmount.toFloat() / 100), fontSize = 48.sp)
+                    Text("%.2f€".format(getAmount()), fontSize = 48.sp)
                     Text("received?", fontSize = 48.sp)
                 }
             }
         },
         bottomBar = {
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .padding(bottom = 5.dp)
+                    .fillMaxWidth()
+            ) {
                 Divider(modifier = Modifier.fillMaxWidth())
                 Text(status, fontSize = 32.sp)
 
-                Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                ) {
                     Button(
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
                         onClick = {
                             goBack()
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -68,7 +88,7 @@ fun TopUpCashConfirm(
                             .height(70.dp)
                             .padding(end = 10.dp)
                     ) {
-                        Text(text = "Back")
+                        Text(text = "Back", fontSize = 24.sp)
                     }
                     Button(
                         onClick = {
@@ -80,7 +100,7 @@ fun TopUpCashConfirm(
                             .height(70.dp)
                             .padding(start = 10.dp)
                     ) {
-                        Text(text = "✓")
+                        Text(text = "✓", fontSize = 24.sp)
                     }
                 }
             }

@@ -49,8 +49,8 @@ class RegistrationViewModel @Inject constructor(
             initialValue = ForceDeregisterState.Disallow,
         )
 
-    suspend fun register(qrcode_b64: String) {
-        registrationRepo.register(qrcode_b64)
+    suspend fun register(qrcodeB64: String) {
+        registrationRepo.register(qrcodeB64)
     }
 
     suspend fun deregister(force: Boolean = false) {
@@ -77,11 +77,13 @@ private fun registrationUiState(
                                 msg = registerState.message,
                             )
                         }
+
                         is RegistrationState.Error -> {
                             RegistrationUiState.Error(
                                 msg = registerState.message,
                             )
                         }
+
                         is RegistrationState.NotRegistered -> {
                             RegistrationUiState.Error(
                                 msg = registerState.message,

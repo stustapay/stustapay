@@ -40,6 +40,11 @@ interface TerminalAPI {
     suspend fun listOrders(): Response<List<Order>>
 
     /**
+     * Get infos about a single order.
+     */
+    suspend fun getOrder(orderId: Int): Response<Order>
+
+    /**
      * Create a new order, which is not yet booked.
      */
     suspend fun checkSale(newSale: NewSale): Response<PendingSale>
@@ -55,19 +60,34 @@ interface TerminalAPI {
     suspend fun cancelSale(id: Int): Response<Unit>
 
     /**
-     * Get infos about a single order.
+     * Validate if the topup is ok.
      */
     suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp>
 
     /**
-     * Book a new order - this transfers the money between accounts.
+     * Book the topup, this transfers money.
      */
     suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp>
 
     /**
-     * Get infos about a single order.
+     * Validate if giving out money is ok.
      */
-    suspend fun getOrder(orderId: Int): Response<Order>
+    suspend fun checkPayOut(newPayOut: NewPayOut): Response<PendingPayOut>
+
+    /**
+     * Perform the payout.
+     */
+    suspend fun bookPayOut(newPayOut: NewPayOut): Response<CompletedPayOut>
+
+    /**
+     * Check if a ticket can be sold.
+     */
+    suspend fun checkTicketSale(newTicketSale: NewTicketSale): Response<PendingTicketSale>
+
+    /**
+     * Sell a ticket.
+     */
+    suspend fun bookTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale>
 
     // auth
     /**
@@ -87,12 +107,17 @@ interface TerminalAPI {
     /**
      * Get the currently logged in user.
      */
-    suspend fun currentUser(): Response<User?>
+    suspend fun currentUser(): Response<CurrentUser?>
+
+    /**
+     * Check which roles a user could have have.
+     */
+    suspend fun checkLogin(userTag: UserTag): Response<CheckLoginResult>
 
     /**
      * Login a user by token.
      */
-    suspend fun userLogin(userTag: UserTag): Response<User>
+    suspend fun userLogin(payload: LoginPayload): Response<CurrentUser>
 
     /**
      * Logout the current user.
@@ -107,10 +132,10 @@ interface TerminalAPI {
     /**
      * Create a user with cashier privileges.
      */
-    suspend fun userCreateCashier(newUser: NewUser): Response<User>
+    suspend fun userCreateCashier(newUser: NewUser): Response<CurrentUser>
 
     /**
      * Create a user with Finanzorga privileges.
      */
-    suspend fun userCreateFinanzorga(newUser: NewUser): Response<User>
+    suspend fun userCreateFinanzorga(newUser: NewUser): Response<CurrentUser>
 }

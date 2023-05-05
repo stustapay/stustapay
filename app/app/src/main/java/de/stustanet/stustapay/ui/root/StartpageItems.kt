@@ -5,7 +5,13 @@ import androidx.compose.material.icons.filled.*
 import de.stustanet.stustapay.model.Access
 
 
-val startpageItems = listOf<StartpageItem>(
+val startpageItems = listOf(
+    StartpageItem(
+        icon = Icons.Filled.Face,
+        label = "Ticket Sale",
+        navDestination = RootNavDests.ticket,
+        canAccess = { _, t -> Access.canSellTicket(t) }
+    ),
     StartpageItem(
         icon = Icons.Filled.ShoppingCart,
         label = "Product Sale",

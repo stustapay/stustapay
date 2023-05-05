@@ -84,6 +84,7 @@ fun SaleView(
                         viewModel.checkSale()
                     }
                 },
+                leaveView = leaveView,
             )
         }
 
@@ -110,7 +111,7 @@ fun SaleView(
                 viewModel,
                 onConfirm = {
                     scope.launch {
-                        viewModel.clearSale()
+                        viewModel.clearSale(true)
                     }
                 }
             )

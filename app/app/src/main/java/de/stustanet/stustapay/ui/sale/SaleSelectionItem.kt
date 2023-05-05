@@ -85,17 +85,20 @@ fun SaleSelectionItem(
                 itemPrice = "%.02f".format(type.price.price)
                 itemAmount = "×%2d".format(amount)
             }
+
             is SaleSelectionItemType.Returnable -> {
                 sameSizeButtons = true
                 val amount: Int = type.amount?.amount ?: 0
                 itemPrice = "%.02f".format(type.price.price)
                 itemAmount = "×%2d".format(amount)
             }
+
             is SaleSelectionItemType.FreePrice -> {
                 val price: Double = type.amount?.price ?: 0.0
                 itemPrice = "%.02f".format(price)
                 itemAmount = ""
             }
+
             is SaleSelectionItemType.Vouchers -> {
                 itemPrice = "%2d ".format(type.amount)
                 itemAmount = "of %2d".format(type.maxAmount)
@@ -105,7 +108,7 @@ fun SaleSelectionItem(
         Row(
             modifier = Modifier
                 .weight(0.3f)
-                .padding(end = 5.dp),
+                .padding(end = 6.dp),
             horizontalArrangement = Arrangement.End,
         ) {
             // TODO: highlight background if not 0
@@ -128,11 +131,12 @@ fun SaleSelectionItem(
         Box(
             modifier = Modifier
                 .weight(0.7f)
-                .padding(vertical = 2.dp)
+                .padding(vertical = 3.dp)
+                .height(74.dp)
         ) {
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.height(75.dp)
+                modifier = Modifier.fillMaxSize(),
             ) {
                 Button(
                     onClick = {
@@ -141,12 +145,15 @@ fun SaleSelectionItem(
                             is SaleSelectionItemType.FixedPrice -> {
                                 type.onIncr()
                             }
+
                             is SaleSelectionItemType.Returnable -> {
                                 type.onDecr()
                             }
+
                             is SaleSelectionItemType.FreePrice -> {
                                 type.onPriceEdit(false)
                             }
+
                             is SaleSelectionItemType.Vouchers -> {
                                 type.onIncr()
                             }
@@ -165,6 +172,7 @@ fun SaleSelectionItem(
                     Text(text = caption, fontSize = 24.sp)
                 }
                 Spacer(modifier = Modifier.padding(horizontal = 2.dp))
+
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -172,12 +180,15 @@ fun SaleSelectionItem(
                             is SaleSelectionItemType.FixedPrice -> {
                                 type.onDecr()
                             }
+
                             is SaleSelectionItemType.Returnable -> {
                                 type.onIncr()
                             }
+
                             is SaleSelectionItemType.FreePrice -> {
                                 type.onPriceEdit(true)
                             }
+
                             is SaleSelectionItemType.Vouchers -> {
                                 type.onDecr()
                             }
@@ -192,17 +203,19 @@ fun SaleSelectionItem(
                     }
                 ) {
                     val text: String
-                    var fontSize = 50.sp
-                    var color = MaterialTheme.colors.onPrimary
+                    var fontSize = 40.sp
+                    val color = MaterialTheme.colors.onPrimary
                     when (type) {
                         is SaleSelectionItemType.FixedPrice,
                         is SaleSelectionItemType.Vouchers -> {
-                            text = "-"
+                            text = "‒"
                         }
+
                         is SaleSelectionItemType.Returnable -> {
                             text = type.incrementText
                             fontSize = 24.sp
                         }
+
                         is SaleSelectionItemType.FreePrice -> {
                             // unicode: erase to the left
                             text = "⌫"
@@ -210,7 +223,7 @@ fun SaleSelectionItem(
                         }
                     }
                     Text(
-                        text = text, fontSize = fontSize, color = color
+                        text = text, fontSize = fontSize, color = color,
                     )
                 }
             }

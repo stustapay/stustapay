@@ -277,7 +277,6 @@ values
     (2, 'can_book_orders'),
     -- standleiter
     (3, 'terminal_login'),
-    (3, 'grant_free_tickets'),
     (3, 'grant_vouchers'),
     -- infozelt helfer
     (4, 'supervised_terminal_login'),

@@ -48,8 +48,9 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
         content = { padding ->
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = padding.calculateBottomPadding()),
+                    .padding(bottom = padding.calculateBottomPadding())
+                    .padding(horizontal = 10.dp)
+                    .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -100,7 +101,12 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
             }
         },
         bottomBar = {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .padding(bottom = 5.dp)
+                    .fillMaxWidth()
+            ) {
                 Divider(modifier = Modifier.padding(top = 10.dp))
                 Text(
                     text = status,
@@ -117,7 +123,6 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(70.dp)
-                        .padding(10.dp)
                 ) {
                     Text(text = "Done")
                 }

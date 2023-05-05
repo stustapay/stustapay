@@ -29,25 +29,25 @@ class RegistrationRepository @Inject constructor(
     private val registrationLocalDataSource: RegistrationLocalDataSource
 ) {
     // for local insertions of values without the datasources
-    var localRegState = MutableSharedFlow<RegistrationState>()
+    private var _regState = MutableSharedFlow<RegistrationState>()
     var registrationState: Flow<RegistrationState> =
-        registrationLocalDataSource.registrationState.merge(localRegState)
+        registrationLocalDataSource.registrationState.merge(_regState)
 
     var forceDeregisterState = MutableStateFlow<ForceDeregisterState>(ForceDeregisterState.Disallow)
 
     suspend fun register(
-        qrcode_b64: String,
+        qrcodeB64: String,
     ) {
-        localRegState.emit(RegistrationState.NotRegistered("registering..."))
-        forceDeregisterState.emit(ForceDeregisterState.Disallow)
+        _regState.tryEmit(RegistrationState.NotRegistered("Registering..."))
+        forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
 
-        val state = registerAsState(qrcode_b64)
+        val state = registerAsState(qrcodeB64)
 
         // only persist if registration was successful
         if (state is RegistrationState.Registered) {
             registrationLocalDataSource.setState(state)
         } else {
-            localRegState.emit(state)
+            _regState.tryEmit(state)
         }
     }
 
@@ -58,24 +58,25 @@ class RegistrationRepository @Inject constructor(
                 if (force) {
                     // delete the local state anyway
                     registrationLocalDataSource.delete()
-                    forceDeregisterState.emit(ForceDeregisterState.Disallow)
+                    forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
                 } else {
                     // allow deleting local state anyway
-                    forceDeregisterState.emit(ForceDeregisterState.Allow(result.message))
+                    forceDeregisterState.tryEmit(ForceDeregisterState.Allow(result.message))
                 }
             }
+
             is DeregistrationState.Deregistered -> {
                 registrationLocalDataSource.delete()
-                forceDeregisterState.emit(ForceDeregisterState.Disallow)
+                forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
             }
         }
     }
 
-    private suspend fun registerAsState(qrcode_b64: String): RegistrationState {
+    private suspend fun registerAsState(qrcodeB64: String): RegistrationState {
         try {
             val regCode: RegisterQRCodeContent
             try {
-                val decodedBytes = Base64.decode(qrcode_b64, Base64.DEFAULT)
+                val decodedBytes = Base64.decode(qrcodeB64, Base64.DEFAULT)
                 regCode = Json.decodeFromString(String(decodedBytes))
             } catch (e: SerializationException) {
                 return RegistrationState.Error(
