@@ -2,7 +2,7 @@
 
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.till import NewTillProfile
-from stustapay.core.schema.user import Privilege, NewUserRole
+from stustapay.core.schema.user import Privilege, NewUserRole, ADMIN_ROLE_NAME
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied
 from .common import TerminalTestCase
@@ -57,7 +57,7 @@ class AccountServiceTest(TerminalTestCase):
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
-                allowed_role_names=["test-role"],
+                allowed_role_names=[ADMIN_ROLE_NAME, "test-role"],
             ),
         )
 
@@ -114,7 +114,7 @@ class AccountServiceTest(TerminalTestCase):
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
-                allowed_role_names=["test-role"],
+                allowed_role_names=[ADMIN_ROLE_NAME, "test-role"],
             ),
         )
 

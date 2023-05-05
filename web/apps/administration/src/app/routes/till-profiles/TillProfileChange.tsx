@@ -17,6 +17,7 @@ import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 import { NewTillProfile } from "@stustapay/models";
 import { TillLayoutSelect } from "./TillLayoutSelect";
+import { RoleSelect } from "../users/RoleSelect";
 
 export interface TillChangeProps<T extends NewTillProfile> {
   headerTitle: string;
@@ -110,6 +111,16 @@ export function TillProfileChange<T extends NewTillProfile>({
                 label={t("profile.allowTicketSale")}
               />
             </FormGroup>
+
+            <RoleSelect
+              margin="normal"
+              variant="standard"
+              label={t("profile.allowedUserRoles")}
+              error={touched.allowed_role_names && !!errors.allowed_role_names}
+              helperText={(touched.allowed_role_names && errors.allowed_role_names) as string}
+              onChange={(value) => setFieldValue("allowed_role_names", value)}
+              value={values.allowed_role_names}
+            />
 
             <TillLayoutSelect
               name="layout"

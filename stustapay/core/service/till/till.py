@@ -155,10 +155,14 @@ class TillService(DBService):
             "from user_role_with_privileges urwp "
             "join user_to_role urt on urwp.id = urt.role_id "
             "join usr on urt.user_id = usr.id "
-            "where usr.user_tag_uid = $1 and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges))",
+            "join allowed_user_roles_for_till_profile aurftp on urt.role_id = aurftp.role_id "
+            "where usr.user_tag_uid = $1 "
+            "   and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges)) "
+            "   and aurftp.profile_id = $4",
             user_tag.uid,
             Privilege.terminal_login.name,
             Privilege.supervised_terminal_login.name,
+            current_terminal.till.active_profile_id,
         )
         if rows is None or len(rows) == 0:
             raise AccessDenied(
@@ -208,6 +212,14 @@ class TillService(DBService):
 
         user_id = await conn.fetchval("select usr.id from usr where user_tag_uid = $1", user_tag.uid)
         assert user_id is not None
+
+        is_role_allowed = await conn.fetchval(
+            "select true from allowed_user_roles_for_till_profile where role_id = $1 and profile_id = $2",
+            user_role_id,
+            current_terminal.till.active_profile_id,
+        )
+        if not is_role_allowed:
+            raise AccessDenied("This till does not allow login with this role")
 
         t_id = await conn.fetchval(
             "update till set active_user_id = $1, active_user_role_id = $2 where id = $3 returning id",

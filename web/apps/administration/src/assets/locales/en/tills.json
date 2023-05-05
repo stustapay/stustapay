@@ -32,6 +32,7 @@
     "allowTopUp": "Allow top up",
     "allowCashOut": "Allow cash out",
     "allowTicketSale": "Allow ticket sales",
+    "allowedUserRoles": "Allowed user roles",
     "layout": "Layout",
     "update": "Update profile",
     "delete": "Delete profile",

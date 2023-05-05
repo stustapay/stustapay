@@ -9,7 +9,7 @@ import { Loading } from "@stustapay/components";
 export const TillProfileUpdate: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const { profileId } = useParams();
-  const { profile, isLoading } = useGetTillProfileByIdQuery(Number(profileId), {
+  const { profile, isLoading, error } = useGetTillProfileByIdQuery(Number(profileId), {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       profile: data ? selectTillProfileById(data, Number(profileId)) : undefined,
@@ -17,12 +17,12 @@ export const TillProfileUpdate: React.FC = () => {
   });
   const [updateProfile] = useUpdateTillProfileMutation();
 
-  if (isLoading) {
-    return <Loading />;
+  if (error) {
+    return <Navigate to="/till-profiles" />;
   }
 
-  if (!profile) {
-    return <Navigate to="/till-profiles" />;
+  if (isLoading || !profile) {
+    return <Loading />;
   }
 
   return (
