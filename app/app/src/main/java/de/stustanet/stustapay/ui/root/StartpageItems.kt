@@ -41,5 +41,11 @@ val startpageItems = listOf(
         label = "Helper Vouchers",
         navDestination = RootNavDests.vouchers,
         canAccess = { _, _ -> true }
+    ),
+    StartpageItem(
+        icon = Icons.Filled.ThumbUp,
+        label = "Cashier Management",
+        navDestination = RootNavDests.cashierManagement,
+        canAccess = { _, _ -> true }
     )
 )

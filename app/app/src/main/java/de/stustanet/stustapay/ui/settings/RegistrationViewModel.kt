@@ -50,6 +50,7 @@ class RegistrationViewModel @Inject constructor(
         )
 
     suspend fun register(qrcodeB64: String) {
+        println("REGISTER")
         registrationRepo.register(qrcodeB64)
     }
 
