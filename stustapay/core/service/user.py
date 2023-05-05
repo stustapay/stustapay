@@ -6,7 +6,6 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.user import (
     NewUser,
     Privilege,
@@ -190,12 +189,6 @@ class UserService(DBService):
         if CASHIER_ROLE_NAME in user.role_names:
             return user
 
-        # create cashier account
-        user.cashier_account_id = await conn.fetchval(
-            "insert into account (type, name) values ($1, $2) returning id",
-            AccountType.internal.value,
-            f"Cashier account for {user.display_name}",
-        )
         user.role_names.append(CASHIER_ROLE_NAME)
         return await self._update_user(conn=conn, user_id=user.id, user=user)
 
@@ -209,12 +202,6 @@ class UserService(DBService):
         if FINANZORGA_ROLE_NAME in user.role_names:
             return user
 
-        # create backpack account
-        user.transport_account_id = await conn.fetchval(
-            "insert into account (type, name) values ($1, $2) returning id",
-            AccountType.internal.value,
-            f"Transport account for finanzorga {user.display_name}",
-        )
         user.role_names.append(FINANZORGA_ROLE_NAME)
         return await self._update_user(conn=conn, user_id=user.id, user=user)
 

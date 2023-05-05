@@ -11,6 +11,7 @@ from stustapay.core.schema.terminal import TerminalButton
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import with_db_connection
 from stustapay.core.service.order import NotEnoughFundsException, OrderService
+from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 
@@ -23,8 +24,19 @@ class DummyTerminal:
 
         self.auth_service = AuthService(config=self.config, db_pool=self.db_pool)
         self.user_service = UserService(config=self.config, db_pool=self.db_pool, auth_service=self.auth_service)
-        self.till_service = TillService(config=self.config, db_pool=self.db_pool, auth_service=self.auth_service)
-        self.order_service = OrderService(config=self.config, db_pool=self.db_pool, auth_service=self.auth_service)
+        self.product_service = ProductService(config=self.config, db_pool=self.db_pool, auth_service=self.auth_service)
+        self.till_service = TillService(
+            config=self.config,
+            db_pool=self.db_pool,
+            auth_service=self.auth_service,
+            product_service=self.product_service,
+        )
+        self.order_service = OrderService(
+            config=self.config,
+            db_pool=self.db_pool,
+            auth_service=self.auth_service,
+            product_service=self.product_service,
+        )
 
         self.min_interval_between_orders = 0.0001
         self.max_interval_between_orders = 0.001

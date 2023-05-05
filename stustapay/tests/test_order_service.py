@@ -17,17 +17,21 @@ from stustapay.core.schema.order import (
     Order,
     NewTicketSale,
     PendingTicketSale,
+    Ticket,
+    CompletedTicketSale,
 )
-from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.product import NewProduct, TICKET_PRODUCT_ID, TICKET_U18_PRODUCT_ID, TICKET_U16_PRODUCT_ID
+from stustapay.core.schema.terminal import ENTRY_BUTTON_ID, ENTRY_U18_BUTTON_ID, ENTRY_U16_BUTTON_ID
 from stustapay.core.schema.till import NewTill, NewTillLayout, NewTillProfile, NewTillButton
+from stustapay.core.schema.user import ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME
 from stustapay.core.service.account import AccountService
+from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.order import OrderService, NotEnoughVouchersException
 from stustapay.core.service.order.order import NotEnoughFundsException
 from stustapay.core.service.order.order import TillPermissionException, InvalidSaleException
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 from .common import TerminalTestCase
-from ..core.schema.user import ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME
 
 START_BALANCE = 100
 
@@ -38,7 +42,12 @@ class OrderLogicTest(TerminalTestCase):
         self.product_service = ProductService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
-        self.till_service = TillService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
+        self.till_service = TillService(
+            db_pool=self.db_pool,
+            config=self.test_config,
+            auth_service=self.auth_service,
+            product_service=self.product_service,
+        )
         self.account_service = AccountService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
@@ -46,6 +55,7 @@ class OrderLogicTest(TerminalTestCase):
             db_pool=self.db_pool,
             config=self.test_config,
             auth_service=self.auth_service,
+            product_service=self.product_service,
         )
 
         self.beer_product = await self.product_service.create_product(
@@ -111,9 +121,14 @@ class OrderLogicTest(TerminalTestCase):
             self.customer_uid,
             START_BALANCE,
         )
-        self.unused_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
 
-        self.ticket_price = 12  # TODO: remove ugly hardcoding
+        self.ticket_price = await self.db_conn.fetchval(
+            "select price::double precision from product where id = $1", TICKET_PRODUCT_ID
+        )
+
+        self.initial_topup_amount = float(
+            await self.db_conn.fetchval("select value from config where key ='entry.initial_topup_amount'")
+        )
 
     async def _assert_account_balance(self, account_id: int, balance: float):
         account = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
@@ -402,50 +417,31 @@ class OrderLogicTest(TerminalTestCase):
 
         with self.assertRaises(TillPermissionException):
             new_ticket_sale = NewTicketSale(
-                customer_tag_uid=self.customer_uid, initial_top_up_amount=0, payment_method=PaymentMethod.cash
+                customer_tag_uids=[self.customer_uid],
+                tickets=[Ticket(till_button_id=ENTRY_BUTTON_ID, quantity=1)],
+                payment_method=PaymentMethod.cash,
             )
             await self.order_service.check_ticket_sale(token=self.terminal_token, new_ticket_sale=new_ticket_sale)
 
-    async def test_ticket_flow_no_initial_topup_cash(self):
+    async def test_ticket_flow_with_one_tag(self):
+        unused_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
         new_ticket = NewTicketSale(
-            customer_tag_uid=self.unused_tag_uid, initial_top_up_amount=0, payment_method=PaymentMethod.cash
+            customer_tag_uids=[unused_tag_uid],
+            tickets=[Ticket(till_button_id=ENTRY_BUTTON_ID, quantity=1)],
+            payment_method=PaymentMethod.cash,
         )
         pending_ticket: PendingTicketSale = await self.order_service.check_ticket_sale(
             token=self.terminal_token, new_ticket_sale=new_ticket
         )
-        self.assertEqual(0, pending_ticket.initial_top_up_amount)
-        self.assertEqual(1, pending_ticket.item_count)
-        self.assertEqual(self.ticket_price, pending_ticket.total_price)
-        completed_ticket = await self.order_service.book_ticket_sale(
-            token=self.terminal_token, new_ticket_sale=new_ticket
-        )
-        self.assertIsNotNone(completed_ticket)
-
-        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.unused_tag_uid)
-        self.assertEqual(0, customer.balance)
-        await self._assert_account_balance(
-            account_id=self.cashier.cashier_account_id, balance=completed_ticket.total_price
-        )
-        await self._assert_account_balance(account_id=ACCOUNT_CASH_ENTRY, balance=-completed_ticket.total_price)
-        await self._assert_account_balance(account_id=ACCOUNT_CASH_VAULT, balance=-completed_ticket.total_price)
-
-    async def test_ticket_flow_with_initial_topup_cash(self):
-        new_ticket = NewTicketSale(
-            customer_tag_uid=self.unused_tag_uid, initial_top_up_amount=8, payment_method=PaymentMethod.cash
-        )
-        pending_ticket: PendingTicketSale = await self.order_service.check_ticket_sale(
-            token=self.terminal_token, new_ticket_sale=new_ticket
-        )
-        self.assertEqual(8, pending_ticket.initial_top_up_amount)
         self.assertEqual(2, pending_ticket.item_count)
-        self.assertEqual(self.ticket_price + 8, pending_ticket.total_price)
+        self.assertEqual(self.ticket_price + self.initial_topup_amount, pending_ticket.total_price)
         completed_ticket = await self.order_service.book_ticket_sale(
             token=self.terminal_token, new_ticket_sale=new_ticket
         )
         self.assertIsNotNone(completed_ticket)
 
-        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.unused_tag_uid)
-        self.assertEqual(8, customer.balance)
+        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=unused_tag_uid)
+        self.assertEqual(self.initial_topup_amount, customer.balance)
         await self._assert_account_balance(
             account_id=self.cashier.cashier_account_id, balance=completed_ticket.total_price
         )
@@ -454,21 +450,79 @@ class OrderLogicTest(TerminalTestCase):
         await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, balance=self.ticket_price)
 
     async def test_ticket_flow_with_initial_topup_sumup(self):
+        unused_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
         new_ticket = NewTicketSale(
-            customer_tag_uid=self.unused_tag_uid, initial_top_up_amount=8, payment_method=PaymentMethod.sumup
+            customer_tag_uids=[unused_tag_uid],
+            tickets=[Ticket(till_button_id=ENTRY_BUTTON_ID, quantity=1)],
+            payment_method=PaymentMethod.sumup,
         )
         pending_ticket: PendingTicketSale = await self.order_service.check_ticket_sale(
             token=self.terminal_token, new_ticket_sale=new_ticket
         )
-        self.assertEqual(8, pending_ticket.initial_top_up_amount)
         self.assertEqual(2, pending_ticket.item_count)
-        self.assertEqual(self.ticket_price + 8, pending_ticket.total_price)
+        self.assertEqual(self.ticket_price + self.initial_topup_amount, pending_ticket.total_price)
         completed_ticket = await self.order_service.book_ticket_sale(
             token=self.terminal_token, new_ticket_sale=new_ticket
         )
         self.assertIsNotNone(completed_ticket)
 
-        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.unused_tag_uid)
-        self.assertEqual(8, customer.balance)
+        customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=unused_tag_uid)
+        self.assertEqual(self.initial_topup_amount, customer.balance)
         await self._assert_account_balance(account_id=ACCOUNT_SUMUP, balance=-completed_ticket.total_price)
         await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, balance=self.ticket_price)
+
+    async def test_ticket_flow_with_multiple_tags_invalid_booking(self):
+        tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
+        tag2_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12346) returning uid")
+        u18_tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (uid, restriction) values (12347, 'under_18') returning uid"
+        )
+        u16_tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (uid, restriction) values (12348, 'under_16') returning uid"
+        )
+        tags = [tag_uid, tag2_uid, u18_tag_uid, u16_tag_uid]
+        new_ticket = NewTicketSale(
+            customer_tag_uids=tags,
+            tickets=[Ticket(till_button_id=ENTRY_BUTTON_ID, quantity=4)],
+            payment_method=PaymentMethod.cash,
+        )
+        with self.assertRaises(InvalidArgument):
+            await self.order_service.check_ticket_sale(token=self.terminal_token, new_ticket_sale=new_ticket)
+        new_ticket = NewTicketSale(
+            customer_tag_uids=tags,
+            tickets=[
+                Ticket(till_button_id=ENTRY_BUTTON_ID, quantity=2),
+                Ticket(till_button_id=ENTRY_U18_BUTTON_ID, quantity=1),
+                Ticket(till_button_id=ENTRY_U16_BUTTON_ID, quantity=1),
+            ],
+            payment_method=PaymentMethod.cash,
+        )
+        pending_ticket: PendingTicketSale = await self.order_service.check_ticket_sale(
+            token=self.terminal_token, new_ticket_sale=new_ticket
+        )
+        self.assertEqual(4, pending_ticket.item_count)
+        self.assertEqual(self.ticket_price * 4 + self.initial_topup_amount * 4, pending_ticket.total_price)
+        completed_ticket: CompletedTicketSale = await self.order_service.book_ticket_sale(
+            token=self.terminal_token, new_ticket_sale=new_ticket
+        )
+        self.assertIsNotNone(completed_ticket)
+        await self._assert_account_balance(
+            account_id=self.cashier.cashier_account_id, balance=completed_ticket.total_price
+        )
+        expected_line_items = {
+            TICKET_PRODUCT_ID: 2,
+            TICKET_U18_PRODUCT_ID: 1,
+            TICKET_U16_PRODUCT_ID: 1,
+        }
+        for product_id, quantity in expected_line_items.items():
+            items = [line_item for line_item in completed_ticket.line_items if line_item.product.id == product_id]
+            self.assertEqual(1, len(items))
+            self.assertEqual(quantity, items[0].quantity)
+
+        for tag in tags:
+            customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=tag)
+            self.assertEqual(self.initial_topup_amount, customer.balance)
+
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_ENTRY, balance=-completed_ticket.total_price)
+        await self._assert_account_balance(account_id=ACCOUNT_CASH_VAULT, balance=-completed_ticket.total_price)
+        await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, balance=self.ticket_price * 4)

@@ -25,6 +25,11 @@ class TerminalButton(BaseModel):
     fixed_price: bool
 
 
+ENTRY_BUTTON_ID = -1
+ENTRY_U18_BUTTON_ID = -2
+ENTRY_U16_BUTTON_ID = -3
+
+
 class TerminalConfig(BaseModel):
     id: int
     name: str
@@ -33,6 +38,7 @@ class TerminalConfig(BaseModel):
     allow_top_up: bool
     allow_cash_out: bool
     allow_ticket_sale: bool
+    ticket_buttons: Optional[list[TerminalButton]]
     buttons: Optional[list[TerminalButton]]
     secrets: Optional[TerminalSecrets]
 

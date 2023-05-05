@@ -46,7 +46,8 @@ values
     -- Umsatzsteuer ID. Needed on each bon
     ('ust_id', 'DE123456789'),
     ('currency.symbol', '€'),
-    ('currency.identifier', 'EUR')
+    ('currency.identifier', 'EUR'),
+    ('entry.initial_topup_amount', '8')
     on conflict do nothing;
 
 
@@ -228,6 +229,51 @@ create table if not exists user_to_role (
     role_id bigint not null references user_role(id),
     primary key (user_id, role_id)
 );
+
+create or replace function user_to_role_updated() returns trigger as
+$$
+<<locals>> declare
+    role_name text;
+    user_login text;
+    cashier_account_id bigint;
+    transport_account_id bigint;
+begin
+    select name into locals.role_name from user_role where id = NEW.role_id;
+
+    select
+        usr.cashier_account_id,
+        usr.transport_account_id,
+        usr.login
+        into locals.cashier_account_id, locals.transport_account_id, locals.user_login
+    from usr where id = NEW.user_id;
+
+    if locals.role_name = 'cashier' then
+        if locals.cashier_account_id is null then
+            insert into account (type, name)
+            values ('internal', 'cashier account for ' || locals.user_login)
+            returning id into locals.cashier_account_id;
+
+            update usr set cashier_account_id = locals.cashier_account_id where id = NEW.user_id;
+        end if;
+    end if;
+    if locals.role_name = 'finanzorga' then
+        if locals.transport_account_id is null then
+            insert into account (type, name)
+            values ('internal', 'transport account for ' || locals.user_login)
+            returning id into locals.transport_account_id;
+
+            update usr set transport_account_id = locals.transport_account_id where id = NEW.user_id;
+        end if;
+    end if;
+
+    return NEW;
+end
+$$ language plpgsql;
+
+create trigger user_to_role_updated_trigger
+    after insert on user_to_role
+    for each row
+execute function user_to_role_updated();
 
 create table if not exists user_role_to_privilege (
     role_id bigint not null references user_role(id) on delete cascade,
@@ -421,7 +467,9 @@ values
     (1, 'Rabatt', false, null, 'none', true),
     (2, 'Aufladen', false, null, 'none', true),
     (3, 'Auszahlen', false, null, 'none', true),
-    (4, 'Eintritt', true, 12, 'ust', true);  -- TODO: correct tax for ticket?
+    (4, 'Eintritt', true, 12, 'ust', true),
+    (5, 'Eintritt U18', true, 12, 'ust', true),
+    (6, 'Eintritt U16', true, 12, 'ust', true);
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (

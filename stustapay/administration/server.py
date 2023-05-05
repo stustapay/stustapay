@@ -61,13 +61,18 @@ class Api(SubCommand):
         db_pool = await self.server.db_connect(self.cfg.database)
 
         auth_service = AuthService(db_pool=db_pool, config=self.cfg)
-        till_service = TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
-        order_service = OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
+        product_service = ProductService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
+        till_service = TillService(
+            db_pool=db_pool, config=self.cfg, auth_service=auth_service, product_service=product_service
+        )
+        order_service = OrderService(
+            db_pool=db_pool, config=self.cfg, auth_service=auth_service, product_service=product_service
+        )
 
         context = Context(
             config=self.cfg,
             db_pool=db_pool,
-            product_service=ProductService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            product_service=product_service,
             tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             till_service=till_service,
