@@ -24,6 +24,7 @@ from stustapay.core.service.common.error import AccessDenied, NotFound
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
+from stustapay.core.service.till.register import TillRegisterService
 from stustapay.core.service.user import AuthService
 
 
@@ -37,6 +38,7 @@ class TillService(DBService):
 
         self.profile = TillProfileService(db_pool, config, auth_service)
         self.layout = TillLayoutService(db_pool, config, auth_service)
+        self.register = TillRegisterService(db_pool, config, auth_service)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])

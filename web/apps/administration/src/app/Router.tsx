@@ -37,6 +37,11 @@ import { OrderDetail } from "./routes/orders/OrderDetail";
 import { CashierList, CashierDetail } from "./routes/cashiers";
 import { CashierCloseOut } from "./routes/cashiers/CashierCloseOut";
 import { PrivilegeGuard } from "./routes/PrivilegeGuard";
+import {
+  TillRegisterStockingList,
+  TillRegisterStockingCreate,
+  TillRegisterStockingUpdate,
+} from "./routes/till-register-stocking";
 
 const router = createBrowserRouter([
   {
@@ -142,6 +147,25 @@ const router = createBrowserRouter([
           },
         ],
       },
+      {
+        path: "till-register-stockings",
+        element: <PrivilegeGuard privilege="till_management" />,
+        children: [
+          {
+            path: "",
+            element: <TillRegisterStockingList />,
+          },
+          {
+            path: "new",
+            element: <TillRegisterStockingCreate />,
+          },
+          {
+            path: ":stockingId/edit",
+            element: <TillRegisterStockingUpdate />,
+          },
+        ],
+      },
+
       {
         path: "till-layouts",
         element: <PrivilegeGuard privilege="till_management" />,

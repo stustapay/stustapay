@@ -19,6 +19,7 @@ from stustapay.core.schema.user import (
     FINANZORGA_ROLE_NAME,
     CASHIER_ROLE_NAME,
 )
+from stustapay.core.service.account import AccountService
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
@@ -89,6 +90,9 @@ class BaseTestCase(TestCase):
 
         self.auth_service = AuthService(db_pool=self.db_pool, config=self.test_config)
         self.user_service = UserService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
+        self.account_service = AccountService(
+            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
+        )
         self.product_service = ProductService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
@@ -126,6 +130,11 @@ class BaseTestCase(TestCase):
         self.cashier = await self.user_service.get_user(token=self.admin_token, user_id=self.cashier.id)
 
         self.cashier_token = (await self.user_service.login_user(username=self.cashier.login, password="rolf")).token
+
+    async def _assert_account_balance(self, account_id: int, balance: float):
+        account = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
+        self.assertIsNotNone(account)
+        self.assertEqual(balance, account.balance)
 
     async def asyncTearDown(self) -> None:
         await self.db_conn.close()

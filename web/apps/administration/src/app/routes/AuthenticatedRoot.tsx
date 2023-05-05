@@ -190,6 +190,12 @@ export const AuthenticatedRoot: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText primary={t("tills")} />
               </ListItemLink>
+              <ListItemLink to="/till-register-stockings">
+                <ListItemIcon>
+                  <PointOfSaleIcon />
+                </ListItemIcon>
+                <ListItemText primary={t("registerStockings")} />
+              </ListItemLink>
             </>
           )}
           {user.privileges.includes("account_management") && (

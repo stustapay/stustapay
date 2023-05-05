@@ -8,3 +8,4 @@ export * from "./configApi";
 export * from "./orderApi";
 export * from "./accountApi";
 export * from "./cashierApi";
+export * from "./tillRegisterStockingApi";

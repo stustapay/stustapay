@@ -50,5 +50,29 @@
     "name": "Name",
     "price": "Price",
     "addProductToButton": "Add a product"
+  },
+  "register": {
+    "stockings": "Cash register stockings",
+    "createStocking": "Add a new cash register stocking template",
+    "updateStocking": "Update a cash register stocking template",
+    "deleteStocking": "Update a cash register stocking template",
+    "deleteStockingDescription": "Confirm register stocking deletion",
+    "name": "Name",
+    "euro200": "Amount of 200€ bills",
+    "euro100": "Amount of 100€ bills",
+    "euro50": "Amount of 50€ bills",
+    "euro20": "Amount of 20€ bills",
+    "euro10": "Amount of 10€ bills",
+    "euro5": "Amount of 5€ bills",
+    "euro2": "Amount of 2€ rolls  one roll = 25 pcs = 50€",
+    "euro1": "Amount of 1€ rolls, one roll = 25 pcs = 25€",
+    "cent50": "Amount of 50 cent rolls, one roll = 40 pcs = 20€",
+    "cent20": "Amount of 20 cent rolls, one roll = 40 pcs = 8€",
+    "cent10": "Amount of 10 cent rolls, one roll = 40 pcs = 4€",
+    "cent5": "Amount of 5 cent rolls, one roll = 50 pcs = 2,50€",
+    "cent2": "Amount of 2 cent rolls, one roll = 50 pcs = 1€",
+    "cent1": "Amount of 1 cent rolls, one roll = 50 pcs = 0,50€",
+    "variableInEuro": "Additional variable stocking in euro",
+    "stockingTotal": "Total"
   }
 }

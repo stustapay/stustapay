@@ -24,6 +24,7 @@ from .routers import (
     till_button,
     till_layout,
     till_profile,
+    till_register_stockings,
     user,
     cashier,
 )
@@ -52,6 +53,7 @@ class Api(SubCommand):
         self.server.add_router(till_layout.router)
         self.server.add_router(till_profile.router)
         self.server.add_router(till_button.router)
+        self.server.add_router(till_register_stockings.router)
         self.server.add_router(config_router.router)
         self.server.add_router(account.router)
         self.server.add_router(order.router)

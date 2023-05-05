@@ -6,6 +6,8 @@ from fastapi import APIRouter, HTTPException, status
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.terminal import TerminalConfig
+from stustapay.core.schema.till import CashRegisterStocking
+from stustapay.core.util import BaseModel
 
 router = APIRouter(
     prefix="",
@@ -32,3 +34,34 @@ async def config(
     if terminal_config is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return terminal_config
+
+
+@router.get(
+    "/cash-register-stockings",
+    summary="obtain the list of available cash register stockings",
+    response_model=list[CashRegisterStocking],
+)
+async def list_cash_register_stockings(
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
+):
+    return await till_service.register.list_cash_register_stockings_terminal(token=token)
+
+
+class RegisterStockUpPayload(BaseModel):
+    cashier_tag_uid: int
+    register_stocking_id: int
+
+
+@router.post(
+    "/stock-up-cash-register",
+    summary="stock up a cash register",
+)
+async def stock_up_cash_register(
+    token: CurrentAuthToken,
+    payload: RegisterStockUpPayload,
+    till_service: ContextTillService,
+):
+    return await till_service.register.stock_up_cash_register(
+        token=token, stocking_id=payload.register_stocking_id, cashier_tag_uid=payload.cashier_tag_uid
+    )

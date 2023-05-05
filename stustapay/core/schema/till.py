@@ -52,3 +52,27 @@ class Till(NewTill):
     registration_uuid: Optional[UUID] = None
     active_user_id: Optional[int] = None
     active_user_role_id: Optional[int] = None
+
+
+class NewCashRegisterStocking(BaseModel):
+    name: str
+    euro200: int = 0
+    euro100: int = 0
+    euro50: int = 0
+    euro20: int = 0
+    euro10: int = 0
+    euro5: int = 0
+    euro2: int = 0
+    euro1: int = 0
+    cent50: int = 0
+    cent20: int = 0
+    cent10: int = 0
+    cent5: int = 0
+    cent2: int = 0
+    cent1: int = 0
+    variable_in_euro: float = 0.0
+
+
+class CashRegisterStocking(NewCashRegisterStocking):
+    id: int
+    total: float

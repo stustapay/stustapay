@@ -130,11 +130,6 @@ class OrderLogicTest(TerminalTestCase):
             await self.db_conn.fetchval("select value from config where key ='entry.initial_topup_amount'")
         )
 
-    async def _assert_account_balance(self, account_id: int, balance: float):
-        account = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
-        self.assertIsNotNone(account)
-        self.assertEqual(balance, account.balance)
-
     async def test_basic_sale_flow(self):
         customer_acc = await self.till_service.get_customer(
             token=self.terminal_token, customer_tag_uid=self.customer_uid

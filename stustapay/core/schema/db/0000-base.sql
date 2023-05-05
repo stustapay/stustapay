@@ -685,6 +685,51 @@ create or replace view till_profile_with_allowed_roles as (
     ) roles on roles.profile_id = p.id
 );
 
+create table if not exists cash_register_stocking (
+    id bigint primary key generated always as identity,
+    name text not null,
+    euro200 bigint not null default 0,
+    euro100 bigint not null default 0,
+    euro50 bigint not null default 0,
+    euro20 bigint not null default 0,
+    euro10 bigint not null default 0,
+    euro5 bigint not null default 0,
+    euro2 bigint not null default 0,
+    euro1 bigint not null default 0,
+    cent50 bigint not null default 0,
+    cent20 bigint not null default 0,
+    cent10 bigint not null default 0,
+    cent5 bigint not null default 0,
+    cent2 bigint not null default 0,
+    cent1 bigint not null default 0,
+    variable_in_euro numeric not null default 0,
+    total numeric generated always as (
+        euro200 * 200.0 +
+        euro100 * 100.0 +
+        euro50 * 50.0 +
+        euro20 * 20.0 +
+        euro10 * 10.0 +
+        euro5 * 5.0 +
+        euro2 * 50.0 +
+        euro1 * 25.0 +
+        cent50 * 20.0 +
+        cent20 * 8.0 +
+        cent10 * 4.0 +
+        cent5 * 2.5 +
+        cent2 * 1.0 +
+        cent1 * 0.5 +
+        variable_in_euro
+    ) stored
+);
+comment on column cash_register_stocking.euro2 is 'number of rolls, one roll = 25 pcs = 50€';
+comment on column cash_register_stocking.euro1 is 'number of rolls, one roll = 25 pcs = 25€';
+comment on column cash_register_stocking.cent50 is 'number of rolls, one roll = 40 pcs = 20€';
+comment on column cash_register_stocking.cent20 is 'number of rolls, one roll = 40 pcs = 8€';
+comment on column cash_register_stocking.cent10 is 'number of rolls, one roll = 40 pcs = 4€';
+comment on column cash_register_stocking.cent5 is 'number of rolls, one roll = 50 pcs = 2,50€';
+comment on column cash_register_stocking.cent2 is 'number of rolls, one roll = 50 pcs = 1€';
+comment on column cash_register_stocking.cent1 is 'number of rolls, one roll = 50 pcs = 0,50€';
+
 -- which cash desks do we have and in which state are they
 create table if not exists till (
     id bigint primary key generated always as identity,
