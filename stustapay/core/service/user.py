@@ -20,12 +20,17 @@ from stustapay.core.schema.user import (
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
-from stustapay.core.service.common.error import NotFound, InvalidArgument
+from stustapay.core.service.common.error import NotFound, InvalidArgument, AccessDenied
 
 
 class UserLoginSuccess(BaseModel):
     user: CurrentUser
     token: str
+
+
+async def list_user_roles(*, conn: asyncpg.Connection) -> list[UserRole]:
+    rows = await conn.fetch("select * from user_role_with_privileges")
+    return [UserRole.parse_obj(row) for row in rows]
 
 
 class UserService(DBService):
@@ -52,8 +57,7 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user([Privilege.user_management])
     async def list_user_roles(self, *, conn: asyncpg.Connection) -> list[UserRole]:
-        rows = await conn.fetch("select * from user_role_with_privileges")
-        return [UserRole.parse_obj(row) for row in rows]
+        return await list_user_roles(conn=conn)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
@@ -97,6 +101,19 @@ class UserService(DBService):
         )
         return result != "DELETE 0"
 
+    @staticmethod
+    async def _update_user_roles(
+        *, conn: asyncpg.Connection, user_id: int, role_names: list[str], delete_before_insert=False
+    ):
+        if delete_before_insert:
+            await conn.execute("delete from user_to_role where user_id = $1", user_id)
+
+        for role_name in role_names:
+            role_id = await conn.fetchval("select id from user_role where name = $1", role_name)
+            if role_id is None:
+                raise InvalidArgument(f"User role with name '{role_name}' does not exist")
+            await conn.execute("insert into user_to_role (user_id, role_id) values ($1, $2)", user_id, role_id)
+
     async def _create_user(
         self, *, conn: asyncpg.Connection, new_user: UserWithoutId, password: Optional[str] = None
     ) -> User:
@@ -116,11 +133,7 @@ class UserService(DBService):
             new_user.cashier_account_id,
         )
 
-        for role_name in new_user.role_names:
-            role_id = await conn.fetchval("select id from user_role where name = $1", role_name)
-            if role_id is None:
-                raise InvalidArgument(f"User role with name '{role_name}' does not exist")
-            await conn.execute("insert into user_to_role (user_id, role_id) values ($1, $2)", user_id, role_id)
+        await self._update_user_roles(conn=conn, user_id=user_id, role_names=new_user.role_names)
 
         row = await conn.fetchrow("select * from user_with_roles where id = $1", user_id)
         return User.parse_obj(row)
@@ -138,20 +151,38 @@ class UserService(DBService):
     ) -> User:
         return await self._create_user(conn=conn, new_user=new_user, password=password)
 
-    @with_db_transaction
-    @requires_terminal([Privilege.user_management])
-    async def create_cashier(self, *, conn: asyncpg.Connection, current_user: User, new_user: NewUser) -> User:
-        user = await self.create_user_with_tag(current_user=current_user, conn=conn, new_user=new_user)
-        user = await self.promote_to_cashier(current_user=current_user, conn=conn, user_id=user.id)
-        return user
+    @staticmethod
+    async def _contains_privileged_roles(conn: asyncpg.Connection, role_names: list[str]) -> bool:
+        res = await conn.fetchval(
+            "select true from user_role where name = any($1::text array) and is_privileged", role_names
+        )
+        return res is not None
 
     @with_db_transaction
     @requires_terminal([Privilege.user_management])
-    async def create_finanzorga(self, *, conn: asyncpg.Connection, current_user: User, new_user: NewUser) -> User:
-        user = await self.create_user_with_tag(current_user=current_user, conn=conn, new_user=new_user)
-        user = await self.promote_to_cashier(current_user=current_user, conn=conn, user_id=user.id)
-        user = await self.promote_to_finanzorga(current_user=current_user, conn=conn, user_id=user.id)
-        return user
+    async def create_user_terminal(
+        self, *, conn: asyncpg.Connection, current_user: CurrentUser, new_user: NewUser
+    ) -> User:
+        if await self._contains_privileged_roles(conn=conn, role_names=new_user.role_names):
+            raise AccessDenied("Cannot promote users to privileged roles on a terminal")
+
+        return await self.create_user_with_tag(conn=conn, current_user=current_user, new_user=new_user)
+
+    @with_db_transaction
+    @requires_terminal([Privilege.user_management])
+    async def update_user_roles_terminal(
+        self, *, conn: asyncpg.Connection, user_tag_uid: int, role_names: list[str]
+    ) -> User:
+        if await self._contains_privileged_roles(conn=conn, role_names=role_names):
+            raise AccessDenied("Cannot promote users to privileged roles on a terminal")
+
+        user_id = await conn.fetchval("select id from usr where user_tag_uid = $1", user_tag_uid)
+        if user_id is None:
+            raise InvalidArgument(f"User with tag {user_tag_uid} not found")
+
+        await self._update_user_roles(conn=conn, user_id=user_id, role_names=role_names, delete_before_insert=True)
+
+        return await self._get_user(conn=conn, user_id=user_id)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
@@ -173,7 +204,7 @@ class UserService(DBService):
 
         user = UserWithoutId(
             login=new_user.login,
-            role_names=[],
+            role_names=new_user.role_names,
             user_tag_uid=user_tag_uid,
             display_name=new_user.display_name,
         )
@@ -214,7 +245,8 @@ class UserService(DBService):
             result.append(User.parse_obj(row))
         return result
 
-    async def _get_user(self, conn: asyncpg.Connection, user_id: int) -> User:
+    @staticmethod
+    async def _get_user(*, conn: asyncpg.Connection, user_id: int) -> User:
         row = await conn.fetchrow("select * from user_with_roles where id = $1", user_id)
         if row is None:
             raise NotFound(element_typ="user", element_id=str(user_id))
@@ -223,7 +255,7 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user([Privilege.user_management])
     async def get_user(self, *, conn: asyncpg.Connection, user_id: int) -> Optional[User]:
-        return await self._get_user(conn, user_id)
+        return await self._get_user(conn=conn, user_id=user_id)
 
     async def _update_user(self, *, conn: asyncpg.Connection, user_id: int, user: UserWithoutId) -> User:
         row = await conn.fetchrow(
@@ -242,18 +274,9 @@ class UserService(DBService):
         if row is None:
             raise NotFound(element_typ="user", element_id=str(user_id))
 
-        await self._update_user_roles(conn=conn, user_id=user_id, role_names=user.role_names)
+        await self._update_user_roles(conn=conn, user_id=user_id, role_names=user.role_names, delete_before_insert=True)
 
-        return await self._get_user(conn, user_id)
-
-    @staticmethod
-    async def _update_user_roles(*, conn: asyncpg.Connection, user_id: int, role_names: list[str]):
-        await conn.execute("delete from user_to_role where user_id = $1", user_id)
-        for role_name in role_names:
-            role_id = await conn.fetchval("select id from user_role where name = $1", role_name)
-            if role_id is None:
-                raise InvalidArgument(f"User role with name '{role_name}' does not exist")
-            await conn.execute("insert into user_to_role (user_id, role_id) values ($1, $2)", user_id, role_id)
+        return await self._get_user(conn=conn, user_id=user_id)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
@@ -264,7 +287,7 @@ class UserService(DBService):
         if not found:
             raise NotFound(element_typ="user", element_id=str(user_id))
 
-        await self._update_user_roles(conn=conn, user_id=user_id, role_names=role_names)
+        await self._update_user_roles(conn=conn, user_id=user_id, role_names=role_names, delete_before_insert=True)
         return await self._get_user(conn=conn, user_id=user_id)
 
     @with_db_transaction
