@@ -97,9 +97,10 @@ fun CameraOverlay(
 
 @Preview
 @Composable
-fun QRScanView(onScanSuccess: (String) -> Unit = {}) {
-
-
+fun QRScanView(
+    continuous: Boolean = false,
+    onScanSuccess: (String) -> Unit = {},
+) {
     var code: String? by remember {
         mutableStateOf(null)
     }
@@ -175,8 +176,10 @@ fun QRScanView(onScanSuccess: (String) -> Unit = {}) {
                             ContextCompat.getMainExecutor(context),
                             ZXingQRCode(
                                 scanned = { result ->
-                                    code = result
-                                    onScanSuccess(result)
+                                    if (code == null || continuous) {
+                                        code = result
+                                        onScanSuccess(result)
+                                    }
                                 },
                                 status = { message ->
                                     status = message
