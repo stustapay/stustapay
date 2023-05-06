@@ -17,13 +17,13 @@ from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     CASHIER_ROLE_ID,
     UserTag,
-    FINANZORGA_ROLE_ID, UserWithoutId,
+    FINANZORGA_ROLE_ID,
+    UserWithoutId,
 )
 from stustapay.core.service.cashier import CashierService, CloseOut, InvalidCloseOutException
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.order import OrderService
 from .common import TerminalTestCase
-
 
 
 class TillManagementTest(TerminalTestCase):
@@ -64,7 +64,11 @@ class TillManagementTest(TerminalTestCase):
         )
 
         cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values ($1) returning uid", 123413413)
-        cashier = await self.user_service.create_user_no_auth(new_user=UserWithoutId(login="cashier-asdf", display_name="", role_names=[CASHIER_ROLE_NAME], user_tag_uid=cashier_tag_uid))
+        cashier = await self.user_service.create_user_no_auth(
+            new_user=UserWithoutId(
+                login="cashier-asdf", display_name="", role_names=[CASHIER_ROLE_NAME], user_tag_uid=cashier_tag_uid
+            )
+        )
         register = await self.till_service.register.create_cash_register(
             token=self.admin_token, new_register=NewCashRegister(name="Lade")
         )
