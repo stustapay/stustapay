@@ -3,6 +3,8 @@ from functools import wraps
 from inspect import signature
 from typing import Optional
 
+import asyncpg.exceptions
+
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, CurrentUser
 from stustapay.core.service.common.error import AccessDenied
@@ -37,6 +39,37 @@ def with_db_transaction(func):
                 return await func(self, conn=conn, **kwargs)
 
     return wrapper
+
+
+def with_retryable_db_transaction(n_retries=3):
+    def f(func):
+        @wraps(func)
+        async def wrapper(self, **kwargs):
+            current_retries = n_retries
+            if "conn" in kwargs:
+                return await func(self, **kwargs)
+
+            async with self.db_pool.acquire() as conn:
+                # leads to slow queries in some cases
+                await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
+
+                exception = None
+                while current_retries > 0:
+                    try:
+                        async with conn.transaction():
+                            return await func(self, conn=conn, **kwargs)
+                    except asyncpg.exceptions.DeadlockDetectedError as e:
+                        current_retries -= 1
+                        exception = e
+
+                if exception:
+                    raise exception
+                else:
+                    raise RuntimeError("Unexpected error")
+
+        return wrapper
+
+    return f
 
 
 def requires_user(privileges: Optional[list[Privilege]] = None):
