@@ -135,14 +135,14 @@ interface TerminalAPI {
     suspend fun userLogout(): Response<Unit>
 
     /**
-     * Create a user with cashier privileges.
+     * Create a user with specific roles.
      */
-    suspend fun userCreateCashier(newUser: NewUser): Response<CurrentUser>
+    suspend fun userCreate(newUser: NewUser): Response<CurrentUser>
 
     /**
-     * Create a user with Finanzorga privileges.
+     * Change a user's roles.
      */
-    suspend fun userCreateFinanzorga(newUser: NewUser): Response<CurrentUser>
+    suspend fun userUpdate(updateUser: UpdateUser): Response<CurrentUser>
 
     /**
      * Grant drink vouchers to a customer tag

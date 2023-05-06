@@ -40,4 +40,5 @@ data class TerminalConfig(
     val allow_ticket_sale: Boolean,
     val buttons: List<TerminalButton>?,
     val secrets: TerminalSecrets?,
+    val available_roles: List<Role>
 )

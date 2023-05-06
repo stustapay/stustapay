@@ -4,14 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustanet.stustapay.ui.common.TagTextField
@@ -19,12 +17,11 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun UserCreateView(
+fun UserUpdateView(
     viewModel: UserViewModel,
     goBack: () -> Unit
 ) {
     val scanState = rememberNfcScanDialogState()
-    var login by remember { mutableStateOf("") }
     var roles by remember { mutableStateOf(listOf<ULong>()) }
     var newTagId by remember { mutableStateOf<ULong?>(null) }
     val scope = rememberCoroutineScope()
@@ -60,23 +57,6 @@ fun UserCreateView(
         NfcScanDialog(state = scanState, onScan = { tag ->
             newTagId = tag.uid
         })
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Login", fontSize = 48.sp, modifier = Modifier.padding(end = 20.dp))
-            TextField(
-                value = login,
-                placeholder = { Text("Username") },
-                onValueChange = { login = it },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-        }
 
         Row(
             modifier = Modifier
@@ -138,12 +118,12 @@ fun UserCreateView(
                 scope.launch {
                     val id = newTagId
                     if (id != null) {
-                        viewModel.create(login, id, roles.mapNotNull { roleId -> availableRoles.find { r -> r.id == roleId } })
+                        viewModel.update(id, roles.mapNotNull { roleId -> availableRoles.find { r -> r.id == roleId } })
                         goBack()
                     }
                 }
             }) {
-            Text(text = "Create", fontSize = 24.sp)
+            Text(text = "Update", fontSize = 24.sp)
         }
     }
 }

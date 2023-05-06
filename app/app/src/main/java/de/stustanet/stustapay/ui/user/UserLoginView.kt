@@ -38,7 +38,8 @@ sealed interface RoleSelectionState {
 @Composable
 fun UserLoginView(
     viewModel: UserViewModel,
-    goToUserCreateView: () -> Unit
+    goToUserCreateView: () -> Unit,
+    goToUserUpdateView: () -> Unit
 ) {
 
     val scope = rememberCoroutineScope()
@@ -215,6 +216,17 @@ fun UserLoginView(
                 onClick = { goToUserCreateView() }
             ) {
                 Text("Create new user", fontSize = 24.sp)
+            }
+        }
+
+        if (userUIStateV is UserUIState.LoggedIn && userUIStateV.showCreateUser) {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                onClick = { goToUserUpdateView() }
+            ) {
+                Text("Update user", fontSize = 24.sp)
             }
         }
     }

@@ -32,3 +32,11 @@ sealed interface UserCreateState {
         var msg: String,
     ) : UserCreateState
 }
+
+sealed interface UserUpdateState {
+    object Created : UserUpdateState
+
+    data class Error(
+        var msg: String,
+    ) : UserUpdateState
+}

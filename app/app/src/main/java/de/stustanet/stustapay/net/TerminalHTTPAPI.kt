@@ -128,12 +128,12 @@ class TerminalHTTPAPI @Inject constructor(
         return client.post<Unit, Unit>("user/logout")
     }
 
-    override suspend fun userCreateCashier(newUser: NewUser): Response<CurrentUser> {
-        return client.post("user/create_cashier") { newUser }
+    override suspend fun userCreate(newUser: NewUser): Response<CurrentUser> {
+        return client.post("user/create-user") { newUser }
     }
 
-    override suspend fun userCreateFinanzorga(newUser: NewUser): Response<CurrentUser> {
-        return client.post("user/create_finanzorga") { newUser }
+    override suspend fun userUpdate(updateUser: UpdateUser): Response<CurrentUser> {
+        return client.post("user/update-user-roles") { updateUser }
     }
 
     override suspend fun grantVouchers(grant: GrantVouchers): Response<Account> {
