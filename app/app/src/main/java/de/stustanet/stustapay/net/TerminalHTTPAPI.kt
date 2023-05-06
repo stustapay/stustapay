@@ -157,4 +157,8 @@ class TerminalHTTPAPI @Inject constructor(
     override suspend fun bookVault(change: TransportAccountChange): Response<Unit> {
         return client.post("change-transport-register-balance") { change }
     }
+
+    override suspend fun getCashierInfo(tag: UserInfoPayload): Response<UserInfo> {
+        return client.post("user-info") { tag }
+    }
 }

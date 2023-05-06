@@ -1,9 +1,6 @@
 package de.stustanet.stustapay.netsource
 
-import de.stustanet.stustapay.model.AccountChange
-import de.stustanet.stustapay.model.CashierEquip
-import de.stustanet.stustapay.model.CashierStocking
-import de.stustanet.stustapay.model.TransportAccountChange
+import de.stustanet.stustapay.model.*
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.net.TerminalAPI
 import javax.inject.Inject
@@ -25,5 +22,9 @@ class CashierRemoteDataSource @Inject constructor(
 
     suspend fun bookVault(orgaTagId: ULong, amount: Double): Response<Unit> {
         return terminalAPI.bookVault(TransportAccountChange(orgaTagId, amount))
+    }
+
+    suspend fun getCashierInfo(tagId: ULong): Response<UserInfo> {
+        return terminalAPI.getCashierInfo(UserInfoPayload(tagId))
     }
 }

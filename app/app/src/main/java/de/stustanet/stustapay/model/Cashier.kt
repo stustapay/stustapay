@@ -42,3 +42,15 @@ data class TransportAccountChange(
     val orga_tag_uid: ULong,
     val amount: Double
 )
+
+@Serializable
+data class UserInfoPayload(
+    val user_tag_uid: ULong
+)
+
+@Serializable
+data class UserInfo(
+    val user_tag_uid: ULong = 0uL,
+    val cash_drawer_balance: Double? = 0.0,
+    val transport_account_balance: Double? = 0.0
+)

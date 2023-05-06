@@ -170,4 +170,9 @@ interface TerminalAPI {
      * Move cash between a bag and the vault.
      */
     suspend fun bookVault(change: TransportAccountChange): Response<Unit>
+
+    /**
+     * Get information about cashier / orga accounts.
+     */
+    suspend fun getCashierInfo(tag: UserInfoPayload): Response<UserInfo>
 }

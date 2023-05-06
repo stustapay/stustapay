@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,9 +51,46 @@ fun CashierStatusView(
                                 .fillMaxSize()
                                 .padding(10.dp)
                         ) {
-                            when (uiState.state) {
+                            when (val state = uiState.state) {
                                 is CashierStatusRequestState.Fetching -> {
                                     Text("Fetching", fontSize = 48.sp)
+                                }
+                                is CashierStatusRequestState.Done -> {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("ID", fontSize = 48.sp)
+                                        Text("${state.userInfo.user_tag_uid}", fontSize = 24.sp)
+                                    }
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("Cashier", fontSize = 48.sp)
+                                        Text("${state.userInfo.cash_drawer_balance}€", fontSize = 24.sp)
+                                    }
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("Bag", fontSize = 48.sp)
+                                        Text("${state.userInfo.transport_account_balance}€", fontSize = 24.sp)
+                                    }
+                                }
+                                is CashierStatusRequestState.Failed -> {
+                                    Text("Failed", fontSize = 48.sp)
                                 }
                             }
                         }

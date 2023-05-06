@@ -1,6 +1,8 @@
 package de.stustanet.stustapay.repository
 
 import de.stustanet.stustapay.model.CashierStocking
+import de.stustanet.stustapay.model.UserInfo
+import de.stustanet.stustapay.model.UserInfoPayload
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.netsource.CashierRemoteDataSource
 import javax.inject.Inject
@@ -22,5 +24,9 @@ class CashierRepository @Inject constructor(
 
     suspend fun bookVault(orgaTagId: ULong, amount: Double): Response<Unit> {
         return cashierRemoteDataSource.bookVault(orgaTagId, amount)
+    }
+
+    suspend fun getCashierInfo(tagId: ULong): Response<UserInfo> {
+        return cashierRemoteDataSource.getCashierInfo(tagId)
     }
 }
