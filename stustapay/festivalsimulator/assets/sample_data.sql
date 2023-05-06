@@ -32,8 +32,7 @@ insert into user_to_role (
 )
 values
     (0, 0), -- admin
-    (0, 1), -- finanzorga
-    (0, 2) -- cashier
+    (0, 1) -- finanzorga
 on conflict do nothing;
 
 insert into product (

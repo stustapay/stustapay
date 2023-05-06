@@ -2,7 +2,6 @@ import json
 import logging
 import uuid
 from collections import defaultdict
-from dataclasses import dataclass
 from typing import Dict, Optional, Set
 
 import asyncpg
@@ -47,7 +46,8 @@ from stustapay.core.schema.product import (
     TICKET_U16_PRODUCT_ID,
 )
 from stustapay.core.schema.terminal import Terminal, ENTRY_BUTTON_ID, ENTRY_U18_BUTTON_ID, ENTRY_U16_BUTTON_ID
-from stustapay.core.schema.user import Privilege, User
+from stustapay.core.schema.user import Privilege, User, CurrentUser
+from stustapay.core.service.account import get_account_by_id
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
@@ -69,16 +69,10 @@ from stustapay.core.service.product import (
 )
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.util import BaseModel
+from .booking import BookingIdentifier, book_prepared_bookings
 from .voucher import VoucherService
-from ..account import get_account_by_id
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(eq=True, frozen=True)
-class BookingIdentifier:
-    source_account_id: int
-    target_account_id: int
 
 
 class NotEnoughFundsException(ServiceException):
@@ -357,8 +351,9 @@ class OrderService(DBService):
             new_balance=new_balance,
         )
 
+    @staticmethod
     async def _book_topup_cash_order(
-        self, *, conn: asyncpg.Connection, order_id: int, amount: float, customer_account_id: int, cashier: User
+        *, conn: asyncpg.Connection, order_id: int, amount: float, customer_account_id: int, cashier: CurrentUser
     ):
         """
         The customer pays cash money to get funds on hist customer account
@@ -373,10 +368,11 @@ class OrderService(DBService):
             ): amount,
         }
 
-        await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
+        await book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
 
+    @staticmethod
     async def _book_topup_sumup_order(
-        self, *, conn: asyncpg.Connection, order_id: int, amount: float, customer_account_id: int
+        *, conn: asyncpg.Connection, order_id: int, amount: float, customer_account_id: int
     ):
         """
         The customer pays ec money (via sumup) to get funds on the customer account
@@ -385,20 +381,21 @@ class OrderService(DBService):
         prepared_bookings = {
             BookingIdentifier(source_account_id=ACCOUNT_SUMUP, target_account_id=customer_account_id): amount
         }
-        await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
+        await book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_topup(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_topup: NewTopUp
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, new_topup: NewTopUp
     ) -> CompletedTopUp:
         pending_top_up: PendingTopUp = await self.check_topup(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_terminal=current_terminal, current_user=current_user, new_topup=new_topup
         )
 
         order_row = await conn.fetchrow(
-            "insert into ordr (uuid, item_count, order_type, cashier_id, till_id, customer_account_id, payment_method) "
-            "values ($1, $2, $3, $4, $5, $6, $7) "
+            "insert into ordr (uuid, item_count, order_type, cashier_id, till_id, customer_account_id, payment_method, "
+            "   cash_register_id) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8) "
             "returning id, uuid, booked_at",
             pending_top_up.uuid or uuid.uuid4(),
             1,  # item_count
@@ -407,6 +404,7 @@ class OrderService(DBService):
             current_terminal.till.id,
             pending_top_up.customer_account_id,
             pending_top_up.payment_method.name,
+            current_user.cash_register_id if pending_top_up.payment_method == PaymentMethod.cash else None,
         )
         order_id = order_row["id"]
         order_uuid = order_row["uuid"]
@@ -502,7 +500,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_sale(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_sale: NewSale
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, new_sale: NewSale
     ) -> CompletedSale:
         """
         apply the order after all payment has been settled.
@@ -577,7 +575,7 @@ class OrderService(DBService):
                 voucher_amount=completed_order.used_vouchers,
             )
 
-        await self._book_prepared_bookings(conn=conn, order_id=completed_order.id, bookings=prepared_bookings)
+        await book_prepared_bookings(conn=conn, order_id=completed_order.id, bookings=prepared_bookings)
 
         customer_account_after_booking = await get_account_by_id(
             conn=conn, account_id=completed_order.customer_account_id
@@ -590,23 +588,6 @@ class OrderService(DBService):
         completed_order.new_voucher_balance = customer_account_after_booking.vouchers
 
         return completed_order
-
-    @staticmethod
-    async def _book_prepared_bookings(
-        *, conn: asyncpg.Connection, order_id: int, bookings: Dict[BookingIdentifier, float]
-    ):
-        """
-        insert the selected bookings into the database.
-        bookings are (source, target, tax) -> amount
-        """
-        for booking_identifier, amount in bookings.items():
-            await book_transaction(
-                conn=conn,
-                order_id=order_id,
-                source_account_id=booking_identifier.source_account_id,
-                target_account_id=booking_identifier.target_account_id,
-                amount=amount,
-            )
 
     @staticmethod
     async def _fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
@@ -622,7 +603,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def cancel_sale(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, order_id: int
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, order_id: int
     ) -> bool:
         order = await self._fetch_order(conn=conn, order_id=order_id)
         if order is None:
@@ -633,8 +614,8 @@ class OrderService(DBService):
             return False
 
         order_row = await conn.fetchrow(
-            "insert into ordr ("
-            "   item_count, order_type, cashier_id, till_id, customer_account_id, cancels_order, payment_method) "
+            "insert into ordr (item_count, order_type, cashier_id, till_id, customer_account_id, cancels_order, "
+            "   payment_method) "
             "values ($1, $2, $3, $4, $5, $6, $7) "
             "returning id, uuid, booked_at",
             len(order.line_items),
@@ -716,7 +697,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_pay_out(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_pay_out: NewPayOut
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, new_pay_out: NewPayOut
     ) -> CompletedPayOut:
         assert current_user.cashier_account_id is not None
         pending_pay_out: PendingPayOut = await self.check_pay_out(  # pylint: disable=unexpected-keyword-arg
@@ -724,13 +705,15 @@ class OrderService(DBService):
         )
 
         order_row = await conn.fetchrow(
-            "insert into ordr(item_count, order_type, cashier_id, till_id, customer_account_id, payment_method) "
-            "values (1, 'pay_out', $1, $2, $3, $4) "
+            "insert into ordr(item_count, order_type, cashier_id, till_id, customer_account_id, payment_method, "
+            "   cash_register_id) "
+            "values (1, 'pay_out', $1, $2, $3, $4, $5) "
             "returning id, uuid, booked_at",
             current_user.id,
             current_terminal.till.id,
             pending_pay_out.customer_account_id,
-            PaymentMethod.tag.name,  # payouts as orders using this API can only be processed as direct cash payouts
+            PaymentMethod.cash.name,  # payouts as orders using this API can only be processed as direct cash payouts
+            current_user.cash_register_id,
         )
         order_id = order_row["id"]
         order_uuid = order_row["uuid"]
@@ -757,7 +740,7 @@ class OrderService(DBService):
             ): -pending_pay_out.amount,
         }
 
-        await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
+        await book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
 
         return CompletedPayOut(
             amount=pending_pay_out.amount,
@@ -907,7 +890,7 @@ class OrderService(DBService):
         *,
         conn: asyncpg.Connection,
         current_terminal: Terminal,
-        current_user: User,
+        current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,
     ) -> CompletedTicketSale:
         assert current_user.cashier_account_id is not None
@@ -928,8 +911,9 @@ class OrderService(DBService):
         oldest_customer_account_id = self._find_oldest_customer(customers)
 
         order_row = await conn.fetchrow(
-            "insert into ordr(uuid, item_count, order_type, cashier_id, till_id, customer_account_id, payment_method) "
-            "values ($1, $2, $3, $4, $5, $6, $7) "
+            "insert into ordr(uuid, item_count, order_type, cashier_id, till_id, customer_account_id, payment_method, "
+            "   cash_register_id) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8) "
             "returning id, uuid, booked_at",
             new_ticket_sale.uuid or uuid.uuid4(),
             pending_ticket_sale.item_count,
@@ -938,6 +922,7 @@ class OrderService(DBService):
             current_terminal.till.id,
             oldest_customer_account_id,
             pending_ticket_sale.payment_method.name,
+            current_user.cash_register_id if PaymentMethod.cash == pending_ticket_sale.payment_method else None,
         )
         order_id = order_row["id"]
         order_uuid = order_row["uuid"]
@@ -987,7 +972,7 @@ class OrderService(DBService):
         else:
             raise InvalidArgument("Invalid payment method")
 
-        await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
+        await book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
 
         return CompletedTicketSale(
             id=order_id,

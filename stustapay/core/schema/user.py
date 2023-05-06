@@ -101,3 +101,4 @@ class CurrentUser(BaseModel):
     user_tag_uid: Optional[int] = None
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None
+    cash_register_id: Optional[int] = None

@@ -63,6 +63,8 @@ class Simulator(SubCommand):
         self.customer_lock = threading.Lock()
         self.locked_customers: set[int] = set()
 
+        self.cashier_lock = threading.Lock()
+
     @staticmethod
     def argparse_register(subparser: argparse.ArgumentParser):
         subparser.add_argument(
@@ -104,7 +106,7 @@ class Simulator(SubCommand):
                 "from usr "
                 "join account a on usr.cashier_account_id = a.id "
                 "left join till t on usr.id = t.active_user_id "
-                "where t.active_user_id is null"
+                "where t.id is null"
             )
         ]
 
@@ -145,21 +147,43 @@ class Simulator(SubCommand):
 
             time.sleep(10)
 
-    async def _register_terminals(self, db_pool: asyncpg.Pool, registration_uuids: list[str]) -> list[Terminal]:
-        terminals = []
-        for registration_uuid in registration_uuids:
+    async def _register_terminals(
+        self, db_pool: asyncpg.Pool, registration_uuids: list[str], stock_up=False
+    ) -> list[Terminal]:
+        stocking_id = await db_pool.fetchval("select id from cash_register_stocking limit 1")
+        terminals: list[Terminal] = []
+        for i, registration_uuid in enumerate(registration_uuids):
             terminal = await self._register_terminal(registration_uuid)
-            cashier_tag_uid = (await self.get_unused_cashiers(db_pool=db_pool))[0]
-            async with aiohttp.ClientSession(base_url=self.base_url, headers=terminal.get_headers()) as client:
-                resp = await client.post(
-                    "/user/login", json={"user_tag": {"uid": self.admin_tag_uid}, "user_role_id": ADMIN_ROLE_ID}
-                )
-                assert resp.status == 200
-                resp = await client.post(
-                    "/user/login", json={"user_tag": {"uid": cashier_tag_uid}, "user_role_id": CASHIER_ROLE_ID}
-                )
-                assert resp.status == 200
-            terminals.append(terminal)
+            with self.cashier_lock:
+                cashier_tag_uids = await self.get_unused_cashiers(db_pool=db_pool)
+                if len(cashier_tag_uids) == 0:
+                    return terminals
+                cashier_tag_uid = cashier_tag_uids[0]
+                async with aiohttp.ClientSession(base_url=self.base_url, headers=terminal.get_headers()) as client:
+                    resp = await client.post(
+                        "/user/login", json={"user_tag": {"uid": self.admin_tag_uid}, "user_role_id": ADMIN_ROLE_ID}
+                    )
+                    assert resp.status == 200
+
+                    if stock_up:
+                        register_id = await db_pool.fetchval(
+                            "insert into cash_register (name) values ($1) returning id", f"Blechkasse {i}"
+                        )
+                        resp = await client.post(
+                            "/stock-up-cash-register",
+                            json={
+                                "cashier_tag_uid": cashier_tag_uid,
+                                "register_stocking_id": stocking_id,
+                                "cash_register_id": register_id,
+                            },
+                        )
+                        assert resp.status == 200
+
+                    resp = await client.post(
+                        "/user/login", json={"user_tag": {"uid": cashier_tag_uid}, "user_role_id": CASHIER_ROLE_ID}
+                    )
+                    assert resp.status == 200
+                terminals.append(terminal)
         return terminals
 
     async def entry_till(self):
@@ -169,7 +193,7 @@ class Simulator(SubCommand):
                 "select registration_uuid from till where active_profile_id = $1", PROFILE_ID_TICKET
             )
             terminals = await self._register_terminals(
-                db_pool=db_pool, registration_uuids=[str(row["registration_uuid"]) for row in rows]
+                db_pool=db_pool, registration_uuids=[str(row["registration_uuid"]) for row in rows], stock_up=True
             )
 
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
@@ -201,7 +225,7 @@ class Simulator(SubCommand):
         async with db_pool.acquire() as conn:
             rows = await conn.fetch("select registration_uuid from till where active_profile_id = $1", PROFILE_ID_TOPUP)
             terminals = await self._register_terminals(
-                db_pool=db_pool, registration_uuids=[str(row["registration_uuid"]) for row in rows]
+                db_pool=db_pool, registration_uuids=[str(row["registration_uuid"]) for row in rows], stock_up=True
             )
 
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
@@ -244,7 +268,8 @@ class Simulator(SubCommand):
                 PROFILE_ID_COCKTAIL,
             )
             terminals = await self._register_terminals(
-                db_pool=db_pool, registration_uuids=[str(row["registration_uuid"]) for row in rows]
+                db_pool=db_pool,
+                registration_uuids=[str(row["registration_uuid"]) for row in rows],
             )
 
         async with aiohttp.ClientSession(base_url=self.base_url) as client:

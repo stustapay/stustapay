@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import argparse
 import asyncio
 import logging
@@ -9,7 +10,7 @@ import asyncpg
 from stustapay.administration.server import Api as AdminApi
 from stustapay.core.config import Config
 from stustapay.core.database import create_db_pool, reset_schema, apply_revisions
-from stustapay.core.schema.till import NewTill
+from stustapay.core.schema.till import NewTill, NewCashRegisterStocking
 from stustapay.core.schema.user import UserWithoutId, CASHIER_ROLE_NAME
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import with_db_transaction
@@ -132,5 +133,8 @@ class FestivalSetup(SubCommand):
         admin_login = await user_service.login_user(username="admin", password="admin")  # pylint: disable=missing-kwoa
         assert admin_login is not None
         admin_token = admin_login.token
+        await till_service.register.create_cash_register_stockings(
+            token=admin_token, stocking=NewCashRegisterStocking(name="Stocking", euro20=2, euro10=1)
+        )
         await self._create_tills(admin_token=admin_token, till_service=till_service)
         await self._create_cashiers(user_service=user_service)

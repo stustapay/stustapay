@@ -163,6 +163,11 @@ create trigger update_tag_association_history_trigger
     when (OLD.user_tag_uid is distinct from NEW.user_tag_uid and OLD.user_tag_uid is not null)
     execute function update_tag_association_history();
 
+create table if not exists cash_register (
+    id bigint primary key generated always as identity,
+    name text not null
+);
+
 -- people working with the payment system
 create table if not exists usr (
     id bigint primary key generated always as identity,
@@ -177,7 +182,10 @@ create table if not exists usr (
     user_tag_uid numeric(20) unique references user_tag(uid) on delete restrict,
 
     transport_account_id bigint references account(id),
-    cashier_account_id bigint references account(id)
+    cashier_account_id bigint references account(id),
+    cash_register_id bigint references cash_register(id) unique,
+    constraint cash_register_need_cashier_acccount
+        check (((cash_register_id is not null) and (cashier_account_id is not null)) or cash_register_id is null),
     -- depending on the transfer action, the correct account is booked
 
     constraint password_or_user_tag_uid_set check ((user_tag_uid is not null) or (password is not null))
@@ -404,7 +412,8 @@ values
     -- pay out remaining balance on a tag
     ('pay_out'),
     -- sale of a ticket in combination with an initial top up
-    ('ticket')
+    ('ticket'),
+    ('money_transfer')
     on conflict do nothing;
 
 
@@ -469,7 +478,8 @@ values
     (3, 'Auszahlen', false, null, 'none', true),
     (4, 'Eintritt', true, 12, 'ust', true),
     (5, 'Eintritt U18', true, 12, 'ust', true),
-    (6, 'Eintritt U16', true, 12, 'ust', true);
+    (6, 'Eintritt U16', true, 12, 'ust', true),
+    (7, 'Geldtransit', false, null, 'none', true);
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
@@ -501,13 +511,13 @@ create or replace view product_as_json as (
 );
 
 create table if not exists till_layout (
-    id bigint primary key generated always as identity,
+    id bigint primary key generated always as identity (start with 1000),
     name text not null unique,
     description text
 );
 
 create table if not exists till_button (
-    id bigint primary key generated always as identity,
+    id bigint primary key generated always as identity (start with 1000),
     name text not null unique
 );
 
@@ -655,7 +665,7 @@ create or replace view till_layout_with_buttons as (
 );
 
 create table if not exists till_profile (
-    id bigint primary key generated always as identity,
+    id bigint primary key generated always as identity (start with 1000),
     name text not null unique,
     description text,
     allow_top_up boolean not null default false,
@@ -732,7 +742,7 @@ comment on column cash_register_stocking.cent1 is 'number of rolls, one roll = 5
 
 -- which cash desks do we have and in which state are they
 create table if not exists till (
-    id bigint primary key generated always as identity,
+    id bigint primary key generated always as identity (start with 1000),
     name text not null unique,
     description text,
     registration_uuid uuid unique,
@@ -746,14 +756,82 @@ create table if not exists till (
     active_profile_id bigint not null references till_profile(id),
     active_user_id bigint references usr(id),
     active_user_role_id bigint references user_role(id),
+    active_cash_register_id bigint references cash_register(id) unique,
     constraint user_requires_role check ((active_user_id is null) = (active_user_role_id is null)),
 
     constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null))
 );
 
+insert into till_layout (id, name, description) overriding system value values (1, 'Virtual Till Layout', '') ;
+insert into till_profile (id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id)
+    overriding system value values (1, 'Virtual till profile', '', false, false, false, 1);
+insert into till (id, name, description, active_profile_id, registration_uuid) overriding system value
+values (1, 'Virtual Till', '', 1, gen_random_uuid());
+
+
+create or replace function handle_till_user_login() returns trigger as
+$$
+<<locals>> declare
+    old_cashier_account_id bigint;
+    old_cash_register_id bigint;
+    old_cash_register_balance numeric;
+    old_order_id bigint;
+
+    new_cashier_account_id bigint;
+    new_cash_register_id bigint;
+    new_cash_register_balance numeric;
+    new_order_id bigint;
+begin
+    NEW.active_cash_register_id = null;
+
+    if NEW.active_user_id is not null then
+        select usr.cash_register_id, usr.cashier_account_id, a.balance
+        into locals.new_cash_register_id, locals.new_cashier_account_id, locals.new_cash_register_balance
+        from usr
+                 join account a on usr.cashier_account_id = a.id
+        where usr.id = NEW.active_user_id;
+
+        if locals.new_cash_register_id is not null then
+            insert into ordr (item_count, payment_method, order_type, cashier_id, till_id, cash_register_id)
+            values (1, 'cash', 'money_transfer', NEW.active_user_id, NEW.id, locals.new_cash_register_id)
+            returning id into locals.new_order_id;
+
+            insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate)
+            values
+                (locals.new_order_id, 1, 7, locals.new_cash_register_balance, 1, 'none', 0);
+            NEW.active_cash_register_id = locals.new_cash_register_id;
+        end if;
+    end if;
+
+    if OLD.active_user_id is not null then
+        select usr.cash_register_id, usr.cashier_account_id, a.balance
+        into locals.old_cash_register_id, locals.old_cashier_account_id, locals.old_cash_register_balance
+        from usr
+                 join account a on usr.cashier_account_id = a.id
+        where usr.id = OLD.active_user_id;
+
+        if locals.old_cash_register_id is not null and locals.old_cash_register_balance != 0 then
+            insert into ordr (item_count, payment_method, order_type, cashier_id, till_id, cash_register_id)
+            values (1, 'cash', 'money_transfer', OLD.active_user_id, OLD.id, locals.old_cash_register_id)
+            returning id into locals.old_order_id;
+
+            insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate)
+            values
+                (locals.old_order_id, 1, 7, -locals.old_cash_register_balance, 1, 'none', 0);
+        end if;
+    end if;
+
+    return NEW;
+end
+$$ language plpgsql;
+
+create trigger handle_till_user_login_trigger
+    after update of active_user_id on till
+    for each row
+    when (OLD.active_user_id is distinct from NEW.active_user_id)
+execute function handle_till_user_login();
 
 create type till_tse_history_type as enum ('register', 'deregister');
-
 
 -- logs all historic till <-> TSE assignments (as registered with the TSE)
 create table if not exists till_tse_history (
@@ -767,15 +845,13 @@ create table if not exists till_tse_history (
 create function deny_in_trigger() returns trigger language plpgsql as
 $$
 begin
-  return null;
+    return null;
 end;
 $$;
-
 
 create trigger till_tse_history_deny_update_delete
 before update or delete on till_tse_history
 for each row execute function deny_in_trigger();
-
 
 -- represents an order of an customer, like buying wares or top up
 create table if not exists ordr (
@@ -790,8 +866,6 @@ create table if not exists ordr (
 
     booked_at timestamptz not null default now(),
 
-    -- todo: who triggered the transaction (user)
-
     -- how the order was invoked
     payment_method text not null references payment_method(name),
     -- todo: method_info references payment_information(id) -> (sumup-id, paypal-id, ...)
@@ -804,6 +878,9 @@ create table if not exists ordr (
 
     -- who created it
     cashier_id bigint not null references usr(id),
+    cash_register_id bigint references cash_register(id),
+    constraint cash_orders_need_cash_register
+        check ((payment_method = 'cash' and cash_register_id is not null) or (payment_method != 'cash' and cash_register_id is null)),
     till_id bigint not null references till(id),
     -- customer is allowed to be null, as it is only known on the final booking, not on the creation of the order
     -- canceled orders can have no customer
@@ -955,7 +1032,7 @@ create table if not exists cashier_shift (
     final_cash_drawer_balance numeric not null,
     final_cash_drawer_imbalance numeric not null,
     comment text not null,
-    close_out_transaction_id bigint not null references transaction(id)
+    close_out_order_id bigint not null references ordr(id)
 );
 
 create or replace view cashier as (
@@ -967,6 +1044,7 @@ create or replace view cashier as (
         usr.user_tag_uid,
         usr.transport_account_id,
         usr.cashier_account_id,
+        usr.cash_register_id,
         a.balance as cash_drawer_balance,
         t.id as till_id
     from usr
