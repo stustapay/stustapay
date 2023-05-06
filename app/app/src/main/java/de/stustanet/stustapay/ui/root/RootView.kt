@@ -70,7 +70,7 @@ fun RootView(uictrl: SysUiController? = null) {
             VouchersView()
         }
         composable(RootNavDests.cashierManagement.route) {
-            CashierManagementView()
+            CashierManagementView(leaveView = { navController.navigateUp() })
         }
     }
 }

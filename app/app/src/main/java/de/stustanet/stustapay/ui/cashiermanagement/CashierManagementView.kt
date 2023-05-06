@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.cashiermanagement
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -16,11 +17,15 @@ import de.stustanet.stustapay.ui.nav.NavScaffold
 import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
-fun CashierManagementView(viewModel: CashierManagementViewModel = hiltViewModel()) {
+fun CashierManagementView(viewModel: CashierManagementViewModel = hiltViewModel(), leaveView: () -> Unit) {
     val nav = rememberNavController()
 
     LaunchedEffect(nav) {
         viewModel.getStockings()
+    }
+
+    BackHandler {
+        leaveView()
     }
 
     NavHost(navController = nav, startDestination = CashierManagementNavDests.Main.route) {
