@@ -1,7 +1,7 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+from stustapay.core.schema.user import ADMIN_ROLE_ID
+from stustapay.core.service.common.error import AccessDenied
 from .common import TerminalTestCase
-from ..core.schema.user import ADMIN_ROLE_ID
-from ..core.service.common.error import AccessDenied
 
 
 class TillUsageTest(TerminalTestCase):

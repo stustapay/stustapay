@@ -353,7 +353,7 @@ class OrderService(DBService):
 
     @staticmethod
     async def _book_topup_cash_order(
-        *, conn: asyncpg.Connection, order_id: int, amount: float, customer_account_id: int, cashier: User
+        *, conn: asyncpg.Connection, order_id: int, amount: float, customer_account_id: int, cashier: CurrentUser
     ):
         """
         The customer pays cash money to get funds on hist customer account

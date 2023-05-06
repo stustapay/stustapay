@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import argparse
 import asyncio
 import logging

@@ -151,7 +151,7 @@ class Simulator(SubCommand):
         self, db_pool: asyncpg.Pool, registration_uuids: list[str], stock_up=False
     ) -> list[Terminal]:
         stocking_id = await db_pool.fetchval("select id from cash_register_stocking limit 1")
-        terminals = []
+        terminals: list[Terminal] = []
         for i, registration_uuid in enumerate(registration_uuids):
             terminal = await self._register_terminal(registration_uuid)
             with self.cashier_lock:
