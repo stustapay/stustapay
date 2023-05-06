@@ -15,8 +15,11 @@ import binascii
 from datetime import datetime, timezone, timedelta
 from random import randbytes
 
+import time
 
 from .errorcodes import dnerror
+
+MAGIC_PRODUCTION_CLIENT = "DN TSEProduction ef82abcedf"
 
 
 class VirtualTSE:
@@ -28,11 +31,12 @@ class VirtualTSE:
         # map from "client id" -> set of transactions
         self.current_transactions = dict[str, set[int]]()
         self.current_transactions["POS001"] = set()
+        self.current_transactions[MAGIC_PRODUCTION_CLIENT] = set()
         self.current_transactions["DummyDefaultClientId"] = set()
 
-        self.public_key = b"lol" * 32 + b"x"
+        self.public_key = b"\x04\x6B\x1D\x4B\xFA\x4C\xD5\x0D\xE8\x8F\x31\x79\x92\x54\x36\x41\xA9\x48\x01\xE5\x8B\x7E\x18\x26\x86\x52\x0F\xE4\x42\x7C\x5E\xD1\xDC\x12\xFA\xD4\x9F\x3F\xFA\xF2\x86\x58\x6D\xBB\x23\xF9\x25\x08\x7E\x2A\xB7\xEB\x9C\x72\xB0\xA4\x4D\x57\xE2\x57\x11\xFE\x1B\xE2\x71\x36\x72\x3A\x8D\x20\x30\x07\xCF\x01\xF2\x25\x59\x14\x89\x22\x26\x63\x2C\x0C\xB0\x2D\x14\x89\x32\x28\xE9\x61\xCD\x2F\xB2\xFA\x48"
         self.serial = "1BA7F861E9467C60DDF78EC003C9A8E163F6A7EB69EAC5C780EC201932EA0BF1"
-        self.password_admin = "Mb2.r5oHf-0t"
+        self.password_admin = "12345"
         self.password_timeadmin = self.password_admin
         self.puk = "000000"
 
@@ -133,7 +137,7 @@ class VirtualTSE:
         response["TransactionNumber"] = self.transnr
         response["SerialNumber"] = self.serial
         response["SignatureCounter"] = self.signctr
-        response["Signature"] = randbytes(16).hex()
+        response["Signature"] = randbytes(96).hex()
         response["LogTime"] = datetime.now(timezone(timedelta(hours=1))).isoformat(timespec="seconds")
 
         return response
@@ -199,6 +203,7 @@ class VirtualTSE:
         if msg["ClientID"] not in self.current_transactions:
             return dnerror(19)
 
+        time.sleep(0.8)
         self.password_block_counter = 0
 
         # check transaction number
@@ -347,6 +352,9 @@ class VirtualTSE:
         if len(msg["ClientID"]) > 30:
             return dnerror(4)
 
+        if msg["ClientID"] == MAGIC_PRODUCTION_CLIENT:
+            return dnerror(1337)
+
         if msg["ClientID"] in self.current_transactions:
             if not self.current_transactions[msg["ClientID"]]:
                 del self.current_transactions[msg["ClientID"]]
@@ -377,7 +385,7 @@ class VirtualTSE:
 
     def getdeviceinfo(self, msg):
         del msg
-        return {"Status": "ok", "SerialNumber": self.serial, "TimeFormat": "UnixTime"}
+        return {"Status": "ok", "DeviceInfo": {"SerialNumber": self.serial, "TimeFormat": "UnixTime"}}
 
     def getdevicedata(self, msg):
         name = msg["Name"]

@@ -88,11 +88,11 @@ class DieboldNixdorfUSBTSE(TSEHandler):
                 await self.request("SetDefaultClientID", ClientID="DummyDefaultClientId")
 
                 device_info = await self.request("GetDeviceInfo")
-                if self.serial_number != device_info["SerialNumber"]:
+                if self.serial_number != device_info["DeviceInfo"]["SerialNumber"]:
                     raise RuntimeError(
                         f"wrong serial number: expected {self.serial_number}, but device has serial number {device_info['SerialNumber']}"
                     )
-                self._log_time_format = device_info["TimeFormat"]
+                self._log_time_format = device_info["DeviceInfo"]["TimeFormat"]
 
                 device_status = await self.request("GetDeviceStatus")
                 self._signature_algorithm = device_status["Parameters"]["SignatureAlgorithm"]
