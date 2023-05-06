@@ -214,12 +214,17 @@ insert into till (
     id, name, description, active_profile_id, active_user_id, active_user_role_id, registration_uuid, session_uuid, tse_id, active_shift
 ) overriding system value
 values
-    (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, 'tse 0', null),
-    (1, 'ssc-pot-1', 'Pot Bierkasse', 1, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, 'tse 0', null),
-    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, 'tse 0', null)
+    (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, 'tse1', null),
+    (1, 'ssc-pot-1', 'Pot Bierkasse', 1, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, 'tse1', null),
+    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, 'tse1', null)
     on conflict do nothing;
 select setval('till_id_seq', 100);
 
+insert into till_tse_history (
+    till_name, tse_id, what
+)
+values
+    (0, 'tse1', 'register');
 
 insert into ordr (
     id, item_count, booked_at, payment_method, order_type,
@@ -276,6 +281,15 @@ values
     -- transaction 2 would not need a bon, as it is a top up
     on conflict do nothing;
 
+insert into tse_signature (
+    id
+)
+values
+    (0),
+    (1),
+    (2)
+    on conflict do nothing;
+
 insert into cash_register (
     id, name
 ) overriding system value
@@ -289,4 +303,3 @@ values
     (7, 'Blechkasse 1');
 
 commit;
-
