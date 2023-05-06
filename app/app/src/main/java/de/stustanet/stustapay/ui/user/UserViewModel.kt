@@ -17,6 +17,7 @@ sealed interface UserUIState {
         val username: String,
         val activeRole: String,
         val showCreateUser: Boolean,
+        val showLoginUser: Boolean
     ) : UserUIState
 
     object NotLoggedIn : UserUIState
@@ -102,6 +103,7 @@ private fun userUiState(
                                 username = userState.user.login,
                                 activeRole = userState.user.active_role_name,
                                 showCreateUser = Access.canCreateUser(userState.user),
+                                showLoginUser = Access.canLogInOtherUsers(userState.user),
                             )
                         }
                         is UserState.NoLogin -> {

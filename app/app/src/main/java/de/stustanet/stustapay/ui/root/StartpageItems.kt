@@ -3,6 +3,7 @@ package de.stustanet.stustapay.ui.root
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import de.stustanet.stustapay.model.Access
+import de.stustanet.stustapay.model.Privilege
 
 
 val startpageItems = listOf(
@@ -40,12 +41,12 @@ val startpageItems = listOf(
         icon = Icons.Filled.Favorite,
         label = "Helper Vouchers",
         navDestination = RootNavDests.vouchers,
-        canAccess = { _, _ -> true }
+        canAccess = { u, _ -> Access.canGiveVouchers(u) }
     ),
     StartpageItem(
         icon = Icons.Filled.ThumbUp,
         label = "Cashier Management",
         navDestination = RootNavDests.cashierManagement,
-        canAccess = { _, _ -> true }
+        canAccess = { u, _ -> Access.canManageCashiers(u) }
     )
 )

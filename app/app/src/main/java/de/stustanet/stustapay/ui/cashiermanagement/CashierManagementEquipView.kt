@@ -64,34 +64,31 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    if (status is CashierManagementStatus.Done) {
-                        when ((status as CashierManagementStatus.Done).res) {
-                            is Response.OK -> {
-                                Text("Success", fontSize = 24.sp)
-                            }
-                            is Response.Error -> {
-                                Text(((status as CashierManagementStatus.Done).res as Response.Error).msg(), fontSize = 24.sp)
-                            }
-                        }
-                    }
                 }
             }
         },
         bottomBar = {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                onClick = {
-                    if (0 < selected && selected < stockings.size) {
-                        scanState.open()
-                    }
+            Column {
+                Spacer(modifier = Modifier.height(20.dp))
+                Divider()
+                Spacer(modifier = Modifier.height(20.dp))
+                Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+                    Text(status, fontSize = 24.sp)
                 }
-            ) {
-                Text("Equip", fontSize = 24.sp)
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    onClick = {
+                        if (0 < selected && selected < stockings.size) {
+                            scanState.open()
+                        }
+                    }
+                ) {
+                    Text("Equip", fontSize = 24.sp)
+                }
             }
         }
     )

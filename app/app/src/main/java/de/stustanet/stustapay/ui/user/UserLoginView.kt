@@ -159,16 +159,18 @@ fun UserLoginView(
 
         Divider()
 
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            onClick = {
-                scanState.open()
-                target = ScanTarget.Login
-            },
-        ) {
-            Text("Login User", fontSize = 24.sp)
+        if (userUIStateV !is UserUIState.LoggedIn || userUIStateV.showLoginUser) {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                onClick = {
+                    scanState.open()
+                    target = ScanTarget.Login
+                },
+            ) {
+                Text("Login User", fontSize = 24.sp)
+            }
         }
 
         if (userUIStateV is UserUIState.LoggedIn) {

@@ -99,14 +99,17 @@ fun StartpageView(
                 ),
                 navigateTo = navigateTo
             )
-            StartpageEntry(
-                item = StartpageItem(
-                    icon = Icons.Filled.Settings,
-                    label = "Settings",
-                    navDestination = RootNavDests.settings,
-                ),
-                navigateTo = navigateTo
-            )
+
+            if (uiState.checkAccess { u, _ -> Access.canChangeConfig(u) }) {
+                StartpageEntry(
+                    item = StartpageItem(
+                        icon = Icons.Filled.Settings,
+                        label = "Settings",
+                        navDestination = RootNavDests.settings,
+                    ),
+                    navigateTo = navigateTo
+                )
+            }
 
             if (uiState.checkAccess { u, _ -> Access.canHackTheSystem(u) }) {
                 StartpageEntry(
