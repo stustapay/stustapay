@@ -125,7 +125,17 @@ class SchemaRevision:
             await conn.execute(f"insert into {REVISION_TABLE} (version) values ($1)", self.version)
 
         # now we can actually apply the revision
-        await conn.execute(self.code)
+        try:
+            await conn.execute(self.code)
+        except asyncpg.exceptions.PostgresSyntaxError as exc:
+            exc_dict = exc.as_dict()
+            position = int(exc_dict["position"])
+            message = exc_dict["message"]
+            lineno = self.code.count("\n", 0, position) + 1
+            raise ValueError(
+                f"Syntax error when executing SQL code at character "
+                f"{position} ({self.file_name!s}:{lineno}): {message!r}"
+            ) from exc
 
     @classmethod
     def revisions_from_dir(cls, revision_dir: Path) -> list["SchemaRevision"]:

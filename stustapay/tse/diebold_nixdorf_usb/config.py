@@ -6,7 +6,12 @@ from pydantic import BaseModel
 
 
 class DieboldNixdorfUSBTSEConfig(BaseModel):
-    diebold_nixdorf_usb_ws_url: str
+    serial_number: str
+    password: str
+    ws_url: str
+    ws_timeout: float = 5
 
-    def make(self):
-        return DieboldNixdorfUSBTSE(self)
+    def factory(self, name: str):
+        from .handler import DieboldNixdorfUSBTSE
+
+        return DieboldNixdorfUSBTSE(name, self)
