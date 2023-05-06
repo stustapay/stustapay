@@ -54,6 +54,14 @@ class Till(NewTill):
     active_user_role_id: Optional[int] = None
 
 
+class NewCashRegister(BaseModel):
+    name: str
+
+
+class CashRegister(NewCashRegister):
+    id: int
+
+
 class NewCashRegisterStocking(BaseModel):
     name: str
     euro200: int = 0

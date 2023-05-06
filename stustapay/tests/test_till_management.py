@@ -1,24 +1,37 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+from stustapay.core.schema.account import ACCOUNT_CASH_VAULT
+from stustapay.core.schema.order import OrderType, NewSale, Button
 from stustapay.core.schema.product import NewProduct
-from stustapay.core.schema.till import NewTill, NewTillButton, NewTillLayout, NewTillProfile, NewCashRegisterStocking
+from stustapay.core.schema.till import (
+    NewTill,
+    NewTillButton,
+    NewTillLayout,
+    NewTillProfile,
+    NewCashRegisterStocking,
+    NewCashRegister,
+)
 from stustapay.core.schema.user import (
     CASHIER_ROLE_NAME,
     FINANZORGA_ROLE_NAME,
     ADMIN_ROLE_NAME,
     ADMIN_ROLE_ID,
-    FINANZORGA_ROLE_ID,
+    CASHIER_ROLE_ID,
+    UserTag,
+    FINANZORGA_ROLE_ID, UserWithoutId,
 )
+from stustapay.core.service.cashier import CashierService, CloseOut, InvalidCloseOutException
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
-from stustapay.core.service.product import ProductService
+from stustapay.core.service.order import OrderService
 from .common import TerminalTestCase
-from ..core.schema.account import ACCOUNT_CASH_VAULT
+
 
 
 class TillManagementTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
 
-        self.product_service = ProductService(
+        self.order_service = OrderService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
+        self.cashier_service = CashierService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
 
@@ -38,7 +51,6 @@ class TillManagementTest(TerminalTestCase):
         self.assertEqual(90, stocking.total)
 
         stockings = await self.till_service.register.list_cash_register_stockings_admin(token=self.admin_token)
-        self.assertEqual(len(stockings), 1)
         self.assertTrue(stocking in stockings)
 
         deleted = await self.till_service.register.delete_cash_register_stockings(
@@ -47,23 +59,99 @@ class TillManagementTest(TerminalTestCase):
         self.assertTrue(deleted)
 
     async def test_stock_up_cashier(self):
+        n_orders_start = await self.db_conn.fetchval(
+            "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
+        )
+
+        cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values ($1) returning uid", 123413413)
+        cashier = await self.user_service.create_user_no_auth(new_user=UserWithoutId(login="cashier-asdf", display_name="", role_names=[CASHIER_ROLE_NAME], user_tag_uid=cashier_tag_uid))
+        register = await self.till_service.register.create_cash_register(
+            token=self.admin_token, new_register=NewCashRegister(name="Lade")
+        )
         await self._login_supervised_user(user_tag_uid=self.admin_tag_uid, user_role_id=ADMIN_ROLE_ID)
         stocking = await self.till_service.register.create_cash_register_stockings(
             token=self.admin_token,
             stocking=NewCashRegisterStocking(name="My fancy stocking", euro20=2),
         )
         success = await self.till_service.register.stock_up_cash_register(
-            token=self.terminal_token, cashier_tag_uid=self.cashier_tag_uid, stocking_id=stocking.id
+            token=self.terminal_token,
+            cashier_tag_uid=cashier_tag_uid,
+            stocking_id=stocking.id,
+            cash_register_id=register.id,
         )
         self.assertTrue(success)
 
-        await self._assert_account_balance(self.cashier.cashier_account_id, stocking.total)
+        await self._assert_account_balance(cashier.cashier_account_id, stocking.total)
         await self._assert_account_balance(ACCOUNT_CASH_VAULT, -stocking.total)
 
+        # before logging in we did not produce a money transfer order
+        n_orders = await self.db_conn.fetchval(
+            "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
+        )
+        self.assertEqual(n_orders_start, n_orders)
+
+        await self._login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=CASHIER_ROLE_ID)
+
+        # after logging in we've got a money transfer order to be signed
+        n_orders = await self.db_conn.fetchval(
+            "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
+        )
+        self.assertEqual(n_orders_start + 1, n_orders)
+
+        # we don't have any bookings but we simulate a close out
+        # we book one order
+        await self.order_service.book_sale(
+            token=self.terminal_token,
+            new_sale=NewSale(
+                customer_tag_uid=self.customer_tag_uid, buttons=[Button(till_button_id=self.till_button.id, quantity=1)]
+            ),
+        )
+
+        cashier = await self.cashier_service.get_cashier(token=self.admin_token, cashier_id=cashier.id)
+        actual_balance = 458.2
+        with self.assertRaises(InvalidCloseOutException):
+            await self.cashier_service.close_out_cashier(
+                token=self.admin_token,
+                cashier_id=cashier.id,
+                close_out=CloseOut(
+                    comment="Some comment",
+                    actual_cash_drawer_balance=actual_balance,
+                    closing_out_user_id=self.admin_user.id,
+                ),
+            )
+
+        await self.till_service.logout_user(token=self.terminal_token)
+        n_orders = await self.db_conn.fetchval(
+            "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
+        )
+        self.assertEqual(n_orders_start + 2, n_orders)
+
+        close_out_result = await self.cashier_service.close_out_cashier(
+            token=self.admin_token,
+            cashier_id=cashier.id,
+            close_out=CloseOut(
+                comment="Some comment",
+                actual_cash_drawer_balance=actual_balance,
+                closing_out_user_id=self.admin_user.id,
+            ),
+        )
+        self.assertEqual(close_out_result.imbalance, actual_balance - cashier.cash_drawer_balance)
+
+        shifts = await self.cashier_service.get_cashier_shifts(token=self.admin_token, cashier_id=cashier.id)
+        self.assertEqual(len(shifts), 1)
+        n_orders = await self.db_conn.fetchval(
+            "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
+        )
+        self.assertEqual(n_orders_start + 3, n_orders)
+
     async def test_transport_and_cashier_account_management(self):
-        await self._login_supervised_user(user_tag_uid=self.finanzorga_tag_uid, user_role_id=FINANZORGA_ROLE_ID)
+        admin_terminal_token = await self.create_terminal(name="Admin terminal")
+        await self.till_service.login_user(
+            token=admin_terminal_token, user_tag=UserTag(uid=self.finanzorga_tag_uid), user_role_id=FINANZORGA_ROLE_ID
+        )
+
         await self.till_service.register.modify_transport_account_balance(
-            token=self.terminal_token, orga_tag_uid=self.finanzorga_tag_uid, amount=100
+            token=admin_terminal_token, orga_tag_uid=self.finanzorga_tag_uid, amount=100
         )
 
         await self._assert_account_balance(self.finanzorga_user.transport_account_id, 100)
@@ -71,26 +159,26 @@ class TillManagementTest(TerminalTestCase):
 
         with self.assertRaises(InvalidArgument):
             await self.till_service.register.modify_cashier_account_balance(
-                token=self.terminal_token, cashier_tag_uid=self.cashier_tag_uid, amount=120
+                token=admin_terminal_token, cashier_tag_uid=self.cashier_tag_uid, amount=120
             )
 
         await self.till_service.register.modify_cashier_account_balance(
-            token=self.terminal_token, cashier_tag_uid=self.cashier_tag_uid, amount=60
+            token=admin_terminal_token, cashier_tag_uid=self.cashier_tag_uid, amount=60
         )
         await self._assert_account_balance(self.finanzorga_user.transport_account_id, 40)
         await self._assert_account_balance(self.cashier.cashier_account_id, 60)
         await self.till_service.register.modify_cashier_account_balance(
-            token=self.terminal_token, cashier_tag_uid=self.cashier_tag_uid, amount=-30
+            token=admin_terminal_token, cashier_tag_uid=self.cashier_tag_uid, amount=-30
         )
         await self._assert_account_balance(self.finanzorga_user.transport_account_id, 70)
         await self._assert_account_balance(self.cashier.cashier_account_id, 30)
 
         with self.assertRaises(InvalidArgument):
             await self.till_service.register.modify_transport_account_balance(
-                token=self.terminal_token, orga_tag_uid=self.finanzorga_tag_uid, amount=-100
+                token=admin_terminal_token, orga_tag_uid=self.finanzorga_tag_uid, amount=-100
             )
         await self.till_service.register.modify_transport_account_balance(
-            token=self.terminal_token, orga_tag_uid=self.finanzorga_tag_uid, amount=-70
+            token=admin_terminal_token, orga_tag_uid=self.finanzorga_tag_uid, amount=-70
         )
         await self._assert_account_balance(self.finanzorga_user.transport_account_id, 0)
         await self._assert_account_balance(ACCOUNT_CASH_VAULT, -30)
@@ -128,7 +216,6 @@ class TillManagementTest(TerminalTestCase):
         self.assertEqual(updated_button.price, 5)
 
         buttons = await self.till_service.layout.list_buttons(token=self.admin_token)
-        self.assertEqual(len(buttons), 1)
         self.assertTrue(updated_button in buttons)
 
         with self.assertRaises(AccessDenied):
@@ -200,7 +287,7 @@ class TillManagementTest(TerminalTestCase):
         self.assertEqual(updated_till.description, "Pottipot - new")
 
         tills = await self.till_service.list_tills(token=self.admin_token)
-        self.assertEqual(len(tills), 2)
+        self.assertTrue(updated_till in tills)
 
         with self.assertRaises(AccessDenied):
             await self.till_service.delete_till(token=self.cashier_token, till_id=till.id)

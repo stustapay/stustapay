@@ -276,5 +276,17 @@ values
     -- transaction 2 would not need a bon, as it is a top up
     on conflict do nothing;
 
+insert into cash_register (
+    id, name
+) overriding system value
+values
+    (1, 'Blechkasse 1'),
+    (2, 'Blechkasse 1'),
+    (3, 'Blechkasse 1'),
+    (4, 'Blechkasse 1'),
+    (5, 'Blechkasse 1'),
+    (6, 'Blechkasse 1'),
+    (7, 'Blechkasse 1');
+
 commit;
 

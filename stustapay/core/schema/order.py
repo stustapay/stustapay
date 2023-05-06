@@ -15,6 +15,7 @@ class OrderType(enum.Enum):
     top_up = "top_up"
     pay_out = "pay_out"
     ticket = "ticket"
+    money_transfer = "money_transfer"
 
 
 class PaymentMethod(enum.Enum):
