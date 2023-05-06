@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, status
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.terminal import TerminalConfig
-from stustapay.core.schema.till import CashRegisterStocking, CashRegister
+from stustapay.core.schema.till import CashRegisterStocking, CashRegister, UserInfo
 from stustapay.core.util import BaseModel
 
 router = APIRouter(
@@ -77,3 +77,12 @@ async def stock_up_cash_register(
         cashier_tag_uid=payload.cashier_tag_uid,
         cash_register_id=payload.cash_register_id,
     )
+
+
+class UserInfoPayload(BaseModel):
+    user_tag_uid: int
+
+
+@router.post("/user-info", summary="Obtain information about a user tag", response_model=UserInfo)
+async def user_info(token: CurrentAuthToken, payload: UserInfoPayload, till_service: ContextTillService):
+    return await till_service.get_user_info(token=token, user_tag_uid=payload.user_tag_uid)

@@ -15,7 +15,7 @@ from stustapay.core.schema.terminal import (
     ENTRY_U18_BUTTON_ID,
     ENTRY_U16_BUTTON_ID,
 )
-from stustapay.core.schema.till import NewTill, Till, TillProfile
+from stustapay.core.schema.till import NewTill, Till, TillProfile, UserInfo
 from stustapay.core.schema.user import Privilege, UserTag, UserRole, CurrentUser
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
@@ -259,6 +259,29 @@ class TillService(DBService):
             current_terminal.till.id,
         )
         return t_id is not None
+
+    @with_db_transaction
+    @requires_terminal()
+    async def get_user_info(
+        self, *, conn: asyncpg.Connection, current_user: CurrentUser, user_tag_uid: int
+    ) -> UserInfo:
+        if Privilege.cashier_management not in current_user.privileges and user_tag_uid != current_user.user_tag_uid:
+            raise AccessDenied("cannot retrieve user info for someone other than yourself")
+
+        row = await conn.fetchrow(
+            "select "
+            "   u.*, "
+            "   cash_a.balance as cash_drawer_balance, "
+            "   transp_a.balance as transport_account_balance "
+            "from user_with_roles u "
+            "left join account cash_a on cash_a.id = u.cashier_account_id "
+            "left join account transp_a on transp_a.id = u.cashier_account_id "
+            "where u.user_tag_uid = $1",
+            user_tag_uid,
+        )
+        if row is None:
+            raise NotFound(element_typ="user_tag", element_id=str(user_tag_uid))
+        return UserInfo.parse_obj(row)
 
     @staticmethod
     async def _construct_ticket_buttons(*, conn: asyncpg.Connection) -> list[TerminalButton]:

@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from stustapay.core.schema.user import UserWithoutId
+
 
 class NewTillButton(BaseModel):
     name: str
@@ -84,3 +86,9 @@ class NewCashRegisterStocking(BaseModel):
 class CashRegisterStocking(NewCashRegisterStocking):
     id: int
     total: float
+
+
+class UserInfo(UserWithoutId):
+    user_tag_uid: int
+    cash_drawer_balance: Optional[float] = None
+    transport_account_balance: Optional[float] = None
