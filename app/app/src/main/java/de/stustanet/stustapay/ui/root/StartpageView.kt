@@ -1,17 +1,10 @@
 package de.stustanet.stustapay.ui.root
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
@@ -73,7 +66,9 @@ fun StartpageView(
         }
 
         Column(
-            modifier = Modifier.fillMaxSize().padding(top = 5.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 5.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             val title = uiState.title()
@@ -92,41 +87,48 @@ fun StartpageView(
 
             LoginProfile(viewModel)
 
-            for (item in startpageItems) {
-                if (uiState.checkAccess(item.canAccess)) {
-                    StartpageEntry(item = item, navigateTo = navigateTo)
+            Column(verticalArrangement = Arrangement.Bottom) {
+                val scroll = rememberScrollState()
+                Column(Modifier.verticalScroll(state = scroll).weight(1.0f)) {
+                    for (item in startpageItems) {
+                        if (uiState.checkAccess(item.canAccess)) {
+                            StartpageEntry(item = item, navigateTo = navigateTo)
+                        }
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.weight(1.0f))
-            Divider()
+                Divider()
 
-            StartpageEntry(
-                item = StartpageItem(
-                    icon = Icons.Filled.Person,
-                    navDestination = RootNavDests.user,
-                    label = "User",
-                ),
-                navigateTo = navigateTo
-            )
-            StartpageEntry(
-                item = StartpageItem(
-                    icon = Icons.Filled.Settings,
-                    label = "Settings",
-                    navDestination = RootNavDests.settings,
-                ),
-                navigateTo = navigateTo
-            )
-
-            if (uiState.checkAccess { u, _ -> Access.canHackTheSystem(u) }) {
                 StartpageEntry(
                     item = StartpageItem(
-                        icon = Icons.Filled.Send,
-                        label = "Development",
-                        navDestination = RootNavDests.development,
+                        icon = Icons.Filled.Person,
+                        navDestination = RootNavDests.user,
+                        label = "User",
                     ),
                     navigateTo = navigateTo
                 )
+
+                if (uiState.checkAccess { u, _ -> Access.canChangeConfig(u) } || uiState.notConfigured()) {
+                    StartpageEntry(
+                        item = StartpageItem(
+                            icon = Icons.Filled.Settings,
+                            label = "Settings",
+                            navDestination = RootNavDests.settings,
+                        ),
+                        navigateTo = navigateTo
+                    )
+                }
+
+                if (uiState.checkAccess { u, _ -> Access.canHackTheSystem(u) }) {
+                    StartpageEntry(
+                        item = StartpageItem(
+                            icon = Icons.Filled.Send,
+                            label = "Development",
+                            navDestination = RootNavDests.development,
+                        ),
+                        navigateTo = navigateTo
+                    )
+                }
             }
         }
     }

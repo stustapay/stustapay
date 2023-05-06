@@ -45,5 +45,5 @@ async def change_transport_account_balance(
     token: CurrentAuthToken, till_service: ContextTillService, payload: TransportAccountChangePayload
 ):
     return await till_service.register.modify_transport_account_balance(
-        token=token, cashier_tag_uid=payload.orga_tag_uid, amount=payload.amount
+        token=token, orga_tag_uid=payload.orga_tag_uid, amount=payload.amount
     )

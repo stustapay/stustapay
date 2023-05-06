@@ -183,7 +183,7 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                             modifier = Modifier
                                 .fillMaxWidth(),
                             onClick = {
-                                viewModel.startSwap((uiState.state as CustomerStatusRequestState.Done).customer.id)
+                                viewModel.startSwap((uiState.state as CustomerStatusRequestState.Done).customer.user_tag_uid)
                             }
                         ) {
                             Text("Swap", fontSize = 24.sp)
@@ -203,11 +203,15 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                             .padding(10.dp),
                         onClick = {
                             try {
-                                viewModel.completeSwap(
-                                    (uiState.state as CustomerStatusRequestState.Swap).id,
-                                    targetId.toULong()
-                                )
-                                targetId = ""
+                                scope.launch {
+                                    try {
+                                        viewModel.completeSwap(
+                                            targetId.toULong(),
+                                            (uiState.state as CustomerStatusRequestState.Swap).newTagId
+                                        )
+                                        targetId = ""
+                                    } catch (_: java.lang.NumberFormatException) {}
+                                }
                             } catch (e: java.lang.NumberFormatException) {
                                 e.printStackTrace()
                             }

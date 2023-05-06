@@ -290,11 +290,14 @@ enum class OrderType {
     @SerialName("cancel_sale")
     CancelSale,
 
-    @SerialName("topup_cash")
-    TopupCash,
+    @SerialName("top_up")
+    Topup,
 
-    @SerialName("topup_sumup")
-    TopupSumup,
+    @SerialName("pay_out")
+    Payout,
+
+    @SerialName("ticket")
+    Ticket
 }
 
 

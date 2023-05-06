@@ -19,6 +19,7 @@ import de.stustanet.stustapay.ui.nav.navigateTo
 object UserNavDest {
     val info = NavDest("info")
     val create = NavDest("create")
+    val update = NavDest("update")
 }
 
 
@@ -28,8 +29,7 @@ object UserNavDest {
 @Preview
 @Composable
 fun UserView(
-    leaveView: () -> Unit = {},
-    viewModel: UserViewModel = hiltViewModel()
+    leaveView: () -> Unit = {}, viewModel: UserViewModel = hiltViewModel()
 ) {
 
     val navController = rememberNavController()
@@ -54,11 +54,19 @@ fun UserView(
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
             composable(UserNavDest.info.route) {
-                UserLoginView(viewModel) {
-                    navController.navigateTo(
-                        UserNavDest.create.route
-                    )
-                }
+                UserLoginView(
+                    viewModel,
+                    goToUserCreateView = {
+                        navController.navigateTo(
+                            UserNavDest.create.route
+                        )
+                    },
+                    goToUserUpdateView = {
+                        navController.navigateTo(
+                            UserNavDest.update.route
+                        )
+                    }
+                )
             }
             composable(UserNavDest.create.route) {
                 UserCreateView(viewModel) {
@@ -67,7 +75,13 @@ fun UserView(
                     )
                 }
             }
+            composable(UserNavDest.update.route) {
+                UserUpdateView(viewModel) {
+                    navController.navigateTo(
+                        UserNavDest.info.route
+                    )
+                }
+            }
         }
     }
-
 }

@@ -31,6 +31,13 @@ class TerminalHTTPAPI @Inject constructor(
         return client.get("health", basePath = apiUrl)
     }
 
+    override suspend fun getCashierStockings(): Response<List<CashierStocking>> {
+        return client.get("cash-register-stockings")
+    }
+
+    override suspend fun equipCashier(equip: CashierEquip): Response<Unit> {
+        return client.post("stock-up-cash-register") { equip }
+    }
 
     // order
     override suspend fun listOrders(): Response<List<Order>> {
@@ -121,15 +128,37 @@ class TerminalHTTPAPI @Inject constructor(
         return client.post<Unit, Unit>("user/logout")
     }
 
+    override suspend fun userCreate(newUser: NewUser): Response<CurrentUser> {
+        return client.post("user/create-user") { newUser }
+    }
+
+    override suspend fun userUpdate(updateUser: UpdateUser): Response<CurrentUser> {
+        return client.post("user/update-user-roles") { updateUser }
+    }
+
+    override suspend fun grantVouchers(grant: GrantVouchers): Response<Account> {
+        return client.post("user/grant-vouchers") { grant }
+    }
+
+    // customer
     override suspend fun getCustomer(id: ULong): Response<Account> {
         return client.get("customer/$id")
     }
 
-    override suspend fun userCreateCashier(newUser: NewUser): Response<CurrentUser> {
-        return client.post("user/create_cashier") { newUser }
+    override suspend fun switchTag(switch: SwitchTag): Response<Unit> {
+        return client.post("customer/switch_tag") { switch }
     }
 
-    override suspend fun userCreateFinanzorga(newUser: NewUser): Response<CurrentUser> {
-        return client.post("user/create_finanzorga") { newUser }
+    // cashier
+    override suspend fun bookTransport(change: AccountChange): Response<Unit> {
+        return client.post("change-cash-register-balance") { change }
+    }
+
+    override suspend fun bookVault(change: TransportAccountChange): Response<Unit> {
+        return client.post("change-transport-register-balance") { change }
+    }
+
+    override suspend fun getCashierInfo(tag: UserInfoPayload): Response<UserInfo> {
+        return client.post("user-info") { tag }
     }
 }

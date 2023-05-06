@@ -33,6 +33,16 @@ interface TerminalAPI {
      */
     suspend fun getHealthStatus(apiUrl: String): Response<HealthStatus>
 
+    /**
+     * Get possible cashier stockings.
+     */
+    suspend fun getCashierStockings(): Response<List<CashierStocking>>
+
+    /**
+     * Equip a cashier with a specific stocking.
+     */
+    suspend fun equipCashier(equip: CashierEquip): Response<Unit>
+
     // order
     /**
      * List orders of this till.
@@ -125,17 +135,44 @@ interface TerminalAPI {
     suspend fun userLogout(): Response<Unit>
 
     /**
+     * Create a user with specific roles.
+     */
+    suspend fun userCreate(newUser: NewUser): Response<CurrentUser>
+
+    /**
+     * Change a user's roles.
+     */
+    suspend fun userUpdate(updateUser: UpdateUser): Response<CurrentUser>
+
+    /**
+     * Grant drink vouchers to a customer tag
+     */
+    suspend fun grantVouchers(grant: GrantVouchers): Response<Account>
+
+    // customer
+    /**
      * Get the account status for a customer tag.
      */
     suspend fun getCustomer(id: ULong): Response<Account>
 
     /**
-     * Create a user with cashier privileges.
+     * Move customer account to a new tag.
      */
-    suspend fun userCreateCashier(newUser: NewUser): Response<CurrentUser>
+    suspend fun switchTag(switch: SwitchTag): Response<Unit>
+
+    // cashier
+    /**
+     * Move cash between a cashier and a bag.
+     */
+    suspend fun bookTransport(change: AccountChange): Response<Unit>
 
     /**
-     * Create a user with Finanzorga privileges.
+     * Move cash between a bag and the vault.
      */
-    suspend fun userCreateFinanzorga(newUser: NewUser): Response<CurrentUser>
+    suspend fun bookVault(change: TransportAccountChange): Response<Unit>
+
+    /**
+     * Get information about cashier / orga accounts.
+     */
+    suspend fun getCashierInfo(tag: UserInfoPayload): Response<UserInfo>
 }

@@ -35,14 +35,15 @@ data class UserTag(
 @Serializable
 data class NewUser(
     val login: String,
-    val user_tag_uid: ULong
+    val user_tag_uid: ULong,
+    val role_names: List<String>
 )
 
 @Serializable
-enum class UserKind(val label: String) {
-    Cashier("Cashier"),
-    Finanzorga("Finanzorga")
-}
+data class UpdateUser(
+    val user_tag_uid: ULong,
+    val role_names: List<String>
+)
 
 @Serializable
 data class LoginPayload(
