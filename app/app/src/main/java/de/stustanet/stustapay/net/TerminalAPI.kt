@@ -159,4 +159,15 @@ interface TerminalAPI {
      * Move customer account to a new tag.
      */
     suspend fun switchTag(switch: SwitchTag): Response<Unit>
+
+    // cashier
+    /**
+     * Move cash between a cashier and a bag.
+     */
+    suspend fun bookTransport(change: AccountChange): Response<Unit>
+
+    /**
+     * Move cash between a bag and the vault.
+     */
+    suspend fun bookVault(change: TransportAccountChange): Response<Unit>
 }

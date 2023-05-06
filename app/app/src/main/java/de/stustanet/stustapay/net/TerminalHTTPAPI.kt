@@ -148,4 +148,13 @@ class TerminalHTTPAPI @Inject constructor(
     override suspend fun switchTag(switch: SwitchTag): Response<Unit> {
         return client.post("customer/switch_tag") { switch }
     }
+
+    // cashier
+    override suspend fun bookTransport(change: AccountChange): Response<Unit> {
+        return client.post("change-cash-register-balance") { change }
+    }
+
+    override suspend fun bookVault(change: TransportAccountChange): Response<Unit> {
+        return client.post("change-transport-register-balance") { change }
+    }
 }

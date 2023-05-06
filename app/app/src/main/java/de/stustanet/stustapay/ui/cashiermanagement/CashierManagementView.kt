@@ -17,7 +17,10 @@ import de.stustanet.stustapay.ui.nav.NavScaffold
 import de.stustanet.stustapay.ui.nav.navigateTo
 
 @Composable
-fun CashierManagementView(viewModel: CashierManagementViewModel = hiltViewModel(), leaveView: () -> Unit) {
+fun CashierManagementView(
+    viewModel: CashierManagementViewModel = hiltViewModel(),
+    leaveView: () -> Unit
+) {
     val nav = rememberNavController()
 
     LaunchedEffect(nav) {
@@ -36,26 +39,58 @@ fun CashierManagementView(viewModel: CashierManagementViewModel = hiltViewModel(
                     .padding(10.dp)
             ) {
                 Button(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
                     onClick = { nav.navigateTo(CashierManagementNavDests.Equip.route) }
                 ) {
-                    Text("Equip Cashier", fontSize = 24.sp)
+                    Text(CashierManagementNavDests.Equip.title, fontSize = 24.sp)
+                }
+                Button(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                    onClick = { nav.navigateTo(CashierManagementNavDests.Transport.route) }
+                ) {
+                    Text(CashierManagementNavDests.Transport.title, fontSize = 24.sp)
+                }
+                Button(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                    onClick = { nav.navigateTo(CashierManagementNavDests.Vault.route) }
+                ) {
+                    Text(CashierManagementNavDests.Vault.title, fontSize = 24.sp)
                 }
             }
         }
         composable(CashierManagementNavDests.Equip.route) {
             NavScaffold(
-                title = { Text("Equip Cashier") },
+                title = { Text(CashierManagementNavDests.Equip.title) },
                 navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) }) {
                 Box(modifier = Modifier.padding(it)) {
                     CashierManagementEquipView(viewModel = viewModel)
                 }
             }
         }
+        composable(CashierManagementNavDests.Transport.route) {
+            NavScaffold(
+                title = { Text(CashierManagementNavDests.Transport.title) },
+                navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) }) {
+                Box(modifier = Modifier.padding(it)) {
+                    CashierManagementTransportView(viewModel = viewModel)
+                }
+            }
+        }
+        composable(CashierManagementNavDests.Vault.route) {
+            NavScaffold(
+                title = { Text(CashierManagementNavDests.Vault.title) },
+                navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) }) {
+                Box(modifier = Modifier.padding(it)) {
+                    CashierManagementVaultView(viewModel = viewModel)
+                }
+            }
+        }
     }
 }
 
-enum class CashierManagementNavDests(val route: String) {
-    Main("main"),
-    Equip("equip")
+enum class CashierManagementNavDests(val route: String, val title: String) {
+    Main("main", "Main"),
+    Equip("equip", "Equip Cashier"),
+    Transport("transport", "Transport"),
+    Vault("vault", "Vault")
 }

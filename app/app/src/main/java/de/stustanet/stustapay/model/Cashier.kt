@@ -1,6 +1,7 @@
 package de.stustanet.stustapay.model
 
 import kotlinx.serialization.Serializable
+import java.util.zip.DeflaterOutputStream
 
 @Serializable
 data class CashierEquip(
@@ -28,4 +29,16 @@ data class CashierStocking(
     val variable_in_euro: Double = 0.0,
     val id: ULong = 0uL,
     val total: Double = 0.0
+)
+
+@Serializable
+data class AccountChange(
+    val cashier_tag_uid: ULong,
+    val amount: Double
+)
+
+@Serializable
+data class TransportAccountChange(
+    val orga_tag_uid: ULong,
+    val amount: Double
 )
