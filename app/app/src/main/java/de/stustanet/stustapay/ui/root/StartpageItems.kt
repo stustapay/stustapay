@@ -48,5 +48,11 @@ val startpageItems = listOf(
         label = "Cashier Management",
         navDestination = RootNavDests.cashierManagement,
         canAccess = { u, _ -> Access.canManageCashiers(u) }
+    ),
+    StartpageItem(
+        icon = Icons.Filled.Info,
+        label = "Cashier Status",
+        navDestination = RootNavDests.cashierStatus,
+        canAccess = { _, _ -> true }
     )
 )

@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.ui.cashiermanagement.CashierManagementView
+import de.stustanet.stustapay.ui.cashierstatus.CashierStatusView
 import de.stustanet.stustapay.ui.debug.DebugView
 import de.stustanet.stustapay.ui.history.SaleHistoryView
 import de.stustanet.stustapay.ui.nav.NavChangeHandler
@@ -71,6 +72,9 @@ fun RootView(uictrl: SysUiController? = null) {
         }
         composable(RootNavDests.cashierManagement.route) {
             CashierManagementView(leaveView = { navController.navigateUp() })
+        }
+        composable(RootNavDests.cashierStatus.route) {
+            CashierStatusView(leaveView = { navController.navigateUp() })
         }
     }
 }
