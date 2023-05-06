@@ -99,7 +99,8 @@ class TSEWrapper:
                 await self._till_add(till)
         # Unregister all of the extra tills
         for till in sorted(extra_tills):
-            await self._till_remove(till)
+            pass
+            # await self._till_remove(till)
 
         # The TSE is now ready to be used.
         # Ready to execute signatures from the database.

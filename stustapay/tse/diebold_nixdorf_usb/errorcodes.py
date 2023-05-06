@@ -21,6 +21,7 @@ errors = {
     32: "JSON_CODE_ERROR_PARAMETER_USER_BLOCKED",
     33: "JSON_CODE_ERROR_PARAMETER_PUK_BLOCKED --- now you are fucked!",
     34: "JSON_CODE_ERROR_PARAMETER_PASSWORD_SAME",
+    1337: "ClientID name not allowed (reserved as Production-ClientID)",
     5017: "ERROR_NO_ORDER",
 }
 
