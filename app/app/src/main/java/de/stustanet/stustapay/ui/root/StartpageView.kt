@@ -100,7 +100,7 @@ fun StartpageView(
                 navigateTo = navigateTo
             )
 
-            if (uiState.checkAccess { u, _ -> Access.canChangeConfig(u) }) {
+            if (uiState.checkAccess { u, _ -> Access.canChangeConfig(u) } || uiState.notConfigured()) {
                 StartpageEntry(
                     item = StartpageItem(
                         icon = Icons.Filled.Settings,

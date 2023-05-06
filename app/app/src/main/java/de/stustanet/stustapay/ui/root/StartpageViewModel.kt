@@ -3,8 +3,8 @@ package de.stustanet.stustapay.ui.root
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustanet.stustapay.model.TerminalConfig
 import de.stustanet.stustapay.model.CurrentUser
+import de.stustanet.stustapay.model.TerminalConfig
 import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TerminalConfigState
@@ -20,6 +20,7 @@ class StartPageUiState(
     private val terminal: TerminalConfigState = TerminalConfigState.Loading
 ) {
     data class StartTitle(val title: String, val subtitle: String? = null)
+
     fun title(): StartTitle {
         return if (terminal is TerminalConfigState.Success) {
             StartTitle(terminal.config.name, terminal.config.description)
@@ -27,12 +28,17 @@ class StartPageUiState(
             StartTitle("StuStaPay")
         }
     }
+
     fun checkAccess(access: (CurrentUser, TerminalConfig) -> Boolean): Boolean {
         return if (user is UserState.LoggedIn && terminal is TerminalConfigState.Success) {
             access(user.user, terminal.config)
         } else {
             false
         }
+    }
+
+    fun notConfigured(): Boolean {
+        return terminal !is TerminalConfigState.Success
     }
 }
 

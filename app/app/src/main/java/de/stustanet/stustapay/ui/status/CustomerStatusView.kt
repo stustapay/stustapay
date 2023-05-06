@@ -204,11 +204,13 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                         onClick = {
                             try {
                                 scope.launch {
-                                    viewModel.completeSwap(
-                                        targetId.toULong(),
-                                        (uiState.state as CustomerStatusRequestState.Swap).newTagId
-                                    )
-                                    targetId = ""
+                                    try {
+                                        viewModel.completeSwap(
+                                            targetId.toULong(),
+                                            (uiState.state as CustomerStatusRequestState.Swap).newTagId
+                                        )
+                                        targetId = ""
+                                    } catch (_: java.lang.NumberFormatException) {}
                                 }
                             } catch (e: java.lang.NumberFormatException) {
                                 e.printStackTrace()

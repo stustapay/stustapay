@@ -82,7 +82,7 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
                         .fillMaxWidth()
                         .padding(10.dp),
                     onClick = {
-                        if (0 < selected && selected < stockings.size) {
+                        if (0 <= selected && selected < stockings.size) {
                             scanState.open()
                         }
                     }
