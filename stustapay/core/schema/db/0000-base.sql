@@ -873,7 +873,7 @@ create table if not exists ordr (
 
     -- type of the order like, top up, buy beer,
     order_type text not null references order_type(name),
-    cancels_order bigint references ordr(id),
+    cancels_order bigint references ordr(id) unique,
     constraint only_cancel_orders_can_reference_orders check((order_type != 'cancel_sale') = (cancels_order is null)),
 
     -- who created it

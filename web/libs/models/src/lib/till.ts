@@ -117,3 +117,17 @@ export const TillRegisterStockingSchema = UpdateTillRegisterStockingSchema.merge
 );
 
 export type TillRegisterStocking = z.infer<typeof TillRegisterStockingSchema>;
+
+export const NewTillRegisterSchema = z.object({
+  name: z.string(),
+});
+
+export type NewTillRegister = z.infer<typeof NewTillRegisterSchema>;
+
+export const TillRegisterSchema = NewTillRegisterSchema.merge(
+  z.object({
+    id: z.number().int(),
+  })
+);
+
+export type TillRegister = z.infer<typeof TillRegisterSchema>;

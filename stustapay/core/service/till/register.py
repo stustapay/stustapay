@@ -132,11 +132,8 @@ class TillRegisterService(DBService):
         )
         return result != "DELETE 0"
 
-    @with_db_transaction
-    @requires_user([Privilege.till_management])
-    async def list_cash_registers(
-        self, *, conn: asyncpg.Connection, hide_assigned_registers=False
-    ) -> list[CashRegister]:
+    @staticmethod
+    async def _list_cash_registers(*, conn: asyncpg.Connection, hide_assigned_registers: bool) -> list[CashRegister]:
         if hide_assigned_registers:
             rows = await conn.fetch(
                 "select * "
@@ -149,10 +146,33 @@ class TillRegisterService(DBService):
         return [CashRegister.parse_obj(row) for row in rows]
 
     @with_db_transaction
+    @requires_terminal([Privilege.till_management])
+    async def list_cash_registers_terminal(
+        self, *, conn: asyncpg.Connection, hide_assigned_registers=False
+    ) -> list[CashRegister]:
+        return await self._list_cash_registers(conn=conn, hide_assigned_registers=hide_assigned_registers)
+
+    @with_db_transaction
+    @requires_user([Privilege.till_management])
+    async def list_cash_registers_admin(
+        self, *, conn: asyncpg.Connection, hide_assigned_registers=False
+    ) -> list[CashRegister]:
+        return await self._list_cash_registers(conn=conn, hide_assigned_registers=hide_assigned_registers)
+
+    @with_db_transaction
     @requires_user([Privilege.till_management])
     async def create_cash_register(self, *, conn: asyncpg.Connection, new_register: NewCashRegister) -> CashRegister:
         row = await conn.fetchrow("insert into cash_register (name) values ($1) returning id, name", new_register.name)
         return CashRegister.parse_obj(row)
+
+    @with_db_transaction
+    @requires_user([Privilege.till_management])
+    async def delete_cash_register(self, *, conn: asyncpg.Connection, register_id: int):
+        result = await conn.execute(
+            "delete from cash_register where id = $1",
+            register_id,
+        )
+        return result != "DELETE 0"
 
     @with_retryable_db_transaction()
     @requires_terminal([Privilege.cashier_management])

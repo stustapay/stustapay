@@ -8,4 +8,5 @@ export * from "./configApi";
 export * from "./orderApi";
 export * from "./accountApi";
 export * from "./cashierApi";
+export * from "./tillRegisterApi";
 export * from "./tillRegisterStockingApi";

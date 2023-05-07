@@ -42,6 +42,7 @@ import {
   TillRegisterStockingCreate,
   TillRegisterStockingUpdate,
 } from "./routes/till-register-stocking";
+import { TillRegisterList, TillRegisterCreate } from "./routes/till-registers";
 
 const router = createBrowserRouter([
   {
@@ -165,7 +166,20 @@ const router = createBrowserRouter([
           },
         ],
       },
-
+      {
+        path: "till-registers",
+        element: <PrivilegeGuard privilege="till_management" />,
+        children: [
+          {
+            path: "",
+            element: <TillRegisterList />,
+          },
+          {
+            path: "new",
+            element: <TillRegisterCreate />,
+          },
+        ],
+      },
       {
         path: "till-layouts",
         element: <PrivilegeGuard privilege="till_management" />,
