@@ -18,17 +18,17 @@ enum class ProductRestriction() {
 @Serializable
 data class Product(
     // NewProduct
-    val name: String,
-    val price: Double?,
+    val name: String = "",
+    val price: Double? = null,
     val fixed_price: Boolean = true,
     val price_in_vouchers: Int? = null,
-    val tax_name: String,
+    val tax_name: String = "",
     val restrictions: List<ProductRestriction> = listOf(),
     val is_locked: Boolean = false,
     val is_returnable: Boolean = false,
     val target_account_id: Int? = null,
 
     // Product
-    val id: Int,
-    val tax_rate: Double,
+    val id: Int = 0,
+    val tax_rate: Double = 0.0,
 )
