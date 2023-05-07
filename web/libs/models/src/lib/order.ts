@@ -13,7 +13,13 @@ export const LineItemSchema = z.object({
 
 export type LineItem = z.infer<typeof LineItemSchema>;
 
-export const OrderTypeSchema = z.union([z.literal("sale"), z.literal("topup_cash"), z.literal("topup_sumup")]);
+export const OrderTypeSchema = z.union([
+  z.literal("sale"),
+  z.literal("cancel_sale"),
+  z.literal("top_up"),
+  z.literal("pay_out"),
+  z.literal("ticket"),
+]);
 
 export type OrderType = z.infer<typeof OrderTypeSchema>;
 
@@ -22,8 +28,8 @@ export const OrderSchema = z.object({
   uuid: z.string().uuid(),
   item_count: z.number(),
   booked_at: z.string().datetime({ offset: true }),
-  payment_method: z.string().nullable(),
-  order_type: OrderTypeSchema.nullable(),
+  payment_method: z.string(),
+  order_type: OrderTypeSchema,
   total_price: z.number(),
   total_tax: z.number(),
   total_no_tax: z.number(),

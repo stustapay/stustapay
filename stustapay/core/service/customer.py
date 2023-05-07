@@ -27,7 +27,7 @@ class CustomerService(DBService):
     async def login_customer(self, *, conn: asyncpg.Connection, uid: int, pin: str) -> Optional[CustomerLoginSuccess]:
         # Customer has hardware tag and pin
         row = await conn.fetchrow(
-            "select a.* from user_tag u join account a on u.uid = a.user_tag_uid where u.uid = $1 and u.pin = $2",
+            "select c.* from user_tag u join customer c on u.uid = c.user_tag_uid where u.uid = $1 and u.pin = $2",
             uid,
             pin,
         )

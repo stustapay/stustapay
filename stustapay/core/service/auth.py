@@ -89,9 +89,9 @@ class AuthService(DBService):
             return None
 
         row = await conn.fetchrow(
-            "select a.*, s.id as session_id "
-            "from account a join customer_session s on a.id = s.customer "
-            "where a.id = $1 and s.id = $2",
+            "select c.*, s.id as session_id "
+            "from customer c join customer_session s on c.id = s.customer "
+            "where c.id = $1 and s.id = $2",
             token_payload.customer_id,
             token_payload.session_id,
         )

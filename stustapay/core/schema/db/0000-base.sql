@@ -168,6 +168,14 @@ create table if not exists cash_register (
     name text not null
 );
 
+-- customer iban bank accounts
+create table if not exists customer_info (
+    customer_account_id bigint primary key references account(id),
+    iban text,
+    account_name text,
+    email text
+);
+
 -- people working with the payment system
 create table if not exists usr (
     id bigint primary key generated always as identity,
@@ -983,6 +991,16 @@ create or replace view order_value as
             on (ordr.id = line_item_json.order_id)
     group by
         ordr.id;
+
+-- aggregates account and customer_info to customer
+create or replace view customer as
+    select
+        account.*,
+        customer_info.*
+    from
+        account
+        left join customer_info
+            on (account.id = customer_info.customer_account_id);
 
 -- show all line items
 create or replace view order_items as
