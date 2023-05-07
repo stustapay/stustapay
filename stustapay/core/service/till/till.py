@@ -275,7 +275,7 @@ class TillService(DBService):
             "   transp_a.balance as transport_account_balance "
             "from user_with_roles u "
             "left join account cash_a on cash_a.id = u.cashier_account_id "
-            "left join account transp_a on transp_a.id = u.cashier_account_id "
+            "left join account transp_a on transp_a.id = u.transport_account_id "
             "where u.user_tag_uid = $1",
             user_tag_uid,
         )
