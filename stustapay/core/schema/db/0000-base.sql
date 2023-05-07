@@ -732,7 +732,23 @@ create table if not exists cash_register_stocking (
         cent2 * 1.0 +
         cent1 * 0.5 +
         variable_in_euro
-    ) stored
+    ) stored,
+    constraint non_negative_stockings check
+        (euro200 >= 0 and
+         euro100 >= 0 and
+         euro50 >= 0 and
+         euro20 >= 0 and
+         euro10 >= 0 and
+         euro5 >= 0 and
+         euro2 >= 0 and
+         euro1 >= 0 and
+         cent50 >= 0 and
+         cent20 >= 0 and
+         cent10 >= 0 and
+         cent5 >= 0 and
+         cent2 >= 0 and
+         cent1 >= 0 and
+         variable_in_euro >= 0)
 );
 comment on column cash_register_stocking.euro2 is 'number of rolls, one roll = 25 pcs = 50€';
 comment on column cash_register_stocking.euro1 is 'number of rolls, one roll = 25 pcs = 25€';
