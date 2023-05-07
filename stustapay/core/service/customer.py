@@ -5,16 +5,14 @@ from typing import Optional, List
 import asyncpg
 from pydantic import BaseModel
 from stustapay.core.config import Config
-from stustapay.core.schema.account import Account
 from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon
-from stustapay.core.schema.order import Order
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_customer,
     with_db_transaction,
 )
-from stustapay.core.service.common.error import InvalidArgument, NotFound
+from stustapay.core.service.common.error import InvalidArgument
 from schwifty import IBAN
 
 
@@ -22,7 +20,7 @@ class CustomerLoginSuccess(BaseModel):
     customer: Customer
     token: str
 
-    
+
 class CustomerBankData(BaseModel):
     iban: str
     account_name: str
@@ -30,21 +28,30 @@ class CustomerBankData(BaseModel):
     user_tag_uid: int
     balance: float
 
-    
+
 async def get_customer_bank_data(db_pool: asyncpg.Pool) -> List[CustomerBankData]:
     async with db_pool.acquire() as conn:
-        rows = await conn.fetch("select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance from customer c where c.iban is not null")
+        rows = await conn.fetch(
+            "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance from customer c where c.iban is not null"
+        )
         return [CustomerBankData.parse_obj(row) for row in rows]
 
 
 def csv_export(customers_bank_data: list[CustomerBankData], output_path: str) -> None:
-    with open(output_path, 'w', newline='') as f:
+    with open(output_path, "w", newline="") as f:
         writer = csv.writer(f)
         fields = ["beneficiary_name", "iban", "amount", "currency", "reference"]
         writer.writerow(fields)
         for customer in customers_bank_data:
-            writer.writerow([customer.account_name, customer.iban, customer.balance, "EUR", f"StuStaCulum, TagID: {customer.user_tag_uid}"])
-    
+            writer.writerow(
+                [
+                    customer.account_name,
+                    customer.iban,
+                    customer.balance,
+                    "EUR",
+                    f"StuStaCulum, TagID: {customer.user_tag_uid}",
+                ]
+            )
 
 
 class CustomerService(DBService):
@@ -93,36 +100,40 @@ class CustomerService(DBService):
         )
         return result != "DELETE 0"
 
-
     @with_db_transaction
     @requires_customer
-    async def get_customer(self, *, conn: asyncpg.Connection, current_customer: Customer) -> Optional[Customer]:
+    async def get_customer(self, *, current_customer: Customer) -> Optional[Customer]:
         return current_customer
 
-        
     @with_db_transaction
     @requires_customer
-    async def get_orders_with_bon(self, *, conn: asyncpg.Connection, current_customer: Customer) -> Optional[List[OrderWithBon]]:
-        rows = await conn.fetch("select * from order_value_with_bon where customer_account_id = $1 order by booked_at DESC", current_customer.id)
+    async def get_orders_with_bon(
+        self, *, conn: asyncpg.Connection, current_customer: Customer
+    ) -> Optional[List[OrderWithBon]]:
+        rows = await conn.fetch(
+            "select * from order_value_with_bon where customer_account_id = $1 order by booked_at DESC",
+            current_customer.id,
+        )
         if rows is None:
             return None
         orders_with_bon: List[OrderWithBon] = [OrderWithBon.parse_obj(row) for row in rows]
         for order_with_bon in orders_with_bon:
             if order_with_bon.bon_output_file is not None:
-                order_with_bon.bon_output_file = self.cfg.customer_portal.base_bon_url.format(bon_output_file=order_with_bon.bon_output_file)
+                order_with_bon.bon_output_file = self.cfg.customer_portal.base_bon_url.format(
+                    bon_output_file=order_with_bon.bon_output_file
+                )
         return orders_with_bon
-            
 
     @with_db_transaction
     @requires_customer
-    async def update_customer_info(self, *, conn: asyncpg.Connection, current_customer: Customer,
-                                   customer_bank: CustomerBank) -> None:
+    async def update_customer_info(
+        self, *, conn: asyncpg.Connection, current_customer: Customer, customer_bank: CustomerBank
+    ) -> None:
         # check iban
         try:
             IBAN(customer_bank.iban)
-        except ValueError:
-            raise InvalidArgument("Provided IBAN is not valid")
-        
+        except ValueError as exc:
+            raise InvalidArgument("Provided IBAN is not valid") from exc
 
         # if customer_info does not exist create it, otherwise update it
         result = await conn.execute(
@@ -130,12 +141,10 @@ class CustomerService(DBService):
             current_customer.id,
             customer_bank.iban,
             customer_bank.account_name,
-            customer_bank.email
+            customer_bank.email,
         )
         if result.rowcount == 0:
             raise InvalidArgument("Could not update customer account data")
 
     def data_privacy_url(self) -> str:
         return self.cfg.customer_portal.data_privacy_url
-            
-        

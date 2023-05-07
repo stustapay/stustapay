@@ -1,14 +1,11 @@
 """
 some basic api endpoints.
 """
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
-from stustapay.core.http.context import ContextCustomerService, ContextTillService
-from stustapay.core.schema.account import Account
+from stustapay.core.http.context import ContextCustomerService
 from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon
-from stustapay.core.schema.order import Order
-from stustapay.core.schema.terminal import TerminalConfig
 
 router = APIRouter(
     prefix="",
@@ -23,7 +20,7 @@ router = APIRouter(
 
 @router.get("/customer", summary="Obtain customer", response_model=Customer)
 async def get_customer(
-    token: CurrentAuthToken, 
+    token: CurrentAuthToken,
     customer_service: ContextCustomerService,
 ):
     return await customer_service.get_customer(token=token)
@@ -31,22 +28,22 @@ async def get_customer(
 
 @router.get("/orders_with_bon", summary="Obtain customer orders", response_model=list[OrderWithBon])
 async def get_orders(
-    token: CurrentAuthToken, 
+    token: CurrentAuthToken,
     customer_service: ContextCustomerService,
 ):
     return await customer_service.get_orders_with_bon(token=token)
 
-@router.post("/customer_info", summary="set iban, account name and email",
-    status_code=status.HTTP_204_NO_CONTENT)
+
+@router.post("/customer_info", summary="set iban, account name and email", status_code=status.HTTP_204_NO_CONTENT)
 async def update_customer_info(
-    token: CurrentAuthToken, 
+    token: CurrentAuthToken,
     customer_service: ContextCustomerService,
     customer_bank: CustomerBank,
 ):
     await customer_service.update_customer_info(customer_bank=customer_bank, token=token)
 
-@router.get("/data_privacy_url", summary="get the url where data privacy is statically hosted",
-    response_model=str)
+
+@router.get("/data_privacy_url", summary="get the url where data privacy is statically hosted", response_model=str)
 async def get_data_privacy_url(
     customer_service: ContextCustomerService,
 ):

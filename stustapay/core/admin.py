@@ -61,7 +61,6 @@ class AdminCli(SubCommand):
         csv_export(customers_bank_data, "customers_bank_data.csv")
         logging.info("Exported customers' bank data to customers_bank_data.csv")
 
-
     async def run(self):
         db_pool = await database.create_db_pool(self.config.database)
         if self.action == "add-user":

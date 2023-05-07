@@ -34,6 +34,7 @@ class CoreConfig(BaseModel):
     jwt_token_algorithm: str = "HS256"
     sumup_affiliate_key: str = "unset"
 
+
 class CustomerPortalApiConfig(HTTPServerConfig):
     base_url: str
     host: str = "localhost"
