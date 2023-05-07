@@ -9,5 +9,12 @@ class Customer(Account):
     email: Optional[str]
 
     
+class CustomerBank(BaseModel):
+    iban: str
+    account_name: str
+    email: str
 
     
+class OrderWithBon(Order):
+    bon_generated: Optional[bool]
+    bon_output_file: Optional[str]

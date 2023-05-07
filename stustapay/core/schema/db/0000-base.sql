@@ -1253,6 +1253,15 @@ create table if not exists bon (
     output_file text
 );
 
+create or replace view order_value_with_bon as
+    select
+        o.*,
+        b.generated as bon_generated,
+        b.output_file as bon_output_file
+    from order_value o
+        left join bon b
+            on (o.id = b.id);
+
 
 -- wooh \o/
 commit;
