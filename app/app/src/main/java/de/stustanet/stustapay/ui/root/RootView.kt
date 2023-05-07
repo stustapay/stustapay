@@ -53,7 +53,7 @@ fun RootView(uictrl: SysUiController? = null) {
             TopUpView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.status.route) {
-            CustomerStatusView()
+            CustomerStatusView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.user.route) {
             UserView(leaveView = { navController.navigateUp() })
@@ -65,10 +65,10 @@ fun RootView(uictrl: SysUiController? = null) {
             DebugView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.history.route) {
-            SaleHistoryView()
+            SaleHistoryView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.vouchers.route) {
-            VouchersView()
+            VouchersView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.cashierManagement.route) {
             CashierManagementView(leaveView = { navController.navigateUp() })

@@ -12,8 +12,8 @@ class CashierRemoteDataSource @Inject constructor(
         return terminalAPI.getCashierStockings()
     }
 
-    suspend fun equipCashier(tagUid: ULong, stockingId: ULong): Response<Unit> {
-        return terminalAPI.equipCashier(CashierEquip(tagUid, stockingId))
+    suspend fun equipCashier(tagId: ULong, registerId: ULong, stockingId: ULong): Response<Unit> {
+        return terminalAPI.equipCashier(CashierEquip(tagId, registerId, stockingId))
     }
 
     suspend fun bookTransport(cashierTagId: ULong, amount: Double): Response<Unit> {
@@ -26,5 +26,9 @@ class CashierRemoteDataSource @Inject constructor(
 
     suspend fun getCashierInfo(tagId: ULong): Response<UserInfo> {
         return terminalAPI.getCashierInfo(UserInfoPayload(tagId))
+    }
+
+    suspend fun getRegisters(): Response<List<CashRegister>> {
+        return terminalAPI.listRegisters()
     }
 }

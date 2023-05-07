@@ -18,12 +18,14 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
     val scope = rememberCoroutineScope()
     val scanState = rememberNfcScanDialogState()
     val stockings by viewModel.stockings.collectAsStateWithLifecycle()
+    val registers by viewModel.registers.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
-    var selected by remember { mutableStateOf(0) }
+    var selectedStocking by remember { mutableStateOf(0) }
+    var selectedRegister by remember { mutableStateOf(0) }
 
     NfcScanDialog(state = scanState, onScan = {
         scope.launch {
-            viewModel.equip(it.uid, stockings[selected].id)
+            viewModel.equip(it.uid, registers[selectedRegister].id, stockings[selectedStocking].id)
         }
     })
 
@@ -31,35 +33,69 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
         content = { padding ->
             Box(modifier = Modifier.padding(padding)) {
                 Column(modifier = Modifier.padding(10.dp)) {
-                    var expanded by remember { mutableStateOf(false) }
+                    var stockingExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it },
-                        modifier = Modifier.fillMaxWidth()
+                        expanded = stockingExpanded,
+                        onExpandedChange = { stockingExpanded = it },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
                     ) {
                         TextField(
                             readOnly = true,
-                            value = stockings.getOrNull(selected)?.name.orEmpty(),
+                            value = stockings.getOrNull(selectedStocking)?.name.orEmpty(),
                             onValueChange = {},
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(
-                                    expanded = expanded
+                                    expanded = stockingExpanded
                                 )
                             },
                             colors = ExposedDropdownMenuDefaults.textFieldColors(),
                             modifier = Modifier.fillMaxWidth()
                         )
                         ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
+                            expanded = stockingExpanded,
+                            onDismissRequest = { stockingExpanded = false },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             for (i in stockings.indices) {
                                 DropdownMenuItem(onClick = {
-                                    selected = i
-                                    expanded = false
+                                    selectedStocking = i
+                                    stockingExpanded = false
                                 }, modifier = Modifier.fillMaxWidth()) {
                                     Text(stockings[i].name)
+                                }
+                            }
+                        }
+                    }
+
+                    var registerExpanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        expanded = registerExpanded,
+                        onExpandedChange = { registerExpanded = it },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+                    ) {
+                        TextField(
+                            readOnly = true,
+                            value = registers.getOrNull(selectedRegister)?.name.orEmpty(),
+                            onValueChange = {},
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = registerExpanded
+                                )
+                            },
+                            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = registerExpanded,
+                            onDismissRequest = { registerExpanded = false },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            for (i in registers.indices) {
+                                DropdownMenuItem(onClick = {
+                                    selectedRegister = i
+                                    registerExpanded = false
+                                }, modifier = Modifier.fillMaxWidth()) {
+                                    Text(registers[i].name)
                                 }
                             }
                         }
@@ -82,8 +118,10 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
                         .fillMaxWidth()
                         .padding(10.dp),
                     onClick = {
-                        if (0 <= selected && selected < stockings.size) {
-                            scanState.open()
+                        if (0 <= selectedStocking && selectedStocking < stockings.size) {
+                            if (0 <= selectedRegister && selectedRegister < registers.size) {
+                                scanState.open()
+                            }
                         }
                     }
                 ) {
