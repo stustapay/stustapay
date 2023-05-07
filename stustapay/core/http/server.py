@@ -4,6 +4,7 @@ http server base class
 
 import logging
 
+import asyncpg
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,8 +18,10 @@ from stustapay.core.http.error import (
     not_found_exception_handler,
     service_exception_handler,
     access_exception_handler,
+    unauthorized_exception_handler,
+    bad_request_exception_handler,
 )
-from stustapay.core.service.common.error import NotFound, ServiceException, AccessDenied
+from stustapay.core.service.common.error import NotFound, ServiceException, AccessDenied, Unauthorized
 
 
 class Server:
@@ -32,6 +35,10 @@ class Server:
         self.api.add_exception_handler(NotFound, not_found_exception_handler)
         self.api.add_exception_handler(ServiceException, service_exception_handler)
         self.api.add_exception_handler(AccessDenied, access_exception_handler)
+        self.api.add_exception_handler(Unauthorized, unauthorized_exception_handler)
+        self.api.add_exception_handler(
+            asyncpg.exceptions.IntegrityConstraintViolationError, bad_request_exception_handler
+        )
         self.api.add_exception_handler(Exception, exception_handler)
 
         if cors:
