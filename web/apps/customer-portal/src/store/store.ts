@@ -6,6 +6,7 @@ import { authSlice } from "./authSlice";
 import { uiSlice } from "./uiSlice";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { customerApi } from "@/api/customerApi";
 
 const authPersistConfig = {
   key: "auth",
@@ -24,11 +25,13 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [authSlice.name]: persistReducer(authPersistConfig, authSlice.reducer),
     [uiSlice.name]: persistReducer(uiPersistConfig, uiSlice.reducer),
+    [customerApi.reducerPath]: customerApi.reducer,
   }),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: { ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER] },
-    }).concat(authApi.middleware),
+    }).concat(authApi.middleware)
+    .concat(customerApi.middleware),
 });
 
 export const persistor = persistStore(store);
