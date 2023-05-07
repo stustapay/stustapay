@@ -8,7 +8,7 @@ const initialValues: NewTill = {
   name: "",
   description: "",
   tse_id: undefined,
-  active_cashier_id: undefined,
+  active_user_id: undefined,
   active_profile_id: undefined as unknown as number, // to circument typescript
   active_shift: undefined,
 };

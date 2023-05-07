@@ -34,8 +34,7 @@ import {
 import { SystemAccountList, CustomerAccountDetail, SystemAccountDetail, FindAccounts } from "./routes/accounts";
 import { OrderList } from "./routes/orders/OrderList";
 import { OrderDetail } from "./routes/orders/OrderDetail";
-import { CashierList, CashierDetail } from "./routes/cashiers";
-import { CashierCloseOut } from "./routes/cashiers/CashierCloseOut";
+import { CashierList, CashierDetail, CashierCloseOut, CashierShiftDetail } from "./routes/cashiers";
 import { PrivilegeGuard } from "./routes/PrivilegeGuard";
 import {
   TillRegisterStockingList,
@@ -87,6 +86,10 @@ const router = createBrowserRouter([
           {
             path: ":cashierId/close-out",
             element: <CashierCloseOut />,
+          },
+          {
+            path: ":cashierId/shifts/:shiftId",
+            element: <CashierShiftDetail />,
           },
         ],
       },

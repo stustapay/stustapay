@@ -236,7 +236,7 @@ class Order(BaseModel):
     # foreign keys
     cashier_id: int
     till_id: int
-    customer_account_id: int
+    customer_account_id: Optional[int]
 
     line_items: list[LineItem]
 

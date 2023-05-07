@@ -3,10 +3,10 @@ import uuid
 
 from stustapay.core.schema.account import (
     ACCOUNT_SALE_EXIT,
-    ACCOUNT_CASH_VAULT,
     ACCOUNT_CASH_ENTRY,
     ACCOUNT_SUMUP,
     ACCOUNT_CASH_EXIT,
+    ACCOUNT_CASH_SALE_SOURCE,
 )
 from stustapay.core.schema.order import (
     NewSale,
@@ -104,7 +104,9 @@ class OrderLogicTest(TerminalTestCase):
         )
         self.till_layout = await self.till_service.layout.create_layout(
             token=self.admin_token,
-            layout=NewTillLayout(name="layout1", description="", button_ids=None),
+            layout=NewTillLayout(
+                name="layout1", description="", button_ids=[self.deposit_button.id, self.beer_button.id]
+            ),
         )
         self.till_profile = await self.till_service.profile.create_profile(
             token=self.admin_token,
@@ -329,7 +331,7 @@ class OrderLogicTest(TerminalTestCase):
 
     async def test_topup_cash_order_flow(self):
         cash_drawer_start_balance = await self._get_account_balance(account_id=self.cashier.cashier_account_id)
-        cash_vault_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_VAULT)
+        cash_sale_source_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_SALE_SOURCE)
         cash_entry_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_ENTRY)
 
         new_topup = NewTopUp(
@@ -353,7 +355,7 @@ class OrderLogicTest(TerminalTestCase):
             account_id=ACCOUNT_CASH_ENTRY, expected_balance=cash_entry_start_balance - 20
         )
         await self._assert_account_balance(
-            account_id=ACCOUNT_CASH_VAULT, expected_balance=cash_vault_start_balance - 20
+            account_id=ACCOUNT_CASH_SALE_SOURCE, expected_balance=cash_sale_source_start_balance - 20
         )
 
     async def test_topup_sumup_order_flow(self):
@@ -402,7 +404,7 @@ class OrderLogicTest(TerminalTestCase):
 
     async def test_cash_pay_out_flow_no_amount(self):
         cash_drawer_start_balance = await self._get_account_balance(account_id=self.cashier.cashier_account_id)
-        cash_vault_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_VAULT)
+        cash_sale_source_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_SALE_SOURCE)
         cash_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_EXIT)
 
         new_pay_out = NewPayOut(customer_tag_uid=self.customer_uid)
@@ -419,7 +421,7 @@ class OrderLogicTest(TerminalTestCase):
             expected_balance=cash_drawer_start_balance - START_BALANCE, account_id=self.cashier.cashier_account_id
         )
         await self._assert_account_balance(
-            account_id=ACCOUNT_CASH_VAULT, expected_balance=cash_vault_start_balance + START_BALANCE
+            account_id=ACCOUNT_CASH_SALE_SOURCE, expected_balance=cash_sale_source_start_balance + START_BALANCE
         )
         await self._assert_account_balance(
             account_id=ACCOUNT_CASH_EXIT, expected_balance=cash_exit_start_balance + START_BALANCE
@@ -427,7 +429,7 @@ class OrderLogicTest(TerminalTestCase):
 
     async def test_cash_pay_out_flow_with_amount(self):
         cash_drawer_start_balance = await self._get_account_balance(account_id=self.cashier.cashier_account_id)
-        cash_vault_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_VAULT)
+        cash_sale_source_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_SALE_SOURCE)
         cash_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_EXIT)
 
         new_pay_out = NewPayOut(customer_tag_uid=self.customer_uid, amount=-2 * START_BALANCE)
@@ -449,7 +451,7 @@ class OrderLogicTest(TerminalTestCase):
             account_id=self.cashier.cashier_account_id, expected_balance=cash_drawer_start_balance - 20
         )
         await self._assert_account_balance(
-            account_id=ACCOUNT_CASH_VAULT, expected_balance=cash_vault_start_balance + 20
+            account_id=ACCOUNT_CASH_SALE_SOURCE, expected_balance=cash_sale_source_start_balance + 20
         )
         await self._assert_account_balance(account_id=ACCOUNT_CASH_EXIT, expected_balance=cash_exit_start_balance + 20)
 
@@ -479,7 +481,7 @@ class OrderLogicTest(TerminalTestCase):
 
     async def test_ticket_flow_with_one_tag(self):
         cash_drawer_start_balance = await self._get_account_balance(account_id=self.cashier.cashier_account_id)
-        cash_vault_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_VAULT)
+        cash_sale_source_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_SALE_SOURCE)
         cash_entry_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_ENTRY)
         sale_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_SALE_EXIT)
 
@@ -509,7 +511,8 @@ class OrderLogicTest(TerminalTestCase):
             account_id=ACCOUNT_CASH_ENTRY, expected_balance=cash_entry_start_balance - completed_ticket.total_price
         )
         await self._assert_account_balance(
-            account_id=ACCOUNT_CASH_VAULT, expected_balance=cash_vault_start_balance + -completed_ticket.total_price
+            account_id=ACCOUNT_CASH_SALE_SOURCE,
+            expected_balance=cash_sale_source_start_balance + -completed_ticket.total_price,
         )
         await self._assert_account_balance(
             account_id=ACCOUNT_SALE_EXIT, expected_balance=sale_exit_start_balance + self.ticket_price
@@ -545,7 +548,7 @@ class OrderLogicTest(TerminalTestCase):
 
     async def test_ticket_flow_with_multiple_tags_invalid_booking(self):
         cash_drawer_start_balance = await self._get_account_balance(account_id=self.cashier.cashier_account_id)
-        cash_vault_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_VAULT)
+        cash_sale_source_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_SALE_SOURCE)
         cash_entry_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_ENTRY)
         sale_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_SALE_EXIT)
 
@@ -605,7 +608,8 @@ class OrderLogicTest(TerminalTestCase):
             account_id=ACCOUNT_CASH_ENTRY, expected_balance=cash_entry_start_balance - completed_ticket.total_price
         )
         await self._assert_account_balance(
-            account_id=ACCOUNT_CASH_VAULT, expected_balance=cash_vault_start_balance - completed_ticket.total_price
+            account_id=ACCOUNT_CASH_SALE_SOURCE,
+            expected_balance=cash_sale_source_start_balance - completed_ticket.total_price,
         )
         await self._assert_account_balance(
             account_id=ACCOUNT_SALE_EXIT, expected_balance=sale_exit_start_balance + self.ticket_price * 4

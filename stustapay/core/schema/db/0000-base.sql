@@ -134,7 +134,8 @@ values
     (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here'),
     (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement'),
     (6, null, 'virtual', 'Money / Voucher create', 'Account which will be charged on manual account balance updates and voucher top ups'),
-    (7, null, 'virtual', 'Cash Exit', 'target account when cash exists the system, e.g. cash pay outs')
+    (7, null, 'virtual', 'Cash Exit', 'target account when cash exists the system, e.g. cash pay outs'),
+    (8, null, 'virtual', 'Cash Sale Source', 'source account for cash good sales or cash top ups')
     on conflict do nothing;
 
 create table if not exists account_tag_association_history (
@@ -739,7 +740,23 @@ create table if not exists cash_register_stocking (
         cent2 * 1.0 +
         cent1 * 0.5 +
         variable_in_euro
-    ) stored
+    ) stored,
+    constraint non_negative_stockings check
+        (euro200 >= 0 and
+         euro100 >= 0 and
+         euro50 >= 0 and
+         euro20 >= 0 and
+         euro10 >= 0 and
+         euro5 >= 0 and
+         euro2 >= 0 and
+         euro1 >= 0 and
+         cent50 >= 0 and
+         cent20 >= 0 and
+         cent10 >= 0 and
+         cent5 >= 0 and
+         cent2 >= 0 and
+         cent1 >= 0 and
+         variable_in_euro >= 0)
 );
 comment on column cash_register_stocking.euro2 is 'number of rolls, one roll = 25 pcs = 50€';
 comment on column cash_register_stocking.euro1 is 'number of rolls, one roll = 25 pcs = 25€';
@@ -778,8 +795,8 @@ create table if not exists till (
 insert into till_layout (id, name, description) overriding system value values (1, 'Virtual Till Layout', '') ;
 insert into till_profile (id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id)
     overriding system value values (1, 'Virtual till profile', '', false, false, false, 1);
-insert into till (id, name, description, active_profile_id, registration_uuid) overriding system value
-values (1, 'Virtual Till', '', 1, gen_random_uuid());
+insert into till (id, name, description, active_profile_id, registration_uuid, tse_id) overriding system value
+values (1, 'Virtual Till', '', 1, gen_random_uuid(), 'tse1');
 
 
 create or replace function handle_till_user_login() returns trigger as
@@ -1063,8 +1080,10 @@ create table if not exists cashier_shift (
     closing_out_user_id bigint references usr(id),
     started_at timestamptz not null,
     ended_at timestamptz not null,
-    final_cash_drawer_balance numeric not null,
-    final_cash_drawer_imbalance numeric not null,
+    actual_cash_drawer_balance numeric not null,
+    expected_cash_drawer_balance numeric not null,
+    cash_drawer_imbalance numeric generated always as
+        ( actual_cash_drawer_balance - expected_cash_drawer_balance ) stored,
     comment text not null,
     close_out_order_id bigint not null references ordr(id) unique,
     close_out_imbalance_order_id bigint not null references ordr(id) unique

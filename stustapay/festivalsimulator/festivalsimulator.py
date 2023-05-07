@@ -167,7 +167,8 @@ class Simulator(SubCommand):
 
                     if stock_up:
                         register_id = await db_pool.fetchval(
-                            "insert into cash_register (name) values ($1) returning id", f"Blechkasse {i}"
+                            "insert into cash_register (name) values ($1) returning id",
+                            f"Blechkasse {i} - {terminal.till.name}",
                         )
                         resp = await client.post(
                             "/stock-up-cash-register",

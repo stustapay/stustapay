@@ -141,6 +141,7 @@ class TillManagementTest(TerminalTestCase):
         )
         self.assertEqual(close_out_result.imbalance, actual_balance - cashier.cash_drawer_balance)
 
+        await self._assert_account_balance(account_id=cashier.cashier_account_id, expected_balance=0)
         shifts = await self.cashier_service.get_cashier_shifts(token=self.admin_token, cashier_id=cashier.id)
         self.assertEqual(len(shifts), 1)
         n_orders = await self.db_conn.fetchval(

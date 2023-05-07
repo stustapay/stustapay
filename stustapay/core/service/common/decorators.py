@@ -7,7 +7,7 @@ import asyncpg.exceptions
 
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, CurrentUser
-from stustapay.core.service.common.error import AccessDenied
+from stustapay.core.service.common.error import AccessDenied, Unauthorized
 
 
 def with_db_connection(func):
@@ -103,7 +103,7 @@ def requires_user(privileges: Optional[list[Privilege]] = None):
                     raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
             if user is None:
-                raise AccessDenied("invalid user token")
+                raise Unauthorized("invalid user token")
 
             if privileges:
                 if not any([p in privileges for p in user.privileges]):
@@ -157,7 +157,7 @@ def requires_customer(func):
                 raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
         if customer is None:
-            raise AccessDenied("invalid customer token")
+            raise Unauthorized("invalid customer token")
 
         if "current_customer" in signature(func).parameters:
             kwargs["current_customer"] = customer
@@ -206,7 +206,7 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
                     raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
             if terminal is None:
-                raise AccessDenied("invalid terminal token")
+                raise Unauthorized("invalid terminal token")
 
             current_user_row = await kwargs["conn"].fetchrow(
                 "select "

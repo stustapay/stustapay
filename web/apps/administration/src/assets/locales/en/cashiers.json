@@ -18,8 +18,10 @@
         "comment": "Comment",
         "startedAt": "Started At",
         "endedAt": "Ended At",
-        "finalCashDrawerBalance": "Final Cash Drawer Balance",
-        "finalCashDrawerImbalance": "Final Cash Drawer Imbalance"
+        "actualCashDrawerBalance": "Final Cash Drawer Balance as counted",
+        "expectedCashDrawerBalance": "Final Expected Cash Drawer Balance",
+        "cashDrawerImbalance": "Final Cash Drawer Imbalance",
+        "soldProductQuantity": "Quantity"
     },
     "closeOut": {
         "start": "Start",
