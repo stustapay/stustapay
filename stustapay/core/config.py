@@ -34,12 +34,20 @@ class CoreConfig(BaseModel):
     jwt_token_algorithm: str = "HS256"
     sumup_affiliate_key: str = "unset"
 
+class CustomerPortalApiConfig(HTTPServerConfig):
+    base_url: str
+    host: str = "localhost"
+    port: int = 8082
+    base_bon_url: str
+    data_privacy_url: str
+
 
 class Config(BaseModel):
     administration: AdministrationApiConfig
     terminalserver: TerminalApiConfig
     database: DatabaseConfig
     core: CoreConfig
+    customer_portal: CustomerPortalApiConfig
 
 
 def read_config(config_path: str) -> Config:

@@ -1,4 +1,5 @@
 import logging
+from stustapay.core.config import Config
 
 from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
@@ -7,7 +8,6 @@ from stustapay.core.service.customer import CustomerService
 from stustapay.core.service.user import AuthService
 from stustapay.core.subcommand import SubCommand
 from .routers import auth
-from .config import Config
 
 
 class Api(SubCommand):
