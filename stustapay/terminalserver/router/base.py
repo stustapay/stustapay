@@ -53,7 +53,7 @@ async def list_cash_registers(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    return await till_service.register.list_cash_registers(token=token)
+    return await till_service.register.list_cash_registers_terminal(token=token)
 
 
 class RegisterStockUpPayload(BaseModel):

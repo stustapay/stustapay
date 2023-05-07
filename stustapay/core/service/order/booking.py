@@ -1,10 +1,13 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 from uuid import UUID, uuid4
 
 import asyncpg
 
 from stustapay.core.schema.order import PaymentMethod, OrderType
+from stustapay.core.service.common.error import InvalidArgument
+from stustapay.core.service.product import fetch_money_transfer_product
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.util import BaseModel
 
@@ -38,7 +41,47 @@ class NewLineItem(BaseModel):
     tax_rate: float
 
 
+@dataclass
+class OrderInfo:
+    id: int
+    uuid: UUID
+    booked_at: datetime
+
+
+async def book_money_transfer(
+    *,
+    conn: asyncpg.Connection,
+    originating_user_id: int,
+    cash_register_id: int,
+    bookings: dict[BookingIdentifier, float],
+    amount: float,
+    till_id: int,
+) -> OrderInfo:
+    transfer_product = await fetch_money_transfer_product(conn=conn)
+    line_items = [
+        NewLineItem(
+            quantity=1,
+            product_id=transfer_product.id,
+            product_price=amount,
+            tax_name=transfer_product.tax_name,
+            tax_rate=transfer_product.tax_rate,
+        )
+    ]
+
+    return await book_order(
+        conn=conn,
+        payment_method=PaymentMethod.cash,
+        order_type=OrderType.money_transfer,
+        till_id=till_id,
+        cashier_id=originating_user_id,
+        line_items=line_items,
+        bookings=bookings,
+        cash_register_id=cash_register_id,
+    )
+
+
 async def book_order(
+    *,
     conn: asyncpg.Connection,
     order_type: OrderType,
     payment_method: PaymentMethod,
@@ -50,12 +93,16 @@ async def book_order(
     cancels_order: Optional[int] = None,
     customer_account_id: Optional[int] = None,
     cash_register_id: Optional[int] = None,
-) -> int:
+) -> OrderInfo:
+    z_nr = await conn.fetchval("select z_nr from till where id = $1", till_id)
+    if z_nr is None:
+        raise InvalidArgument("Till does not exist")
+
     uuid = uuid or uuid4()
-    order_id = await conn.fetchval(
+    order_row = await conn.fetchrow(
         "insert into ordr (uuid, item_count, payment_method, order_type, cancels_order, cashier_id, "
-        "   till_id, customer_account_id, cash_register_id) "
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id",
+        "   till_id, customer_account_id, cash_register_id, z_nr) "
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id, uuid, booked_at",
         uuid,
         len(line_items),
         payment_method.name,
@@ -64,8 +111,11 @@ async def book_order(
         cashier_id,
         till_id,
         customer_account_id,
-        cash_register_id,
+        cash_register_id if payment_method == PaymentMethod.cash else None,
+        z_nr,
     )
+    order_id = order_row["id"]
+    booked_at = order_row["booked_at"]
 
     for i, line_item in enumerate(line_items):
         await conn.fetchval(
@@ -80,4 +130,4 @@ async def book_order(
             line_item.tax_rate,
         )
     await book_prepared_bookings(conn=conn, order_id=order_id, bookings=bookings)
-    return order_id
+    return OrderInfo(id=order_id, uuid=uuid, booked_at=booked_at)

@@ -50,6 +50,7 @@ class NewTill(BaseModel):
 
 class Till(NewTill):
     id: int
+    z_nr: int
     session_uuid: Optional[UUID] = None
     registration_uuid: Optional[UUID] = None
     active_user_id: Optional[int] = None

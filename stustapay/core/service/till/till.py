@@ -54,7 +54,7 @@ class TillService(DBService):
             "insert into till "
             "   (name, description, registration_uuid, tse_id, active_shift, active_profile_id) "
             "values ($1, $2, $3, $4, $5, $6) returning id, name, description, registration_uuid, session_uuid, "
-            "   tse_id, active_shift, active_profile_id",
+            "   tse_id, active_shift, active_profile_id, z_nr",
             till.name,
             till.description,
             uuid.uuid4(),
@@ -89,7 +89,7 @@ class TillService(DBService):
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, tse_id = $4, active_shift = $5, active_profile_id = $6 "
             "where id = $1 returning id, name, description, registration_uuid, tse_id, active_shift, "
-            "   active_profile_id, session_uuid",
+            "   active_profile_id, session_uuid, z_nr",
             till_id,
             till.name,
             till.description,
@@ -152,7 +152,7 @@ class TillService(DBService):
     @with_db_transaction
     @requires_terminal()
     async def check_user_login(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, user_tag: UserTag
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, user_tag: UserTag
     ) -> list[UserRole]:
         """
         Check if a user can log in to the terminal and return the available roles he can log in as
@@ -185,15 +185,8 @@ class TillService(DBService):
             user_tag.uid,
             Privilege.terminal_login.name,
         )
-        if new_user_is_supervisor:
-            pass
-        else:
-            current_user_is_supervisor = await conn.fetchval(
-                "select true from user_with_privileges uwp where id = $1 and $2 = any(uwp.privileges)",
-                current_terminal.till.active_user_id,
-                Privilege.terminal_login.name,
-            )
-            if not current_user_is_supervisor:
+        if not new_user_is_supervisor:
+            if current_user is None or Privilege.terminal_login not in current_user.privileges:
                 raise AccessDenied("You can only be logged in by a supervisor")
 
         return available_roles
@@ -275,7 +268,7 @@ class TillService(DBService):
             "   transp_a.balance as transport_account_balance "
             "from user_with_roles u "
             "left join account cash_a on cash_a.id = u.cashier_account_id "
-            "left join account transp_a on transp_a.id = u.cashier_account_id "
+            "left join account transp_a on transp_a.id = u.transport_account_id "
             "where u.user_tag_uid = $1",
             user_tag_uid,
         )

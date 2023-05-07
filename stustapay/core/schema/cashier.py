@@ -11,7 +11,7 @@ class Cashier(BaseModel):
     description: Optional[str] = None
     user_tag_uid: Optional[int] = None
     transport_account_id: Optional[int] = None
-    cashier_account_id: Optional[int] = None
+    cashier_account_id: int
     cash_register_id: Optional[int] = None
     cash_drawer_balance: float
     till_id: Optional[int]
