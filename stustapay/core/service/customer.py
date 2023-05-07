@@ -23,6 +23,29 @@ class CustomerLoginSuccess(BaseModel):
     token: str
 
     
+class CustomerBankData(BaseModel):
+    iban: str
+    account_name: str
+    email: str
+    user_tag_uid: int
+    balance: float
+
+    
+async def get_customer_bank_data(db_pool: asyncpg.Pool) -> List[CustomerBankData]:
+    async with db_pool.acquire() as conn:
+        rows = await conn.fetch("select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance from customer c where c.iban is not null")
+        return [CustomerBankData.parse_obj(row) for row in rows]
+
+
+def csv_export(customers_bank_data: list[CustomerBankData], output_path: str) -> None:
+    with open(output_path, 'w', newline='') as f:
+        writer = csv.writer(f)
+        fields = ["beneficiary_name", "iban", "amount", "currency", "reference"]
+        writer.writerow(fields)
+        for customer in customers_bank_data:
+            writer.writerow([customer.account_name, customer.iban, customer.balance, "EUR", f"StuStaCulum, TagID: {customer.user_tag_uid}"])
+    
+
 
 class CustomerService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):

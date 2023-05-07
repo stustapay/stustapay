@@ -24,7 +24,8 @@ dependencies = [
     "python-jose[cryptography]",
     "jinja2",
     "aiohttp",
-    "pylatexenc"
+    "pylatexenc",
+    "schwifty"
 ]
 
 [project.optional-dependencies]
