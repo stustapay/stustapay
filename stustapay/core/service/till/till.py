@@ -54,7 +54,7 @@ class TillService(DBService):
             "insert into till "
             "   (name, description, registration_uuid, tse_id, active_shift, active_profile_id) "
             "values ($1, $2, $3, $4, $5, $6) returning id, name, description, registration_uuid, session_uuid, "
-            "   tse_id, active_shift, active_profile_id",
+            "   tse_id, active_shift, active_profile_id, z_nr",
             till.name,
             till.description,
             uuid.uuid4(),
@@ -89,7 +89,7 @@ class TillService(DBService):
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, tse_id = $4, active_shift = $5, active_profile_id = $6 "
             "where id = $1 returning id, name, description, registration_uuid, tse_id, active_shift, "
-            "   active_profile_id, session_uuid",
+            "   active_profile_id, session_uuid, z_nr",
             till_id,
             till.name,
             till.description,

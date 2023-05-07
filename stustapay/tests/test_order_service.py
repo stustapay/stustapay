@@ -36,6 +36,7 @@ from stustapay.core.schema.user import (
     CASHIER_ROLE_NAME,
     ADMIN_ROLE_ID,
     CASHIER_ROLE_ID,
+    UserTag,
 )
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import InvalidArgument
@@ -149,6 +150,7 @@ class OrderLogicTest(TerminalTestCase):
         await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=CASHIER_ROLE_ID)
 
     async def test_basic_sale_flow(self):
+        z_nr_start = await self.db_conn.fetchval("select z_nr from till where id = $1", self.till.id)
         customer_acc = await self.till_service.get_customer(
             token=self.terminal_token, customer_tag_uid=self.customer_uid
         )
@@ -180,6 +182,17 @@ class OrderLogicTest(TerminalTestCase):
         self.assertIsNotNone(customer)
         self.assertEqual(starting_balance, customer.balance)
         await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, expected_balance=0)
+
+        # after logging out a user with bookings the z_nr should not be incremented
+        await self.till_service.logout_user(token=self.terminal_token)
+        z_nr = await self.db_pool.fetchval("select z_nr from till where id = $1", self.till.id)
+        self.assertEqual(z_nr_start, z_nr)
+        # after logging in a user with bookings the z_nr should be incremented
+        await self.till_service.login_user(
+            token=self.terminal_token, user_tag=UserTag(uid=self.admin_tag_uid), user_role_id=ADMIN_ROLE_ID
+        )
+        z_nr = await self.db_pool.fetchval("select z_nr from till where id = $1", self.till.id)
+        self.assertEqual(z_nr_start + 1, z_nr)
 
     async def test_returnable_products(self):
         new_sale = NewSale(

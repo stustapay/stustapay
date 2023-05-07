@@ -761,6 +761,9 @@ create table if not exists till (
     active_cash_register_id bigint references cash_register(id) unique,
     constraint user_requires_role check ((active_user_id is null) = (active_user_role_id is null)),
 
+    -- kassenschlussnummer für tse, incremented after every login
+    z_nr bigint not null default 1,
+
     constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null))
 );
 
@@ -779,12 +782,14 @@ $$
     old_cash_register_balance numeric;
     old_order_id bigint;
 
+    n_orders_booked bigint;
+
     new_cashier_account_id bigint;
     new_cash_register_id bigint;
     new_cash_register_balance numeric;
     new_order_id bigint;
 begin
-    NEW.active_cash_register_id = null;
+    NEW.active_cash_register_id := null;
 
     if NEW.active_user_id is not null then
         select usr.cash_register_id, usr.cashier_account_id, a.balance
@@ -793,15 +798,21 @@ begin
                  join account a on usr.cashier_account_id = a.id
         where usr.id = NEW.active_user_id;
 
+        select count(*) into locals.n_orders_booked from ordr where z_nr = NEW.z_nr and till_id = NEW.id;
+
+        if locals.n_orders_booked > 0 then
+            NEW.z_nr := NEW.z_nr + 1;
+        end if;
+
         if locals.new_cash_register_id is not null then
-            insert into ordr (item_count, payment_method, order_type, cashier_id, till_id, cash_register_id)
-            values (1, 'cash', 'money_transfer', NEW.active_user_id, NEW.id, locals.new_cash_register_id)
+            insert into ordr (item_count, payment_method, order_type, cashier_id, till_id, cash_register_id, z_nr)
+            values (1, 'cash', 'money_transfer', NEW.active_user_id, NEW.id, locals.new_cash_register_id, NEW.z_nr)
             returning id into locals.new_order_id;
 
             insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate)
             values
                 (locals.new_order_id, 1, 7, locals.new_cash_register_balance, 1, 'none', 0);
-            NEW.active_cash_register_id = locals.new_cash_register_id;
+            NEW.active_cash_register_id := locals.new_cash_register_id;
         end if;
     end if;
 
@@ -813,8 +824,8 @@ begin
         where usr.id = OLD.active_user_id;
 
         if locals.old_cash_register_id is not null and locals.old_cash_register_balance != 0 then
-            insert into ordr (item_count, payment_method, order_type, cashier_id, till_id, cash_register_id)
-            values (1, 'cash', 'money_transfer', OLD.active_user_id, OLD.id, locals.old_cash_register_id)
+            insert into ordr (item_count, payment_method, order_type, cashier_id, till_id, cash_register_id, z_nr)
+            values (1, 'cash', 'money_transfer', OLD.active_user_id, OLD.id, locals.old_cash_register_id, OLD.z_nr)
             returning id into locals.old_order_id;
 
             insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate)
@@ -828,7 +839,7 @@ end
 $$ language plpgsql;
 
 create trigger handle_till_user_login_trigger
-    after update of active_user_id on till
+    before update of active_user_id on till
     for each row
     when (OLD.active_user_id is distinct from NEW.active_user_id)
 execute function handle_till_user_login();
@@ -872,6 +883,9 @@ create table if not exists ordr (
     payment_method text not null references payment_method(name),
     -- todo: method_info references payment_information(id) -> (sumup-id, paypal-id, ...)
     --       or inline-json without separate table?
+
+    -- kassenschlussnummer für tse
+    z_nr bigint not null,
 
     -- type of the order like, top up, buy beer,
     order_type text not null references order_type(name),
