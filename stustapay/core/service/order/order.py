@@ -212,6 +212,7 @@ class OrderService(DBService):
     async def _get_products_from_buttons(
         *,
         conn: asyncpg.Connection,
+        till_profile_id: int,
         buttons: list[Button],
     ) -> list[BookedProduct]:
         # TODO: check if the till making this sale has these buttons as part of its layout
@@ -220,9 +221,15 @@ class OrderService(DBService):
             product_rows = await conn.fetch(
                 "select p.* from till_button_product tbp "
                 "join product_with_tax_and_restrictions p on tbp.product_id = p.id "
-                "where button_id = $1",
+                "join till_layout_to_button tltp on tltp.button_id = tbp.button_id "
+                "join till_profile tp on tp.layout_id = tltp.layout_id "
+                "where tbp.button_id = $1 and tp.id = $2",
                 button.till_button_id,
+                till_profile_id,
             )
+            if len(product_rows) == 0:
+                raise InvalidArgument("this till profile is not allowed to use these buttons")
+
             for row in product_rows:
                 product = Product.parse_obj(row)
                 if (button.price is None) != product.fixed_price:
@@ -418,14 +425,18 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def check_sale(self, *, conn: asyncpg.Connection, new_sale: NewSale) -> PendingSale:
+    async def check_sale(
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_sale: NewSale
+    ) -> PendingSale:
         """
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
         """
         customer_account = await self._fetch_customer_by_user_tag(conn=conn, customer_tag_uid=new_sale.customer_tag_uid)
 
-        booked_products = await self._get_products_from_buttons(conn=conn, buttons=new_sale.buttons)
+        booked_products = await self._get_products_from_buttons(
+            conn=conn, till_profile_id=current_terminal.till.active_profile_id, buttons=new_sale.buttons
+        )
         line_items = await self._preprocess_order_positions(
             customer_restrictions=customer_account.restriction, booked_products=booked_products
         )

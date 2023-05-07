@@ -104,7 +104,9 @@ class OrderLogicTest(TerminalTestCase):
         )
         self.till_layout = await self.till_service.layout.create_layout(
             token=self.admin_token,
-            layout=NewTillLayout(name="layout1", description="", button_ids=None),
+            layout=NewTillLayout(
+                name="layout1", description="", button_ids=[self.deposit_button.id, self.beer_button.id]
+            ),
         )
         self.till_profile = await self.till_service.profile.create_profile(
             token=self.admin_token,
