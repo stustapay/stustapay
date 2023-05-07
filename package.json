@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "iban": "^0.0.14"
+  },
+  "devDependencies": {
+    "@types/iban": "^0.0.32"
+  }
+}

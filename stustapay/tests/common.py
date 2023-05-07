@@ -58,6 +58,11 @@ TEST_CONFIG = {
         "host": "localhost",
         "port": 8080,
     },
+    "customer_portal": {
+        "base_url": "http://localhost:8082",
+        "base_bon_url": "https://bon.stustapay.de/{bon_output_file}",
+        "data_privacy_url": "https://stustapay.de/datenschutz",
+    },
     "database": get_test_db_config(),
 }
 

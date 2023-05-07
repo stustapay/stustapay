@@ -168,6 +168,14 @@ create table if not exists cash_register (
     name text not null
 );
 
+-- customer iban bank accounts
+create table if not exists customer_info (
+    customer_account_id bigint primary key references account(id),
+    iban text,
+    account_name text,
+    email text
+);
+
 -- people working with the payment system
 create table if not exists usr (
     id bigint primary key generated always as identity,
@@ -984,6 +992,16 @@ create or replace view order_value as
     group by
         ordr.id;
 
+-- aggregates account and customer_info to customer
+create or replace view customer as
+    select
+        account.*,
+        customer_info.*
+    from
+        account
+        left join customer_info
+            on (account.id = customer_info.customer_account_id);
+
 -- show all line items
 create or replace view order_items as
     select
@@ -1254,6 +1272,15 @@ create table if not exists bon (
     -- output file path
     output_file text
 );
+
+create or replace view order_value_with_bon as
+    select
+        o.*,
+        b.generated as bon_generated,
+        b.output_file as bon_output_file
+    from order_value o
+        left join bon b
+            on (o.id = b.id);
 
 
 -- wooh \o/

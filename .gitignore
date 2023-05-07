@@ -34,3 +34,9 @@ flycheck_*
 # project specific
 config.yaml
 config.devcontainer.yml
+
+# nodejs
+node_modules/
+
+# local
+TODO.md
