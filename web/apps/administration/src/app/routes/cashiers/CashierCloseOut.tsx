@@ -23,8 +23,9 @@ import { NumericInput } from "@components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { Formik, FormikHelpers } from "formik";
-import { toast } from "react-toastify";
 import { UserSelect } from "@components/UserSelect";
+import { getUserName } from "@stustapay/models";
+import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
 
 const CloseOutDataSchema = z.object({
   comment: z.string(),
@@ -102,8 +103,6 @@ export const CashierCloseOut: React.FC = () => {
       })
       .catch((err) => {
         setSubmitting(false);
-        console.log(err);
-        toast.error(`Error while closing out cashier: ${err.toString()}`);
       });
   };
 
@@ -111,7 +110,7 @@ export const CashierCloseOut: React.FC = () => {
     <>
       <Paper>
         <ListItem>
-          <ListItemText primary={cashier.display_name} />
+          <ListItemText primary={getUserName(cashier)} />
         </ListItem>
       </Paper>
 
@@ -264,6 +263,7 @@ export const CashierCloseOut: React.FC = () => {
                 {t("submit", { ns: "common" })}
               </Button>
             </Paper>
+            <CashierShiftStatsOverview cashierId={cashier.id} />
           </>
         )}
       </Formik>

@@ -770,8 +770,8 @@ create table if not exists till (
 insert into till_layout (id, name, description) overriding system value values (1, 'Virtual Till Layout', '') ;
 insert into till_profile (id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id)
     overriding system value values (1, 'Virtual till profile', '', false, false, false, 1);
-insert into till (id, name, description, active_profile_id, registration_uuid) overriding system value
-values (1, 'Virtual Till', '', 1, gen_random_uuid());
+insert into till (id, name, description, active_profile_id, registration_uuid, tse_id) overriding system value
+values (1, 'Virtual Till', '', 1, gen_random_uuid(), 'tse1');
 
 
 create or replace function handle_till_user_login() returns trigger as
@@ -1045,8 +1045,10 @@ create table if not exists cashier_shift (
     closing_out_user_id bigint references usr(id),
     started_at timestamptz not null,
     ended_at timestamptz not null,
-    final_cash_drawer_balance numeric not null,
-    final_cash_drawer_imbalance numeric not null,
+    actual_cash_drawer_balance numeric not null,
+    expected_cash_drawer_balance numeric not null,
+    cash_drawer_imbalance numeric generated always as
+        ( actual_cash_drawer_balance - expected_cash_drawer_balance ) stored,
     comment text not null,
     close_out_order_id bigint not null references ordr(id) unique,
     close_out_imbalance_order_id bigint not null references ordr(id) unique

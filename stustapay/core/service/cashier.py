@@ -6,14 +6,14 @@ from pydantic import BaseModel
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import ACCOUNT_IMBALANCE, ACCOUNT_CASH_VAULT
-from stustapay.core.schema.cashier import Cashier, CashierShift
+from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
 from stustapay.core.schema.order import PaymentMethod, OrderType
 from stustapay.core.schema.user import Privilege, User, CurrentUser
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction, requires_user
 from .common.error import ServiceException, NotFound
 from .order.booking import book_order, BookingIdentifier, NewLineItem, book_money_transfer, OrderInfo
-from .product import fetch_money_difference_product
+from .product import fetch_money_difference_product, fetch_product
 from .till.register import VIRTUAL_TILL_ID
 from .user import AuthService
 
@@ -56,6 +56,13 @@ class CashierService(DBService):
             return None
         return Cashier.parse_obj(row)
 
+    @staticmethod
+    async def _get_cashier_shift(conn: asyncpg.Connection, cashier_id: int, shift_id: int) -> Optional[CashierShift]:
+        row = await conn.fetchrow("select * from cashier_shift where cashier_id = $1 and id = $2", cashier_id, shift_id)
+        if row is None:
+            return None
+        return CashierShift.parse_obj(row)
+
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
     async def get_cashier_shifts(
@@ -73,7 +80,7 @@ class CashierService(DBService):
         return result
 
     @staticmethod
-    async def _get_current_cashier_shift_start(*, conn: asyncpg.Connection, cashier_id) -> Optional[datetime]:
+    async def _get_current_cashier_shift_start(*, conn: asyncpg.Connection, cashier_id: int) -> Optional[datetime]:
         return await conn.fetchval(
             "select ordr.booked_at from ordr "
             "where ordr.cashier_id = $1 and ordr.booked_at > coalesce(("
@@ -83,6 +90,52 @@ class CashierService(DBService):
             "order by ordr.booked_at asc limit 1",
             cashier_id,
         )
+
+    @with_db_transaction
+    @requires_user([Privilege.cashier_management])
+    async def get_cashier_shift_stats(
+        self,
+        *,
+        conn: asyncpg.Connection,
+        cashier_id: int,
+        shift_id: Optional[int] = None,
+    ) -> Optional[CashierShiftStats]:
+        shift_end = None
+        if shift_id is None:
+            shift_start = await self._get_current_cashier_shift_start(conn=conn, cashier_id=cashier_id)
+        else:
+            shift = await self._get_cashier_shift(conn=conn, cashier_id=cashier_id, shift_id=shift_id)
+            if shift is None:
+                raise NotFound(element_typ="cashier_shift", element_id=str(shift_id))
+            shift_start = shift.started_at
+            shift_end = shift.ended_at
+
+        if shift_end is None:
+            rows = await conn.fetch(
+                "select li.product_id, count(*) as quantity "
+                "from line_item li join ordr o on li.order_id = o.id "
+                "where o.cashier_id = $1 and o.booked_at >= $2 "
+                "group by li.product_id",
+                cashier_id,
+                shift_start,
+            )
+        else:
+            rows = await conn.fetch(
+                "select li.product_id, count(*) as quantity "
+                "from line_item li join ordr o on li.order_id = o.id "
+                "where o.cashier_id = $1 and o.booked_at >= $2 and o.booked_at <= $3 "
+                "group by li.product_id",
+                cashier_id,
+                shift_start,
+                shift_end,
+            )
+        stats = CashierShiftStats(booked_products=[])
+        for row in rows:
+            product = await fetch_product(conn=conn, product_id=row["product_id"])
+            if product is None:
+                continue
+            stats.booked_products.append(CashierShiftStats.ProductStats(product=product, quantity=row["quantity"]))
+        return stats
 
     @staticmethod
     async def _book_imbalance_order(
@@ -148,7 +201,7 @@ class CashierService(DBService):
             conn=conn,
             originating_user_id=current_user.id,
             cash_register_id=cash_register_id,
-            amount=amount,
+            amount=-amount,
             bookings=bookings,
             till_id=VIRTUAL_TILL_ID,
         )
@@ -163,6 +216,7 @@ class CashierService(DBService):
         )
         if cashier.cash_register_id is None:
             raise InvalidCloseOutException("Cashier does not have a cash register")
+        expected_balance = cashier.cash_drawer_balance
 
         is_logged_in = await conn.fetchval("select true from till where active_user_id = $1", cashier_id)
         if is_logged_in:
@@ -176,14 +230,14 @@ class CashierService(DBService):
         if shift_start is None:
             raise InvalidCloseOutException("the cashier did not start a shift, no orders were booked")
         shift_end = datetime.now()
-        imbalance = close_out.actual_cash_drawer_balance - cashier.cash_drawer_balance
+        imbalance = close_out.actual_cash_drawer_balance - expected_balance
 
         # first we transfer all money to the virtual till via a tse signed order
         await self._book_money_transfer_close_out_start(
             conn=conn,
             current_user=current_user,
             cash_register_id=cashier.cash_register_id,
-            amount=cashier.cash_drawer_balance,
+            amount=expected_balance,
         )
 
         # then we book two orders, one to track the imbalance, on to transfer the money to the cash vault
@@ -192,7 +246,7 @@ class CashierService(DBService):
             current_user=current_user,
             cashier_account_id=cashier.cashier_account_id,
             cash_register_id=cashier.cash_register_id,
-            amount=-close_out.actual_cash_drawer_balance,
+            amount=close_out.actual_cash_drawer_balance,
         )
         imbalance_order_info = await self._book_imbalance_order(
             conn=conn,
@@ -204,14 +258,14 @@ class CashierService(DBService):
 
         await conn.execute(
             "insert into cashier_shift ("
-            "   cashier_id, started_at, ended_at, final_cash_drawer_balance, final_cash_drawer_imbalance, "
+            "   cashier_id, started_at, ended_at, actual_cash_drawer_balance, expected_cash_drawer_balance, "
             "   comment, close_out_order_id, close_out_imbalance_order_id, closing_out_user_id) "
             "values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
             cashier.id,
             shift_start,
             shift_end,
-            cashier.cash_drawer_balance,
-            imbalance,
+            close_out.actual_cash_drawer_balance,
+            expected_balance,
             close_out.comment,
             order_info.id,
             imbalance_order_info.id,

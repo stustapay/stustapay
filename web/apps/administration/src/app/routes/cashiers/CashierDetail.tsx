@@ -2,7 +2,7 @@ import * as React from "react";
 import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, Typography } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link as RouterLink } from "react-router-dom";
 import {
   selectCashierById,
   useGetCashierByIdQuery,
@@ -11,6 +11,7 @@ import {
   useGetCashierShiftsQuery,
   selectUserById,
   useGetUsersQuery,
+  selectCashierShiftAll,
 } from "@api";
 import { Loading } from "@stustapay/components";
 import { ButtonLink, IconButtonLink, ListItemLink } from "@components";
@@ -33,10 +34,15 @@ export const CashierDetail: React.FC = () => {
     }),
   });
   const {
-    data: cashierShifts,
+    cashierShifts,
     error: shiftsError,
     isLoading: isShiftsLoading,
-  } = useGetCashierShiftsQuery(Number(cashierId));
+  } = useGetCashierShiftsQuery(Number(cashierId), {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      cashierShifts: data ? selectCashierShiftAll(data) : undefined,
+    }),
+  });
   const { data: tills, isLoading: isTillsLoading, error: tillError } = useGetTillsQuery();
   const { data: users, isLoading: isUsersLoading, error: userError } = useGetUsersQuery();
 
@@ -58,7 +64,7 @@ export const CashierDetail: React.FC = () => {
   };
 
   const renderUser = (id?: number | null) => {
-    if (!id || !users) {
+    if (id == null || users == null) {
       return "";
     }
 
@@ -74,7 +80,9 @@ export const CashierDetail: React.FC = () => {
     {
       field: "id",
       headerName: t("shift.id") as string,
-      // renderCell: (params) => <RouterLink to={`/cashiers/${params.row.id}`}>{params.row.login}</RouterLink>,
+      renderCell: (params) => (
+        <RouterLink to={`/cashiers/${cashierId}/shifts/${params.row.id}`}>{params.row.id}</RouterLink>
+      ),
     },
     {
       field: "comment",
@@ -101,14 +109,20 @@ export const CashierDetail: React.FC = () => {
       flex: 1,
     },
     {
-      field: "final_cash_drawer_balance",
-      headerName: t("shift.finalCashDrawerBalance") as string,
+      field: "actual_cash_drawer_balance",
+      headerName: t("shift.actualCashDrawerBalance") as string,
       valueFormatter: ({ value }) => formatCurrency(value),
       type: "number",
     },
     {
-      field: "final_cash_drawer_imbalance",
-      headerName: t("shift.finalCashDrawerImbalance") as string,
+      field: "expected_cash_drawer_balance",
+      headerName: t("shift.expectedCashDrawerBalance") as string,
+      valueFormatter: ({ value }) => formatCurrency(value),
+      type: "number",
+    },
+    {
+      field: "cash_drawer_imbalance",
+      headerName: t("shift.cashDrawerImbalance") as string,
       valueFormatter: ({ value }) => formatCurrency(value),
       type: "number",
     },

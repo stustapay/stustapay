@@ -81,6 +81,7 @@ export const CashierList: React.FC = () => {
       field: "till_id",
       headerName: t("cashier.till") as string,
       flex: 0.5,
+      minWidth: 150,
       renderCell: (params) => renderTill(params.row.till_id),
     },
     {

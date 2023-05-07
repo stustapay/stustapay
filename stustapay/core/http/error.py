@@ -1,4 +1,3 @@
-import asyncpg.exceptions
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 

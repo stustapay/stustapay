@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
+from stustapay.core.schema.product import Product
 from stustapay.core.util import BaseModel
 
 
@@ -17,11 +18,20 @@ class Cashier(BaseModel):
     till_id: Optional[int]
 
 
+class CashierShiftStats(BaseModel):
+    class ProductStats(BaseModel):
+        product: Product
+        quantity: int
+
+    booked_products: list[ProductStats]
+
+
 class CashierShift(BaseModel):
     id: int
     comment: str
     closing_out_user_id: int
-    final_cash_drawer_balance: float
-    final_cash_drawer_imbalance: float
+    actual_cash_drawer_balance: float
+    expected_cash_drawer_balance: float
+    cash_drawer_imbalance: float
     started_at: datetime
     ended_at: datetime
