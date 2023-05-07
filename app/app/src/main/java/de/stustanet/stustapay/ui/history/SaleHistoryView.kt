@@ -16,10 +16,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.model.OrderType
+import de.stustanet.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
 
 @Composable
-fun SaleHistoryView(viewModel: SaleHistoryViewModel = hiltViewModel()) {
+fun SaleHistoryView(
+    viewModel: SaleHistoryViewModel = hiltViewModel(),
+    leaveView: () -> Unit
+) {
     val sales by viewModel.sales.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
@@ -28,39 +32,41 @@ fun SaleHistoryView(viewModel: SaleHistoryViewModel = hiltViewModel()) {
         viewModel.fetchHistory()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(10.dp)
-    ) {
-        Button(modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 10.dp),
-            enabled = sales.isNotEmpty() && sales.first().type == OrderType.Sale,
-            onClick = {
-                scope.launch {
-                    if (sales.isNotEmpty()) {
-                        viewModel.cancelSale(sales.first().id)
+    NavScaffold(title = { Text("Transaction History") }, navigateBack = leaveView) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp)
+        ) {
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
+                enabled = sales.isNotEmpty() && sales.first().type == OrderType.Sale,
+                onClick = {
+                    scope.launch {
+                        if (sales.isNotEmpty()) {
+                            viewModel.cancelSale(sales.first().id)
+                        }
                     }
-                }
-            }) {
-            Text("Cancel Last Sale", fontSize = 24.sp)
-        }
+                }) {
+                Text("Cancel Last Sale", fontSize = 24.sp)
+            }
 
-        Column(modifier = Modifier.verticalScroll(state = scrollState)) {
-            for (sale in sales) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "${sale.timestamp.dayOfWeek} ${sale.timestamp.toLocalTime()}",
-                        fontSize = 24.sp
-                    )
-                    Text("${sale.amount}€", fontSize = 24.sp)
+            Column(modifier = Modifier.verticalScroll(state = scrollState)) {
+                for (sale in sales) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "${sale.timestamp.dayOfWeek} ${sale.timestamp.toLocalTime()}",
+                            fontSize = 24.sp
+                        )
+                        Text("${sale.amount}€", fontSize = 24.sp)
+                    }
                 }
             }
         }

@@ -33,28 +33,39 @@ fun CashierManagementView(
 
     NavHost(navController = nav, startDestination = CashierManagementNavDests.Main.route) {
         composable(CashierManagementNavDests.Main.route) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp)
+            NavScaffold(
+                title = { Text(CashierManagementNavDests.Main.title) },
+                navigateBack = leaveView
             ) {
-                Button(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                    onClick = { nav.navigateTo(CashierManagementNavDests.Equip.route) }
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(10.dp)
                 ) {
-                    Text(CashierManagementNavDests.Equip.title, fontSize = 24.sp)
-                }
-                Button(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                    onClick = { nav.navigateTo(CashierManagementNavDests.Transport.route) }
-                ) {
-                    Text(CashierManagementNavDests.Transport.title, fontSize = 24.sp)
-                }
-                Button(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                    onClick = { nav.navigateTo(CashierManagementNavDests.Vault.route) }
-                ) {
-                    Text(CashierManagementNavDests.Vault.title, fontSize = 24.sp)
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp),
+                        onClick = { nav.navigateTo(CashierManagementNavDests.Equip.route) }
+                    ) {
+                        Text(CashierManagementNavDests.Equip.title, fontSize = 24.sp)
+                    }
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp),
+                        onClick = { nav.navigateTo(CashierManagementNavDests.Transport.route) }
+                    ) {
+                        Text(CashierManagementNavDests.Transport.title, fontSize = 24.sp)
+                    }
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp),
+                        onClick = { nav.navigateTo(CashierManagementNavDests.Vault.route) }
+                    ) {
+                        Text(CashierManagementNavDests.Vault.title, fontSize = 24.sp)
+                    }
                 }
             }
         }
@@ -89,7 +100,7 @@ fun CashierManagementView(
 }
 
 enum class CashierManagementNavDests(val route: String, val title: String) {
-    Main("main", "Main"),
+    Main("main", "Cashier Management"),
     Equip("equip", "Equip Cashier"),
     Transport("transport", "Transport"),
     Vault("vault", "Vault")
