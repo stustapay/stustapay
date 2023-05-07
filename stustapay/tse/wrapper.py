@@ -6,6 +6,7 @@ import typing
 import traceback
 
 import asyncpg
+import time
 
 # from stustapay.core.schema.order import Order
 from .handler import TSEHandler, TSESignatureRequest, TSESignature
@@ -99,8 +100,7 @@ class TSEWrapper:
                 await self._till_add(till)
         # Unregister all of the extra tills
         for till in sorted(extra_tills):
-            pass
-            # await self._till_remove(till)
+            await self._till_remove(till)
 
         # The TSE is now ready to be used.
         # Ready to execute signatures from the database.
@@ -144,48 +144,6 @@ class TSEWrapper:
             return None
 
         async with self._conn.transaction(isolation="serializable"):
-            # the following two statements should be equivalent.
-            # for testing purposes we run both statements to make sure that
-            # they actually are. TODO remove the first one (next_sig_alt).
-            next_sig_alt = await self._conn.fetchrow(
-                """
-                with currently_signing as (
-                    select
-                        till_id
-                    from
-                        tse_signature
-                        join ordr on ordr.id = tse_signature.id
-                    where tse_signature.signature_status = 'pending'
-                ),
-                todo_signatures as (
-                    select
-                        ordr.id, till_id, till.name as till_name
-                    from
-                        tse_signature
-                        join ordr on ordr.id = tse_signature.id
-                        join till on ordr.till_id = till.id
-                    where
-                        tse_signature.signature_status = 'todo'
-                        and till.tse_id = $1
-                )
-                select
-                    id as order_id, till_name
-                from
-                    todo_signatures
-                where
-                    not exists (
-                        select
-                            1
-                        from
-                            currently_signing
-                        where
-                            currently_signing.till_id = todo_signatures.till_id
-                    )
-                order by id
-                limit 1
-                """,
-                self.name,
-            )
             next_sig = await self._conn.fetchrow(
                 """
                 with currently_signing as (
@@ -220,8 +178,6 @@ class TSEWrapper:
                 """,
                 self.name,
             )
-            assert next_sig_alt == next_sig
-            del next_sig_alt
             if next_sig is None:
                 # no orders are available, return None
                 return None
@@ -335,11 +291,13 @@ class TSEWrapper:
         # must be called when the TSE is connected and operational.
         if signing_request.till_name not in self._tills:
             await self._till_add(signing_request.till_name)
+        start = time.monotonic()
         result = await self._tse_handler.sign(signing_request)
+        stop = time.monotonic()
         # TODO handle failures
         # (return None if the signature was cleanly aborted,
         #  e.g. because self._tse_handler is no longer valid)
-        LOGGER.info(f"{self.name!r}: signature done ({signing_request})")
+        LOGGER.info(f"{self.name!r}: signature done ({signing_request}) in TIME {stop-start:.3f}s")
         return result
 
     async def _till_add(self, till):

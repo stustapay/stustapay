@@ -228,6 +228,13 @@ class DieboldNixdorfUSBTSE(TSEHandler):
             result.remove("DummyDefaultClientId")
         except ValueError:
             raise RuntimeError("TSE does not have 'DummyDefaultClientId' registered") from None
+        clientid_to_ignore = set()
+        for entry in result:
+            if entry.startswith("DN TSEProduction"):
+                clientid_to_ignore.add(entry)
+        for entry in clientid_to_ignore:
+            result.remove(entry)
+
         return result
 
     def __str__(self):

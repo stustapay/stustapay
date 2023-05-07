@@ -203,7 +203,7 @@ class VirtualTSE:
         if msg["ClientID"] not in self.current_transactions:
             return dnerror(19)
 
-        time.sleep(0.9)
+        time.sleep(0.5)
         self.password_block_counter = 0
 
         # check transaction number
