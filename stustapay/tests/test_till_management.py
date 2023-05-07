@@ -260,7 +260,7 @@ class TillManagementTest(TerminalTestCase):
             till=NewTill(
                 name="Pot 1",
                 description="Pottipot",
-                tse_id=None,
+                tse_nr=None,
                 active_shift=None,
                 active_profile_id=till_profile.id,
             ),
@@ -273,7 +273,7 @@ class TillManagementTest(TerminalTestCase):
                 till=NewTill(
                     name="Pot 1",
                     description="Pottipot",
-                    tse_id=None,
+                    tse_nr=None,
                     active_shift=None,
                     active_profile_id=till_profile.id,
                 ),
@@ -285,7 +285,7 @@ class TillManagementTest(TerminalTestCase):
             till=NewTill(
                 name="Pot 2",
                 description="Pottipot - new",
-                tse_id=None,
+                tse_nr=None,
                 active_shift=None,
                 active_user_id=None,
                 active_profile_id=till_profile.id,

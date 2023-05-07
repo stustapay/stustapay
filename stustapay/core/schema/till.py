@@ -43,7 +43,7 @@ class TillProfile(NewTillProfile):
 class NewTill(BaseModel):
     name: str
     description: Optional[str] = None
-    tse_id: Optional[str] = None
+    tse_nr: Optional[int] = None
     active_shift: Optional[str] = None
     active_profile_id: int
 
