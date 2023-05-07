@@ -24,7 +24,7 @@ fun CashierManagementView(
     val nav = rememberNavController()
 
     LaunchedEffect(nav) {
-        viewModel.getStockings()
+        viewModel.getData()
     }
 
     BackHandler {
