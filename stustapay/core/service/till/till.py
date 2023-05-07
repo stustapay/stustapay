@@ -152,7 +152,7 @@ class TillService(DBService):
     @with_db_transaction
     @requires_terminal()
     async def check_user_login(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, user_tag: UserTag
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, user_tag: UserTag
     ) -> list[UserRole]:
         """
         Check if a user can log in to the terminal and return the available roles he can log in as
@@ -185,15 +185,8 @@ class TillService(DBService):
             user_tag.uid,
             Privilege.terminal_login.name,
         )
-        if new_user_is_supervisor:
-            pass
-        else:
-            current_user_is_supervisor = await conn.fetchval(
-                "select true from user_with_privileges uwp where id = $1 and $2 = any(uwp.privileges)",
-                current_terminal.till.active_user_id,
-                Privilege.terminal_login.name,
-            )
-            if not current_user_is_supervisor:
+        if not new_user_is_supervisor:
+            if current_user is None or Privilege.terminal_login not in current_user.privileges:
                 raise AccessDenied("You can only be logged in by a supervisor")
 
         return available_roles
