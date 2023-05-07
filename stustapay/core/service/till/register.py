@@ -4,7 +4,6 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, Account
-from stustapay.core.schema.order import PaymentMethod, OrderType
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.till import CashRegisterStocking, NewCashRegisterStocking, CashRegister, NewCashRegister
 from stustapay.core.schema.user import Privilege, CurrentUser
@@ -21,8 +20,7 @@ from stustapay.core.service.common.decorators import (
     with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import NotFound, InvalidArgument
-from stustapay.core.service.order.booking import NewLineItem, book_order, BookingIdentifier
-from stustapay.core.service.product import fetch_money_transfer_product
+from stustapay.core.service.order.booking import BookingIdentifier, book_money_transfer
 from stustapay.core.service.transaction import book_transaction
 
 VIRTUAL_TILL_ID = 1
@@ -258,30 +256,17 @@ class TillRegisterService(DBService):
                 f"Insufficient balance on transport account. Current balance is {transport_account.balance}"
             )
 
-        transfer_product = await fetch_money_transfer_product(conn=conn)
-        line_items = [
-            NewLineItem(
-                quantity=1,
-                product_id=transfer_product.id,
-                product_price=amount,
-                tax_name=transfer_product.tax_name,
-                tax_rate=transfer_product.tax_rate,
-            )
-        ]
-
         bookings: dict[BookingIdentifier, float] = {
             BookingIdentifier(source_account_id=transport_account.id, target_account_id=cashier_account.id): amount
         }
 
-        await book_order(
+        await book_money_transfer(
             conn=conn,
-            payment_method=PaymentMethod.cash,
-            order_type=OrderType.money_transfer,
+            originating_user_id=current_user.id,
             till_id=current_terminal.till.id,
-            cashier_id=current_user.id,
-            line_items=line_items,
             bookings=bookings,
             cash_register_id=cash_register_id,
+            amount=amount,
         )
 
         return True

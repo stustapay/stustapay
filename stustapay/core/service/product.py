@@ -12,6 +12,7 @@ from stustapay.core.schema.product import (
     TICKET_U18_PRODUCT_ID,
     TICKET_U16_PRODUCT_ID,
     MONEY_TRANSFER_PRODUCT_ID,
+    MONEY_DIFFERENCE_PRODUCT_ID,
 )
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
@@ -56,6 +57,10 @@ async def fetch_ticket_product_u16(*, conn: asyncpg.Connection) -> Product:
 
 async def fetch_money_transfer_product(*, conn: asyncpg.Connection) -> Product:
     return await fetch_constant_product(conn=conn, product_id=MONEY_TRANSFER_PRODUCT_ID)
+
+
+async def fetch_money_difference_product(*, conn: asyncpg.Connection) -> Product:
+    return await fetch_constant_product(conn=conn, product_id=MONEY_DIFFERENCE_PRODUCT_ID)
 
 
 async def fetch_initial_topup_amount(conn: asyncpg.Connection) -> float:

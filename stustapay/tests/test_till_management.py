@@ -146,7 +146,11 @@ class TillManagementTest(TerminalTestCase):
         n_orders = await self.db_conn.fetchval(
             "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
         )
-        self.assertEqual(n_orders_start + 3, n_orders)
+        self.assertEqual(n_orders_start + 4, n_orders)
+        n_orders = await self.db_conn.fetchval(
+            "select count(*) from ordr where order_type = $1", OrderType.money_transfer_imbalance.name
+        )
+        self.assertEqual(1, n_orders)
 
     async def test_transport_and_cashier_account_management(self):
         admin_terminal_token = await self.create_terminal(name="Admin terminal")

@@ -413,7 +413,8 @@ values
     ('pay_out'),
     -- sale of a ticket in combination with an initial top up
     ('ticket'),
-    ('money_transfer')
+    ('money_transfer'),
+    ('money_transfer_imbalance')
     on conflict do nothing;
 
 
@@ -479,7 +480,8 @@ values
     (4, 'Eintritt', true, 12, 'ust', true),
     (5, 'Eintritt U18', true, 12, 'ust', true),
     (6, 'Eintritt U16', true, 12, 'ust', true),
-    (7, 'Geldtransit', false, null, 'none', true);
+    (7, 'Geldtransit', false, null, 'none', true),
+    (8, 'DifferenzSollIst', false, null, 'none', true);
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
@@ -1032,7 +1034,8 @@ create table if not exists cashier_shift (
     final_cash_drawer_balance numeric not null,
     final_cash_drawer_imbalance numeric not null,
     comment text not null,
-    close_out_order_id bigint not null references ordr(id)
+    close_out_order_id bigint not null references ordr(id) unique,
+    close_out_imbalance_order_id bigint not null references ordr(id) unique
 );
 
 create or replace view cashier as (
@@ -1051,7 +1054,6 @@ create or replace view cashier as (
     join account a on usr.cashier_account_id = a.id
     left join till t on t.active_user_id = usr.id
 );
-
 
 -- book a new transaction and update the account balances automatically, returns the new transaction_id
 create or replace function book_transaction (

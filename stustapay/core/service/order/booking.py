@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 import asyncpg
 
 from stustapay.core.schema.order import PaymentMethod, OrderType
+from stustapay.core.service.product import fetch_money_transfer_product
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.util import BaseModel
 
@@ -38,7 +39,40 @@ class NewLineItem(BaseModel):
     tax_rate: float
 
 
+async def book_money_transfer(
+    *,
+    conn: asyncpg.Connection,
+    originating_user_id: int,
+    cash_register_id: int,
+    bookings: dict[BookingIdentifier, float],
+    amount: float,
+    till_id: int,
+) -> int:
+    transfer_product = await fetch_money_transfer_product(conn=conn)
+    line_items = [
+        NewLineItem(
+            quantity=1,
+            product_id=transfer_product.id,
+            product_price=amount,
+            tax_name=transfer_product.tax_name,
+            tax_rate=transfer_product.tax_rate,
+        )
+    ]
+
+    return await book_order(
+        conn=conn,
+        payment_method=PaymentMethod.cash,
+        order_type=OrderType.money_transfer,
+        till_id=till_id,
+        cashier_id=originating_user_id,
+        line_items=line_items,
+        bookings=bookings,
+        cash_register_id=cash_register_id,
+    )
+
+
 async def book_order(
+    *,
     conn: asyncpg.Connection,
     order_type: OrderType,
     payment_method: PaymentMethod,
