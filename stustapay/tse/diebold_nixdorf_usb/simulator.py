@@ -137,7 +137,7 @@ class VirtualTSE:
         response["TransactionNumber"] = self.transnr
         response["SerialNumber"] = self.serial
         response["SignatureCounter"] = self.signctr
-        response["Signature"] = randbytes(96).hex()
+        response["Signature"] = "ca8968b306a0" + randbytes(90).hex()
         response["LogTime"] = datetime.now(timezone(timedelta(hours=1))).isoformat(timespec="seconds")
 
         return response
@@ -177,7 +177,7 @@ class VirtualTSE:
 
         self.signctr += 1
         response["SignatureCounter"] = self.signctr
-        response["Signature"] = randbytes(16).hex()
+        response["Signature"] = "ca8968b306a0" + randbytes(90).hex()
         response["LogTime"] = datetime.now(timezone(timedelta(hours=1))).isoformat(timespec="seconds")
 
         return response
@@ -203,7 +203,7 @@ class VirtualTSE:
         if msg["ClientID"] not in self.current_transactions:
             return dnerror(19)
 
-        time.sleep(0.8)
+        time.sleep(0.9)
         self.password_block_counter = 0
 
         # check transaction number
@@ -215,7 +215,7 @@ class VirtualTSE:
         response["Status"] = "ok"
         self.signctr += 1
         response["SignatureCounter"] = self.signctr
-        response["Signature"] = randbytes(16).hex()
+        response["Signature"] = "ca8968b306a0" + randbytes(90).hex()
         response["LogTime"] = datetime.now(timezone(timedelta(hours=1))).isoformat(timespec="seconds")
 
         return response
@@ -318,10 +318,10 @@ class VirtualTSE:
         except binascii.Error:
             return dnerror(9)  # base64
 
-        if len(msg["ClientID"]) > 30:
-            return dnerror(4)
+        if len(msg["ClientID"]) > 100:
+            return dnerror(21)
 
-        if len(self.current_transactions) > 15:
+        if len(self.current_transactions) > 512:
             return dnerror(23)
 
         if msg["ClientID"] in self.current_transactions:

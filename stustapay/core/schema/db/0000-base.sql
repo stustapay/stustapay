@@ -863,7 +863,7 @@ create table if not exists till_tse_history (
 );
 
 
-create function deny_in_trigger() returns trigger language plpgsql as
+create or replace function deny_in_trigger() returns trigger language plpgsql as
 $$
 begin
     return null;
@@ -952,8 +952,8 @@ begin
     end if;
 
     -- insert a new tse signing request and notify for it
-    insert into bon(id) values (NEW.id);
-    perform pg_notify('bon', NEW.id::text);
+    insert into tse_signature(id) values (NEW.id);
+    perform pg_notify('tse_signature', NEW.id::text);
 
     -- send general notifications, used e.g. for instant UI updates
     perform pg_notify(
@@ -1223,7 +1223,7 @@ create table if not exists tse_signature (
 create index on tse_signature (id) where signature_status = 'todo';
 create index on tse_signature (id) where signature_status = 'pending';
 
-create function tse_signature_update_trigger_procedure()
+create or replace function tse_signature_update_trigger_procedure()
 returns trigger as $$
 begin
     new.last_update = now();
@@ -1238,6 +1238,26 @@ create trigger tse_signature_update_trigger
     for each row
 execute function tse_signature_update_trigger_procedure();
 
+
+--TODO: trigger on tse done, then update bon
+--create or replace function tse_signature_finished_trigger_procedure()
+--returns trigger as $$
+--begin
+    
+    --insert into bon(id) values (NEW.id);
+    --perform pg_notify('bon', NEW.id::text);
+
+    --return NEW;
+--end;
+--$$ language plpgsql;
+
+--create or replace trigger tse_signature_finished_trigger
+--   after update
+--    on
+--        tse_signature
+--    for each row
+--    when (NEW.signature_status is 'done')
+--execute function tse_signature_finished_trigger_procedure();
 
 -- requests the bon generator to create a new receipt
 create table if not exists bon (

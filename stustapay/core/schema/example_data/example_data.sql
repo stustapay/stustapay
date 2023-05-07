@@ -215,7 +215,7 @@ insert into till (
 ) overriding system value
 values
     (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, 'tse1', null),
-    (1, 'ssc-pot-1', 'Pot Bierkasse', 1, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, 'tse1', null),
+    (3, 'ssc-pot-1', 'Pot Bierkasse', 1, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, 'tse1', null),
     (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, 'tse1', null)
     on conflict do nothing;
 select setval('till_id_seq', 100);
@@ -236,9 +236,9 @@ values
     (3, 2, '2023-01-01 16:35:02 UTC+1', 'tag', 'sale', 0, 0, 200, 1),
     (4, 2, '2023-01-01 17:35:02 UTC+1', 'tag', 'sale', 0, 0, 200, 1),
     -- items with different tax rates
-    (1, 3, '2023-01-02 17:00:07 UTC+1', 'tag', 'sale', 0, 1, 201, 1),
+    (1, 3, '2023-01-02 17:00:07 UTC+1', 'tag', 'sale', 0, 3, 201, 1),
     -- Top Up EC
-    (2, 1, '2023-01-01 17:00:07 UTC+1', 'tag', 'sale', 0, 1, 201, 1)
+    (2, 1, '2023-01-01 17:00:07 UTC+1', 'tag', 'sale', 0, 3, 201, 1)
     on conflict do nothing;
 select setval('ordr_id_seq', 100);
 
