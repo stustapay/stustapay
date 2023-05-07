@@ -314,4 +314,10 @@ values
     ('Blechkasse 6'),
     ('Blechkasse 7');
 
+insert into cash_register_stocking (
+    name, euro20, euro10, euro5, euro2, euro1
+)
+values
+    ('default', 5, 10, 10, 1, 1);
+
 commit;
