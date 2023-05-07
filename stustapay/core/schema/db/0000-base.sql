@@ -742,10 +742,28 @@ comment on column cash_register_stocking.cent5 is 'number of rolls, one roll = 5
 comment on column cash_register_stocking.cent2 is 'number of rolls, one roll = 50 pcs = 1€';
 comment on column cash_register_stocking.cent1 is 'number of rolls, one roll = 50 pcs = 0,50€';
 
+
+
+create type tse_status_enum as enum ('new', 'active', 'disabled', 'failed');
+create table tse_status_info (
+    enum_value tse_status_enum primary key,
+    name text not null,
+    description text not null
+);
+
+
+insert into tse_status_info (enum_value, name, description) values
+    ('new', 'new', 'TSE is newly added'),
+    ('active', 'active', 'TSE is active and in use'),
+    ('disabled', 'disabled', 'TSE is diabled/no longer in use'),
+    ('failed', 'failed', 'TSE Failed') on conflict do nothing;
+
+
 -- list of TSEs with static TSE info
 create table if not exists tse (
     tse_nr                    bigserial primary key, -- replaces tse_id
     tse_name                  text unique not null,
+    tse_status                tse_status_enum not null default 'new',
     tse_serial                text,
     tse_hashalgo              text,
     tse_time_format           text,

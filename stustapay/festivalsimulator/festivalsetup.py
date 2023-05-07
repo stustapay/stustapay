@@ -29,8 +29,6 @@ PROFILE_ID_TICKET = 3
 CASHIER_TAG_START = 1000
 CUSTOMER_TAG_START = 100000
 
-DEFAULT_TSE_NR = "1"
-
 
 class FestivalSetup(SubCommand):
     def __init__(self, args, config: Config, **rest):
@@ -88,22 +86,22 @@ class FestivalSetup(SubCommand):
         for i in range(self.args.n_topup_tills):
             await till_service.create_till(
                 token=admin_token,
-                till=NewTill(name=f"Aufladekasse {i}", tse_nr=DEFAULT_TSE_NR, active_profile_id=PROFILE_ID_TOPUP),
+                till=NewTill(name=f"Aufladekasse {i}", active_profile_id=PROFILE_ID_TOPUP),
             )
         for i in range(self.args.n_entry_tills):
             await till_service.create_till(
                 token=admin_token,
-                till=NewTill(name=f"Eintrittskasse {i}", tse_nr=DEFAULT_TSE_NR, active_profile_id=PROFILE_ID_TICKET),
+                till=NewTill(name=f"Eintrittskasse {i}", active_profile_id=PROFILE_ID_TICKET),
             )
         for i in range(self.args.n_beer_tills):
             await till_service.create_till(
                 token=admin_token,
-                till=NewTill(name=f"Bierkasse {i}", tse_nr=DEFAULT_TSE_NR, active_profile_id=PROFILE_ID_BEER),
+                till=NewTill(name=f"Bierkasse {i}", active_profile_id=PROFILE_ID_BEER),
             )
         for i in range(self.args.n_cocktail_tills):
             await till_service.create_till(
                 token=admin_token,
-                till=NewTill(name=f"Cocktailkasse {i}", tse_nr=DEFAULT_TSE_NR, active_profile_id=PROFILE_ID_COCKTAIL),
+                till=NewTill(name=f"Cocktailkasse {i}", active_profile_id=PROFILE_ID_COCKTAIL),
             )
 
     async def _create_cashiers(self, user_service: UserService):

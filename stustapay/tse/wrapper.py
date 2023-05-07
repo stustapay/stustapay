@@ -19,13 +19,15 @@ PAYMENT_METHOD_TO_ZAHLUNGSART = {"cash": "Bar", "sumup": "Unbar", "tag": "Unbar"
 
 
 class TSEWrapper:
-    def __init__(self, name: int, factory_function: Callable[[], TSEHandler]): #TODO TSE name is now a number, no longer a string!
+    def __init__(
+        self, name: str, factory_function: Callable[[], TSEHandler]
+    ):  # TODO TSE name is now a number, no longer a string!
         # most of these members will be set in run().
 
         # The TSE name (database TSE_name and TSE config entry)
         self.name = name
         # The TSE_nr (database tse_nr), references to tills and transactions
-        self.tse_nr:typing.Optional[int] = None
+        self.tse_nr: typing.Optional[int] = None
         # The factory function that constructs the inner TSE handler object
         self._factory_function = factory_function
         # Inner TSE handler (constructed by factory function)
@@ -88,8 +90,49 @@ class TSEWrapper:
         assert self._tse_handler is not None
 
         # get tse_nr of the configured TSE
-        self.tse_nr = await self._conn.fetchval("select tse_nr from tse where tse_name=$1", self.name)
+        self.tse_nr, tse_status = await self._conn.fetchrow(
+            "select tse_nr, tse_status from tse where tse_name=$1", self.name
+        )
         assert self.tse_nr is not None
+
+        # get master data
+        masterdata = self._tse_handler.get_master_data()
+
+        if tse_status == "new":
+            await self._conn.execute(
+                """
+            update
+                tse
+            set
+                tse_status='active',
+                tse_serial=$1,
+                tse_hashalgo=$2,
+                tse_time_format=$3,
+                tse_public_key=$4,
+                tse_certificate=$5,
+                tse_process_data_encoding=$6
+            where
+                tse_nr=$7
+            """,
+                masterdata.tse_serial,
+                masterdata.tse_hashalgo,
+                masterdata.tse_time_format,
+                masterdata.tse_public_key,
+                masterdata.tse_certificate,
+                masterdata.tse_process_data_encoding,
+                self.tse_nr,
+            )
+        elif tse_status == "active":
+            # TODO verify
+            pass
+        elif tse_status == "disabled":
+            # TODO abort, switch till to new tse in processor
+            pass
+        elif tse_status == "failed":
+            # TODO abort, switch till to new tse in processor
+            pass
+        else:
+            raise RuntimeError("TSE has no state, forbidden db state")
 
         # get the list of tills that are registered to the TSE
         self._tills = set(await self._tse_handler.get_client_ids())
