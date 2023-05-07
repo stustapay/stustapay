@@ -134,7 +134,8 @@ values
     (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here'),
     (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement'),
     (6, null, 'virtual', 'Money / Voucher create', 'Account which will be charged on manual account balance updates and voucher top ups'),
-    (7, null, 'virtual', 'Cash Exit', 'target account when cash exists the system, e.g. cash pay outs')
+    (7, null, 'virtual', 'Cash Exit', 'target account when cash exists the system, e.g. cash pay outs'),
+    (8, null, 'virtual', 'Cash Sale Source', 'source account for cash good sales or cash top ups')
     on conflict do nothing;
 
 create table if not exists account_tag_association_history (

@@ -8,13 +8,13 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.account import (
     ACCOUNT_CASH_ENTRY,
-    ACCOUNT_CASH_VAULT,
     ACCOUNT_SUMUP,
     Account,
     get_source_account,
     get_target_account,
     ACCOUNT_SALE_EXIT,
     ACCOUNT_CASH_EXIT,
+    ACCOUNT_CASH_SALE_SOURCE,
 )
 from stustapay.core.schema.order import (
     CompletedSale,
@@ -382,7 +382,7 @@ class OrderService(DBService):
         if pending_top_up.payment_method == PaymentMethod.cash:
             bookings = {
                 BookingIdentifier(
-                    source_account_id=ACCOUNT_CASH_VAULT, target_account_id=pending_top_up.customer_account_id
+                    source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=pending_top_up.customer_account_id
                 ): pending_top_up.amount,
                 BookingIdentifier(
                     source_account_id=ACCOUNT_CASH_ENTRY, target_account_id=current_user.cashier_account_id
@@ -686,7 +686,7 @@ class OrderService(DBService):
 
         prepared_bookings: Dict[BookingIdentifier, float] = {
             BookingIdentifier(
-                source_account_id=pending_pay_out.customer_account_id, target_account_id=ACCOUNT_CASH_VAULT
+                source_account_id=pending_pay_out.customer_account_id, target_account_id=ACCOUNT_CASH_SALE_SOURCE
             ): -pending_pay_out.amount,
             BookingIdentifier(
                 source_account_id=current_user.cashier_account_id, target_account_id=ACCOUNT_CASH_EXIT
@@ -899,11 +899,11 @@ class OrderService(DBService):
                 )
             ] = pending_ticket_sale.total_price
             prepared_bookings[
-                BookingIdentifier(source_account_id=ACCOUNT_CASH_VAULT, target_account_id=ACCOUNT_SALE_EXIT)
+                BookingIdentifier(source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=ACCOUNT_SALE_EXIT)
             ] = total_ticket_price
             for customer_account_id in customers.keys():
                 prepared_bookings[
-                    BookingIdentifier(source_account_id=ACCOUNT_CASH_VAULT, target_account_id=customer_account_id)
+                    BookingIdentifier(source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=customer_account_id)
                 ] = initial_top_up_amount
         elif pending_ticket_sale.payment_method == PaymentMethod.sumup:
             prepared_bookings[
