@@ -32,11 +32,13 @@ import { encodeTillRegistrationQrCode } from "@core";
 import { config } from "@api/common";
 import { toast } from "react-toastify";
 import { getUserName } from "@stustapay/models";
+import { useCurrencyFormatter } from "@hooks";
 
 export const TillDetail: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const { tillId } = useParams();
   const navigate = useNavigate();
+  const formatCurrency = useCurrencyFormatter();
 
   const [showForceLogoutDlg, setShowForceLogoutDlg] = React.useState(false);
   const [showUnregisterTillDlg, setShowUnregisterTillDlg] = React.useState(false);
@@ -164,6 +166,19 @@ export const TillDetail: React.FC = () => {
                 </Button>
               </ListItem>
             </>
+          )}
+          {till.current_cash_register_name != null && (
+            <ListItem>
+              <ListItemText primary={t("till.cashRegisterName")} secondary={till.current_cash_register_name} />
+            </ListItem>
+          )}
+          {till.current_cash_register_balance != null && (
+            <ListItem>
+              <ListItemText
+                primary={t("till.cashRegisterBalance")}
+                secondary={formatCurrency(till.current_cash_register_balance)}
+              />
+            </ListItem>
           )}
           {till.registration_uuid != null && (
             <ListItem>
