@@ -14,7 +14,9 @@
     "deleteDescription": "Confirm till deletion",
     "activeUser": "Logged in user",
     "forceLogoutUser": "Force logout user",
-    "forceLogoutUserDescription": "Force logout user at terminal. This should NEVER be done while a cashier is still using the terminal"
+    "forceLogoutUserDescription": "Force logout user at terminal. This should NEVER be done while a cashier is still using the terminal",
+    "unregisterTill": "Force logout a terminal",
+    "unregisterTillDescription": "Force logout a terminal. This should NEVER be done while a cashier is still using the terminal"
   },
   "layout": {
     "layout": "Layout",

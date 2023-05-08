@@ -39,6 +39,7 @@ export const TillDetail: React.FC = () => {
   const navigate = useNavigate();
 
   const [showForceLogoutDlg, setShowForceLogoutDlg] = React.useState(false);
+  const [showUnregisterTillDlg, setShowUnregisterTillDlg] = React.useState(false);
 
   const [forceLogoutUser] = useForceLogoutUserMutation();
   const [deleteTill] = useDeleteTillMutation();
@@ -74,8 +75,15 @@ export const TillDetail: React.FC = () => {
     setShowConfirmDelete(false);
   };
 
-  const performLogoutTill = () => {
-    logoutTill(Number(tillId));
+  const openUnregisterTillDialog = () => {
+    setShowUnregisterTillDlg(true);
+  };
+
+  const handleUnregisterTill: ConfirmDialogCloseHandler = (reason) => {
+    if (reason === "confirm") {
+      logoutTill(Number(tillId));
+    }
+    setShowUnregisterTillDlg(false);
   };
 
   if (till === undefined) {
@@ -117,7 +125,7 @@ export const TillDetail: React.FC = () => {
               </IconButtonLink>
               {till.session_uuid != null && (
                 <Tooltip title={t("till.logout")}>
-                  <IconButton onClick={performLogoutTill} color="warning">
+                  <IconButton onClick={openUnregisterTillDialog} color="warning">
                     <LogoutIcon />
                   </IconButton>
                 </Tooltip>
@@ -185,6 +193,12 @@ export const TillDetail: React.FC = () => {
         body={t("till.forceLogoutUserDescription")}
         show={showForceLogoutDlg}
         onClose={handleConfirmForceLogout}
+      />
+      <ConfirmDialog
+        title={t("till.unregisterTill")}
+        body={t("till.unregisterTillDescription")}
+        show={showUnregisterTillDlg}
+        onClose={handleUnregisterTill}
       />
       <ConfirmDialog
         title={t("till.delete")}
