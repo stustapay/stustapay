@@ -767,6 +767,38 @@ comment on column cash_register_stocking.cent5 is 'number of rolls, one roll = 5
 comment on column cash_register_stocking.cent2 is 'number of rolls, one roll = 50 pcs = 1€';
 comment on column cash_register_stocking.cent1 is 'number of rolls, one roll = 50 pcs = 0,50€';
 
+
+
+create type tse_status_enum as enum ('new', 'active', 'disabled', 'failed');
+create table tse_status_info (
+    enum_value tse_status_enum primary key,
+    name text not null,
+    description text not null
+);
+
+
+insert into tse_status_info (enum_value, name, description) values
+    ('new', 'new', 'TSE is newly added'),
+    ('active', 'active', 'TSE is active and in use'),
+    ('disabled', 'disabled', 'TSE is diabled/no longer in use'),
+    ('failed', 'failed', 'TSE Failed') on conflict do nothing;
+
+
+-- list of TSEs with static TSE info
+create table if not exists tse (
+    tse_id                    bigserial primary key, -- now integer!
+    tse_name                  text unique not null,
+    tse_status                tse_status_enum not null default 'new',
+    tse_serial                text,
+    tse_hashalgo              text,
+    tse_time_format           text,
+    tse_public_key            text,
+    tse_certificate           text,
+    tse_process_data_encoding text
+);
+
+
+
 -- which cash desks do we have and in which state are they
 create table if not exists till (
     id bigint primary key generated always as identity (start with 1000),
@@ -776,7 +808,7 @@ create table if not exists till (
     session_uuid uuid unique,
 
     -- how this till is currently mapped to a tse
-    tse_id text,
+    tse_id bigint references tse(tse_id),
 
     -- identifies the current active work shift and configuration
     active_shift text,
@@ -796,7 +828,7 @@ insert into till_layout (id, name, description) overriding system value values (
 insert into till_profile (id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id)
     overriding system value values (1, 'Virtual till profile', '', false, false, false, 1);
 insert into till (id, name, description, active_profile_id, registration_uuid, tse_id) overriding system value
-values (1, 'Virtual Till', '', 1, gen_random_uuid(), 'tse1');
+values (1, 'Virtual Till', '', 1, gen_random_uuid(), null);
 
 
 create or replace function handle_till_user_login() returns trigger as
@@ -874,7 +906,7 @@ create type till_tse_history_type as enum ('register', 'deregister');
 -- logs all historic till <-> TSE assignments (as registered with the TSE)
 create table if not exists till_tse_history (
     till_name text not null,
-    tse_id text not null,
+    tse_id bigint references tse(tse_id) not null,
     what till_tse_history_type not null,
     date timestamptz not null default now()
 );
@@ -1166,19 +1198,6 @@ end;
 $$ language plpgsql;
 
 
-create table if not exists tse (
-    tse_id                    serial primary key,
-    tse_name                  text not null,
-
-    tse_serial                text not null,
-    tse_hashalgo              text not null,
-    tse_time_format           text not null,
-    tse_public_key            text not null,
-    tse_certificate           text not null,
-    tse_process_data_encoding text not null
-);
-
-
 create type tse_signature_status as enum ('todo', 'pending', 'done', 'failure');
 create table tse_signature_status_info (
     enum_value tse_signature_status primary key,
@@ -1207,7 +1226,7 @@ create table if not exists tse_signature (
     last_update timestamptz not null default now(),
 
     -- id of the TSE that was used to create the signature
-    tse_id          text,
+    tse_id          bigint references tse(tse_id),
     constraint tse_id_set check ((tse_id is null) = (signature_status = 'todo')),
 
     -- signature input for the TSE
@@ -1225,16 +1244,8 @@ create table if not exists tse_signature (
     constraint tse_start_set check ((tse_start is not null) = (signature_status = 'done')),
     tse_end         text,
     constraint tse_end_set check ((tse_end is not null) = (signature_status = 'done')),
-    tse_serial      text,
-    constraint tse_serial_set check ((tse_serial is not null) = (signature_status = 'done')),
-    tse_hashalgo    text,
-    constraint tse_hashalgo_set check ((tse_hashalgo is not null) = (signature_status = 'done')),
     tse_signature   text,
-    constraint tse_signature_set check ((tse_signature is not null) = (signature_status = 'done')),
-    tse_time_format text,
-    constraint tse_time_format_set check ((tse_time_format is not null) = (signature_status = 'done')),
-    tse_public_key  text,
-    constraint tse_public_key_set check ((tse_public_key is not null) = (signature_status = 'done'))
+    constraint tse_signature_set check ((tse_signature is not null) = (signature_status = 'done'))
 );
 
 

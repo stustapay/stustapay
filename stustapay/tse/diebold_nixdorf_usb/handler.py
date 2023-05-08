@@ -9,7 +9,7 @@ import json
 import logging
 import typing
 
-from ..handler import TSEHandler, TSESignature, TSESignatureRequest
+from ..handler import TSEHandler, TSESignature, TSESignatureRequest, TSEMasterData
 from .config import DieboldNixdorfUSBTSEConfig
 
 LOGGER = logging.getLogger(__name__)
@@ -42,6 +42,7 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         self._signature_algorithm: typing.Optional[str] = None
         self._log_time_format: typing.Optional[str] = None
         self._public_key: typing.Optional[str] = None  # base64
+        self._certificate: typing.Optional[str] = None  # long string
 
     async def start(self) -> bool:
         self._stop = False
@@ -97,6 +98,7 @@ class DieboldNixdorfUSBTSE(TSEHandler):
                 device_status = await self.request("GetDeviceStatus")
                 self._signature_algorithm = device_status["Parameters"]["SignatureAlgorithm"]
                 self._public_key = await self.get_device_data("PublicKey", format="Base64")
+                self._certificate = await self.get_device_data("Certificates", format="Base64")
 
                 start_result.set_result(True)
             except:
@@ -189,10 +191,6 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         await self.request_with_password("DeregisterClientID", ClientID=client_id)
 
     async def sign(self, request: TSESignatureRequest) -> TSESignature:
-        assert self._signature_algorithm is not None
-        assert self._log_time_format is not None
-        assert self._public_key is not None
-
         LOGGER.info(f"{self}: signing {request}")
         start_result = await self.request_with_password("StartTransaction", ClientID=request.till_name)
         transaction_number = start_result["TransactionNumber"]
@@ -208,11 +206,21 @@ class DieboldNixdorfUSBTSE(TSEHandler):
             tse_signaturenr=finish_result["SignatureCounter"],
             tse_start=start_result["LogTime"],
             tse_end=finish_result["LogTime"],
+            tse_signature=base64.b64encode(binascii.unhexlify(finish_result["Signature"])).decode("ascii"),
+        )
+
+    def get_master_data(self) -> TSEMasterData:
+        assert self._signature_algorithm is not None
+        assert self._log_time_format is not None
+        assert self._public_key is not None
+        assert self._certificate is not None
+        return TSEMasterData(
             tse_serial=self.serial_number,
             tse_hashalgo=self._signature_algorithm,
-            tse_signature=base64.b64encode(binascii.unhexlify(finish_result["Signature"])).decode("ascii"),
             tse_time_format=self._log_time_format,
             tse_public_key=self._public_key,
+            tse_certificate=self._certificate,
+            tse_process_data_encoding="UTF-8",
         )
 
     async def get_client_ids(self) -> list[str]:
@@ -228,6 +236,13 @@ class DieboldNixdorfUSBTSE(TSEHandler):
             result.remove("DummyDefaultClientId")
         except ValueError:
             raise RuntimeError("TSE does not have 'DummyDefaultClientId' registered") from None
+        clientid_to_ignore = set()
+        for entry in result:
+            if entry.startswith("DN TSEProduction"):
+                clientid_to_ignore.add(entry)
+        for entry in clientid_to_ignore:
+            result.remove(entry)
+
         return result
 
     def __str__(self):

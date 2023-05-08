@@ -14,16 +14,22 @@ class TSESignatureRequest:
 
 
 @dataclasses.dataclass
+class TSEMasterData:
+    tse_serial: str
+    tse_hashalgo: str
+    tse_time_format: str
+    tse_public_key: str
+    tse_certificate: str
+    tse_process_data_encoding: str
+
+
+@dataclasses.dataclass
 class TSESignature:
     tse_transaction: str
     tse_signaturenr: str
     tse_start: str
     tse_end: str
-    tse_serial: str
-    tse_hashalgo: str
     tse_signature: str
-    tse_time_format: str
-    tse_public_key: str
 
 
 class TSEHandler(abc.ABC):
@@ -104,6 +110,13 @@ class TSEHandler(abc.ABC):
     async def get_client_ids(self) -> list[str]:
         """
         Returns all registered client ids.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_master_data(self) -> TSEMasterData:
+        """
+        Returns TSE master data like serial, hashalgo, timeformat...
         """
         raise NotImplementedError()
 

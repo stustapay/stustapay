@@ -52,13 +52,12 @@ class TillService(DBService):
     async def create_till(self, *, conn: asyncpg.Connection, till: NewTill) -> Till:
         row = await conn.fetchrow(
             "insert into till "
-            "   (name, description, registration_uuid, tse_id, active_shift, active_profile_id) "
-            "values ($1, $2, $3, $4, $5, $6) returning id, name, description, registration_uuid, session_uuid, "
+            "   (name, description, registration_uuid, active_shift, active_profile_id) "
+            "values ($1, $2, $3, $4, $5) returning id, name, description, registration_uuid, session_uuid, "
             "   tse_id, active_shift, active_profile_id, z_nr",
             till.name,
             till.description,
             uuid.uuid4(),
-            till.tse_id,
             till.active_shift,
             till.active_profile_id,
         )
@@ -87,13 +86,12 @@ class TillService(DBService):
     @requires_user([Privilege.till_management])
     async def update_till(self, *, conn: asyncpg.Connection, till_id: int, till: NewTill) -> Optional[Till]:
         row = await conn.fetchrow(
-            "update till set name = $2, description = $3, tse_id = $4, active_shift = $5, active_profile_id = $6 "
+            "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5 "
             "where id = $1 returning id, name, description, registration_uuid, tse_id, active_shift, "
             "   active_profile_id, session_uuid, z_nr",
             till_id,
             till.name,
             till.description,
-            till.tse_id,
             till.active_shift,
             till.active_profile_id,
         )

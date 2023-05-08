@@ -6,6 +6,7 @@ import typing
 import traceback
 
 import asyncpg
+import time
 
 # from stustapay.core.schema.order import Order
 from .handler import TSEHandler, TSESignatureRequest, TSESignature
@@ -18,11 +19,15 @@ PAYMENT_METHOD_TO_ZAHLUNGSART = {"cash": "Bar", "sumup": "Unbar", "tag": "Unbar"
 
 
 class TSEWrapper:
-    def __init__(self, name: str, factory_function: Callable[[], TSEHandler]):
+    def __init__(
+        self, name: str, factory_function: Callable[[], TSEHandler]
+    ):  # TODO TSE name is now a number, no longer a string!
         # most of these members will be set in run().
 
-        # The TSE name (database TSE id and TSE config entry)
+        # The TSE name (database TSE_name and TSE config entry)
         self.name = name
+        # The TSE_id (database tse_id), references to tills and transactions
+        self.tse_id: typing.Optional[int] = None
         # The factory function that constructs the inner TSE handler object
         self._factory_function = factory_function
         # Inner TSE handler (constructed by factory function)
@@ -84,6 +89,51 @@ class TSEWrapper:
         """
         assert self._tse_handler is not None
 
+        # get tse_id of the configured TSE
+        self.tse_id, tse_status = await self._conn.fetchrow(
+            "select tse_id, tse_status from tse where tse_name=$1", self.name
+        )
+        assert self.tse_id is not None
+
+        # get master data
+        masterdata = self._tse_handler.get_master_data()
+
+        if tse_status == "new":
+            await self._conn.execute(
+                """
+            update
+                tse
+            set
+                tse_status='active',
+                tse_serial=$1,
+                tse_hashalgo=$2,
+                tse_time_format=$3,
+                tse_public_key=$4,
+                tse_certificate=$5,
+                tse_process_data_encoding=$6
+            where
+                tse_id=$7
+            """,
+                masterdata.tse_serial,
+                masterdata.tse_hashalgo,
+                masterdata.tse_time_format,
+                masterdata.tse_public_key,
+                masterdata.tse_certificate,
+                masterdata.tse_process_data_encoding,
+                self.tse_id,
+            )
+        elif tse_status == "active":
+            # TODO verify
+            pass
+        elif tse_status == "disabled":
+            # TODO abort, switch till to new tse in processor
+            pass
+        elif tse_status == "failed":
+            # TODO abort, switch till to new tse in processor
+            pass
+        else:
+            raise RuntimeError("TSE has no state, forbidden db state")
+
         # get the list of tills that are registered to the TSE
         self._tills = set(await self._tse_handler.get_client_ids())
 
@@ -91,7 +141,7 @@ class TSEWrapper:
         # listed as assigned to the TSE in the database.
         # These tills need to be unregistered from the TSE.
         extra_tills = set(self._tills)
-        for row in await self._conn.fetch("select name from till where tse_id=$1", self.name):
+        for row in await self._conn.fetch("select name from till where tse_id=$1", self.tse_id):
             till = row["name"]
             extra_tills.discard(till)  # no need to unregister this till
             if till not in self._tills:
@@ -99,8 +149,7 @@ class TSEWrapper:
                 await self._till_add(till)
         # Unregister all of the extra tills
         for till in sorted(extra_tills):
-            pass
-            # await self._till_remove(till)
+            await self._till_remove(till)
 
         # The TSE is now ready to be used.
         # Ready to execute signatures from the database.
@@ -144,48 +193,6 @@ class TSEWrapper:
             return None
 
         async with self._conn.transaction(isolation="serializable"):
-            # the following two statements should be equivalent.
-            # for testing purposes we run both statements to make sure that
-            # they actually are. TODO remove the first one (next_sig_alt).
-            next_sig_alt = await self._conn.fetchrow(
-                """
-                with currently_signing as (
-                    select
-                        till_id
-                    from
-                        tse_signature
-                        join ordr on ordr.id = tse_signature.id
-                    where tse_signature.signature_status = 'pending'
-                ),
-                todo_signatures as (
-                    select
-                        ordr.id, till_id, till.name as till_name
-                    from
-                        tse_signature
-                        join ordr on ordr.id = tse_signature.id
-                        join till on ordr.till_id = till.id
-                    where
-                        tse_signature.signature_status = 'todo'
-                        and till.tse_id = $1
-                )
-                select
-                    id as order_id, till_name
-                from
-                    todo_signatures
-                where
-                    not exists (
-                        select
-                            1
-                        from
-                            currently_signing
-                        where
-                            currently_signing.till_id = todo_signatures.till_id
-                    )
-                order by id
-                limit 1
-                """,
-                self.name,
-            )
             next_sig = await self._conn.fetchrow(
                 """
                 with currently_signing as (
@@ -218,10 +225,8 @@ class TSEWrapper:
                 order by ordr.id
                 limit 1
                 """,
-                self.name,
+                self.tse_id,
             )
-            assert next_sig_alt == next_sig
-            del next_sig_alt
             if next_sig is None:
                 # no orders are available, return None
                 return None
@@ -244,7 +249,7 @@ class TSEWrapper:
                 where
                     id=$2
                 """,
-                self.name,
+                self.tse_id,
                 order_id,
             )
 
@@ -308,13 +313,9 @@ class TSEWrapper:
                 tse_signaturenr=$4,
                 tse_start=$5,
                 tse_end=$6,
-                tse_serial=$7,
-                tse_hashalgo=$8,
-                tse_signature=$9,
-                tse_time_format=$10,
-                tse_public_key=$11
+                tse_signature=$7
             where
-                id=$12
+                id=$8
             """,
             request.process_type,
             request.process_data,
@@ -322,11 +323,7 @@ class TSEWrapper:
             str(result.tse_signaturenr),
             result.tse_start,
             result.tse_end,
-            result.tse_serial,
-            result.tse_hashalgo,
             result.tse_signature,
-            result.tse_time_format,
-            result.tse_public_key,
             request.order_id,
         )
 
@@ -335,11 +332,13 @@ class TSEWrapper:
         # must be called when the TSE is connected and operational.
         if signing_request.till_name not in self._tills:
             await self._till_add(signing_request.till_name)
+        start = time.monotonic()
         result = await self._tse_handler.sign(signing_request)
+        stop = time.monotonic()
         # TODO handle failures
         # (return None if the signature was cleanly aborted,
         #  e.g. because self._tse_handler is no longer valid)
-        LOGGER.info(f"{self.name!r}: signature done ({signing_request})")
+        LOGGER.info(f"{self.name!r}: signature done ({signing_request}) in TIME {stop-start:.3f}s")
         return result
 
     async def _till_add(self, till):
@@ -347,7 +346,7 @@ class TSEWrapper:
         LOGGER.info(f"{self.name!r}: adding till {till!r}")
         await self._tse_handler.register_client_id(till)
         await self._conn.execute(
-            "insert into till_tse_history (till_name, tse_id, what) values ($1, $2, 'register')", till, self.name
+            "insert into till_tse_history (till_name, tse_id, what) values ($1, $2, 'register')", till, self.tse_id
         )
         self._tills.add(till)
 
@@ -356,6 +355,6 @@ class TSEWrapper:
         LOGGER.info(f"{self.name!r}: removing till {till!r}")
         await self._tse_handler.deregister_client_id(till)
         await self._conn.execute(
-            "insert into till_tse_history (till_name, tse_id, what) values ($1, $2, 'deregister')", till, self.name
+            "insert into till_tse_history (till_name, tse_id, what) values ($1, $2, 'deregister')", till, self.tse_id
         )
         self._tills.remove(till)
