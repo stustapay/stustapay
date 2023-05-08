@@ -761,7 +761,7 @@ insert into tse_status_info (enum_value, name, description) values
 
 -- list of TSEs with static TSE info
 create table if not exists tse (
-    tse_nr                    bigserial primary key, -- replaces tse_id
+    tse_id                    bigserial primary key, -- now integer!
     tse_name                  text unique not null,
     tse_status                tse_status_enum not null default 'new',
     tse_serial                text,
@@ -783,7 +783,7 @@ create table if not exists till (
     session_uuid uuid unique,
 
     -- how this till is currently mapped to a tse
-    tse_nr bigint references tse(tse_nr),
+    tse_id bigint references tse(tse_id),
 
     -- identifies the current active work shift and configuration
     active_shift text,
@@ -881,7 +881,7 @@ create type till_tse_history_type as enum ('register', 'deregister');
 -- logs all historic till <-> TSE assignments (as registered with the TSE)
 create table if not exists till_tse_history (
     till_name text not null,
-    tse_nr bigint references tse(tse_nr) not null,
+    tse_id bigint references tse(tse_id) not null,
     what till_tse_history_type not null,
     date timestamptz not null default now()
 );
@@ -1189,8 +1189,8 @@ create table if not exists tse_signature (
     last_update timestamptz not null default now(),
 
     -- id of the TSE that was used to create the signature
-    tse_nr          bigint references tse(tse_nr),
-    constraint tse_nr_set check ((tse_nr is null) = (signature_status = 'todo')),
+    tse_id          bigint references tse(tse_id),
+    constraint tse_id_set check ((tse_id is null) = (signature_status = 'todo')),
 
     -- signature input for the TSE
     transaction_process_type text,

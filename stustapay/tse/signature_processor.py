@@ -43,7 +43,7 @@ class SignatureProcessor(SubCommand):
             # This intruduces much complexity and potential for bugs though,
             # so for now we just assume that the signature was interrupted and failed.
             # after this clean-up the database will be in a consistent state where
-            # the till <-> tse mapping can be obtained via select name, tse_nr from till;
+            # the till <-> tse mapping can be obtained via select name, tse_id from till;
             # see the next request.
             await psql.execute(
                 """

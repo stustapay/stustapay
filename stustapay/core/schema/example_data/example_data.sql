@@ -216,7 +216,7 @@ insert into tse ( tse_name) values
 
 
 insert into till (
-    id, name, description, active_profile_id, active_user_id, active_user_role_id, registration_uuid, session_uuid, tse_nr, active_shift
+    id, name, description, active_profile_id, active_user_id, active_user_role_id, registration_uuid, session_uuid, tse_id, active_shift
 ) overriding system value
 values
     (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, '1', null),
@@ -226,7 +226,7 @@ values
 select setval('till_id_seq', 100);
 
 insert into till_tse_history (
-    till_name, tse_nr, what
+    till_name, tse_id, what
 )
 values
     (0, '1', 'register');
