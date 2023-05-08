@@ -15,6 +15,9 @@ export const cashierApi = createApi({
   reducerPath: "cashierApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["cashier", "cashierShift"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getCashiers: builder.query<EntityState<Cashier>, void>({
       query: () => "/cashiers/",

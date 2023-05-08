@@ -12,6 +12,9 @@ export const tillProfileApi = createApi({
   reducerPath: "tillProfileApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["till-profiles"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getTillProfileById: builder.query<EntityState<TillProfile>, number>({
       query: (id) => `/till-profiles/${id}/`,

@@ -12,6 +12,9 @@ export const tillRegisterApi = createApi({
   reducerPath: "tillRegisterApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["till-register"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getTillRegisters: builder.query<EntityState<TillRegister>, void>({
       query: () => "/till-registers/",
