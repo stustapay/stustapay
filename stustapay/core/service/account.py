@@ -135,17 +135,14 @@ class AccountService(DBService):
             return False
 
         imbalance = new_voucher_amount - account.vouchers
-        try:
-            await book_transaction(
-                conn=conn,
-                description="Admin override for account voucher amount",
-                source_account_id=ACCOUNT_MONEY_VOUCHER_CREATE,
-                target_account_id=account.id,
-                amount=imbalance,
-                conducting_user_id=current_user.id,
-            )
-        except:  # pylint: disable=bare-except
-            return False
+        await book_transaction(
+            conn=conn,
+            description="Admin override for account voucher amount",
+            source_account_id=ACCOUNT_MONEY_VOUCHER_CREATE,
+            target_account_id=account.id,
+            voucher_amount=imbalance,
+            conducting_user_id=current_user.id,
+        )
         return True
 
     @with_db_transaction

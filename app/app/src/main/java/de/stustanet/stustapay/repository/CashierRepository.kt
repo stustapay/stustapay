@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.repository
 
+import de.stustanet.stustapay.model.CashRegister
 import de.stustanet.stustapay.model.CashierStocking
 import de.stustanet.stustapay.model.UserInfo
 import de.stustanet.stustapay.model.UserInfoPayload
@@ -14,8 +15,8 @@ class CashierRepository @Inject constructor(
         return cashierRemoteDataSource.getCashierStockings()
     }
 
-    suspend fun equipCashier(tagUid: ULong, stockingId: ULong): Response<Unit> {
-        return cashierRemoteDataSource.equipCashier(tagUid, stockingId)
+    suspend fun equipCashier(tagid: ULong, registerId: ULong, stockingId: ULong): Response<Unit> {
+        return cashierRemoteDataSource.equipCashier(tagid, registerId, stockingId)
     }
 
     suspend fun bookTransport(cashierTagId: ULong, amount: Double): Response<Unit> {
@@ -28,5 +29,9 @@ class CashierRepository @Inject constructor(
 
     suspend fun getCashierInfo(tagId: ULong): Response<UserInfo> {
         return cashierRemoteDataSource.getCashierInfo(tagId)
+    }
+
+    suspend fun getRegisters(): Response<List<CashRegister>> {
+        return cashierRemoteDataSource.getRegisters()
     }
 }

@@ -1,4 +1,5 @@
 import logging
+from stustapay.core.config import Config
 
 from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
@@ -6,8 +7,8 @@ from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer import CustomerService
 from stustapay.core.service.user import AuthService
 from stustapay.core.subcommand import SubCommand
+from stustapay.customer_portal.routers import base
 from .routers import auth
-from .config import Config
 
 
 class Api(SubCommand):
@@ -26,6 +27,7 @@ class Api(SubCommand):
         )
 
         self.server.add_router(auth.router)
+        self.server.add_router(base.router)
 
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)

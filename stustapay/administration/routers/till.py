@@ -63,6 +63,15 @@ async def logout_till(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
+@router.post("/{till_id}/force-logout-user")
+async def force_logout_user(
+    till_id: int,
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
+):
+    await till_service.force_logout_user(token=token, till_id=till_id)
+
+
 @router.delete("/{till_id}")
 async def delete_till(
     till_id: int,

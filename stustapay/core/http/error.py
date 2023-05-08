@@ -1,7 +1,8 @@
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
-from stustapay.core.service.common.error import NotFound, ServiceException, AccessDenied
+from stustapay.core.service.common.error import NotFound, ServiceException, AccessDenied, Unauthorized
+
 
 # these exception messages are parsed in the frontends
 
@@ -39,6 +40,30 @@ def access_exception_handler(request: Request, exc: AccessDenied):
         content={
             "type": "access",
             "id": exc.id,
+            "message": str(exc),
+        },
+    )
+
+
+def unauthorized_exception_handler(request: Request, exc: Unauthorized):
+    del request
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content={
+            "type": "unauthorized",
+            "id": exc.id,
+            "message": str(exc),
+        },
+    )
+
+
+def bad_request_exception_handler(request: Request, exc: Exception):
+    del request
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "type": "service",
+            "id": exc.__class__.__name__,
             "message": str(exc),
         },
     )

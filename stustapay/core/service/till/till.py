@@ -20,7 +20,7 @@ from stustapay.core.schema.user import Privilege, UserTag, UserRole, CurrentUser
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
-from stustapay.core.service.common.error import AccessDenied, NotFound
+from stustapay.core.service.common.error import AccessDenied, NotFound, InvalidArgument
 from stustapay.core.service.product import (
     fetch_ticket_product_u18,
     fetch_ticket_product_u16,
@@ -146,6 +146,15 @@ class TillService(DBService):
             current_terminal.till.id,
         )
         return id_ is not None
+
+    @with_db_transaction
+    @requires_user([Privilege.till_management])
+    async def force_logout_user(self, *, conn: asyncpg.Connection, till_id: int):
+        result = await conn.fetchval(
+            "update till set active_user_id = null, active_user_role_id = null where id = $1 returning id", till_id
+        )
+        if result is None:
+            raise InvalidArgument("till does not exist")
 
     @with_db_transaction
     @requires_terminal()

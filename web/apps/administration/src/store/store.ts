@@ -20,6 +20,7 @@ import { authSlice } from "./authSlice";
 import { uiSlice } from "./uiSlice";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { errorMiddleware } from "./errorMiddleware";
 
 const authPersistConfig = {
   key: "auth",
@@ -65,7 +66,8 @@ export const store = configureStore({
       .concat(cashierApi.middleware)
       .concat(tillRegisterApi.middleware)
       .concat(tillRegisterStockingApi.middleware)
-      .concat(authApi.middleware),
+      .concat(authApi.middleware)
+      .concat(errorMiddleware),
 });
 
 export const persistor = persistStore(store);

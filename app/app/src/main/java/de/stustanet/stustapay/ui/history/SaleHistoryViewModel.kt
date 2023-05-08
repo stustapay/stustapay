@@ -2,6 +2,8 @@ package de.stustanet.stustapay.ui.history
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustanet.stustapay.model.LineItem
+import de.stustanet.stustapay.model.Order
 import de.stustanet.stustapay.model.OrderType
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.SaleRepository
@@ -16,21 +18,14 @@ import javax.inject.Inject
 class SaleHistoryViewModel @Inject constructor(
     private val saleRepository: SaleRepository
 ) : ViewModel() {
-    private val _sales = MutableStateFlow(List(0) { SaleHistoryEntry() })
+    private val _sales = MutableStateFlow<List<Order>>(listOf())
     val sales = _sales.asStateFlow()
 
     suspend fun fetchHistory() {
         when (val sales = saleRepository.listSales()) {
             is Response.OK -> {
                 _sales.update {
-                    sales.data.map {
-                        SaleHistoryEntry(
-                            id = it.id,
-                            timestamp = ZonedDateTime.parse(it.booked_at).toLocalDateTime(),
-                            amount = it.total_price,
-                            type = it.order_type
-                        )
-                    }.sortedBy { it.timestamp }.reversed()
+                    sales.data.sortedBy { ZonedDateTime.parse(it.booked_at).toLocalDateTime() }.reversed()
                 }
             }
             else -> {}
@@ -42,10 +37,3 @@ class SaleHistoryViewModel @Inject constructor(
         fetchHistory()
     }
 }
-
-data class SaleHistoryEntry(
-    val id: Int = 0,
-    val timestamp: LocalDateTime = LocalDateTime.MIN,
-    val amount: Double = 0.0,
-    val type: OrderType = OrderType.Sale
-)

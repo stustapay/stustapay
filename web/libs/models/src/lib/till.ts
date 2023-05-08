@@ -63,7 +63,7 @@ export const NewTillSchema = z.object({
   tse_id: z.string().nullable().optional(),
   active_shift: z.string().nullable().optional(),
   active_profile_id: z.number(),
-  active_cashier_id: z.number().nullable().optional(),
+  active_user_id: z.number().nullable().optional(),
 });
 
 export type NewTill = z.infer<typeof NewTillSchema>;

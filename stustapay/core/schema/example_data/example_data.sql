@@ -231,7 +231,9 @@ insert into ordr (
 ) overriding system value
 values
     -- simple beer with deposit
-    (0, 2, '2023-01-01 15:35:02 UTC+1', 'tag', 'sale', 0, 3, 200, 1),
+    (0, 2, '2023-01-01 15:35:02 UTC+1', 'tag', 'sale', 0, 1, 200, 1),
+    (3, 2, '2023-01-01 16:35:02 UTC+1', 'tag', 'sale', 0, 0, 200, 1),
+    (4, 2, '2023-01-01 17:35:02 UTC+1', 'tag', 'sale', 0, 0, 200, 1),
     -- items with different tax rates
     (1, 3, '2023-01-02 17:00:07 UTC+1', 'tag', 'sale', 0, 3, 201, 1),
     -- Top Up EC
@@ -247,6 +249,12 @@ values
     -- simple beer with deposit
     (0, 0, 100, 1, 5.00, 'ust', 0.19), -- beer
     (0, 1, 10, 1, 2.00, 'none', 0.00), -- deposit
+    -- simple beer with deposit
+    (3, 0, 100, 1, 5.00, 'ust', 0.19), -- beer
+    (3, 1, 10, 1, 2.00, 'none', 0.00), -- deposit
+    -- simple beer with deposit
+    (4, 0, 100, 1, 5.00, 'ust', 0.19), -- beer
+    (4, 1, 10, 1, 2.00, 'none', 0.00), -- deposit
     -- items with different tax rates
     (1, 0, 100, 2, 5.00, 'ust', 0.19), -- beer
     (1, 1, 10, 2, 2.00, 'none', 0.00), -- deposit
@@ -271,14 +279,18 @@ values
     on conflict do nothing;
 select setval('transaction_id_seq', 100);
 
-insert into bon (
+INSERT INTO bon (
     id, generated, generated_at, error, output_file
 )
-values
-    (0, true, '2023-01-01 15:34:57 UTC+1', null, null),
+VALUES
+    (0, true, '2023-01-01 15:34:57 UTC+1', null, 'test_bon.pdf'),
     (1, false, null, null, null)
-    -- transaction 2 would not need a bon, as it is a top up
-    on conflict do nothing;
+ON CONFLICT (id) DO UPDATE
+SET
+    generated = EXCLUDED.generated,
+    generated_at = EXCLUDED.generated_at,
+    error = EXCLUDED.error,
+    output_file = EXCLUDED.output_file;
 
 insert into tse_signature (
     id
@@ -300,5 +312,11 @@ values
     ('Blechkasse 5'),
     ('Blechkasse 6'),
     ('Blechkasse 7');
+
+insert into cash_register_stocking (
+    name, euro20, euro10, euro5, euro2, euro1
+)
+values
+    ('default', 5, 10, 10, 1, 1);
 
 commit;

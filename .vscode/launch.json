@@ -5,6 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Customer Portal",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "module": "stustapay.customer_portal",
+            "justMyCode": true,
+            "args": ["-c", "server.conf", "-vvv", "api"
+            ]
+        },
+        {
             "name": "Launch 'terminalserver' in mock-mode",
             "type": "python",
             "request": "launch",

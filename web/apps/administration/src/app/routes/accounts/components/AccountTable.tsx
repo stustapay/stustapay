@@ -19,7 +19,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       headerName: t("account.name") as string,
       renderCell: (params) => {
         if (params.row.type === "private") {
-          return <RouterLink to={`/customer-accounts/${params.row.id}`}>{params.row.name}</RouterLink>;
+          return <RouterLink to={`/customer-accounts/${params.row.id}`}>customer</RouterLink>;
         } else {
           return <RouterLink to={`/system-accounts/${params.row.id}`}>{params.row.name}</RouterLink>;
         }

@@ -43,6 +43,11 @@ interface TerminalAPI {
      */
     suspend fun equipCashier(equip: CashierEquip): Response<Unit>
 
+    /**
+     * Get available cash registers.
+     */
+    suspend fun listRegisters(): Response<List<CashRegister>>
+
     // order
     /**
      * List orders of this till.
