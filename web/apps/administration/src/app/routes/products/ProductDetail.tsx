@@ -103,7 +103,7 @@ export const ProductDetail: React.FC = () => {
               primary={t("product.taxRate")}
               secondary={
                 <span>
-                  {product.tax_name} ({product.tax_rate * 100}%)
+                  {product.tax_name} ({(product.tax_rate * 100).toFixed(0)}%)
                 </span>
               }
             />
