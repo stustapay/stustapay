@@ -14,6 +14,7 @@ _the StuStaPay authors_ are:
 | Michael Loipführer                | milo                        | milo á sft dawt lol                               |
 | Michael Enßlin                    | mic_e                       | mic á sft dawt lol                                |
 | Janis Heims                       | TechnoElf                   | janis.heims á stusta dawt de                      |
+| Tobias Jülg                       | juelg,jobi                  | jobi á stusta dawt de                             |
 
 
 If you're a first-time committer, add yourself to the above list. This is not
