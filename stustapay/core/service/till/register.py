@@ -165,6 +165,16 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    async def update_cash_register(
+        self, *, conn: asyncpg.Connection, register_id: int, register: NewCashRegister
+    ) -> CashRegister:
+        row = await conn.fetchrow(
+            "update cash_register set name = $2 where id = $1 returning id, name", register_id, register.name
+        )
+        return CashRegister.parse_obj(row)
+
+    @with_db_transaction
+    @requires_user([Privilege.till_management])
     async def delete_cash_register(self, *, conn: asyncpg.Connection, register_id: int):
         result = await conn.execute(
             "delete from cash_register where id = $1",

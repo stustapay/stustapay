@@ -27,6 +27,10 @@ export const tillRegisterApi = createApi({
       query: (till) => ({ url: "/till-registers/", method: "POST", body: till }),
       invalidatesTags: ["till-register"],
     }),
+    updateTillRegister: builder.mutation<TillRegister, TillRegister>({
+      query: ({ id, ...till }) => ({ url: `/till-registers/${id}`, method: "POST", body: till }),
+      invalidatesTags: ["till-register"],
+    }),
     deleteTillRegister: builder.mutation<void, number>({
       query: (id) => ({ url: `/till-registers/${id}/`, method: "DELETE" }),
       invalidatesTags: ["till-register"],
@@ -42,5 +46,9 @@ export const {
   selectTillRegisterTotal,
 } = convertEntityAdaptorSelectors("TillRegister", tillRegisterAdapter.getSelectors());
 
-export const { useCreateTillRegisterMutation, useGetTillRegistersQuery, useDeleteTillRegisterMutation } =
-  tillRegisterApi;
+export const {
+  useCreateTillRegisterMutation,
+  useGetTillRegistersQuery,
+  useUpdateTillRegisterMutation,
+  useDeleteTillRegisterMutation,
+} = tillRegisterApi;

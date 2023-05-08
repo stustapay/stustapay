@@ -65,6 +65,7 @@
     "deleteRegister": "Update a cash register",
     "deleteRegisterDescription": "Confirm register deletion",
     "registers": "Registers",
+    "update": "Update cash register",
     "name": "Name",
     "euro200": "Amount of 200€ bills",
     "euro100": "Amount of 100€ bills",

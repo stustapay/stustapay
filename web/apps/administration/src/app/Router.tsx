@@ -41,7 +41,7 @@ import {
   TillRegisterStockingCreate,
   TillRegisterStockingUpdate,
 } from "./routes/till-register-stocking";
-import { TillRegisterList, TillRegisterCreate } from "./routes/till-registers";
+import { TillRegisterList, TillRegisterCreate, TillRegisterUpdate } from "./routes/till-registers";
 
 const router = createBrowserRouter([
   {
@@ -180,6 +180,10 @@ const router = createBrowserRouter([
           {
             path: "new",
             element: <TillRegisterCreate />,
+          },
+          {
+            path: ":registerId/edit",
+            element: <TillRegisterUpdate />,
           },
         ],
       },
