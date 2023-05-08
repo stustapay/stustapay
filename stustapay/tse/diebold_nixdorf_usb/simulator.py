@@ -13,17 +13,24 @@ import base64
 import binascii
 
 from datetime import datetime, timezone, timedelta
-from random import randbytes
+from random import randbytes, randrange
 
 import time
 
 from .errorcodes import dnerror
 
+# from asn1cryptoi.core import Integer, Sequence, ObjectIdentifier
+
+
 MAGIC_PRODUCTION_CLIENT = "DN TSEProduction ef82abcedf"
 
 
 class VirtualTSE:
-    def __init__(self):
+    def __init__(self, delay: float, fast: bool, real: bool):
+        self._fast: bool = fast
+        self._real: bool = real
+        self._delay: float = delay
+
         self.password_block_counter = 0
         self.puk_block_counter = 0
         self.transnr = 0
@@ -138,8 +145,9 @@ class VirtualTSE:
         response["TransactionNumber"] = self.transnr
         response["SerialNumber"] = self.serial
         response["SignatureCounter"] = self.signctr
-        response["Signature"] = "ca8968b306a0" + randbytes(90).hex()
-        response["LogTime"] = datetime.now(timezone(timedelta(hours=1))).isoformat(timespec="seconds")
+        LogTime_datetime = datetime.now(timezone(timedelta(hours=1)))
+        response["Signature"] = self.generate_signature(msg, str(self.transnr), LogTime_datetime)
+        response["LogTime"] = LogTime_datetime.isoformat(timespec="seconds")
 
         return response
 
@@ -178,8 +186,9 @@ class VirtualTSE:
 
         self.signctr += 1
         response["SignatureCounter"] = self.signctr
-        response["Signature"] = "ca8968b306a0" + randbytes(90).hex()
-        response["LogTime"] = datetime.now(timezone(timedelta(hours=1))).isoformat(timespec="seconds")
+        LogTime_datetime = datetime.now(timezone(timedelta(hours=1)))
+        response["Signature"] = self.generate_signature(msg, str(self.transnr), LogTime_datetime)
+        response["LogTime"] = LogTime_datetime.isoformat(timespec="seconds")
 
         return response
 
@@ -204,7 +213,6 @@ class VirtualTSE:
         if msg["ClientID"] not in self.current_transactions:
             return dnerror(19)
 
-        time.sleep(0.5)
         self.password_block_counter = 0
 
         # check transaction number
@@ -216,8 +224,10 @@ class VirtualTSE:
         response["Status"] = "ok"
         self.signctr += 1
         response["SignatureCounter"] = self.signctr
-        response["Signature"] = "ca8968b306a0" + randbytes(90).hex()
-        response["LogTime"] = datetime.now(timezone(timedelta(hours=1))).isoformat(timespec="seconds")
+
+        LogTime_datetime = datetime.now(timezone(timedelta(hours=1)))
+        response["Signature"] = self.generate_signature(msg, msg["TransactionNumber"], LogTime_datetime)
+        response["LogTime"] = LogTime_datetime.isoformat(timespec="seconds")
 
         return response
 
@@ -408,13 +418,39 @@ class VirtualTSE:
 
         return {"Status": "ok", "Name": name, "Value": value_enc, "Length": len(value)}
 
+    def generate_signature(self, msg, TransactionNr, LogTime_datetime):
+        signature: str = ""
+
+        # simulate time required for signing process
+        if not self._fast:
+            time.sleep(self._delay)
+
+        # generate bs signature
+        if not self._real:
+            if randrange(5) == 0:
+                signature = (
+                    "1c82c513e64e2cbfbefa189eafe8629ed7abce27a1b7e8de99a9ddf92b5eb9eae7fbefbe" + randbytes(60).hex()
+                )
+            else:
+                signature = "ca8968b306a0" + randbytes(90).hex()
+            return signature
+
+        # now for the real deal
+
+        # version = Integer(2)
+
+        # time = Integer(int(LogTime_datetime.timestamp()))
+
+        signature = "1c82c513e64e2cbfbefa189eafe8629ed7abce27a1b7e8de99a9ddf92b5eb9eae7fbefbe" + randbytes(60).hex()
+        return signature
+
 
 class WebsocketInterface:
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str, port: int, delay: float, fast: bool, real: bool):
         self.host: str = host
         self.port: int = port
 
-        self.tse = VirtualTSE()
+        self.tse = VirtualTSE(delay, fast, real)
 
     async def websocket_handler(self, request):
         print("Websocket connection starting")
