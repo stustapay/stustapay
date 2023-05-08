@@ -828,7 +828,7 @@ insert into till_layout (id, name, description) overriding system value values (
 insert into till_profile (id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id)
     overriding system value values (1, 'Virtual till profile', '', false, false, false, 1);
 insert into till (id, name, description, active_profile_id, registration_uuid, tse_id) overriding system value
-values (1, 'Virtual Till', '', 1, gen_random_uuid(), 'tse1');
+values (1, 'Virtual Till', '', 1, gen_random_uuid(), null);
 
 
 create or replace function handle_till_user_login() returns trigger as
