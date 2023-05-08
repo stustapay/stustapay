@@ -12,6 +12,9 @@ export const tillApi = createApi({
   reducerPath: "tillApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["tills"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getTillById: builder.query<EntityState<Till>, number>({
       query: (id) => `/tills/${id}/`,

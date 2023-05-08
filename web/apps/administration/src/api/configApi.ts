@@ -13,6 +13,9 @@ export const configApi = createApi({
   reducerPath: "configApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["config"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getConfigEntries: builder.query<EntityState<ConfigEntry>, void>({
       query: () => "/config/",

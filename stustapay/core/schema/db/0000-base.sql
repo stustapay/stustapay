@@ -824,6 +824,29 @@ create table if not exists till (
     constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null))
 );
 
+create or replace view till_with_cash_register as (
+    select
+        t.*,
+        cr.name as current_cash_register_name,
+        a.balance as current_cash_register_balance
+    from till t
+    left join usr u on t.active_user_id = u.id
+    left join account a on u.cashier_account_id = a.id
+    left join cash_register cr on t.active_cash_register_id = cr.id
+);
+
+create or replace view cash_register_with_cashier as (
+    select
+        c.*,
+        t.id as current_till_id,
+        u.id as current_cashier_id,
+        coalesce(a.balance, 0) as current_balance
+    from cash_register c
+    left join usr u on u.cash_register_id = c.id
+    left join account a on a.id = u.cashier_account_id
+    left join till t on t.active_cash_register_id = c.id
+);
+
 insert into till_layout (id, name, description) overriding system value values (1, 'Virtual Till Layout', '') ;
 insert into till_profile (id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id)
     overriding system value values (1, 'Virtual till profile', '', false, false, false, 1);
