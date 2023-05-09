@@ -14,6 +14,8 @@ from .config import DieboldNixdorfUSBTSEConfig
 
 LOGGER = logging.getLogger(__name__)
 
+from ...core.util import create_task_protected
+
 
 class RequestError(RuntimeError):
     def __init__(self, name: str, request: dict, response: dict):
@@ -35,8 +37,7 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         self.pending_requests: dict[int, asyncio.Future[dict]] = {}
         self.password: str = config.password
         self.serial_number: str = config.serial_number
-        self._started = asyncio.Event()
-        self._stop = False
+        self._stop = asyncio.Event()  # set this to request all tasks to stop
         self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
         self._name = name
         self._signature_algorithm: typing.Optional[str] = None
@@ -45,16 +46,14 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         self._certificate: typing.Optional[str] = None  # long string
 
     async def start(self) -> bool:
-        self._stop = False
         start_result: asyncio.Future[bool] = asyncio.Future()
-        self.background_task = asyncio.create_task(self.run(start_result))
+        self.background_task = create_task_protected(self.run(start_result), f"run_task {self}", self._stop.set)
         return await start_result
 
     async def stop(self):
         # TODO cleanly cancel the background task
-        self._stop = True
+        self._stop.set()
         await self.background_task
-        self._started.clear()
 
     async def get_device_data(self, name: str, *args, **kwargs) -> str:
         result = await self.request("GetDeviceData", Name=name, *args, **kwargs)
@@ -78,7 +77,7 @@ class DieboldNixdorfUSBTSE(TSEHandler):
                     return
                 assert self._ws is not None
 
-                receive_task = asyncio.create_task(self.recieve_loop())
+                receive_task = create_task_protected(self.recieve_loop(), f"receive_loop_task {self}", self._stop.set)
 
                 async def await_receive_task():
                     await receive_task
@@ -91,7 +90,7 @@ class DieboldNixdorfUSBTSE(TSEHandler):
                 device_info = await self.request("GetDeviceInfo")
                 if self.serial_number != device_info["DeviceInfo"]["SerialNumber"]:
                     raise RuntimeError(
-                        f"wrong serial number: expected {self.serial_number}, but device has serial number {device_info['SerialNumber']}"
+                        f"wrong serial number: expected {self.serial_number}, but device has serial number {device_info['DeviceInfo']['SerialNumber']}"
                     )
                 self._log_time_format = device_info["DeviceInfo"]["TimeFormat"]
 
@@ -105,9 +104,12 @@ class DieboldNixdorfUSBTSE(TSEHandler):
                 start_result.set_result(False)
                 raise
 
-            while not self._stop:
+            while not self._stop.is_set():
                 await self.request("PingPong")
-                await asyncio.sleep(1)
+                try:
+                    await asyncio.wait_for(self._stop.wait(), timeout=1)
+                except asyncio.TimeoutError:
+                    pass
 
     async def request(self, command: str, *, timeout: float = 5, **kwargs) -> dict:
         assert self._ws is not None
@@ -119,11 +121,12 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         request.update(kwargs)
 
         LOGGER.info(f"{self}: >> {request}")
+
         await self._ws.send_str(f"\x02{json.dumps(request)}\x03\n")
         future: asyncio.Future[dict] = asyncio.Future()
         self.pending_requests[request_id] = future
         try:
-            response = await asyncio.wait_for(future, timeout=timeout)
+            response = await asyncio.wait_for(future, timeout=1)
             LOGGER.info(f"{self}: << {response}")
             command_back = response.pop("Command")
             if command_back != command:
@@ -148,41 +151,53 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         that we sent through the request() method.
         """
         assert self._ws is not None
-        async for msg in self._ws:
-            if msg.type == aiohttp.WSMsgType.TEXT:
-                msg_data: str = msg.data
-                if not msg_data.startswith("\x02") or not msg_data.endswith("\x03\n"):
-                    LOGGER.error(f"{self}: Badly-formatted message: {msg!r}")
-                    continue
-                try:
-                    data = json.loads(msg_data[1:-2])
-                except json.decoder.JSONDecodeError:
-                    LOGGER.error(f"{self}: Invalid JSON: {msg!r}")
-                    continue
-                if not isinstance(data, dict):
-                    LOGGER.error(f"{self}: JSON data is not a dict: {data!r}")
-                    continue
-                message_id = data.pop("PingPong")
-                if not isinstance(message_id, int):
-                    LOGGER.error(f"{self}: JSON data has no int PingPong field: {msg!r}")
-                    continue
-                future = self.pending_requests.pop(message_id)
-                if future is None:
-                    LOGGER.error(f"{self}: Response does not match any pending request: {msg!r}")
-                    continue
-                future.set_result(data)
-            elif msg.type == aiohttp.WSMsgType.CLOSE:
-                LOGGER.info(f"{self}: websocket connection has been closed: {msg!r}")
-                # TODO recover?
-            elif msg.type == aiohttp.WSMsgType.ERROR:
-                LOGGER.error(f"{self}: websocket connection has errored: {msg!r}")
-                # TODO recover?
-            else:
-                LOGGER.error(f"{self}: unexpected websocket message type: {msg!r}")
 
-    async def reset(self) -> bool:
-        await self.stop()
-        return await self.start()
+        msg_queue = asyncio.Queue[typing.Optional[aiohttp.WSMessage]]()
+
+        async def receive_internal():
+            async for msg in self._ws:
+                msg_queue.put_nowait(msg)
+
+        async def wait_for_stop():
+            await self._stop.wait()
+            msg_queue.put_nowait(None)
+
+        create_task_protected(receive_internal(), f"receive_internal {self}", self._stop.set)
+        create_task_protected(wait_for_stop(), f"wait_for_stop {self}", self._stop.set)
+
+        while True:
+            msg = await msg_queue.get()
+            if msg is None:
+                break
+
+            if msg.type != aiohttp.WSMsgType.TEXT:
+                if msg.type == aiohttp.WSMsgType.CLOSED:
+                    LOGGER.info(f"{self}: Websocket closed")
+                    break
+                msg_type = aiohttp.WSMsgType(msg.type).name
+                raise TypeError(f"{self}: Unexpected WS message {msg_type!r}")
+            msg_data: str = msg.data
+
+            if not msg_data.startswith("\x02") or not msg_data.endswith("\x03\n"):
+                LOGGER.error(f"{self}: Badly-formatted message: {msg!r}")
+                continue
+            try:
+                data = json.loads(msg_data[1:-2])
+            except json.decoder.JSONDecodeError:
+                LOGGER.error(f"{self}: Invalid JSON: {msg!r}")
+                continue
+            if not isinstance(data, dict):
+                LOGGER.error(f"{self}: JSON data is not a dict: {data!r}")
+                continue
+            message_id = data.pop("PingPong")
+            if not isinstance(message_id, int):
+                LOGGER.error(f"{self}: JSON data has no int PingPong field: {msg!r}")
+                continue
+            future = self.pending_requests.pop(message_id)
+            if future is None:
+                LOGGER.error(f"{self}: Response does not match any pending request: {msg!r}")
+                continue
+            future.set_result(data)
 
     async def register_client_id(self, client_id: str):
         await self.request_with_password("RegisterClientID", ClientID=client_id)
@@ -245,5 +260,8 @@ class DieboldNixdorfUSBTSE(TSEHandler):
 
         return result
 
+    def is_stop_set(self):
+        return self._stop.is_set()
+
     def __str__(self):
-        return f"DieboldNixdorfUSBTSEHandler({self.websocket_url!r})"
+        return self._name

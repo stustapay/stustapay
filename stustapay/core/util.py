@@ -3,12 +3,17 @@ import logging
 import os
 import signal
 import sys
-from typing import Optional
+from typing import Optional, Awaitable, Callable
+
+import traceback
+
 
 from pydantic import BaseModel as PydanticBaseModel
 
 # convenience infinity.
 INF = float("inf")
+
+LOGGER = logging.getLogger(__name__)
 
 
 class BaseModel(PydanticBaseModel):
@@ -146,3 +151,19 @@ async def run_as_fg_process(args, **kwargs):
         termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, old_attr)
 
     return ret
+
+
+async def run_task_protected(task: Awaitable, name: str, on_exit: Optional[Callable] = None):
+    LOGGER.info(f"Task {name} started")
+    try:
+        await task
+    except Exception:
+        LOGGER.error(f"{name} failed\n{traceback.format_exc()}")
+    finally:
+        LOGGER.info(f"Task {name} STOPPED")
+        if on_exit is not None:
+            on_exit()
+
+
+def create_task_protected(task: Awaitable, name: str, on_exit: Optional[Callable] = None):
+    return asyncio.create_task(run_task_protected(task, name, on_exit), name=name)

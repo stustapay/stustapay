@@ -12,6 +12,7 @@ import time
 from .handler import TSEHandler, TSESignatureRequest, TSESignature
 from .kassenbeleg_v1 import Kassenbeleg_V1
 
+from ..core.util import create_task_protected
 
 LOGGER = logging.getLogger(__name__)
 
@@ -19,9 +20,7 @@ PAYMENT_METHOD_TO_ZAHLUNGSART = {"cash": "Bar", "sumup": "Unbar", "tag": "Unbar"
 
 
 class TSEWrapper:
-    def __init__(
-        self, name: str, factory_function: Callable[[], TSEHandler]
-    ):  # TODO TSE name is now a number, no longer a string!
+    def __init__(self, name: str, factory_function: Callable[[], TSEHandler]):
         # most of these members will be set in run().
 
         # The TSE name (database TSE_name and TSE config entry)
@@ -44,7 +43,7 @@ class TSEWrapper:
         self._orders_available_event = asyncio.Event()
 
     def start(self, db_pool: asyncpg.Pool):
-        self._task = asyncio.create_task(self.run(db_pool))
+        self._task = create_task_protected(self.run(db_pool), f"tse_wrapper_task {self.name}")
 
     async def stop(self):
         self._stop = True
@@ -55,12 +54,6 @@ class TSEWrapper:
         self._orders_available_event.set()
 
     async def run(self, db_pool: asyncpg.Pool):
-        try:
-            await self._run_internal(db_pool)
-        except Exception:
-            LOGGER.error(f"TSE wrapper {self.name!r} exc!!!:\n\n{traceback.format_exc()}")
-
-    async def _run_internal(self, db_pool: asyncpg.Pool):
         """
         Connects to the wrapped TSE and calls _tse_handler_loop.
         This repeats until self._stop is set.
@@ -154,7 +147,7 @@ class TSEWrapper:
         # The TSE is now ready to be used.
         # Ready to execute signatures from the database.
 
-        while not self._stop:
+        while not self._stop and not self._tse_handler.is_stop_set():
             LOGGER.info(f"TSE {self.name!r}: getting next request")
             next_request = await self._grab_next_request()
             LOGGER.info(f"TSE {self.name!r}: {next_request=!r}")
@@ -172,7 +165,7 @@ class TSEWrapper:
 
             # TODO break out of while loop if the TSE connection has failed somehow
 
-    async def _grab_next_request(self, timeout: float = 5) -> typing.Optional[TSESignatureRequest]:
+    async def _grab_next_request(self, timeout: float = 2) -> typing.Optional[TSESignatureRequest]:
         """
         Waits until the 'order available' event is set,
         then fetches the next TSE signature request for this TSE from the database,

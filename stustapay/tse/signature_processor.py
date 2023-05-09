@@ -65,6 +65,8 @@ class SignatureProcessor(SubCommand):
                 aes.push_async_callback(tse.stop)
                 self.tses[name] = tse
 
+            # TODO Task to assign feral tills to a TSE
+
             # pylint: disable=attribute-defined-outside-init
             db_hook_conn = await aes.enter_async_context(pool.acquire())
             db_hook = DBHook(db_hook_conn, "tse_signature", self.handle_hook)
