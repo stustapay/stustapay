@@ -131,20 +131,19 @@ class CustomerService(DBService):
     ) -> None:
         # check iban
         try:
-            IBAN(customer_bank.iban)
+            iban = IBAN(customer_bank.iban, validate_bban=True)
         except ValueError as exc:
             raise InvalidArgument("Provided IBAN is not valid") from exc
+        # TODO: check for countries which are in sepa but do not accept euro
 
         # if customer_info does not exist create it, otherwise update it
-        result = await conn.execute(
+        await conn.execute(
             "insert into customer_info (customer_account_id, iban, account_name, email) values ($1, $2, $3, $4) on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4",
             current_customer.id,
-            customer_bank.iban,
+            iban.compact,
             customer_bank.account_name,
             customer_bank.email,
         )
-        if result.rowcount == 0:
-            raise InvalidArgument("Could not update customer account data")
 
     def data_privacy_url(self) -> str:
         return self.cfg.customer_portal.data_privacy_url
