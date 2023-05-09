@@ -48,7 +48,7 @@ export const TaxRateSelect: React.FC<TaxRateSelectProps> = ({
       <Select labelId="taxRateSelectLabel" value={value} onChange={handleChange} {...props}>
         {taxRates.map((taxRate) => (
           <MenuItem key={taxRate.name} value={taxRate.name}>
-            {taxRate.description} ({taxRate.rate}%)
+            {taxRate.description} ({taxRate.rate * 100}%)
           </MenuItem>
         ))}
       </Select>
