@@ -796,6 +796,16 @@ class OrderService(DBService):
         if not can_sell_tickets:
             raise TillPermissionException("This terminal is not allowed to sell tickets")
 
+        known_accounts = await conn.fetch(
+            "select user_tag_uid from account where user_tag_uid = ANY($1::numeric(20)[])",
+            new_ticket_sale.customer_tag_uids,
+        )
+
+        if len(known_accounts) > 0:
+            raise InvalidArgument(
+                f"Ticket already has account: " f"{', '.join('%X' % int(a['user_tag_uid']) for a in known_accounts)}"
+            )
+
         expected_tag_counts = {
             ProductRestriction.under_18.name: 0,
             ProductRestriction.under_16.name: 0,
