@@ -29,7 +29,11 @@ class VoucherService(DBService):
         used_vouchers = 0
         additional_line_items = []
         line_items_by_price_per_voucher = list(
-            sorted(line_items, key=lambda x: (x.product.price_per_voucher is None, x.product.price_per_voucher))
+            sorted(
+                line_items,
+                key=lambda x: (x.product.price_per_voucher is None, x.product.price_per_voucher),
+                reverse=True,
+            )
         )
         for current_line_item in line_items_by_price_per_voucher:
             if used_vouchers >= max_vouchers:

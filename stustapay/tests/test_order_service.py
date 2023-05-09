@@ -19,6 +19,7 @@ from stustapay.core.schema.order import (
     PendingTicketSale,
     Ticket,
     CompletedTicketSale,
+    PendingSale,
 )
 from stustapay.core.schema.product import NewProduct, TICKET_PRODUCT_ID, TICKET_U18_PRODUCT_ID, TICKET_U16_PRODUCT_ID
 from stustapay.core.schema.terminal import ENTRY_BUTTON_ID, ENTRY_U18_BUTTON_ID, ENTRY_U16_BUTTON_ID
@@ -82,6 +83,18 @@ class OrderLogicTest(TerminalTestCase):
                 is_locked=True,
             ),
         )
+        self.beer_product_full = await self.product_service.create_product(
+            token=self.admin_token,
+            product=NewProduct(
+                name="Helles 1l",
+                price=5,
+                fixed_price=True,
+                tax_name="ust",
+                target_account_id=None,
+                price_in_vouchers=2,
+                is_locked=True,
+            ),
+        )
         self.deposit_product = await self.product_service.create_product(
             token=self.admin_token,
             product=NewProduct(
@@ -98,6 +111,10 @@ class OrderLogicTest(TerminalTestCase):
             token=self.admin_token,
             button=NewTillButton(name="Helles 0,5l", product_ids=[self.beer_product.id, self.deposit_product.id]),
         )
+        self.beer_button_full = await self.till_service.layout.create_button(
+            token=self.admin_token,
+            button=NewTillButton(name="Helles 1l", product_ids=[self.beer_product_full.id, self.deposit_product.id]),
+        )
         self.deposit_button = await self.till_service.layout.create_button(
             token=self.admin_token,
             button=NewTillButton(name="Pfand", product_ids=[self.deposit_product.id]),
@@ -105,7 +122,9 @@ class OrderLogicTest(TerminalTestCase):
         self.till_layout = await self.till_service.layout.create_layout(
             token=self.admin_token,
             layout=NewTillLayout(
-                name="layout1", description="", button_ids=[self.deposit_button.id, self.beer_button.id]
+                name="layout1",
+                description="",
+                button_ids=[self.deposit_button.id, self.beer_button.id, self.beer_button_full.id],
             ),
         )
         self.till_profile = await self.till_service.profile.create_profile(
@@ -286,10 +305,19 @@ class OrderLogicTest(TerminalTestCase):
         new_sale = NewSale(
             buttons=[
                 Button(till_button_id=self.beer_button.id, quantity=3),
+                Button(till_button_id=self.beer_product_full.id, quantity=1),
             ],
             customer_tag_uid=self.customer_uid,
-            used_vouchers=4,
         )
+        pending_sale: PendingSale = await self.order_service.check_sale(
+            token=self.terminal_token,
+            new_sale=new_sale,
+        )
+        self.assertEqual(3, pending_sale.used_vouchers)
+        self.assertEqual(0, pending_sale.new_voucher_balance)
+        self.assertEqual(self.beer_product_full.price + self.deposit_product.price * 4, pending_sale.total_price)
+
+        new_sale.used_vouchers = 4
         with self.assertRaises(NotEnoughVouchersException):
             await self.order_service.check_sale(
                 token=self.terminal_token,
@@ -300,8 +328,13 @@ class OrderLogicTest(TerminalTestCase):
             token=self.terminal_token,
             new_sale=new_sale,
         )
-        self.assertEqual(pending_sale.old_voucher_balance, 3)
-        self.assertEqual(pending_sale.new_voucher_balance, 1)
+
+        self.assertEqual(
+            self.beer_product_full.price + self.deposit_product.price * 4 + self.beer_product.price,
+            pending_sale.total_price,
+        )
+        self.assertEqual(3, pending_sale.old_voucher_balance)
+        self.assertEqual(1, pending_sale.new_voucher_balance)
         completed_sale = await self.order_service.book_sale(token=self.terminal_token, new_sale=new_sale)
         self.assertIsNotNone(completed_sale)
 
