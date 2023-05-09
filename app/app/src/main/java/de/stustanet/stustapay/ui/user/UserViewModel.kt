@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.Access
 import de.stustanet.stustapay.model.UserKind
-import de.stustanet.stustapay.model.UserRole
 import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.repository.UserRepository
@@ -42,8 +41,12 @@ class UserViewModel @Inject constructor(
             initialValue = UserUIState.Error("Loading..."),
         )
 
-    val userUIMessage = userRepository.status
+    val userStatus = userRepository.status
     val userRoles = userRepository.userRoles
+
+    fun clearErrors() {
+        userStatus.update { null }
+    }
 
     suspend fun fetchLogin() {
         userRepository.fetchLogin()

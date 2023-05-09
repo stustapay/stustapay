@@ -127,7 +127,7 @@ class SaleViewModel @Inject constructor(
         _navState.update { SalePage.ProductSelect }
         _saleCompleted.update { null }
         if (success) {
-            _status.update { "Order cleared" }
+            _status.update { "Order cleared - ready." }
         } else {
             _status.update { "Order cleared" }
         }

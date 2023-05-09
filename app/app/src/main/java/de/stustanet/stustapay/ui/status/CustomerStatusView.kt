@@ -21,7 +21,10 @@ import kotlinx.coroutines.launch
 
 @Preview
 @Composable
-fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
+fun CustomerStatusView(
+    leaveView: () -> Unit = {},
+    viewModel: CustomerStatusViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scanState = rememberNfcScanDialogState()
     var targetId by remember { mutableStateOf("") }
@@ -45,6 +48,7 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                         is CustomerStatusRequestState.Fetching -> {
                             Text("Fetching status...", fontSize = 48.sp)
                         }
+
                         is CustomerStatusRequestState.Done -> {
                             val customer =
                                 (uiState.state as CustomerStatusRequestState.Done).customer
@@ -113,9 +117,11 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                                 Text(customer.comment, fontSize = 24.sp)
                             }
                         }
+
                         is CustomerStatusRequestState.Failed -> {
                             Text("Request failed", fontSize = 48.sp)
                         }
+
                         is CustomerStatusRequestState.Swap -> {
                             Row(
                                 modifier = Modifier
@@ -149,10 +155,14 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                                 Text("Scan", fontSize = 24.sp)
                             }
 
-                            NfcScanDialog(scanState, onScan = { tag ->
-                                targetId = tag.uid.toString()
-                            })
+                            NfcScanDialog(
+                                state = scanState,
+                                onScan = { tag ->
+                                    targetId = tag.uid.toString()
+                                }
+                            )
                         }
+
                         is CustomerStatusRequestState.SwapDone -> {
                             Text("Swapped tag accounts", fontSize = 48.sp)
                         }
@@ -190,12 +200,13 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                         }
                     }
 
-                    NfcScanDialog(scanState, onScan = { tag ->
+                    NfcScanDialog(state = scanState, onScan = { tag ->
                         scope.launch {
                             viewModel.completeScan(tag.uid)
                         }
                     })
                 }
+
                 is CustomerStatusRequestState.Swap -> {
                     Button(
                         modifier = Modifier
@@ -216,6 +227,7 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                         Text("Confirm Swap", fontSize = 24.sp)
                     }
                 }
+
                 else -> {
                     Button(
                         modifier = Modifier
@@ -230,7 +242,7 @@ fun CustomerStatusView(viewModel: CustomerStatusViewModel = hiltViewModel()) {
                     }
 
                     NfcScanDialog(
-                        scanState,
+                        state = scanState,
                         onScan = { tag ->
                             scope.launch {
                                 viewModel.completeScan(tag.uid)

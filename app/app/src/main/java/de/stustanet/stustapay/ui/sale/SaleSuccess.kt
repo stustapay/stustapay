@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
 
 
 @Composable
@@ -68,13 +69,13 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                     )
 
 
-                    SaleConfirmItem(
+                    ProductConfirmItem(
                         name = "Preis",
                         price = completedSale.total_price,
                         fontSize = 40.sp,
                     )
 
-                    SaleConfirmItem(
+                    ProductConfirmItem(
                         name = "neues Guthaben",
                         price = completedSale.new_balance,
                         fontSize = 30.sp,
@@ -84,14 +85,14 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                         Divider(modifier = Modifier.padding(bottom = 10.dp))
 
                         if (completedSale.used_vouchers > 0) {
-                            SaleConfirmItem(
+                            ProductConfirmItem(
                                 name = "Gutscheine",
                                 quantity = completedSale.used_vouchers,
                             )
                         }
 
                         if (completedSale.new_voucher_balance > 0) {
-                            SaleConfirmItem(
+                            ProductConfirmItem(
                                 name = "übrige Gutscheine",
                                 quantity = completedSale.new_voucher_balance,
                             )

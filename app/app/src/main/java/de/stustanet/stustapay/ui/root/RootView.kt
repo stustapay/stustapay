@@ -50,7 +50,7 @@ fun RootView(uictrl: SysUiController? = null) {
             TopUpView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.status.route) {
-            CustomerStatusView()
+            CustomerStatusView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.user.route) {
             UserView(leaveView = { navController.navigateUp() })

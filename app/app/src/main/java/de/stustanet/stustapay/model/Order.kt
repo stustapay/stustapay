@@ -207,14 +207,23 @@ data class CompletedSale(
 )
 
 /**
+ * Ticket class from core model.
+ */
+@Serializable
+data class Ticket(
+    val till_button_id: Int,
+    val quantity: Int,
+)
+
+/**
  * To create a new ticket.
  * NewTicketSale class from core model.
  */
 @Serializable
 data class NewTicketSale(
     val uuid: String? = null,
-    val customer_tag_uid: Int,
-    val initial_top_up_amount: Double,
+    val customer_tag_uids: List<ULong>,
+    val tickets: List<Ticket>,
     val payment_method: PaymentMethod,
 )
 
@@ -227,8 +236,7 @@ data class NewTicketSale(
 data class PendingTicketSale(
     // NewTicketSale
     val uuid: String? = null,
-    val customer_tag_uid: Int,
-    val initial_top_up_amount: Double,
+    val customer_tag_uids: List<ULong>,
     val payment_method: PaymentMethod,
     // PendingTicketSale
     val line_items: List<PendingLineItem>,
@@ -243,8 +251,7 @@ data class PendingTicketSale(
 data class CompletedTicketSale(
     // NewTicketSale
     // val uuid: String? = null, // not null below
-    val customer_tag_uid: Int,
-    val initial_top_up_amount: Double,
+    val customer_tag_uids: List<ULong>,
     val payment_method: PaymentMethod,
 
     // PendingTicketSale

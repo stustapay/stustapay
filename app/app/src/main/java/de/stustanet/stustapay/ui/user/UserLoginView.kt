@@ -12,11 +12,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustanet.stustapay.model.UserRole
 import de.stustanet.stustapay.model.UserRolesState
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import de.stustanet.stustapay.ui.theme.errorButtonColors
 import kotlinx.coroutines.launch
 
 /** after a scan happened, where do we send the info to */
@@ -46,7 +46,7 @@ fun UserLoginView(
     val userUIState: UserUIState by viewModel.userUIState.collectAsStateWithLifecycle()
     val userUIStateV = userUIState
 
-    val userUIMessage by viewModel.userUIMessage.collectAsStateWithLifecycle()
+    val status by viewModel.userStatus.collectAsStateWithLifecycle()
 
     val userRoles by viewModel.userRoles.collectAsStateWithLifecycle()
     val userRolesV = userRoles
@@ -60,7 +60,9 @@ fun UserLoginView(
     ) {
 
         LaunchedEffect(true) {
-            viewModel.fetchLogin()
+            scope.launch {
+                viewModel.fetchLogin()
+            }
         }
 
         var target by remember { mutableStateOf(ScanTarget.Login) }
@@ -69,7 +71,7 @@ fun UserLoginView(
         val roleSelectionV = roleSelection
 
         NfcScanDialog(
-            scanState,
+            state = scanState,
             onScan = { tag ->
                 when (target) {
                     ScanTarget.Login -> {
@@ -88,22 +90,27 @@ fun UserLoginView(
                     if (userRolesV.roles.size == 1) {
                         // bypass dialog for single available role
                         LaunchedEffect(Unit) {
-                            viewModel.login(roleSelectionV.tag, userRolesV.roles[0].id)
-                        }
-                    }
-                    RoleSelectionDialog(
-                        roles = userRolesV,
-                        onDismiss = {
-                            roleSelection = RoleSelectionState.Closed
-                        },
-                        onSelect = { roleID ->
                             scope.launch {
-                                val tag = roleSelectionV.tag
                                 roleSelection = RoleSelectionState.Closed
-                                viewModel.login(tag, roleID)
+                                viewModel.login(roleSelectionV.tag, userRolesV.roles[0].id)
                             }
                         }
-                    )
+                    }
+                    else {
+                        RoleSelectionDialog(
+                            roles = userRolesV,
+                            onDismiss = {
+                                roleSelection = RoleSelectionState.Closed
+                            },
+                            onSelect = { roleID ->
+                                scope.launch {
+                                    val tag = roleSelectionV.tag
+                                    roleSelection = RoleSelectionState.Closed
+                                    viewModel.login(tag, roleID)
+                                }
+                            }
+                        )
+                    }
                 }
             }
             is UserRolesState.Unknown -> {}
@@ -137,7 +144,6 @@ fun UserLoginView(
             }
         }
 
-
         ListItem(
             text = { Text(user) },
             secondaryText = if (subtext != null) {
@@ -163,6 +169,7 @@ fun UserLoginView(
                 .fillMaxWidth()
                 .padding(8.dp),
             onClick = {
+                viewModel.clearErrors()
                 scanState.open()
                 target = ScanTarget.Login
             },
@@ -180,7 +187,7 @@ fun UserLoginView(
                         viewModel.logout()
                     }
                 },
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                colors = errorButtonColors(),
             ) {
                 Text("Logout", fontSize = 24.sp)
             }
@@ -190,7 +197,7 @@ fun UserLoginView(
 
         Spacer(modifier = Modifier.height(15.dp))
 
-        val status = userUIMessage
+        val status = status
         if (status != null) {
             ListItem(
                 text = { Text(status) },
@@ -205,7 +212,6 @@ fun UserLoginView(
         }
 
         Spacer(modifier = Modifier.height(15.dp))
-
 
         if (userUIStateV is UserUIState.LoggedIn && userUIStateV.showCreateUser) {
             Button(

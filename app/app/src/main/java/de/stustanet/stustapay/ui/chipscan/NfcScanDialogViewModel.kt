@@ -28,7 +28,6 @@ sealed interface NfcScanDialogResult {
 
 
 data class NfcScanDialogUiState(
-    val action: String? = null,
     val status: String = "",
     val scanTag: UserTag? = null,
 )
@@ -50,8 +49,7 @@ class NfcScanDialogViewModel @Inject constructor(
                 }
                 is NfcScanDialogResult.Success -> {
                     NfcScanDialogUiState(
-                        action = "Success!",
-                        status = "",
+                        status = "Scan success!",
                         scanTag = UserTag(uid = scanResult.uid),
                     )
                 }
