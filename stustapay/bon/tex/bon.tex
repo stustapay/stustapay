@@ -33,7 +33,7 @@
 
 
     \begin{center}
-        \huge \VAR[title|latex]
+        \huge \VAR[config.title|latex]
     \end{center}
 
     % Rechnungsnummer und Datum
@@ -44,9 +44,9 @@
 
     % Addresse und Steuer ID
     \begin{flushright}
-        \VAR[issuer|latex] \\
-        \VAR[address.strip()|latex] \\
-        USt-IdNr. \VAR[ust_id|latex] \\
+        \VAR[config.issuer|latex] \\
+        \VAR[config.address.strip()|latex] \\
+        USt-IdNr. \VAR[config.ust_id|latex] \\
     \end{flushright}
 
     % Line Items in the Rechnung
@@ -72,7 +72,7 @@
     \begin{tabularx}{\textwidth}{ RRRR }
         \textbf{MwSt.\%}                                         & \textbf{Brutto}                & \textbf{Netto}                   & \textbf{MwSt.}                 \\
         \hline
-        \BLOCK[ for tax_rate in tax_rates ]
+        \BLOCK[ for tax_rate in tax_rate_aggregations ]
         \VAR[tax_rate.tax_name]=\VAR[ tax_rate.tax_rate|percent] & \VAR[tax_rate.total_price|money] & \VAR[tax_rate.total_no_tax|money] & \VAR[tax_rate.total_tax|money] \\
         \BLOCK[endfor]
         \hline
@@ -96,7 +96,7 @@
     % ein kurzer "witz"
     \vspace{\fill}
     \begin{center}
-        \VAR[funny_text|latex]
+        \VAR[closing_text|latex]
 
         \includegraphics[width=3cm]{logo}
     \end{center}

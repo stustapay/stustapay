@@ -1057,7 +1057,7 @@ create or replace view order_value as
         sum(total_price) as total_price,
         sum(total_tax) as total_tax,
         sum(total_price - total_tax) as total_no_tax,
-        json_agg(line_item_json) as line_items
+        coalesce(json_agg(line_item_json), json_build_array()) as line_items
     from
         ordr
         left join line_item_json
@@ -1280,38 +1280,35 @@ create index on tse_signature (id) where signature_status = 'pending';
 create or replace function tse_signature_update_trigger_procedure()
 returns trigger as $$
 begin
-    new.last_update = now();
-    return new;
+    NEW.last_update = now();
+    return NEW;
 end;
 $$ language plpgsql;
 
 create trigger tse_signature_update_trigger
     before update
-    on
-        tse_signature
+    on tse_signature
     for each row
 execute function tse_signature_update_trigger_procedure();
 
 
 --TODO: trigger on tse done, then update bon
---create or replace function tse_signature_finished_trigger_procedure()
---returns trigger as $$
---begin
-    
-    --insert into bon(id) values (NEW.id);
-    --perform pg_notify('bon', NEW.id::text);
+create or replace function tse_signature_finished_trigger_procedure()
+returns trigger as $$
+begin
+  insert into bon(id) values (NEW.id);
+  perform pg_notify('bon', json_build_object('bon_id', NEW.id));
 
-    --return NEW;
---end;
---$$ language plpgsql;
+  return NEW;
+end;
+$$ language plpgsql;
 
---create or replace trigger tse_signature_finished_trigger
---   after update
---    on
---        tse_signature
---    for each row
---    when (NEW.signature_status is 'done')
---execute function tse_signature_finished_trigger_procedure();
+create trigger tse_signature_finished_trigger
+    after update of signature_status
+    on tse_signature
+    for each row
+    when (NEW.signature_status = 'done')
+execute function tse_signature_finished_trigger_procedure();
 
 -- requests the bon generator to create a new receipt
 create table if not exists bon (
@@ -1319,7 +1316,6 @@ create table if not exists bon (
 
     generated bool default false,
     generated_at timestamptz,
-    status text,
     -- latex compile error
     error text,
 
