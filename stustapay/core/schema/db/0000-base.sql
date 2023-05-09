@@ -821,7 +821,8 @@ create table if not exists till (
     -- kassenschlussnummer für tse, incremented after every login
     z_nr bigint not null default 1,
 
-    constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null))
+    constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null)),
+    constraint virtual_till_cannot_be_registered check ((id = 1 and session_uuid is null) or id != 1)
 );
 
 create or replace view till_with_cash_register as (
