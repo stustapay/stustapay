@@ -38,7 +38,8 @@ sealed interface RoleSelectionState {
 @Composable
 fun UserLoginView(
     viewModel: UserViewModel,
-    goToUserCreateView: () -> Unit
+    goToUserCreateView: () -> Unit,
+    goToUserUpdateView: () -> Unit,
 ) {
 
     val scope = rememberCoroutineScope()
@@ -164,17 +165,19 @@ fun UserLoginView(
 
         Divider()
 
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            onClick = {
-                viewModel.clearErrors()
-                scanState.open()
-                target = ScanTarget.Login
-            },
-        ) {
-            Text("Login User", fontSize = 24.sp)
+        if (userUIStateV !is UserUIState.LoggedIn || userUIStateV.showLoginUser) {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                onClick = {
+                    viewModel.clearErrors()
+                    scanState.open()
+                    target = ScanTarget.Login
+                },
+            ) {
+                Text("Login User", fontSize = 24.sp)
+            }
         }
 
         if (userUIStateV is UserUIState.LoggedIn) {
@@ -197,10 +200,10 @@ fun UserLoginView(
 
         Spacer(modifier = Modifier.height(15.dp))
 
-        val status = status
-        if (status != null) {
+        val statusV = status
+        if (statusV != null) {
             ListItem(
-                text = { Text(status) },
+                text = { Text(statusV) },
                 icon = {
                     Icon(
                         Icons.Filled.Info,
@@ -221,6 +224,17 @@ fun UserLoginView(
                 onClick = { goToUserCreateView() }
             ) {
                 Text("Create new user", fontSize = 24.sp)
+            }
+        }
+
+        if (userUIStateV is UserUIState.LoggedIn && userUIStateV.showCreateUser) {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                onClick = { goToUserUpdateView() }
+            ) {
+                Text("Update user", fontSize = 24.sp)
             }
         }
     }

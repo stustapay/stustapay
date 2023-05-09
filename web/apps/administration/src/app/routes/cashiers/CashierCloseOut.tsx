@@ -13,9 +13,11 @@ import {
   InputAdornment,
   TextField,
   Button,
+  Alert,
+  AlertTitle,
 } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { useParams, useNavigate } from "react-router-dom";
+import { Trans, useTranslation } from "react-i18next";
+import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import { selectCashierById, useCloseOutCashierMutation, useGetCashierByIdQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
@@ -23,8 +25,9 @@ import { NumericInput } from "@components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { Formik, FormikHelpers } from "formik";
-import { toast } from "react-toastify";
 import { UserSelect } from "@components/UserSelect";
+import { getUserName } from "@stustapay/models";
+import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
 
 const CloseOutDataSchema = z.object({
   comment: z.string(),
@@ -102,8 +105,6 @@ export const CashierCloseOut: React.FC = () => {
       })
       .catch((err) => {
         setSubmitting(false);
-        console.log(err);
-        toast.error(`Error while closing out cashier: ${err.toString()}`);
       });
   };
 
@@ -111,9 +112,16 @@ export const CashierCloseOut: React.FC = () => {
     <>
       <Paper>
         <ListItem>
-          <ListItemText primary={cashier.display_name} />
+          <ListItemText primary={getUserName(cashier)} />
         </ListItem>
       </Paper>
+
+      <Alert severity="error" sx={{ mt: 2 }}>
+        <AlertTitle>{t("closeOut.warningStillLoggedInTitle")}</AlertTitle>
+        <Trans i18nKey="closeOut.warningStillLoggedIn" ns="cashiers">
+          warning, <RouterLink to={`/tills/${cashier.till_id}`}>here</RouterLink>
+        </Trans>
+      </Alert>
 
       <Formik
         initialValues={initialValues}
@@ -264,6 +272,7 @@ export const CashierCloseOut: React.FC = () => {
                 {t("submit", { ns: "common" })}
               </Button>
             </Paper>
+            <CashierShiftStatsOverview cashierId={cashier.id} />
           </>
         )}
       </Formik>

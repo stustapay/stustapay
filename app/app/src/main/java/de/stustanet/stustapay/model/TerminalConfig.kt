@@ -41,4 +41,5 @@ data class TerminalConfig(
     val ticket_buttons: List<TerminalButton>?,
     val buttons: List<TerminalButton>?,
     val secrets: TerminalSecrets?,
+    val available_roles: List<Role>
 )

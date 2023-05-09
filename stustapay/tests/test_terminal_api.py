@@ -7,6 +7,7 @@ from stustapay.core.schema.user import (
     CurrentUser,
     CASHIER_ROLE_ID,
     INFOZELT_ROLE_ID,
+    CASHIER_ROLE_NAME,
 )
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.tests.common import TerminalTestCase
@@ -20,7 +21,7 @@ class TerminalAPiTest(TerminalTestCase):
             new_user=UserWithoutId(
                 login="Fianazorga",
                 description="",
-                role_names=[FINANZORGA_ROLE_NAME],
+                role_names=[FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
                 user_tag_uid=self.finanzorga_tag_uid,
                 display_name="Finanzorga",
             )
@@ -77,3 +78,12 @@ class TerminalAPiTest(TerminalTestCase):
         self.assertTrue(logged_out)
         user = await self.till_service.get_current_user(token=self.terminal_token)
         self.assertIsNone(user)
+
+        # non supervisors cannot login when a supervisor is logged in with a non-supervisor role
+        await self.till_service.login_user(
+            token=self.terminal_token, user_tag=UserTag(uid=self.finanzorga_tag_uid), user_role_id=CASHIER_ROLE_ID
+        )
+        with self.assertRaises(AccessDenied):
+            await self.till_service.login_user(
+                token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid), user_role_id=CASHIER_ROLE_ID
+            )

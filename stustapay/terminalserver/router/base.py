@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, status
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.terminal import TerminalConfig
-from stustapay.core.schema.till import CashRegisterStocking
+from stustapay.core.schema.till import CashRegisterStocking, CashRegister, UserInfo
 from stustapay.core.util import BaseModel
 
 router = APIRouter(
@@ -48,8 +48,18 @@ async def list_cash_register_stockings(
     return await till_service.register.list_cash_register_stockings_terminal(token=token)
 
 
+@router.get("/cash-registers", summary="list all cash registers", response_model=list[CashRegister])
+async def list_cash_registers(
+    token: CurrentAuthToken,
+    hide_assigned: bool,
+    till_service: ContextTillService,
+):
+    return await till_service.register.list_cash_registers_terminal(token=token, hide_assigned_registers=hide_assigned)
+
+
 class RegisterStockUpPayload(BaseModel):
     cashier_tag_uid: int
+    cash_register_id: int
     register_stocking_id: int
 
 
@@ -63,5 +73,17 @@ async def stock_up_cash_register(
     till_service: ContextTillService,
 ):
     return await till_service.register.stock_up_cash_register(
-        token=token, stocking_id=payload.register_stocking_id, cashier_tag_uid=payload.cashier_tag_uid
+        token=token,
+        stocking_id=payload.register_stocking_id,
+        cashier_tag_uid=payload.cashier_tag_uid,
+        cash_register_id=payload.cash_register_id,
     )
+
+
+class UserInfoPayload(BaseModel):
+    user_tag_uid: int
+
+
+@router.post("/user-info", summary="Obtain information about a user tag", response_model=UserInfo)
+async def user_info(token: CurrentAuthToken, payload: UserInfoPayload, till_service: ContextTillService):
+    return await till_service.get_user_info(token=token, user_tag_uid=payload.user_tag_uid)

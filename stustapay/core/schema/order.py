@@ -15,6 +15,8 @@ class OrderType(enum.Enum):
     top_up = "top_up"
     pay_out = "pay_out"
     ticket = "ticket"
+    money_transfer = "money_transfer"
+    money_transfer_imbalance = "money_transfer_imbalance"
 
 
 class PaymentMethod(enum.Enum):
@@ -234,7 +236,7 @@ class Order(BaseModel):
     # foreign keys
     cashier_id: int
     till_id: int
-    customer_account_id: int
+    customer_account_id: Optional[int]
 
     line_items: list[LineItem]
 

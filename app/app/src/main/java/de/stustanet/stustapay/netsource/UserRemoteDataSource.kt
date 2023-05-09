@@ -83,22 +83,27 @@ class UserRemoteDataSource @Inject constructor(
     /**
      * Create a new user of any type.
      */
-    suspend fun userCreate(newUser: NewUser, userKind: UserKind): UserCreateState {
-        val res = when (userKind) {
-            UserKind.Cashier -> {
-                terminalAPI.userCreateCashier(newUser)
-            }
-            UserKind.Finanzorga -> {
-                terminalAPI.userCreateFinanzorga(newUser)
-            }
-        }
-
-        return when (res) {
+    suspend fun userCreate(newUser: NewUser): UserCreateState {
+        return when (val res = terminalAPI.userCreate(newUser)) {
             is Response.OK -> {
                 UserCreateState.Created
             }
             is Response.Error -> {
                 UserCreateState.Error(res.msg())
+            }
+        }
+    }
+
+    /**
+     * Change a user's roles.
+     */
+    suspend fun userUpdate(updateUser: UpdateUser): UserUpdateState {
+        return when (val res = terminalAPI.userUpdate(updateUser)) {
+            is Response.OK -> {
+                UserUpdateState.Created
+            }
+            is Response.Error -> {
+                UserUpdateState.Error(res.msg())
             }
         }
     }

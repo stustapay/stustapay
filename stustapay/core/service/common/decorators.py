@@ -3,9 +3,11 @@ from functools import wraps
 from inspect import signature
 from typing import Optional
 
+import asyncpg.exceptions
+
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, CurrentUser
-from stustapay.core.service.common.error import AccessDenied
+from stustapay.core.service.common.error import AccessDenied, Unauthorized
 
 
 def with_db_connection(func):
@@ -39,6 +41,37 @@ def with_db_transaction(func):
     return wrapper
 
 
+def with_retryable_db_transaction(n_retries=3):
+    def f(func):
+        @wraps(func)
+        async def wrapper(self, **kwargs):
+            current_retries = n_retries
+            if "conn" in kwargs:
+                return await func(self, **kwargs)
+
+            async with self.db_pool.acquire() as conn:
+                # leads to slow queries in some cases
+                await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
+
+                exception = None
+                while current_retries > 0:
+                    try:
+                        async with conn.transaction():
+                            return await func(self, conn=conn, **kwargs)
+                    except asyncpg.exceptions.DeadlockDetectedError as e:
+                        current_retries -= 1
+                        exception = e
+
+                if exception:
+                    raise exception
+                else:
+                    raise RuntimeError("Unexpected error")
+
+        return wrapper
+
+    return f
+
+
 def requires_user(privileges: Optional[list[Privilege]] = None):
     """
     Check if a user is logged in via a user jwt token and has ALL provided privileges.
@@ -70,7 +103,7 @@ def requires_user(privileges: Optional[list[Privilege]] = None):
                     raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
             if user is None:
-                raise AccessDenied("invalid user token")
+                raise Unauthorized("invalid user token")
 
             if privileges:
                 if not any([p in privileges for p in user.privileges]):
@@ -124,7 +157,7 @@ def requires_customer(func):
                 raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
         if customer is None:
-            raise AccessDenied("invalid customer token")
+            raise Unauthorized("invalid customer token")
 
         if "current_customer" in signature(func).parameters:
             kwargs["current_customer"] = customer
@@ -173,7 +206,7 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
                     raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
             if terminal is None:
-                raise AccessDenied("invalid terminal token")
+                raise Unauthorized("invalid terminal token")
 
             current_user_row = await kwargs["conn"].fetchrow(
                 "select "

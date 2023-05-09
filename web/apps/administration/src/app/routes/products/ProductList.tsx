@@ -20,7 +20,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
 import { Product } from "@stustapay/models";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "src/hooks";
 
@@ -82,44 +82,45 @@ export const ProductList: React.FC = () => {
   const columns: GridColDef<Product>[] = [
     {
       field: "name",
-      headerName: t("productName") as string,
+      headerName: t("product.name") as string,
       flex: 1,
+      renderCell: (params) => <RouterLink to={`/products/${params.row.id}`}>{params.row.name}</RouterLink>,
     },
     {
       field: "is_locked",
-      headerName: t("productIsLocked") as string,
+      headerName: t("product.isLocked") as string,
       type: "boolean",
     },
     {
       field: "is_returnable",
-      headerName: t("isReturnable") as string,
+      headerName: t("product.isReturnable") as string,
       type: "boolean",
     },
     {
       field: "fixed_price",
-      headerName: t("isFixedPrice") as string,
+      headerName: t("product.isFixedPrice") as string,
       type: "boolean",
     },
     {
       field: "price",
-      headerName: t("productPrice") as string,
+      headerName: t("product.productPrice") as string,
       type: "number",
       valueFormatter: ({ value }) => formatCurrency(value),
     },
     {
       field: "price_in_vouchers",
-      headerName: t("productPriceInVouchers") as string,
+      headerName: t("product.productPriceInVouchers") as string,
       type: "number",
     },
     {
       field: "tax_rate",
-      headerName: t("taxRate") as string,
+      headerName: t("product.taxRate") as string,
       align: "right",
       renderCell: (params) => renderTaxRate(params.row.tax_name),
     },
     {
       field: "restrictions",
-      headerName: t("productRestrictions") as string,
+      headerName: t("product.restrictions") as string,
       valueFormatter: ({ value }) => value.join(", "),
       width: 150,
     },
@@ -151,6 +152,7 @@ export const ProductList: React.FC = () => {
         <GridActionsCellItem
           icon={<DeleteIcon />}
           color="error"
+          disabled={params.row.is_locked}
           label={t("delete", { ns: "common" })}
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,

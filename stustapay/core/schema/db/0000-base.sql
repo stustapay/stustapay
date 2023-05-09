@@ -134,7 +134,8 @@ values
     (4, null, 'virtual', 'Cash Vault', 'Main Cash tresor. At some point cash top up lands here'),
     (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement'),
     (6, null, 'virtual', 'Money / Voucher create', 'Account which will be charged on manual account balance updates and voucher top ups'),
-    (7, null, 'virtual', 'Cash Exit', 'target account when cash exists the system, e.g. cash pay outs')
+    (7, null, 'virtual', 'Cash Exit', 'target account when cash exists the system, e.g. cash pay outs'),
+    (8, null, 'virtual', 'Cash Sale Source', 'source account for cash good sales or cash top ups')
     on conflict do nothing;
 
 create table if not exists account_tag_association_history (
@@ -163,6 +164,19 @@ create trigger update_tag_association_history_trigger
     when (OLD.user_tag_uid is distinct from NEW.user_tag_uid and OLD.user_tag_uid is not null)
     execute function update_tag_association_history();
 
+create table if not exists cash_register (
+    id bigint primary key generated always as identity,
+    name text not null
+);
+
+-- customer iban bank accounts
+create table if not exists customer_info (
+    customer_account_id bigint primary key references account(id),
+    iban text,
+    account_name text,
+    email text
+);
+
 -- people working with the payment system
 create table if not exists usr (
     id bigint primary key generated always as identity,
@@ -177,7 +191,10 @@ create table if not exists usr (
     user_tag_uid numeric(20) unique references user_tag(uid) on delete restrict,
 
     transport_account_id bigint references account(id),
-    cashier_account_id bigint references account(id)
+    cashier_account_id bigint references account(id),
+    cash_register_id bigint references cash_register(id) unique,
+    constraint cash_register_need_cashier_acccount
+        check (((cash_register_id is not null) and (cashier_account_id is not null)) or cash_register_id is null),
     -- depending on the transfer action, the correct account is booked
 
     constraint password_or_user_tag_uid_set check ((user_tag_uid is not null) or (password is not null))
@@ -221,6 +238,7 @@ values
 
 create table if not exists user_role (
     id bigint primary key generated always as identity (start with 1000),
+    is_privileged boolean not null default false,
     name text not null unique
 );
 
@@ -282,14 +300,14 @@ create table if not exists user_role_to_privilege (
 );
 
 insert into user_role (
-    id, name
+    id, name, is_privileged
 ) overriding system value
 values
-    (0, 'admin'),
-    (1, 'finanzorga'),
-    (2, 'cashier'),
-    (3, 'standleiter'),
-    (4, 'infozelt helfer')
+    (0, 'admin', true),
+    (1, 'finanzorga', true),
+    (2, 'cashier', false),
+    (3, 'standleiter', false),
+    (4, 'infozelt helfer', false)
 on conflict do nothing;
 
 insert into user_role_to_privilege (
@@ -403,7 +421,9 @@ values
     -- pay out remaining balance on a tag
     ('pay_out'),
     -- sale of a ticket in combination with an initial top up
-    ('ticket')
+    ('ticket'),
+    ('money_transfer'),
+    ('money_transfer_imbalance')
     on conflict do nothing;
 
 
@@ -468,7 +488,9 @@ values
     (3, 'Auszahlen', false, null, 'none', true),
     (4, 'Eintritt', true, 12, 'ust', true),
     (5, 'Eintritt U18', true, 12, 'ust', true),
-    (6, 'Eintritt U16', true, 12, 'ust', true);
+    (6, 'Eintritt U16', true, 12, 'ust', true),
+    (7, 'Geldtransit', false, null, 'none', true),
+    (8, 'DifferenzSollIst', false, null, 'none', true);
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
@@ -500,13 +522,13 @@ create or replace view product_as_json as (
 );
 
 create table if not exists till_layout (
-    id bigint primary key generated always as identity,
+    id bigint primary key generated always as identity (start with 1000),
     name text not null unique,
     description text
 );
 
 create table if not exists till_button (
-    id bigint primary key generated always as identity,
+    id bigint primary key generated always as identity (start with 1000),
     name text not null unique
 );
 
@@ -654,7 +676,7 @@ create or replace view till_layout_with_buttons as (
 );
 
 create table if not exists till_profile (
-    id bigint primary key generated always as identity,
+    id bigint primary key generated always as identity (start with 1000),
     name text not null unique,
     description text,
     allow_top_up boolean not null default false,
@@ -718,7 +740,23 @@ create table if not exists cash_register_stocking (
         cent2 * 1.0 +
         cent1 * 0.5 +
         variable_in_euro
-    ) stored
+    ) stored,
+    constraint non_negative_stockings check
+        (euro200 >= 0 and
+         euro100 >= 0 and
+         euro50 >= 0 and
+         euro20 >= 0 and
+         euro10 >= 0 and
+         euro5 >= 0 and
+         euro2 >= 0 and
+         euro1 >= 0 and
+         cent50 >= 0 and
+         cent20 >= 0 and
+         cent10 >= 0 and
+         cent5 >= 0 and
+         cent2 >= 0 and
+         cent1 >= 0 and
+         variable_in_euro >= 0)
 );
 comment on column cash_register_stocking.euro2 is 'number of rolls, one roll = 25 pcs = 50€';
 comment on column cash_register_stocking.euro1 is 'number of rolls, one roll = 25 pcs = 25€';
@@ -729,26 +767,184 @@ comment on column cash_register_stocking.cent5 is 'number of rolls, one roll = 5
 comment on column cash_register_stocking.cent2 is 'number of rolls, one roll = 50 pcs = 1€';
 comment on column cash_register_stocking.cent1 is 'number of rolls, one roll = 50 pcs = 0,50€';
 
+
+
+create type tse_status_enum as enum ('new', 'active', 'disabled', 'failed');
+create table tse_status_info (
+    enum_value tse_status_enum primary key,
+    name text not null,
+    description text not null
+);
+
+
+insert into tse_status_info (enum_value, name, description) values
+    ('new', 'new', 'TSE is newly added'),
+    ('active', 'active', 'TSE is active and in use'),
+    ('disabled', 'disabled', 'TSE is diabled/no longer in use'),
+    ('failed', 'failed', 'TSE Failed') on conflict do nothing;
+
+
+-- list of TSEs with static TSE info
+create table if not exists tse (
+    tse_id                    bigserial primary key, -- now integer!
+    tse_name                  text unique not null,
+    tse_status                tse_status_enum not null default 'new',
+    tse_serial                text,
+    tse_hashalgo              text,
+    tse_time_format           text,
+    tse_public_key            text,
+    tse_certificate           text,
+    tse_process_data_encoding text
+);
+
+
+
 -- which cash desks do we have and in which state are they
 create table if not exists till (
-    id bigint primary key generated always as identity,
+    id bigint primary key generated always as identity (start with 1000),
     name text not null unique,
     description text,
     registration_uuid uuid unique,
     session_uuid uuid unique,
 
-    -- how this till is mapped to a tse
-    tse_id text,
+    -- how this till is currently mapped to a tse
+    tse_id bigint references tse(tse_id),
 
     -- identifies the current active work shift and configuration
     active_shift text,
     active_profile_id bigint not null references till_profile(id),
     active_user_id bigint references usr(id),
     active_user_role_id bigint references user_role(id),
+    active_cash_register_id bigint references cash_register(id) unique,
     constraint user_requires_role check ((active_user_id is null) = (active_user_role_id is null)),
+
+    -- kassenschlussnummer für tse, incremented after every login
+    z_nr bigint not null default 1,
 
     constraint registration_or_session_uuid_null check ((registration_uuid is null) != (session_uuid is null))
 );
+
+create or replace view till_with_cash_register as (
+    select
+        t.*,
+        cr.name as current_cash_register_name,
+        a.balance as current_cash_register_balance
+    from till t
+    left join usr u on t.active_user_id = u.id
+    left join account a on u.cashier_account_id = a.id
+    left join cash_register cr on t.active_cash_register_id = cr.id
+);
+
+create or replace view cash_register_with_cashier as (
+    select
+        c.*,
+        t.id as current_till_id,
+        u.id as current_cashier_id,
+        coalesce(a.balance, 0) as current_balance
+    from cash_register c
+    left join usr u on u.cash_register_id = c.id
+    left join account a on a.id = u.cashier_account_id
+    left join till t on t.active_cash_register_id = c.id
+);
+
+insert into till_layout (id, name, description) overriding system value values (1, 'Virtual Till Layout', '') ;
+insert into till_profile (id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id)
+    overriding system value values (1, 'Virtual till profile', '', false, false, false, 1);
+insert into till (id, name, description, active_profile_id, registration_uuid, tse_id) overriding system value
+values (1, 'Virtual Till', '', 1, gen_random_uuid(), null);
+
+
+create or replace function handle_till_user_login() returns trigger as
+$$
+<<locals>> declare
+    old_cashier_account_id bigint;
+    old_cash_register_id bigint;
+    old_cash_register_balance numeric;
+    old_order_id bigint;
+
+    n_orders_booked bigint;
+
+    new_cashier_account_id bigint;
+    new_cash_register_id bigint;
+    new_cash_register_balance numeric;
+    new_order_id bigint;
+begin
+    NEW.active_cash_register_id := null;
+
+    if NEW.active_user_id is not null then
+        select usr.cash_register_id, usr.cashier_account_id, a.balance
+        into locals.new_cash_register_id, locals.new_cashier_account_id, locals.new_cash_register_balance
+        from usr
+                 join account a on usr.cashier_account_id = a.id
+        where usr.id = NEW.active_user_id;
+
+        select count(*) into locals.n_orders_booked from ordr where z_nr = NEW.z_nr and till_id = NEW.id;
+
+        if locals.n_orders_booked > 0 then
+            NEW.z_nr := NEW.z_nr + 1;
+        end if;
+
+        if locals.new_cash_register_id is not null then
+            insert into ordr (item_count, payment_method, order_type, cashier_id, till_id, cash_register_id, z_nr)
+            values (1, 'cash', 'money_transfer', NEW.active_user_id, NEW.id, locals.new_cash_register_id, NEW.z_nr)
+            returning id into locals.new_order_id;
+
+            insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate)
+            values
+                (locals.new_order_id, 1, 7, locals.new_cash_register_balance, 1, 'none', 0);
+            NEW.active_cash_register_id := locals.new_cash_register_id;
+        end if;
+    end if;
+
+    if OLD.active_user_id is not null then
+        select usr.cash_register_id, usr.cashier_account_id, a.balance
+        into locals.old_cash_register_id, locals.old_cashier_account_id, locals.old_cash_register_balance
+        from usr
+                 join account a on usr.cashier_account_id = a.id
+        where usr.id = OLD.active_user_id;
+
+        if locals.old_cash_register_id is not null and locals.old_cash_register_balance != 0 then
+            insert into ordr (item_count, payment_method, order_type, cashier_id, till_id, cash_register_id, z_nr)
+            values (1, 'cash', 'money_transfer', OLD.active_user_id, OLD.id, locals.old_cash_register_id, OLD.z_nr)
+            returning id into locals.old_order_id;
+
+            insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate)
+            values
+                (locals.old_order_id, 1, 7, -locals.old_cash_register_balance, 1, 'none', 0);
+        end if;
+    end if;
+
+    return NEW;
+end
+$$ language plpgsql;
+
+create trigger handle_till_user_login_trigger
+    before update of active_user_id on till
+    for each row
+    when (OLD.active_user_id is distinct from NEW.active_user_id)
+execute function handle_till_user_login();
+
+create type till_tse_history_type as enum ('register', 'deregister');
+
+-- logs all historic till <-> TSE assignments (as registered with the TSE)
+create table if not exists till_tse_history (
+    till_name text not null,
+    tse_id bigint references tse(tse_id) not null,
+    what till_tse_history_type not null,
+    date timestamptz not null default now()
+);
+
+
+create or replace function deny_in_trigger() returns trigger language plpgsql as
+$$
+begin
+    return null;
+end;
+$$;
+
+create trigger till_tse_history_deny_update_delete
+before update or delete on till_tse_history
+for each row execute function deny_in_trigger();
 
 -- represents an order of an customer, like buying wares or top up
 create table if not exists ordr (
@@ -763,20 +959,24 @@ create table if not exists ordr (
 
     booked_at timestamptz not null default now(),
 
-    -- todo: who triggered the transaction (user)
-
     -- how the order was invoked
     payment_method text not null references payment_method(name),
     -- todo: method_info references payment_information(id) -> (sumup-id, paypal-id, ...)
     --       or inline-json without separate table?
 
+    -- kassenschlussnummer für tse
+    z_nr bigint not null,
+
     -- type of the order like, top up, buy beer,
     order_type text not null references order_type(name),
-    cancels_order bigint references ordr(id),
+    cancels_order bigint references ordr(id) unique,
     constraint only_cancel_orders_can_reference_orders check((order_type != 'cancel_sale') = (cancels_order is null)),
 
     -- who created it
     cashier_id bigint not null references usr(id),
+    cash_register_id bigint references cash_register(id),
+    constraint cash_orders_need_cash_register
+        check ((payment_method = 'cash' and cash_register_id is not null) or (payment_method != 'cash' and cash_register_id is null)),
     till_id bigint not null references till(id),
     -- customer is allowed to be null, as it is only known on the final booking, not on the creation of the order
     -- canceled orders can have no customer
@@ -824,8 +1024,8 @@ begin
     end if;
 
     -- insert a new tse signing request and notify for it
-    insert into bon(id) values (NEW.id);
-    perform pg_notify('bon', NEW.id::text);
+    insert into tse_signature(id) values (NEW.id);
+    perform pg_notify('tse_signature', NEW.id::text);
 
     -- send general notifications, used e.g. for instant UI updates
     perform pg_notify(
@@ -863,6 +1063,16 @@ create or replace view order_value as
             on (ordr.id = line_item_json.order_id)
     group by
         ordr.id;
+
+-- aggregates account and customer_info to customer
+create or replace view customer as
+    select
+        account.*,
+        customer_info.*
+    from
+        account
+        left join customer_info
+            on (account.id = customer_info.customer_account_id);
 
 -- show all line items
 create or replace view order_items as
@@ -925,10 +1135,13 @@ create table if not exists cashier_shift (
     closing_out_user_id bigint references usr(id),
     started_at timestamptz not null,
     ended_at timestamptz not null,
-    final_cash_drawer_balance numeric not null,
-    final_cash_drawer_imbalance numeric not null,
+    actual_cash_drawer_balance numeric not null,
+    expected_cash_drawer_balance numeric not null,
+    cash_drawer_imbalance numeric generated always as
+        ( actual_cash_drawer_balance - expected_cash_drawer_balance ) stored,
     comment text not null,
-    close_out_transaction_id bigint not null references transaction(id)
+    close_out_order_id bigint not null references ordr(id) unique,
+    close_out_imbalance_order_id bigint not null references ordr(id) unique
 );
 
 create or replace view cashier as (
@@ -940,13 +1153,13 @@ create or replace view cashier as (
         usr.user_tag_uid,
         usr.transport_account_id,
         usr.cashier_account_id,
+        usr.cash_register_id,
         a.balance as cash_drawer_balance,
         t.id as till_id
     from usr
     join account a on usr.cashier_account_id = a.id
     left join till t on t.active_user_id = usr.id
 );
-
 
 -- book a new transaction and update the account balances automatically, returns the new transaction_id
 create or replace function book_transaction (
@@ -1008,22 +1221,96 @@ end;
 $$ language plpgsql;
 
 
+create type tse_signature_status as enum ('todo', 'pending', 'done', 'failure');
+create table tse_signature_status_info (
+    enum_value tse_signature_status primary key,
+    name text not null,
+    description text not null
+);
+
+
+insert into tse_signature_status_info (enum_value, name, description) values
+    ('todo', 'todo', 'Signature request is enqueued'),
+    ('pending', 'pending', 'Signature is being created by TSE'),
+    ('done', 'done', 'Signature was successful'),
+    ('failure', 'failure', 'Failed to create signature') on conflict do nothing;
+
+
 -- requests the tse module to sign something
 create table if not exists tse_signature (
     id bigint primary key references ordr(id),
 
-    signed bool default false,
-    status text,
+    signature_status tse_signature_status not null default 'todo',
+    -- TSE signature result message (error message or success message)
+    result_message  text,
+    constraint result_message_set check ((result_message is null) = (signature_status = 'todo' or signature_status = 'pending')),
 
+    created timestamptz not null default now(),
+    last_update timestamptz not null default now(),
+
+    -- id of the TSE that was used to create the signature
+    tse_id          bigint references tse(tse_id),
+    constraint tse_id_set check ((tse_id is null) = (signature_status = 'todo')),
+
+    -- signature input for the TSE
+    transaction_process_type text,
+    constraint transaction_process_type_set check ((transaction_process_type is not null) = (signature_status = 'done')),
+    transaction_process_data text,
+    constraint transaction_process_data_set check ((transaction_process_data is not null) = (signature_status = 'done')),
+
+    -- signature data from the TSE
     tse_transaction text,
+    constraint tse_transaction_set check ((tse_transaction is not null) = (signature_status = 'done')),
     tse_signaturenr text,
+    constraint tse_signaturenr_set check ((tse_signaturenr is not null) = (signature_status = 'done')),
     tse_start       text,
+    constraint tse_start_set check ((tse_start is not null) = (signature_status = 'done')),
     tse_end         text,
-    tse_serial      text,
-    tse_hashalgo    text,
-    tse_signature   text
+    constraint tse_end_set check ((tse_end is not null) = (signature_status = 'done')),
+    tse_signature   text,
+    constraint tse_signature_set check ((tse_signature is not null) = (signature_status = 'done'))
 );
 
+
+-- partial index for only the unsigned rows in tse_signature
+create index on tse_signature (id) where signature_status = 'todo';
+create index on tse_signature (id) where signature_status = 'pending';
+
+create or replace function tse_signature_update_trigger_procedure()
+returns trigger as $$
+begin
+    new.last_update = now();
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger tse_signature_update_trigger
+    before update
+    on
+        tse_signature
+    for each row
+execute function tse_signature_update_trigger_procedure();
+
+
+--TODO: trigger on tse done, then update bon
+--create or replace function tse_signature_finished_trigger_procedure()
+--returns trigger as $$
+--begin
+    
+    --insert into bon(id) values (NEW.id);
+    --perform pg_notify('bon', NEW.id::text);
+
+    --return NEW;
+--end;
+--$$ language plpgsql;
+
+--create or replace trigger tse_signature_finished_trigger
+--   after update
+--    on
+--        tse_signature
+--    for each row
+--    when (NEW.signature_status is 'done')
+--execute function tse_signature_finished_trigger_procedure();
 
 -- requests the bon generator to create a new receipt
 create table if not exists bon (
@@ -1038,6 +1325,15 @@ create table if not exists bon (
     -- output file path
     output_file text
 );
+
+create or replace view order_value_with_bon as
+    select
+        o.*,
+        b.generated as bon_generated,
+        b.output_file as bon_output_file
+    from order_value o
+        left join bon b
+            on (o.id = b.id);
 
 
 -- wooh \o/

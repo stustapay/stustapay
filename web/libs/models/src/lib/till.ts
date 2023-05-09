@@ -2,14 +2,14 @@ import { z } from "zod";
 
 export const NewTillButtonSchema = z.object({
   name: z.string(),
-  product_ids: z.array(z.number()),
+  product_ids: z.array(z.number().int()),
 });
 
 export type NewTillButton = z.infer<typeof NewTillButtonSchema>;
 
 export const UpdateTillButtonSchema = NewTillButtonSchema.merge(
   z.object({
-    id: z.number(),
+    id: z.number().int(),
   })
 );
 
@@ -26,7 +26,7 @@ export type TillButton = z.infer<typeof TillButtonSchema>;
 export const NewTillLayoutSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
-  button_ids: z.array(z.number()).nullable(),
+  button_ids: z.array(z.number().int()).nullable(),
 });
 
 export type NewTillLayout = z.infer<typeof NewTillLayoutSchema>;
@@ -41,7 +41,7 @@ export type TillLayout = z.infer<typeof TillLayoutSchema>;
 export const NewTillProfileSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
-  layout_id: z.number(),
+  layout_id: z.number().int(),
   allow_top_up: z.boolean(),
   allow_cash_out: z.boolean(),
   allow_ticket_sale: z.boolean(),
@@ -52,7 +52,7 @@ export type NewTillProfile = z.infer<typeof NewTillProfileSchema>;
 
 export const TillProfileSchema = NewTillProfileSchema.merge(
   z.object({
-    id: z.number(),
+    id: z.number().int(),
   })
 );
 export type TillProfile = z.infer<typeof TillProfileSchema>;
@@ -63,7 +63,7 @@ export const NewTillSchema = z.object({
   tse_id: z.string().nullable().optional(),
   active_shift: z.string().nullable().optional(),
   active_profile_id: z.number(),
-  active_cashier_id: z.number().nullable().optional(),
+  active_user_id: z.number().nullable().optional(),
 });
 
 export type NewTill = z.infer<typeof NewTillSchema>;
@@ -76,6 +76,8 @@ export const TillSchema = UpdateTillSchema.merge(
   z.object({
     registration_uuid: z.string().nullable(),
     session_uuid: z.string().nullable(),
+    current_cash_register_name: z.string().nullable(),
+    current_cash_register_balance: z.number().nullable(),
   })
 );
 
@@ -117,3 +119,20 @@ export const TillRegisterStockingSchema = UpdateTillRegisterStockingSchema.merge
 );
 
 export type TillRegisterStocking = z.infer<typeof TillRegisterStockingSchema>;
+
+export const NewTillRegisterSchema = z.object({
+  name: z.string(),
+});
+
+export type NewTillRegister = z.infer<typeof NewTillRegisterSchema>;
+
+export const TillRegisterSchema = NewTillRegisterSchema.merge(
+  z.object({
+    id: z.number().int(),
+    current_cashier_id: z.number().int().nullable(),
+    current_till_id: z.number().int().nullable(),
+    current_balance: z.number(),
+  })
+);
+
+export type TillRegister = z.infer<typeof TillRegisterSchema>;

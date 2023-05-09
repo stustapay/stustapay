@@ -274,15 +274,15 @@ data class CompletedTicketSale(
 @Serializable
 data class LineItem(
     // PendingLineItem
-    val quantity: Int,
-    val product: Product,
-    val product_price: Double,
-    val tax_name: String,
-    val tax_rate: Double,
+    val quantity: Int = 0,
+    val product: Product = Product(),
+    val product_price: Double = 0.0,
+    val tax_name: String = "",
+    val tax_rate: Double = 0.0,
 
     // LineItem
-    val item_id: Int,
-    val total_tax: Double,
+    val item_id: Int = 0,
+    val total_tax: Double = 0.0,
 )
 
 
@@ -297,11 +297,14 @@ enum class OrderType {
     @SerialName("cancel_sale")
     CancelSale,
 
-    @SerialName("topup_cash")
-    TopupCash,
+    @SerialName("top_up")
+    Topup,
 
-    @SerialName("topup_sumup")
-    TopupSumup,
+    @SerialName("pay_out")
+    Payout,
+
+    @SerialName("ticket")
+    Ticket
 }
 
 

@@ -1,11 +1,6 @@
 package de.stustanet.stustapay.repository
 
-import de.stustanet.stustapay.model.LoginPayload
-import de.stustanet.stustapay.model.NewUser
-import de.stustanet.stustapay.model.UserKind
-import de.stustanet.stustapay.model.UserRolesState
-import de.stustanet.stustapay.model.UserState
-import de.stustanet.stustapay.model.UserTag
+import de.stustanet.stustapay.model.*
 import de.stustanet.stustapay.netsource.UserRemoteDataSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,8 +63,11 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun create(login: String, userTag: UserTag, userKind: UserKind) {
-        // TODO: Error handling
-        userRemoteDataSource.userCreate(NewUser(login, userTag.uid), userKind)
+    suspend fun create(login: String, userTag: UserTag, roles: List<Role>) {
+        userRemoteDataSource.userCreate(NewUser(login, userTag.uid, roles.map { r -> r.name }))
+    }
+
+    suspend fun update(userTag: UserTag, roles: List<Role>) {
+        userRemoteDataSource.userUpdate(UpdateUser(userTag.uid, roles.map { r -> r.name }))
     }
 }

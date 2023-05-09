@@ -210,28 +210,34 @@ values
     (1, 3),
     (1, 4);
 
+
+--insert into tse ( tse_name) values
+--    ('tse1');
+
+
 insert into till (
     id, name, description, active_profile_id, active_user_id, active_user_role_id, registration_uuid, session_uuid, tse_id, active_shift
 ) overriding system value
 values
-    (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, 'tse 0', null),
-    (1, 'ssc-pot-1', 'Pot Bierkasse', 1, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, 'tse 0', null),
-    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, 'tse 0', null)
+    (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, null, null),
+    (3, 'ssc-pot-1', 'Pot Bierkasse', 1, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, null, null),
+    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, null, null)
     on conflict do nothing;
 select setval('till_id_seq', 100);
 
-
 insert into ordr (
     id, item_count, booked_at, payment_method, order_type,
-    cashier_id, till_id, customer_account_id
+    cashier_id, till_id, customer_account_id, z_nr
 ) overriding system value
 values
     -- simple beer with deposit
-    (0, 2, '2023-01-01 15:35:02 UTC+1', 'tag', 'sale', 0, 1, 200),
+    (0, 2, '2023-01-01 15:35:02 UTC+1', 'tag', 'sale', 0, 1, 200, 1),
+    (3, 2, '2023-01-01 16:35:02 UTC+1', 'tag', 'sale', 0, 0, 200, 1),
+    (4, 2, '2023-01-01 17:35:02 UTC+1', 'tag', 'sale', 0, 0, 200, 1),
     -- items with different tax rates
-    (1, 3, '2023-01-02 17:00:07 UTC+1', 'tag', 'sale', 0, 1, 201),
+    (1, 3, '2023-01-02 17:00:07 UTC+1', 'tag', 'sale', 0, 3, 201, 1),
     -- Top Up EC
-    (2, 1, '2023-01-01 17:00:07 UTC+1', 'tag', 'sale', 0, 1, 201)
+    (2, 1, '2023-01-01 17:00:07 UTC+1', 'tag', 'sale', 0, 3, 201, 1)
     on conflict do nothing;
 select setval('ordr_id_seq', 100);
 
@@ -243,6 +249,12 @@ values
     -- simple beer with deposit
     (0, 0, 100, 1, 5.00, 'ust', 0.19), -- beer
     (0, 1, 10, 1, 2.00, 'none', 0.00), -- deposit
+    -- simple beer with deposit
+    (3, 0, 100, 1, 5.00, 'ust', 0.19), -- beer
+    (3, 1, 10, 1, 2.00, 'none', 0.00), -- deposit
+    -- simple beer with deposit
+    (4, 0, 100, 1, 5.00, 'ust', 0.19), -- beer
+    (4, 1, 10, 1, 2.00, 'none', 0.00), -- deposit
     -- items with different tax rates
     (1, 0, 100, 2, 5.00, 'ust', 0.19), -- beer
     (1, 1, 10, 2, 2.00, 'none', 0.00), -- deposit
@@ -267,14 +279,44 @@ values
     on conflict do nothing;
 select setval('transaction_id_seq', 100);
 
-insert into bon (
+INSERT INTO bon (
     id, generated, generated_at, error, output_file
 )
-values
-    (0, true, '2023-01-01 15:34:57 UTC+1', null, null),
+VALUES
+    (0, true, '2023-01-01 15:34:57 UTC+1', null, 'test_bon.pdf'),
     (1, false, null, null, null)
-    -- transaction 2 would not need a bon, as it is a top up
+ON CONFLICT (id) DO UPDATE
+SET
+    generated = EXCLUDED.generated,
+    generated_at = EXCLUDED.generated_at,
+    error = EXCLUDED.error,
+    output_file = EXCLUDED.output_file;
+
+insert into tse_signature (
+    id
+)
+values
+    (0),
+    (1),
+    (2)
     on conflict do nothing;
 
-commit;
+insert into cash_register (
+    name
+) overriding system value
+values
+    ('Blechkasse 1'),
+    ('Blechkasse 2'),
+    ('Blechkasse 3'),
+    ('Blechkasse 4'),
+    ('Blechkasse 5'),
+    ('Blechkasse 6'),
+    ('Blechkasse 7');
 
+insert into cash_register_stocking (
+    name, euro20, euro10, euro5, euro2, euro1
+)
+values
+    ('default', 5, 10, 10, 1, 1);
+
+commit;

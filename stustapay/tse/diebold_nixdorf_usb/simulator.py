@@ -13,23 +13,39 @@ import base64
 import binascii
 
 from datetime import datetime, timezone, timedelta
-from random import randbytes
+from random import randbytes, randrange
 
+import time
 
 from .errorcodes import dnerror
 
+# from asn1cryptoi.core import Integer, Sequence, ObjectIdentifier
+
+
+MAGIC_PRODUCTION_CLIENT = "DN TSEProduction ef82abcedf"
+
 
 class VirtualTSE:
-    def __init__(self):
+    def __init__(self, delay: float, fast: bool, real: bool):
+        self._fast: bool = fast
+        self._real: bool = real
+        self._delay: float = delay
+
         self.password_block_counter = 0
         self.puk_block_counter = 0
         self.transnr = 0
         self.signctr = 0
-        self.current_transactions = {}
+        # map from "client id" -> set of transactions
+        self.current_transactions = dict[str, set[int]]()
         self.current_transactions["POS001"] = set()
-        self.serial = randbytes(32).hex()
+        self.current_transactions[MAGIC_PRODUCTION_CLIENT] = set()
+        self.current_transactions["DummyDefaultClientId"] = set()
+
+        self.public_key = b"\x04\x6B\x1D\x4B\xFA\x4C\xD5\x0D\xE8\x8F\x31\x79\x92\x54\x36\x41\xA9\x48\x01\xE5\x8B\x7E\x18\x26\x86\x52\x0F\xE4\x42\x7C\x5E\xD1\xDC\x12\xFA\xD4\x9F\x3F\xFA\xF2\x86\x58\x6D\xBB\x23\xF9\x25\x08\x7E\x2A\xB7\xEB\x9C\x72\xB0\xA4\x4D\x57\xE2\x57\x11\xFE\x1B\xE2\x71\x36\x72\x3A\x8D\x20\x30\x07\xCF\x01\xF2\x25\x59\x14\x89\x22\x26\x63\x2C\x0C\xB0\x2D\x14\x89\x32\x28\xE9\x61\xCD\x2F\xB2\xFA\x48"
+        self.serial = "1BA7F861E9467C60DDF78EC003C9A8E163F6A7EB69EAC5C780EC201932EA0BF1"
+        self.certificate = b"THIS IS A VERY LONG CERTIFICATE!!!!"
         self.password_admin = "12345"
-        self.password_timeadmin = "12345"
+        self.password_timeadmin = self.password_admin
         self.puk = "000000"
 
         # just return ok
@@ -39,9 +55,6 @@ class VirtualTSE:
             "PerformSelfTest",
             "SetDefaultClientID",
             "GetServiceInfo",
-            "GetDeviceInfo",
-            "GetDeviceData",
-            "GetDeviceStatus",
             "Export",
             "ExportRemove",
             "ExportAbort",
@@ -54,7 +67,7 @@ class VirtualTSE:
     def parse_input(self, msgdata):
         response = {}
 
-        msg = json.loads(msgdata.strip("\x02").strip("\x03"))
+        msg = json.loads(msgdata.strip("\x02").strip("\n").strip("\x03"))
 
         # extract command
         if "Command" not in msg:
@@ -65,7 +78,7 @@ class VirtualTSE:
         if "PingPong" in msg:
             response["PingPong"] = msg["PingPong"]
 
-        return f"\x02{json.dumps(response)}\x03"
+        return f"\x02{json.dumps(response)}\x03\n"
 
     def act_on_command(self, msg):
         response = {"Command": msg["Command"]}
@@ -86,7 +99,12 @@ class VirtualTSE:
             response.update(self.registerclientid(msg))
         elif msg["Command"] == "DeregisterClientID":
             response.update(self.deregisterclientid(msg))
-
+        elif msg["Command"] == "GetDeviceStatus":
+            response.update(self.getdevicestatus(msg))
+        elif msg["Command"] == "GetDeviceInfo":
+            response.update(self.getdeviceinfo(msg))
+        elif msg["Command"] == "GetDeviceData":
+            response.update(self.getdevicedata(msg))
         elif msg["Command"] in self.ignored_commands:
             response["Status"] = "ok"
         else:
@@ -127,8 +145,9 @@ class VirtualTSE:
         response["TransactionNumber"] = self.transnr
         response["SerialNumber"] = self.serial
         response["SignatureCounter"] = self.signctr
-        response["Signature"] = randbytes(16).hex()
-        response["LogTime"] = datetime.now(timezone(timedelta(hours=1))).isoformat(timespec="seconds")
+        LogTime_datetime = datetime.now(timezone(timedelta(hours=1)))
+        response["Signature"] = self.generate_signature(msg, str(self.transnr), LogTime_datetime)
+        response["LogTime"] = LogTime_datetime.isoformat(timespec="seconds")
 
         return response
 
@@ -167,8 +186,9 @@ class VirtualTSE:
 
         self.signctr += 1
         response["SignatureCounter"] = self.signctr
-        response["Signature"] = randbytes(16).hex()
-        response["LogTime"] = datetime.now(timezone(timedelta(hours=1))).isoformat(timespec="seconds")
+        LogTime_datetime = datetime.now(timezone(timedelta(hours=1)))
+        response["Signature"] = self.generate_signature(msg, str(self.transnr), LogTime_datetime)
+        response["LogTime"] = LogTime_datetime.isoformat(timespec="seconds")
 
         return response
 
@@ -204,8 +224,10 @@ class VirtualTSE:
         response["Status"] = "ok"
         self.signctr += 1
         response["SignatureCounter"] = self.signctr
-        response["Signature"] = randbytes(16).hex()
-        response["LogTime"] = datetime.now(timezone(timedelta(hours=1))).isoformat(timespec="seconds")
+
+        LogTime_datetime = datetime.now(timezone(timedelta(hours=1)))
+        response["Signature"] = self.generate_signature(msg, msg["TransactionNumber"], LogTime_datetime)
+        response["LogTime"] = LogTime_datetime.isoformat(timespec="seconds")
 
         return response
 
@@ -296,6 +318,9 @@ class VirtualTSE:
         # check if all Parameters are here
         if "ClientID" not in msg or "Password" not in msg:
             return dnerror(3)  # param missing
+        # check if blocked
+        if self.password_block_counter >= 3:
+            return dnerror(32)  # user blocked
         # check password_admin == 12345
         try:
             if base64.b64decode(msg["Password"]).decode("utf8") != self.password_admin:
@@ -304,10 +329,10 @@ class VirtualTSE:
         except binascii.Error:
             return dnerror(9)  # base64
 
-        if len(msg["ClientID"]) > 30:
-            return dnerror(4)
+        if len(msg["ClientID"]) > 100:
+            return dnerror(21)
 
-        if len(self.current_transactions) > 15:
+        if len(self.current_transactions) > 512:
             return dnerror(23)
 
         if msg["ClientID"] in self.current_transactions:
@@ -324,6 +349,9 @@ class VirtualTSE:
         # check if all Parameters are here
         if "ClientID" not in msg or "Password" not in msg:
             return dnerror(3)  # param missing
+        # check if blocked
+        if self.password_block_counter >= 3:
+            return dnerror(32)  # user blocked
         # check password_admin == 12345
         try:
             if base64.b64decode(msg["Password"]).decode("utf8") != self.password_admin:
@@ -334,6 +362,9 @@ class VirtualTSE:
 
         if len(msg["ClientID"]) > 30:
             return dnerror(4)
+
+        if msg["ClientID"] == MAGIC_PRODUCTION_CLIENT:
+            return dnerror(1337)
 
         if msg["ClientID"] in self.current_transactions:
             if not self.current_transactions[msg["ClientID"]]:
@@ -347,13 +378,79 @@ class VirtualTSE:
         response["Status"] = "ok"
         return response
 
+    def getdevicestatus(self, msg):
+        response = {"Status": "ok", "Parameters": {"SignatureAlgorithm": "ecdsa-plain-SHA384"}}
+        password = msg.get("Password")
+        if password is not None:
+            # check if blocked
+            if self.password_block_counter >= 3:
+                return dnerror(32)  # user blocked
+            try:
+                if base64.b64decode(msg["Password"]).decode("utf8") != self.password_admin:
+                    self.password_block_counter += 1
+                    return dnerror(30)  # password wrong
+            except binascii.Error:
+                return dnerror(9)  # base64
+            response["ClientIDs"] = sorted(self.current_transactions)
+        return response
+
+    def getdeviceinfo(self, msg):
+        del msg
+        return {"Status": "ok", "DeviceInfo": {"SerialNumber": self.serial, "TimeFormat": "UnixTime"}}
+
+    def getdevicedata(self, msg):
+        name = msg["Name"]
+        encoding_format = msg.get("Format", "Hex")
+
+        if name == "PublicKey":
+            value = self.public_key
+        elif name == "Certificates":
+            value = self.certificate
+        else:
+            return dnerror(4)
+
+        if encoding_format == "Hex":
+            value_enc = binascii.hexlify(value).decode("ascii")
+        elif encoding_format == "Base64":
+            value_enc = base64.b64encode(value).decode("ascii")
+        else:
+            return dnerror(4)
+
+        return {"Status": "ok", "Name": name, "Value": value_enc, "Length": len(value)}
+
+    def generate_signature(self, msg, TransactionNr, LogTime_datetime):
+        signature: str = ""
+
+        # simulate time required for signing process
+        if not self._fast:
+            time.sleep(self._delay)
+
+        # generate bs signature
+        if not self._real:
+            if randrange(5) == 0:
+                signature = (
+                    "1c82c513e64e2cbfbefa189eafe8629ed7abce27a1b7e8de99a9ddf92b5eb9eae7fbefbe" + randbytes(60).hex()
+                )
+            else:
+                signature = "ca8968b306a0" + randbytes(90).hex()
+            return signature
+
+        # now for the real deal
+
+        # version = Integer(2)
+
+        # time = Integer(int(LogTime_datetime.timestamp()))
+
+        signature = "1c82c513e64e2cbfbefa189eafe8629ed7abce27a1b7e8de99a9ddf92b5eb9eae7fbefbe" + randbytes(60).hex()
+        return signature
+
 
 class WebsocketInterface:
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str, port: int, delay: float, fast: bool, real: bool):
         self.host: str = host
         self.port: int = port
 
-        self.tse = VirtualTSE()
+        self.tse = VirtualTSE(delay, fast, real)
 
     async def websocket_handler(self, request):
         print("Websocket connection starting")
@@ -364,12 +461,12 @@ class WebsocketInterface:
         async for msg in ws:
             # got message
             if msg.type == aiohttp.WSMsgType.TEXT:
-                print(f" >>: {msg.data}")
+                print(f" >>: {str(msg.data).strip()}")
                 # check for STX ETX
-                if msg.data[0] == "\x02" and msg.data[-1] == "\x03":
+                if msg.data[:1] == "\x02" and msg.data[-2:] == "\x03\n":
                     resp = self.tse.parse_input(msg.data)
 
-                    print(f"<< : {resp}")
+                    print(f"<< : {str(resp).strip()}")
                     await ws.send_str(resp)
                 else:
                     print("ERROR: missing STX and/or ETX framing")

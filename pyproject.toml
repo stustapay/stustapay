@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -14,17 +14,17 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "fastapi",
-    "python-multipart",
-    "uvicorn[standard]",
-    "pydantic",
-    "passlib[bcrypt]",
-    "asyncpg",
-    "PyYAML",
-    "python-jose[cryptography]",
-    "jinja2",
-    "aiohttp",
-    "pylatexenc"
+    "fastapi==0.95.1",
+    "python-multipart==0.0.6",
+    "uvicorn[standard]==0.22.0",
+    "passlib[bcrypt]==1.7.4",
+    "asyncpg==0.27.0",
+    "PyYAML==6.0",
+    "python-jose[cryptography]==3.3.0",
+    "Jinja2==3.1.2",
+    "aiohttp==3.8.4",
+    "pylatexenc==2.10",
+    "schwifty==2023.3.0"
 ]
 
 [project.optional-dependencies]
@@ -42,8 +42,11 @@ dev = [
 [project.urls]
 Source = "https://github.com/stustanet/stustapay"
 
-[tool.setuptools]
-packages = ["stustapay"]
+[tool.setuptools.packages.find]
+#where = [""]
+namespaces = false
+#include = ["stustapay*"]
+exclude = ["stustapay.tests*", "tests*"]
 
 [tool.pylint]
 extension-pkg-whitelist = [

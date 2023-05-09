@@ -1,8 +1,6 @@
 import json
 import logging
-import uuid
 from collections import defaultdict
-from dataclasses import dataclass
 from typing import Dict, Optional, Set
 
 import asyncpg
@@ -10,13 +8,13 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.account import (
     ACCOUNT_CASH_ENTRY,
-    ACCOUNT_CASH_VAULT,
     ACCOUNT_SUMUP,
     Account,
     get_source_account,
     get_target_account,
     ACCOUNT_SALE_EXIT,
     ACCOUNT_CASH_EXIT,
+    ACCOUNT_CASH_SALE_SOURCE,
 )
 from stustapay.core.schema.order import (
     CompletedSale,
@@ -40,31 +38,39 @@ from stustapay.core.schema.order import (
 from stustapay.core.schema.product import (
     Product,
     ProductRestriction,
-    TOP_UP_PRODUCT_ID,
-    PAY_OUT_PRODUCT_ID,
     TICKET_PRODUCT_ID,
     TICKET_U18_PRODUCT_ID,
     TICKET_U16_PRODUCT_ID,
 )
 from stustapay.core.schema.terminal import Terminal, ENTRY_BUTTON_ID, ENTRY_U18_BUTTON_ID, ENTRY_U16_BUTTON_ID
-from stustapay.core.schema.user import Privilege, User
+from stustapay.core.schema.user import Privilege, User, CurrentUser
+from stustapay.core.service.account import get_account_by_id
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import (
+    requires_terminal,
+    requires_user,
+    with_db_transaction,
+    with_retryable_db_transaction,
+)
 from stustapay.core.service.common.error import InvalidArgument, ServiceException
 from stustapay.core.service.common.notifications import Subscription
+from stustapay.core.service.product import (
+    fetch_discount_product,
+    fetch_ticket_product,
+    fetch_ticket_product_u16,
+    fetch_ticket_product_u18,
+    fetch_top_up_product,
+    fetch_initial_topup_amount,
+    fetch_pay_out_product,
+)
+from stustapay.core.service.transaction import book_transaction
 from stustapay.core.util import BaseModel
+from .booking import BookingIdentifier, NewLineItem, book_order
 from .voucher import VoucherService
-from ..product import ProductService
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(eq=True, frozen=True)
-class BookingIdentifier:
-    source_account_id: int
-    target_account_id: int
 
 
 class NotEnoughFundsException(ServiceException):
@@ -158,12 +164,9 @@ class BookedProduct(BaseModel):
 
 
 class OrderService(DBService):
-    def __init__(
-        self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, product_service: ProductService
-    ):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
-        self.product_service = product_service
         self.voucher_service = VoucherService(db_pool=db_pool, config=config, auth_service=auth_service)
 
         self.admin_order_update_queues: set[Subscription] = set()
@@ -205,10 +208,11 @@ class OrderService(DBService):
         self.admin_order_update_queues.add(subscription)
         return subscription
 
+    @staticmethod
     async def _get_products_from_buttons(
-        self,
         *,
         conn: asyncpg.Connection,
+        till_profile_id: int,
         buttons: list[Button],
     ) -> list[BookedProduct]:
         # TODO: check if the till making this sale has these buttons as part of its layout
@@ -217,9 +221,15 @@ class OrderService(DBService):
             product_rows = await conn.fetch(
                 "select p.* from till_button_product tbp "
                 "join product_with_tax_and_restrictions p on tbp.product_id = p.id "
-                "where button_id = $1",
+                "join till_layout_to_button tltp on tltp.button_id = tbp.button_id "
+                "join till_profile tp on tp.layout_id = tltp.layout_id "
+                "where tbp.button_id = $1 and tp.id = $2",
                 button.till_button_id,
+                till_profile_id,
             )
+            if len(product_rows) == 0:
+                raise InvalidArgument("this till profile is not allowed to use these buttons")
+
             for row in product_rows:
                 product = Product.parse_obj(row)
                 if (button.price is None) != product.fixed_price:
@@ -229,8 +239,8 @@ class OrderService(DBService):
                 booked_products.append(BookedProduct(product=product, quantity=button.quantity, price=button.price))
         return booked_products
 
+    @staticmethod
     async def _preprocess_order_positions(
-        self,
         *,
         customer_restrictions: Optional[ProductRestriction],
         booked_products: list[BookedProduct],
@@ -290,15 +300,6 @@ class OrderService(DBService):
 
         return line_items
 
-    async def _fetch_account(self, conn: asyncpg.Connection, account_id: int) -> Optional[Account]:
-        account = await conn.fetchrow(
-            "select * from account where id=$1",
-            account_id,
-        )
-        if account is None:
-            return None
-        return Account.parse_obj(account)
-
     async def _fetch_customer_by_user_tag(self, conn: asyncpg.Connection, customer_tag_uid: int) -> Account:
         customer = await conn.fetchrow(
             "select a.*, t.restriction from user_tag t join account a on t.uid = a.user_tag_uid where t.uid = $1",
@@ -308,7 +309,7 @@ class OrderService(DBService):
             raise CustomerNotFound(uid=customer_tag_uid)
         return Account.parse_obj(customer)
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_topup(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_topup: NewTopUp
@@ -355,90 +356,59 @@ class OrderService(DBService):
             new_balance=new_balance,
         )
 
-    async def _book_topup_cash_order(
-        self, *, conn: asyncpg.Connection, order_id: int, amount: float, customer_account_id: int, cashier: User
-    ):
-        """
-        The customer pays cash money to get funds on hist customer account
-        It books the money from the cash input to the current cashier's register and
-        from the cash vault to the customer
-        """
-        assert cashier.cashier_account_id is not None
-        prepared_bookings: Dict[BookingIdentifier, float] = {
-            BookingIdentifier(source_account_id=ACCOUNT_CASH_VAULT, target_account_id=customer_account_id): amount,
-            BookingIdentifier(
-                source_account_id=ACCOUNT_CASH_ENTRY, target_account_id=cashier.cashier_account_id
-            ): amount,
-        }
-
-        await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
-
-    async def _book_topup_sumup_order(
-        self, *, conn: asyncpg.Connection, order_id: int, amount: float, customer_account_id: int
-    ):
-        """
-        The customer pays ec money (via sumup) to get funds on the customer account
-        It books the money from the sumup input directly to the customer
-        """
-        prepared_bookings = {
-            BookingIdentifier(source_account_id=ACCOUNT_SUMUP, target_account_id=customer_account_id): amount
-        }
-        await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
-
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_topup(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_topup: NewTopUp
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, new_topup: NewTopUp
     ) -> CompletedTopUp:
+        assert current_user.cashier_account_id is not None
+
         pending_top_up: PendingTopUp = await self.check_topup(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_terminal=current_terminal, current_user=current_user, new_topup=new_topup
         )
 
-        order_row = await conn.fetchrow(
-            "insert into ordr (uuid, item_count, order_type, cashier_id, till_id, customer_account_id, payment_method) "
-            "values ($1, $2, $3, $4, $5, $6, $7) "
-            "returning id, uuid, booked_at",
-            pending_top_up.uuid or uuid.uuid4(),
-            1,  # item_count
-            OrderType.top_up.name,
-            current_user.id,
-            current_terminal.till.id,
-            pending_top_up.customer_account_id,
-            pending_top_up.payment_method.name,
-        )
-        order_id = order_row["id"]
-        order_uuid = order_row["uuid"]
-        booked_at = order_row["booked_at"]
+        top_up_product = await fetch_top_up_product(conn=conn)
 
-        await conn.execute(
-            "insert into line_item (order_id, item_id, product_id, quantity, product_price, tax_name, tax_rate) "
-            "values ($1, $2, $3, $4, $5, $6, $7)",
-            order_id,
-            1,
-            TOP_UP_PRODUCT_ID,
-            1,
-            pending_top_up.amount,
-            "none",
-            0,
-        )
+        line_items = [
+            NewLineItem(
+                quantity=1,
+                product_id=top_up_product.id,
+                product_price=pending_top_up.amount,
+                tax_rate=top_up_product.tax_rate,
+                tax_name=top_up_product.tax_name,
+            )
+        ]
 
         if pending_top_up.payment_method == PaymentMethod.cash:
-            await self._book_topup_cash_order(
-                conn=conn,
-                order_id=order_id,
-                amount=pending_top_up.amount,
-                customer_account_id=pending_top_up.customer_account_id,
-                cashier=current_user,
-            )
+            bookings = {
+                BookingIdentifier(
+                    source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=pending_top_up.customer_account_id
+                ): pending_top_up.amount,
+                BookingIdentifier(
+                    source_account_id=ACCOUNT_CASH_ENTRY, target_account_id=current_user.cashier_account_id
+                ): pending_top_up.amount,
+            }
         elif pending_top_up.payment_method == PaymentMethod.sumup:
-            await self._book_topup_sumup_order(
-                conn=conn,
-                order_id=order_id,
-                amount=pending_top_up.amount,
-                customer_account_id=pending_top_up.customer_account_id,
-            )
+            bookings = {
+                BookingIdentifier(
+                    source_account_id=ACCOUNT_SUMUP, target_account_id=pending_top_up.customer_account_id
+                ): pending_top_up.amount
+            }
         else:
-            raise NotImplementedError()
+            raise InvalidArgument("topups cannot be payed with a tag")
+
+        order_info = await book_order(
+            conn=conn,
+            order_type=OrderType.top_up,
+            payment_method=pending_top_up.payment_method,
+            uuid=pending_top_up.uuid,
+            cashier_id=current_user.id,
+            till_id=current_terminal.till.id,
+            customer_account_id=pending_top_up.customer_account_id,
+            cash_register_id=current_user.cash_register_id,
+            line_items=line_items,
+            bookings=bookings,
+        )
 
         return CompletedTopUp(
             amount=pending_top_up.amount,
@@ -447,22 +417,26 @@ class OrderService(DBService):
             payment_method=pending_top_up.payment_method,
             old_balance=pending_top_up.old_balance,
             new_balance=pending_top_up.new_balance,
-            uuid=order_uuid,
-            booked_at=booked_at,
+            uuid=order_info.uuid,
+            booked_at=order_info.booked_at,
             cashier_id=current_user.id,
             till_id=current_terminal.till.id,
         )
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def check_sale(self, *, conn: asyncpg.Connection, new_sale: NewSale) -> PendingSale:
+    async def check_sale(
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_sale: NewSale
+    ) -> PendingSale:
         """
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
         """
         customer_account = await self._fetch_customer_by_user_tag(conn=conn, customer_tag_uid=new_sale.customer_tag_uid)
 
-        booked_products = await self._get_products_from_buttons(conn=conn, buttons=new_sale.buttons)
+        booked_products = await self._get_products_from_buttons(
+            conn=conn, till_profile_id=current_terminal.till.active_profile_id, buttons=new_sale.buttons
+        )
         line_items = await self._preprocess_order_positions(
             customer_restrictions=customer_account.restriction, booked_products=booked_products
         )
@@ -483,7 +457,7 @@ class OrderService(DBService):
             if new_sale.used_vouchers > customer_account.vouchers:
                 raise NotEnoughVouchersException(available_vouchers=customer_account.vouchers)
             vouchers_to_use = new_sale.used_vouchers
-        discount_product = await self.product_service.fetch_discount_product(conn=conn)
+        discount_product = await fetch_discount_product(conn=conn)
         voucher_usage = self.voucher_service.compute_optimal_voucher_usage(
             max_vouchers=vouchers_to_use, line_items=order.line_items, discount_product=discount_product
         )
@@ -497,10 +471,10 @@ class OrderService(DBService):
 
         return order
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_sale(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_sale: NewSale
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, new_sale: NewSale
     ) -> CompletedSale:
         """
         apply the order after all payment has been settled.
@@ -512,79 +486,65 @@ class OrderService(DBService):
             new_sale=new_sale,
         )
 
-        order_row = await conn.fetchrow(
-            "insert into ordr (uuid, item_count, order_type, cashier_id, till_id, customer_account_id, payment_method) "
-            "values ($1, $2, $3, $4, $5, $6, $7) "
-            "returning id, uuid, booked_at",
-            uuid.uuid4(),
-            len(pending_sale.line_items),
-            OrderType.sale.name,
-            current_user.id,
-            current_terminal.till.id,
-            pending_sale.customer_account_id,
-            "tag",  # sales can only be booked when payed with a user tag
-        )
-        order_id = order_row["id"]
-        order_uuid = order_row["uuid"]
-        booked_at = order_row["booked_at"]
+        line_items = []
 
-        for item_id, line_item in enumerate(pending_sale.line_items):
-            await conn.execute(
-                "insert into line_item (order_id, item_id, product_id, quantity, product_price, tax_name, tax_rate) "
-                "values ($1, $2, $3, $4, $5, $6, $7)",
-                order_id,
-                item_id,
-                line_item.product.id,
-                line_item.quantity,
-                line_item.product_price,
-                line_item.tax_name,
-                line_item.tax_rate,
+        for line_item in pending_sale.line_items:
+            line_items.append(
+                NewLineItem(
+                    quantity=line_item.quantity,
+                    product_id=line_item.product.id,
+                    product_price=line_item.product_price,
+                    tax_name=line_item.tax_name,
+                    tax_rate=line_item.tax_rate,
+                )
+            )
+
+        # combine booking based on (source, target) -> amount
+        bookings: Dict[BookingIdentifier, float] = defaultdict(lambda: 0.0)
+        for line_item in pending_sale.line_items:
+            product = line_item.product
+            source_acc_id = get_source_account(OrderType.sale, product, pending_sale.customer_account_id)
+            target_acc_id = get_target_account(OrderType.sale, product, pending_sale.customer_account_id)
+            bookings[BookingIdentifier(source_account_id=source_acc_id, target_account_id=target_acc_id)] += float(
+                line_item.total_price
+            )
+
+        order_info = await book_order(
+            conn=conn,
+            order_type=OrderType.sale,
+            payment_method=PaymentMethod.tag,
+            customer_account_id=pending_sale.customer_account_id,
+            cashier_id=current_user.id,
+            line_items=line_items,
+            bookings=bookings,
+            till_id=current_terminal.till.id,
+        )
+
+        if pending_sale.used_vouchers > 0:
+            await book_transaction(
+                conn=conn,
+                order_id=order_info.id,
+                source_account_id=pending_sale.customer_account_id,
+                target_account_id=ACCOUNT_SALE_EXIT,
+                voucher_amount=pending_sale.used_vouchers,
             )
 
         completed_order = CompletedSale(
             buttons=pending_sale.buttons,
-            id=order_id,
-            uuid=order_uuid,
+            id=order_info.id,
+            uuid=order_info.uuid,
             old_balance=pending_sale.old_balance,
             new_balance=pending_sale.new_balance,
             old_voucher_balance=pending_sale.old_voucher_balance,
             new_voucher_balance=pending_sale.new_voucher_balance,
             customer_account_id=pending_sale.customer_account_id,
             line_items=pending_sale.line_items,
-            booked_at=booked_at,
+            booked_at=order_info.booked_at,
             till_id=current_terminal.till.id,
             cashier_id=current_user.id,
         )
 
-        # combine booking based on (source, target) -> amount
-        prepared_bookings: Dict[BookingIdentifier, float] = defaultdict(lambda: 0.0)
-        for line_item in completed_order.line_items:
-            product = line_item.product
-            source_acc_id = get_source_account(OrderType.sale, product, pending_sale.customer_account_id)
-            target_acc_id = get_target_account(OrderType.sale, product, pending_sale.customer_account_id)
-            prepared_bookings[
-                BookingIdentifier(source_account_id=source_acc_id, target_account_id=target_acc_id)
-            ] += float(line_item.total_price)
-
-        if completed_order.used_vouchers > 0:
-            await conn.fetchval(
-                "select * from book_transaction("
-                "   order_id => $1,"
-                "   description => $2,"
-                "   source_account_id => $3,"
-                "   target_account_id => $4,"
-                "   amount => 0,"
-                "   vouchers_amount => $5)",
-                order_id,
-                "",
-                completed_order.customer_account_id,
-                ACCOUNT_SALE_EXIT,
-                completed_order.used_vouchers,
-            )
-
-        await self._book_prepared_bookings(conn=conn, order_id=completed_order.id, bookings=prepared_bookings)
-
-        customer_account_after_booking = await self._fetch_account(
+        customer_account_after_booking = await get_account_by_id(
             conn=conn, account_id=completed_order.customer_account_id
         )
         if customer_account_after_booking is None:
@@ -596,31 +556,8 @@ class OrderService(DBService):
 
         return completed_order
 
-    async def _book_prepared_bookings(
-        self, conn: asyncpg.Connection, order_id: int, bookings: Dict[BookingIdentifier, float]
-    ):
-        """
-        insert the selected bookings into the database.
-        bookings are (source, target, tax) -> amount
-        """
-        for booking_identifier, amount in bookings.items():
-            await conn.fetchval(
-                "select * from book_transaction("
-                "   order_id => $1,"
-                "   description => $2,"
-                "   source_account_id => $3,"
-                "   target_account_id => $4,"
-                "   amount => $5,"
-                "   vouchers_amount => $6)",
-                order_id,
-                "",
-                booking_identifier.source_account_id,
-                booking_identifier.target_account_id,
-                amount,
-                0,  # TODO: add vouchers here
-            )
-
-    async def _fetch_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
+    @staticmethod
+    async def _fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
         """
         get all info about an order.
         """
@@ -630,11 +567,15 @@ class OrderService(DBService):
 
         return Order.parse_obj(row)
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def cancel_sale(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, order_id: int
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, order_id: int
     ) -> bool:
+        is_order_cancelled = await conn.fetchval("select true from ordr where cancels_order = $1", order_id)
+        if is_order_cancelled:
+            raise InvalidArgument("Order has already been cancelled")
+
         order = await self._fetch_order(conn=conn, order_id=order_id)
         if order is None:
             return False
@@ -643,33 +584,30 @@ class OrderService(DBService):
         if order.payment_method != PaymentMethod.tag:
             return False
 
-        order_row = await conn.fetchrow(
-            "insert into ordr ("
-            "   item_count, order_type, cashier_id, till_id, customer_account_id, cancels_order, payment_method) "
-            "values ($1, $2, $3, $4, $5, $6, $7) "
-            "returning id, uuid, booked_at",
-            len(order.line_items),
-            OrderType.cancel_sale.name,
-            current_user.id,
-            current_terminal.till.id,
-            order.customer_account_id,
-            order.id,
-            order.payment_method.name,
-        )
-        order_id = order_row["id"]
-
+        line_items = []
         for line_item in order.line_items:
-            await conn.execute(
-                "insert into line_item (order_id, item_id, product_id, quantity, product_price, tax_name, tax_rate) "
-                "values ($1, $2, $3, $4, $5, $6, $7)",
-                order_id,
-                line_item.item_id,
-                line_item.product.id,
-                -line_item.quantity,
-                line_item.product_price,
-                line_item.tax_name,
-                line_item.tax_rate,
+            line_items.append(
+                NewLineItem(
+                    quantity=-line_item.quantity,
+                    product_id=line_item.product.id,
+                    tax_name=line_item.tax_name,
+                    tax_rate=line_item.tax_rate,
+                    product_price=line_item.product_price,
+                )
             )
+
+        order_info = await book_order(
+            conn=conn,
+            order_type=OrderType.cancel_sale,
+            cashier_id=current_user.id,
+            till_id=current_terminal.till.id,
+            customer_account_id=order.customer_account_id,
+            cancels_order=order.id,
+            payment_method=order.payment_method,
+            line_items=line_items,
+            bookings={},
+        )
+
         transactions = await conn.fetch("select * from transaction where order_id = $1", order.id)
         for transaction in transactions:
             await conn.fetchval(
@@ -680,7 +618,7 @@ class OrderService(DBService):
                 "   target_account_id => $4,"
                 "   amount => $5,"
                 "   vouchers_amount => $6)",
-                order_id,
+                order_info.id,
                 transaction["description"],
                 transaction["target_account"],
                 transaction["source_account"],
@@ -690,7 +628,7 @@ class OrderService(DBService):
 
         return True
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_pay_out(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_pay_out: NewPayOut
@@ -724,51 +662,48 @@ class OrderService(DBService):
             new_balance=new_balance,
         )
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_pay_out(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: User, new_pay_out: NewPayOut
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, new_pay_out: NewPayOut
     ) -> CompletedPayOut:
         assert current_user.cashier_account_id is not None
         pending_pay_out: PendingPayOut = await self.check_pay_out(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_terminal=current_terminal, current_user=current_user, new_pay_out=new_pay_out
         )
 
-        order_row = await conn.fetchrow(
-            "insert into ordr(item_count, order_type, cashier_id, till_id, customer_account_id, payment_method) "
-            "values (1, 'pay_out', $1, $2, $3, $4) "
-            "returning id, uuid, booked_at",
-            current_user.id,
-            current_terminal.till.id,
-            pending_pay_out.customer_account_id,
-            PaymentMethod.tag.name,  # payouts as orders using this API can only be processed as direct cash payouts
-        )
-        order_id = order_row["id"]
-        order_uuid = order_row["uuid"]
-        booked_at = order_row["booked_at"]
+        pay_out_product = await fetch_pay_out_product(conn=conn)
 
-        await conn.execute(
-            "insert into line_item (order_id, item_id, product_id, quantity, product_price, tax_name, tax_rate) "
-            "values ($1, $2, $3, $4, $5, $6, $7)",
-            order_id,
-            1,  # item_id
-            PAY_OUT_PRODUCT_ID,
-            1,  # quantity
-            pending_pay_out.amount,
-            "none",
-            0,
-        )
+        line_items = [
+            NewLineItem(
+                quantity=1,
+                product_id=pay_out_product.id,
+                product_price=pending_pay_out.amount,
+                tax_name=pay_out_product.tax_name,
+                tax_rate=pay_out_product.tax_rate,
+            )
+        ]
 
         prepared_bookings: Dict[BookingIdentifier, float] = {
             BookingIdentifier(
-                source_account_id=pending_pay_out.customer_account_id, target_account_id=ACCOUNT_CASH_VAULT
+                source_account_id=pending_pay_out.customer_account_id, target_account_id=ACCOUNT_CASH_SALE_SOURCE
             ): -pending_pay_out.amount,
             BookingIdentifier(
                 source_account_id=current_user.cashier_account_id, target_account_id=ACCOUNT_CASH_EXIT
             ): -pending_pay_out.amount,
         }
 
-        await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
+        order_info = await book_order(
+            conn=conn,
+            order_type=OrderType.pay_out,
+            cashier_id=current_user.id,
+            till_id=current_terminal.till.id,
+            customer_account_id=pending_pay_out.customer_account_id,
+            payment_method=PaymentMethod.cash,
+            cash_register_id=current_user.cash_register_id,
+            line_items=line_items,
+            bookings=prepared_bookings,
+        )
 
         return CompletedPayOut(
             amount=pending_pay_out.amount,
@@ -776,13 +711,13 @@ class OrderService(DBService):
             customer_account_id=pending_pay_out.customer_account_id,
             old_balance=pending_pay_out.old_balance,
             new_balance=pending_pay_out.new_balance,
-            uuid=order_uuid,
-            booked_at=booked_at,
+            uuid=order_info.uuid,
+            booked_at=order_info.booked_at,
             cashier_id=current_user.id,
             till_id=current_terminal.till.id,
         )
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_ticket_sale(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_ticket_sale: NewTicketSale
@@ -844,7 +779,7 @@ class OrderService(DBService):
 
         line_items = []
         if expected_tag_counts[None] != 0:
-            ticket_product = await self.product_service.fetch_ticket_product(conn=conn)
+            ticket_product = await fetch_ticket_product(conn=conn)
             assert ticket_product.price is not None
             line_items.append(
                 PendingLineItem(
@@ -856,7 +791,7 @@ class OrderService(DBService):
                 )
             )
         if expected_tag_counts[ProductRestriction.under_16.name] != 0:
-            ticket_product = await self.product_service.fetch_ticket_product_u16(conn=conn)
+            ticket_product = await fetch_ticket_product_u16(conn=conn)
             assert ticket_product.price is not None
             line_items.append(
                 PendingLineItem(
@@ -868,7 +803,7 @@ class OrderService(DBService):
                 )
             )
         if expected_tag_counts[ProductRestriction.under_18.name] != 0:
-            ticket_product = await self.product_service.fetch_ticket_product_u18(conn=conn)
+            ticket_product = await fetch_ticket_product_u18(conn=conn)
             assert ticket_product.price is not None
             line_items.append(
                 PendingLineItem(
@@ -880,8 +815,8 @@ class OrderService(DBService):
                 )
             )
 
-        top_up_product = await self.product_service.fetch_top_up_product(conn=conn)
-        initial_topup_amount = await self.product_service.fetch_initial_topup_amount(conn=conn)
+        top_up_product = await fetch_top_up_product(conn=conn)
+        initial_topup_amount = await fetch_initial_topup_amount(conn=conn)
         line_items.append(
             PendingLineItem(
                 quantity=1,
@@ -921,14 +856,14 @@ class OrderService(DBService):
 
         return oldest_customer[0]
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_ticket_sale(
         self,
         *,
         conn: asyncpg.Connection,
         current_terminal: Terminal,
-        current_user: User,
+        current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,
     ) -> CompletedTicketSale:
         assert current_user.cashier_account_id is not None
@@ -948,40 +883,23 @@ class OrderService(DBService):
 
         oldest_customer_account_id = self._find_oldest_customer(customers)
 
-        order_row = await conn.fetchrow(
-            "insert into ordr(uuid, item_count, order_type, cashier_id, till_id, customer_account_id, payment_method) "
-            "values ($1, $2, $3, $4, $5, $6, $7) "
-            "returning id, uuid, booked_at",
-            new_ticket_sale.uuid or uuid.uuid4(),
-            pending_ticket_sale.item_count,
-            OrderType.ticket.name,
-            current_user.id,
-            current_terminal.till.id,
-            oldest_customer_account_id,
-            pending_ticket_sale.payment_method.name,
-        )
-        order_id = order_row["id"]
-        order_uuid = order_row["uuid"]
-        booked_at = order_row["booked_at"]
-
-        for item_id, line_item in enumerate(pending_ticket_sale.line_items):
-            await conn.execute(
-                "insert into line_item (order_id, item_id, product_id, quantity, product_price, tax_name, tax_rate) "
-                "values ($1, $2, $3, $4, $5, $6, $7)",
-                order_id,
-                item_id,
-                line_item.product.id,
-                line_item.quantity,
-                line_item.product_price,
-                line_item.tax_name,
-                line_item.tax_rate,
+        line_items = []
+        for line_item in pending_ticket_sale.line_items:
+            line_items.append(
+                NewLineItem(
+                    quantity=line_item.quantity,
+                    product_id=line_item.product.id,
+                    product_price=line_item.product_price,
+                    tax_name=line_item.tax_name,
+                    tax_rate=line_item.tax_rate,
+                )
             )
 
         total_ticket_price = 0.0
         for line_item in pending_ticket_sale.line_items:
             if line_item.product.id in {TICKET_PRODUCT_ID, TICKET_U18_PRODUCT_ID, TICKET_U16_PRODUCT_ID}:
                 total_ticket_price += line_item.total_price
-        initial_top_up_amount = await self.product_service.fetch_initial_topup_amount(conn=conn)
+        initial_top_up_amount = await fetch_initial_topup_amount(conn=conn)
 
         prepared_bookings: dict[BookingIdentifier, float] = {}
         if pending_ticket_sale.payment_method == PaymentMethod.cash:
@@ -991,11 +909,11 @@ class OrderService(DBService):
                 )
             ] = pending_ticket_sale.total_price
             prepared_bookings[
-                BookingIdentifier(source_account_id=ACCOUNT_CASH_VAULT, target_account_id=ACCOUNT_SALE_EXIT)
+                BookingIdentifier(source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=ACCOUNT_SALE_EXIT)
             ] = total_ticket_price
             for customer_account_id in customers.keys():
                 prepared_bookings[
-                    BookingIdentifier(source_account_id=ACCOUNT_CASH_VAULT, target_account_id=customer_account_id)
+                    BookingIdentifier(source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=customer_account_id)
                 ] = initial_top_up_amount
         elif pending_ticket_sale.payment_method == PaymentMethod.sumup:
             prepared_bookings[
@@ -1008,16 +926,27 @@ class OrderService(DBService):
         else:
             raise InvalidArgument("Invalid payment method")
 
-        await self._book_prepared_bookings(conn=conn, order_id=order_id, bookings=prepared_bookings)
+        order_info = await book_order(
+            conn=conn,
+            order_type=OrderType.ticket,
+            customer_account_id=oldest_customer_account_id,
+            cashier_id=current_user.id,
+            till_id=current_terminal.till.id,
+            uuid=new_ticket_sale.uuid,
+            cash_register_id=current_user.cash_register_id,
+            payment_method=pending_ticket_sale.payment_method,
+            bookings=prepared_bookings,
+            line_items=line_items,
+        )
 
         return CompletedTicketSale(
-            id=order_id,
+            id=order_info.id,
             payment_method=pending_ticket_sale.payment_method,
             customer_tag_uids=pending_ticket_sale.customer_tag_uids,
             customer_account_id=oldest_customer_account_id,
             line_items=pending_ticket_sale.line_items,
-            uuid=order_uuid,
-            booked_at=booked_at,
+            uuid=order_info.uuid,
+            booked_at=order_info.booked_at,
             cashier_id=current_user.id,
             tickets=pending_ticket_sale.tickets,
             till_id=current_terminal.till.id,

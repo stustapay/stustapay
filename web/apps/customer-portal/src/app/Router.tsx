@@ -6,6 +6,7 @@ import { Login } from "./routes/auth/Login";
 import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
 import { Logout } from "./routes/auth/Logout";
 import { Index } from "./routes/Index";
+import { PayoutInfo } from "./routes/PayoutInfo";
 
 const router = createBrowserRouter([
   {
@@ -16,6 +17,10 @@ const router = createBrowserRouter([
       {
         path: "",
         element: <Index />,
+      },
+      {
+        path: "payout-info",
+        element: <PayoutInfo />,
       },
       {
         path: "logout",

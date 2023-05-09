@@ -1,16 +1,15 @@
 package de.stustanet.stustapay.ui.user
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustanet.stustapay.model.UserKind
-import de.stustanet.stustapay.model.UserTag
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustanet.stustapay.ui.common.TagTextField
@@ -24,9 +23,10 @@ fun UserCreateView(
 ) {
     val scanState = rememberNfcScanDialogState()
     var login by remember { mutableStateOf("") }
-    var kind by remember { mutableStateOf(UserKind.Cashier) }
+    var roles by remember { mutableStateOf(listOf<ULong>()) }
     var newTagId by remember { mutableStateOf<ULong?>(null) }
     val scope = rememberCoroutineScope()
+    val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -85,11 +85,13 @@ fun UserCreateView(
         ) {
             var expanded by remember { mutableStateOf(false) }
 
-            Text("Kind", fontSize = 48.sp, modifier = Modifier.padding(end = 20.dp))
+            Text("Roles", fontSize = 48.sp, modifier = Modifier.padding(end = 20.dp))
             ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
                 TextField(
                     readOnly = true,
-                    value = kind.label,
+                    value = roles.map { id ->
+                        availableRoles.find { r -> r.id == id }?.name ?: ""
+                    }.reduceOrNull() { acc, r -> "$acc, $r" }.orEmpty(),
                     onValueChange = {},
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(
@@ -99,12 +101,28 @@ fun UserCreateView(
                     colors = ExposedDropdownMenuDefaults.textFieldColors()
                 )
                 ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    for (k in UserKind.values()) {
-                        DropdownMenuItem(onClick = {
-                            kind = k
-                            expanded = false
-                        }) {
-                            Text(k.label)
+                    for (r in availableRoles) {
+                        if (!r.is_privileged) {
+                            DropdownMenuItem(onClick = {
+                                roles = if (roles.contains(r.id)) {
+                                    roles - r.id
+                                } else {
+                                    roles + r.id
+                                }
+                                expanded = false
+                                println(roles)
+                            }) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(r.name)
+                                    if (roles.contains(r.id)) {
+                                        Icon(Icons.Filled.Check, null)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -118,7 +136,10 @@ fun UserCreateView(
                 scope.launch {
                     val id = newTagId
                     if (id != null) {
-                        viewModel.create(login, UserTag(id), kind)
+                        viewModel.create(
+                            login,
+                            id,
+                            roles.mapNotNull { roleId -> availableRoles.find { r -> r.id == roleId } })
                         goBack()
                     }
                 }

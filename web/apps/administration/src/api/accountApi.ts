@@ -1,5 +1,4 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-// import { Account } from "@models/account";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
@@ -11,6 +10,9 @@ export const accountApi = createApi({
   reducerPath: "accountApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["account"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getSystemAccounts: builder.query<EntityState<Account>, void>({
       query: () => "/system-accounts/",

@@ -15,6 +15,9 @@ export const tillLayoutApi = createApi({
   reducerPath: "tillLayoutApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["till-buttons", "till-layouts"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getTillButtonById: builder.query<EntityState<TillButton>, number>({
       query: (id) => `/till-buttons/${id}/`,

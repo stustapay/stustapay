@@ -4,13 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.Access
-import de.stustanet.stustapay.model.UserKind
+import de.stustanet.stustapay.model.Role
 import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.model.UserTag
+import de.stustanet.stustapay.repository.TerminalConfigRepository
+import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.repository.UserRepository
 import de.stustanet.stustapay.util.Result
 import de.stustanet.stustapay.util.asResult
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 sealed interface UserUIState {
@@ -18,6 +25,7 @@ sealed interface UserUIState {
         val username: String,
         val activeRole: String,
         val showCreateUser: Boolean,
+        val showLoginUser: Boolean
     ) : UserUIState
 
     object NotLoggedIn : UserUIState
@@ -30,7 +38,8 @@ sealed interface UserUIState {
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val terminalConfigRepository: TerminalConfigRepository
 ) : ViewModel() {
     val userUIState: StateFlow<UserUIState> = userUiState(
         userRepo = userRepository
@@ -43,6 +52,18 @@ class UserViewModel @Inject constructor(
 
     val userStatus = userRepository.status
     val userRoles = userRepository.userRoles
+
+    val availableRoles = terminalConfigRepository.terminalConfigState.map { state ->
+        if (state is TerminalConfigState.Success) {
+            state.config.available_roles
+        } else {
+            List(0) { Role() }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(3000),
+        initialValue = List(0) { Role() },
+    )
 
     fun clearErrors() {
         userStatus.update { null }
@@ -64,8 +85,12 @@ class UserViewModel @Inject constructor(
         userRepository.logout()
     }
 
-    suspend fun create(login: String, tag: UserTag, userKind: UserKind) {
-        userRepository.create(login, tag, userKind)
+    suspend fun create(login: String, tag: ULong, roles: List<Role>) {
+        userRepository.create(login, UserTag(tag), roles)
+    }
+
+    suspend fun update(tag: ULong, roles: List<Role>) {
+        userRepository.update(UserTag(tag), roles)
     }
 }
 
@@ -90,11 +115,14 @@ private fun userUiState(
                                 username = userState.user.login,
                                 activeRole = userState.user.active_role_name,
                                 showCreateUser = Access.canCreateUser(userState.user),
+                                showLoginUser = Access.canLogInOtherUsers(userState.user),
                             )
                         }
+
                         is UserState.NoLogin -> {
                             UserUIState.NotLoggedIn
                         }
+
                         is UserState.Error -> {
                             UserUIState.Error(
                                 message = userState.msg,

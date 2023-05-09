@@ -13,12 +13,14 @@ import {
   orderApi,
   accountApi,
   cashierApi,
+  tillRegisterApi,
   tillRegisterStockingApi,
 } from "@api";
 import { authSlice } from "./authSlice";
 import { uiSlice } from "./uiSlice";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { errorMiddleware } from "./errorMiddleware";
 
 const authPersistConfig = {
   key: "auth",
@@ -45,6 +47,7 @@ export const store = configureStore({
     [orderApi.reducerPath]: orderApi.reducer,
     [accountApi.reducerPath]: accountApi.reducer,
     [cashierApi.reducerPath]: cashierApi.reducer,
+    [tillRegisterApi.reducerPath]: tillRegisterApi.reducer,
     [tillRegisterStockingApi.reducerPath]: tillRegisterStockingApi.reducer,
     [authSlice.name]: persistReducer(authPersistConfig, authSlice.reducer),
     [uiSlice.name]: persistReducer(uiPersistConfig, uiSlice.reducer),
@@ -61,8 +64,10 @@ export const store = configureStore({
       .concat(orderApi.middleware)
       .concat(accountApi.middleware)
       .concat(cashierApi.middleware)
+      .concat(tillRegisterApi.middleware)
       .concat(tillRegisterStockingApi.middleware)
-      .concat(authApi.middleware),
+      .concat(authApi.middleware)
+      .concat(errorMiddleware),
 });
 
 export const persistor = persistStore(store);

@@ -1,5 +1,16 @@
-import { Paper, ListItem, IconButton, Typography, ListItemText, List, Checkbox, Tooltip, Box } from "@mui/material";
-import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, OrderTable } from "@components";
+import {
+  Paper,
+  ListItem,
+  IconButton,
+  Typography,
+  ListItemText,
+  List,
+  Checkbox,
+  Tooltip,
+  Box,
+  Button,
+} from "@mui/material";
+import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink, OrderTable } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -11,16 +22,28 @@ import {
   selectTillById,
   useGetOrderByTillQuery,
   selectOrderAll,
+  selectUserById,
+  useGetUsersQuery,
+  useForceLogoutUserMutation,
 } from "@api";
 import { Loading } from "@stustapay/components";
 import QRCode from "react-qr-code";
 import { encodeTillRegistrationQrCode } from "@core";
 import { config } from "@api/common";
+import { toast } from "react-toastify";
+import { getUserName } from "@stustapay/models";
+import { useCurrencyFormatter } from "@hooks";
 
 export const TillDetail: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const { tillId } = useParams();
   const navigate = useNavigate();
+  const formatCurrency = useCurrencyFormatter();
+
+  const [showForceLogoutDlg, setShowForceLogoutDlg] = React.useState(false);
+  const [showUnregisterTillDlg, setShowUnregisterTillDlg] = React.useState(false);
+
+  const [forceLogoutUser] = useForceLogoutUserMutation();
   const [deleteTill] = useDeleteTillMutation();
   const [logoutTill] = useLogoutTillMutation();
   const { till, error: tillError } = useGetTillByIdQuery(Number(tillId), {
@@ -35,9 +58,11 @@ export const TillDetail: React.FC = () => {
       orders: data ? selectOrderAll(data) : undefined,
     }),
   });
+  const { data: users, error: userError } = useGetUsersQuery();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
-  if (tillError || orderError) {
+  if (tillError || orderError || userError) {
+    toast.error("Error loading tills or orders");
     return <Navigate to="/tills" />;
   }
 
@@ -52,13 +77,44 @@ export const TillDetail: React.FC = () => {
     setShowConfirmDelete(false);
   };
 
-  const performLogoutTill = () => {
-    logoutTill(Number(tillId));
+  const openUnregisterTillDialog = () => {
+    setShowUnregisterTillDlg(true);
+  };
+
+  const handleUnregisterTill: ConfirmDialogCloseHandler = (reason) => {
+    if (reason === "confirm") {
+      logoutTill(Number(tillId));
+    }
+    setShowUnregisterTillDlg(false);
   };
 
   if (till === undefined) {
     return <Loading />;
   }
+
+  const renderUser = (id?: number | null) => {
+    if (!id || !users) {
+      return "";
+    }
+
+    const user = selectUserById(users, id);
+    if (!user) {
+      return "";
+    }
+
+    return getUserName(user);
+  };
+
+  const openConfirmLogoutDialog = () => {
+    setShowForceLogoutDlg(true);
+  };
+
+  const handleConfirmForceLogout: ConfirmDialogCloseHandler = (reason) => {
+    if (reason === "confirm") {
+      forceLogoutUser(Number(tillId));
+    }
+    setShowForceLogoutDlg(false);
+  };
 
   return (
     <>
@@ -70,8 +126,8 @@ export const TillDetail: React.FC = () => {
                 <EditIcon />
               </IconButtonLink>
               {till.session_uuid != null && (
-                <Tooltip title={t("logoutTill")}>
-                  <IconButton onClick={performLogoutTill} color="warning">
+                <Tooltip title={t("till.logout")}>
+                  <IconButton onClick={openUnregisterTillDialog} color="warning">
                     <LogoutIcon />
                   </IconButton>
                 </Tooltip>
@@ -99,15 +155,40 @@ export const TillDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("till.description")} secondary={till.description} />
           </ListItem>
-        </List>
-        {till.registration_uuid != null && (
-          <ListItem>
-            <ListItemText primary={t("till.registrationUUID")} secondary={till.registration_uuid} />
+          {till.active_user_id != null && (
+            <>
+              <ListItemLink to={`/cashiers/${till.active_user_id}`}>
+                <ListItemText primary={t("till.activeUser")} secondary={renderUser(till.active_user_id)} />
+              </ListItemLink>
+              <ListItem>
+                <Button color="error" variant="contained" onClick={openConfirmLogoutDialog}>
+                  {t("till.forceLogoutUser")}
+                </Button>
+              </ListItem>
+            </>
+          )}
+          {till.current_cash_register_name != null && (
+            <ListItem>
+              <ListItemText primary={t("till.cashRegisterName")} secondary={till.current_cash_register_name} />
+            </ListItem>
+          )}
+          {till.current_cash_register_balance != null && (
+            <ListItem>
+              <ListItemText
+                primary={t("till.cashRegisterBalance")}
+                secondary={formatCurrency(till.current_cash_register_balance)}
+              />
+            </ListItem>
+          )}
+          {till.registration_uuid != null && (
+            <ListItem>
+              <ListItemText primary={t("till.registrationUUID")} secondary={till.registration_uuid} />
+            </ListItem>
+          )}
+          <ListItem secondaryAction={<Checkbox edge="end" checked={till.session_uuid != null} disabled={true} />}>
+            <ListItemText primary={t("till.loggedIn")} />
           </ListItem>
-        )}
-        <ListItem secondaryAction={<Checkbox edge="end" checked={till.session_uuid != null} disabled={true} />}>
-          <ListItemText primary={t("till.loggedIn")} />
-        </ListItem>
+        </List>
       </Paper>
       {till.registration_uuid != null && (
         <Paper>
@@ -122,6 +203,18 @@ export const TillDetail: React.FC = () => {
         </Paper>
       )}
       <OrderTable orders={orders ?? []} />
+      <ConfirmDialog
+        title={t("till.forceLogoutUser")}
+        body={t("till.forceLogoutUserDescription")}
+        show={showForceLogoutDlg}
+        onClose={handleConfirmForceLogout}
+      />
+      <ConfirmDialog
+        title={t("till.unregisterTill")}
+        body={t("till.unregisterTillDescription")}
+        show={showUnregisterTillDlg}
+        onClose={handleUnregisterTill}
+      />
       <ConfirmDialog
         title={t("till.delete")}
         body={t("till.deleteDescription")}

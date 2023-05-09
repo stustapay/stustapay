@@ -18,11 +18,15 @@
         "comment": "Comment",
         "startedAt": "Started At",
         "endedAt": "Ended At",
-        "finalCashDrawerBalance": "Final Cash Drawer Balance",
-        "finalCashDrawerImbalance": "Final Cash Drawer Imbalance"
+        "actualCashDrawerBalance": "Final Cash Drawer Balance as counted",
+        "expectedCashDrawerBalance": "Final Expected Cash Drawer Balance",
+        "cashDrawerImbalance": "Final Cash Drawer Imbalance",
+        "soldProductQuantity": "Quantity"
     },
     "closeOut": {
         "start": "Start",
+        "warningStillLoggedInTitle": "Warning",
+        "warningStillLoggedIn": "The cashier is still logged in at a terminal, either manually log him out if possible, otherwise force logout at the till itself <1>here</1>",
         "targetInDrawer": "Target in cash drawer",
         "countedInDrawer": "Counted in cash drawer",
         "difference": "Difference",

@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from stustapay.core.schema.till import Till
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import Privilege, UserRole
 
 
 class Terminal(BaseModel):
@@ -41,6 +41,8 @@ class TerminalConfig(BaseModel):
     ticket_buttons: Optional[list[TerminalButton]]
     buttons: Optional[list[TerminalButton]]
     secrets: Optional[TerminalSecrets]
+
+    available_roles: list[UserRole]
 
 
 class TerminalRegistrationSuccess(BaseModel):

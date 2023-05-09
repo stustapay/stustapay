@@ -9,6 +9,7 @@
     "paths": {
       "@stustapay/components": ["../../libs/components/src/index.ts"],
       "@stustapay/utils": ["../../libs/utils/src/index.ts"],
+      "@stustapay/models": ["../../libs/models/src/index.ts"],
       "@/*": ["src/*"]
     }
   },

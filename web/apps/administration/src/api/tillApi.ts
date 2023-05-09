@@ -12,6 +12,9 @@ export const tillApi = createApi({
   reducerPath: "tillApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["tills"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getTillById: builder.query<EntityState<Till>, number>({
       query: (id) => `/tills/${id}/`,
@@ -40,6 +43,10 @@ export const tillApi = createApi({
       query: (id) => ({ url: `/tills/${id}/logout/`, method: "POST" }),
       invalidatesTags: (result, error, arg) => [{ type: "tills", id: arg }],
     }),
+    forceLogoutUser: builder.mutation<void, number>({
+      query: (id) => ({ url: `/tills/${id}/force-logout-user/`, method: "POST" }),
+      invalidatesTags: (result, error, arg) => [{ type: "tills", id: arg }],
+    }),
     deleteTill: builder.mutation<void, number>({
       query: (id) => ({ url: `/tills/${id}/`, method: "DELETE" }),
       invalidatesTags: ["tills"],
@@ -57,4 +64,5 @@ export const {
   useGetTillsQuery,
   useUpdateTillMutation,
   useLogoutTillMutation,
+  useForceLogoutUserMutation,
 } = tillApi;

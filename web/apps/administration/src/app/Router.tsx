@@ -2,9 +2,7 @@ import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
 import { TillList } from "./routes/tills/TillList";
-import { ProductCreate } from "./routes/products/ProductCreate";
-import { ProductUpdate } from "./routes/products/ProductUpdate";
-import { ProductList } from "./routes/products/ProductList";
+import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
 import { TaxRateCreate } from "./routes/tax-rates/TaxRateCreate";
 import { TaxRateUpdate } from "./routes/tax-rates/TaxRateUpdate";
 import { TaxRateList } from "./routes/tax-rates/TaxRateList";
@@ -34,14 +32,14 @@ import {
 import { SystemAccountList, CustomerAccountDetail, SystemAccountDetail, FindAccounts } from "./routes/accounts";
 import { OrderList } from "./routes/orders/OrderList";
 import { OrderDetail } from "./routes/orders/OrderDetail";
-import { CashierList, CashierDetail } from "./routes/cashiers";
-import { CashierCloseOut } from "./routes/cashiers/CashierCloseOut";
+import { CashierList, CashierDetail, CashierCloseOut, CashierShiftDetail } from "./routes/cashiers";
 import { PrivilegeGuard } from "./routes/PrivilegeGuard";
 import {
   TillRegisterStockingList,
   TillRegisterStockingCreate,
   TillRegisterStockingUpdate,
 } from "./routes/till-register-stocking";
+import { TillRegisterList, TillRegisterCreate, TillRegisterUpdate } from "./routes/till-registers";
 
 const router = createBrowserRouter([
   {
@@ -69,6 +67,10 @@ const router = createBrowserRouter([
             path: ":productId/edit",
             element: <ProductUpdate />,
           },
+          {
+            path: ":productId",
+            element: <ProductDetail />,
+          },
         ],
       },
       {
@@ -86,6 +88,10 @@ const router = createBrowserRouter([
           {
             path: ":cashierId/close-out",
             element: <CashierCloseOut />,
+          },
+          {
+            path: ":cashierId/shifts/:shiftId",
+            element: <CashierShiftDetail />,
           },
         ],
       },
@@ -165,7 +171,24 @@ const router = createBrowserRouter([
           },
         ],
       },
-
+      {
+        path: "till-registers",
+        element: <PrivilegeGuard privilege="till_management" />,
+        children: [
+          {
+            path: "",
+            element: <TillRegisterList />,
+          },
+          {
+            path: "new",
+            element: <TillRegisterCreate />,
+          },
+          {
+            path: ":registerId/edit",
+            element: <TillRegisterUpdate />,
+          },
+        ],
+      },
       {
         path: "till-layouts",
         element: <PrivilegeGuard privilege="till_management" />,
