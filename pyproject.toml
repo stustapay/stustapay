@@ -24,7 +24,8 @@ dependencies = [
     "Jinja2==3.1.2",
     "aiohttp==3.8.4",
     "pylatexenc==2.10",
-    "schwifty==2023.3.0"
+    "schwifty==2023.3.0",
+    "sepaxml==2.6.1"
 ]
 
 [project.optional-dependencies]
