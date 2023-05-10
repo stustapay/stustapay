@@ -52,7 +52,7 @@ fun SaleView(
     }
 
     NfcScanDialog(
-        scanState,
+        state = scanState,
         onScan = { uid ->
             scope.launch {
                 viewModel.tagScanned(uid)
@@ -74,16 +74,6 @@ fun SaleView(
         composable(SalePage.ProductSelect.route) {
             SaleSelection(
                 viewModel,
-                onAbort = {
-                    scope.launch {
-                        viewModel.clearSale()
-                    }
-                },
-                onSubmit = {
-                    scope.launch {
-                        viewModel.checkSale()
-                    }
-                },
                 leaveView = leaveView,
             )
         }

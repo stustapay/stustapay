@@ -25,6 +25,16 @@ async def create_register(
     return await till_service.register.create_cash_register(token=token, new_register=register)
 
 
+@router.post("/{register_id}")
+async def update_register(
+    register_id: int,
+    register: NewCashRegister,
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
+):
+    return await till_service.register.update_cash_register(token=token, register_id=register_id, register=register)
+
+
 @router.delete("/{register_id}")
 async def delete_register(
     register_id: int,

@@ -16,6 +16,9 @@ export const userApi = createApi({
   reducerPath: "userApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["user", "userRole"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getUserById: builder.query<EntityState<User>, number>({
       query: (id) => `/users/${id}/`,

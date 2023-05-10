@@ -1,20 +1,9 @@
 package de.stustanet.stustapay.ui.sale
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustanet.stustapay.ui.common.pay.ProductSelectionItem
 
 sealed interface SaleSelectionItemType {
     data class FixedPrice(
@@ -67,166 +56,104 @@ fun SaleSelectionItem(
     caption: String,
     type: SaleSelectionItemType,
 ) {
-    val haptic = LocalHapticFeedback.current
+    var sameSizeButtons = false
 
-    Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        var sameSizeButtons = false
+    val itemPrice: String
+    val itemAmount: String
+    var itemAmountDelimiter: String = "×"
 
-        val itemPrice: String
-        val itemAmount: String
-
-        when (type) {
-            is SaleSelectionItemType.FixedPrice -> {
-                val amount: Int = type.amount?.amount ?: 0
-                itemPrice = "%.02f".format(type.price.price)
-                itemAmount = "×%2d".format(amount)
-            }
-
-            is SaleSelectionItemType.Returnable -> {
-                sameSizeButtons = true
-                val amount: Int = type.amount?.amount ?: 0
-                itemPrice = "%.02f".format(type.price.price)
-                itemAmount = "×%2d".format(amount)
-            }
-
-            is SaleSelectionItemType.FreePrice -> {
-                val price: Double = type.amount?.price ?: 0.0
-                itemPrice = "%.02f".format(price)
-                itemAmount = ""
-            }
-
-            is SaleSelectionItemType.Vouchers -> {
-                itemPrice = "%2d ".format(type.amount)
-                itemAmount = "of %2d".format(type.maxAmount)
-            }
+    when (type) {
+        is SaleSelectionItemType.FixedPrice -> {
+            val amount: Int = type.amount?.amount ?: 0
+            itemPrice = "%.02f".format(type.price.price)
+            itemAmount = "%2d".format(amount)
         }
 
-        Row(
-            modifier = Modifier
-                .weight(0.3f)
-                .padding(end = 6.dp),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            // TODO: highlight background if not 0
-
-            Text(
-                text = itemPrice.replace('.', ','),
-                textAlign = TextAlign.Right,
-                modifier = Modifier.weight(0.6f),
-                fontSize = 24.sp,
-            )
-
-            Text(
-                text = itemAmount,
-                textAlign = TextAlign.Right,
-                modifier = Modifier.weight(0.4f),
-                fontSize = 24.sp,
-            )
+        is SaleSelectionItemType.Returnable -> {
+            sameSizeButtons = true
+            val amount: Int = type.amount?.amount ?: 0
+            itemPrice = "%.02f".format(type.price.price)
+            itemAmount = "%2d".format(amount)
         }
 
-        Box(
-            modifier = Modifier
-                .weight(0.7f)
-                .padding(vertical = 3.dp)
-                .height(74.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                Button(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        when (type) {
-                            is SaleSelectionItemType.FixedPrice -> {
-                                type.onIncr()
-                            }
+        is SaleSelectionItemType.FreePrice -> {
+            val price: Double = type.amount?.price ?: 0.0
+            itemPrice = "%.02f".format(price)
+            itemAmount = ""
+        }
 
-                            is SaleSelectionItemType.Returnable -> {
-                                type.onDecr()
-                            }
-
-                            is SaleSelectionItemType.FreePrice -> {
-                                type.onPriceEdit(false)
-                            }
-
-                            is SaleSelectionItemType.Vouchers -> {
-                                type.onIncr()
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(
-                            if (sameSizeButtons) {
-                                0.6f
-                            } else {
-                                0.7f
-                            }
-                        )
-                        .fillMaxHeight()
-                ) {
-                    Text(text = caption, fontSize = 24.sp)
-                }
-                Spacer(modifier = Modifier.padding(horizontal = 2.dp))
-
-                Button(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        when (type) {
-                            is SaleSelectionItemType.FixedPrice -> {
-                                type.onDecr()
-                            }
-
-                            is SaleSelectionItemType.Returnable -> {
-                                type.onIncr()
-                            }
-
-                            is SaleSelectionItemType.FreePrice -> {
-                                type.onPriceEdit(true)
-                            }
-
-                            is SaleSelectionItemType.Vouchers -> {
-                                type.onDecr()
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    colors = if (sameSizeButtons) {
-                        ButtonDefaults.buttonColors()
-                    } else {
-                        ButtonDefaults.buttonColors(backgroundColor = Color.Red)
-                    }
-                ) {
-                    val text: String
-                    var fontSize = 40.sp
-                    val color = MaterialTheme.colors.onPrimary
-                    when (type) {
-                        is SaleSelectionItemType.FixedPrice,
-                        is SaleSelectionItemType.Vouchers -> {
-                            text = "‒"
-                        }
-
-                        is SaleSelectionItemType.Returnable -> {
-                            text = type.incrementText
-                            fontSize = 24.sp
-                        }
-
-                        is SaleSelectionItemType.FreePrice -> {
-                            // unicode: erase to the left
-                            text = "⌫"
-                            fontSize = 30.sp
-                        }
-                    }
-                    Text(
-                        text = text, fontSize = fontSize, color = color,
-                    )
-                }
-            }
+        is SaleSelectionItemType.Vouchers -> {
+            itemPrice = "%2d ".format(type.amount)
+            itemAmount = "%2d".format(type.maxAmount)
+            itemAmountDelimiter = "of "
         }
     }
+
+    val rightButtonText: String
+    var rightButtonFontSize = 40.sp
+    when (type) {
+        is SaleSelectionItemType.FixedPrice,
+        is SaleSelectionItemType.Vouchers -> {
+            rightButtonText = "‒"
+        }
+
+        is SaleSelectionItemType.Returnable -> {
+            rightButtonText = type.incrementText
+            rightButtonFontSize = 24.sp
+        }
+
+        is SaleSelectionItemType.FreePrice -> {
+            // unicode: erase to the left
+            rightButtonText = "⌫"
+            rightButtonFontSize = 30.sp
+        }
+    }
+
+    ProductSelectionItem(
+        itemPrice = itemPrice.replace('.', ','),
+        itemAmount = itemAmount,
+        itemAmountDelimiter = itemAmountDelimiter,
+        sameSizeButtons = sameSizeButtons,
+        leftButtonText = caption,
+        rightButtonText = rightButtonText,
+        rightButtonFontSize = rightButtonFontSize,
+        leftButtonPress = {
+            when (type) {
+                is SaleSelectionItemType.FixedPrice -> {
+                    type.onIncr()
+                }
+
+                is SaleSelectionItemType.Returnable -> {
+                    type.onDecr()
+                }
+
+                is SaleSelectionItemType.FreePrice -> {
+                    type.onPriceEdit(false)
+                }
+
+                is SaleSelectionItemType.Vouchers -> {
+                    type.onIncr()
+                }
+            }
+        },
+        rightButtonPress = {
+            when (type) {
+                is SaleSelectionItemType.FixedPrice -> {
+                    type.onDecr()
+                }
+
+                is SaleSelectionItemType.Returnable -> {
+                    type.onIncr()
+                }
+
+                is SaleSelectionItemType.FreePrice -> {
+                    type.onPriceEdit(true)
+                }
+
+                is SaleSelectionItemType.Vouchers -> {
+                    type.onDecr()
+                }
+            }
+        }
+    )
 }

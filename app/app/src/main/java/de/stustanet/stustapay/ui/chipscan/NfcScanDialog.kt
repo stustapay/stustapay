@@ -1,6 +1,13 @@
 package de.stustanet.stustapay.ui.chipscan
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
@@ -9,7 +16,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -19,9 +28,12 @@ import de.stustanet.stustapay.model.UserTag
 
 @Composable
 fun NfcScanDialog(
+    modifier: Modifier = Modifier.size(350.dp, 350.dp),
     state: NfcScanDialogState,
     viewModel: NfcScanDialogViewModel = hiltViewModel(),
+    border: BorderStroke? = null,
     onDismiss: () -> Unit = {},
+    checkScan: (UserTag) -> Boolean = { true },
     onScan: (UserTag) -> Unit = {},
     content: @Composable () -> Unit = {
         // utf8 "satellite antenna"
@@ -34,8 +46,10 @@ fun NfcScanDialog(
     LaunchedEffect(scanResult) {
         val tag = scanResult.scanTag
         if (tag != null) {
-            state.close()
-            onScan(tag)
+            if (checkScan(tag)) {
+                state.close()
+                onScan(tag)
+            }
         }
     }
 
@@ -48,7 +62,8 @@ fun NfcScanDialog(
         ) {
             Card(
                 shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.size(350.dp, 350.dp),
+                border = border,
+                modifier = modifier,
                 elevation = 8.dp,
             ) {
                 Box(
@@ -61,16 +76,8 @@ fun NfcScanDialog(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center
                     ) {
-                        val actionMsg = scanResult.action
-                        if (actionMsg == null) {
-                            content()
-                        } else {
-                            Text(
-                                actionMsg,
-                                textAlign = TextAlign.Center,
-                                fontSize = 40.sp,
-                            )
-                        }
+                        content()
+
                         Text(
                             scanResult.status,
                             textAlign = TextAlign.Left,

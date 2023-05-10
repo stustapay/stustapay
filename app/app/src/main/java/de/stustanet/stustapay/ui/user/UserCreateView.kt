@@ -4,14 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustanet.stustapay.ui.common.TagTextField
@@ -138,7 +136,10 @@ fun UserCreateView(
                 scope.launch {
                     val id = newTagId
                     if (id != null) {
-                        viewModel.create(login, id, roles.mapNotNull { roleId -> availableRoles.find { r -> r.id == roleId } })
+                        viewModel.create(
+                            login,
+                            id,
+                            roles.mapNotNull { roleId -> availableRoles.find { r -> r.id == roleId } })
                         goBack()
                     }
                 }

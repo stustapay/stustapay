@@ -12,6 +12,9 @@ export const productApi = createApi({
   reducerPath: "productApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["product"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getProductById: builder.query<EntityState<Product>, number>({
       query: (id) => `/products/${id}/`,

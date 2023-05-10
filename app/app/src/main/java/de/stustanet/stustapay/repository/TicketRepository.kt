@@ -12,11 +12,11 @@ import javax.inject.Singleton
 class TicketRepository @Inject constructor(
     private val ticketRemoteDataSource: TicketRemoteDataSource,
 ) {
-    suspend fun checkTicketSale(newTopUp: NewTicketSale): Response<PendingTicketSale> {
-        return ticketRemoteDataSource.checkTicketSale(newTopUp)
+    suspend fun checkTicketSale(newTicketSale: NewTicketSale): Response<PendingTicketSale> {
+        return ticketRemoteDataSource.checkTicketSale(newTicketSale)
     }
 
-    suspend fun bookTicketSale(newTopUp: NewTicketSale): Response<CompletedTicketSale> {
-        return ticketRemoteDataSource.bookTicketSale(newTopUp)
+    suspend fun bookTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
+        return ticketRemoteDataSource.bookTicketSale(newTicketSale)
     }
 }

@@ -133,14 +133,9 @@ class TillRegisterService(DBService):
     @staticmethod
     async def _list_cash_registers(*, conn: asyncpg.Connection, hide_assigned_registers: bool) -> list[CashRegister]:
         if hide_assigned_registers:
-            rows = await conn.fetch(
-                "select * "
-                "from cash_register "
-                "left join usr u on cash_register.id = u.cash_register_id "
-                "where u.id is null"
-            )
+            rows = await conn.fetch("select * rom cash_register_with_cashier where current_cashier_id is null")
         else:
-            rows = await conn.fetch("select * from cash_register")
+            rows = await conn.fetch("select * from cash_register_with_cashier")
         return [CashRegister.parse_obj(row) for row in rows]
 
     @with_db_transaction
@@ -157,11 +152,36 @@ class TillRegisterService(DBService):
     ) -> list[CashRegister]:
         return await self._list_cash_registers(conn=conn, hide_assigned_registers=hide_assigned_registers)
 
+    @staticmethod
+    async def _get_cash_register(conn: asyncpg.Connection, register_id: int) -> Optional[CashRegister]:
+        row = await conn.fetchrow("select * from cash_register_with_cashier where id = $1", register_id)
+        if row is None:
+            return None
+        return CashRegister.parse_obj(row)
+
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def create_cash_register(self, *, conn: asyncpg.Connection, new_register: NewCashRegister) -> CashRegister:
-        row = await conn.fetchrow("insert into cash_register (name) values ($1) returning id, name", new_register.name)
-        return CashRegister.parse_obj(row)
+        register_id = await conn.fetchval(
+            "insert into cash_register (name) values ($1) returning id", new_register.name
+        )
+        register = await self._get_cash_register(conn=conn, register_id=register_id)
+        assert register is not None
+        return register
+
+    @with_db_transaction
+    @requires_user([Privilege.till_management])
+    async def update_cash_register(
+        self, *, conn: asyncpg.Connection, register_id: int, register: NewCashRegister
+    ) -> CashRegister:
+        row = await conn.fetchrow(
+            "update cash_register set name = $2 where id = $1 returning id, name", register_id, register.name
+        )
+        if row is None:
+            raise NotFound(element_typ="cash_register", element_id=str(register_id))
+        r = await self._get_cash_register(conn=conn, register_id=register_id)
+        assert r is not None
+        return r
 
     @with_db_transaction
     @requires_user([Privilege.till_management])

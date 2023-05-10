@@ -40,6 +40,7 @@ fun ErrorScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(horizontal = 10.dp)
                     .padding(bottom = padding.calculateBottomPadding()),
                 contentAlignment = Alignment.Center
             ) {
@@ -53,7 +54,7 @@ fun ErrorScreen(
                             .size(size = 60.dp)
                             .padding(top = 2.dp),
                         contentDescription = "Error!",
-                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onError),
+                        colorFilter = ColorFilter.tint(MaterialTheme.colors.error),
                     )
 
                     content()

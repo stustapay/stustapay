@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.sale
+package de.stustanet.stustapay.ui.common.pay
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
@@ -15,8 +15,8 @@ import de.stustanet.stustapay.model.Product
 
 @Preview
 @Composable
-fun PreviewSaleConfirmLineItem() {
-    SaleConfirmLineItem(
+fun PreviewProductConfirmLineItem() {
+    ProductConfirmLineItem(
         PendingLineItem(
             quantity = 12,
             product = Product(
@@ -34,10 +34,10 @@ fun PreviewSaleConfirmLineItem() {
 }
 
 @Composable
-fun SaleConfirmLineItem(
+fun ProductConfirmLineItem(
     lineItem: PendingLineItem,
 ) {
-    SaleConfirmItem(
+    ProductConfirmItem(
         name = lineItem.product.name,
         quantity = lineItem.quantity,
         price = lineItem.product_price,
@@ -47,7 +47,7 @@ fun SaleConfirmLineItem(
 @Preview
 @Composable
 fun PreviewSaleConfirmItem() {
-    SaleConfirmItem(
+    ProductConfirmItem(
         name = "Drahtlose Erdbeeren",
         price = 52.20,
         fontSize = 40.sp,
@@ -58,7 +58,7 @@ fun PreviewSaleConfirmItem() {
  * line item on the order confirm view
  */
 @Composable
-fun SaleConfirmItem(
+fun ProductConfirmItem(
     modifier: Modifier = Modifier,
     name: String,
     price: Double? = null,

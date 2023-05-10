@@ -17,6 +17,7 @@ import de.stustanet.stustapay.repository.ForceDeregisterState
 import de.stustanet.stustapay.ui.barcode.QRScanView
 import de.stustanet.stustapay.ui.common.PrefGroup
 import de.stustanet.stustapay.ui.settings.RegistrationUiState.*
+import de.stustanet.stustapay.ui.theme.errorButtonColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -41,7 +42,7 @@ fun Registered(
             onDismissRequest = { showConfirm = false },
             confirmButton = {
                 Button(
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                    colors = errorButtonColors(),
                     onClick = {
                         showForceConfirm = true
                         onDeregister()
@@ -70,7 +71,7 @@ fun Registered(
             onDismissRequest = { showForceConfirm = false },
             confirmButton = {
                 Button(
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                    colors = errorButtonColors(),
                     onClick = {
                         onForceDeregister()
                     }) {
@@ -93,7 +94,7 @@ fun Registered(
         onClick = {
             showConfirm = true
         },
-        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
+        colors = errorButtonColors()
     ) {
         Text(text = "Deregister Terminal")
     }

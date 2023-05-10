@@ -12,6 +12,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
+import de.stustanet.stustapay.ui.common.pay.ProductSelectionBottomBar
+import de.stustanet.stustapay.ui.common.pay.ProductConfirmLineItem
 import de.stustanet.stustapay.ui.nav.TopAppBar
 
 /**
@@ -42,18 +45,18 @@ fun SaleConfirm(
             Column(modifier = Modifier.fillMaxWidth()) {
                 TopAppBar(title = { Text(saleConfig.tillName) })
 
-                SaleConfirmItem(
+                ProductConfirmItem(
                     name = "Preis",
                     price = checkedSale.total_price,
                     fontSize = 35.sp,
                 )
                 Divider(thickness = 2.dp)
-                SaleConfirmItem(
+                ProductConfirmItem(
                     name = "übriges Guthaben",
                     price = checkedSale.new_balance,
                 )
                 if (checkedSale.new_voucher_balance > 0) {
-                    SaleConfirmItem(
+                    ProductConfirmItem(
                         name = "übrige Gutscheine",
                         quantity = checkedSale.new_voucher_balance,
                     )
@@ -71,7 +74,7 @@ fun SaleConfirm(
 
                 if (checkedSale.used_vouchers > 0) {
                     item {
-                        SaleConfirmItem(
+                        ProductConfirmItem(
                             name = "Gutscheine",
                             quantity = checkedSale.used_vouchers,
                         )
@@ -80,7 +83,7 @@ fun SaleConfirm(
 
                 for (lineItem in checkedSale.line_items) {
                     item {
-                        SaleConfirmLineItem(
+                        ProductConfirmLineItem(
                             lineItem = lineItem
                         )
                     }
@@ -88,7 +91,7 @@ fun SaleConfirm(
             }
         },
         bottomBar = {
-            SaleBottomBar(
+            ProductSelectionBottomBar(
                 abortText = "↢ Edit",
                 status = {
                     Column(modifier = Modifier.fillMaxWidth()) {
@@ -100,7 +103,7 @@ fun SaleConfirm(
                         )
                     }
                 },
-                saleConfig = orderConfig,
+                ready = orderConfig.ready,
                 onAbort = onEdit,
                 onSubmit = onConfirm,
             )

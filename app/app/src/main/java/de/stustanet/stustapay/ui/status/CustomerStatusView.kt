@@ -24,8 +24,8 @@ import java.lang.NumberFormatException
 @Preview
 @Composable
 fun CustomerStatusView(
+    leaveView: () -> Unit = {},
     viewModel: CustomerStatusViewModel = hiltViewModel(),
-    leaveView: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scanState = rememberNfcScanDialogState()
@@ -155,7 +155,7 @@ fun CustomerStatusView(
                                     Text("Scan", fontSize = 24.sp)
                                 }
 
-                                NfcScanDialog(scanState, onScan = { tag ->
+                                NfcScanDialog(state = scanState, onScan = { tag ->
                                     targetId = tag.uid.toString()
                                 })
                             }
@@ -196,11 +196,14 @@ fun CustomerStatusView(
                             }
                         }
 
-                        NfcScanDialog(scanState, onScan = { tag ->
-                            scope.launch {
-                                viewModel.completeScan(tag.uid)
+                        NfcScanDialog(
+                            state = scanState,
+                            onScan = { tag ->
+                                scope.launch {
+                                    viewModel.completeScan(tag.uid)
+                                }
                             }
-                        })
+                        )
                     }
                     is CustomerStatusRequestState.Swap -> {
                         Button(
@@ -241,7 +244,7 @@ fun CustomerStatusView(
                         }
 
                         NfcScanDialog(
-                            scanState,
+                            state = scanState,
                             onScan = { tag ->
                                 scope.launch {
                                     viewModel.completeScan(tag.uid)

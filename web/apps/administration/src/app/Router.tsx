@@ -2,9 +2,7 @@ import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
 import { TillList } from "./routes/tills/TillList";
-import { ProductCreate } from "./routes/products/ProductCreate";
-import { ProductUpdate } from "./routes/products/ProductUpdate";
-import { ProductList } from "./routes/products/ProductList";
+import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
 import { TaxRateCreate } from "./routes/tax-rates/TaxRateCreate";
 import { TaxRateUpdate } from "./routes/tax-rates/TaxRateUpdate";
 import { TaxRateList } from "./routes/tax-rates/TaxRateList";
@@ -41,7 +39,7 @@ import {
   TillRegisterStockingCreate,
   TillRegisterStockingUpdate,
 } from "./routes/till-register-stocking";
-import { TillRegisterList, TillRegisterCreate } from "./routes/till-registers";
+import { TillRegisterList, TillRegisterCreate, TillRegisterUpdate } from "./routes/till-registers";
 
 const router = createBrowserRouter([
   {
@@ -68,6 +66,10 @@ const router = createBrowserRouter([
           {
             path: ":productId/edit",
             element: <ProductUpdate />,
+          },
+          {
+            path: ":productId",
+            element: <ProductDetail />,
           },
         ],
       },
@@ -180,6 +182,10 @@ const router = createBrowserRouter([
           {
             path: "new",
             element: <TillRegisterCreate />,
+          },
+          {
+            path: ":registerId/edit",
+            element: <TillRegisterUpdate />,
           },
         ],
       },
