@@ -46,6 +46,7 @@ values
     -- Umsatzsteuer ID. Needed on each bon
     ('ust_id', 'DE123456789'),
     ('currency.symbol', '€'),
+    -- Must conform to ISO 4217 for SEPA transfer
     ('currency.identifier', 'EUR'),
     ('entry.initial_topup_amount', '8')
     on conflict do nothing;

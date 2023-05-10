@@ -38,7 +38,8 @@ class CoreConfig(BaseModel):
 class SEPAConfig(BaseModel):
     sender_name: str
     sender_iban: str
-    currency: str = "EUR"  # ISO 4217
+    # currency: str = "EUR"  # ISO 4217
+    # ueberweisungszweck
     description: str
 
 

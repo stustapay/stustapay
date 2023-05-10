@@ -39,8 +39,8 @@ async def get_customer_bank_data(db_pool: asyncpg.Pool) -> List[CustomerBankData
         return [CustomerBankData.parse_obj(row) for row in rows]
 
 
-def csv_export(customers_bank_data: list[CustomerBankData], output_path: str) -> None:
-    with open(output_path, "w", newline="") as f:
+def csv_export(customers_bank_data: list[CustomerBankData], output_path: str, currency_ident: str) -> int:
+    with open(output_path, "w") as f:
         writer = csv.writer(f)
         fields = ["beneficiary_name", "iban", "amount", "currency", "reference"]
         writer.writerow(fields)
@@ -50,25 +50,35 @@ def csv_export(customers_bank_data: list[CustomerBankData], output_path: str) ->
                     customer.account_name,
                     customer.iban,
                     customer.balance,
-                    "EUR",
+                    currency_ident,
                     f"StuStaCulum, TagID: {customer.user_tag_uid}",
                 ]
             )
+    return len(customers_bank_data)
 
 
 def sepa_export(
-    customers_bank_data: list[CustomerBankData], output_path: str, cfg: Config, execution_date: Optional[datetime.date]
-) -> None:
+    customers_bank_data: list[CustomerBankData],
+    output_path: str,
+    cfg: Config,
+    currency_ident: str,
+    execution_date: Optional[datetime.date],
+) -> int:
+    if len(customers_bank_data) == 0:
+        return 0
+
     execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
-    IBAN_vkl = IBAN(cfg.customer_portal.sepa_config.sender_iban)
+    iban = IBAN(cfg.customer_portal.sepa_config.sender_iban)
     config = {
         "name": cfg.customer_portal.sepa_config.sender_name,
-        "IBAN": IBAN_vkl.compact,
-        "BIC": str(IBAN_vkl.bic),
+        "IBAN": iban.compact,
+        "BIC": str(iban.bic),
         "batch": True,
-        "currency": cfg.customer_portal.sepa_config.currency,  # ISO 4217
+        "currency": currency_ident,  # ISO 4217
     }
     sepa = SepaTransfer(config, clean=True)
+
+    print(customers_bank_data)
 
     for customer_bank_data in customers_bank_data:
         payment = {
@@ -81,12 +91,14 @@ def sepa_export(
                 user_tag_uid=customer_bank_data.user_tag_uid
             ),
         }
+        print(payment)
         sepa.add_payment(payment)
 
     sepa_xml = sepa.export(validate=True, pretty_print=True)
 
     with open(output_path, "wb") as f:
         f.write(sepa_xml)
+    return len(customers_bank_data)
 
 
 class CustomerService(DBService):

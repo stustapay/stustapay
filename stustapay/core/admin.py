@@ -2,8 +2,6 @@ from getpass import getpass
 
 import asyncpg
 
-from stustapay.core.service.customer import csv_export, get_customer_bank_data, sepa_export
-
 from . import database
 from .config import Config
 from .schema.user import UserWithoutId

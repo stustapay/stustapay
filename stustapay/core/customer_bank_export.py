@@ -1,6 +1,8 @@
 import datetime
 import logging
 from typing import Optional
+
+from stustapay.core.service.config import ConfigService
 from .config import Config
 from stustapay.core.subcommand import SubCommand
 import asyncpg
@@ -42,9 +44,15 @@ class CustomerExportCli(SubCommand):
         # sql statement to get all customer with iban not null
         customers_bank_data = await get_customer_bank_data(db_pool=db_pool)
 
+        currency_ident = (
+            await ConfigService(db_pool=db_pool, config=self.config, auth_service=None).get_public_config()
+        ).currency_identifier
+
         # create csv file with iban, name, balance, transfer description: customer tag
-        csv_export(customers_bank_data, output_path)
-        logging.info(f"Exported customers' bank data to {output_path}")
+        n_written = csv_export(
+            customers_bank_data=customers_bank_data, output_path=output_path, currency_ident=currency_ident
+        )
+        logging.info(f"Exported bank data of {n_written} customers to csv: {output_path}")
 
     async def _export_customer_sepa_bank_data(
         self, db_pool: asyncpg.Pool, output_path: Optional[str], execution_date: Optional[datetime.date] = None
@@ -54,15 +62,29 @@ class CustomerExportCli(SubCommand):
         # sql statement to get all customer with iban not null
         customers_bank_data = await get_customer_bank_data(db_pool=db_pool)
 
-        # create csv file with iban, name, balance, transfer description: customer tag
-        sepa_export(customers_bank_data, output_path, self.config, execution_date)
-        logging.info(f"Exported customers' bank data to {output_path}")
+        currency_ident = (await ConfigService(db_pool, self.config, None).get_public_config()).currency_identifier
+
+        # create sepa xml file for sepa transfer in bank frontend
+        n_written = sepa_export(
+            customers_bank_data=customers_bank_data,
+            output_path=output_path,
+            cfg=self.config,
+            currency_ident=currency_ident,
+            execution_date=execution_date,
+        )
+        if n_written == 0:
+            logging.info("No customers with bank data found. Nothing to export.")
+        else:
+            logging.info(f"Exported bank data of {n_written} customers to sepa xml: {output_path}")
 
     async def run(self):
         db_pool = await database.create_db_pool(self.config.database)
         if self.args.action == "sepa":
-            await self._export_customer_sepa_bank_data(
-                db_pool, self.args.output_path, datetime.datetime.strptime(self.args.execution_date, "%Y-%m-%d").date()
+            execution_date = (
+                datetime.datetime.strptime(self.args.execution_date, "%Y-%m-%d").date()
+                if self.args.execution_date
+                else None
             )
+            await self._export_customer_sepa_bank_data(db_pool, self.args.output_path, execution_date)
         elif self.args.action == "csv":
             await self._export_customer_csv_bank_data(db_pool, self.args.output_path)
