@@ -62,6 +62,11 @@ TEST_CONFIG = {
         "base_url": "http://localhost:8082",
         "base_bon_url": "https://bon.stustapay.de/{bon_output_file}",
         "data_privacy_url": "https://stustapay.de/datenschutz",
+        "sepa_config": {
+            "sender_name": "Verein Kulturleben in der Studentenstadt e. V.",
+            "sender_iban": "DE89 3704 0044 0532 0130 00",
+            "description": "StuStaCulum23, TagID: {user_tag_uid}",
+        },
     },
     "database": get_test_db_config(),
 }
