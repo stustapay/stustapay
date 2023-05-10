@@ -31,12 +31,11 @@ class CustomerBankData(BaseModel):
     balance: float
 
 
-async def get_customer_bank_data(db_pool: asyncpg.Pool) -> List[CustomerBankData]:
-    async with db_pool.acquire() as conn:
-        rows = await conn.fetch(
-            "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance from customer c where c.iban is not null"
-        )
-        return [CustomerBankData.parse_obj(row) for row in rows]
+async def get_customer_bank_data(conn: asyncpg.Connection) -> List[CustomerBankData]:
+    rows = await conn.fetch(
+        "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance from customer c where c.iban is not null"
+    )
+    return [CustomerBankData.parse_obj(row) for row in rows]
 
 
 def csv_export(customers_bank_data: list[CustomerBankData], output_path: str, currency_ident: str) -> int:

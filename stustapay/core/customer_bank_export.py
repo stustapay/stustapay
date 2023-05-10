@@ -41,12 +41,13 @@ class CustomerExportCli(SubCommand):
     async def _export_customer_csv_bank_data(self, db_pool: asyncpg.Pool, output_path: Optional[str]):
         output_path = output_path or "customer_bank_data.csv"
 
-        # sql statement to get all customer with iban not null
-        customers_bank_data = await get_customer_bank_data(db_pool=db_pool)
+        async with db_pool.acquire() as conn:
+            # get all customer with iban not null
+            customers_bank_data = await get_customer_bank_data(conn=conn)
 
-        currency_ident = (
-            await ConfigService(db_pool=db_pool, config=self.config, auth_service=None).get_public_config()
-        ).currency_identifier
+            currency_ident = (
+                await ConfigService(db_pool=db_pool, config=self.config, auth_service=None).get_public_config(conn=conn)
+            ).currency_identifier
 
         # create csv file with iban, name, balance, transfer description: customer tag
         n_written = csv_export(
@@ -59,10 +60,13 @@ class CustomerExportCli(SubCommand):
     ):
         output_path = output_path or "sepa_transfer.xml"
 
-        # sql statement to get all customer with iban not null
-        customers_bank_data = await get_customer_bank_data(db_pool=db_pool)
+        async with db_pool.acquire() as conn:
+            # get all customer with iban not null
+            customers_bank_data = await get_customer_bank_data(conn=conn)
 
-        currency_ident = (await ConfigService(db_pool, self.config, None).get_public_config()).currency_identifier
+            currency_ident = (
+                await ConfigService(db_pool, self.config, None).get_public_config(conn=conn)
+            ).currency_identifier
 
         # create sepa xml file for sepa transfer in bank frontend
         n_written = sepa_export(
@@ -72,6 +76,7 @@ class CustomerExportCli(SubCommand):
             currency_ident=currency_ident,
             execution_date=execution_date,
         )
+
         if n_written == 0:
             logging.info("No customers with bank data found. Nothing to export.")
         else:
