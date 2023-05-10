@@ -1,9 +1,8 @@
 from getpass import getpass
-import logging
 
 import asyncpg
 
-from stustapay.core.service.customer import csv_export, get_customer_bank_data
+from stustapay.core.service.customer import csv_export, get_customer_bank_data, sepa_export
 
 from . import database
 from .config import Config
@@ -25,7 +24,7 @@ class AdminCli(SubCommand):
 
     @staticmethod
     def argparse_register(subparser):
-        subparser.add_argument("action", choices=["add-user", "export-customer-bank-data"])
+        subparser.add_argument("action", choices=["add-user"])
 
     async def _add_user(self, db_pool: asyncpg.Pool):
         try:
@@ -53,18 +52,7 @@ class AdminCli(SubCommand):
         except KeyboardInterrupt:
             print("Aborting ...")
 
-    async def _export_customer_bank_data(self, db_pool: asyncpg.Pool):
-        # TODO
-        # sql statement to get all customer with iban not null
-        customers_bank_data = await get_customer_bank_data(db_pool=db_pool)
-        # create csv file with iban, name, balance, ueberweisungzweck: customer tag
-        csv_export(customers_bank_data, "customers_bank_data.csv")
-        logging.info("Exported customers' bank data to customers_bank_data.csv")
-
     async def run(self):
         db_pool = await database.create_db_pool(self.config.database)
         if self.action == "add-user":
             return await self._add_user(db_pool)
-
-        elif self.action == "export-customer-bank-data":
-            return await self._export_customer_bank_data(db_pool)

@@ -35,12 +35,20 @@ class CoreConfig(BaseModel):
     sumup_affiliate_key: str = "unset"
 
 
+class SEPAConfig(BaseModel):
+    sender_name: str
+    sender_iban: str
+    currency: str = "EUR"  # ISO 4217
+    description: str
+
+
 class CustomerPortalApiConfig(HTTPServerConfig):
     base_url: str
     host: str = "localhost"
     port: int = 8082
     base_bon_url: str
     data_privacy_url: str
+    sepa_config: SEPAConfig
 
 
 class Config(BaseModel):

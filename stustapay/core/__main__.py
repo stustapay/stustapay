@@ -4,6 +4,8 @@ cli entrypoint for controlling the core.
 
 import asyncio
 
+from stustapay.core import customer_bank_export
+
 from . import admin
 from . import database
 from .args import Parser
@@ -22,6 +24,7 @@ def main():
     ### module registration
     parser.add_subcommand("database", database.DatabaseManage)
     parser.add_subcommand("admin", admin.AdminCli)
+    parser.add_subcommand("customer-bank-export", customer_bank_export.CustomerExportCli)
     ### / module registration
 
     loop = asyncio.new_event_loop()

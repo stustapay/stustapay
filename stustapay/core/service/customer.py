@@ -1,5 +1,6 @@
 # pylint: disable=unexpected-keyword-arg
 import csv
+import datetime
 from typing import Optional, List
 
 import asyncpg
@@ -14,6 +15,7 @@ from stustapay.core.service.common.decorators import (
 )
 from stustapay.core.service.common.error import InvalidArgument
 from schwifty import IBAN
+from sepaxml import SepaTransfer
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -52,6 +54,39 @@ def csv_export(customers_bank_data: list[CustomerBankData], output_path: str) ->
                     f"StuStaCulum, TagID: {customer.user_tag_uid}",
                 ]
             )
+
+
+def sepa_export(
+    customers_bank_data: list[CustomerBankData], output_path: str, cfg: Config, execution_date: Optional[datetime.date]
+) -> None:
+    execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
+    IBAN_vkl = IBAN(cfg.customer_portal.sepa_config.sender_iban)
+    config = {
+        "name": cfg.customer_portal.sepa_config.sender_name,
+        "IBAN": IBAN_vkl.compact,
+        "BIC": str(IBAN_vkl.bic),
+        "batch": True,
+        "currency": cfg.customer_portal.sepa_config.currency,  # ISO 4217
+    }
+    sepa = SepaTransfer(config, clean=True)
+
+    for customer_bank_data in customers_bank_data:
+        payment = {
+            "name": customer_bank_data.account_name,
+            "IBAN": IBAN(customer_bank_data.iban).compact,
+            "BIC": str(IBAN(customer_bank_data.iban).bic),
+            "amount": round(customer_bank_data.balance * 100),  # in cents
+            "execution_date": execution_date,
+            "description": cfg.customer_portal.sepa_config.description.format(
+                user_tag_uid=customer_bank_data.user_tag_uid
+            ),
+        }
+        sepa.add_payment(payment)
+
+    sepa_xml = sepa.export(validate=True, pretty_print=True)
+
+    with open(output_path, "wb") as f:
+        f.write(sepa_xml)
 
 
 class CustomerService(DBService):
