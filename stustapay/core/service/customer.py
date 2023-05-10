@@ -77,8 +77,6 @@ def sepa_export(
     }
     sepa = SepaTransfer(config, clean=True)
 
-    print(customers_bank_data)
-
     for customer_bank_data in customers_bank_data:
         payment = {
             "name": customer_bank_data.account_name,
@@ -90,7 +88,6 @@ def sepa_export(
                 user_tag_uid=customer_bank_data.user_tag_uid
             ),
         }
-        print(payment)
         sepa.add_payment(payment)
 
     sepa_xml = sepa.export(validate=True, pretty_print=True)
