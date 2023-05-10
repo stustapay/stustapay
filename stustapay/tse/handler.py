@@ -47,6 +47,8 @@ class TSEHandler(abc.ABC):
 
         This method shall return True if the TSE was started successfully.
         On failure, awaiting stop() will yield the exception.
+
+        Can only be called once.
         """
         raise NotImplementedError()
 
@@ -66,21 +68,6 @@ class TSEHandler(abc.ABC):
 
     async def __aexit__(self, *_):
         await self.stop()
-
-    @abc.abstractmethod
-    async def reset(self):
-        """
-        Resets the connection to the TSE or the TSE itself to attempt and fix any errors
-        that prevent it from being usable.
-
-        This will be called by the TSEMuxer if the TSE times out on signature requests
-        or if it produces some other errors.
-
-        Like with start(), this method shall only return when requests can be sent again,
-        it will return True iff the TSE was reset successfully and awaiting stop() will
-        yield the exception that occured during resetting when False was returned.
-        """
-        raise NotImplementedError()
 
     @abc.abstractmethod
     async def register_client_id(self, client_id: str):
@@ -117,6 +104,13 @@ class TSEHandler(abc.ABC):
     def get_master_data(self) -> TSEMasterData:
         """
         Returns TSE master data like serial, hashalgo, timeformat...
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def is_stop_set(self) -> bool:
+        """
+        Returns TSE handler service stop status, true if stopped
         """
         raise NotImplementedError()
 
