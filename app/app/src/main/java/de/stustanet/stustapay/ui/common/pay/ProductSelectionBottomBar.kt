@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.sale
+package de.stustanet.stustapay.ui.common.pay
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,37 +7,40 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustanet.stustapay.ui.theme.errorButtonColors
 
 @Preview
 @Composable
-fun PreviewSaleBottomBar() {
-    SaleBottomBar(
+fun PreviewSelectionBottomBar() {
+    ProductSelectionBottomBar(
         status = { Text("stuff") },
-        saleConfig = SaleConfig(),
+        ready = true,
         onAbort = {},
         onSubmit = {},
     )
 }
 
 @Composable
-fun SaleBottomBar(
+fun ProductSelectionBottomBar(
     modifier: Modifier = Modifier,
     status: @Composable () -> Unit,
-    saleConfig: SaleConfig,
+    ready: Boolean = true,
     onAbort: () -> Unit,
     onSubmit: () -> Unit,
     // WASTEBASKET symbol
     abortText: String = "\uD83D\uDDD1",
+    abortSize: TextUnit = 24.sp,
+    submitText: String = "✓",
+    submitSize: TextUnit = 30.sp,
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -58,8 +61,8 @@ fun SaleBottomBar(
             modifier = Modifier.padding(vertical = 3.dp)
         ) {
             Button(
-                enabled = saleConfig.ready,
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                enabled = ready,
+                colors = errorButtonColors(),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onAbort()
@@ -69,11 +72,10 @@ fun SaleBottomBar(
                     .fillMaxWidth(0.5f)
                     .padding(end = 5.dp)
             ) {
-
-                Text(text = abortText, fontSize = 24.sp)
+                Text(text = abortText, fontSize = abortSize)
             }
             Button(
-                enabled = saleConfig.ready,
+                enabled = ready,
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onSubmit()
@@ -83,7 +85,7 @@ fun SaleBottomBar(
                     .fillMaxWidth()
                     .padding(start = 5.dp)
             ) {
-                Text(text = "✓", fontSize = 24.sp)
+                Text(text = submitText, fontSize = submitSize)
             }
         }
     }

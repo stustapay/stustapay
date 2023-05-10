@@ -3,13 +3,21 @@ package de.stustanet.stustapay.ui.user
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustanet.stustapay.model.*
+import de.stustanet.stustapay.model.Access
+import de.stustanet.stustapay.model.Role
+import de.stustanet.stustapay.model.UserState
+import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.repository.UserRepository
 import de.stustanet.stustapay.util.Result
 import de.stustanet.stustapay.util.asResult
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 sealed interface UserUIState {
@@ -42,7 +50,7 @@ class UserViewModel @Inject constructor(
             initialValue = UserUIState.Error("Loading..."),
         )
 
-    val userUIMessage = userRepository.status
+    val userStatus = userRepository.status
     val userRoles = userRepository.userRoles
 
     val availableRoles = terminalConfigRepository.terminalConfigState.map { state ->
@@ -56,6 +64,10 @@ class UserViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(3000),
         initialValue = List(0) { Role() },
     )
+
+    fun clearErrors() {
+        userStatus.update { null }
+    }
 
     suspend fun fetchLogin() {
         userRepository.fetchLogin()
@@ -106,9 +118,11 @@ private fun userUiState(
                                 showLoginUser = Access.canLogInOtherUsers(userState.user),
                             )
                         }
+
                         is UserState.NoLogin -> {
                             UserUIState.NotLoggedIn
                         }
+
                         is UserState.Error -> {
                             UserUIState.Error(
                                 message = userState.msg,

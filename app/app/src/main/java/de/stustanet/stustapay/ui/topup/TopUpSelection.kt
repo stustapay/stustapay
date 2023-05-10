@@ -1,7 +1,8 @@
 package de.stustanet.stustapay.ui.topup
 
 import android.app.Activity
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -9,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.ui.common.pay.CashECCallback
 import de.stustanet.stustapay.ui.common.pay.CashECPay
 import de.stustanet.stustapay.ui.priceselect.PriceSelection
 import de.stustanet.stustapay.ui.priceselect.rememberPriceSelectionState
@@ -33,16 +35,22 @@ fun TopUpSelection(
             viewModel.checkAmountLocal(topUpState.currentAmount.toDouble() / 100)
         },
         status = status,
-        leaveView = leaveView,
+        goBack = leaveView,
         title = topUpConfig.tillName,
-        onEC = {
-            scope.launch {
-                viewModel.topUpWithCard(context, it)
-            }
-        },
+        onPay = CashECCallback.Tag(
+            onEC = {
+                scope.launch {
+                    viewModel.topUpWithCard(context, it)
+                }
+            },
+            onCash = {
+                scope.launch {
+                    viewModel.topUpWithCash(it)
+                }
+            },
+        ),
         ready = topUpConfig.ready,
         getAmount = { topUpState.currentAmount.toDouble() / 100 },
-        onCash = { scope.launch { viewModel.topUpWithCash(it) } },
     ) { paddingValues ->
         PriceSelection(
             modifier = Modifier

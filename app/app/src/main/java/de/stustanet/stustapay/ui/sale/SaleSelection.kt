@@ -9,17 +9,20 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.ui.common.pay.ProductSelectionBottomBar
 import de.stustanet.stustapay.ui.nav.TopAppBar
 import de.stustanet.stustapay.ui.nav.TopAppBarIcon
 import de.stustanet.stustapay.ui.priceselect.PriceSelectionDialog
 import de.stustanet.stustapay.ui.priceselect.rememberPriceSelectionState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * View for displaying available purchase items
@@ -27,13 +30,13 @@ import kotlinx.coroutines.flow.update
 @Composable
 fun SaleSelection(
     viewModel: SaleViewModel,
-    onAbort: () -> Unit,
-    onSubmit: () -> Unit,
     leaveView: () -> Unit = {},
 ) {
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
-    val saleDraft by viewModel.saleStatus.collectAsStateWithLifecycle()
+    val saleStatus by viewModel.saleStatus.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
+
+    val scope = rememberCoroutineScope()
 
     val priceTargetButtonId = remember { MutableStateFlow(-1) }
     val priceSelectionState = rememberPriceSelectionState()
@@ -64,8 +67,8 @@ fun SaleSelection(
                     .padding(horizontal = 10.dp)
                     .fillMaxSize()
             ) {
-                val vouchers = saleDraft.voucherAmount ?: saleDraft.checkedSale?.used_vouchers
-                if (vouchers != null && (saleDraft.checkedSale?.old_voucher_balance ?: 0) > 0) {
+                val vouchers = saleStatus.voucherAmount ?: saleStatus.checkedSale?.used_vouchers
+                if (vouchers != null && (saleStatus.checkedSale?.old_voucher_balance ?: 0) > 0) {
                     // if the server says we used vouchers,
                     // allow adjustment here
                     item {
@@ -73,7 +76,7 @@ fun SaleSelection(
                             caption = "Gutschein",
                             type = SaleSelectionItemType.Vouchers(
                                 amount = vouchers,
-                                maxAmount = saleDraft.checkedSale?.old_voucher_balance ?: -1,
+                                maxAmount = saleStatus.checkedSale?.old_voucher_balance ?: -1,
                                 onIncr = { viewModel.incrementVouchers() },
                                 onDecr = { viewModel.decrementVouchers() },
                             )
@@ -89,7 +92,7 @@ fun SaleSelection(
                                 is SaleItemPrice.FixedPrice -> {
                                     SaleSelectionItemType.FixedPrice(
                                         price = price,
-                                        amount = (saleDraft.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
+                                        amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
                                         onIncr = { viewModel.incrementButton(button.value.id) },
                                         onDecr = { viewModel.decrementButton(button.value.id) },
                                     )
@@ -99,7 +102,7 @@ fun SaleSelection(
                                     // returnable items can become negative and positive.
                                     SaleSelectionItemType.Returnable(
                                         price = price,
-                                        amount = (saleDraft.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
+                                        amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
                                         onIncr = { viewModel.incrementButton(button.value.id) },
                                         onDecr = { viewModel.decrementButton(button.value.id) },
                                         // TODO: i'd like a customizable text here :)
@@ -110,7 +113,7 @@ fun SaleSelection(
                                 is SaleItemPrice.FreePrice -> {
                                     SaleSelectionItemType.FreePrice(
                                         // todo: preselect default price.defaultPrice when no freeprice is set yet
-                                        amount = (saleDraft.buttonSelection[button.value.id] as? SaleItemAmount.FreePrice),
+                                        amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FreePrice),
                                         onPriceEdit = { clear ->
                                             if (clear) {
                                                 viewModel.adjustPrice(
@@ -133,7 +136,7 @@ fun SaleSelection(
             }
         },
         bottomBar = {
-            SaleBottomBar(
+            ProductSelectionBottomBar(
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
                     .padding(bottom = 5.dp),
@@ -145,9 +148,17 @@ fun SaleSelection(
                         fontFamily = FontFamily.Monospace,
                     )
                 },
-                saleConfig = saleConfig,
-                onAbort = onAbort,
-                onSubmit = onSubmit,
+                ready = saleConfig.ready,
+                onAbort = {
+                    scope.launch {
+                        viewModel.clearSale()
+                    }
+                },
+                onSubmit = {
+                    scope.launch {
+                        viewModel.checkSale()
+                    }
+                },
             )
         }
     )
