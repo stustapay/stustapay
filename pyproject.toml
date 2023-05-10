@@ -25,7 +25,7 @@ dependencies = [
     "aiohttp==3.8.4",
     "pylatexenc==2.10",
     "schwifty==2023.3.0",
-    "sepaxml==2.2.3"
+    "sepaxml==2.6.1"
 ]
 
 [project.optional-dependencies]
