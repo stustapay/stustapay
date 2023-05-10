@@ -45,9 +45,9 @@ class CustomerExportCli(SubCommand):
             # get all customer with iban not null
             customers_bank_data = await get_customer_bank_data(conn=conn)
 
-            currency_ident = (
-                await ConfigService(db_pool=db_pool, config=self.config, auth_service=None).get_public_config(conn=conn)
-            ).currency_identifier
+            # just to get currency identifer from db
+            cfg_srvc = ConfigService(db_pool=None, config=None, auth_service=None)  # type: ignore
+            currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
 
         # create csv file with iban, name, balance, transfer description: customer tag
         n_written = csv_export(
@@ -64,11 +64,11 @@ class CustomerExportCli(SubCommand):
             # get all customer with iban not null
             customers_bank_data = await get_customer_bank_data(conn=conn)
 
-            currency_ident = (
-                await ConfigService(db_pool, self.config, None).get_public_config(conn=conn)
-            ).currency_identifier
+            # just to get currency identifer from db
+            cfg_srvc = ConfigService(db_pool=None, config=None, auth_service=None)  # type: ignore
+            currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
 
-        # create sepa xml file for sepa transfer in bank frontend
+        # create sepa xml file for sepa transfer to upload in online banking
         n_written = sepa_export(
             customers_bank_data=customers_bank_data,
             output_path=output_path,
