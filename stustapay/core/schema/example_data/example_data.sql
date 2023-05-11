@@ -211,8 +211,9 @@ values
     (1, 4);
 
 
---insert into tse ( tse_name) values
---    ('tse1');
+--configure one TSE 'tse1'
+insert into tse ( tse_name) values
+    ('tse1');
 
 
 insert into till (
