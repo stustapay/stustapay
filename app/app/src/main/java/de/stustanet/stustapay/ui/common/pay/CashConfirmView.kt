@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -37,16 +38,25 @@ fun CashConfirmView(
     goBack: () -> Unit,
     getAmount: () -> Double,
     status: String,
-    onConfirm: (UserTag) -> Unit,
+    onPay: CashECCallback,
 ) {
     val haptic = LocalHapticFeedback.current
     val scanState = rememberNfcScanDialogState()
     val scope = rememberCoroutineScope()
 
-    NfcScanDialog(scanState, onScan = {
+    NfcScanDialog(state = scanState, onScan = { tag ->
         scope.launch {
             scanState.close()
-            onConfirm(it)
+            when (onPay) {
+                is CashECCallback.Tag -> {
+                    onPay.onCash(tag)
+                }
+
+                is CashECCallback.NoTag -> {
+                    // never reached.
+                    error("nfc scanned in cash NoTag mode")
+                }
+            }
         }
     })
 
@@ -78,7 +88,7 @@ fun CashConfirmView(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
                     Button(
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error),
                         onClick = {
                             goBack()
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -92,7 +102,15 @@ fun CashConfirmView(
                     }
                     Button(
                         onClick = {
-                            scanState.open()
+                            when (onPay) {
+                                is CashECCallback.Tag -> {
+                                    scanState.open()
+                                }
+
+                                is CashECCallback.NoTag -> {
+                                    onPay.onCash()
+                                }
+                            }
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
                         modifier = Modifier

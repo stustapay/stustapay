@@ -13,9 +13,11 @@ import {
   InputAdornment,
   TextField,
   Button,
+  Alert,
+  AlertTitle,
 } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { useParams, useNavigate } from "react-router-dom";
+import { Trans, useTranslation } from "react-i18next";
+import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import { selectCashierById, useCloseOutCashierMutation, useGetCashierByIdQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
@@ -113,6 +115,13 @@ export const CashierCloseOut: React.FC = () => {
           <ListItemText primary={getUserName(cashier)} />
         </ListItem>
       </Paper>
+
+      <Alert severity="error" sx={{ mt: 2 }}>
+        <AlertTitle>{t("closeOut.warningStillLoggedInTitle")}</AlertTitle>
+        <Trans i18nKey="closeOut.warningStillLoggedIn" ns="cashiers">
+          warning, <RouterLink to={`/tills/${cashier.till_id}`}>here</RouterLink>
+        </Trans>
+      </Alert>
 
       <Formik
         initialValues={initialValues}

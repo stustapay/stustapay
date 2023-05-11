@@ -32,13 +32,16 @@ import { encodeTillRegistrationQrCode } from "@core";
 import { config } from "@api/common";
 import { toast } from "react-toastify";
 import { getUserName } from "@stustapay/models";
+import { useCurrencyFormatter } from "@hooks";
 
 export const TillDetail: React.FC = () => {
   const { t } = useTranslation(["tills", "common"]);
   const { tillId } = useParams();
   const navigate = useNavigate();
+  const formatCurrency = useCurrencyFormatter();
 
   const [showForceLogoutDlg, setShowForceLogoutDlg] = React.useState(false);
+  const [showUnregisterTillDlg, setShowUnregisterTillDlg] = React.useState(false);
 
   const [forceLogoutUser] = useForceLogoutUserMutation();
   const [deleteTill] = useDeleteTillMutation();
@@ -74,8 +77,15 @@ export const TillDetail: React.FC = () => {
     setShowConfirmDelete(false);
   };
 
-  const performLogoutTill = () => {
-    logoutTill(Number(tillId));
+  const openUnregisterTillDialog = () => {
+    setShowUnregisterTillDlg(true);
+  };
+
+  const handleUnregisterTill: ConfirmDialogCloseHandler = (reason) => {
+    if (reason === "confirm") {
+      logoutTill(Number(tillId));
+    }
+    setShowUnregisterTillDlg(false);
   };
 
   if (till === undefined) {
@@ -117,7 +127,7 @@ export const TillDetail: React.FC = () => {
               </IconButtonLink>
               {till.session_uuid != null && (
                 <Tooltip title={t("till.logout")}>
-                  <IconButton onClick={performLogoutTill} color="warning">
+                  <IconButton onClick={openUnregisterTillDialog} color="warning">
                     <LogoutIcon />
                   </IconButton>
                 </Tooltip>
@@ -157,6 +167,19 @@ export const TillDetail: React.FC = () => {
               </ListItem>
             </>
           )}
+          {till.current_cash_register_name != null && (
+            <ListItem>
+              <ListItemText primary={t("till.cashRegisterName")} secondary={till.current_cash_register_name} />
+            </ListItem>
+          )}
+          {till.current_cash_register_balance != null && (
+            <ListItem>
+              <ListItemText
+                primary={t("till.cashRegisterBalance")}
+                secondary={formatCurrency(till.current_cash_register_balance)}
+              />
+            </ListItem>
+          )}
           {till.registration_uuid != null && (
             <ListItem>
               <ListItemText primary={t("till.registrationUUID")} secondary={till.registration_uuid} />
@@ -185,6 +208,12 @@ export const TillDetail: React.FC = () => {
         body={t("till.forceLogoutUserDescription")}
         show={showForceLogoutDlg}
         onClose={handleConfirmForceLogout}
+      />
+      <ConfirmDialog
+        title={t("till.unregisterTill")}
+        body={t("till.unregisterTillDescription")}
+        show={showUnregisterTillDlg}
+        onClose={handleUnregisterTill}
       />
       <ConfirmDialog
         title={t("till.delete")}

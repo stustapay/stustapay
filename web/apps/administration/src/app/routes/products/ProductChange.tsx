@@ -71,7 +71,7 @@ export function ProductChange<T extends NewProduct>({
               fullWidth
               autoFocus
               name="name"
-              label={t("productName")}
+              label={t("product.name")}
               error={touched.name && !!errors.name}
               helperText={(touched.name && errors.name) as string}
               onBlur={handleBlur}
@@ -80,7 +80,7 @@ export function ProductChange<T extends NewProduct>({
             />
 
             <FormControlLabel
-              label={t("isReturnable")}
+              label={t("product.isReturnable")}
               control={
                 <Checkbox
                   checked={values.is_returnable}
@@ -94,7 +94,7 @@ export function ProductChange<T extends NewProduct>({
             />
 
             <FormControlLabel
-              label={t("fixedPrice")}
+              label={t("product.fixedPrice")}
               control={
                 <Checkbox
                   checked={values.fixed_price}
@@ -117,7 +117,7 @@ export function ProductChange<T extends NewProduct>({
                   margin="normal"
                   fullWidth
                   name="price"
-                  label={t("productPrice")}
+                  label={t("product.price")}
                   disabled={values.is_locked}
                   InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
                   error={touched.price && !!errors.price}
@@ -130,7 +130,7 @@ export function ProductChange<T extends NewProduct>({
                   margin="normal"
                   fullWidth
                   name="price_in_vouchers"
-                  label={t("productPriceInVouchers")}
+                  label={t("product.priceInVouchers")}
                   disabled={values.is_locked}
                   error={touched.price_in_vouchers && !!errors.price_in_vouchers}
                   helperText={(touched.price_in_vouchers && errors.price_in_vouchers) as string}
@@ -144,7 +144,7 @@ export function ProductChange<T extends NewProduct>({
               name="tax"
               margin="normal"
               variant="standard"
-              label={t("taxRate")}
+              label={t("product.taxRate")}
               disabled={values.is_locked}
               error={touched.tax_name && !!errors.tax_name}
               helperText={(touched.tax_name && errors.tax_name) as string}
@@ -153,7 +153,7 @@ export function ProductChange<T extends NewProduct>({
             />
 
             <RestrictionSelect
-              label={t("productRestrictions")}
+              label={t("product.restrictions")}
               margin="normal"
               variant="standard"
               value={values.restrictions}

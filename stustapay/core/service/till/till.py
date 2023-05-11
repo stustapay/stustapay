@@ -67,16 +67,15 @@ class TillService(DBService):
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def list_tills(self, *, conn: asyncpg.Connection) -> list[Till]:
-        cursor = conn.cursor("select * from till")
+        cursor = conn.cursor("select * from till_with_cash_register")
         result = []
         async for row in cursor:
             result.append(Till.parse_obj(row))
         return result
 
-    @with_db_transaction
-    @requires_user([Privilege.till_management])
-    async def get_till(self, *, conn: asyncpg.Connection, till_id: str) -> Optional[Till]:
-        row = await conn.fetchrow("select * from till where id = $1", till_id)
+    @staticmethod
+    async def _get_till(*, conn: asyncpg.Connection, till_id: int) -> Optional[Till]:
+        row = await conn.fetchrow("select * from till_with_cash_register where id = $1", till_id)
         if row is None:
             return None
 
@@ -84,11 +83,15 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    async def get_till(self, *, conn: asyncpg.Connection, till_id: int) -> Optional[Till]:
+        return await self._get_till(conn=conn, till_id=till_id)
+
+    @with_db_transaction
+    @requires_user([Privilege.till_management])
     async def update_till(self, *, conn: asyncpg.Connection, till_id: int, till: NewTill) -> Optional[Till]:
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5 "
-            "where id = $1 returning id, name, description, registration_uuid, tse_id, active_shift, "
-            "   active_profile_id, session_uuid, z_nr",
+            "where id = $1 returning id",
             till_id,
             till.name,
             till.description,
@@ -98,7 +101,7 @@ class TillService(DBService):
         if row is None:
             return None
 
-        return Till.parse_obj(row)
+        return await self._get_till(conn=conn, till_id=till_id)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])

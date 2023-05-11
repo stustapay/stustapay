@@ -1,27 +1,25 @@
 # pylint: disable=attribute-defined-outside-init
 import datetime
-import os.path
 import uuid
-from pathlib import Path
-from tempfile import NamedTemporaryFile
 
-from stustapay.bon.pdflatex import pdflatex
-from stustapay.core.schema.order import LineItem, Order, OrderType
+from stustapay.bon.bon import BonTemplateContext, TaxRateAggregation, BonConfig
+from stustapay.core.schema.order import LineItem, Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import Product
 from .common import BaseTestCase
+from ..bon.pdflatex import render_template
 
 
 class BonGeneratorTest(BaseTestCase):
     async def test_pdflatex_bon(self):
-        context = {
-            "order": Order(
+        context = BonTemplateContext(
+            order=Order(
                 id=1,
                 uuid=uuid.uuid4(),
                 total_price=16.00,
                 total_tax=1.23,
                 total_no_tax=14.77,
                 booked_at=datetime.datetime.fromisoformat("2023-04-24T14:46:54.550316"),
-                payment_method="nfc tag",
+                payment_method=PaymentMethod.tag,
                 order_type=OrderType.sale,
                 cashier_id=0,
                 till_id=0,
@@ -76,48 +74,38 @@ class BonGeneratorTest(BaseTestCase):
                     ),
                 ],
             ),
-            "tax_rates": [  # The commented lines are returned from the database but are ignored in the bon
-                {
-                    # "id": 1,
-                    # "itemcount": 3,
-                    # "status": "done",
-                    # "created_at": datetime.datetime(2023, 1, 2, 17, 59, 20, tzinfo=datetime.timezone.utc),
-                    # "finished_at": datetime.datetime(2023, 1, 2, 18, 0, 7, tzinfo=datetime.timezone.utc),
-                    # "payment_method": "token",
-                    # "order_type": None,
-                    # "cashier_id": 0,
-                    # "terminal_id": 0,
-                    # "customer_account_id": 11,
-                    "tax_name": "none",
-                    "tax_rate": 0.00,
-                    "total_price": 4.0000,
-                    "total_tax": 0.0000,
-                    "total_no_tax": 4.00,
-                },
-                {
-                    "tax_name": "eust",
-                    "tax_rate": 0.07,
-                    "total_price": 2.00,
-                    "total_tax": 0.14,
-                    "total_no_tax": 1.86,
-                },
-                {
-                    "tax_name": "ust",
-                    "tax_rate": 0.19,
-                    "total_price": 10.00,
-                    "total_tax": 1.90,
-                    "total_no_tax": 8.10,
-                },
+            tax_rate_aggregations=[  # The commented lines are returned from the database but are ignored in the bon
+                TaxRateAggregation(
+                    tax_name="none",
+                    tax_rate=0.00,
+                    total_price=4.0000,
+                    total_tax=0.0000,
+                    total_no_tax=4.00,
+                ),
+                TaxRateAggregation(
+                    tax_name="eust",
+                    tax_rate=0.07,
+                    total_price=2.00,
+                    total_tax=0.14,
+                    total_no_tax=1.86,
+                ),
+                TaxRateAggregation(
+                    tax_name="ust",
+                    tax_rate=0.19,
+                    total_price=10.00,
+                    total_tax=1.90,
+                    total_no_tax=8.10,
+                ),
             ],
-            "title": "StuStaPay 学生城 Test Überschrift 2023",
-            "issuer": "!§$%&//()=?/*-+#'@€_-µ<>|^¬°²³[\"üäö;,:.",
-            "address": "\\Musterstraße\t66\n12345 Musterstädt\n\n\nSTUSTA",
-            "ust_id": "DE123456789",
-            "funny_text": "\0🍕",
-        }
+            config=BonConfig(
+                title="StuStaPay 学生城 Test Überschrift 2023",
+                issuer="!§$%&//()=?/*-+#'@€_-µ<>|^¬°²³[\"üäö;,:.",
+                address="\\Musterstraße\t66\n12345 Musterstädt\n\n\nSTUSTA",
+                ust_id="DE123456789",
+                closing_texts=["\0🍕"],
+            ),
+            closing_text="foobar",
+        )
 
-        with NamedTemporaryFile() as file:
-            out_file = Path(file.name)
-            success, msg = await pdflatex("bon.tex", context, out_file)
-            self.assertTrue(success, msg=f"failed to generate pdf with error: {msg}")
-            self.assertTrue(os.path.exists(out_file))
+        rendered = await render_template("bon.tex", context=context.dict())
+        self.assertIsNotNone(rendered)

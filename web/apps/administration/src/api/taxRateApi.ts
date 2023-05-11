@@ -13,6 +13,9 @@ export const taxRateApi = createApi({
   reducerPath: "taxRatesApi",
   baseQuery: adminApiBaseQuery,
   tagTypes: ["taxRate"],
+  refetchOnFocus: true,
+  refetchOnMountOrArgChange: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getTaxRateByName: builder.query<EntityState<TaxRate>, string>({
       query: (name) => `/tax-rates/${name}/`,

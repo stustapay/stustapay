@@ -163,6 +163,17 @@ class BookedProduct(BaseModel):
     price: Optional[float] = None
 
 
+async def fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
+    """
+    get all info about an order.
+    """
+    row = await conn.fetchrow("select * from order_value where id = $1", order_id)
+    if row is None:
+        return None
+
+    return Order.parse_obj(row)
+
+
 class OrderService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -190,7 +201,7 @@ class OrderService(DBService):
             json_payload = json.loads(payload)
             async with self.db_pool.acquire() as conn:
                 async with conn.transaction():
-                    order = await self._fetch_order(conn=conn, order_id=json_payload["order_id"])
+                    order = await fetch_order(conn=conn, order_id=json_payload["order_id"])
                     if order:
                         await self._propagate_order_update(order=order)
         except:  # pylint: disable=bare-except
@@ -556,17 +567,6 @@ class OrderService(DBService):
 
         return completed_order
 
-    @staticmethod
-    async def _fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
-        """
-        get all info about an order.
-        """
-        row = await conn.fetchrow("select * from order_value where id = $1", order_id)
-        if row is None:
-            return None
-
-        return Order.parse_obj(row)
-
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def cancel_sale(
@@ -576,7 +576,7 @@ class OrderService(DBService):
         if is_order_cancelled:
             raise InvalidArgument("Order has already been cancelled")
 
-        order = await self._fetch_order(conn=conn, order_id=order_id)
+        order = await fetch_order(conn=conn, order_id=order_id)
         if order is None:
             return False
         if order.order_type != OrderType.sale:
@@ -730,6 +730,16 @@ class OrderService(DBService):
         )
         if not can_sell_tickets:
             raise TillPermissionException("This terminal is not allowed to sell tickets")
+
+        known_accounts = await conn.fetch(
+            "select user_tag_uid from account where user_tag_uid = ANY($1::numeric(20)[])",
+            new_ticket_sale.customer_tag_uids,
+        )
+
+        if len(known_accounts) > 0:
+            raise InvalidArgument(
+                f"Ticket already has account: " f"{', '.join('%X' % int(a['user_tag_uid']) for a in known_accounts)}"
+            )
 
         expected_tag_counts = {
             ProductRestriction.under_18.name: 0,
@@ -945,7 +955,7 @@ class OrderService(DBService):
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def show_order(self, *, conn: asyncpg.Connection, current_user: User, order_id: int) -> Optional[Order]:
-        order = await self._fetch_order(conn=conn, order_id=order_id)
+        order = await fetch_order(conn=conn, order_id=order_id)
         if order is not None and order.cashier_id == current_user.id:
             return order
         return None
@@ -983,4 +993,4 @@ class OrderService(DBService):
     @with_db_transaction
     @requires_user([Privilege.order_management])
     async def get_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
-        return await self._fetch_order(conn=conn, order_id=order_id)
+        return await fetch_order(conn=conn, order_id=order_id)

@@ -171,7 +171,7 @@ data class SaleStatus(
                         buttonSelection.remove(buttonId)
                     }
                 } else {
-                    // ignore decrement on onset button
+                    // ignore decrement on unset button
                 }
             }
             is SaleItemPrice.Returnable -> {

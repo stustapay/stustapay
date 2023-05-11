@@ -25,6 +25,7 @@ class UserRepository @Inject constructor(
     }
 
     suspend fun checkLogin(userTag: UserTag) {
+        _userRolesState.update { UserRolesState.Unknown }
         when (val checkResult = userRemoteDataSource.checkLogin(userTag)) {
             is UserRolesState.Error -> {
                 status.update { checkResult.msg }
