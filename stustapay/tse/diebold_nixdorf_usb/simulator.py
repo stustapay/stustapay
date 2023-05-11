@@ -19,14 +19,49 @@ import time
 
 from .errorcodes import dnerror
 
-# from asn1cryptoi.core import Integer, Sequence, ObjectIdentifier
+from inspect import stack
+import ecdsa
+from hashlib import sha384, sha256
+import base64
+from asn1crypto.core import Integer, ObjectIdentifier, Sequence, OctetString, PrintableString, Any
+
+
+class SignatureAlgorithm_seq(Sequence):
+    _fields = [
+        ("signatureAlgorithm", ObjectIdentifier),
+        ("parameters", OctetString, {"optional": True}),
+    ]
+
+
+class CertifiedData(Sequence):
+    _fields = [
+        ("operationType", PrintableString, {"implicit": 0}),
+        ("clientId", PrintableString, {"implicit": 1}),
+        ("ProcessData", OctetString, {"implicit": 2}),
+        ("ProcessType", PrintableString, {"implicit": 3}),
+        ("additionalExternalData", OctetString, {"implicit": 4, "optional": True}),
+        ("transactionNumber", Integer, {"implicit": 5}),
+        ("additionalInternalData", OctetString, {"implicit": 6, "optional": True}),
+    ]
+
+
+class TransactionData(Sequence):
+    _fields = [
+        ("Version", Integer),
+        ("CertifiedDataType", ObjectIdentifier),
+        ("CertifiedData", Any),
+        ("SerialNumber", OctetString),
+        ("signatureAlgorithm", Sequence),
+        ("signatureCounter", Integer),
+        ("LogTime", Integer),  # unixTime!
+    ]
 
 
 MAGIC_PRODUCTION_CLIENT = "DN TSEProduction ef82abcedf"
 
 
 class VirtualTSE:
-    def __init__(self, delay: float, fast: bool, real: bool):
+    def __init__(self, delay: float, fast: bool, real: bool, private_key_hex: str):
         self._fast: bool = fast
         self._real: bool = real
         self._delay: float = delay
@@ -41,8 +76,21 @@ class VirtualTSE:
         self.current_transactions[MAGIC_PRODUCTION_CLIENT] = set()
         self.current_transactions["DummyDefaultClientId"] = set()
 
-        self.public_key = b"\x04\x6B\x1D\x4B\xFA\x4C\xD5\x0D\xE8\x8F\x31\x79\x92\x54\x36\x41\xA9\x48\x01\xE5\x8B\x7E\x18\x26\x86\x52\x0F\xE4\x42\x7C\x5E\xD1\xDC\x12\xFA\xD4\x9F\x3F\xFA\xF2\x86\x58\x6D\xBB\x23\xF9\x25\x08\x7E\x2A\xB7\xEB\x9C\x72\xB0\xA4\x4D\x57\xE2\x57\x11\xFE\x1B\xE2\x71\x36\x72\x3A\x8D\x20\x30\x07\xCF\x01\xF2\x25\x59\x14\x89\x22\x26\x63\x2C\x0C\xB0\x2D\x14\x89\x32\x28\xE9\x61\xCD\x2F\xB2\xFA\x48"
-        self.serial = "1BA7F861E9467C60DDF78EC003C9A8E163F6A7EB69EAC5C780EC201932EA0BF1"
+        if private_key_hex is not None:
+            self.sk = ecdsa.SigningKey.from_string(
+                bytes.fromhex(private_key_hex), curve=ecdsa.BRAINPOOLP384r1, hashfunc=sha384
+            )
+        else:
+            self.sk = ecdsa.SigningKey.generate(curve=ecdsa.BRAINPOOLP384r1, hashfunc=sha384)
+
+        if self._real:
+            vk = self.sk.get_verifying_key()
+            self.public_key = Sequence.load(vk.to_der())[1].dump()[3:]
+            self.serial = sha256(self.public_key).hexdigest()
+        else:
+            self.public_key = b"\x04\x6B\x1D\x4B\xFA\x4C\xD5\x0D\xE8\x8F\x31\x79\x92\x54\x36\x41\xA9\x48\x01\xE5\x8B\x7E\x18\x26\x86\x52\x0F\xE4\x42\x7C\x5E\xD1\xDC\x12\xFA\xD4\x9F\x3F\xFA\xF2\x86\x58\x6D\xBB\x23\xF9\x25\x08\x7E\x2A\xB7\xEB\x9C\x72\xB0\xA4\x4D\x57\xE2\x57\x11\xFE\x1B\xE2\x71\x36\x72\x3A\x8D\x20\x30\x07\xCF\x01\xF2\x25\x59\x14\x89\x22\x26\x63\x2C\x0C\xB0\x2D\x14\x89\x32\x28\xE9\x61\xCD\x2F\xB2\xFA\x48"
+            self.serial = "1BA7F861E9467C60DDF78EC003C9A8E163F6A7EB69EAC5C780EC201932EA0BF1"
+
         self.certificate = b"THIS IS A VERY LONG CERTIFICATE!!!!"
         self.password_admin = "12345"
         self.password_timeadmin = self.password_admin
@@ -145,7 +193,7 @@ class VirtualTSE:
         response["TransactionNumber"] = self.transnr
         response["SerialNumber"] = self.serial
         response["SignatureCounter"] = self.signctr
-        LogTime_datetime = datetime.now(timezone(timedelta(hours=1)))
+        LogTime_datetime = datetime.now(timezone(timedelta(hours=2)))
         response["Signature"] = self.generate_signature(msg, str(self.transnr), LogTime_datetime)
         response["LogTime"] = LogTime_datetime.isoformat(timespec="seconds")
 
@@ -437,20 +485,71 @@ class VirtualTSE:
 
         # now for the real deal
 
-        # version = Integer(2)
+        # check from where we are called
+        transaction_type = stack()[1].function
+        if transaction_type == "updatetrans":
+            signature = "1c82c513e64e2cbfbefa189eafe8629ed7abce27a1b7e8de99a9ddf92b5eb9eae7fbefbe" + randbytes(60).hex()
+            return signature
+        elif transaction_type == "starttrans":
+            signature = "ca8968b306a0" + randbytes(90).hex()
+            return signature
+        elif transaction_type == "finishtrans":
+            pass
+        else:
+            signature = "1c82c513e64e2cbfbefa189eafe8629ed7abce27a1b7e8de99a9ddf92b5eb9eae7fbefbe" + randbytes(60).hex()
+            return signature
 
-        # time = Integer(int(LogTime_datetime.timestamp()))
+        signaturealgorithm = SignatureAlgorithm_seq()
+        signaturealgorithm["signatureAlgorithm"] = "0.4.0.127.0.7.1.1.4.1.4"
 
-        signature = "1c82c513e64e2cbfbefa189eafe8629ed7abce27a1b7e8de99a9ddf92b5eb9eae7fbefbe" + randbytes(60).hex()
+        certidata = CertifiedData()
+        certidata["operationType"] = "FinishTransaction"
+        certidata["clientId"] = msg["ClientID"]
+        try:
+            certidata["ProcessData"] = bytes(msg["Data"].encode("utf-8"))  # optional field
+        except KeyError:
+            certidata["ProcessData"] = b""
+        try:
+            certidata["ProcessType"] = msg["Typ"]  # optional field
+        except KeyError:
+            certidata["ProcessType"] = ""
+
+        certidata["transactionNumber"] = self.transnr
+
+        data = TransactionData()
+        data["Version"] = 2
+        data["CertifiedDataType"] = "0.4.0.127.0.7.3.7.1.1"
+        data["CertifiedData"] = certidata
+        data["SerialNumber"] = sha256(self.public_key).digest()
+        data["signatureAlgorithm"] = signaturealgorithm
+        data["signatureCounter"] = self.signctr
+        data["LogTime"] = int(LogTime_datetime.timestamp())
+
+        # why use a propper ASN.1 SEQUENCE, when you can make it much more complicated?
+        message = (
+            data["Version"].dump()
+            + data["CertifiedDataType"].dump()
+            + certidata["operationType"].dump()
+            + certidata["clientId"].dump()
+            + certidata["ProcessData"].dump()
+            + certidata["ProcessType"].dump()
+            + certidata["transactionNumber"].dump()
+            + data["SerialNumber"].dump()
+            + data["signatureAlgorithm"].dump()
+            + data["signatureCounter"].dump()
+            + data["LogTime"].dump()
+        )
+
+        signature = self.sk.sign(message).hex()
         return signature
 
 
 class WebsocketInterface:
-    def __init__(self, host: str, port: int, delay: float, fast: bool, real: bool):
+    def __init__(self, host: str, port: int, delay: float, fast: bool, real: bool, private_key_hex: str):
         self.host: str = host
         self.port: int = port
 
-        self.tse = VirtualTSE(delay, fast, real)
+        self.tse = VirtualTSE(delay, fast, real, private_key_hex)
 
     async def websocket_handler(self, request):
         print("Websocket connection starting")
