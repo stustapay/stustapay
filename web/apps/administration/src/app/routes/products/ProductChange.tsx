@@ -80,7 +80,7 @@ export function ProductChange<T extends NewProduct>({
             />
 
             <FormControlLabel
-              label={t("isReturnable")}
+              label={t("product.isReturnable")}
               control={
                 <Checkbox
                   checked={values.is_returnable}
@@ -94,7 +94,7 @@ export function ProductChange<T extends NewProduct>({
             />
 
             <FormControlLabel
-              label={t("fixedPrice")}
+              label={t("product.fixedPrice")}
               control={
                 <Checkbox
                   checked={values.fixed_price}

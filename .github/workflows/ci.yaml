@@ -69,7 +69,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e '.[dev,test]'
       - name: Run all tests except ones that require latex to be installed
-        run: pytest stustapay/tests --doctest-modules --junitxml=junit/test-results.xml --cov=stustapay --cov-report=xml --cov-report=html -k 'not pdflatex'
+        run: pytest stustapay/tests --doctest-modules --junitxml=junit/test-results.xml --cov=stustapay --cov-report=xml --cov-report=html
 
   py-format:
     runs-on: ubuntu-latest

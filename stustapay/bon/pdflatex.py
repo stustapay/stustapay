@@ -63,20 +63,23 @@ def setup_jinja_env():
     return env
 
 
-async def pdflatex(tex_tpl_name: str, context: dict, out_file: Path) -> Tuple[bool, str]:
+async def render_template(tex_tpl_name: str, context: dict) -> str:
+    env = setup_jinja_env()
+    tpl = env.get_template(tex_tpl_name)
+    return tpl.render(context)
+
+
+async def pdflatex(file_content: str, out_file: Path) -> Tuple[bool, str]:
     """
     renders the given latex template with the context and saves the resulting pdf to out_file
     returns <True, ""> if the pdf was compiled successfully
     returns <False, error_msg> on a latex compile error
     """
-    env = setup_jinja_env()
-    tpl = env.get_template(tex_tpl_name)
-    rendered_tpl = tpl.render(context)
 
     with TemporaryDirectory() as tmp_dir:
         main_tex = os.path.join(tmp_dir, "main.tex")
         with open(main_tex, "w") as f:
-            f.write(rendered_tpl)
+            f.write(file_content)
 
         newenv = os.environ.copy()
         newenv["TEXINPUTS"] = os.pathsep.join([TEX_PATH]) + os.pathsep
