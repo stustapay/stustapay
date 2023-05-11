@@ -3,6 +3,7 @@ Defines the interface for the handlers for the various TSEs
 """
 import abc
 import dataclasses
+import typing
 
 
 @dataclasses.dataclass
@@ -30,6 +31,7 @@ class TSESignature:
     tse_start: str
     tse_end: str
     tse_signature: str
+    tse_duration: typing.Optional[float] = None
 
 
 class TSEHandler(abc.ABC):

@@ -8,6 +8,8 @@ import contextlib
 import json
 import logging
 import typing
+from dateutil import parser
+import pytz
 
 from ..handler import TSEHandler, TSESignature, TSESignatureRequest, TSEMasterData
 from .config import DieboldNixdorfUSBTSEConfig
@@ -96,8 +98,8 @@ class DieboldNixdorfUSBTSE(TSEHandler):
 
                 device_status = await self.request("GetDeviceStatus")
                 self._signature_algorithm = device_status["Parameters"]["SignatureAlgorithm"]
-                self._public_key = await self.get_device_data("PublicKey", format="Base64")
-                self._certificate = await self.get_device_data("Certificates", format="Base64")
+                self._public_key = await self.get_device_data("PublicKey", Format="Base64")
+                self._certificate = await self.get_device_data("Certificates", Format="Base64")
 
                 start_result.set_result(True)
             except:
@@ -219,8 +221,9 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         return TSESignature(
             tse_transaction=transaction_number,
             tse_signaturenr=finish_result["SignatureCounter"],
-            tse_start=start_result["LogTime"],
-            tse_end=finish_result["LogTime"],
+            tse_start=parser.isoparse(start_result["LogTime"]).astimezone(pytz.utc).isoformat().split("+")[0]
+            + ".000Z",  # convert to isoformat in UTC YYYY-mm-ddTHH:MM:ss.000Z
+            tse_end=parser.isoparse(finish_result["LogTime"]).astimezone(pytz.utc).isoformat().split("+")[0] + ".000Z",
             tse_signature=base64.b64encode(binascii.unhexlify(finish_result["Signature"])).decode("ascii"),
         )
 
