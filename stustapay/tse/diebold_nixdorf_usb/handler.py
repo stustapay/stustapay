@@ -107,7 +107,7 @@ class DieboldNixdorfUSBTSE(TSEHandler):
             while not self._stop.is_set():
                 await self.request("PingPong")
                 try:
-                    await asyncio.wait_for(self._stop.wait(), timeout=1)
+                    await asyncio.wait_for(self._stop.wait(), timeout=2)
                 except asyncio.TimeoutError:
                     pass
 
@@ -126,7 +126,7 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         future: asyncio.Future[dict] = asyncio.Future()
         self.pending_requests[request_id] = future
         try:
-            response = await asyncio.wait_for(future, timeout=1)
+            response = await asyncio.wait_for(future, timeout=timeout)
             LOGGER.info(f"{self}: << {response}")
             command_back = response.pop("Command")
             if command_back != command:
