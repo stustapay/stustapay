@@ -1,9 +1,8 @@
 import { useGetCustomerQuery, useGetDataPrivacyUrlQuery, useSetCustomerInfoMutation } from "@/api/customerApi";
 import { Loading } from "@stustapay/components";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { CustomerInfoSchema, CustomerInfo } from "@stustapay/models";
 import {
   Alert,
   Button,
@@ -13,36 +12,36 @@ import {
   FormHelperText,
   Grid,
   Link,
-  Paper,
+  Stack,
   TextField,
-  Typography,
 } from "@mui/material";
 import { Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import iban from "iban";
+import i18n from "@/i18n";
 
 const FormSchema = z.object({
   iban: z.string().refine((val) => iban.isValid(val), {
-    message: "IBAN is not valid",
+    message: i18n.t("payout.ibanNotValid"),
   }),
   account_name: z.string(),
   email: z.string().email(),
-  privacy_policy: z.boolean().refine((val) => val, { message: "You must accept the privacy policy" }),
+  privacy_policy: z.boolean().refine((val) => val, {
+    message: i18n.t("payout.mustAcceptPrivacyPolicy"),
+  }),
 });
 
 type FormVal = z.infer<typeof FormSchema>;
 
 export const PayoutInfo: React.FC = () => {
-  const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
+  const { t } = useTranslation(undefined, { keyPrefix: "payout" });
+  const navigate = useNavigate();
 
+  const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
   const { data: dataPrivacyUrl, error: errorPrivacyUrl, isLoading: isLoadingPrivacyUrl } = useGetDataPrivacyUrlQuery();
 
   const [setCustomerInfo] = useSetCustomerInfoMutation();
-
-  const { t } = useTranslation(["common"]);
-
-  const navigate = useNavigate();
 
   if (
     isCustomerLoading ||
@@ -54,7 +53,7 @@ export const PayoutInfo: React.FC = () => {
   }
 
   if (customerError || !customer || errorPrivacyUrl || !dataPrivacyUrl) {
-    toast.error(t("Error fetching data."));
+    toast.error(t("errorFetchingData"));
     navigate(-1);
     return null;
   }
@@ -72,11 +71,11 @@ export const PayoutInfo: React.FC = () => {
     setCustomerInfo(values)
       .unwrap()
       .then(() => {
-        toast.success(t("Successfully updated bank data."));
+        toast.success(t("updatedBankData"));
         navigate(-1);
       })
       .catch((error) => {
-        toast.error(t("Error occurred while updating bank data."));
+        toast.error(t("errorWhileUpdatingBankData"));
         console.error(error);
       });
 
@@ -85,24 +84,19 @@ export const PayoutInfo: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        margin: "2rem auto",
-        maxWidth: "800px",
-        width: "90%",
-      }}
-    >
-      <Alert severity="info" variant="outlined" style={{ marginBottom: "2em", width: "100%" }}>
-        Enter your account information to receive your leftover cash to your bank account.
-      </Alert>
-      <Formik initialValues={initialValues} validationSchema={toFormikValidationSchema(FormSchema)} onSubmit={onSubmit}>
-        {(formik) => (
-          <form onSubmit={formik.handleSubmit}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
+    <Grid container justifyItems="center" justifyContent="center">
+      <Grid item xs={8}>
+        <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
+          {t("info")}
+        </Alert>
+        <Formik
+          initialValues={initialValues}
+          validationSchema={toFormikValidationSchema(FormSchema)}
+          onSubmit={onSubmit}
+        >
+          {(formik) => (
+            <form onSubmit={formik.handleSubmit}>
+              <Stack spacing={2}>
                 <TextField
                   id="iban"
                   name="iban"
@@ -115,8 +109,6 @@ export const PayoutInfo: React.FC = () => {
                   error={formik.touched.iban && Boolean(formik.errors.iban)}
                   helperText={formik.touched.iban && formik.errors.iban}
                 />
-              </Grid>
-              <Grid item xs={12}>
                 <TextField
                   id="account_name"
                   name="account_name"
@@ -129,8 +121,6 @@ export const PayoutInfo: React.FC = () => {
                   error={formik.touched.account_name && Boolean(formik.errors.account_name)}
                   helperText={formik.touched.account_name && formik.errors.account_name}
                 />
-              </Grid>
-              <Grid item xs={12}>
                 <TextField
                   id="email"
                   name="email"
@@ -143,8 +133,6 @@ export const PayoutInfo: React.FC = () => {
                   error={formik.touched.email && Boolean(formik.errors.email)}
                   helperText={formik.touched.email && formik.errors.email}
                 />
-              </Grid>
-              <Grid item xs={12}>
                 <FormControl error={Boolean(formik.errors.privacy_policy)}>
                   <FormControlLabel
                     control={
@@ -156,29 +144,26 @@ export const PayoutInfo: React.FC = () => {
                       />
                     }
                     label={
-                      <>
-                        I have read and agree to StuStaCulum's&nbsp;
+                      <Trans i18nKey="payout.privayPolicyCheck">
+                        please accept the
                         <Link href={dataPrivacyUrl} target="_blank" rel="noopener">
                           privacy policy
                         </Link>
-                        .
-                      </>
+                      </Trans>
                     }
                   />
                   {formik.touched.privacy_policy && (
                     <FormHelperText sx={{ ml: 0 }}>{formik.errors.privacy_policy}</FormHelperText>
                   )}
                 </FormControl>
-              </Grid>
-              <Grid item xs={12}>
                 <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
                   {formik.isSubmitting ? "Submitting" : "Submit"}
                 </Button>
-              </Grid>
-            </Grid>
-          </form>
-        )}
-      </Formik>
-    </div>
+              </Stack>
+            </form>
+          )}
+        </Formik>
+      </Grid>
+    </Grid>
   );
 };
