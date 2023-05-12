@@ -1,5 +1,6 @@
 import datetime
 import logging
+import math
 from typing import Optional
 
 from stustapay.core.service.config import ConfigService
@@ -7,7 +8,12 @@ from .config import Config
 from stustapay.core.subcommand import SubCommand
 import asyncpg
 
-from stustapay.core.service.customer import csv_export, get_customer_bank_data, sepa_export
+from stustapay.core.service.customer import (
+    csv_export,
+    get_customer_bank_data,
+    get_number_of_customers,
+    sepa_export,
+)
 from . import database
 
 
@@ -27,9 +33,15 @@ class CustomerExportCli(SubCommand):
     @staticmethod
     def argparse_register(subparser):
         subparser.add_argument(
-            "action", choices=["sepa", "csv"], default="sepa", help="Choose between SEPA transfer file or CSV file"
+            "action", choices=["sepa", "csv"], default="sepa", help="Choose between SEPA transfer file or CSV file."
         )
-        subparser.add_argument("-f", "--output-path", default=None, type=str, help="Output path for SEPA transfer file")
+        subparser.add_argument(
+            "-f",
+            "--output-path",
+            default="customer_bank_data",
+            type=str,
+            help="Output path for export file without file extensions.",
+        )
         subparser.add_argument(
             "-t",
             "--execution-date",
@@ -37,50 +49,65 @@ class CustomerExportCli(SubCommand):
             type=str,
             help="Execution date for SEPA transfer. Format: YYYY-MM-DD",
         )
-
-    async def _export_customer_csv_bank_data(self, db_pool: asyncpg.Pool, output_path: Optional[str]):
-        output_path = output_path or "customer_bank_data.csv"
-
-        async with db_pool.acquire() as conn:
-            # get all customer with iban not null
-            customers_bank_data = await get_customer_bank_data(conn=conn)
-
-            # just to get currency identifer from db
-            cfg_srvc = ConfigService(db_pool=None, config=None, auth_service=None)  # type: ignore
-            currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
-
-        # create csv file with iban, name, balance, transfer description: customer tag
-        n_written = csv_export(
-            customers_bank_data=customers_bank_data, output_path=output_path, currency_ident=currency_ident
+        subparser.add_argument(
+            "-n",
+            "--max-transactions-batch",
+            default=None,
+            type=int,
+            help="Maximum amount of transactions per file. Not giving this argument means one large batch with all customers in a single file.",
         )
-        logging.info(f"Exported bank data of {n_written} customers to csv: {output_path}")
 
-    async def _export_customer_sepa_bank_data(
-        self, db_pool: asyncpg.Pool, output_path: Optional[str], execution_date: Optional[datetime.date] = None
+    async def _export_customer_bank_data(
+        self,
+        db_pool: asyncpg.Pool,
+        output_path: str,
+        execution_date: Optional[datetime.date] = None,
+        max_export_items_per_batch: Optional[int] = None,
+        data_format: str = "sepa",
     ):
-        output_path = output_path or "sepa_transfer.xml"
+        """
+        Supported data formats: sepa, csv
+        """
+        if data_format == "csv":
+            export_function = csv_export
+            file_extension = "csv"
+        elif data_format == "sepa":
+            export_function = sepa_export
+            file_extension = "xml"
+        else:
+            logging.error("Data format not supported!")
+            return
 
         async with db_pool.acquire() as conn:
-            # get all customer with iban not null
-            customers_bank_data = await get_customer_bank_data(conn=conn)
+            number_of_customers = await get_number_of_customers(conn=conn)
+            if number_of_customers == 0:
+                logging.info("No customers with bank data found. Nothing to export.")
 
-            # just to get currency identifer from db
-            cfg_srvc = ConfigService(db_pool=None, config=None, auth_service=None)  # type: ignore
-            currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
+            max_export_items_per_batch = max_export_items_per_batch or number_of_customers
 
-        # create sepa xml file for sepa transfer to upload in online banking
-        n_written = sepa_export(
-            customers_bank_data=customers_bank_data,
-            output_path=output_path,
-            cfg=self.config,
-            currency_ident=currency_ident,
-            execution_date=execution_date,
+            for i in range(math.ceil(number_of_customers / max_export_items_per_batch)):
+                # get all customer with iban not null
+                customers_bank_data = await get_customer_bank_data(
+                    conn=conn, max_export_items_per_batch=max_export_items_per_batch, ith_batch=i
+                )
+
+                # just to get currency identifier from db
+                cfg_srvc = ConfigService(db_pool=None, config=None, auth_service=None)  # type: ignore
+                currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
+
+                output_path_file_extension = f"{output_path}_{i+1}.{file_extension}"
+
+                export_function(
+                    customers_bank_data=customers_bank_data,
+                    output_path=output_path_file_extension,
+                    cfg=self.config,
+                    currency_ident=currency_ident,
+                    execution_date=execution_date,
+                )
+
+        logging.info(
+            f"Exported bank data of {number_of_customers} customers into #{i+1} files named {output_path}_x.{file_extension}"
         )
-
-        if n_written == 0:
-            logging.info("No customers with bank data found. Nothing to export.")
-        else:
-            logging.info(f"Exported bank data of {n_written} customers to sepa xml: {output_path}")
 
     async def run(self):
         db_pool = await database.create_db_pool(self.config.database)
@@ -90,6 +117,10 @@ class CustomerExportCli(SubCommand):
                 if self.args.execution_date
                 else None
             )
-            await self._export_customer_sepa_bank_data(db_pool, self.args.output_path, execution_date)
-        elif self.args.action == "csv":
-            await self._export_customer_csv_bank_data(db_pool, self.args.output_path)
+        # self.args.action is either sepa or csv
+        await self._export_customer_bank_data(
+            db_pool=db_pool,
+            output_path=self.args.output_path,
+            execution_date=execution_date,
+            data_format=self.args.action,
+        )
