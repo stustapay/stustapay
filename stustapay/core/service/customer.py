@@ -31,14 +31,25 @@ class CustomerBankData(BaseModel):
     balance: float
 
 
-async def get_customer_bank_data(conn: asyncpg.Connection) -> List[CustomerBankData]:
+async def get_number_of_customers(conn: asyncpg.Connection) -> List[CustomerBankData]:
+    # number of customers with iban not null
+    return await conn.fetchval("select count(*) from customer c where c.iban is not null")
+
+
+async def get_customer_bank_data(
+    conn: asyncpg.Connection, max_export_items_per_batch: int, ith_batch: int = 0
+) -> List[CustomerBankData]:
     rows = await conn.fetch(
-        "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance from customer c where c.iban is not null"
+        "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance from customer c where c.iban is not null limit $1, $2",
+        ith_batch * max_export_items_per_batch,
+        (ith_batch + 1) * max_export_items_per_batch,
     )
     return [CustomerBankData.parse_obj(row) for row in rows]
 
 
-def csv_export(customers_bank_data: list[CustomerBankData], output_path: str, currency_ident: str) -> int:
+def csv_export(
+    customers_bank_data: list[CustomerBankData], output_path: str, cfg: Config, currency_ident: str, **kwargs
+) -> int:
     with open(output_path, "w") as f:
         writer = csv.writer(f)
         fields = ["beneficiary_name", "iban", "amount", "currency", "reference"]
@@ -50,7 +61,7 @@ def csv_export(customers_bank_data: list[CustomerBankData], output_path: str, cu
                     customer.iban,
                     customer.balance,
                     currency_ident,
-                    f"StuStaCulum, TagID: {customer.user_tag_uid}",
+                    cfg.customer_portal.sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
                 ]
             )
     return len(customers_bank_data)
@@ -77,16 +88,14 @@ def sepa_export(
     }
     sepa = SepaTransfer(config, clean=True)
 
-    for customer_bank_data in customers_bank_data:
+    for customer in customers_bank_data:
         payment = {
-            "name": customer_bank_data.account_name,
-            "IBAN": IBAN(customer_bank_data.iban).compact,
-            "BIC": str(IBAN(customer_bank_data.iban).bic),
-            "amount": round(customer_bank_data.balance * 100),  # in cents
+            "name": customer.account_name,
+            "IBAN": IBAN(customer.iban).compact,
+            "BIC": str(IBAN(customer.iban).bic),
+            "amount": round(customer.balance * 100),  # in cents
             "execution_date": execution_date,
-            "description": cfg.customer_portal.sepa_config.description.format(
-                user_tag_uid=customer_bank_data.user_tag_uid
-            ),
+            "description": cfg.customer_portal.sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
         }
         sepa.add_payment(payment)
 
