@@ -8,6 +8,6 @@
 ## Operation
 - Start API
 ```shell
-python -m stustapay.customer_portal -c server.conf -vvv api
+python -m stustapay.customer_portal -c server.yaml -vvv api
 ```
 - To start the web ui see [web.md](web.md#running)

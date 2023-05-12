@@ -13,7 +13,7 @@ def main():
     """
     parser = Parser()
 
-    parser.add_argument("-c", "--config-path", default="tse.conf")
+    parser.add_argument("-c", "--config-path", default="tse.yaml")
 
     ### module registration
     parser.add_subcommand("signature_processor", SignatureProcessor)
