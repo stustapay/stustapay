@@ -68,7 +68,7 @@ class Simulator(SubCommand):
     @staticmethod
     def argparse_register(subparser: argparse.ArgumentParser):
         subparser.add_argument(
-            "-b", "--bookings-per-second", type=float, help="number of bookings per second", default=200.0
+            "-b", "--bookings-per-second", type=float, help="number of bookings per second", default=100.0
         )
 
     def sleep(self, n_tills: int):
@@ -132,6 +132,9 @@ class Simulator(SubCommand):
     async def _register_terminal(self, registration_uuid: str) -> Terminal:
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
             resp = await client.post("/auth/register_terminal", json={"registration_uuid": registration_uuid})
+            if resp.status != 200:
+                print("Error registering terminal", resp.status, await resp.text())
+                raise RuntimeError("foobar")
             success = TerminalRegistrationSuccess.parse_obj(await resp.json())
             resp = await client.get("/config", headers={"Authorization": f"Bearer {success.token}"})
             config = TerminalConfig.parse_obj(await resp.json())
@@ -191,7 +194,7 @@ class Simulator(SubCommand):
         db_pool = await create_db_pool(self.config.database)
         async with db_pool.acquire() as conn:
             rows = await conn.fetch(
-                "select registration_uuid from till where active_profile_id = $1", PROFILE_ID_TICKET
+                "select registration_uuid from till where id != 1 and active_profile_id = $1", PROFILE_ID_TICKET
             )
             terminals = await self._register_terminals(
                 db_pool=db_pool, registration_uuids=[str(row["registration_uuid"]) for row in rows], stock_up=True
@@ -224,7 +227,9 @@ class Simulator(SubCommand):
     async def topup_till(self):
         db_pool = await create_db_pool(self.config.database)
         async with db_pool.acquire() as conn:
-            rows = await conn.fetch("select registration_uuid from till where active_profile_id = $1", PROFILE_ID_TOPUP)
+            rows = await conn.fetch(
+                "select registration_uuid from till where id != 1 and active_profile_id = $1", PROFILE_ID_TOPUP
+            )
             terminals = await self._register_terminals(
                 db_pool=db_pool, registration_uuids=[str(row["registration_uuid"]) for row in rows], stock_up=True
             )
@@ -264,7 +269,9 @@ class Simulator(SubCommand):
         db_pool = await create_db_pool(self.config.database)
         async with db_pool.acquire() as conn:
             rows = await conn.fetch(
-                "select registration_uuid from till where active_profile_id = $1 or active_profile_id = $2",
+                "select registration_uuid "
+                "from till "
+                "where id != 1 and (active_profile_id = $1 or active_profile_id = $2)",
                 PROFILE_ID_BEER,
                 PROFILE_ID_COCKTAIL,
             )
