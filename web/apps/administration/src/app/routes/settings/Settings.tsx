@@ -1,7 +1,7 @@
 import { useGetConfigEntriesQuery, useSetConfigEntryMutation, selectConfigEntryAll } from "@api";
 import { EditableListItem } from "@components";
 import { Loading } from "@stustapay/components";
-import { List, ListItem, ListItemText, Paper, Typography } from "@mui/material";
+import { List, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -49,8 +49,8 @@ export const Settings: React.FC = () => {
   const { t } = useTranslation(["settings"]);
 
   return (
-    <>
-      <Paper sx={{ mb: 2 }}>
+    <Stack spacing={2}>
+      <Paper>
         <Box sx={{ p: 2 }}>
           <Typography variant="h5">{t("localConfig")}</Typography>
         </Box>
@@ -61,6 +61,6 @@ export const Settings: React.FC = () => {
         </List>
       </Paper>
       <ServerSideSettings />
-    </>
+    </Stack>
   );
 };

@@ -6,7 +6,7 @@ import {
   selectTillAll,
   selectTillProfileById,
 } from "@api";
-import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
+import { Paper, Typography, ListItem, ListItemText, Stack } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
@@ -99,7 +99,7 @@ export const TillList: React.FC = () => {
   ];
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -117,7 +117,7 @@ export const TillList: React.FC = () => {
         rows={tills ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
         title={t("till.delete")}
@@ -125,6 +125,6 @@ export const TillList: React.FC = () => {
         show={tillToDelete !== null}
         onClose={handleConfirmDeleteTill}
       />
-    </>
+    </Stack>
   );
 };

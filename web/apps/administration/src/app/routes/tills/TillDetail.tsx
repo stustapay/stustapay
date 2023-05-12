@@ -9,6 +9,7 @@ import {
   Tooltip,
   Box,
   Button,
+  Stack,
 } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink, OrderTable } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
@@ -117,7 +118,7 @@ export const TillDetail: React.FC = () => {
   };
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -144,7 +145,7 @@ export const TillDetail: React.FC = () => {
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>
-      <Paper sx={{ mt: 2 }}>
+      <Paper>
         <List>
           <ListItem>
             <ListItemText primary={t("till.id")} secondary={till.id} />
@@ -221,6 +222,6 @@ export const TillDetail: React.FC = () => {
         show={showConfirmDelete}
         onClose={handleConfirmDeleteTill}
       />
-    </>
+    </Stack>
   );
 };

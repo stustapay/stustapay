@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, Tooltip } from "@mui/material";
+import { Paper, ListItem, ListItemText, Tooltip, Stack } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import {
   Edit as EditIcon,
@@ -161,7 +161,7 @@ export const ProductList: React.FC = () => {
   ];
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -178,7 +178,7 @@ export const ProductList: React.FC = () => {
         rows={products ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
         title={t("deleteProduct")}
@@ -186,6 +186,6 @@ export const ProductList: React.FC = () => {
         show={productToDelete !== null}
         onClose={handleConfirmDeleteProduct}
       />
-    </>
+    </Stack>
   );
 };

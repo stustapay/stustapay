@@ -79,7 +79,7 @@ class FestivalSetup(SubCommand):
     async def _create_tags(self, conn: asyncpg.Connection):
         self.logger.info(f"Creating {self.args.n_tags} tags")
         for i in range(self.args.n_tags):
-            await conn.execute("insert into user_tag (uid) values ($1)", i + CUSTOMER_TAG_START)
+            await conn.execute("insert into user_tag (uid, pin) values ($1, $2)", i + CUSTOMER_TAG_START, "pin")
 
     async def _create_tills(self, admin_token: str, till_service: TillService):
         self.logger.info(f"Creating {self.n_tills} tills")

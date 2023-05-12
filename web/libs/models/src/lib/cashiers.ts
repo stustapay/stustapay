@@ -8,7 +8,7 @@ export const CashierSchema = z.object({
   description: z.string().optional(),
   cash_drawer_balance: z.number(),
   user_tag_uid: z.bigint(),
-  till_id: z.number().int().optional(),
+  till_ids: z.array(z.number().int()),
 });
 
 export type Cashier = z.infer<typeof CashierSchema>;

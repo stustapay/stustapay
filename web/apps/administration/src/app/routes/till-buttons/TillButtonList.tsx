@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText } from "@mui/material";
+import { Paper, ListItem, ListItemText, Stack } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { selectTillButtonAll, useDeleteTillButtonMutation, useGetTillButtonsQuery } from "@api";
@@ -74,7 +74,7 @@ export const TillButtonList: React.FC = () => {
   ];
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -92,7 +92,7 @@ export const TillButtonList: React.FC = () => {
         rows={buttons ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
         title={t("button.delete")}
@@ -100,6 +100,6 @@ export const TillButtonList: React.FC = () => {
         show={buttonToDelete !== null}
         onClose={handleConfirmDeleteTaxRate}
       />
-    </>
+    </Stack>
   );
 };

@@ -3,9 +3,10 @@ import { Typography, Toolbar, CssBaseline, Box, CircularProgress, Button, AppBar
 import { Outlet, Navigate, useLocation, Link as RouterLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAppSelector, selectIsAuthenticated } from "@/store";
+import { LanguageSelect } from "@/components/LanguageSelect";
 
 export const AuthenticatedRoot: React.FC = () => {
-  const { t } = useTranslation(["common"]);
+  const { t } = useTranslation();
   const location = useLocation();
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
@@ -24,6 +25,7 @@ export const AuthenticatedRoot: React.FC = () => {
               {t("StuStaPay")}
             </RouterLink>
           </Typography>
+          <LanguageSelect sx={{ color: "inherit" }} variant="outlined" />
           <Button component={RouterLink} color="inherit" to="/logout">
             {t("logout")}
           </Button>

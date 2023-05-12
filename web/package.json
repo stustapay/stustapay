@@ -51,9 +51,11 @@
   "dependencies": {
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@fontsource/roboto": "^4.5.8",
     "@mui/icons-material": "^5.11.0",
     "@mui/material": "^5.11.0",
     "@mui/x-data-grid": "^6.0.0",
+    "@nivo/pie": "^0.83.0",
     "@reduxjs/toolkit": "^1.9.1",
     "core-js": "^3.6.5",
     "formik": "^2.2.9",

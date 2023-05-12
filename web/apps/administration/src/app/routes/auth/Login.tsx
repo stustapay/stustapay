@@ -66,7 +66,7 @@ export const Login: React.FC = () => {
           onSubmit={handleSubmit}
           validationSchema={toFormikValidationSchema(validationSchema)}
         >
-          {({ values, handleBlur, handleChange, handleSubmit, isSubmitting }) => (
+          {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, errors, touched }) => (
             <Form onSubmit={handleSubmit}>
               <input type="hidden" name="remember" value="true" />
               <TextField
@@ -81,6 +81,8 @@ export const Login: React.FC = () => {
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.username}
+                error={touched.username && !!errors.username}
+                helperText={(touched.username && errors.username) as string}
               />
 
               <TextField
@@ -94,6 +96,8 @@ export const Login: React.FC = () => {
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.password}
+                error={touched.password && !!errors.password}
+                helperText={(touched.password && errors.password) as string}
               />
 
               {isSubmitting && <LinearProgress />}

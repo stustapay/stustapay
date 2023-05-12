@@ -1,4 +1,4 @@
-import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Chip } from "@mui/material";
+import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Chip, Stack } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -40,7 +40,7 @@ export const UserDetail: React.FC = () => {
   }
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -59,7 +59,7 @@ export const UserDetail: React.FC = () => {
           <ListItemText primary={user.login} />
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2 }}>
+      <Paper>
         <List>
           <ListItem>
             <ListItemText primary={t("userLogin")} secondary={user.login} />
@@ -83,6 +83,6 @@ export const UserDetail: React.FC = () => {
         show={showConfirmDelete}
         onClose={handleConfirmDeleteUser}
       />
-    </>
+    </Stack>
   );
 };
