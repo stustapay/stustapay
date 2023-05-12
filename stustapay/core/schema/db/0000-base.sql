@@ -1059,20 +1059,30 @@ create trigger new_order_trigger
     for each row
 execute function new_order_added();
 
--- aggregates the line_item's amounts
-create or replace view order_value as
+create or replace view line_item_aggregated_json as (
     select
-        ordr.*,
+        order_id,
         sum(total_price) as total_price,
         sum(total_tax) as total_tax,
         sum(total_price - total_tax) as total_no_tax,
         coalesce(json_agg(line_item_json), json_build_array()) as line_items
+    from line_item_json
+    group by order_id
+);
+
+-- aggregates the line_item's amounts
+create or replace view order_value as
+    select
+        ordr.*,
+        a.user_tag_uid as customer_tag_uid,
+        li.total_price,
+        li.total_tax,
+        li.total_no_tax,
+        li.line_items
     from
         ordr
-        left join line_item_json
-            on (ordr.id = line_item_json.order_id)
-    group by
-        ordr.id;
+        left join line_item_aggregated_json li on ordr.id = li.order_id
+        left join account a on ordr.customer_account_id = a.id;
 
 -- aggregates account and customer_info to customer
 create or replace view customer as

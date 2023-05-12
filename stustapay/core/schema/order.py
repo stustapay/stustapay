@@ -237,6 +237,7 @@ class Order(BaseModel):
     cashier_id: int
     till_id: int
     customer_account_id: Optional[int]
+    customer_tag_uid: Optional[int]
 
     line_items: list[LineItem]
 

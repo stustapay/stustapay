@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { selectOrderById, useGetOrderByIdQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { LineItemTable } from "@components/LineItemTable";
+import { ListItemLink } from "@components";
 
 export const OrderDetail: React.FC = () => {
   const { t } = useTranslation(["orders", "common"]);
@@ -55,6 +56,16 @@ export const OrderDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("order.bookedAt")} secondary={order.booked_at} />
           </ListItem>
+          {order.customer_account_id != null && (
+            <ListItemLink to={`/customer-accounts/${order.customer_account_id}`}>
+              <ListItemText primary={t("order.customerAccountId")} secondary={order.customer_account_id} />
+            </ListItemLink>
+          )}
+          {order.customer_tag_uid != null && (
+            <ListItem>
+              <ListItemText primary={t("order.customerTagUid")} secondary={String(order.customer_tag_uid)} />
+            </ListItem>
+          )}
         </List>
       </Paper>
       <LineItemTable lineItems={order.line_items} />
