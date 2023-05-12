@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, TextField, Button, LinearProgress } from "@mui/material";
+import { Paper, ListItem, ListItemText, TextField, Button, LinearProgress, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useFindAccountsMutation } from "@api";
 import { toast } from "react-toastify";
@@ -36,13 +36,13 @@ export const FindAccounts: React.FC = () => {
   };
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem>
           <ListItemText primary={t("findAccounts", { ns: "common" })} />
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2, p: 3 }}>
+      <Paper sx={{ p: 3 }}>
         <Formik
           initialValues={initialValues}
           onSubmit={handleSubmit}
@@ -65,6 +65,6 @@ export const FindAccounts: React.FC = () => {
         </Formik>
       </Paper>
       {searchResult.data && <AccountTable accounts={searchResult.data} />}
-    </>
+    </Stack>
   );
 };

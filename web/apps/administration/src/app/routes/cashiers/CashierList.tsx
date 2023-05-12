@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useCurrencyFormatter } from "@hooks";
-import { Paper, ListItem, FormControlLabel, Checkbox, ListItemText } from "@mui/material";
+import { Paper, ListItem, FormControlLabel, Checkbox, ListItemText, Stack } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { selectCashierAll, selectTillById, useGetCashiersQuery, useGetTillsQuery } from "@api";
@@ -29,7 +29,7 @@ export const CashierList: React.FC = () => {
       ...rest,
       cashiers: data
         ? selectCashierAll(data).filter((cashier) => {
-            if (!filterOptions.showWithoutTill && cashier.till_id == null) {
+            if (!filterOptions.showWithoutTill && cashier.till_ids.length === 0) {
               return false;
             }
             if (!filterOptions.showZeroBalance && cashier.cash_drawer_balance === 0) {
@@ -82,7 +82,7 @@ export const CashierList: React.FC = () => {
       headerName: t("cashier.till") as string,
       flex: 0.5,
       minWidth: 150,
-      renderCell: (params) => renderTill(params.row.till_id),
+      renderCell: (params) => params.row.till_ids.map((till_id) => renderTill(till_id)),
     },
     {
       field: "user_tag_uid",
@@ -101,13 +101,13 @@ export const CashierList: React.FC = () => {
   ];
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem>
           <ListItemText primary={t("cashiers", { ns: "common" })} />
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2, p: 1 }}>
+      <Paper sx={{ p: 1 }}>
         <FormControlLabel
           control={
             <Checkbox
@@ -132,8 +132,8 @@ export const CashierList: React.FC = () => {
         rows={cashiers ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
-    </>
+    </Stack>
   );
 };

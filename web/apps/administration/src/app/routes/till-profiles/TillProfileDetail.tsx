@@ -1,4 +1,4 @@
-import { Paper, ListItem, Chip, IconButton, ListItemText, List, Tooltip, Checkbox } from "@mui/material";
+import { Paper, ListItem, Chip, IconButton, ListItemText, List, Tooltip, Checkbox, Stack } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -50,7 +50,7 @@ export const TillProfileDetail: React.FC = () => {
   const layout = selectTillLayoutById(layouts, profile.layout_id);
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -69,7 +69,7 @@ export const TillProfileDetail: React.FC = () => {
           <ListItemText primary={profile.name} />
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2 }}>
+      <Paper>
         <List>
           <ListItem>
             <ListItemText primary={t("profile.name")} secondary={profile.name} />
@@ -113,6 +113,6 @@ export const TillProfileDetail: React.FC = () => {
         show={showConfirmDelete}
         onClose={handleConfirmDeleteProfile}
       />
-    </>
+    </Stack>
   );
 };

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List } from "@mui/material";
+import { Paper, ListItem, ListItemText, List, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { selectOrderById, useGetOrderByIdQuery } from "@api";
@@ -32,13 +32,13 @@ export const OrderDetail: React.FC = () => {
   }
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem>
           <ListItemText primary={t("order.name", { id: orderId })} />
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2 }}>
+      <Paper>
         <List>
           <ListItem>
             <ListItemText primary={t("order.id")} secondary={order.id} />
@@ -58,6 +58,6 @@ export const OrderDetail: React.FC = () => {
         </List>
       </Paper>
       <LineItemTable lineItems={order.line_items} />
-    </>
+    </Stack>
   );
 };

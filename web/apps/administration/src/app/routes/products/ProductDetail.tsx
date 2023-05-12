@@ -1,4 +1,4 @@
-import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Checkbox, Chip } from "@mui/material";
+import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Checkbox, Chip, Stack } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -43,7 +43,7 @@ export const ProductDetail: React.FC = () => {
   }
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -67,7 +67,7 @@ export const ProductDetail: React.FC = () => {
           <ListItemText primary={product.name} />
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2 }}>
+      <Paper>
         <List>
           <ListItem>
             <ListItemText primary={t("product.name")} secondary={product.name} />
@@ -116,6 +116,6 @@ export const ProductDetail: React.FC = () => {
         show={showConfirmDelete}
         onClose={handleConfirmDeleteproduct}
       />
-    </>
+    </Stack>
   );
 };

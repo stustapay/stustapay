@@ -1,4 +1,4 @@
-import { Paper, ListItem, IconButton, Typography, ListItemText, List, Tooltip, Divider } from "@mui/material";
+import { Paper, ListItem, IconButton, Typography, ListItemText, List, Tooltip, Divider, Stack } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -51,7 +51,7 @@ export const TillLayoutDetail: React.FC = () => {
     layout.button_ids == null ? [] : [...layout.button_ids].map((i) => selectTillButtonById(buttons, i) as TillButton);
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -70,7 +70,7 @@ export const TillLayoutDetail: React.FC = () => {
           <ListItemText primary={layout.name} />
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2 }}>
+      <Paper>
         <List>
           <ListItem>
             <ListItemText primary={t("layout.name")} secondary={layout.name} />
@@ -81,7 +81,7 @@ export const TillLayoutDetail: React.FC = () => {
         </List>
       </Paper>
       {sortedButtons.length > 0 && (
-        <Paper sx={{ mt: 2 }}>
+        <Paper>
           <List>
             <ListItem>
               <Typography variant="h6">{t("button.buttons")}</Typography>
@@ -101,6 +101,6 @@ export const TillLayoutDetail: React.FC = () => {
         show={showConfirmDelete}
         onClose={handleConfirmDeleteLayout}
       />
-    </>
+    </Stack>
   );
 };

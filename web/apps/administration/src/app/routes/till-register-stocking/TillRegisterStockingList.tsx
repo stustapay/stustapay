@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
+import { Paper, Typography, ListItem, ListItemText, Stack } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -81,7 +81,7 @@ export const TillRegisterStockingList: React.FC = () => {
   ];
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -99,7 +99,7 @@ export const TillRegisterStockingList: React.FC = () => {
         rows={stockings ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
         title={t("register.deleteStocking")}
@@ -107,6 +107,6 @@ export const TillRegisterStockingList: React.FC = () => {
         show={stockingToDelete !== null}
         onClose={handleConfirmDeleteProfile}
       />
-    </>
+    </Stack>
   );
 };

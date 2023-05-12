@@ -1165,10 +1165,15 @@ create or replace view cashier as (
         usr.cashier_account_id,
         usr.cash_register_id,
         a.balance as cash_drawer_balance,
-        t.id as till_id
+        coalesce(tills.till_ids, '{}'::bigint array) as till_ids
     from usr
     join account a on usr.cashier_account_id = a.id
-    left join till t on t.active_user_id = usr.id
+    left join (
+        select t.active_user_id as user_id, array_agg(t.id) as till_ids
+        from till t
+        where t.active_user_id is not null
+        group by t.active_user_id
+    ) tills on tills.user_id = usr.id
 );
 
 -- book a new transaction and update the account balances automatically, returns the new transaction_id
