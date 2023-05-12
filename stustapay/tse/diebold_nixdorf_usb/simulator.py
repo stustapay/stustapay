@@ -23,7 +23,6 @@ from .errorcodes import dnerror
 from inspect import stack
 import ecdsa
 from hashlib import sha384, sha256
-import base64
 from asn1crypto.core import Integer, ObjectIdentifier, Sequence, OctetString, PrintableString, Any
 
 
@@ -199,11 +198,11 @@ class VirtualTSE:
             return dnerror(19)
 
         # count number of open transactions
-        number_of_open_transaction = 0
+        number_of_open_transactions = 0
         for t in self.current_transactions:
             number_of_open_transactions += len(t)
 
-        if number_of_open_transaction > 512:  # max number of open transactions is 512 for Dn TSE
+        if number_of_open_transactions > 512:  # max number of open transactions is 512 for Dn TSE
             return dnerror(21)
 
         # generate transaction
