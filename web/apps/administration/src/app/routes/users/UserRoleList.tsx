@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, Button, Typography, ListItem, ListItemText } from "@mui/material";
+import { Paper, Button, Typography, ListItem, ListItemText, Stack } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { selectUserRoleAll, useDeleteUserRoleMutation, useGetUserRolesQuery } from "@api";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -77,7 +77,7 @@ export const UserRoleList: React.FC = () => {
   ];
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -95,7 +95,7 @@ export const UserRoleList: React.FC = () => {
         rows={userRoles ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
         title={t("userRole.delete")}
@@ -103,6 +103,6 @@ export const UserRoleList: React.FC = () => {
         show={userRoleToDelete !== null}
         onClose={handleConfirmDeleteUser}
       />
-    </>
+    </Stack>
   );
 };

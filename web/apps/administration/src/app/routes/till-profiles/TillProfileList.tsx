@@ -6,7 +6,7 @@ import {
   useGetTillProfilesQuery,
   selectTillProfileAll,
 } from "@api";
-import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
+import { Paper, Typography, ListItem, ListItemText, Stack } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -119,7 +119,7 @@ export const TillProfileList: React.FC = () => {
   ];
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -137,7 +137,7 @@ export const TillProfileList: React.FC = () => {
         rows={profiles ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
         title={t("profile.delete")}
@@ -145,6 +145,6 @@ export const TillProfileList: React.FC = () => {
         show={profileToDelete !== null}
         onClose={handleConfirmDeleteProfile}
       />
-    </>
+    </Stack>
   );
 };

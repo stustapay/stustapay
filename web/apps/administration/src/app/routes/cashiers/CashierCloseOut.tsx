@@ -15,10 +15,17 @@ import {
   Button,
   Alert,
   AlertTitle,
+  Stack,
 } from "@mui/material";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
-import { selectCashierById, useCloseOutCashierMutation, useGetCashierByIdQuery } from "@api";
+import {
+  selectCashierById,
+  selectTillById,
+  useCloseOutCashierMutation,
+  useGetCashierByIdQuery,
+  useGetTillsQuery,
+} from "@api";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
 import { NumericInput } from "@components";
@@ -85,10 +92,18 @@ export const CashierCloseOut: React.FC = () => {
       cashier: data ? selectCashierById(data, Number(cashierId)) : undefined,
     }),
   });
+  const { data: tills, isLoading: isTillsLoading } = useGetTillsQuery();
 
-  if (!cashier || isLoading) {
+  if (!cashier || isLoading || !tills || isTillsLoading) {
     return <Loading />;
   }
+
+  const getTill = (id: number) => {
+    if (!tills) {
+      return undefined;
+    }
+    return selectTillById(tills, id);
+  };
 
   const handleSubmit = (values: CloseOutData, { setSubmitting }: FormikHelpers<CloseOutData>) => {
     setSubmitting(true);
@@ -109,19 +124,22 @@ export const CashierCloseOut: React.FC = () => {
   };
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem>
           <ListItemText primary={getUserName(cashier)} />
         </ListItem>
       </Paper>
 
-      <Alert severity="error" sx={{ mt: 2 }}>
-        <AlertTitle>{t("closeOut.warningStillLoggedInTitle")}</AlertTitle>
-        <Trans i18nKey="closeOut.warningStillLoggedIn" ns="cashiers">
-          warning, <RouterLink to={`/tills/${cashier.till_id}`}>here</RouterLink>
-        </Trans>
-      </Alert>
+      {cashier.till_ids.length !== 0 && (
+        <Alert severity="error">
+          <AlertTitle>{t("closeOut.warningStillLoggedInTitle")}</AlertTitle>
+          {t("closeOut.warningStillLoggedIn")}
+          {cashier.till_ids.map((till_id) => (
+            <RouterLink to={`/tills/${till_id}`}>{getTill(till_id)?.name}</RouterLink>
+          ))}
+        </Alert>
+      )}
 
       <Formik
         initialValues={initialValues}
@@ -130,7 +148,7 @@ export const CashierCloseOut: React.FC = () => {
       >
         {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, setFieldValue, errors, touched }) => (
           <>
-            <TableContainer component={Paper} sx={{ mt: 2 }}>
+            <TableContainer component={Paper}>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -257,6 +275,8 @@ export const CashierCloseOut: React.FC = () => {
                 onBlur={handleBlur}
                 filterRole="finanzorga"
                 onChange={(val) => setFieldValue("closingOutUserId", val)}
+                error={touched.closingOutUserId && !!errors.closingOutUserId}
+                helperText={(touched.closingOutUserId && errors.closingOutUserId) as string}
               />
               <TextField
                 multiline
@@ -266,6 +286,8 @@ export const CashierCloseOut: React.FC = () => {
                 value={values.comment}
                 onChange={handleChange}
                 onBlur={handleBlur}
+                error={touched.comment && !!errors.comment}
+                helperText={(touched.comment && errors.comment) as string}
               />
               {isSubmitting && <LinearProgress />}
               <Button type="submit" onClick={() => handleSubmit()} disabled={isSubmitting}>
@@ -276,6 +298,6 @@ export const CashierCloseOut: React.FC = () => {
           </>
         )}
       </Formik>
-    </>
+    </Stack>
   );
 };

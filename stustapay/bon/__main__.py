@@ -10,7 +10,7 @@ def main():
     main entry point for launching the bon generator
     """
     parser = Parser()
-    parser.add_argument("-c", "--config-path", default="etc/bon.conf")
+    parser.add_argument("-c", "--config-path", default="etc/bon.yaml")
     parser.add_subcommand("bon", Generator)
 
     loop = asyncio.new_event_loop()

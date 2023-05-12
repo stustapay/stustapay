@@ -98,7 +98,7 @@ jobs:
         run: npm ci
         working-directory: ./web
       - name: Lint
-        run: npx nx lint
+        run: npx nx run-many --target=lint
         working-directory: ./web
 
   web-build:
@@ -115,7 +115,7 @@ jobs:
         run: npm ci
         working-directory: ./web
       - name: Build
-        run: npx nx build
+        run: npx nx run-many --target=build
         working-directory: ./web
 
   web-test:
@@ -132,7 +132,7 @@ jobs:
         run: npm ci
         working-directory: ./web
       - name: Build
-        run: npx nx test
+        run: npx nx run-many --target=test
         working-directory: ./web
 
   app-build:

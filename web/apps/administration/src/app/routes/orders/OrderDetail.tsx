@@ -1,10 +1,11 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List } from "@mui/material";
+import { Paper, ListItem, ListItemText, List, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { selectOrderById, useGetOrderByIdQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { LineItemTable } from "@components/LineItemTable";
+import { ListItemLink } from "@components";
 
 export const OrderDetail: React.FC = () => {
   const { t } = useTranslation(["orders", "common"]);
@@ -32,13 +33,13 @@ export const OrderDetail: React.FC = () => {
   }
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem>
           <ListItemText primary={t("order.name", { id: orderId })} />
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2 }}>
+      <Paper>
         <List>
           <ListItem>
             <ListItemText primary={t("order.id")} secondary={order.id} />
@@ -55,9 +56,19 @@ export const OrderDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("order.bookedAt")} secondary={order.booked_at} />
           </ListItem>
+          {order.customer_account_id != null && (
+            <ListItemLink to={`/customer-accounts/${order.customer_account_id}`}>
+              <ListItemText primary={t("order.customerAccountId")} secondary={order.customer_account_id} />
+            </ListItemLink>
+          )}
+          {order.customer_tag_uid != null && (
+            <ListItem>
+              <ListItemText primary={t("order.customerTagUid")} secondary={String(order.customer_tag_uid)} />
+            </ListItem>
+          )}
         </List>
       </Paper>
       <LineItemTable lineItems={order.line_items} />
-    </>
+    </Stack>
   );
 };

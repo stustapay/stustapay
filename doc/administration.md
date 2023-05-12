@@ -6,5 +6,5 @@
 ## Operation
 - Run the backend API server
 ```shell
-python -m stustapay.administration -c server.conf -vvv api
+python -m stustapay.administration -c server.yaml -vvv api
 ```

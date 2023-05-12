@@ -11,7 +11,7 @@ def main():
     """
     parser = Parser()
 
-    parser.add_argument("-c", "--config-path", default="server.conf")
+    parser.add_argument("-c", "--config-path", default="server.yaml")
 
     ### module registration
     parser.add_subcommand("api", server.Api)

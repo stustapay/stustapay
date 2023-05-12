@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText } from "@mui/material";
+import { Paper, ListItem, ListItemText, Stack } from "@mui/material";
 import { selectAccountAll, useGetSystemAccountsQuery } from "@api";
 import { useTranslation } from "react-i18next";
 import { Loading } from "@stustapay/components";
@@ -20,13 +20,13 @@ export const SystemAccountList: React.FC = () => {
   }
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem>
           <ListItemText primary={t("systemAccounts", { ns: "common" })} />
         </ListItem>
       </Paper>
       <AccountTable accounts={accounts ?? []} />
-    </>
+    </Stack>
   );
 };

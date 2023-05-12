@@ -67,7 +67,7 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
       rows={orders ?? []}
       columns={columns}
       disableRowSelectionOnClick
-      sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
     />
   );
 };

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, Button, Typography, ListItem, ListItemText } from "@mui/material";
+import { Paper, Button, Typography, ListItem, ListItemText, Stack } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { selectUserAll, useDeleteUserMutation, useGetUsersQuery } from "@api";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -88,7 +88,7 @@ export const UserList: React.FC = () => {
   ];
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -106,7 +106,7 @@ export const UserList: React.FC = () => {
         rows={users ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
         title={t("deleteUser")}
@@ -114,6 +114,6 @@ export const UserList: React.FC = () => {
         show={userToDelete !== null}
         onClose={handleConfirmDeleteUser}
       />
-    </>
+    </Stack>
   );
 };
