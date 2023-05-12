@@ -230,8 +230,14 @@ values
     ('user_management'),
     ('till_management'),
     ('order_management'),
+    ('festival_overview'),
+
+    -- festival workflow privileges
     ('terminal_login'),
     ('supervised_terminal_login'),
+
+    -- festival order / ticket / voucher flow privileges
+    -- which orders are available (sale, ticket, ...) is determined by the terminal profile
     ('can_book_orders'),
     ('grant_free_tickets'),
     ('grant_vouchers')
@@ -324,6 +330,7 @@ values
     (0, 'user_management'),
     (0, 'till_management'),
     (0, 'order_management'),
+    (0, 'festival_overview'),
     (0, 'terminal_login'),
     (0, 'grant_free_tickets'),
     (0, 'grant_vouchers'),
@@ -334,6 +341,7 @@ values
     (1, 'user_management'),
     (1, 'till_management'),
     (1, 'order_management'),
+    (1, 'festival_overview'),
     (1, 'terminal_login'),
     (1, 'grant_free_tickets'),
     (1, 'grant_vouchers'),

@@ -142,7 +142,7 @@ export const AuthenticatedRoot: React.FC = () => {
         </DrawerHeader>
         <Divider />
         <List>
-          <ListItemLink to="/">
+          <ListItemLink to="/overview/festival">
             <ListItemIcon>
               <DashboardIcon />
             </ListItemIcon>
