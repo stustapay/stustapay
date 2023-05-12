@@ -63,17 +63,16 @@ class CustomerExportCli(SubCommand):
         """
         Supported data formats: sepa, csv
         """
-        if data_format == "sepa":
-            export_function = sepa_export
-            file_extension = "xml"
-        elif data_format == "csv":
+        if data_format == "csv":
             export_function = csv_export
             file_extension = "csv"
+        elif data_format == "sepa":
+            export_function = sepa_export
+            file_extension = "xml"
         else:
             logging.error("Data format not supported!")
             return
 
-        n_written = 0
         async with db_pool.acquire() as conn:
             number_of_customers = await get_number_of_customers(conn=conn)
             if number_of_customers == 0:
@@ -84,17 +83,16 @@ class CustomerExportCli(SubCommand):
             for i in range(math.ceil(number_of_customers / max_export_items_per_batch)):
                 # get all customer with iban not null
                 customers_bank_data = await get_customer_bank_data(
-                    conn=conn, max_items=max_export_items_per_batch, ith_batch=i
+                    conn=conn, max_export_items_per_batch=max_export_items_per_batch, ith_batch=i
                 )
 
-                # just to get currency identifer from db
+                # just to get currency identifier from db
                 cfg_srvc = ConfigService(db_pool=None, config=None, auth_service=None)  # type: ignore
                 currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
 
                 output_path_file_extension = f"{output_path}_{i+1}.{file_extension}"
 
-                # create sepa xml file for sepa transfer to upload in online banking
-                n_written += export_function(
+                export_function(
                     customers_bank_data=customers_bank_data,
                     output_path=output_path_file_extension,
                     cfg=self.config,
@@ -103,7 +101,7 @@ class CustomerExportCli(SubCommand):
                 )
 
         logging.info(
-            f"Exported bank data of {n_written} customers into #{i+1} files named {output_path}_x.{file_extension}"
+            f"Exported bank data of {number_of_customers} customers into #{i+1} files named {output_path}_x.{file_extension}"
         )
 
     async def run(self):

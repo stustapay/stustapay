@@ -1,6 +1,7 @@
 # pylint: disable=unexpected-keyword-arg
 import csv
 import datetime
+import logging
 from typing import Optional, List
 
 import asyncpg
@@ -31,7 +32,7 @@ class CustomerBankData(BaseModel):
     balance: float
 
 
-async def get_number_of_customers(conn: asyncpg.Connection) -> List[CustomerBankData]:
+async def get_number_of_customers(conn: asyncpg.Connection) -> int:
     # number of customers with iban not null
     return await conn.fetchval("select count(*) from customer c where c.iban is not null")
 
@@ -49,7 +50,7 @@ async def get_customer_bank_data(
 
 def csv_export(
     customers_bank_data: list[CustomerBankData], output_path: str, cfg: Config, currency_ident: str, **kwargs
-) -> int:
+) -> None:
     with open(output_path, "w") as f:
         writer = csv.writer(f)
         fields = ["beneficiary_name", "iban", "amount", "currency", "reference"]
@@ -64,7 +65,6 @@ def csv_export(
                     cfg.customer_portal.sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
                 ]
             )
-    return len(customers_bank_data)
 
 
 def sepa_export(
@@ -73,9 +73,11 @@ def sepa_export(
     cfg: Config,
     currency_ident: str,
     execution_date: Optional[datetime.date],
-) -> int:
+) -> None:
     if len(customers_bank_data) == 0:
-        return 0
+        # avoid error in sepa library
+        logging.warning("No customers with bank data found. Nothing to export.")
+        return
 
     execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
     iban = IBAN(cfg.customer_portal.sepa_config.sender_iban)
@@ -101,9 +103,9 @@ def sepa_export(
 
     sepa_xml = sepa.export(validate=True, pretty_print=True)
 
+    # create sepa xml file for sepa transfer to upload in online banking
     with open(output_path, "wb") as f:
         f.write(sepa_xml)
-    return len(customers_bank_data)
 
 
 class CustomerService(DBService):
