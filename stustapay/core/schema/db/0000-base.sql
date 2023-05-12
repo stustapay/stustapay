@@ -1293,7 +1293,8 @@ create table if not exists tse_signature (
     tse_end         text,
     constraint tse_end_set check ((tse_end is not null) = (signature_status = 'done')),
     tse_signature   text,
-    constraint tse_signature_set check ((tse_signature is not null) = (signature_status = 'done'))
+    constraint tse_signature_set check ((tse_signature is not null) = (signature_status = 'done')),
+    tse_duration    float
 );
 
 

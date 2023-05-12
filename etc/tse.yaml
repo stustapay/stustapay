@@ -1,0 +1,19 @@
+database:
+  dbname: stustapay
+
+tses:
+  diebold_nixdorf_usb:
+    ##simulated tse1
+    tse1:
+      ws_url: "ws://localhost:10001"
+      ws_timeout: 1
+      serial_number: "84ba2997f8fbf9d0feee48c7ba5812d6d1e37c33fdb11cdb06eb849b1336b1c7"
+      password: "12345"
+
+    ###simulated tse2
+    #tse2:
+    #  ws_url: "ws://localhost:10002"
+    #  ws_timeout: 1
+    #  serial_number: "84ba2997f8fbf9d0feee48c7ba5812d6d1e37c33fdb11cdb06eb849b1336b1c7"
+    #  password: "12345"
+

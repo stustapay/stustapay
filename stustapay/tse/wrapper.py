@@ -293,6 +293,7 @@ class TSEWrapper:
         Writes the results from the request to the database, marking the signature
         as done.
         """
+        LOGGER.info(f"duration {result.tse_duration}")
         await self._conn.execute(
             """
             update
@@ -306,9 +307,10 @@ class TSEWrapper:
                 tse_signaturenr=$4,
                 tse_start=$5,
                 tse_end=$6,
-                tse_signature=$7
+                tse_signature=$7,
+                tse_duration=$8
             where
-                id=$8
+                id=$9
             """,
             request.process_type,
             request.process_data,
@@ -317,6 +319,7 @@ class TSEWrapper:
             result.tse_start,
             result.tse_end,
             result.tse_signature,
+            result.tse_duration,
             request.order_id,
         )
 
@@ -332,6 +335,7 @@ class TSEWrapper:
         # (return None if the signature was cleanly aborted,
         #  e.g. because self._tse_handler is no longer valid)
         LOGGER.info(f"{self.name!r}: signature done ({signing_request}) in TIME {stop-start:.3f}s")
+        result.tse_duration = float(stop - start)  # duratoion
         return result
 
     async def _till_add(self, till):
