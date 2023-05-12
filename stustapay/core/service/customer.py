@@ -1,4 +1,5 @@
 # pylint: disable=unexpected-keyword-arg
+# pylint: disable=unused-argument
 import csv
 import datetime
 import logging
@@ -49,7 +50,11 @@ async def get_customer_bank_data(
 
 
 def csv_export(
-    customers_bank_data: list[CustomerBankData], output_path: str, cfg: Config, currency_ident: str, **kwargs
+    customers_bank_data: list[CustomerBankData],
+    output_path: str,
+    cfg: Config,
+    currency_ident: str,
+    execution_date: Optional[datetime.date],
 ) -> None:
     with open(output_path, "w") as f:
         writer = csv.writer(f)

@@ -8,7 +8,12 @@ from .config import Config
 from stustapay.core.subcommand import SubCommand
 import asyncpg
 
-from stustapay.core.service.customer import csv_export, get_customer_bank_data, get_number_of_customers, sepa_export
+from stustapay.core.service.customer import (
+    csv_export,
+    get_customer_bank_data,
+    get_number_of_customers,
+    sepa_export,
+)
 from . import database
 
 
