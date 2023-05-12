@@ -28,6 +28,7 @@ class Simulator(SubCommand):
             help="might be a bit to realistic, be careful",
         )
         subparser.add_argument("-s", "--secret_key", type=str, default=None, help="ECDSA BRAINPOOLP384r1 sha384 in hex")
+        subparser.add_argument("-g", "--gen_key", action="store_true", default=False, help="generate new secret key")
 
     def __init__(self, args, config: Config, **rest):
         del rest  # unused
@@ -35,7 +36,7 @@ class Simulator(SubCommand):
         self.cfg = config
 
         self.tse_sim = WebsocketInterface(
-            args.host, args.port, args.delay, args.fast, args.even_more_realistic, args.secret_key
+            args.host, args.port, args.delay, args.fast, args.even_more_realistic, args.secret_key, args.gen_key
         )
 
     async def run(self):

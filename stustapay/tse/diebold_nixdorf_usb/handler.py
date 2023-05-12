@@ -95,6 +95,8 @@ class DieboldNixdorfUSBTSE(TSEHandler):
                         f"wrong serial number: expected {self.serial_number}, but device has serial number {device_info['DeviceInfo']['SerialNumber']}"
                     )
                 self._log_time_format = device_info["DeviceInfo"]["TimeFormat"]
+                if self._log_time_format == "UnixTime":
+                    self._log_time_format = "unixTime"  # ¯\_(ツ)_/¯
 
                 device_status = await self.request("GetDeviceStatus")
                 self._signature_algorithm = device_status["Parameters"]["SignatureAlgorithm"]
