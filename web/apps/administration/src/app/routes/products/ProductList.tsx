@@ -25,7 +25,7 @@ import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "src/hooks";
 
 export const ProductList: React.FC = () => {
-  const { t } = useTranslation(["products", "common"]);
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
@@ -76,7 +76,7 @@ export const ProductList: React.FC = () => {
   };
 
   const copyProduct = (product: Product) => {
-    createProduct({ ...product, name: `${product.name} - ${t("copy", { ns: "common" })}` });
+    createProduct({ ...product, name: `${product.name} - ${t("copy")}` });
   };
 
   const columns: GridColDef<Product>[] = [
@@ -103,13 +103,13 @@ export const ProductList: React.FC = () => {
     },
     {
       field: "price",
-      headerName: t("product.productPrice") as string,
+      headerName: t("product.price") as string,
       type: "number",
       valueFormatter: ({ value }) => formatCurrency(value),
     },
     {
       field: "price_in_vouchers",
-      headerName: t("product.productPriceInVouchers") as string,
+      headerName: t("product.priceInVouchers") as string,
       type: "number",
     },
     {
@@ -127,33 +127,33 @@ export const ProductList: React.FC = () => {
     {
       field: "actions",
       type: "actions",
-      headerName: t("actions", { ns: "common" }) as string,
+      headerName: t("actions") as string,
       width: 150,
       getActions: (params) => [
         <GridActionsCellItem
           icon={<EditIcon />}
           color="primary"
-          label={t("edit", { ns: "common" })}
+          label={t("edit")}
           onClick={() => navigate(`/products/${params.row.id}/edit`)}
         />,
         <GridActionsCellItem
           icon={<ContentCopyIcon />}
           color="primary"
-          label={t("copy", { ns: "common" })}
+          label={t("copy")}
           onClick={() => copyProduct(params.row)}
         />,
         <GridActionsCellItem
           icon={<LockIcon />}
           color="primary"
           disabled={params.row.is_locked}
-          label={t("lockProduct")}
+          label={t("product.lock")}
           onClick={() => lockProduct(params.row)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
           color="error"
           disabled={params.row.is_locked}
-          label={t("delete", { ns: "common" })}
+          label={t("delete")}
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
@@ -166,11 +166,11 @@ export const ProductList: React.FC = () => {
         <ListItem
           secondaryAction={
             <ButtonLink to="/products/new" endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add", { ns: "common" })}
+              {t("add")}
             </ButtonLink>
           }
         >
-          <ListItemText primary={t("products", { ns: "common" })} />
+          <ListItemText primary={t("products")} />
         </ListItem>
       </Paper>
       <DataGrid
@@ -181,8 +181,8 @@ export const ProductList: React.FC = () => {
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
-        title={t("deleteProduct")}
-        body={t("deleteProductDescription")}
+        title={t("product.delete")}
+        body={t("product.deleteDescription")}
         show={productToDelete !== null}
         onClose={handleConfirmDeleteProduct}
       />

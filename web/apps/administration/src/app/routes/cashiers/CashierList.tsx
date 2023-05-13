@@ -5,7 +5,7 @@ import { Paper, ListItem, FormControlLabel, Checkbox, ListItemText, Stack } from
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { selectCashierAll, selectTillById, useGetCashiersQuery, useGetTillsQuery } from "@api";
-import { Cashier } from "@stustapay/models";
+import { Cashier, formatUserTagUid } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 import { z } from "zod";
 import { StringyBoolean, useQueryState } from "@stustapay/utils";
@@ -16,7 +16,7 @@ const FilterOptionsSchema = z.object({
 });
 
 export const CashierList: React.FC = () => {
-  const { t } = useTranslation(["cashiers", "common"]);
+  const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
 
   const [filterOptions, setFilterOptions] = useQueryState(
@@ -88,7 +88,7 @@ export const CashierList: React.FC = () => {
       field: "user_tag_uid",
       headerName: t("cashier.tagId") as string,
       type: "number",
-      valueFormatter: ({ value }) => value ?? "",
+      valueFormatter: ({ value }) => formatUserTagUid(value),
       width: 150,
     },
     {
@@ -104,7 +104,7 @@ export const CashierList: React.FC = () => {
     <Stack spacing={2}>
       <Paper>
         <ListItem>
-          <ListItemText primary={t("cashiers", { ns: "common" })} />
+          <ListItemText primary={t("cashiers")} />
         </ListItem>
       </Paper>
       <Paper sx={{ p: 1 }}>

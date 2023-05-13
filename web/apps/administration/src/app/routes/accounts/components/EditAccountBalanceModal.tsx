@@ -23,7 +23,7 @@ export interface EditAccountBalanceModalProps {
 }
 
 export const EditAccountBalanceModal: React.FC<EditAccountBalanceModalProps> = ({ account, open, handleClose }) => {
-  const { t } = useTranslation(["accounts", "common"]);
+  const { t } = useTranslation();
 
   const formatCurrency = useCurrencyFormatter();
   const currencySymbol = useCurrencySymbol();

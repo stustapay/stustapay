@@ -11,7 +11,7 @@ export interface OrderListProps {
 }
 
 export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
-  const { t } = useTranslation(["orders", "common"]);
+  const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
 
   const columns: GridColDef<Order>[] = [

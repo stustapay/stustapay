@@ -13,7 +13,7 @@ export interface AssignedButtonsProps {
 }
 
 export const AssignedButtons: React.FC<AssignedButtonsProps> = ({ assignedButtonIds, setAssignedButtonIds }) => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { allButtons, isLoading } = useGetTillButtonsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,

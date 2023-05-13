@@ -38,7 +38,7 @@ export function ProductChange<T extends NewProduct>({
   onSubmit,
 }: ProductChangeProps<T>) {
   const navigate = useNavigate();
-  const { t } = useTranslation(["products", "common"]);
+  const { t } = useTranslation();
   const currencySymbol = useCurrencySymbol();
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
     setSubmitting(true);

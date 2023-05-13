@@ -36,7 +36,7 @@ import { getUserName } from "@stustapay/models";
 import { useCurrencyFormatter } from "@hooks";
 
 export const TillDetail: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { tillId } = useParams();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
@@ -133,7 +133,7 @@ export const TillDetail: React.FC = () => {
                   </IconButton>
                 </Tooltip>
               )}
-              <Tooltip title={t("delete", { ns: "common" })}>
+              <Tooltip title={t("delete")}>
                 <IconButton onClick={openConfirmDeleteDialog} color="error">
                   <DeleteIcon />
                 </IconButton>

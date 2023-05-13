@@ -18,7 +18,7 @@ export const UserRoleCreate: React.FC = () => {
   const navigate = useNavigate();
   const [createUserRole] = useCreateUserRoleMutation();
 
-  const { t } = useTranslation(["users", "common"]);
+  const { t } = useTranslation();
   const handleSubmit = (values: NewUserRole, { setSubmitting }: FormikHelpers<NewUserRole>) => {
     setSubmitting(true);
 
@@ -70,7 +70,7 @@ export const UserRoleCreate: React.FC = () => {
 
             {isSubmitting && <LinearProgress />}
             <Button type="submit" fullWidth variant="contained" color="primary" disabled={isSubmitting} sx={{ mt: 1 }}>
-              {t("add", { ns: "common" })}
+              {t("add")}
             </Button>
           </Form>
         )}

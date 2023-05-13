@@ -19,7 +19,7 @@ const initialValues: SearchForm = {
 };
 
 export const FindAccounts: React.FC = () => {
-  const { t } = useTranslation(["accounts", "common"]);
+  const { t } = useTranslation();
   const [findAccounts, searchResult] = useFindAccountsMutation();
 
   const handleSubmit = (values: SearchForm, { setSubmitting }: FormikHelpers<SearchForm>) => {
@@ -39,7 +39,7 @@ export const FindAccounts: React.FC = () => {
     <Stack spacing={2}>
       <Paper>
         <ListItem>
-          <ListItemText primary={t("findAccounts", { ns: "common" })} />
+          <ListItemText primary={t("findAccounts")} />
         </ListItem>
       </Paper>
       <Paper sx={{ p: 3 }}>
@@ -51,7 +51,7 @@ export const FindAccounts: React.FC = () => {
           {({ values, handleBlur, handleChange, handleSubmit, isSubmitting }) => (
             <Form onSubmit={handleSubmit}>
               <TextField
-                label={t("searchTerm")}
+                label={t("account.searchTerm")}
                 fullWidth
                 name="searchTerm"
                 value={values.searchTerm}
@@ -59,7 +59,7 @@ export const FindAccounts: React.FC = () => {
                 onBlur={handleBlur}
               />
               {isSubmitting && <LinearProgress />}
-              <Button type="submit">{t("submit", { ns: "common" })}</Button>
+              <Button type="submit">{t("submit")}</Button>
             </Form>
           )}
         </Formik>

@@ -26,7 +26,7 @@ export function TaxRateChange<T extends TaxRate>({
   onSubmit,
 }: TaxRateChangeProps<T>) {
   const navigate = useNavigate();
-  const { t } = useTranslation(["taxRates", "common"]);
+  const { t } = useTranslation();
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
     setSubmitting(true);
 

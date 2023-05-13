@@ -12,7 +12,7 @@ export interface ConfirmDialogProps {
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ title, body, show, onClose }) => {
-  const { t } = useTranslation(["common"]);
+  const { t } = useTranslation();
 
   const handleAbort = () => {
     onClose("abort");

@@ -9,7 +9,7 @@ import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "@hooks";
 
 export const ProductDetail: React.FC = () => {
-  const { t } = useTranslation(["products", "common"]);
+  const { t } = useTranslation();
   const { productId } = useParams();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
@@ -51,12 +51,12 @@ export const ProductDetail: React.FC = () => {
               <IconButtonLink to={`/products/${productId}/edit`} color="primary">
                 <EditIcon />
               </IconButtonLink>
-              <Tooltip title={t("lockProduct")}>
+              <Tooltip title={t("product.lock")}>
                 <IconButton disabled={product.is_locked} onClick={() => lockProduct(product)} color="error">
                   <LockIcon />
                 </IconButton>
               </Tooltip>
-              <Tooltip title={t("delete", { ns: "common" })}>
+              <Tooltip title={t("delete")}>
                 <IconButton disabled={product.is_locked} onClick={openConfirmDeleteDialog} color="error">
                   <DeleteIcon />
                 </IconButton>

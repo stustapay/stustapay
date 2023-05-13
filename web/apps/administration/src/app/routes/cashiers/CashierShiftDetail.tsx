@@ -16,7 +16,7 @@ import { getUserName } from "@stustapay/models";
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
 
 export const CashierShiftDetail: React.FC = () => {
-  const { t } = useTranslation(["cashiers", "common"]);
+  const { t } = useTranslation();
   const { cashierId, shiftId } = useParams();
   const formatCurrency = useCurrencyFormatter();
 

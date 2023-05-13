@@ -16,7 +16,7 @@ import { Till } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 
 export const TillList: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const { tills, isLoading: isTillsLoading } = useGetTillsQuery(undefined, {
@@ -79,19 +79,19 @@ export const TillList: React.FC = () => {
     {
       field: "actions",
       type: "actions",
-      headerName: t("actions", { ns: "common" }) as string,
+      headerName: t("actions") as string,
       width: 150,
       getActions: (params) => [
         <GridActionsCellItem
           icon={<EditIcon />}
           color="primary"
-          label={t("edit", { ns: "common" })}
+          label={t("edit")}
           onClick={() => navigate(`/tills/${params.row.id}/edit`)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
           color="error"
-          label={t("delete", { ns: "common" })}
+          label={t("delete")}
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
@@ -104,11 +104,11 @@ export const TillList: React.FC = () => {
         <ListItem
           secondaryAction={
             <ButtonLink to="/tills/new" endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add", { ns: "common" })}
+              {t("add")}
             </ButtonLink>
           }
         >
-          <ListItemText primary={t("tills", { ns: "common" })} />
+          <ListItemText primary={t("tills")} />
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>

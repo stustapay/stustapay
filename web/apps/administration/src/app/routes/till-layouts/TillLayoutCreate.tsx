@@ -11,13 +11,13 @@ const initialValues: NewTillLayout = {
 };
 
 export const TillLayoutCreate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const [createLayout] = useCreateTillLayoutMutation();
 
   return (
     <TillLayoutChange
       headerTitle={t("layout.create")}
-      submitLabel={t("add", { ns: "common" })}
+      submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillLayoutSchema}
       onSubmit={createLayout}

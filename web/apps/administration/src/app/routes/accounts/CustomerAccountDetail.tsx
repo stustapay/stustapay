@@ -17,9 +17,10 @@ import { Edit as EditIcon } from "@mui/icons-material";
 import { EditAccountBalanceModal } from "./components/EditAccountBalanceModal";
 import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAmountModal";
 import { EditAccountTagModal } from "./components/EditAccountTagModal";
+import { formatUserTagUid } from "@stustapay/models";
 
 export const CustomerAccountDetail: React.FC = () => {
-  const { t } = useTranslation(["accounts", "common"]);
+  const { t } = useTranslation();
   const { accountId } = useParams();
   const navigate = useNavigate();
 
@@ -94,7 +95,7 @@ export const CustomerAccountDetail: React.FC = () => {
             <ListItemText primary={t("account.type")} secondary={account.type} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("account.user_tag_uid")} secondary={String(account.user_tag_uid)} />
+            <ListItemText primary={t("account.user_tag_uid")} secondary={formatUserTagUid(account.user_tag_uid)} />
             <ListItemSecondaryAction>
               <IconButton color="primary" onClick={() => setTagModalOpen(true)}>
                 <EditIcon />

@@ -15,7 +15,7 @@ import { Loading } from "@stustapay/components";
 import { TillButton } from "@stustapay/models";
 
 export const TillLayoutDetail: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { layoutId } = useParams();
   const navigate = useNavigate();
   const [deleteLayout] = useDeleteTillLayoutMutation();
@@ -59,7 +59,7 @@ export const TillLayoutDetail: React.FC = () => {
               <IconButtonLink to={`/till-layouts/${layoutId}/edit`} color="primary" sx={{ mr: 1 }}>
                 <EditIcon />
               </IconButtonLink>
-              <Tooltip title={t("delete", { ns: "common" })}>
+              <Tooltip title={t("delete")}>
                 <IconButton onClick={openConfirmDeleteDialog} color="error">
                   <DeleteIcon />
                 </IconButton>

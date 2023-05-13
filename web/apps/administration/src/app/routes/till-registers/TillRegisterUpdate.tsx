@@ -7,7 +7,7 @@ import { Loading } from "@stustapay/components";
 import { TillRegisterChange } from "./TillRegisterChange";
 
 export const TillRegisterUpdate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { registerId } = useParams();
   const { register, isLoading, error } = useGetTillRegistersQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
@@ -28,7 +28,7 @@ export const TillRegisterUpdate: React.FC = () => {
   return (
     <TillRegisterChange
       headerTitle={t("register.update")}
-      submitLabel={t("update", { ns: "common" })}
+      submitLabel={t("update")}
       initialValues={register}
       validationSchema={TillRegisterSchema}
       onSubmit={update}

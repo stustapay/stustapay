@@ -12,7 +12,7 @@ interface BalanceCardProps {
 }
 
 const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(undefined, { keyPrefix: "overview" });
   const formatCurrency = useCurrencyFormatter();
 
   if (!account) {
