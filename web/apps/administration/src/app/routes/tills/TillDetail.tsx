@@ -156,6 +156,9 @@ export const TillDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("till.description")} secondary={till.description} />
           </ListItem>
+          <ListItem>
+            <ListItemText primary={t("till.tseSerial")} secondary={till.tse_serial} />
+          </ListItem>
           {till.active_user_id != null && (
             <>
               <ListItemLink to={`/cashiers/${till.active_user_id}`}>

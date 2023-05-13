@@ -181,6 +181,8 @@ export const translations = {
     delete: "Delete till",
     deleteDescription: "Confirm till deletion",
     activeUser: "Logged in user",
+    tseId: "TSE ID",
+    tseSerial: "TSE Serial",
     forceLogoutUser: "Force logout user",
     forceLogoutUserDescription:
       "Force logout user at terminal. This should NEVER be done while a cashier is still using the terminal",
