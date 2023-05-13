@@ -200,7 +200,7 @@ class VirtualTSE:
         # count number of open transactions
         number_of_open_transactions = 0
         for t in self.current_transactions:
-            number_of_open_transactions += len(t)
+            number_of_open_transactions += len(self.current_transactions[t])
 
         if number_of_open_transactions > 512:  # max number of open transactions is 512 for Dn TSE
             return dnerror(21)
