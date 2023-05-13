@@ -28,6 +28,7 @@ from .routers import (
     till_registers,
     user,
     cashier,
+    stats,
 )
 
 
@@ -60,6 +61,7 @@ class Api(SubCommand):
         self.server.add_router(account.router)
         self.server.add_router(order.router)
         self.server.add_router(cashier.router)
+        self.server.add_router(stats.router)
 
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)

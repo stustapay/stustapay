@@ -15,6 +15,7 @@ import {
   cashierApi,
   tillRegisterApi,
   tillRegisterStockingApi,
+  statsApi,
 } from "@api";
 import { authSlice } from "./authSlice";
 import { uiSlice } from "./uiSlice";
@@ -49,6 +50,7 @@ export const store = configureStore({
     [cashierApi.reducerPath]: cashierApi.reducer,
     [tillRegisterApi.reducerPath]: tillRegisterApi.reducer,
     [tillRegisterStockingApi.reducerPath]: tillRegisterStockingApi.reducer,
+    [statsApi.reducerPath]: statsApi.reducer,
     [authSlice.name]: persistReducer(authPersistConfig, authSlice.reducer),
     [uiSlice.name]: persistReducer(uiPersistConfig, uiSlice.reducer),
   }),
@@ -66,6 +68,7 @@ export const store = configureStore({
       .concat(cashierApi.middleware)
       .concat(tillRegisterApi.middleware)
       .concat(tillRegisterStockingApi.middleware)
+      .concat(statsApi.middleware)
       .concat(authApi.middleware)
       .concat(errorMiddleware),
 });
