@@ -27,7 +27,12 @@ async def login(
     customer_service: ContextCustomerService,
 ):
     # Names are due to OAuth compatibility
-    response = await customer_service.login_customer(uid=payload.username, pin=payload.password)
+    try:
+        user_tag_uid = int(payload.username, 16)
+    except:  # pylint: disable=broad-except
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    response = await customer_service.login_customer(uid=user_tag_uid, pin=payload.password)
     if response is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 

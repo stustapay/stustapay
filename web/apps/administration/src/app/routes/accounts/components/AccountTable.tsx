@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Account } from "@stustapay/models";
+import { Account, formatUserTagUid } from "@stustapay/models";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -35,6 +35,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       field: "user_tag_uid",
       headerName: t("account.user_tag_uid") as string,
       align: "right",
+      valueFormatter: ({ value }) => formatUserTagUid(value),
       width: 100,
     },
     {

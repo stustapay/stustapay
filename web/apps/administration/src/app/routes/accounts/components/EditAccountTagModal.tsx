@@ -10,7 +10,7 @@ import {
   TextField,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { Account } from "@stustapay/models";
+import { Account, formatUserTagUid } from "@stustapay/models";
 import { toast } from "react-toastify";
 import { useUpdateTagUidMutation } from "@api";
 
@@ -25,10 +25,10 @@ export const EditAccountTagModal: React.FC<EditAccountTagModalProps> = ({ accoun
 
   const [updateTagUid] = useUpdateTagUidMutation();
 
-  const [tagUid, setTagUid] = React.useState(String(account.user_tag_uid));
+  const [tagUid, setTagUid] = React.useState(formatUserTagUid(account.user_tag_uid));
 
   React.useEffect(() => {
-    setTagUid(String(account.user_tag_uid));
+    setTagUid(formatUserTagUid(account.user_tag_uid));
   }, [account]);
 
   const handleConfirm = () => {
@@ -47,10 +47,10 @@ export const EditAccountTagModal: React.FC<EditAccountTagModalProps> = ({ accoun
       <DialogTitle>{t("account.changeTag")}</DialogTitle>
       <DialogContent>
         <ListItem sx={{ pl: 0 }}>
-          <ListItemText primary={t("account.oldTagUid")} secondary={String(account.user_tag_uid)} />
+          <ListItemText primary={t("account.oldTagUid")} secondary={formatUserTagUid(account.user_tag_uid)} />
         </ListItem>
         <TextField
-          inputProps={{ pattern: "[1-9][0-9]*" }}
+          inputProps={{ pattern: "[a-f0-9]+" }}
           value={tagUid}
           fullWidth
           onChange={(e) => setTagUid(e.target.value)}

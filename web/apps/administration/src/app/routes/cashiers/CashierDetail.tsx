@@ -18,7 +18,7 @@ import { ButtonLink, IconButtonLink, ListItemLink } from "@components";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { useCurrencyFormatter } from "@hooks";
-import { CashierShift, getUserName } from "@stustapay/models";
+import { CashierShift, formatUserTagUid, getUserName } from "@stustapay/models";
 import { formatDate } from "@stustapay/utils";
 
 export const CashierDetail: React.FC = () => {
@@ -158,7 +158,7 @@ export const CashierDetail: React.FC = () => {
             <ListItemText primary={t("cashier.description")} secondary={cashier.description} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("cashier.tagId")} secondary={String(cashier.user_tag_uid)} />
+            <ListItemText primary={t("cashier.tagId")} secondary={formatUserTagUid(cashier.user_tag_uid)} />
           </ListItem>
           {cashier.till_ids.length !== 0 ? (
             cashier.till_ids.map((till_id) => (

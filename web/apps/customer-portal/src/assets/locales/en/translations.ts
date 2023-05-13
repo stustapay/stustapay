@@ -11,6 +11,8 @@ export const translations = {
     en: "English",
     de: "Deutsch",
   },
+  balance: "Balance",
+  tagUid: "Tag UID",
   order: {
     loadingError: "Error loading orders",
     productName: "Product Name",
