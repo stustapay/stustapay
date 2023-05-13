@@ -3,7 +3,6 @@ import { useGetCustomerQuery } from "@/api/customerApi";
 import { Card, Link, Alert, Grid } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useTranslation, Trans } from "react-i18next";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
@@ -11,7 +10,6 @@ import { OrderList } from "./OrderList";
 
 export const Index: React.FC = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   const formatCurrency = useCurrencyFormatter();
 
@@ -23,7 +21,7 @@ export const Index: React.FC = () => {
 
   if (customerError || !customer) {
     toast.error(t("errorLoadingCustomer"));
-    navigate(-1);
+    // navigate(-1); // this will cause infinite redirect loops if the backend is not running
     return null;
   }
 
