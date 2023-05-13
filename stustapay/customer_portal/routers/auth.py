@@ -29,8 +29,8 @@ async def login(
     # Names are due to OAuth compatibility
     try:
         user_tag_uid = int(payload.username, 16)
-    except:  # pylint: disable=broad-except
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:  # pylint: disable=broad-except
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from e
 
     response = await customer_service.login_customer(uid=user_tag_uid, pin=payload.password)
     if response is None:
