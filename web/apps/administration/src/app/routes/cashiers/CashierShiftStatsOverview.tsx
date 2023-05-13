@@ -13,7 +13,7 @@ type ArrElement<ArrType> = ArrType extends readonly (infer ElementType)[] ? Elem
 
 export const CashierShiftStatsOverview: React.FC<CashierShiftStatsOverview> = ({ cashierId, shiftId }) => {
   const { data } = useGetCashierShiftStatsQuery({ cashierId, shiftId });
-  const { t } = useTranslation(["cashiers", "common", "products"]);
+  const { t } = useTranslation();
 
   if (!data) {
     return <Loading />;
@@ -22,7 +22,7 @@ export const CashierShiftStatsOverview: React.FC<CashierShiftStatsOverview> = ({
   const columns: GridColDef<ArrElement<CashierShiftStats["booked_products"]>>[] = [
     {
       field: "product.name",
-      headerName: t("productName", { ns: "products" }) as string,
+      headerName: t("product.name") as string,
       flex: 1,
       valueGetter: (params) => params.row.product.name,
     },

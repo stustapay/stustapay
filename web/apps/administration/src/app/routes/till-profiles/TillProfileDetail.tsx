@@ -14,7 +14,7 @@ import {
 import { Loading } from "@stustapay/components";
 
 export const TillProfileDetail: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { profileId } = useParams();
   const navigate = useNavigate();
   const [deleteProfile] = useDeleteTillProfileMutation();
@@ -58,7 +58,7 @@ export const TillProfileDetail: React.FC = () => {
               <IconButtonLink to={`/till-profiles/${profileId}/edit`} color="primary" sx={{ mr: 1 }}>
                 <EditIcon />
               </IconButtonLink>
-              <Tooltip title={t("delete", { ns: "common" })}>
+              <Tooltip title={t("delete")}>
                 <IconButton onClick={openConfirmDeleteDialog} color="error">
                   <DeleteIcon />
                 </IconButton>

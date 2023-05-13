@@ -10,7 +10,7 @@ import { TaxRate } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 
 export const TaxRateList: React.FC = () => {
-  const { t } = useTranslation(["taxRates", "common"]);
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const { taxRates, isLoading } = useGetTaxRatesQuery(undefined, {
@@ -61,19 +61,19 @@ export const TaxRateList: React.FC = () => {
     {
       field: "actions",
       type: "actions",
-      headerName: t("actions", { ns: "common" }) as string,
+      headerName: t("actions") as string,
       width: 150,
       getActions: (params) => [
         <GridActionsCellItem
           icon={<EditIcon />}
           color="primary"
-          label={t("edit", { ns: "common" })}
+          label={t("edit")}
           onClick={() => navigate(`/tax-rates/${params.row.name}/edit`)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
           color="error"
-          label={t("delete", { ns: "common" })}
+          label={t("delete")}
           onClick={() => openConfirmDeleteDialog(params.row.name)}
         />,
       ],
@@ -86,11 +86,11 @@ export const TaxRateList: React.FC = () => {
         <ListItem
           secondaryAction={
             <ButtonLink to="/tax-rates/new" endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add", { ns: "common" })}
+              {t("add")}
             </ButtonLink>
           }
         >
-          <ListItemText primary={t("taxRates", { ns: "common" })} />
+          <ListItemText primary={t("taxRates")} />
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>

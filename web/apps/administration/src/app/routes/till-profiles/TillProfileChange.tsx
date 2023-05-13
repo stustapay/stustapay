@@ -36,7 +36,7 @@ export function TillProfileChange<T extends NewTillProfile>({
   onSubmit,
 }: TillChangeProps<T>) {
   const navigate = useNavigate();
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
     setSubmitting(true);
 

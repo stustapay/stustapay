@@ -9,13 +9,13 @@ const initialValues: NewTillRegister = {
 };
 
 export const TillRegisterCreate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const [createRegister] = useCreateTillRegisterMutation();
 
   return (
     <TillRegisterChange
       headerTitle={t("register.createRegister")}
-      submitLabel={t("add", { ns: "common" })}
+      submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillRegisterSchema}
       onSubmit={createRegister}

@@ -6,9 +6,10 @@ import { selectOrderById, useGetOrderByIdQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { LineItemTable } from "@components/LineItemTable";
 import { ListItemLink } from "@components";
+import { formatUserTagUid } from "@stustapay/models";
 
 export const OrderDetail: React.FC = () => {
-  const { t } = useTranslation(["orders", "common"]);
+  const { t } = useTranslation();
   const { orderId } = useParams();
   const navigate = useNavigate();
 
@@ -63,7 +64,7 @@ export const OrderDetail: React.FC = () => {
           )}
           {order.customer_tag_uid != null && (
             <ListItem>
-              <ListItemText primary={t("order.customerTagUid")} secondary={String(order.customer_tag_uid)} />
+              <ListItemText primary={t("order.customerTagUid")} secondary={formatUserTagUid(order.customer_tag_uid)} />
             </ListItem>
           )}
         </List>

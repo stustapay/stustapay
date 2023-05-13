@@ -23,7 +23,7 @@ const initialValues: FormSchema = {
 };
 
 export const Login: React.FC = () => {
-  const { t } = useTranslation(["auth", "common"]);
+  const { t } = useTranslation(undefined, { keyPrefix: "auth" });
   const isLoggedIn = useAppSelector(selectIsAuthenticated);
   const [query] = useSearchParams();
   const navigate = useNavigate();

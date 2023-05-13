@@ -7,7 +7,7 @@ import { TillChange } from "./TillChange";
 import { Loading } from "@stustapay/components";
 
 export const TillUpdate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { tillId } = useParams();
   const { till, isLoading } = useGetTillByIdQuery(Number(tillId), {
     selectFromResult: ({ data, ...rest }) => ({
@@ -28,7 +28,7 @@ export const TillUpdate: React.FC = () => {
   return (
     <TillChange
       headerTitle={t("till.update")}
-      submitLabel={t("update", { ns: "common" })}
+      submitLabel={t("update")}
       initialValues={till}
       validationSchema={UpdateTillSchema}
       onSubmit={updateTill}

@@ -6,7 +6,7 @@ import { Loading } from "@stustapay/components";
 import { OrderTable } from "@components";
 
 export const OrderList: React.FC = () => {
-  const { t } = useTranslation(["orders", "common"]);
+  const { t } = useTranslation();
 
   const { products: orders, isLoading: isOrdersLoading } = useGetOrdersQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
@@ -23,7 +23,7 @@ export const OrderList: React.FC = () => {
     <Stack spacing={2}>
       <Paper>
         <ListItem>
-          <ListItemText primary={t("orders", { ns: "common" })} />
+          <ListItemText primary={t("orders")} />
         </ListItem>
       </Paper>
       <OrderTable orders={orders ?? []} />

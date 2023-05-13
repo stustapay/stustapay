@@ -1,12 +1,13 @@
 import { Link as RouterLink } from "react-router-dom";
 import { useGetCustomerQuery } from "@/api/customerApi";
-import { Card, Link, Alert, Grid } from "@mui/material";
+import { Link, Alert, Grid, Paper, Stack, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { toast } from "react-toastify";
 import { useTranslation, Trans } from "react-i18next";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { OrderList } from "./OrderList";
+import { formatUserTagUid } from "@stustapay/models";
 
 export const Index: React.FC = () => {
   const { t } = useTranslation();
@@ -29,22 +30,37 @@ export const Index: React.FC = () => {
   // we also might want to show the balance of the account after each order
 
   return (
-    <Grid container justifyItems="center" justifyContent="center">
+    <Grid container justifyItems="center" justifyContent="center" spacing={2}>
       <Grid item xs={8}>
-        <Card
-          variant="outlined"
-          style={{
-            justifyContent: "center",
-            textAlign: "center",
-            fontSize: "2.5em",
-            marginBottom: "1em",
-            border: "none",
-            marginTop: "1em",
-          }}
-        >
-          <span>{formatCurrency(customer.balance)}</span>
-        </Card>
+        <Grid container justifyContent="center">
+          <Paper
+            // variant="outlined"
+            sx={{
+              paddingX: 8,
+              paddingY: 3,
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <Stack spacing={1}>
+              <Typography component="div" variant="h4">
+                {formatCurrency(customer.balance)}
+              </Typography>
 
+              <div>
+                <Typography component="div" variant="body1">
+                  {t("tagUid")}
+                </Typography>
+                <Typography component="div" variant="subtitle2">
+                  {formatUserTagUid(customer.user_tag_uid)}
+                </Typography>
+              </div>
+            </Stack>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      <Grid item xs={8}>
         <Alert severity="info" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
           <Trans i18nKey="payoutInfo">
             to get your payout
@@ -53,6 +69,9 @@ export const Index: React.FC = () => {
             </Link>
           </Trans>
         </Alert>
+      </Grid>
+
+      <Grid item xs={8}>
         <OrderList />
       </Grid>
     </Grid>

@@ -18,7 +18,7 @@ const UpdateSchema = z.object({
 type FormValues = z.infer<typeof UpdateSchema>;
 
 export const UserRoleUpdate: React.FC = () => {
-  const { t } = useTranslation(["users", "common"]);
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { userId } = useParams();
   const [updateUserRole] = useUpdateUserRoleMutation();
@@ -80,7 +80,7 @@ export const UserRoleUpdate: React.FC = () => {
                 disabled={isSubmitting}
                 sx={{ mt: 1 }}
               >
-                {t("update", { ns: "common" })}
+                {t("update")}
               </Button>
             </Form>
           )}

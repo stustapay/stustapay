@@ -14,13 +14,13 @@ const initialValues: NewTill = {
 };
 
 export const TillCreate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const [createTill] = useCreateTillMutation();
 
   return (
     <TillChange
       headerTitle={t("till.create")}
-      submitLabel={t("add", { ns: "common" })}
+      submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillSchema}
       onSubmit={createTill}

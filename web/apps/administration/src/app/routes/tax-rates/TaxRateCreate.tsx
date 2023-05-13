@@ -11,13 +11,13 @@ const initialValues: TaxRate = {
 };
 
 export const TaxRateCreate: React.FC = () => {
-  const { t } = useTranslation(["taxRates", "common"]);
+  const { t } = useTranslation();
   const [createTaxRate] = useCreateTaxRateMutation();
 
   return (
     <TaxRateChange
       headerTitle={t("createTaxRate")}
-      submitLabel={t("add", { ns: "common" })}
+      submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={TaxRateSchema}
       onSubmit={createTaxRate}

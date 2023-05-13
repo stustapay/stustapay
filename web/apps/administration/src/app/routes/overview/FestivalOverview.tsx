@@ -6,7 +6,7 @@ import { useGetProductStatsQuery } from "@api";
 import { Loading } from "@stustapay/components";
 
 const ProductStatsGraph: React.FC = () => {
-  const { t } = useTranslation(["overview"]);
+  const { t } = useTranslation();
   const { data } = useGetProductStatsQuery();
 
   if (!data) {
@@ -80,7 +80,6 @@ const ProductStatsGraph: React.FC = () => {
 };
 
 export const FestivalOverview: React.FC = () => {
-  const { t } = useTranslation(["overview"]);
   return (
     <Grid container spacing={2}>
       <Grid item xs={4}>

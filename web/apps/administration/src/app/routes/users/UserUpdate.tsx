@@ -11,7 +11,7 @@ import { Loading } from "@stustapay/components";
 import { RoleSelect } from "./RoleSelect";
 
 export const UserUpdate: React.FC = () => {
-  const { t } = useTranslation(["users", "common"]);
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { userId } = useParams();
   const [updateUser] = useUpdateUserMutation();
@@ -109,7 +109,7 @@ export const UserUpdate: React.FC = () => {
                 disabled={isSubmitting}
                 sx={{ mt: 1 }}
               >
-                {t("update", { ns: "common" })}
+                {t("update")}
               </Button>
             </Form>
           )}

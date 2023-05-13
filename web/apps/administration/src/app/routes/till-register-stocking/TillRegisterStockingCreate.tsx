@@ -24,13 +24,13 @@ const initialValues: NewTillRegisterStocking = {
 };
 
 export const TillRegisterStockingCreate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const [createStocking] = useCreateTillRegisterStockingMutation();
 
   return (
     <TillRegisterStockkingChange
       headerTitle={t("register.createStocking")}
-      submitLabel={t("add", { ns: "common" })}
+      submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillRegisterStockingSchema}
       onSubmit={createStocking}

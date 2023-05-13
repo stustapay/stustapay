@@ -28,7 +28,7 @@ interface ProductSelectProps {
 }
 
 const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }) => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { data: products } = useGetProductsQuery();
 
   const getProductById = (id: number) => (products != null ? selectProductById(products, id) : undefined);
@@ -81,7 +81,7 @@ export function TillButtonChange<T extends NewTillButton>({
   onSubmit,
 }: TillButtonChangeProps<T>) {
   const navigate = useNavigate();
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
     setSubmitting(true);
 

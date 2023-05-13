@@ -21,7 +21,7 @@ export const UserCreate: React.FC = () => {
   const navigate = useNavigate();
   const [createUser] = useCreateUserMutation();
 
-  const { t } = useTranslation(["users", "common"]);
+  const { t } = useTranslation();
   const handleSubmit = (values: NewUser, { setSubmitting }: FormikHelpers<NewUser>) => {
     setSubmitting(true);
 
@@ -113,7 +113,7 @@ export const UserCreate: React.FC = () => {
 
             {isSubmitting && <LinearProgress />}
             <Button type="submit" fullWidth variant="contained" color="primary" disabled={isSubmitting} sx={{ mt: 1 }}>
-              {t("add", { ns: "common" })}
+              {t("add")}
             </Button>
           </Form>
         )}

@@ -16,13 +16,13 @@ const initialValues: NewProduct = {
 };
 
 export const ProductCreate: React.FC = () => {
-  const { t } = useTranslation(["products", "common"]);
+  const { t } = useTranslation();
   const [createProduct] = useCreateProductMutation();
 
   return (
     <ProductChange
-      headerTitle={t("createProduct")}
-      submitLabel={t("add", { ns: "common" })}
+      headerTitle={t("product.create")}
+      submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewProductSchema}
       onSubmit={createProduct}
