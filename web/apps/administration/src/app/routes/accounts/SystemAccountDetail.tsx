@@ -39,7 +39,7 @@ export const SystemAccountDetail: React.FC = () => {
     <Stack spacing={2}>
       <Paper>
         <ListItem>
-          <ListItemText primary={account.id} />
+          <ListItemText primary={account.name} />
         </ListItem>
       </Paper>
       <Paper>
@@ -49,9 +49,6 @@ export const SystemAccountDetail: React.FC = () => {
           </ListItem>
           <ListItem>
             <ListItemText primary={t("account.type")} secondary={account.type} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("account.user_tag_uid")} secondary={String(account.user_tag_uid)} />
           </ListItem>
           <ListItem>
             <ListItemText primary={t("account.name")} secondary={account.name} />
