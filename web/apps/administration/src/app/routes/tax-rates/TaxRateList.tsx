@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, Typography, ListItem, ListItemText } from "@mui/material";
+import { Paper, Typography, ListItem, ListItemText, Stack } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { selectTaxRateAll, useDeleteTaxRateMutation, useGetTaxRatesQuery } from "@api";
@@ -81,7 +81,7 @@ export const TaxRateList: React.FC = () => {
   ];
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -100,7 +100,7 @@ export const TaxRateList: React.FC = () => {
         rows={taxRates ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
       <ConfirmDialog
         title={t("deleteTaxRate")}
@@ -108,6 +108,6 @@ export const TaxRateList: React.FC = () => {
         show={taxRateToDelete !== null}
         onClose={handleConfirmDeleteTaxRate}
       />
-    </>
+    </Stack>
   );
 };

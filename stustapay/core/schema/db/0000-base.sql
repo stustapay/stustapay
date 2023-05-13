@@ -230,8 +230,14 @@ values
     ('user_management'),
     ('till_management'),
     ('order_management'),
+    ('festival_overview'),
+
+    -- festival workflow privileges
     ('terminal_login'),
     ('supervised_terminal_login'),
+
+    -- festival order / ticket / voucher flow privileges
+    -- which orders are available (sale, ticket, ...) is determined by the terminal profile
     ('can_book_orders'),
     ('grant_free_tickets'),
     ('grant_vouchers')
@@ -324,6 +330,7 @@ values
     (0, 'user_management'),
     (0, 'till_management'),
     (0, 'order_management'),
+    (0, 'festival_overview'),
     (0, 'terminal_login'),
     (0, 'grant_free_tickets'),
     (0, 'grant_vouchers'),
@@ -334,6 +341,7 @@ values
     (1, 'user_management'),
     (1, 'till_management'),
     (1, 'order_management'),
+    (1, 'festival_overview'),
     (1, 'terminal_login'),
     (1, 'grant_free_tickets'),
     (1, 'grant_vouchers'),
@@ -1051,20 +1059,30 @@ create trigger new_order_trigger
     for each row
 execute function new_order_added();
 
--- aggregates the line_item's amounts
-create or replace view order_value as
+create or replace view line_item_aggregated_json as (
     select
-        ordr.*,
+        order_id,
         sum(total_price) as total_price,
         sum(total_tax) as total_tax,
         sum(total_price - total_tax) as total_no_tax,
         coalesce(json_agg(line_item_json), json_build_array()) as line_items
+    from line_item_json
+    group by order_id
+);
+
+-- aggregates the line_item's amounts
+create or replace view order_value as
+    select
+        ordr.*,
+        a.user_tag_uid as customer_tag_uid,
+        li.total_price,
+        li.total_tax,
+        li.total_no_tax,
+        li.line_items
     from
         ordr
-        left join line_item_json
-            on (ordr.id = line_item_json.order_id)
-    group by
-        ordr.id;
+        left join line_item_aggregated_json li on ordr.id = li.order_id
+        left join account a on ordr.customer_account_id = a.id;
 
 -- aggregates account and customer_info to customer
 create or replace view customer as
@@ -1101,6 +1119,18 @@ create or replace view order_tax_rates as
             on (ordr.id = order_id)
         group by
             ordr.id, tax_rate, tax_name;
+
+create or replace view product_stats as (
+select p.*, s.quantity_sold
+from product_with_tax_and_restrictions p
+join (
+    select li.product_id, sum(li.quantity) as quantity_sold
+    from line_item li
+    join ordr o on li.order_id = o.id
+    where o.order_type != 'cancel_order'
+    group by li.product_id
+ ) s on s.product_id = p.id
+);
 
 
 create table if not exists transaction (
@@ -1157,10 +1187,15 @@ create or replace view cashier as (
         usr.cashier_account_id,
         usr.cash_register_id,
         a.balance as cash_drawer_balance,
-        t.id as till_id
+        coalesce(tills.till_ids, '{}'::bigint array) as till_ids
     from usr
     join account a on usr.cashier_account_id = a.id
-    left join till t on t.active_user_id = usr.id
+    left join (
+        select t.active_user_id as user_id, array_agg(t.id) as till_ids
+        from till t
+        where t.active_user_id is not null
+        group by t.active_user_id
+    ) tills on tills.user_id = usr.id
 );
 
 -- book a new transaction and update the account balances automatically, returns the new transaction_id

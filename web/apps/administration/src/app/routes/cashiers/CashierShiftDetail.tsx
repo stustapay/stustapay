@@ -1,15 +1,13 @@
 import {
   selectCashierById,
   selectCashierShiftById,
-  selectTillById,
   selectUserById,
   useGetCashierByIdQuery,
   useGetCashierShiftsQuery,
-  useGetTillsQuery,
   useGetUsersQuery,
 } from "@api";
 import { useCurrencyFormatter } from "@hooks";
-import { List, ListItem, ListItemText, Paper } from "@mui/material";
+import { List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
@@ -54,13 +52,13 @@ export const CashierShiftDetail: React.FC = () => {
   };
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem>
           <ListItemText primary={getUserName(cashier)} />
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2 }}>
+      <Paper>
         <List>
           <ListItem>
             <ListItemText primary={t("shift.comment")} secondary={cashierShift.comment} />
@@ -98,6 +96,6 @@ export const CashierShiftDetail: React.FC = () => {
         </List>
       </Paper>
       <CashierShiftStatsOverview cashierId={Number(cashierId)} shiftId={Number(shiftId)} />
-    </>
+    </Stack>
   );
 };

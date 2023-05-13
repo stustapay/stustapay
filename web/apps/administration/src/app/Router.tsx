@@ -40,6 +40,7 @@ import {
   TillRegisterStockingUpdate,
 } from "./routes/till-register-stocking";
 import { TillRegisterList, TillRegisterCreate, TillRegisterUpdate } from "./routes/till-registers";
+import { FestivalOverview, MoneyOverview } from "./routes/overview";
 
 const router = createBrowserRouter([
   {
@@ -50,6 +51,27 @@ const router = createBrowserRouter([
       {
         path: "logout",
         element: <Logout />,
+      },
+      {
+        path: "overview",
+        children: [
+          {
+            path: "money",
+            element: (
+              <PrivilegeGuard privilege="account_management">
+                <MoneyOverview />
+              </PrivilegeGuard>
+            ),
+          },
+          {
+            path: "festival",
+            element: (
+              <PrivilegeGuard privilege="festival_overview">
+                <FestivalOverview />
+              </PrivilegeGuard>
+            ),
+          },
+        ],
       },
       {
         path: "products",

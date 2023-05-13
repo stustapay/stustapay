@@ -10,3 +10,4 @@ export * from "./accountApi";
 export * from "./cashierApi";
 export * from "./tillRegisterApi";
 export * from "./tillRegisterStockingApi";
+export * from "./statsApi";

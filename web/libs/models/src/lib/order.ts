@@ -36,7 +36,8 @@ export const OrderSchema = z.object({
 
   cashier_id: z.number(),
   till_id: z.number(),
-  customer_account_id: z.number(),
+  customer_account_id: z.number().nullable(),
+  customer_tag_uid: z.bigint().nullable(),
   line_items: z.array(LineItemSchema),
 });
 

@@ -68,6 +68,7 @@ from stustapay.core.service.product import (
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.util import BaseModel
 from .booking import BookingIdentifier, NewLineItem, book_order
+from .stats import OrderStatsService
 from .voucher import VoucherService
 
 logger = logging.getLogger(__name__)
@@ -179,6 +180,7 @@ class OrderService(DBService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
         self.voucher_service = VoucherService(db_pool=db_pool, config=config, auth_service=auth_service)
+        self.stats = OrderStatsService(db_pool=db_pool, config=config, auth_service=auth_service)
 
         self.admin_order_update_queues: set[Subscription] = set()
 

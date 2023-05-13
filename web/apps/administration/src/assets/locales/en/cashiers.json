@@ -26,7 +26,7 @@
     "closeOut": {
         "start": "Start",
         "warningStillLoggedInTitle": "Warning",
-        "warningStillLoggedIn": "The cashier is still logged in at a terminal, either manually log him out if possible, otherwise force logout at the till itself <1>here</1>",
+        "warningStillLoggedIn": "The cashier is still logged in at a terminal, either manually log him out if possible, otherwise force logout at the till itself.",
         "targetInDrawer": "Target in cash drawer",
         "countedInDrawer": "Counted in cash drawer",
         "difference": "Difference",

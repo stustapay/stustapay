@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, IconButton, Button } from "@mui/material";
+import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, IconButton, Button, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -74,7 +74,7 @@ export const CustomerAccountDetail: React.FC = () => {
   };
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem>
           <ListItemText primary={account.id} />
@@ -85,7 +85,7 @@ export const CustomerAccountDetail: React.FC = () => {
           </ListItemSecondaryAction>
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2 }}>
+      <Paper>
         <List>
           <ListItem>
             <ListItemText primary={t("account.id")} secondary={account.id} />
@@ -143,6 +143,6 @@ export const CustomerAccountDetail: React.FC = () => {
         </>
       )}
       <OrderTable orders={orders} />
-    </>
+    </Stack>
   );
 };

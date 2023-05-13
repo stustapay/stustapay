@@ -9,6 +9,7 @@ export const PrivilegeSchema = z.enum([
   "user_management",
   "till_management",
   "order_management",
+  "festival_overview",
 
   // festival workflow privileges
   "terminal_login",

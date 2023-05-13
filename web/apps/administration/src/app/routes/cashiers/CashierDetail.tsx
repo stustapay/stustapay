@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, Typography } from "@mui/material";
+import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, Typography, Stack } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, Link as RouterLink } from "react-router-dom";
@@ -129,7 +129,7 @@ export const CashierDetail: React.FC = () => {
   ];
 
   return (
-    <>
+    <Stack spacing={2}>
       <Paper>
         <ListItem
           secondaryAction={
@@ -146,7 +146,7 @@ export const CashierDetail: React.FC = () => {
           <ListItemText primary={getUserName(cashier)} />
         </ListItem>
       </Paper>
-      <Paper sx={{ mt: 2 }}>
+      <Paper>
         <List>
           <ListItem>
             <ListItemText primary={t("cashier.login")} secondary={cashier.login} />
@@ -160,10 +160,12 @@ export const CashierDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("cashier.tagId")} secondary={String(cashier.user_tag_uid)} />
           </ListItem>
-          {cashier.till_id ? (
-            <ListItemLink to={`/tills/${getTill(cashier.till_id)?.id}`}>
-              <ListItemText primary={t("cashier.till")} secondary={getTill(cashier.till_id)?.name} />
-            </ListItemLink>
+          {cashier.till_ids.length !== 0 ? (
+            cashier.till_ids.map((till_id) => (
+              <ListItemLink to={`/tills/${getTill(till_id)?.id}`}>
+                <ListItemText primary={t("cashier.till")} secondary={getTill(till_id)?.name} />
+              </ListItemLink>
+            ))
           ) : (
             <ListItem>
               <ListItemText primary={t("cashier.till")} secondary={t("cashier.notLoggedInAtTill")} />
@@ -182,7 +184,8 @@ export const CashierDetail: React.FC = () => {
           </ListItem>
         </List>
       </Paper>
-      <Paper sx={{ mt: 2, p: 1 }}>
+      <Paper></Paper>
+      <Paper sx={{ p: 1 }}>
         <Typography variant="body1" sx={{ p: 1 }}>
           {t("cashier.shifts")}
         </Typography>
@@ -194,6 +197,6 @@ export const CashierDetail: React.FC = () => {
           sx={{ border: "none" }}
         />
       </Paper>
-    </>
+    </Stack>
   );
 };

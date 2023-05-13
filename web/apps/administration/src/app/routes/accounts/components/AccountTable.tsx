@@ -63,7 +63,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       rows={accounts}
       columns={columns}
       disableRowSelectionOnClick
-      sx={{ mt: 2, p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
     />
   );
 };

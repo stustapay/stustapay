@@ -27,6 +27,7 @@ import {
   AccountBalance as AccountBalanceIcon,
   AddShoppingCart as AddShoppingCartIcon,
   Search as SearchIcon,
+  Money as MoneyIcon,
 } from "@mui/icons-material";
 import { Outlet, Navigate, useLocation, Link as RouterLink } from "react-router-dom";
 import { ExpandableLinkMenu, ListItemLink } from "@components";
@@ -142,7 +143,7 @@ export const AuthenticatedRoot: React.FC = () => {
         </DrawerHeader>
         <Divider />
         <List>
-          <ListItemLink to="/">
+          <ListItemLink to="/overview/festival">
             <ListItemIcon>
               <DashboardIcon />
             </ListItemIcon>
@@ -212,6 +213,12 @@ export const AuthenticatedRoot: React.FC = () => {
                     <SearchIcon />
                   </ListItemIcon>
                   <ListItemText primary={t("findAccounts")} />
+                </ListItemLink>
+                <ListItemLink to="/overview/money">
+                  <ListItemIcon>
+                    <MoneyIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={t("moneyOverview")} />
                 </ListItemLink>
                 <ListItemLink to="/system-accounts">
                   <ListItemIcon>

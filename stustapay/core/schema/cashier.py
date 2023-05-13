@@ -15,7 +15,7 @@ class Cashier(BaseModel):
     cashier_account_id: int
     cash_register_id: Optional[int] = None
     cash_drawer_balance: float
-    till_id: Optional[int]
+    till_ids: list[int]
 
 
 class CashierShiftStats(BaseModel):
