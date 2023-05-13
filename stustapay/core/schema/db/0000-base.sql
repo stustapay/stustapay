@@ -1120,6 +1120,18 @@ create or replace view order_tax_rates as
         group by
             ordr.id, tax_rate, tax_name;
 
+create or replace view product_stats as (
+select p.*, s.quantity_sold
+from product_with_tax_and_restrictions p
+join (
+    select li.product_id, sum(li.quantity) as quantity_sold
+    from line_item li
+    join ordr o on li.order_id = o.id
+    where o.order_type != 'cancel_order'
+    group by li.product_id
+ ) s on s.product_id = p.id
+);
+
 
 create table if not exists transaction (
     -- represents a transaction of one account to another
