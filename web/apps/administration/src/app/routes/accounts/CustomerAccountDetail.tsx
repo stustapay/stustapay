@@ -19,7 +19,7 @@ import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAm
 import { EditAccountTagModal } from "./components/EditAccountTagModal";
 
 export const CustomerAccountDetail: React.FC = () => {
-  const { t } = useTranslation(["accounts", "common"]);
+  const { t } = useTranslation();
   const { accountId } = useParams();
   const navigate = useNavigate();
 

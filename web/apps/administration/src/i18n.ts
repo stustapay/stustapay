@@ -1,18 +1,32 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import Backend from "i18next-http-backend";
-// import LanguageDetector from "i18next-browser-languagedetector";
+import translationsEn from "./assets/locales/en/translations";
+import translationsDe from "./assets/locales/de/translations";
+import LanguageDetector from "i18next-browser-languagedetector";
+
+declare module "i18next" {
+  interface CustomTypeOptions {
+    defaultNs: "translations";
+    resources: {
+      translations: typeof translationsEn;
+    };
+  }
+}
+
+const resources = {
+  en: { translations: translationsEn },
+  de: { translations: translationsDe },
+} as const;
 
 i18n
-  .use(Backend)
-  //   .use(LanguageDetector)
+  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    backend: { loadPath: "/assets/locales/{{lng}}/{{ns}}.json" },
     lng: "en",
     fallbackLng: "en",
     debug: true,
-    defaultNS: ["common"],
+    defaultNS: "translations",
+    resources: resources,
     interpolation: { escapeValue: false },
   });
 

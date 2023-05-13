@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 const ServerSideSettings: React.FC = () => {
-  const { t } = useTranslation(["settings"]);
+  const { t } = useTranslation();
   const { data: configEntries } = useGetConfigEntriesQuery();
   const [updateConfigEntry] = useSetConfigEntryMutation();
 
@@ -20,20 +20,20 @@ const ServerSideSettings: React.FC = () => {
     updateConfigEntry({ key, value })
       .unwrap()
       .catch((err) => {
-        toast.error(t("settingsUpdateError", { what: err.error }));
+        toast.error(t("settings.settingsUpdateError", { what: err.error }));
       });
   };
 
   return (
     <Paper>
       <Box sx={{ p: 2 }}>
-        <Typography variant="h5">{t("serverSideConfig")}</Typography>
+        <Typography variant="h5">{t("settings.serverSideConfig")}</Typography>
       </Box>
       <List>
         {selectConfigEntryAll(configEntries).map((entry) => (
           <EditableListItem
             key={entry.key}
-            label={t(entry.key)}
+            label={t(entry.key as any)}
             value={entry.value ?? ""}
             onChange={(value) => {
               changeConfigEntry(entry.key, value);
@@ -46,17 +46,17 @@ const ServerSideSettings: React.FC = () => {
 };
 
 export const Settings: React.FC = () => {
-  const { t } = useTranslation(["settings"]);
+  const { t } = useTranslation();
 
   return (
     <Stack spacing={2}>
       <Paper>
         <Box sx={{ p: 2 }}>
-          <Typography variant="h5">{t("localConfig")}</Typography>
+          <Typography variant="h5">{t("settings.localConfig")}</Typography>
         </Box>
         <List>
           <ListItem>
-            <ListItemText primary={t("language")} secondary={"de"} />
+            <ListItemText primary={t("settings.language")} secondary={"de"} />
           </ListItem>
         </List>
       </Paper>

@@ -5,7 +5,7 @@ import { selectIsAuthenticated, useAppSelector } from "@store";
 import { useTranslation } from "react-i18next";
 
 export const UnauthenticatedRoot: React.FC = () => {
-  const { t } = useTranslation(["common"]);
+  const { t } = useTranslation();
   const authenticated = useAppSelector(selectIsAuthenticated);
 
   const [query] = useSearchParams();

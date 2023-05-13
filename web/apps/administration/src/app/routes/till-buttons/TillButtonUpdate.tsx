@@ -7,7 +7,7 @@ import { TillButtonChange } from "./TillButtonChange";
 import { UpdateTillButtonSchema } from "@stustapay/models";
 
 export const TillButtonUpdate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { buttonId } = useParams();
   const { button, isLoading } = useGetTillButtonByIdQuery(Number(buttonId), {
     selectFromResult: ({ data, ...rest }) => ({
@@ -28,7 +28,7 @@ export const TillButtonUpdate: React.FC = () => {
   return (
     <TillButtonChange
       headerTitle={t("button.update")}
-      submitLabel={t("update", { ns: "common" })}
+      submitLabel={t("update")}
       initialValues={button}
       validationSchema={UpdateTillButtonSchema}
       onSubmit={updateButton}

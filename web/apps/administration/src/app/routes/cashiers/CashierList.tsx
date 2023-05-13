@@ -16,7 +16,7 @@ const FilterOptionsSchema = z.object({
 });
 
 export const CashierList: React.FC = () => {
-  const { t } = useTranslation(["cashiers", "common"]);
+  const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
 
   const [filterOptions, setFilterOptions] = useQueryState(
@@ -104,7 +104,7 @@ export const CashierList: React.FC = () => {
     <Stack spacing={2}>
       <Paper>
         <ListItem>
-          <ListItemText primary={t("cashiers", { ns: "common" })} />
+          <ListItemText primary={t("cashiers")} />
         </ListItem>
       </Paper>
       <Paper sx={{ p: 1 }}>

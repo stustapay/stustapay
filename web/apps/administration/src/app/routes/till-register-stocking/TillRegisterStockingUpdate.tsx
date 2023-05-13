@@ -11,7 +11,7 @@ import { Loading } from "@stustapay/components";
 import { TillRegisterStockkingChange } from "./TillRegisterStockingChange";
 
 export const TillRegisterStockingUpdate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { stockingId } = useParams();
   const { stocking, isLoading, error } = useGetTillRegisterStockingsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
@@ -32,7 +32,7 @@ export const TillRegisterStockingUpdate: React.FC = () => {
   return (
     <TillRegisterStockkingChange
       headerTitle={t("profile.update")}
-      submitLabel={t("update", { ns: "common" })}
+      submitLabel={t("update")}
       initialValues={stocking}
       validationSchema={UpdateTillRegisterStockingSchema}
       onSubmit={updateStocking}

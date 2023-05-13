@@ -1,9 +1,0 @@
-{
-  "taxRateName": "Name",
-  "taxRateRate": "Rate",
-  "taxRateDescription": "Description",
-  "createTaxRate": "Add a new Tax Rate",
-  "updateTaxRate": "Update Tax Rate",
-  "deleteTaxRate": "Delete Tax Rate",
-  "deleteTaxRateDescription": "Confirm tax rate deletion"
-}

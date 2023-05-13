@@ -22,7 +22,7 @@ import { CashierShift, getUserName } from "@stustapay/models";
 import { formatDate } from "@stustapay/utils";
 
 export const CashierDetail: React.FC = () => {
-  const { t } = useTranslation(["cashiers", "common"]);
+  const { t } = useTranslation();
   const { cashierId } = useParams();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();

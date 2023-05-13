@@ -25,7 +25,7 @@ export function TillRegisterChange<T extends NewTillRegister>({
   onSubmit,
 }: TillRegisterChangeProps<T>) {
   const navigate = useNavigate();
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
     setSubmitting(true);
 

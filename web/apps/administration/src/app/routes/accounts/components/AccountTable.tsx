@@ -10,7 +10,7 @@ export interface AccountTableProps {
 }
 
 export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
-  const { t } = useTranslation(["accounts", "common"]);
+  const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
 
   const columns: GridColDef<Account>[] = [

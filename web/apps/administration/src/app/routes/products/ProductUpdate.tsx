@@ -7,7 +7,7 @@ import { ProductSchema } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 
 export const ProductUpdate: React.FC = () => {
-  const { t } = useTranslation(["products", "common"]);
+  const { t } = useTranslation();
   const { productId } = useParams();
   const { product, isLoading } = useGetProductByIdQuery(Number(productId), {
     selectFromResult: ({ data, ...rest }) => ({
@@ -27,8 +27,8 @@ export const ProductUpdate: React.FC = () => {
 
   return (
     <ProductChange
-      headerTitle={t("updateProduct")}
-      submitLabel={t("update", { ns: "common" })}
+      headerTitle={t("product.update")}
+      submitLabel={t("update")}
       initialValues={product}
       validationSchema={ProductSchema}
       onSubmit={updateProduct}

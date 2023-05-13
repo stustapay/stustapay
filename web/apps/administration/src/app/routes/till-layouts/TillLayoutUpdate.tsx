@@ -7,7 +7,7 @@ import { TillLayoutChange } from "./TillLayoutChange";
 import { Loading } from "@stustapay/components";
 
 export const TillLayoutUpdate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { layoutId } = useParams();
   const { layout, isLoading } = useGetTillLayoutByIdQuery(Number(layoutId), {
     selectFromResult: ({ data, ...rest }) => ({
@@ -28,7 +28,7 @@ export const TillLayoutUpdate: React.FC = () => {
   return (
     <TillLayoutChange
       headerTitle={t("layout.update")}
-      submitLabel={t("update", { ns: "common" })}
+      submitLabel={t("update")}
       initialValues={layout}
       validationSchema={TillLayoutSchema}
       onSubmit={updateLayout}

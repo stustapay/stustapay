@@ -21,7 +21,7 @@ export interface EditAccountTagModalProps {
 }
 
 export const EditAccountTagModal: React.FC<EditAccountTagModalProps> = ({ account, open, handleClose }) => {
-  const { t } = useTranslation(["accounts", "common"]);
+  const { t } = useTranslation();
 
   const [updateTagUid] = useUpdateTagUidMutation();
 

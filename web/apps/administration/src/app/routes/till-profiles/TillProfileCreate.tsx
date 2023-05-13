@@ -15,13 +15,13 @@ const initialValues: NewTillProfile = {
 };
 
 export const TillProfileCreate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const [createLayout] = useCreateTillProfileMutation();
 
   return (
     <TillProfileChange
       headerTitle={t("profile.create")}
-      submitLabel={t("add", { ns: "common" })}
+      submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillProfileSchema}
       onSubmit={createLayout}

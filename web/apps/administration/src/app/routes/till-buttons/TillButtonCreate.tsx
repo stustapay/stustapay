@@ -10,13 +10,13 @@ const initialValues: NewTillButton = {
 };
 
 export const TillButtonCreate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const [createTillButton] = useCreateTillButtonMutation();
 
   return (
     <TillButtonChange
       headerTitle={t("button.create")}
-      submitLabel={t("add", { ns: "common" })}
+      submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillButtonSchema}
       onSubmit={createTillButton}

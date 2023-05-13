@@ -8,7 +8,7 @@ import { useGetUserByIdQuery, useDeleteUserMutation, selectUserById } from "@api
 import { Loading } from "@stustapay/components";
 
 export const UserDetail: React.FC = () => {
-  const { t } = useTranslation(["users", "common"]);
+  const { t } = useTranslation();
   const { userId } = useParams();
   const navigate = useNavigate();
   const [deleteUser] = useDeleteUserMutation();
@@ -48,7 +48,7 @@ export const UserDetail: React.FC = () => {
               <IconButtonLink to={`/users/${userId}/edit`} color="primary" sx={{ mr: 1 }}>
                 <EditIcon />
               </IconButtonLink>
-              <Tooltip title={t("delete", { ns: "common" })}>
+              <Tooltip title={t("delete")}>
                 <IconButton onClick={openConfirmDeleteDialog} color="error">
                   <DeleteIcon />
                 </IconButton>

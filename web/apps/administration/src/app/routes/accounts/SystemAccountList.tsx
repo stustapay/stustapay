@@ -6,7 +6,7 @@ import { Loading } from "@stustapay/components";
 import { AccountTable } from "./components/AccountTable";
 
 export const SystemAccountList: React.FC = () => {
-  const { t } = useTranslation(["accounts", "common"]);
+  const { t } = useTranslation();
 
   const { products: accounts, isLoading: isAccountsLoading } = useGetSystemAccountsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
@@ -23,7 +23,7 @@ export const SystemAccountList: React.FC = () => {
     <Stack spacing={2}>
       <Paper>
         <ListItem>
-          <ListItemText primary={t("systemAccounts", { ns: "common" })} />
+          <ListItemText primary={t("systemAccounts")} />
         </ListItem>
       </Paper>
       <AccountTable accounts={accounts ?? []} />

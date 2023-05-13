@@ -7,7 +7,7 @@ import { TillProfileChange } from "./TillProfileChange";
 import { Loading } from "@stustapay/components";
 
 export const TillProfileUpdate: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const { profileId } = useParams();
   const { profile, isLoading, error } = useGetTillProfileByIdQuery(Number(profileId), {
     selectFromResult: ({ data, ...rest }) => ({
@@ -28,7 +28,7 @@ export const TillProfileUpdate: React.FC = () => {
   return (
     <TillProfileChange
       headerTitle={t("profile.update")}
-      submitLabel={t("update", { ns: "common" })}
+      submitLabel={t("update")}
       initialValues={profile}
       validationSchema={TillProfileSchema}
       onSubmit={updateProfile}

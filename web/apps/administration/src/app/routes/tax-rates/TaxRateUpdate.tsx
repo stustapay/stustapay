@@ -7,7 +7,7 @@ import { TaxRateChange } from "./TaxRateChange";
 import { Loading } from "@stustapay/components";
 
 export const TaxRateUpdate: React.FC = () => {
-  const { t } = useTranslation(["taxRates", "common"]);
+  const { t } = useTranslation();
   const { taxRateName } = useParams();
   const { taxRate, isLoading } = useGetTaxRateByNameQuery(taxRateName as string, {
     selectFromResult: ({ data, ...rest }) => ({
@@ -28,7 +28,7 @@ export const TaxRateUpdate: React.FC = () => {
   return (
     <TaxRateChange
       headerTitle={t("updateTaxRate")}
-      submitLabel={t("update", { ns: "common" })}
+      submitLabel={t("update")}
       initialValues={taxRate}
       validationSchema={TaxRateSchema}
       onSubmit={updateTaxRate}

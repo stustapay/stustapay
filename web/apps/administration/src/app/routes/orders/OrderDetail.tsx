@@ -8,7 +8,7 @@ import { LineItemTable } from "@components/LineItemTable";
 import { ListItemLink } from "@components";
 
 export const OrderDetail: React.FC = () => {
-  const { t } = useTranslation(["orders", "common"]);
+  const { t } = useTranslation();
   const { orderId } = useParams();
   const navigate = useNavigate();
 

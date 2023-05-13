@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { useCurrencyFormatter } from "@hooks";
 
 export const SystemAccountDetail: React.FC = () => {
-  const { t } = useTranslation(["accounts", "common"]);
+  const { t } = useTranslation();
   const { accountId } = useParams();
   const navigate = useNavigate();
 

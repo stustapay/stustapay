@@ -20,7 +20,7 @@ import {
 import { useCurrencyFormatter } from "@hooks";
 
 export const TillRegisterList: React.FC = () => {
-  const { t } = useTranslation(["tills", "common"]);
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
@@ -104,19 +104,19 @@ export const TillRegisterList: React.FC = () => {
     {
       field: "actions",
       type: "actions",
-      headerName: t("actions", { ns: "common" }) as string,
+      headerName: t("actions") as string,
       width: 150,
       getActions: (params) => [
         <GridActionsCellItem
           icon={<EditIcon />}
           color="primary"
-          label={t("edit", { ns: "common" })}
+          label={t("edit")}
           onClick={() => navigate(`/till-registers/${params.row.id}/edit`)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
           color="error"
-          label={t("delete", { ns: "common" })}
+          label={t("delete")}
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
@@ -129,7 +129,7 @@ export const TillRegisterList: React.FC = () => {
         <ListItem
           secondaryAction={
             <ButtonLink to="/till-registers/new" endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add", { ns: "common" })}
+              {t("add")}
             </ButtonLink>
           }
         >

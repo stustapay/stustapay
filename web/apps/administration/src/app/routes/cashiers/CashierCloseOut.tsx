@@ -78,7 +78,7 @@ const computeDifference = (values: CloseOutData, targetBalance: number): number 
 };
 
 export const CashierCloseOut: React.FC = () => {
-  const { t } = useTranslation(["cashiers", "common"]);
+  const { t } = useTranslation();
   const { cashierId } = useParams();
   const navigate = useNavigate();
 
@@ -291,7 +291,7 @@ export const CashierCloseOut: React.FC = () => {
               />
               {isSubmitting && <LinearProgress />}
               <Button type="submit" onClick={() => handleSubmit()} disabled={isSubmitting}>
-                {t("submit", { ns: "common" })}
+                {t("submit")}
               </Button>
             </Paper>
             <CashierShiftStatsOverview cashierId={cashier.id} />

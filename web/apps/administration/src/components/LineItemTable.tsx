@@ -13,7 +13,7 @@ export interface LineItemTableProps {
 }
 
 export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
-  const { t } = useTranslation(["orders", "common"]);
+  const { t } = useTranslation();
 
   const formatCurrency = useCurrencyFormatter();
 

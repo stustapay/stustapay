@@ -37,7 +37,7 @@ import { AppBar, Main, DrawerHeader, drawerWidth } from "@components";
 import { CurrentUser } from "@stustapay/models";
 
 const AdvancedMenu: React.FC<{ user: CurrentUser }> = ({ user }) => {
-  const { t } = useTranslation(["common"]);
+  const { t } = useTranslation();
   return (
     <ExpandableLinkMenu label={t("advanced")}>
       <List sx={{ pl: 2 }}>
@@ -70,7 +70,7 @@ const AdvancedMenu: React.FC<{ user: CurrentUser }> = ({ user }) => {
             <ListItemIcon>
               <SettingsIcon />
             </ListItemIcon>
-            <ListItemText primary={t("settings")} />
+            <ListItemText primary={t("settings.title")} />
           </ListItemLink>
         )}
       </List>
@@ -79,7 +79,7 @@ const AdvancedMenu: React.FC<{ user: CurrentUser }> = ({ user }) => {
 };
 
 export const AuthenticatedRoot: React.FC = () => {
-  const { t } = useTranslation(["common"]);
+  const { t } = useTranslation();
   const theme = useTheme();
   const [open, setOpen] = React.useState(true);
   const location = useLocation();
@@ -147,7 +147,7 @@ export const AuthenticatedRoot: React.FC = () => {
             <ListItemIcon>
               <DashboardIcon />
             </ListItemIcon>
-            <ListItemText primary={t("overview")} />
+            <ListItemText primary={t("overview.title")} />
           </ListItemLink>
           {user.privileges.includes("cashier_management") && (
             <ListItemLink to="/cashiers">

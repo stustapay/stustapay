@@ -10,7 +10,7 @@ import { ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Loading } from "@stustapay/components";
 
 export const UserRoleList: React.FC = () => {
-  const { t } = useTranslation(["users", "common"]);
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const { userRoles, isLoading } = useGetUserRolesQuery(undefined, {
@@ -57,19 +57,19 @@ export const UserRoleList: React.FC = () => {
     {
       field: "actions",
       type: "actions",
-      headerName: t("actions", { ns: "common" }) as string,
+      headerName: t("actions") as string,
       width: 150,
       getActions: (params) => [
         <GridActionsCellItem
           icon={<EditIcon />}
           color="primary"
-          label={t("edit", { ns: "common" })}
+          label={t("edit")}
           onClick={() => navigate(`/user-roles/${params.row.id}/edit`)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
           color="error"
-          label={t("delete", { ns: "common" })}
+          label={t("delete")}
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
@@ -82,11 +82,11 @@ export const UserRoleList: React.FC = () => {
         <ListItem
           secondaryAction={
             <Button onClick={addUserRole} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add", { ns: "common" })}
+              {t("add")}
             </Button>
           }
         >
-          <ListItemText primary={t("userRoles", { ns: "common" })} />
+          <ListItemText primary={t("userRoles")} />
         </ListItem>
         <Typography variant="body1">{}</Typography>
       </Paper>

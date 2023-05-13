@@ -17,7 +17,7 @@ export const EditAccountVoucherAmountModal: React.FC<EditAccountVoucherAmountMod
   open,
   handleClose,
 }) => {
-  const { t } = useTranslation(["accounts", "common"]);
+  const { t } = useTranslation();
 
   const [updateVoucherAmount] = useUpdateVoucherAmountMutation();
 
