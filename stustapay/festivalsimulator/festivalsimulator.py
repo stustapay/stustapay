@@ -289,7 +289,7 @@ class Simulator(SubCommand):
         db_pool = await create_db_pool(self.config.database)
         async with db_pool.acquire() as conn:
             rows = await conn.fetch(
-                "select id " "from till " "where id != 1 and (active_profile_id = $1 or active_profile_id = $2)",
+                "select id from till where id != 1 and (active_profile_id = $1 or active_profile_id = $2)",
                 PROFILE_ID_BEER,
                 PROFILE_ID_COCKTAIL,
             )
