@@ -1,0 +1,1640 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE DataSet SYSTEM "gdpdu-01-09-2004.dtd">
+<DataSet>
+  <Version>1.0</Version>
+  <DataSupplier>
+    <Name />
+    <Location />
+    <Comment>Datentraegerueberlassung nach GDPdU vom 12.11.2010</Comment>
+  </DataSupplier>
+  <Media>
+    <Name>CD Nummer 1</Name>
+    <Table>
+      <URL>cashpointclosing.csv</URL>
+      <Name>Stamm_Abschluss</Name>
+      <Description>cashpointclosing.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_BUCHUNGSTAG</Name>
+          <Description>Vom Erstellungsdatum abweichender Verbuchungstag</Description>
+          <AlphaNumeric />
+          <MaxLength>25</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TAXONOMIE_VERSION</Name>
+          <Description>Version der DFKA-Taxonomie-Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>10</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_START_ID</Name>
+          <Description>Erste BON_ID im Abschluss</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ENDE_ID</Name>
+          <Description>Letzte BON_ID im Abschluss</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>NAME</Name>
+          <Description>Name des Unternehmens</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>STRASSE</Name>
+          <Description>Straße</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>PLZ</Name>
+          <Description>Postleitzahl</Description>
+          <AlphaNumeric />
+          <MaxLength>10</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ORT</Name>
+          <Description>Ort</Description>
+          <AlphaNumeric />
+          <MaxLength>62</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>LAND</Name>
+          <Description>Land</Description>
+          <AlphaNumeric />
+          <MaxLength>3</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>STNR</Name>
+          <Description>Steuernummer des Unternehmens</Description>
+          <AlphaNumeric />
+          <MaxLength>20</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>USTID</Name>
+          <Description>USTID</Description>
+          <AlphaNumeric />
+          <MaxLength>15</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_SE_ZAHLUNGEN</Name>
+          <Description>Summe aller Zahlungen</Description>
+          <Numeric>
+            <Accuracy>2</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_SE_BARZAHLUNGEN</Name>
+          <Description>Summe aller Barzahlungen</Description>
+          <Numeric>
+            <Accuracy>2</Accuracy>
+          </Numeric>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>location.csv</URL>
+      <Name>Stamm_Orte</Name>
+      <Description>location.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>LOC_NAME</Name>
+          <Description>Name des Standortes</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>LOC_STRASSE</Name>
+          <Description>Straße</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>LOC_PLZ</Name>
+          <Description>Postleitzahl</Description>
+          <AlphaNumeric />
+          <MaxLength>10</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>LOC_ORT</Name>
+          <Description>Ort</Description>
+          <AlphaNumeric />
+          <MaxLength>62</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>LOC_LAND</Name>
+          <Description>Land</Description>
+          <AlphaNumeric />
+          <MaxLength>3</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>LOC_USTID</Name>
+          <Description>USTID</Description>
+          <AlphaNumeric />
+          <MaxLength>15</MaxLength>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>cashregister.csv</URL>
+      <Name>Stamm_Kassen</Name>
+      <Description>cashregister.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KASSE_BRAND</Name>
+          <Description>Marke der Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KASSE_MODELL</Name>
+          <Description>Modellbezeichnung</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KASSE_SERIENNR</Name>
+          <Description>Seriennummer der Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>70</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KASSE_SW_BRAND</Name>
+          <Description>Markenbezeichnung der Software</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KASSE_SW_VERSION</Name>
+          <Description>Version der Software</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KASSE_BASISWAEH_CODE</Name>
+          <Description>Basiswährung der Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>3</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KEINE_UST_ZUORDNUNG</Name>
+          <Description>UmsatzsteuerNichtErmittelbar (bei späterem Zahlungseingang)</Description>
+          <AlphaNumeric />
+          <MaxLength>1</MaxLength>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>slaves.csv</URL>
+      <Name>Stamm_Terminals</Name>
+      <Description>slaves.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TERMINAL_ID</Name>
+          <Description>ID des Terminals</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TERMINAL_BRAND</Name>
+          <Description>Marke der Terminals</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TERMINAL_MODELL</Name>
+          <Description>Modellbezeichnung des Terminals</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TERMINAL_SERIENNR</Name>
+          <Description>Seriennummer des Terminals</Description>
+          <AlphaNumeric />
+          <MaxLength>70</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TERMINAL_SW_BRAND</Name>
+          <Description>Markenbezeichnung der Software</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TERMINAL_SW_VERSION</Name>
+          <Description>Version der Software</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>pa.csv</URL>
+      <Name>Stamm_Agenturen</Name>
+      <Description>pa.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>AGENTUR_ID</Name>
+          <Description>ID der Agentur</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>AGENTUR_NAME</Name>
+          <Description>Name des Auftraggebers</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>AGENTUR_STRASSE</Name>
+          <Description>Straße</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>AGENTUR_PLZ</Name>
+          <Description>Postleitzahl</Description>
+          <AlphaNumeric />
+          <MaxLength>10</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>AGENTUR_ORT</Name>
+          <Description>Ort</Description>
+          <AlphaNumeric />
+          <MaxLength>62</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>AGENTUR_LAND</Name>
+          <Description>Land</Description>
+          <AlphaNumeric />
+          <MaxLength>3</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>AGENTUR_STNR</Name>
+          <Description>Steuernummer des Auftraggebers</Description>
+          <AlphaNumeric />
+          <MaxLength>20</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>AGENTUR_USTID</Name>
+          <Description>USTID des Auftraggebers</Description>
+          <AlphaNumeric />
+          <MaxLength>15</MaxLength>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>tse.csv</URL>
+      <Name>Stamm_TSE</Name>
+      <Description>tse.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_ID</Name>
+          <Description>ID der TSE - wird nur zur Referenzierung innerhalb eines Kassenabschlusses verwendet</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_SERIAL</Name>
+          <Description>Seriennummer der TSE (Entspricht laut TR-03153 Abschnitt 7.5. dem Hashwert des im Zertifikat enthaltenen Schlüssels in Octet-String-Darstellung)</Description>
+          <AlphaNumeric />
+          <MaxLength>68</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_SIG_ALGO</Name>
+          <Description>Der von der TSE verwendete Signaturalgo-rithmus</Description>
+          <AlphaNumeric />
+          <MaxLength>21</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_ZEITFORMAT</Name>
+          <Description>Das von der TSE verwendete Format für die Log-Time - 'unixTime', 'utcTime' = YYMMDDhhmmZ, 'utcTimeWithSeconds' = YYMMDDhhmmssZ, 'generalizedTime' = YYYYMMDDhhmmssZ, 'generalizedTimeWithMilliseconds' = YYYYMMDDhhmmss.fffZ</Description>
+          <AlphaNumeric />
+          <MaxLength>31</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_PD_ENCODING</Name>
+          <Description>Das Text-Encoding der ProcessData (UTF-8 oder ASCII)</Description>
+          <AlphaNumeric />
+          <MaxLength>5</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_PUBLIC_KEY</Name>
+          <Description>Öffentlicher Schlüssel - extrahiert aus dem Zertifikat der TSE - in base64-Codierung</Description>
+          <AlphaNumeric />
+          <MaxLength>512</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_ZERTIFIKAT_I</Name>
+          <Description>Erste 1000 Zeichen des base64-codierten Zertifikats der TSE (in base64-Codierung)</Description>
+          <AlphaNumeric />
+          <MaxLength>1000</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_ZERTIFIKAT_II</Name>
+          <Description>Ggf. Rest des base64-codierten Zertifikats der TSE (in base64-Codierung)</Description>
+          <AlphaNumeric />
+          <MaxLength>1000</MaxLength>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>vat.csv</URL>
+      <Name>Stamm_USt</Name>
+      <Description>vat.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>UST_SCHLUESSEL</Name>
+          <Description>ID des Umsatzsteuersatzes</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>UST_SATZ</Name>
+          <Description>Prozentsatz</Description>
+          <Numeric>
+            <Accuracy>2</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>UST_BESCHR</Name>
+          <Description>Beschreibung</Description>
+          <AlphaNumeric />
+          <MaxLength>55</MaxLength>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>businesscases.csv</URL>
+      <Name>Z_GV_Typ</Name>
+      <Description>businesscases.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>GV_TYP</Name>
+          <Description>Geschäftsvorfall-Art</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>GV_NAME</Name>
+          <Description>Name des Geschäftsvorfalls</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>AGENTUR_ID</Name>
+          <Description>ID der Agentur</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>UST_SCHLUESSEL</Name>
+          <Description>ID des USt-Satzes</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_UMS_BRUTTO</Name>
+          <Description>Bruttoumsatz</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_UMS_NETTO</Name>
+          <Description>Nettoumsatz</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_UST</Name>
+          <Description>Umsatzsteuer</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>payment.csv</URL>
+      <Name>Z_Zahlart</Name>
+      <Description>payment.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZAHLART_TYP</Name>
+          <Description>Typ der Zahlart</Description>
+          <AlphaNumeric />
+          <MaxLength>25</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZAHLART_NAME</Name>
+          <Description>Name der Zahlart</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ZAHLART_BETRAG</Name>
+          <Description>Betrag</Description>
+          <Numeric>
+            <Accuracy>2</Accuracy>
+          </Numeric>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>cash_per_currency.csv</URL>
+      <Name>Z_Waehrungen</Name>
+      <Description>cash_per_currency.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZAHLART_WAEH</Name>
+          <Description>Währung</Description>
+          <AlphaNumeric />
+          <MaxLength>3</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZAHLART_BETRAG_WAEH</Name>
+          <Description>Betrag</Description>
+          <Numeric>
+            <Accuracy>2</Accuracy>
+          </Numeric>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>transactions.csv</URL>
+      <Name>Bonkopf</Name>
+      <Description>transactions.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_NR</Name>
+          <Description>Bonnummer</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_TYP</Name>
+          <Description>Bontyp</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_NAME</Name>
+          <Description>Zusatz-Beschreibung zum Bontyp</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TERMINAL_ID</Name>
+          <Description>ID des Erfassungsterminals</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_STORNO</Name>
+          <Description>Storno-Kennzeichen</Description>
+          <AlphaNumeric />
+          <MaxLength>1</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_START</Name>
+          <Description>Zeitpunkt des Vorgangsstarts</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ENDE</Name>
+          <Description>Zeitpunkt der Vorgangsbeendigung</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BEDIENER_ID</Name>
+          <Description>Bediener-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BEDIENER_NAME</Name>
+          <Description>Bediener-Name</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>UMS_BRUTTO</Name>
+          <Description>Brutto-Gesamtumsatz</Description>
+          <Numeric>
+            <Accuracy>2</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KUNDE_NAME</Name>
+          <Description>Name des Leistungsempfängers</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KUNDE_ID</Name>
+          <Description>Kundennummer des Leistungsempfängers</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KUNDE_TYP</Name>
+          <Description>Art des Leistungsempfängers (z. B. Mitarbeiter)</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KUNDE_STRASSE</Name>
+          <Description>Straße und Hausnummer des Leistungsempfängers</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KUNDE_PLZ</Name>
+          <Description>PLZ des Leistungsempfängers</Description>
+          <AlphaNumeric />
+          <MaxLength>10</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KUNDE_ORT</Name>
+          <Description>Ort des Leistungsempfängers</Description>
+          <AlphaNumeric />
+          <MaxLength>62</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KUNDE_LAND</Name>
+          <Description>Land des Leistungsempfängers</Description>
+          <AlphaNumeric />
+          <MaxLength>3</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>KUNDE_USTID</Name>
+          <Description>UStID des Leistungsempfängers</Description>
+          <AlphaNumeric />
+          <MaxLength>15</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_NOTIZ</Name>
+          <Description>Zusätzliche Informationen zum Bonkopf</Description>
+          <AlphaNumeric />
+          <MaxLength>255</MaxLength>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>datapayment.csv</URL>
+      <Name>Bonkopf_Zahlarten</Name>
+      <Description>datapayment.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZAHLART_TYP</Name>
+          <Description>Typ der Zahlart</Description>
+          <AlphaNumeric />
+          <MaxLength>25</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZAHLART_NAME</Name>
+          <Description>Name der Zahlart</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZAHLWAEH_CODE</Name>
+          <Description>Währungscode</Description>
+          <AlphaNumeric />
+          <MaxLength>3</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZAHLWAEH_BETRAG</Name>
+          <Description>Betrag in Fremdwährung</Description>
+          <Numeric>
+            <Accuracy>2</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BASISWAEH_BETRAG</Name>
+          <Description>Betrag in Basiswährung (i.d.R. EUR)</Description>
+          <Numeric>
+            <Accuracy>2</Accuracy>
+          </Numeric>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>lines.csv</URL>
+      <Name>Bonpos</Name>
+      <Description>lines.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>POS_ZEILE</Name>
+          <Description>Zeilennummer</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>GUTSCHEIN_NR</Name>
+          <Description>Gutschein-Nr.</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ARTIKELTEXT</Name>
+          <Description>Artikeltext</Description>
+          <AlphaNumeric />
+          <MaxLength>255</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>POS_TERMINAL_ID</Name>
+          <Description>ID des POS-Terminals</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>GV_TYP</Name>
+          <Description>Geschäftsvorfall-Art</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>GV_NAME</Name>
+          <Description>Name des Geschäftsvorfalls</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>INHAUS</Name>
+          <Description>Verzehr an Ort und Stelle</Description>
+          <AlphaNumeric />
+          <MaxLength>1</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>P_STORNO</Name>
+          <Description>Positionsstorno-Kennzeichnung</Description>
+          <AlphaNumeric />
+          <MaxLength>1</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>AGENTUR_ID</Name>
+          <Description>ID der Agentur</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ART_NR</Name>
+          <Description>Artikelnummer</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>GTIN</Name>
+          <Description>GTIN</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>WARENGR_ID</Name>
+          <Description>Warengruppen-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>WARENGR</Name>
+          <Description>Bezeichnung Warengruppe</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>MENGE</Name>
+          <Description>Menge</Description>
+          <Numeric>
+            <Accuracy>3</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>FAKTOR</Name>
+          <Description>Faktor, z. B. Gebindegrößen</Description>
+          <Numeric>
+            <Accuracy>3</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>EINHEIT</Name>
+          <Description>Maßeinheit, z. B. kg, Liter oder Stück</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>STK_BR</Name>
+          <Description>Preis pro Einheit inkl. USt</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>itemamounts.csv</URL>
+      <Name>Bonpos_Preisfindung</Name>
+      <Description>itemamounts.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>POS_ZEILE</Name>
+          <Description>Zeilennummer</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TYP</Name>
+          <Description>Basispreis, Rabatt oder Zuschlag</Description>
+          <AlphaNumeric />
+          <MaxLength>20</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>UST_SCHLUESSEL</Name>
+          <Description>ID des USt-Satzes</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>PF_BRUTTO</Name>
+          <Description>Bruttoumsatz</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>PF_NETTO</Name>
+          <Description>Nettoumsatz</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>PF_UST</Name>
+          <Description>Umsatzsteuer</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>subitems.csv</URL>
+      <Name>Bonpos_Zusatzinfo</Name>
+      <Description>subitems.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>POS_ZEILE</Name>
+          <Description>Zeilennummer</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_ART_NR</Name>
+          <Description>Artikelnummer</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_GTIN</Name>
+          <Description>GTIN</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_NAME</Name>
+          <Description>Artikelbezeichnung</Description>
+          <AlphaNumeric />
+          <MaxLength>60</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_WARENGR_ID</Name>
+          <Description>Warengruppen-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_WARENGR</Name>
+          <Description>Bezeichnung Warengruppe</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_MENGE</Name>
+          <Description>Menge</Description>
+          <Numeric>
+            <Accuracy>3</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_FAKTOR</Name>
+          <Description>Faktor, z. B. Gebindegrößen</Description>
+          <Numeric>
+            <Accuracy>3</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_EINHEIT</Name>
+          <Description>Maßeinheit, z. B. kg, Liter oder Stück</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_UST_SCHLUESSEL</Name>
+          <Description>ID USt-Satz des Basispreises</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_BASISPREIS_BRUTTO</Name>
+          <Description>Basispreis brutto</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_BASISPREIS_NETTO</Name>
+          <Description>Basispreis netto</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ZI_BASISPREIS_UST</Name>
+          <Description>Basispreis USt</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>transactions_tse.csv</URL>
+      <Name>TSE_Transaktionen</Name>
+      <Description>transactions_tse.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_ID</Name>
+          <Description>Die Id der für eine Transaktion verwendeten TSE</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_TANR</Name>
+          <Description>Die Transaktionsnummer der TSE-Transaktion</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_TA_START</Name>
+          <Description>Die Log-Time der StartTransaction-Operation</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_TA_ENDE</Name>
+          <Description>Die Log-Time der FinishTransaction-Operation</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_TA_VORGANGSART</Name>
+          <Description>Der processType der FinishTransaction-Operation</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_TA_SIGZ</Name>
+          <Description>Der Signaturzähler der FinishTransaction-Operation</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_TA_SIG</Name>
+          <Description>Die Signatur der FinishTransaction-Operation</Description>
+          <AlphaNumeric />
+          <MaxLength>512</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_TA_FEHLER</Name>
+          <Description>Beschreibung des TSE-Ausfalls oder Fehlers</Description>
+          <AlphaNumeric />
+          <MaxLength>200</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_VORGANGSDATEN</Name>
+          <Description>An die zertifizierte technische Sicherheitseinrichtung übergebene Daten des Vorgangs (optional)</Description>
+          <AlphaNumeric />
+          <MaxLength>1000</MaxLength>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>transactions_vat.csv</URL>
+      <Name>Bonkopf_USt</Name>
+      <Description>transactions_vat.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>UST_SCHLUESSEL</Name>
+          <Description>ID des USt-Satzes</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_BRUTTO</Name>
+          <Description>Bruttoumsatz</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_NETTO</Name>
+          <Description>Nettoumsatz</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_UST</Name>
+          <Description>Umsatzsteuer</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>lines_vat.csv</URL>
+      <Name>Bonpos_USt</Name>
+      <Description>lines_vat.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>POS_ZEILE</Name>
+          <Description>Zeilennummer</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>UST_SCHLUESSEL</Name>
+          <Description>ID des USt-Satzes</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>POS_BRUTTO</Name>
+          <Description>Bruttoumsatz</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>POS_NETTO</Name>
+          <Description>Nettoumsatz</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>POS_UST</Name>
+          <Description>Umsatzsteuer</Description>
+          <Numeric>
+            <Accuracy>5</Accuracy>
+          </Numeric>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>allocation_groups.csv</URL>
+      <Name>Bonkopf_AbrKreis</Name>
+      <Description>allocation_groups.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>ABRECHNUNGSKREIS</Name>
+          <Description>z. B. Tischnummer</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+    <Table>
+      <URL>references.csv</URL>
+      <Name>Bon_Referenzen</Name>
+      <Description>references.csv</Description>
+      <UTF8 />
+      <DecimalSymbol>,</DecimalSymbol>
+      <DigitGroupingSymbol>.</DigitGroupingSymbol>
+      <Range>
+        <From>2</From>
+      </Range>
+      <VariableLength>
+        <ColumnDelimiter>;</ColumnDelimiter>
+        <RecordDelimiter>&#xD;&#xA;</RecordDelimiter>
+        <TextEncapsulator>"</TextEncapsulator>
+        <VariableColumn>
+          <Name>Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_ERSTELLUNG</Name>
+          <Description>Zeitpunkt des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>POS_ZEILE</Name>
+          <Description>Zeilennummer des referenzierenden Vorgangs (nicht bei Verweis aus einem Bonkopf heraus)</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>REF_TYP</Name>
+          <Description>Art der Referenz</Description>
+          <AlphaNumeric />
+          <MaxLength>20</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>REF_NAME</Name>
+          <Description>Beschreibung bei Art “ExterneSonstige”</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>REF_DATUM</Name>
+          <Description>Datum des Kassenabschlusses</Description>
+          <AlphaNumeric />
+          <MaxLength>30</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>REF_Z_KASSE_ID</Name>
+          <Description>ID der (Abschluss-) Kasse</Description>
+          <AlphaNumeric />
+          <MaxLength>50</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>REF_Z_NR</Name>
+          <Description>Nr. des Kassenabschlusses</Description>
+          <Numeric />
+        </VariableColumn>
+        <VariableColumn>
+          <Name>REF_BON_ID</Name>
+          <Description>Vorgangs-ID</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
+      </VariableLength>
+    </Table>
+  </Media>
+</DataSet>

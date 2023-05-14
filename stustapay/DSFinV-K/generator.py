@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import pytz
 from .dsfinvk.collection import Collection
-from .dsfinvk.models import Stamm_Abschluss, Stamm_Orte, Stamm_Kassen, Stamm_USt
+from .dsfinvk.models import Stamm_Abschluss, Stamm_Orte, Stamm_Kassen, Stamm_USt, Stamm_TSE
 
 from ..tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
 import time
@@ -151,6 +151,26 @@ class Generator:
         ### \vat.csv ###
 
         ### tse.csv ###
+        a = Stamm_TSE()
+        a.Z_KASSE_ID = Z_KASSE_ID
+        #a.Z_ERSTELLUNG = Z_ERSTELLUNG  #TODO richtiges Zeitformat
+        a.Z_NR = Z_NR
+        row = await self._conn.fetchrow("select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from till join tse on till.tse_id = tse.tse_id where till.id = $1 and till.z_nr = $2", Z_KASSE_ID, Z_NR)
+        a.TSE_ID = int(row['tse_id'])
+        a.TSE_SERIAL = row['tse_serial']
+        a.TSE_SIG_ALGO = row['tse_hashalgo']
+        a.TSE_ZEITFORMAT = row['tse_time_format']
+        a.TSE_PD_ENCODING = row['tse_process_data_encoding']
+        a.TSE_PUBLIC_KEY = row['tse_public_key']
+        if len(row['tse_certificate']) < 1001:
+            a.TSE_ZERTIFIKAT_I = row['tse_certificate']
+        elif len(row['tse_certificate']) > 1000 and len(row['tse_certificate']) < 2001:
+            a.TSE_ZERTIFIKAT_I = row['tse_certificate'][0:1000]
+            a.TSE_ZERTIFIKAT_II = row['tse_certificate'][1001:]
+        else:
+            raise NotImplemented
+
+        self.c.add(a)
         ### \tse.csv ###
 
         return
