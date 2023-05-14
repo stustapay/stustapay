@@ -159,7 +159,7 @@ begin
 end
 $$ language plpgsql;
 
-create trigger update_tag_association_history_trigger
+create or replace trigger update_tag_association_history_trigger
     after update of user_tag_uid on account
     for each row
     when (OLD.user_tag_uid is distinct from NEW.user_tag_uid and OLD.user_tag_uid is not null)
@@ -295,7 +295,7 @@ begin
 end
 $$ language plpgsql;
 
-create trigger user_to_role_updated_trigger
+create or replace trigger user_to_role_updated_trigger
     after insert on user_to_role
     for each row
 execute function user_to_role_updated();
@@ -354,7 +354,8 @@ values
     -- infozelt helfer
     (4, 'supervised_terminal_login'),
     (4, 'grant_free_tickets'),
-    (4, 'grant_vouchers');
+    (4, 'grant_vouchers')
+    on conflict do nothing;
 
 create or replace view user_role_with_privileges as (
     select
@@ -499,7 +500,8 @@ values
     (5, 'Eintritt U18', true, 12, 'ust', true),
     (6, 'Eintritt U16', true, 12, 'ust', true),
     (7, 'Geldtransit', false, null, 'none', true),
-    (8, 'DifferenzSollIst', false, null, 'none', true);
+    (8, 'DifferenzSollIst', false, null, 'none', true)
+    on conflict do nothing;
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
@@ -777,9 +779,13 @@ comment on column cash_register_stocking.cent2 is 'number of rolls, one roll = 5
 comment on column cash_register_stocking.cent1 is 'number of rolls, one roll = 50 pcs = 0,50€';
 
 
+do $$ begin
+    create type tse_status_enum as enum ('new', 'active', 'disabled', 'failed');
+exception
+    when duplicate_object then null;
+end $$;
 
-create type tse_status_enum as enum ('new', 'active', 'disabled', 'failed');
-create table tse_status_info (
+create table if not exists tse_status_info (
     enum_value tse_status_enum primary key,
     name text not null,
     description text not null
@@ -795,7 +801,7 @@ insert into tse_status_info (enum_value, name, description) values
 
 -- list of TSEs with static TSE info
 create table if not exists tse (
-    tse_id                    bigserial primary key, -- now integer!
+    tse_id                    bigint primary key generated always as identity,
     tse_name                  text unique not null,
     tse_status                tse_status_enum not null default 'new',
     tse_serial                text,
@@ -859,11 +865,25 @@ create or replace view cash_register_with_cashier as (
     left join till t on t.active_cash_register_id = c.id
 );
 
-insert into till_layout (id, name, description) overriding system value values (1, 'Virtual Till Layout', '') ;
-insert into till_profile (id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id)
-    overriding system value values (1, 'Virtual till profile', '', false, false, false, 1);
-insert into till (id, name, description, active_profile_id, registration_uuid, tse_id) overriding system value
-values (1, 'Virtual Till', '', 1, gen_random_uuid(), null);
+insert into till_layout (
+    id, name, description
+) overriding system value
+values
+    (1, 'Virtual Till Layout', '')
+    on conflict do nothing;
+
+insert into till_profile (
+    id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id
+) overriding system value
+values
+    (1, 'Virtual till profile', '', false, false, false, 1)
+    on conflict do nothing;
+insert into till (
+    id, name, description, active_profile_id, registration_uuid, tse_id
+) overriding system value
+values
+    (1, 'Virtual Till', '', 1, gen_random_uuid(), null)
+    on conflict do nothing;
 
 
 create or replace function handle_till_user_login() returns trigger as
@@ -930,13 +950,17 @@ begin
 end
 $$ language plpgsql;
 
-create trigger handle_till_user_login_trigger
+create or replace trigger handle_till_user_login_trigger
     before update of active_user_id on till
     for each row
     when (OLD.active_user_id is distinct from NEW.active_user_id)
 execute function handle_till_user_login();
 
-create type till_tse_history_type as enum ('register', 'deregister');
+do $$ begin
+    create type till_tse_history_type as enum ('register', 'deregister');
+exception
+    when duplicate_object then null;
+end $$;
 
 -- logs all historic till <-> TSE assignments (as registered with the TSE)
 create table if not exists till_tse_history (
@@ -954,7 +978,7 @@ begin
 end;
 $$;
 
-create trigger till_tse_history_deny_update_delete
+create or replace trigger till_tse_history_deny_update_delete
 before update or delete on till_tse_history
 for each row execute function deny_in_trigger();
 
@@ -1054,8 +1078,7 @@ begin
 end;
 $$ language plpgsql;
 
-drop trigger if exists new_order_trigger on ordr;
-create trigger new_order_trigger
+create or replace trigger new_order_trigger
     after insert
     on ordr
     for each row
@@ -1260,13 +1283,17 @@ end;
 $$ language plpgsql;
 
 
-create type tse_signature_status as enum ('todo', 'pending', 'done', 'failure');
-create table tse_signature_status_info (
+do $$ begin
+    create type tse_signature_status as enum ('todo', 'pending', 'done', 'failure');
+exception
+    when duplicate_object then null;
+end $$;
+
+create table if not exists tse_signature_status_info (
     enum_value tse_signature_status primary key,
     name text not null,
     description text not null
 );
-
 
 insert into tse_signature_status_info (enum_value, name, description) values
     ('todo', 'todo', 'Signature request is enqueued'),
@@ -1324,7 +1351,7 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger tse_signature_update_trigger
+create or replace trigger tse_signature_update_trigger
     before update
     on tse_signature
     for each row
@@ -1336,13 +1363,13 @@ create or replace function tse_signature_finished_trigger_procedure()
 returns trigger as $$
 begin
   insert into bon(id) values (NEW.id);
-  perform pg_notify('bon', json_build_object('bon_id', NEW.id));
+  perform pg_notify('bon', json_build_object('bon_id', NEW.id)::text);
 
   return NEW;
 end;
 $$ language plpgsql;
 
-create trigger tse_signature_finished_trigger
+create or replace trigger tse_signature_finished_trigger
     after update of signature_status
     on tse_signature
     for each row

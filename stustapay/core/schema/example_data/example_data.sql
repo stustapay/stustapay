@@ -45,7 +45,7 @@ values
     (202, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0),
     (203, 5424726016640516, 'private', 'test-tag3', 'test token 3', 15.00, 2),
     (204, 5424726268326916, 'private', 'test-tag4', 'test token 4', 20.00, 2),
-    (205, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0)
+    (205, null, 'internal', 'test-tag4-internal', 'tag4 internal account', 0.0, 0)
     on conflict do nothing;
 select setval('account_id_seq', 300);
 
@@ -68,19 +68,20 @@ insert into user_to_role (
 )
 values
     (0, 2), -- cashier
-    (1, 0), -- admin
-    (1, 1), -- finanzorga
+    (1, 0), -- admin -> admin
+    (1, 1), -- admin -> finanzorga
     (2, 0), -- tag #2, admin
     (2, 1), -- tag #2, finanzorga
     (2, 2), -- tag #2, cashier
     (4, 2), -- tag #4, cashier
-    (5, 1)  -- tag #4, cashier
+    (5, 1)  -- finanzorga -> finanzorga
     on conflict do nothing;
 
 insert into user_role_to_privilege (
     role_id, privilege
 )
 values
+    -- admin normally can't book orders, but for testing it's useful.
     (0, 'can_book_orders')
     on conflict do nothing;
 
@@ -211,9 +212,13 @@ values
     (1, 4);
 
 
---configure one TSE 'tse1'
-insert into tse ( tse_name) values
-    ('tse1');
+-- configure one TSE 'tse1' for testing
+insert into tse (
+    tse_id, tse_name
+) overriding system value
+values
+    (0, 'tse1')
+    on conflict do nothing;
 
 
 insert into till (
@@ -280,14 +285,13 @@ values
     on conflict do nothing;
 select setval('transaction_id_seq', 100);
 
-INSERT INTO bon (
+insert into bon (
     id, generated, generated_at, error, output_file
 )
-VALUES
-    (0, true, '2023-01-01 15:34:57 UTC+1', null, 'test_bon.pdf'),
-    (1, false, null, null, null)
-ON CONFLICT (id) DO UPDATE
-SET
+values
+    (0, true, '2023-01-01 15:34:57 UTC+1', null, 'test_bon.pdf')
+on conflict (id) do update
+set
     generated = EXCLUDED.generated,
     generated_at = EXCLUDED.generated_at,
     error = EXCLUDED.error,
@@ -297,7 +301,7 @@ insert into tse_signature (
     id
 )
 values
-    (0),
+    -- 0 already has bon entry
     (1),
     (2)
     on conflict do nothing;
