@@ -3,6 +3,7 @@ from fastapi import APIRouter, status, HTTPException
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService, ContextAccountService
 from stustapay.core.schema.customer import Customer
+from stustapay.core.service.common.error import NotFound
 from stustapay.core.util import BaseModel
 
 router = APIRouter(
@@ -38,5 +39,5 @@ async def get_customer(
 ):
     customer = await till_service.get_customer(token=token, customer_tag_uid=customer_tag_uid)
     if customer is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise NotFound(element_typ="customer", element_id=("%X" % customer_tag_uid))
     return customer
