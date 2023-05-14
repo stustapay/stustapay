@@ -32,7 +32,7 @@ def is_non_tag_payment_method(payment_method: PaymentMethod):
 
 
 class NewTopUp(BaseModel):
-    uuid: Optional[UUID] = None
+    uuid: UUID
     payment_method: PaymentMethod
 
     amount: float
@@ -67,6 +67,7 @@ class CompletedTopUp(BaseModel):
 
 class NewPayOut(BaseModel):
     # if no amount is passed, the current customer account balance is assumed as payout
+    uuid: UUID
     customer_tag_uid: int
     amount: Optional[float] = None
 
@@ -80,15 +81,7 @@ class PendingPayOut(NewPayOut):
     new_balance: float
 
 
-class CompletedPayOut(BaseModel):
-    customer_tag_uid: int
-    customer_account_id: int
-
-    amount: float
-    old_balance: float
-    new_balance: float
-
-    uuid: UUID
+class CompletedPayOut(PendingPayOut):
     booked_at: datetime.datetime
 
     cashier_id: int
@@ -113,6 +106,7 @@ class Button(BaseModel):
 
 
 class NewSale(BaseModel):
+    uuid: UUID
     buttons: list[Button]
     customer_tag_uid: int
     used_vouchers: Optional[int] = None
@@ -132,6 +126,7 @@ class PendingLineItem(BaseModel):
 
 
 class PendingSale(BaseModel):
+    uuid: UUID
     buttons: list[Button]
 
     old_balance: float
@@ -162,7 +157,6 @@ class PendingSale(BaseModel):
 
 class CompletedSale(PendingSale):
     id: int
-    uuid: UUID
 
     booked_at: datetime.datetime
 
@@ -176,7 +170,7 @@ class Ticket(BaseModel):
 
 
 class NewTicketSale(BaseModel):
-    uuid: Optional[UUID] = None
+    uuid: UUID
     customer_tag_uids: list[int]
     tickets: list[Ticket]
 
@@ -202,7 +196,6 @@ class PendingTicketSale(NewTicketSale):
 
 class CompletedTicketSale(PendingTicketSale):
     id: int
-    uuid: UUID
     booked_at: datetime.datetime
 
     customer_account_id: int

@@ -60,7 +60,6 @@ export type TillProfile = z.infer<typeof TillProfileSchema>;
 export const NewTillSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
-  tse_id: z.string().nullable().optional(),
   active_shift: z.string().nullable().optional(),
   active_profile_id: z.number(),
   active_user_id: z.number().nullable().optional(),
@@ -78,6 +77,8 @@ export const TillSchema = UpdateTillSchema.merge(
     session_uuid: z.string().nullable(),
     current_cash_register_name: z.string().nullable(),
     current_cash_register_balance: z.number().nullable(),
+    tse_id: z.number().int().nullable().optional(),
+    tse_serial: z.string().nullable().optional(),
   })
 );
 

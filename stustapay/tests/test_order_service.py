@@ -178,6 +178,7 @@ class OrderLogicTest(TerminalTestCase):
         self.assertIsNotNone(customer_acc)
         starting_balance = customer_acc.balance
         new_sale = NewSale(
+            uuid=uuid.uuid4(),
             buttons=[Button(till_button_id=self.beer_button.id, quantity=2)],
             customer_tag_uid=self.customer_uid,
         )
@@ -217,6 +218,7 @@ class OrderLogicTest(TerminalTestCase):
 
     async def test_returnable_products(self):
         new_sale = NewSale(
+            uuid=uuid.uuid4(),
             buttons=[Button(till_button_id=self.beer_button.id, quantity=-1)],
             customer_tag_uid=self.customer_uid,
         )
@@ -227,6 +229,7 @@ class OrderLogicTest(TerminalTestCase):
             )
 
         new_sale = NewSale(
+            uuid=uuid.uuid4(),
             buttons=[Button(till_button_id=self.deposit_button.id, quantity=-1)],
             customer_tag_uid=self.customer_uid,
         )
@@ -238,6 +241,7 @@ class OrderLogicTest(TerminalTestCase):
 
     async def test_basic_sale_flow_with_deposit(self):
         new_sale = NewSale(
+            uuid=uuid.uuid4(),
             buttons=[
                 Button(till_button_id=self.beer_button.id, quantity=3),
                 Button(till_button_id=self.beer_button.id, quantity=2),
@@ -261,6 +265,7 @@ class OrderLogicTest(TerminalTestCase):
 
     async def test_basic_sale_flow_with_only_deposit_return(self):
         new_sale = NewSale(
+            uuid=uuid.uuid4(),
             buttons=[
                 Button(till_button_id=self.deposit_button.id, quantity=-1),
                 Button(till_button_id=self.deposit_button.id, quantity=-2),
@@ -282,6 +287,7 @@ class OrderLogicTest(TerminalTestCase):
     async def test_basic_sale_flow_with_vouchers(self):
         await self.db_conn.execute("update account set vouchers = 3 where id = $1", self.customer_account_id)
         new_sale = NewSale(
+            uuid=uuid.uuid4(),
             buttons=[
                 Button(till_button_id=self.beer_button.id, quantity=3),
             ],
@@ -303,6 +309,7 @@ class OrderLogicTest(TerminalTestCase):
     async def test_basic_sale_flow_with_fixed_vouchers(self):
         await self.db_conn.execute("update account set vouchers = 3 where id = $1", self.customer_account_id)
         new_sale = NewSale(
+            uuid=uuid.uuid4(),
             buttons=[
                 Button(till_button_id=self.beer_button.id, quantity=3),
                 Button(till_button_id=self.beer_product_full.id, quantity=1),
@@ -356,6 +363,7 @@ class OrderLogicTest(TerminalTestCase):
 
         with self.assertRaises(TillPermissionException):
             new_topup = NewTopUp(
+                uuid=uuid.uuid4(),
                 amount=20,
                 payment_method=PaymentMethod.cash,
                 customer_tag_uid=self.customer_uid,
@@ -368,6 +376,7 @@ class OrderLogicTest(TerminalTestCase):
         cash_entry_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_ENTRY)
 
         new_topup = NewTopUp(
+            uuid=uuid.uuid4(),
             amount=20,
             payment_method=PaymentMethod.cash,
             customer_tag_uid=self.customer_uid,
@@ -431,6 +440,7 @@ class OrderLogicTest(TerminalTestCase):
 
         with self.assertRaises(TillPermissionException):
             new_pay_out = NewPayOut(
+                uuid=uuid.uuid4(),
                 customer_tag_uid=self.customer_uid,
             )
             await self.order_service.check_pay_out(token=self.terminal_token, new_pay_out=new_pay_out)
@@ -440,7 +450,7 @@ class OrderLogicTest(TerminalTestCase):
         cash_sale_source_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_SALE_SOURCE)
         cash_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_EXIT)
 
-        new_pay_out = NewPayOut(customer_tag_uid=self.customer_uid)
+        new_pay_out = NewPayOut(uuid=uuid.uuid4(), customer_tag_uid=self.customer_uid)
         pending_pay_out = await self.order_service.check_pay_out(token=self.terminal_token, new_pay_out=new_pay_out)
         self.assertEqual(pending_pay_out.old_balance, START_BALANCE)
         self.assertEqual(pending_pay_out.new_balance, 0)
@@ -465,11 +475,11 @@ class OrderLogicTest(TerminalTestCase):
         cash_sale_source_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_SALE_SOURCE)
         cash_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_EXIT)
 
-        new_pay_out = NewPayOut(customer_tag_uid=self.customer_uid, amount=-2 * START_BALANCE)
+        new_pay_out = NewPayOut(uuid=uuid.uuid4(), customer_tag_uid=self.customer_uid, amount=-2 * START_BALANCE)
         with self.assertRaises(NotEnoughFundsException):
             await self.order_service.check_pay_out(token=self.terminal_token, new_pay_out=new_pay_out)
 
-        new_pay_out = NewPayOut(customer_tag_uid=self.customer_uid, amount=-20)
+        new_pay_out = NewPayOut(uuid=uuid.uuid4(), customer_tag_uid=self.customer_uid, amount=-20)
         pending_pay_out = await self.order_service.check_pay_out(token=self.terminal_token, new_pay_out=new_pay_out)
         self.assertEqual(pending_pay_out.old_balance, START_BALANCE)
         self.assertEqual(pending_pay_out.new_balance, START_BALANCE - 20)
@@ -506,6 +516,7 @@ class OrderLogicTest(TerminalTestCase):
 
         with self.assertRaises(TillPermissionException):
             new_ticket_sale = NewTicketSale(
+                uuid=uuid.uuid4(),
                 customer_tag_uids=[self.customer_uid],
                 tickets=[Ticket(till_button_id=ENTRY_BUTTON_ID, quantity=1)],
                 payment_method=PaymentMethod.cash,
@@ -520,6 +531,7 @@ class OrderLogicTest(TerminalTestCase):
 
         unused_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
         new_ticket = NewTicketSale(
+            uuid=uuid.uuid4(),
             customer_tag_uids=[unused_tag_uid],
             tickets=[Ticket(till_button_id=ENTRY_BUTTON_ID, quantity=1)],
             payment_method=PaymentMethod.cash,
@@ -556,6 +568,7 @@ class OrderLogicTest(TerminalTestCase):
         sale_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_SALE_EXIT)
         unused_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
         new_ticket = NewTicketSale(
+            uuid=uuid.uuid4(),
             customer_tag_uids=[unused_tag_uid],
             tickets=[Ticket(till_button_id=ENTRY_BUTTON_ID, quantity=1)],
             payment_method=PaymentMethod.sumup,
@@ -595,6 +608,7 @@ class OrderLogicTest(TerminalTestCase):
         )
         tags = [tag_uid, tag2_uid, u18_tag_uid, u16_tag_uid]
         new_ticket = NewTicketSale(
+            uuid=uuid.uuid4(),
             customer_tag_uids=tags,
             tickets=[Ticket(till_button_id=ENTRY_BUTTON_ID, quantity=4)],
             payment_method=PaymentMethod.cash,
@@ -602,6 +616,7 @@ class OrderLogicTest(TerminalTestCase):
         with self.assertRaises(InvalidArgument):
             await self.order_service.check_ticket_sale(token=self.terminal_token, new_ticket_sale=new_ticket)
         new_ticket = NewTicketSale(
+            uuid=uuid.uuid4(),
             customer_tag_uids=tags,
             tickets=[
                 Ticket(till_button_id=ENTRY_BUTTON_ID, quantity=2),

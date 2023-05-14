@@ -10,13 +10,14 @@ import asyncpg
 from stustapay.administration.server import Api as AdminApi
 from stustapay.core.config import Config
 from stustapay.core.database import create_db_pool, reset_schema, apply_revisions
-from stustapay.core.schema.till import NewTill, NewCashRegisterStocking
+from stustapay.core.schema.till import NewTill, NewCashRegisterStocking, NewCashRegister
 from stustapay.core.schema.user import UserWithoutId, CASHIER_ROLE_NAME
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import with_db_transaction
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
+from stustapay.customer_portal.server import Api as CustomerApi
 from stustapay.terminalserver.server import Api as TerminalApi
 
 SAMPLE_DATA = Path(__file__).parent / "assets" / "sample_data.sql"
@@ -49,6 +50,7 @@ class FestivalSetup(SubCommand):
 
     @staticmethod
     def argparse_register(subparser: argparse.ArgumentParser):
+        subparser.add_argument("action", choices=["database", "start-api"])
         subparser.add_argument("--n-tags", type=int, help="number of tags to create", default=1000)
         subparser.add_argument("--n-entry-tills", type=int, help="number of entry tills to create", default=10)
         subparser.add_argument("--n-topup-tills", type=int, help="number of topup tills to create", default=8)
@@ -63,17 +65,27 @@ class FestivalSetup(SubCommand):
         terminal_api = TerminalApi(args=self.args, config=self.config)
         asyncio.run(terminal_api.run())
 
+    def run_customer_api(self):
+        customer_api = CustomerApi(args=self.args, config=self.config)
+        asyncio.run(customer_api.run())
+
     async def run(self):
-        await self.setup()
+        if self.args.action == "database":
+            await self.setup()
+        elif self.args.action == "start-api":
+            admin_api_thread = threading.Thread(target=self.run_admin_api)
+            terminal_api_thread = threading.Thread(target=self.run_terminal_api)
+            customer_api_thread = threading.Thread(target=self.run_customer_api)
 
-        admin_api_thread = threading.Thread(target=self.run_admin_api)
-        terminal_api_thread = threading.Thread(target=self.run_terminal_api)
+            admin_api_thread.start()
+            terminal_api_thread.start()
+            customer_api_thread.start()
 
-        admin_api_thread.start()
-        terminal_api_thread.start()
-
-        admin_api_thread.join()
-        terminal_api_thread.join()
+            admin_api_thread.join()
+            terminal_api_thread.join()
+            customer_api_thread.join()
+        else:
+            self.logger.error(f"Unknown action: {self.args.action}")
 
     @with_db_transaction
     async def _create_tags(self, conn: asyncpg.Connection):
@@ -103,6 +115,14 @@ class FestivalSetup(SubCommand):
                 token=admin_token,
                 till=NewTill(name=f"Cocktailkasse {i}", active_profile_id=PROFILE_ID_COCKTAIL),
             )
+        for i in range(self.n_tills):
+            await till_service.register.create_cash_register(
+                token=admin_token, new_register=NewCashRegister(name=f"Blechkasse {i}")
+            )
+
+        await till_service.register.create_cash_register_stockings(
+            token=admin_token, stocking=NewCashRegisterStocking(name="Stocking", euro20=2, euro10=1)
+        )
 
     async def _create_cashiers(self, user_service: UserService):
         assert self.db_pool is not None
@@ -137,8 +157,5 @@ class FestivalSetup(SubCommand):
         admin_login = await user_service.login_user(username="admin", password="admin")  # pylint: disable=missing-kwoa
         assert admin_login is not None
         admin_token = admin_login.token
-        await till_service.register.create_cash_register_stockings(
-            token=admin_token, stocking=NewCashRegisterStocking(name="Stocking", euro20=2, euro10=1)
-        )
         await self._create_tills(admin_token=admin_token, till_service=till_service)
         await self._create_cashiers(user_service=user_service)

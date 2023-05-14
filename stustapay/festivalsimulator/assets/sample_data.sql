@@ -13,7 +13,12 @@ insert into user_tag (
     uid, pin, serial, restriction, secret
 )
 values
-    (1, 'pin', null, null, null) -- admin + finanzorga tag
+    (1, 'pin', null, null, null), -- admin + finanzorga tag
+    (2, 'pin', null, null, null), -- finanzorga1 tag
+    (3, 'pin', null, null, null), -- finanzorga2 tag
+    (4, 'pin', null, null, null), -- finanzorga3 tag
+    (5, 'pin', null, null, null), -- finanzorga4 tag
+    (6, 'pin', null, null, null)  -- finanzorga5 tag
 on conflict do nothing;
 
 
@@ -23,7 +28,12 @@ insert into usr (
 ) overriding system value
 values
     -- password is admin
-    (0, 'admin', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Admin user', null, null, 1)
+    (0, 'admin', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Admin user', null, null, 1),
+    (1, 'finanzorga1', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 2),
+    (2, 'finanzorga2', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 3),
+    (3, 'finanzorga3', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 4),
+    (4, 'finanzorga4', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 5),
+    (5, 'finanzorga5', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 6)
 on conflict do nothing;
 select setval('usr_id_seq', 100);
 
@@ -32,7 +42,12 @@ insert into user_to_role (
 )
 values
     (0, 0), -- admin
-    (0, 1) -- finanzorga
+    (0, 1), -- finanzorga
+    (1, 1), -- finanzorga
+    (2, 1), -- finanzorga
+    (3, 1), -- finanzorga
+    (4, 1), -- finanzorga
+    (5, 1)  -- finanzorga
 on conflict do nothing;
 
 insert into product (

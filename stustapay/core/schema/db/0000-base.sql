@@ -837,12 +837,14 @@ create table if not exists till (
 create or replace view till_with_cash_register as (
     select
         t.*,
+        tse.tse_serial,
         cr.name as current_cash_register_name,
         a.balance as current_cash_register_balance
     from till t
     left join usr u on t.active_user_id = u.id
     left join account a on u.cashier_account_id = a.id
     left join cash_register cr on t.active_cash_register_id = cr.id
+    left join tse on tse.tse_id = t.tse_id
 );
 
 create or replace view cash_register_with_cashier as (

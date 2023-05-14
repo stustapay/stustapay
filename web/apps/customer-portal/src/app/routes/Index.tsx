@@ -30,8 +30,8 @@ export const Index: React.FC = () => {
   // we also might want to show the balance of the account after each order
 
   return (
-    <Grid container justifyItems="center" justifyContent="center" spacing={2}>
-      <Grid item xs={8}>
+    <Grid container justifyItems="center" justifyContent="center" spacing={2} sx={{ paddingX: 0.5 }}>
+      <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
         <Grid container justifyContent="center">
           <Paper
             // variant="outlined"
@@ -47,6 +47,17 @@ export const Index: React.FC = () => {
                 {formatCurrency(customer.balance)}
               </Typography>
 
+              {customer.vouchers > 0 && (
+                <div>
+                  <Typography component="div" variant="body1">
+                    {t("vouchers")}
+                  </Typography>
+                  <Typography component="div" variant="subtitle2">
+                    {customer.vouchers}
+                  </Typography>
+                </div>
+              )}
+
               <div>
                 <Typography component="div" variant="body1">
                   {t("tagUid")}
@@ -60,7 +71,7 @@ export const Index: React.FC = () => {
         </Grid>
       </Grid>
 
-      <Grid item xs={8}>
+      <Grid item xs={12} sm={8}>
         <Alert severity="info" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
           <Trans i18nKey="payoutInfo">
             to get your payout
@@ -71,7 +82,7 @@ export const Index: React.FC = () => {
         </Alert>
       </Grid>
 
-      <Grid item xs={8}>
+      <Grid item xs={12} sm={8}>
         <OrderList />
       </Grid>
     </Grid>
