@@ -50,16 +50,32 @@ values
 select setval('account_id_seq', 300);
 
 
-insert into usr (
-    id, login, password, description, transport_account_id, cashier_account_id, user_tag_uid
+insert into cash_register (
+    id, name
 ) overriding system value
 values
-    (0, 'test-cashier', null, 'Some Description', null, 100, 1234),
+    (0, 'Stahlkasse'),
+    (1, 'Blechkasse 1'),
+    (2, 'Blechkasse 2')
+    on conflict do nothing;
+
+insert into cash_register_stocking (
+    id, name, euro20, euro10, euro5, euro2, euro1
+) overriding system value
+values
+    (0, 'default', 5, 10, 10, 1, 1)
+    on conflict do nothing;
+
+insert into usr (
+    id, login, password, description, transport_account_id, cashier_account_id, cash_register_id, user_tag_uid
+) overriding system value
+values
+    (0, 'test-cashier', null, 'Some Description', null, 100, null, 1234),
     -- password is admin
-    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null),
-    (2, 'tag2', null, null, null, 202, 5424726191074820),
-    (4, 'tag4', null, null, null, 205, 5424726268326916),
-    (5, 'finanzorga' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null)
+    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null, null),
+    (2, 'tag2', null, null, null, 202, 0, 5424726191074820),
+    (4, 'tag4', null, null, null, 205, null, 5424726268326916),
+    (5, 'finanzorga' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null, null)
     on conflict do nothing;
 select setval('usr_id_seq', 100);
 
@@ -305,23 +321,5 @@ values
     (1),
     (2)
     on conflict do nothing;
-
-insert into cash_register (
-    name
-) overriding system value
-values
-    ('Blechkasse 1'),
-    ('Blechkasse 2'),
-    ('Blechkasse 3'),
-    ('Blechkasse 4'),
-    ('Blechkasse 5'),
-    ('Blechkasse 6'),
-    ('Blechkasse 7');
-
-insert into cash_register_stocking (
-    name, euro20, euro10, euro5, euro2, euro1
-)
-values
-    ('default', 5, 10, 10, 1, 1);
 
 commit;
