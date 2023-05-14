@@ -498,7 +498,7 @@ values
     (3, 'Auszahlen', false, null, 'none', true),
     (4, 'Eintritt', true, 12, 'ust', true),
     (5, 'Eintritt U18', true, 12, 'ust', true),
-    (6, 'Eintritt U16', true, 12, 'ust', true),
+    (6, 'Eintritt U16', true, 0, 'none', true),
     (7, 'Geldtransit', false, null, 'none', true),
     (8, 'DifferenzSollIst', false, null, 'none', true)
     on conflict do nothing;
