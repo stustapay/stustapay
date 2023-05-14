@@ -18,17 +18,23 @@ class DBHook:
     HOOK_TIMELIMIT = 5
 
     def __init__(
-        self, connection: asyncpg.Connection, channel: str, event_handler: Callable[[Optional[str]], Awaitable[None]]
+        self,
+        connection: asyncpg.Connection,
+        channel: str,
+        event_handler: Callable[[Optional[str]], Awaitable[None]],
+        initial_run: bool = False,
     ):
         """
         connection: open database connection
         channel: subcription channel of the database
         event_handler: async function which receives the payload of the database notification as argument
+        initial_run: true if we shall call the handler once after startup with None as argument.
         """
         self.connection = connection
         self.channel = channel
         self.event_handler = event_handler
         assert inspect.iscoroutinefunction(event_handler)
+        self.initial_run = initial_run
 
         self.events: asyncio.Queue[Union[str, Type[StopIteration]]] = asyncio.Queue(maxsize=256)
         self.logger = logging.getLogger(__name__)
@@ -62,8 +68,9 @@ class DBHook:
     async def run(self):
         await self.register()
 
-        # run the handler once to process pending data
-        await self.event_handler(None)
+        if self.initial_run:
+            # run the handler once to process pending data
+            await self.event_handler(None)
 
         try:
             # handle events

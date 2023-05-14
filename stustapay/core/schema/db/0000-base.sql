@@ -1357,8 +1357,7 @@ create or replace trigger tse_signature_update_trigger
     for each row
 execute function tse_signature_update_trigger_procedure();
 
-
---TODO: trigger on tse done, then update bon
+-- notify the bon generator about a new job
 create or replace function tse_signature_finished_trigger_procedure()
 returns trigger as $$
 begin
