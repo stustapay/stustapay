@@ -1258,7 +1258,7 @@ end;
 $$ language plpgsql;
 
 
-create type tse_signature_status as enum ('todo', 'pending', 'done', 'failure');
+create type tse_signature_status as enum ('new', 'pending', 'done', 'failure');
 create table tse_signature_status_info (
     enum_value tse_signature_status primary key,
     name text not null,
@@ -1267,7 +1267,7 @@ create table tse_signature_status_info (
 
 
 insert into tse_signature_status_info (enum_value, name, description) values
-    ('todo', 'todo', 'Signature request is enqueued'),
+    ('new', 'new', 'Signature request is enqueued'),
     ('pending', 'pending', 'Signature is being created by TSE'),
     ('done', 'done', 'Signature was successful'),
     ('failure', 'failure', 'Failed to create signature') on conflict do nothing;
@@ -1277,17 +1277,17 @@ insert into tse_signature_status_info (enum_value, name, description) values
 create table if not exists tse_signature (
     id bigint primary key references ordr(id),
 
-    signature_status tse_signature_status not null default 'todo',
+    signature_status tse_signature_status not null default 'new',
     -- TSE signature result message (error message or success message)
     result_message  text,
-    constraint result_message_set check ((result_message is null) = (signature_status = 'todo' or signature_status = 'pending')),
+    constraint result_message_set check ((result_message is null) = (signature_status = 'new' or signature_status = 'pending')),
 
     created timestamptz not null default now(),
     last_update timestamptz not null default now(),
 
     -- id of the TSE that was used to create the signature
     tse_id          bigint references tse(tse_id),
-    constraint tse_id_set check ((tse_id is null) = (signature_status = 'todo')),
+    constraint tse_id_set check ((tse_id is null) = (signature_status = 'new')),
 
     -- signature input for the TSE
     transaction_process_type text,
@@ -1311,7 +1311,7 @@ create table if not exists tse_signature (
 
 
 -- partial index for only the unsigned rows in tse_signature
-create index on tse_signature (id) where signature_status = 'todo';
+create index on tse_signature (id) where signature_status = 'new';
 create index on tse_signature (id) where signature_status = 'pending';
 
 create or replace function tse_signature_update_trigger_procedure()

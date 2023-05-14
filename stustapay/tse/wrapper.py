@@ -205,7 +205,7 @@ class TSEWrapper:
                     join ordr on ordr.id=tse_signature.id
                     join till on ordr.till_id=till.id
                 where
-                    tse_signature.signature_status='todo' and
+                    tse_signature.signature_status='new' and
                     till.tse_id = $1 and
                     not exists (
                         select
@@ -285,7 +285,7 @@ class TSEWrapper:
         """
         await self._conn.execute(
             """
-            update tse_signature set signature_status='todo', tse_id=NULL where id=$1
+            update tse_signature set signature_status='new', tse_id=NULL where id=$1
             """,
             request.order_id,
         )
