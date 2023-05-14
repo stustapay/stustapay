@@ -204,5 +204,7 @@ values
     (3, 3),
     (3, 4);
 
+insert into tse (tse_name) values ('tse1');
+
 commit;
 

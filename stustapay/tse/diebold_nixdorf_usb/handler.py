@@ -211,12 +211,12 @@ class DieboldNixdorfUSBTSE(TSEHandler):
 
     async def sign(self, request: TSESignatureRequest) -> TSESignature:
         LOGGER.info(f"{self}: signing {request}")
-        start_result = await self.request_with_password("StartTransaction", ClientID=request.till_name)
+        start_result = await self.request_with_password("StartTransaction", ClientID=request.till_id)
         transaction_number = start_result["TransactionNumber"]
         finish_result = await self.request_with_password(
             "FinishTransaction",
             TransactionNumber=transaction_number,
-            ClientID=request.till_name,
+            ClientID=request.till_id,
             Typ=request.process_type,
             Data=request.process_data,
         )
