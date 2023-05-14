@@ -183,7 +183,8 @@ insert into till_layout (
 values
     (0, 'Alles', 'Alle Features zum Testen'),
     (1, 'Bierkasse', 'Allgemeine Bierkasse'),
-    (2, 'Aufladekasse', 'Allgemeine Aufladekasse')
+    (2, 'Aufladekasse', 'Allgemeine Aufladekasse'),
+    (3, 'Brotladen', 'Brotladen-Kasse')
     on conflict do nothing;
 select setval('till_layout_id_seq', 100);
 
@@ -201,7 +202,9 @@ insert into till_layout_to_button (
     (1, 0, 0),
     (1, 1, 1),
     (1, 2, 2),
-    (1, 3, 3)
+    (1, 3, 3),
+    -- brotladen
+    (3, 4, 1)
     on conflict do nothing;
 
 insert into till_profile (
@@ -210,7 +213,8 @@ insert into till_profile (
 values
     (0, 'Develop', 'Allmächtige Kasse', 0, true, true, true),
     (1, 'Pot', 'Allgemeine Pot Bierkasse', 1, false, false, false),
-    (2, 'Festzelt Aufladung', 'Aufladekasse', 2, true, true, false)
+    (2, 'Festzelt Aufladung', 'Aufladekasse', 2, true, true, false),
+    (3, 'Brotladen', 'Brotladen-Kasse', 3, false, false, false)
     on conflict do nothing;
 select setval('till_profile_id_seq', 100);
 
@@ -225,7 +229,18 @@ values
     (1, 1),
     (1, 2),
     (1, 3),
-    (1, 4);
+    (1, 4),
+    (2, 0),
+    (2, 1),
+    (2, 2),
+    (2, 3),
+    (2, 4),
+    (3, 0),
+    (3, 1),
+    (3, 2),
+    (3, 3),
+    (3, 4)
+    on conflict do nothing;
 
 
 -- configure one TSE 'tse1' for testing
@@ -242,8 +257,10 @@ insert into till (
 ) overriding system value
 values
     (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, null, null),
+    -- 1 is virtual till!
+    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, null, null),
     (3, 'ssc-pot-1', 'Pot Bierkasse', 1, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, null, null),
-    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, null, null)
+    (4, 'ssc-brotladen-1', 'Brotladen', 3, null, null, '6450c106-207c-4f17-b451-249c98ae6f19'::uuid, null, null, null)
     on conflict do nothing;
 select setval('till_id_seq', 100);
 
