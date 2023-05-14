@@ -77,13 +77,14 @@ export const CustomerAccountDetail: React.FC = () => {
   return (
     <Stack spacing={2}>
       <Paper>
-        <ListItem>
-          <ListItemText primary={account.id} />
-          <ListItemSecondaryAction>
+        <ListItem
+          secondaryAction={
             <Button color="error" onClick={handleDisableAccount}>
               {t("account.disable")}
             </Button>
-          </ListItemSecondaryAction>
+          }
+        >
+          <ListItemText primary={account.id} />
         </ListItem>
       </Paper>
       <Paper>

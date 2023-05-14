@@ -347,6 +347,10 @@ class OrderService(DBService):
         if new_topup.amount > max_limit:
             raise InvalidArgument(f"Maximum TopUp amount is {max_limit:.02f}€")
 
+        uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_topup.uuid)
+        if uuid_exists:
+            raise InvalidArgument("This order has already been booked, duplicate order uuid")
+
         customer_account = await self._fetch_customer_by_user_tag(
             conn=conn, customer_tag_uid=new_topup.customer_tag_uid
         )
@@ -412,9 +416,9 @@ class OrderService(DBService):
 
         order_info = await book_order(
             conn=conn,
+            uuid=pending_top_up.uuid,
             order_type=OrderType.top_up,
             payment_method=pending_top_up.payment_method,
-            uuid=pending_top_up.uuid,
             cashier_id=current_user.id,
             till_id=current_terminal.till.id,
             customer_account_id=pending_top_up.customer_account_id,
@@ -445,6 +449,10 @@ class OrderService(DBService):
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
         """
+        uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_sale.uuid)
+        if uuid_exists:
+            raise InvalidArgument("This order has already been booked, duplicate order uuid")
+
         customer_account = await self._fetch_customer_by_user_tag(conn=conn, customer_tag_uid=new_sale.customer_tag_uid)
 
         booked_products = await self._get_products_from_buttons(
@@ -455,6 +463,7 @@ class OrderService(DBService):
         )
 
         order = PendingSale(
+            uuid=new_sale.uuid,
             buttons=new_sale.buttons,
             old_balance=customer_account.balance,
             new_balance=customer_account.balance,  # will be overwritten later on
@@ -525,6 +534,7 @@ class OrderService(DBService):
         order_info = await book_order(
             conn=conn,
             order_type=OrderType.sale,
+            uuid=pending_sale.uuid,
             payment_method=PaymentMethod.tag,
             customer_account_id=pending_sale.customer_account_id,
             cashier_id=current_user.id,
@@ -560,8 +570,7 @@ class OrderService(DBService):
         customer_account_after_booking = await get_account_by_id(
             conn=conn, account_id=completed_order.customer_account_id
         )
-        if customer_account_after_booking is None:
-            raise RuntimeError("customer was deleted unexpectedly, this should not happen")
+        assert customer_account_after_booking is not None
 
         # adjust completed order values after real booking in database
         completed_order.new_balance = customer_account_after_booking.balance
@@ -638,6 +647,10 @@ class OrderService(DBService):
         if new_pay_out.amount is not None and new_pay_out.amount > 0.0:
             raise InvalidArgument("Only payouts with a negative amount are allowed")
 
+        uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_pay_out.uuid)
+        if uuid_exists:
+            raise InvalidArgument("This order has already been booked, duplicate order uuid")
+
         can_pay_out = await conn.fetchval(
             "select allow_cash_out from till_profile where id = $1", current_terminal.till.active_profile_id
         )
@@ -657,6 +670,7 @@ class OrderService(DBService):
             raise NotEnoughFundsException(needed_fund=abs(new_pay_out.amount), available_fund=customer_account.balance)
 
         return PendingPayOut(
+            uuid=new_pay_out.uuid,
             amount=new_pay_out.amount,
             customer_tag_uid=new_pay_out.customer_tag_uid,
             customer_account_id=customer_account.id,
@@ -697,6 +711,7 @@ class OrderService(DBService):
 
         order_info = await book_order(
             conn=conn,
+            uuid=pending_pay_out.uuid,
             order_type=OrderType.pay_out,
             cashier_id=current_user.id,
             till_id=current_terminal.till.id,
@@ -724,6 +739,10 @@ class OrderService(DBService):
     async def check_ticket_sale(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_ticket_sale: NewTicketSale
     ) -> PendingTicketSale:
+        uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_ticket_sale.uuid)
+        if uuid_exists:
+            raise InvalidArgument("This order has already been booked, duplicate order uuid")
+
         if new_ticket_sale.payment_method == PaymentMethod.tag:
             raise InvalidArgument("Cannot pay with tag for a ticket")
 
@@ -830,6 +849,7 @@ class OrderService(DBService):
         )
 
         return PendingTicketSale(
+            uuid=new_ticket_sale.uuid,
             payment_method=new_ticket_sale.payment_method,
             customer_tag_uids=new_ticket_sale.customer_tag_uids,
             tickets=new_ticket_sale.tickets,

@@ -71,6 +71,11 @@ export const TillList: React.FC = () => {
       flex: 2,
     },
     {
+      field: "tse_serial",
+      headerName: t("till.tseSerial") as string,
+      minWidth: 150,
+    },
+    {
       field: "profile",
       headerName: t("till.profile") as string,
       flex: 0.5,

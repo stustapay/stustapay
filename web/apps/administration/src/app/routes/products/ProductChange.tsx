@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { TaxRateSelect } from "./TaxRateSelect";
-import { NumericInput } from "@components";
+import { NumericInput } from "@stustapay/components";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 import { RestrictionSelect } from "./RestrictionSelect";
 import { useCurrencySymbol } from "@hooks";
