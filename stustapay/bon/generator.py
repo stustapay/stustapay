@@ -42,7 +42,7 @@ class Generator(SubCommand):
         subparser.add_argument("-n", "--n-workers", type=int, default=1, help="Number of bon generator indices")
         subparser.add_argument("-i", "--worker-id", type=int, default=0, help="Index of this worker instance")
 
-    async def _should_process_order(self, order_id: int) -> bool:
+    def _should_process_order(self, order_id: int) -> bool:
         return order_id % self.args.n_workers == self.args.worker_id
 
     async def run(self):
@@ -58,7 +58,6 @@ class Generator(SubCommand):
             # initial processing of pending bons
             await self.cleanup_pending_bons()
 
-            # pylint: disable=attribute-defined-outside-init# pylint: disable=attribute-defined-outside-init
             self.db_hook = DBHook(self.db_conn, "bon", self.handle_hook)
             await self.db_hook.run()
 
