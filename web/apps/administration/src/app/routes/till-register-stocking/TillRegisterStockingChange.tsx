@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 import { NewTillRegisterStocking } from "@stustapay/models";
-import { NumericInput } from "@components";
+import { NumericInput } from "@stustapay/components";
 
 export interface TillRegisterStockkingChangeProps<T extends NewTillRegisterStocking> {
   headerTitle: string;

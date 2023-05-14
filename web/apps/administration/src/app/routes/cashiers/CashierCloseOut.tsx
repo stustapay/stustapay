@@ -26,9 +26,9 @@ import {
   useGetCashierByIdQuery,
   useGetTillsQuery,
 } from "@api";
-import { Loading } from "@stustapay/components";
+import { CashingTextField, Loading } from "@stustapay/components";
 import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
-import { NumericInput } from "@components";
+import { NumericInput } from "@stustapay/components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { Formik, FormikHelpers } from "formik";
@@ -278,14 +278,13 @@ export const CashierCloseOut: React.FC = () => {
                 error={touched.closingOutUserId && !!errors.closingOutUserId}
                 helperText={(touched.closingOutUserId && errors.closingOutUserId) as string}
               />
-              <TextField
+              <CashingTextField
                 multiline
                 fullWidth
                 label={t("closeOut.comment")}
                 name="comment"
                 value={values.comment}
-                onChange={handleChange}
-                onBlur={handleBlur}
+                onChange={(val) => setFieldValue("comment", val)}
                 error={touched.comment && !!errors.comment}
                 helperText={(touched.comment && errors.comment) as string}
               />
