@@ -938,7 +938,7 @@ create type till_tse_history_type as enum ('register', 'deregister');
 
 -- logs all historic till <-> TSE assignments (as registered with the TSE)
 create table if not exists till_tse_history (
-    till_name text not null,
+    till_id text not null,
     tse_id bigint references tse(tse_id) not null,
     what till_tse_history_type not null,
     date timestamptz not null default now()
@@ -1334,7 +1334,7 @@ create or replace function tse_signature_finished_trigger_procedure()
 returns trigger as $$
 begin
   insert into bon(id) values (NEW.id);
-  perform pg_notify('bon', json_build_object('bon_id', NEW.id));
+  perform pg_notify('bon', json_build_object('bon_id', NEW.id)::text);
 
   return NEW;
 end;
