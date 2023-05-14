@@ -15,8 +15,8 @@ def main():
     parser.add_argument("-c", "--config-path", default="server.yaml")
 
     ### module registration
-    parser.add_subcommand("start-api", festivalsetup.FestivalSetup)
-    parser.add_subcommand("start", festivalsimulator.Simulator)
+    parser.add_subcommand("setup", festivalsetup.FestivalSetup)
+    parser.add_subcommand("simulate", festivalsimulator.Simulator)
     ### / module registration
 
     loop = asyncio.new_event_loop()
