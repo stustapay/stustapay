@@ -89,7 +89,10 @@ fun StartpageView(
 
             Column(verticalArrangement = Arrangement.Bottom) {
                 val scroll = rememberScrollState()
-                Column(Modifier.verticalScroll(state = scroll).weight(1.0f)) {
+                Column(
+                    Modifier
+                        .verticalScroll(state = scroll)
+                        .weight(1.0f)) {
                     for (item in startpageItems) {
                         if (loginState.checkAccess(item.canAccess)) {
                             StartpageEntry(item = item, navigateTo = navigateTo)
