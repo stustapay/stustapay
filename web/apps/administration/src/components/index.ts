@@ -7,3 +7,5 @@ export * from "./EditableListItem";
 export * from "./layout";
 export * from "./OrderTable";
 export * from "./ExpandableLinkMenu";
+export * from "./RestrictionSelect";
+export * from "./ProductSelect";

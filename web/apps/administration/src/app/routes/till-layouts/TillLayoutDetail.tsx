@@ -1,4 +1,16 @@
-import { Paper, ListItem, IconButton, Typography, ListItemText, List, Tooltip, Divider, Stack } from "@mui/material";
+import {
+  Paper,
+  ListItem,
+  IconButton,
+  Typography,
+  ListItemText,
+  List,
+  Tooltip,
+  Divider,
+  Stack,
+  Tab,
+  Box,
+} from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -10,13 +22,18 @@ import {
   useGetTillButtonsQuery,
   selectTillLayoutById,
   selectTillButtonById,
+  useGetTicketsQuery,
+  selectTicketById,
 } from "@api";
 import { Loading } from "@stustapay/components";
-import { TillButton } from "@stustapay/models";
+import { Ticket, TillButton } from "@stustapay/models";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { useCurrencyFormatter } from "@hooks";
 
 export const TillLayoutDetail: React.FC = () => {
   const { t } = useTranslation();
   const { layoutId } = useParams();
+  const formatCurrency = useCurrencyFormatter();
   const navigate = useNavigate();
   const [deleteLayout] = useDeleteTillLayoutMutation();
   const { layout, error } = useGetTillLayoutByIdQuery(Number(layoutId), {
@@ -26,9 +43,12 @@ export const TillLayoutDetail: React.FC = () => {
     }),
   });
   const { data: buttons, error: buttonsError } = useGetTillButtonsQuery();
+  const { data: tickets, error: ticketsError } = useGetTicketsQuery();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
-  if (error || buttonsError) {
+  const [selectedTab, setSelectedTab] = React.useState<"buttons" | "tickets">("buttons");
+
+  if (error || buttonsError || ticketsError) {
     return <Navigate to="/till-layouts" />;
   }
 
@@ -43,12 +63,14 @@ export const TillLayoutDetail: React.FC = () => {
     setShowConfirmDelete(false);
   };
 
-  if (layout === undefined || buttons === undefined) {
+  if (layout === undefined || buttons === undefined || tickets === undefined) {
     return <Loading />;
   }
 
   const sortedButtons =
     layout.button_ids == null ? [] : [...layout.button_ids].map((i) => selectTillButtonById(buttons, i) as TillButton);
+  const sortedTickets =
+    layout.ticket_ids == null ? [] : [...layout.ticket_ids].map((i) => selectTicketById(tickets, i) as Ticket);
 
   return (
     <Stack spacing={2}>
@@ -80,19 +102,34 @@ export const TillLayoutDetail: React.FC = () => {
           </ListItem>
         </List>
       </Paper>
-      {sortedButtons.length > 0 && (
+      {(sortedButtons.length > 0 || sortedTickets.length > 0) && (
         <Paper>
-          <List>
-            <ListItem>
-              <Typography variant="h6">{t("button.buttons")}</Typography>
-            </ListItem>
-            <Divider />
-            {sortedButtons.map((button) => (
-              <ListItem key={button.id}>
-                <ListItemText primary={button.name} secondary={`${button.price}€`} />
-              </ListItem>
-            ))}
-          </List>
+          <TabContext value={selectedTab}>
+            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+              <TabList onChange={(evt, val) => setSelectedTab(val as any)}>
+                <Tab value="buttons" label={t("layout.buttons")} />
+                <Tab value="tickets" label={t("layout.tickets")} />
+              </TabList>
+            </Box>
+            <TabPanel value="buttons">
+              <List>
+                {sortedButtons.map((button) => (
+                  <ListItem key={button.id}>
+                    <ListItemText primary={button.name} secondary={formatCurrency(button.price)} />
+                  </ListItem>
+                ))}
+              </List>
+            </TabPanel>
+            <TabPanel value="tickets">
+              <List>
+                {sortedTickets.map((ticket) => (
+                  <ListItem key={ticket.id}>
+                    <ListItemText primary={ticket.name} secondary={formatCurrency(ticket.total_price)} />
+                  </ListItem>
+                ))}
+              </List>
+            </TabPanel>
+          </TabContext>
         </Paper>
       )}
       <ConfirmDialog

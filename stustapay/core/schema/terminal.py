@@ -25,11 +25,6 @@ class TerminalButton(BaseModel):
     fixed_price: bool
 
 
-ENTRY_BUTTON_ID = -1
-ENTRY_U18_BUTTON_ID = -2
-ENTRY_U16_BUTTON_ID = -3
-
-
 class TerminalConfig(BaseModel):
     id: int
     name: str

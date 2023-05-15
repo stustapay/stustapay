@@ -5,6 +5,7 @@ import logging
 import random
 import threading
 import time
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -14,7 +15,7 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.database import create_db_pool
 from stustapay.core.schema.order import Button
-from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess, ENTRY_BUTTON_ID
+from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import CASHIER_ROLE_ID, ADMIN_ROLE_ID
 from stustapay.core.subcommand import SubCommand
@@ -41,7 +42,10 @@ class Terminal:
 
         buttons = random.choices(self.config.buttons, k=random.randint(1, len(self.config.buttons)))
 
-        return [Button(till_button_id=button.id, quantity=random.randint(1, 4)).dict() for button in buttons]
+        return [
+            Button(till_button_id=button.id, quantity=(-1 if button.is_returnable else 1) * random.randint(1, 4)).dict()
+            for button in buttons
+        ]
 
 
 class Simulator(SubCommand):
@@ -233,9 +237,11 @@ class Simulator(SubCommand):
 
                 self.inc_counter()
                 payload = {
-                    "customer_tag_uids": user_tags,
+                    "uuid": str(uuid.uuid4()),
                     "payment_method": "cash",
-                    "tickets": [{"till_button_id": ENTRY_BUTTON_ID, "quantity": n_customers}],
+                    "tickets": [
+                        {"till_button_id": terminal.config.ticket_buttons[0].id, "customer_tag_uid": user_tags[0]}
+                    ],
                 }
                 resp = await client.post("/order/check-ticket-sale", json=payload, headers=terminal.get_headers())
                 if resp.status != 200:
@@ -269,6 +275,7 @@ class Simulator(SubCommand):
 
                 self.inc_counter()
                 payload = {
+                    "uuid": str(uuid.uuid4()),
                     "customer_tag_uid": customer_tag_uid,
                     "payment_method": "cash",
                     "amount": random.randint(10, 50),
@@ -314,6 +321,7 @@ class Simulator(SubCommand):
 
                 self.inc_counter()
                 payload = {
+                    "uuid": str(uuid.uuid4()),
                     "customer_tag_uid": customer_tag_uid,
                     "buttons": terminal.get_random_button_selection(),
                 }

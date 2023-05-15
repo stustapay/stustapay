@@ -530,6 +530,30 @@ create or replace view product_as_json as (
     group by p.id
 );
 
+create table if not exists ticket (
+    id bigint primary key generated always as identity (start with 1000),
+    name text not null unique,
+    description text,
+    product_id bigint not null references product(id),
+    initial_top_up_amount numeric not null,
+    restriction text references restriction_type(name),  -- todo: should we derive this from the product somehow??
+    constraint initial_top_up_is_positive check (initial_top_up_amount >= 0)
+    -- TODO: constraint that we can only reference locked, fixed-price products
+);
+
+create or replace view ticket_with_product as (
+    select
+        t.*,
+        p.name as product_name,
+        p.price,
+        p.tax_name,
+        p.tax_rate,
+        p.target_account_id as product_target_account_id,
+        t.initial_top_up_amount + p.price as total_price
+    from ticket t
+    join product_with_tax_and_restrictions p on t.product_id = p.id
+);
+
 create table if not exists till_layout (
     id bigint primary key generated always as identity (start with 1000),
     name text not null unique,
@@ -672,16 +696,30 @@ create table if not exists till_layout_to_button (
     unique (layout_id, button_id, sequence_number)
 );
 
-create or replace view till_layout_with_buttons as (
+create table if not exists till_layout_to_ticket (
+    layout_id bigint not null references till_layout(id) on delete cascade,
+    ticket_id bigint not null references ticket(id),
+    sequence_number bigint not null,
+    primary key (layout_id, ticket_id),
+    unique (layout_id, ticket_id, sequence_number)
+);
+
+create or replace view till_layout_with_buttons_and_tickets as (
     select
        t.*,
-       coalesce(j_view.button_ids, '{}'::bigint array) as button_ids
+       coalesce(j_view.button_ids, '{}'::bigint array) as button_ids,
+       coalesce(t_view.ticket_ids, '{}'::bigint array) as ticket_ids
     from till_layout t
     left join (
         select tltb.layout_id, array_agg(tltb.button_id order by tltb.sequence_number) as button_ids
         from till_layout_to_button tltb
         group by tltb.layout_id
     ) j_view on t.id = j_view.layout_id
+    left join (
+        select tltt.layout_id, array_agg(tltt.ticket_id order by tltt.sequence_number) as ticket_ids
+        from till_layout_to_ticket tltt
+        group by tltt.layout_id
+    ) t_view on t.id = t_view.layout_id
 );
 
 create table if not exists till_profile (

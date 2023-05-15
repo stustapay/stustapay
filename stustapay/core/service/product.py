@@ -8,9 +8,6 @@ from stustapay.core.schema.product import (
     Product,
     DISCOUNT_PRODUCT_ID,
     TOP_UP_PRODUCT_ID,
-    TICKET_PRODUCT_ID,
-    TICKET_U18_PRODUCT_ID,
-    TICKET_U16_PRODUCT_ID,
     MONEY_TRANSFER_PRODUCT_ID,
     MONEY_DIFFERENCE_PRODUCT_ID,
     PAY_OUT_PRODUCT_ID,
@@ -48,28 +45,12 @@ async def fetch_pay_out_product(*, conn: asyncpg.Connection) -> Product:
     return await fetch_constant_product(conn=conn, product_id=PAY_OUT_PRODUCT_ID)
 
 
-async def fetch_ticket_product(*, conn: asyncpg.Connection) -> Product:
-    return await fetch_constant_product(conn=conn, product_id=TICKET_PRODUCT_ID)
-
-
-async def fetch_ticket_product_u18(*, conn: asyncpg.Connection) -> Product:
-    return await fetch_constant_product(conn=conn, product_id=TICKET_U18_PRODUCT_ID)
-
-
-async def fetch_ticket_product_u16(*, conn: asyncpg.Connection) -> Product:
-    return await fetch_constant_product(conn=conn, product_id=TICKET_U16_PRODUCT_ID)
-
-
 async def fetch_money_transfer_product(*, conn: asyncpg.Connection) -> Product:
     return await fetch_constant_product(conn=conn, product_id=MONEY_TRANSFER_PRODUCT_ID)
 
 
 async def fetch_money_difference_product(*, conn: asyncpg.Connection) -> Product:
     return await fetch_constant_product(conn=conn, product_id=MONEY_DIFFERENCE_PRODUCT_ID)
-
-
-async def fetch_initial_topup_amount(conn: asyncpg.Connection) -> float:
-    return float(await conn.fetchval("select value from config where key = 'entry.initial_topup_amount'"))
 
 
 class ProductIsLockedException(ServiceException):
@@ -108,8 +89,7 @@ class ProductService(DBService):
         if product_id is None:
             raise RuntimeError("product should have been created")
         created_product = await fetch_product(conn=conn, product_id=product_id)
-        if created_product is None:
-            raise RuntimeError("product should have been created")
+        assert created_product is not None
         return created_product
 
     @with_db_transaction

@@ -20,6 +20,7 @@ class NewTillLayout(BaseModel):
     name: str
     description: str
     button_ids: Optional[list[int]] = None
+    ticket_ids: Optional[list[int]] = None
 
 
 class TillLayout(NewTillLayout):

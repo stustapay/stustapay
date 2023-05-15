@@ -3,9 +3,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
 import { TillList } from "./routes/tills/TillList";
 import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
-import { TaxRateCreate } from "./routes/tax-rates/TaxRateCreate";
-import { TaxRateUpdate } from "./routes/tax-rates/TaxRateUpdate";
-import { TaxRateList } from "./routes/tax-rates/TaxRateList";
+import { TicketCreate, TicketDetail, TicketList, TicketUpdate } from "./routes/tickets";
+import { TaxRateCreate, TaxRateUpdate, TaxRateList } from "./routes/tax-rates";
 import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
 import { Settings } from "./routes/settings/Settings";
 import { Login } from "./routes/auth/Login";
@@ -92,6 +91,28 @@ const router = createBrowserRouter([
           {
             path: ":productId",
             element: <ProductDetail />,
+          },
+        ],
+      },
+      {
+        path: "tickets",
+        element: <PrivilegeGuard privilege="product_management" />,
+        children: [
+          {
+            path: "",
+            element: <TicketList />,
+          },
+          {
+            path: "new",
+            element: <TicketCreate />,
+          },
+          {
+            path: ":ticketId/edit",
+            element: <TicketUpdate />,
+          },
+          {
+            path: ":ticketId",
+            element: <TicketDetail />,
           },
         ],
       },
