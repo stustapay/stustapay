@@ -5,6 +5,7 @@ import logging
 import random
 import threading
 import time
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -41,7 +42,10 @@ class Terminal:
 
         buttons = random.choices(self.config.buttons, k=random.randint(1, len(self.config.buttons)))
 
-        return [Button(till_button_id=button.id, quantity=random.randint(1, 4)).dict() for button in buttons]
+        return [
+            Button(till_button_id=button.id, quantity=(-1 if button.is_returnable else 1) * random.randint(1, 4)).dict()
+            for button in buttons
+        ]
 
 
 class Simulator(SubCommand):
@@ -233,6 +237,7 @@ class Simulator(SubCommand):
 
                 self.inc_counter()
                 payload = {
+                    "uuid": str(uuid.uuid4()),
                     "customer_tag_uids": user_tags,
                     "payment_method": "cash",
                     "tickets": [{"till_button_id": ENTRY_BUTTON_ID, "quantity": n_customers}],
@@ -269,6 +274,7 @@ class Simulator(SubCommand):
 
                 self.inc_counter()
                 payload = {
+                    "uuid": str(uuid.uuid4()),
                     "customer_tag_uid": customer_tag_uid,
                     "payment_method": "cash",
                     "amount": random.randint(10, 50),
@@ -314,6 +320,7 @@ class Simulator(SubCommand):
 
                 self.inc_counter()
                 payload = {
+                    "uuid": str(uuid.uuid4()),
                     "customer_tag_uid": customer_tag_uid,
                     "buttons": terminal.get_random_button_selection(),
                 }
