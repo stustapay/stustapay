@@ -43,6 +43,7 @@ export const NumericInput: React.FC<NumericInputProps> = ({ value, onChange, ...
       inputProps={{ style: { textAlign: "right" } }}
       onKeyUp={onKeyUp}
       variant="standard"
+      onFocus={(event) => event.target.select()}
       {...props}
     />
   );

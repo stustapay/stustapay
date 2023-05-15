@@ -27,6 +27,18 @@ class TillProfileService(DBService):
 
         return TillProfile.parse_obj(row)
 
+    @staticmethod
+    async def _update_allowed_profile_roles(*, conn: asyncpg.Connection, profile_id: int, role_names: list[str]):
+        for role_name in role_names:
+            role_id = await conn.fetchval("select id from user_role where name = $1", role_name)
+            if role_id is None:
+                raise InvalidArgument(f"User role '{role_name}' does not exist")
+            await conn.execute(
+                "insert into allowed_user_roles_for_till_profile (profile_id, role_id) values ($1, $2)",
+                profile_id,
+                role_id,
+            )
+
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def create_profile(self, *, conn: asyncpg.Connection, profile: NewTillProfile) -> TillProfile:
@@ -42,15 +54,9 @@ class TillProfileService(DBService):
             profile.layout_id,
         )
 
-        for role_name in profile.allowed_role_names:
-            role_id = await conn.fetchval("select id from user_role where name = $1", role_name)
-            if role_id is None:
-                raise InvalidArgument(f"User role '{role_name}' does not exist")
-            await conn.execute(
-                "insert into allowed_user_roles_for_till_profile (profile_id, role_id) values ($1, $2)",
-                profile_id,
-                role_id,
-            )
+        await self._update_allowed_profile_roles(
+            conn=conn, profile_id=profile_id, role_names=profile.allowed_role_names
+        )
 
         resulting_profile = await self._get_profile(conn=conn, profile_id=profile_id)
         assert resulting_profile is not None
@@ -91,15 +97,9 @@ class TillProfileService(DBService):
             return None
 
         await conn.execute("delete from allowed_user_roles_for_till_profile where profile_id = $1", profile_id)
-        for role_name in profile.allowed_role_names:
-            role_id = await conn.fetchval("select id from user_role where name = $1", role_name)
-            if role_id is None:
-                raise InvalidArgument(f"User role '{role_name}' does not exist")
-            await conn.execute(
-                "insert into allowed_user_roles_for_till_profile (profile_id, role_id) values ($1, $2)",
-                profile_id,
-                role_id,
-            )
+        await self._update_allowed_profile_roles(
+            conn=conn, profile_id=profile_id, role_names=profile.allowed_role_names
+        )
 
         resulting_profile = await self._get_profile(conn=conn, profile_id=profile_id)
         assert resulting_profile is not None

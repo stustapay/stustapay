@@ -84,8 +84,8 @@ export const PayoutInfo: React.FC = () => {
   };
 
   return (
-    <Grid container justifyItems="center" justifyContent="center">
-      <Grid item xs={8}>
+    <Grid container justifyItems="center" justifyContent="center" sx={{ paddingX: 0.5 }}>
+      <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
         <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
           {t("info")}
         </Alert>

@@ -13,6 +13,7 @@ export const translations = {
   },
   balance: "Balance",
   tagUid: "Tag UID",
+  vouchers: "Vouchers",
   order: {
     loadingError: "Error loading orders",
     productName: "Product Name",

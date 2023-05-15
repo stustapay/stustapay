@@ -1,3 +1,4 @@
+import re
 from typing import Optional
 
 import asyncpg
@@ -74,9 +75,18 @@ class AccountService(DBService):
     @with_db_transaction
     @requires_user([Privilege.account_management])
     async def find_accounts(self, *, conn: asyncpg.Connection, search_term: str) -> list[Account]:
+        value_as_int = None
+        if re.match("[a-f0-9]+", search_term):
+            value_as_int = int(search_term, base=16)
+
         cursor = conn.cursor(
-            "select * from account where name like $1 or comment like $1 or user_tag_uid::text like $1",
+            "select * from account "
+            "where name like $1 "
+            "   or comment like $1 "
+            "   or user_tag_uid::text like $1 "
+            "   or (user_tag_uid is not null and user_tag_uid = $2)",
             f"%{search_term}%",
+            value_as_int,
         )
         result = []
         async for row in cursor:

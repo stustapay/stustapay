@@ -9,7 +9,7 @@ import typing
 @dataclasses.dataclass
 class TSESignatureRequest:
     order_id: int
-    till_name: str
+    till_id: str
     process_type: str
     process_data: str
 

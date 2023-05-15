@@ -199,13 +199,13 @@ class TSEWrapper:
                 )
                 select
                     ordr.id as order_id,
-                    till.name as till_name
+                    till.id as till_id
                 from
                     tse_signature
                     join ordr on ordr.id=tse_signature.id
                     join till on ordr.till_id=till.id
                 where
-                    tse_signature.signature_status='todo' and
+                    tse_signature.signature_status='new' and
                     till.tse_id = $1 and
                     not exists (
                         select
@@ -230,7 +230,9 @@ class TSEWrapper:
                 self._orders_available_event.set()
 
             order_id = next_sig["order_id"]
-            till_name = next_sig["till_name"]
+            till_id = str(
+                next_sig["till_id"]
+            )  # use till_id converted to string as TSE ClientID to satisfy naming constraints
 
             await self._conn.execute(
                 """
@@ -246,9 +248,9 @@ class TSEWrapper:
                 order_id,
             )
 
-        return await self._make_signature_request(self._conn, order_id, till_name)
+        return await self._make_signature_request(self._conn, order_id, till_id)
 
-    async def _make_signature_request(self, conn: asyncpg.Connection, order_id: int, till_name: str):
+    async def _make_signature_request(self, conn: asyncpg.Connection, order_id: int, till_id: str):
         """
         Collects all required information for signing the order,
         and passes the signing request to the TSE.
@@ -271,7 +273,7 @@ class TSEWrapper:
 
         return TSESignatureRequest(
             order_id=order_id,
-            till_name=till_name,
+            till_id=till_id,
             process_type=beleg.get_process_type(),
             process_data=beleg.get_process_data(),
         )
@@ -283,7 +285,7 @@ class TSEWrapper:
         """
         await self._conn.execute(
             """
-            update tse_signature set signature_status='todo', tse_id=NULL where id=$1
+            update tse_signature set signature_status='new', tse_id=NULL where id=$1
             """,
             request.order_id,
         )
@@ -326,8 +328,8 @@ class TSEWrapper:
     async def _sign(self, signing_request: TSESignatureRequest) -> typing.Optional[TSESignature]:
         assert self._tse_handler is not None
         # must be called when the TSE is connected and operational.
-        if signing_request.till_name not in self._tills:
-            await self._till_add(signing_request.till_name)
+        if signing_request.till_id not in self._tills:
+            await self._till_add(signing_request.till_id)
         start = time.monotonic()
         result = await self._tse_handler.sign(signing_request)
         stop = time.monotonic()
@@ -341,17 +343,17 @@ class TSEWrapper:
     async def _till_add(self, till):
         assert self._tse_handler is not None
         LOGGER.info(f"{self.name!r}: adding till {till!r}")
-        await self._tse_handler.register_client_id(till)
+        await self._tse_handler.register_client_id(str(till))
         await self._conn.execute(
-            "insert into till_tse_history (till_name, tse_id, what) values ($1, $2, 'register')", till, self.tse_id
+            "insert into till_tse_history (till_id, tse_id, what) values ($1, $2, 'register')", till, self.tse_id
         )
         self._tills.add(till)
 
     async def _till_remove(self, till):
         assert self._tse_handler is not None
         LOGGER.info(f"{self.name!r}: removing till {till!r}")
-        await self._tse_handler.deregister_client_id(till)
+        await self._tse_handler.deregister_client_id(str(till))
         await self._conn.execute(
-            "insert into till_tse_history (till_name, tse_id, what) values ($1, $2, 'deregister')", till, self.tse_id
+            "insert into till_tse_history (till_id, tse_id, what) values ($1, $2, 'deregister')", till, self.tse_id
         )
         self._tills.remove(till)

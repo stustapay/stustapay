@@ -1,4 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+import uuid
+
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT
 from stustapay.core.schema.order import OrderType, NewSale, Button
 from stustapay.core.schema.product import NewProduct
@@ -107,7 +109,9 @@ class TillManagementTest(TerminalTestCase):
         await self.order_service.book_sale(
             token=self.terminal_token,
             new_sale=NewSale(
-                customer_tag_uid=self.customer_tag_uid, buttons=[Button(till_button_id=self.till_button.id, quantity=1)]
+                uuid=uuid.uuid4(),
+                customer_tag_uid=self.customer_tag_uid,
+                buttons=[Button(till_button_id=self.till_button.id, quantity=1)],
             ),
         )
 
