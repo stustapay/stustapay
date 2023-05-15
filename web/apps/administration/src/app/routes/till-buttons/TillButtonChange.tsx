@@ -20,7 +20,7 @@ import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/bu
 import { NewTillButton, Product } from "@stustapay/models";
 import { selectProductById, useGetProductsQuery } from "@api";
 import { Delete as DeleteIcon } from "@mui/icons-material";
-import { ProductSelect } from "./ProductSelect";
+import { ProductSelect } from "@components";
 
 interface ProductSelectProps {
   productIds: number[];

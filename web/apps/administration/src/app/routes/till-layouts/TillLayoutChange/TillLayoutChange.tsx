@@ -1,4 +1,4 @@
-import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
+import { Paper, TextField, Button, LinearProgress, Typography, Tab, Box } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -8,6 +8,9 @@ import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 import { NewTillLayout } from "@stustapay/models";
 import { TillLayoutDesigner } from "./TillLayoutDesigner";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { selectTicketAll, selectTillButtonAll, useGetTicketsQuery, useGetTillButtonsQuery } from "@api";
+import { Loading } from "@stustapay/components";
 
 export interface TillChangeProps<T extends NewTillLayout> {
   headerTitle: string;
@@ -27,6 +30,25 @@ export function TillLayoutChange<T extends NewTillLayout>({
 }: TillChangeProps<T>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  const { buttons } = useGetTillButtonsQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      buttons: data ? selectTillButtonAll(data) : undefined,
+    }),
+  });
+  const { tickets } = useGetTicketsQuery(undefined, {
+    selectFromResult: ({ data, ...rest }) => ({
+      ...rest,
+      tickets: data ? selectTicketAll(data) : undefined,
+    }),
+  });
+
+  const [selectedTab, setSelectedTab] = React.useState<"buttons" | "tickets">("buttons");
+
+  if (!tickets || !buttons) {
+    return <Loading />;
+  }
 
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
     setSubmitting(true);
@@ -81,10 +103,28 @@ export function TillLayoutChange<T extends NewTillLayout>({
             />
           </Paper>
           <Paper sx={{ mt: 2 }}>
-            <TillLayoutDesigner
-              buttonIds={values.button_ids === null ? [] : values.button_ids}
-              onChange={(buttonIds) => setFieldValue("button_ids", buttonIds)}
-            />
+            <TabContext value={selectedTab}>
+              <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                <TabList onChange={(evt, val) => setSelectedTab(val as any)}>
+                  <Tab value="buttons" label={t("layout.buttons")} />
+                  <Tab value="tickets" label={t("layout.tickets")} />
+                </TabList>
+              </Box>
+              <TabPanel value="buttons">
+                <TillLayoutDesigner
+                  selectedIds={values.button_ids === null ? [] : values.button_ids}
+                  onChange={(buttonIds) => setFieldValue("button_ids", buttonIds)}
+                  selectables={buttons}
+                />
+              </TabPanel>
+              <TabPanel value="tickets">
+                <TillLayoutDesigner
+                  selectedIds={values.ticket_ids === null ? [] : values.ticket_ids}
+                  onChange={(ticketIds) => setFieldValue("ticket_ids", ticketIds)}
+                  selectables={tickets.map((t) => ({ id: t.id, name: t.name, price: t.total_price }))}
+                />
+              </TabPanel>
+            </TabContext>
           </Paper>
           <Paper sx={{ mt: 2, p: 2 }}>
             {isSubmitting && <LinearProgress />}

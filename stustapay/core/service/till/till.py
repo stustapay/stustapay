@@ -11,9 +11,6 @@ from stustapay.core.schema.terminal import (
     TerminalRegistrationSuccess,
     TerminalSecrets,
     TerminalButton,
-    ENTRY_BUTTON_ID,
-    ENTRY_U18_BUTTON_ID,
-    ENTRY_U16_BUTTON_ID,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile, UserInfo
 from stustapay.core.schema.user import Privilege, UserTag, UserRole, CurrentUser
@@ -21,12 +18,6 @@ from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
 from stustapay.core.service.common.error import AccessDenied, NotFound, InvalidArgument
-from stustapay.core.service.product import (
-    fetch_ticket_product_u18,
-    fetch_ticket_product_u16,
-    fetch_ticket_product,
-    fetch_initial_topup_amount,
-)
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.till.register import TillRegisterService
@@ -286,74 +277,51 @@ class TillService(DBService):
             raise NotFound(element_typ="user_tag", element_id=str(user_tag_uid))
         return UserInfo.parse_obj(row)
 
-    @staticmethod
-    async def _construct_ticket_buttons(*, conn: asyncpg.Connection) -> list[TerminalButton]:
-        initial_topup_amount = await fetch_initial_topup_amount(conn=conn)
-        ticket_product = await fetch_ticket_product(conn=conn)
-        assert ticket_product.price is not None
-        ticket_u16_product = await fetch_ticket_product_u16(conn=conn)
-        assert ticket_u16_product.price is not None
-        ticket_u18_product = await fetch_ticket_product_u18(conn=conn)
-        assert ticket_u18_product.price is not None
-        return [
-            TerminalButton(
-                id=ENTRY_BUTTON_ID,
-                name=ticket_product.name,
-                price=ticket_product.price + initial_topup_amount,
-                is_returnable=False,
-                fixed_price=True,
-            ),
-            TerminalButton(
-                id=ENTRY_U16_BUTTON_ID,
-                name=ticket_u16_product.name,
-                price=ticket_u16_product.price + initial_topup_amount,
-                is_returnable=False,
-                fixed_price=True,
-            ),
-            TerminalButton(
-                id=ENTRY_U18_BUTTON_ID,
-                name=ticket_u18_product.name,
-                price=ticket_u18_product.price + initial_topup_amount,
-                is_returnable=False,
-                fixed_price=True,
-            ),
-        ]
-
     @with_db_transaction
     @requires_terminal()
     async def get_terminal_config(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal
     ) -> Optional[TerminalConfig]:
         db_profile = await conn.fetchrow(
-            "select * from till_profile tp where id = $1", current_terminal.till.active_profile_id
+            "select * from till_profile_with_allowed_roles tp where id = $1",
+            current_terminal.till.active_profile_id,
         )
-        if db_profile is None:
-            return None
+        profile: TillProfile = TillProfile.parse_obj(db_profile)
         user_privileges = await conn.fetchval(
             "select privileges from user_with_privileges where id = $1", current_terminal.till.active_user_id
         )
-        db_buttons = conn.cursor(
+        db_buttons = await conn.fetch(
             "select tlwb.* "
             "from till_button_with_products tlwb "
             "join till_layout_to_button tltb on tltb.button_id = tlwb.id "
             "where tltb.layout_id = $1 "
             "order by tltb.sequence_number asc",
-            db_profile["layout_id"],
+            profile.layout_id,
         )
-        buttons = []
-        async for db_button in db_buttons:
-            buttons.append(TerminalButton.parse_obj(db_button))
-        db_profile = await conn.fetchrow(
-            "select * from till_profile_with_allowed_roles tp join till on tp.id = till.active_profile_id "
-            "where till.id = $1",
-            current_terminal.till.id,
+        buttons = [TerminalButton.parse_obj(db_button) for db_button in db_buttons]
+
+        db_tickets = await conn.fetch(
+            "select * "
+            "from ticket_with_product twp "
+            "join till_layout_to_ticket tltt on tltt.ticket_id = twp.id "
+            "where tltt.layout_id = $1 "
+            "order by tltt.sequence_number asc",
+            profile.layout_id,
         )
-        profile = TillProfile.parse_obj(db_profile)
+        ticket_buttons = [
+            TerminalButton(
+                id=row["id"],
+                name=row["name"],
+                price=row["total_price"],
+                is_returnable=False,
+                fixed_price=True,
+            )
+            for row in db_tickets
+        ]
 
         secrets = None
         # TODO: only send secrets if profile.allow_top_up:
         secrets = TerminalSecrets(sumup_affiliate_key=self.cfg.core.sumup_affiliate_key)
-        ticket_buttons = await self._construct_ticket_buttons(conn=conn)
 
         available_roles = await list_user_roles(conn=conn)
 

@@ -8,6 +8,7 @@ const initialValues: NewTillLayout = {
   name: "",
   description: "",
   button_ids: null,
+  ticket_ids: null,
 };
 
 export const TillLayoutCreate: React.FC = () => {
