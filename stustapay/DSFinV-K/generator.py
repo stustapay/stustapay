@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import pytz
 from .dsfinvk.collection import Collection
-from .dsfinvk.models import Stamm_Abschluss, Stamm_Orte, Stamm_Kassen, Stamm_USt, Stamm_TSE
+from .dsfinvk.models import Stamm_Abschluss, Stamm_Orte, Stamm_Kassen, Stamm_USt, Stamm_TSE, Z_GV_Typ, Z_Zahlart, Z_Waehrungen
 
 from ..tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
 import time
@@ -60,7 +60,7 @@ class Generator:
 
                     self.einzelaufzeichnungsmodul(Z_NR, Z_ERSTELLUNG, Z_KASSE_ID) #sammle Einzelaufzeichnungsmodul
                     await self.stammdatenmodul(Z_NR, Z_ERSTELLUNG, Z_KASSE_ID)  #sammle Stammdatenmodul
-                    self.kassenabschlussmodul(Z_NR, Z_ERSTELLUNG, Z_KASSE_ID) #sammle Kassenabschlussmodul
+                    await self.kassenabschlussmodul(Z_NR, Z_ERSTELLUNG, Z_KASSE_ID) #sammle Kassenabschlussmodul
 
             self.finalize()  #schreibe die Datei
             LOGGER.info(f'Duration: {time.monotonic() - self.starttime:.3f}s')
@@ -168,7 +168,7 @@ class Generator:
             a.TSE_ZERTIFIKAT_I = row['tse_certificate'][0:1000]
             a.TSE_ZERTIFIKAT_II = row['tse_certificate'][1001:]
         else:
-            LOGGER.error(f"Zertifikat zu lang. Länge: {len(row['tse_certificate']) Zeichen. Maximal unterstützt: 2000 Zeichen}")
+            LOGGER.error(f"Zertifikat zu lang. Länge: {len(row['tse_certificate'])} Zeichen. Maximal unterstützt: 2000 Zeichen")
             raise NotImplemented
 
         self.c.add(a)
@@ -176,7 +176,57 @@ class Generator:
 
         return
     
-    def kassenabschlussmodul(self, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID):
+    async def kassenabschlussmodul(self, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID):
+
+        paymentmethods = await self._conn.fetch("select payment_method from line_item join ordr on line_item.order_id=ordr.id where ordr.till_id = $1 and ordr.z_nr = $2 group by payment_method", Z_KASSE_ID, Z_NR)
+        barzahlungen = Decimal(0)
+        summe_je_zahlart = dict()
+        for method in paymentmethods:
+            summe_je_zahlart[str(method['payment_method'])] = Decimal(0)
+
+        for row in await self._conn.fetch("select total_price, payment_method from line_item join ordr on line_item.order_id=ordr.id where ordr.till_id = $1 and ordr.z_nr = $2", Z_KASSE_ID, Z_NR):
+            summe_je_zahlart[row['payment_method']] += Decimal(row['total_price'])
+            if PAYMENT_METHOD_TO_ZAHLUNGSART[row['payment_method']] == 'Bar':
+               barzahlungen += Decimal(row['total_price'])
+
+        ### businesscases.csv###
+        a = Z_GV_Typ()
+        a.Z_KASSE_ID = Z_KASSE_ID
+        a.Z_ERSTELLUNG = Z_ERSTELLUNG
+        a.Z_NR = Z_NR
+        #a.GV_TYP
+        #a.GV_NAME
+        a.AGENTUR_ID = 0 #TODO: Agentur hart auf 0, andere Agenturen not implemented
+        #a.UST_SCHLUESSEL
+        #a.Z_UMS_BRUTTO
+        #a.Z_UMS_NETTO
+        #a.Z_UST
+        #TODO
+        ### \businesscases.csv###
+
+
+        ### payment.csv###
+        a = Z_Zahlart()
+        a.Z_KASSE_ID = Z_KASSE_ID
+        a.Z_ERSTELLUNG = Z_ERSTELLUNG
+        a.Z_NR = Z_NR
+        for typ in paymentmethods:
+            a.ZAHLART_TYP = PAYMENT_METHOD_TO_ZAHLUNGSART[typ['payment_method']]
+            a.ZAHLART_NAME = typ['payment_method']
+            a.Z_ZAHLART_BETRAG = summe_je_zahlart[typ['payment_method']]
+            self.c.add(a)
+        ### \payment.csv###
+
+        ### cash_per_currency.csv###
+        a = Z_Waehrungen()
+        a.Z_KASSE_ID = Z_KASSE_ID
+        a.Z_ERSTELLUNG = Z_ERSTELLUNG
+        a.Z_NR = Z_NR
+        a.ZAHLART_WAEH = self.systemconfig['currency.identifier']
+        a.ZAHLART_BETRAG_WAEH = barzahlungen  #Gesamtsumme der Barzahlungen je Währung (... wir nehmen nur eine!)
+        self.c.add(a)
+        ### \cash_per_currency.csv###
+
         return
 
 
