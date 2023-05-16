@@ -10,7 +10,7 @@ from .config import Config
 from stustapay.core.database import create_db_pool
 from stustapay.core.service.common.dbhook import DBHook
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 import pytz
@@ -56,7 +56,7 @@ class Generator:
                 #iteriere über Kassenabschlüsse Z_NR dieser Kassen
                 for row in  await self._conn.fetch("select z_nr from ordr where till_id = $1 group by z_nr", Z_KASSE_ID): #alle Kassenabschlussids
                     Z_NR = row['z_nr']
-                    Z_ERSTELLUNG = datetime.now() #TODO Zeitpunkt des Kassenabschlusses aus der db herausfinden
+                    Z_ERSTELLUNG = datetime.now(timezone.utc).astimezone() #TODO Zeitpunkt des Kassenabschlusses aus der db herausfinden
 
                     self.einzelaufzeichnungsmodul(Z_NR, Z_ERSTELLUNG, Z_KASSE_ID) #sammle Einzelaufzeichnungsmodul
                     await self.stammdatenmodul(Z_NR, Z_ERSTELLUNG, Z_KASSE_ID)  #sammle Stammdatenmodul
@@ -76,7 +76,7 @@ class Generator:
         a = Stamm_Abschluss()
         #wir haben für jeden Kassenabschluss und Kasse immer die gleichen Stammdaten (pro Festival)
         a.Z_KASSE_ID = Z_KASSE_ID
-        #a.Z_ERSTELLUNG = Z_ERSTELLUNG  #TODO richtiges Zeitformat
+        a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
         a.TAXONOMIE_VERSION = '2.3'  #aktuelle version der DSFinV-K
         a.NAME = self.systemconfig['bon.issuer']
@@ -107,7 +107,7 @@ class Generator:
         LOGGER.debug("Stamm_Orte start")
         a = Stamm_Orte()
         a.Z_KASSE_ID = Z_KASSE_ID
-        #a.Z_ERSTELLUNG = Z_ERSTELLUNG  #TODO richtiges Zeitformat
+        a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
 
         a.LOC_NAME = self.systemconfig['bon.issuer']
@@ -123,7 +123,7 @@ class Generator:
         ### cashregister.csv ###
         a = Stamm_Kassen()
         a.Z_KASSE_ID = Z_KASSE_ID
-        #a.Z_ERSTELLUNG = Z_ERSTELLUNG  #TODO richtiges Zeitformat
+        a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
         a.KASSE_BRAND = 'StuStaPay'
         a.KASSE_MODELL = 'v0'  #TODO version?
@@ -140,7 +140,7 @@ class Generator:
         for row in await self._conn.fetch("select name, rate, description from tax"):
             a = Stamm_USt()
             a.Z_KASSE_ID = Z_KASSE_ID
-            #a.Z_ERSTELLUNG = Z_ERSTELLUNG  #TODO richtiges Zeitformat
+            a.Z_ERSTELLUNG = Z_ERSTELLUNG
             a.Z_NR = Z_NR
 
             a.UST_SCHLUESSEL = TAXNAME_TO_SCHLUESSELNUMMER[row['name']]
@@ -153,7 +153,7 @@ class Generator:
         ### tse.csv ###
         a = Stamm_TSE()
         a.Z_KASSE_ID = Z_KASSE_ID
-        #a.Z_ERSTELLUNG = Z_ERSTELLUNG  #TODO richtiges Zeitformat
+        a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
         row = await self._conn.fetchrow("select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from till join tse on till.tse_id = tse.tse_id where till.id = $1 and till.z_nr = $2", Z_KASSE_ID, Z_NR)
         a.TSE_ID = int(row['tse_id'])
@@ -168,6 +168,7 @@ class Generator:
             a.TSE_ZERTIFIKAT_I = row['tse_certificate'][0:1000]
             a.TSE_ZERTIFIKAT_II = row['tse_certificate'][1001:]
         else:
+            LOGGER.error(f"Zertifikat zu lang. Länge: {len(row['tse_certificate']) Zeichen. Maximal unterstützt: 2000 Zeichen}")
             raise NotImplemented
 
         self.c.add(a)
