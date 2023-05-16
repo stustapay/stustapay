@@ -1,36 +1,29 @@
 import * as React from "react";
 import { List, Typography } from "@mui/material";
-import { selectTillButtonAll, useGetTillButtonsQuery } from "@api";
-import { Loading } from "@stustapay/components";
 import { useTranslation } from "react-i18next";
 import { DraggableButton } from "./DraggableButton";
 import { DragArea } from "./DragArea";
+import { Selectable } from "./types";
 
 export interface AvailableButtonsProps {
   assignedButtonIds: number[];
+  selectables: Selectable[];
   setAssignedButtonIds: (productIds: number[]) => void;
 }
 
-export const AvailableButtons: React.FC<AvailableButtonsProps> = ({ assignedButtonIds, setAssignedButtonIds }) => {
+export const AvailableButtons: React.FC<AvailableButtonsProps> = ({
+  assignedButtonIds,
+  setAssignedButtonIds,
+  selectables,
+}) => {
   const { t } = useTranslation();
-  const { allButtons, isLoading } = useGetTillButtonsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      allButtons: data ? selectTillButtonAll(data) : undefined,
-    }),
-  });
-  const buttons = (allButtons ?? [])
+  const buttons = selectables
     .filter((button) => !assignedButtonIds.includes(button.id))
     .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
   const moveButton = (productId: number) => {
     setAssignedButtonIds(assignedButtonIds.filter((id) => id !== productId));
   };
-
-  if (isLoading || !allButtons) {
-    // TODO handle error case
-    return <Loading />;
-  }
 
   if (buttons.length === 0) {
     const moveButtonEmpty = (productId: number) => {

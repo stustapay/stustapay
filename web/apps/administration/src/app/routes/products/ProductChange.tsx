@@ -18,7 +18,7 @@ import { z } from "zod";
 import { TaxRateSelect } from "./TaxRateSelect";
 import { NumericInput } from "@stustapay/components";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { RestrictionSelect } from "./RestrictionSelect";
+import { RestrictionSelect } from "@components";
 import { useCurrencySymbol } from "@hooks";
 
 export interface ProductChangeProps<T extends NewProduct> {

@@ -139,6 +139,12 @@ insert into till_button_product (
     (10, 10)
 on conflict do nothing;
 
+insert into ticket (
+    id, name, product_id, initial_top_up_amount
+) overriding system value
+values
+    (0, 'Eintritt', 4, 8);
+
 
 insert into till_layout (
     id, name, description
@@ -168,6 +174,13 @@ insert into till_layout_to_button (
       -- Cocktail
       (1, 9, 0),
       (1, 10, 2)
+on conflict do nothing;
+
+insert into till_layout_to_ticket (
+    layout_id, ticket_id, sequence_number
+) values
+      -- Eintrittskasse
+      (3, 0, 0)
 on conflict do nothing;
 
 insert into till_profile (
@@ -203,6 +216,8 @@ values
     (3, 2),
     (3, 3),
     (3, 4);
+
+insert into tse (tse_name) values ('tse1');
 
 commit;
 

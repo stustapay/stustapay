@@ -79,7 +79,8 @@ async def check_ticket_sale(
     token: CurrentAuthToken,
     order_service: ContextOrderService,
 ):
-    return await order_service.check_ticket_sale(token=token, new_ticket_sale=ticket_sale)
+    pending_ticket, _ = await order_service.check_ticket_sale(token=token, new_ticket_sale=ticket_sale)
+    return pending_ticket
 
 
 @router.post(

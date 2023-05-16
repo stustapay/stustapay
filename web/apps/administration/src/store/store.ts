@@ -16,6 +16,7 @@ import {
   tillRegisterApi,
   tillRegisterStockingApi,
   statsApi,
+  ticketApi,
 } from "@api";
 import { authSlice } from "./authSlice";
 import { uiSlice } from "./uiSlice";
@@ -51,6 +52,7 @@ export const store = configureStore({
     [tillRegisterApi.reducerPath]: tillRegisterApi.reducer,
     [tillRegisterStockingApi.reducerPath]: tillRegisterStockingApi.reducer,
     [statsApi.reducerPath]: statsApi.reducer,
+    [ticketApi.reducerPath]: ticketApi.reducer,
     [authSlice.name]: persistReducer(authPersistConfig, authSlice.reducer),
     [uiSlice.name]: persistReducer(uiPersistConfig, uiSlice.reducer),
   }),
@@ -69,6 +71,7 @@ export const store = configureStore({
       .concat(tillRegisterApi.middleware)
       .concat(tillRegisterStockingApi.middleware)
       .concat(statsApi.middleware)
+      .concat(ticketApi.middleware)
       .concat(authApi.middleware)
       .concat(errorMiddleware),
 });

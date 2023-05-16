@@ -95,13 +95,9 @@ class VirtualTSE:
                     hashfunc=sha384,
                 )
 
-        if self._real:
-            vk = self.sk.get_verifying_key()
-            self.public_key = Sequence.load(vk.to_der())[1].dump()[3:]
-            self.serial = sha256(self.public_key).hexdigest()
-        else:
-            self.public_key = b"\x04\x6B\x1D\x4B\xFA\x4C\xD5\x0D\xE8\x8F\x31\x79\x92\x54\x36\x41\xA9\x48\x01\xE5\x8B\x7E\x18\x26\x86\x52\x0F\xE4\x42\x7C\x5E\xD1\xDC\x12\xFA\xD4\x9F\x3F\xFA\xF2\x86\x58\x6D\xBB\x23\xF9\x25\x08\x7E\x2A\xB7\xEB\x9C\x72\xB0\xA4\x4D\x57\xE2\x57\x11\xFE\x1B\xE2\x71\x36\x72\x3A\x8D\x20\x30\x07\xCF\x01\xF2\x25\x59\x14\x89\x22\x26\x63\x2C\x0C\xB0\x2D\x14\x89\x32\x28\xE9\x61\xCD\x2F\xB2\xFA\x48"
-            self.serial = "1BA7F861E9467C60DDF78EC003C9A8E163F6A7EB69EAC5C780EC201932EA0BF1"
+        vk = self.sk.get_verifying_key()
+        self.public_key = Sequence.load(vk.to_der())[1].dump()[3:]
+        self.serial = sha256(self.public_key).hexdigest()
 
         print(f"Serial Number: {self.serial}")
         self.certificate = b"THIS IS A VERY LONG CERTIFICATE!!!!"

@@ -1,28 +1,24 @@
 import * as React from "react";
 import { List, Typography } from "@mui/material";
-import { useGetTillButtonsQuery, selectTillButtonAll } from "@api";
-import { Loading } from "@stustapay/components";
 import { useTranslation } from "react-i18next";
 import { DraggableButton } from "./DraggableButton";
 import { DragArea } from "./DragArea";
 import { TillButton } from "@stustapay/models";
+import { Selectable } from "./types";
 
 export interface AssignedButtonsProps {
   assignedButtonIds: number[];
+  selectables: Selectable[];
   setAssignedButtonIds: (buttonIds: number[]) => void;
 }
 
-export const AssignedButtons: React.FC<AssignedButtonsProps> = ({ assignedButtonIds, setAssignedButtonIds }) => {
+export const AssignedButtons: React.FC<AssignedButtonsProps> = ({
+  assignedButtonIds,
+  setAssignedButtonIds,
+  selectables,
+}) => {
   const { t } = useTranslation();
-  const { allButtons, isLoading } = useGetTillButtonsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      allButtons: data ? selectTillButtonAll(data) : undefined,
-    }),
-  });
-  const buttons = allButtons
-    ? assignedButtonIds.map((id) => allButtons.find((button) => button.id === id) as TillButton)
-    : [];
+  const buttons = assignedButtonIds.map((id) => selectables.find((button) => button.id === id) as TillButton);
 
   const moveButton = (buttonId: number, hoveredButtonId: number, hoveredBelow: boolean) => {
     const addMode = hoveredBelow ? 1 : 0;
@@ -38,10 +34,6 @@ export const AssignedButtons: React.FC<AssignedButtonsProps> = ({ assignedButton
     setAssignedButtonIds(newButtons);
   };
 
-  if (isLoading || !allButtons) {
-    // TODO handle error case
-    return <Loading />;
-  }
   if (assignedButtonIds.length === 0) {
     const moveButtonEmpty = (buttonId: number) => {
       setAssignedButtonIds([buttonId]);

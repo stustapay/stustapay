@@ -4,10 +4,11 @@ import { ListItem, ListItemText, useTheme } from "@mui/material";
 import { useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { DraggableItemTypes } from "@core/draggable";
-import { TillButton } from "@stustapay/models";
+import { useCurrencyFormatter } from "@hooks";
+import { Selectable } from "./types";
 
 export interface DraggableButtonProps {
-  button: TillButton;
+  button: Selectable;
   moveButton: (buttonId: number, hoveredButtonId: number, hoveredBelow: boolean) => void;
 }
 
@@ -19,6 +20,7 @@ export interface DragButton {
 export const DraggableButton: React.FC<DraggableButtonProps> = ({ button, moveButton }) => {
   const theme = useTheme();
   const ref = useRef<HTMLLIElement>(null);
+  const formatCurrency = useCurrencyFormatter();
 
   const [{ handlerId }, drop] = useDrop<DragButton, void, { handlerId: Identifier | null }>({
     accept: DraggableItemTypes.TILL_BUTTON,
@@ -81,7 +83,7 @@ export const DraggableButton: React.FC<DraggableButtonProps> = ({ button, moveBu
   drag(drop(ref));
   return (
     <ListItem ref={ref} data-handler-id={handlerId} sx={{ opacity: opacity, boxShadow: theme.shadows[1] }}>
-      <ListItemText primary={button.name} secondary={`${button.price}€`} />
+      <ListItemText primary={button.name} secondary={formatCurrency(button.price)} />
     </ListItem>
   );
 };

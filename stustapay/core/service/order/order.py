@@ -38,11 +38,9 @@ from stustapay.core.schema.order import (
 from stustapay.core.schema.product import (
     Product,
     ProductRestriction,
-    TICKET_PRODUCT_ID,
-    TICKET_U18_PRODUCT_ID,
-    TICKET_U16_PRODUCT_ID,
+    TOP_UP_PRODUCT_ID,
 )
-from stustapay.core.schema.terminal import Terminal, ENTRY_BUTTON_ID, ENTRY_U18_BUTTON_ID, ENTRY_U16_BUTTON_ID
+from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import Privilege, User, CurrentUser
 from stustapay.core.service.account import get_account_by_id
 from stustapay.core.service.auth import AuthService
@@ -58,18 +56,17 @@ from stustapay.core.service.common.error import InvalidArgument, ServiceExceptio
 from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.service.product import (
     fetch_discount_product,
-    fetch_ticket_product,
-    fetch_ticket_product_u16,
-    fetch_ticket_product_u18,
     fetch_top_up_product,
-    fetch_initial_topup_amount,
     fetch_pay_out_product,
+    fetch_product,
 )
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.util import BaseModel
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
+from ..ticket import fetch_ticket
+from ...schema.ticket import Ticket
 
 logger = logging.getLogger(__name__)
 
@@ -162,6 +159,11 @@ class BookedProduct(BaseModel):
     product: Product
     quantity: Optional[int] = None
     price: Optional[float] = None
+
+
+class PendingTicket(BaseModel):
+    ticket: Ticket
+    customer_tag_uid: int
 
 
 async def fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
@@ -735,7 +737,7 @@ class OrderService(DBService):
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_ticket_sale(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_ticket_sale: NewTicketSale
-    ) -> PendingTicketSale:
+    ) -> tuple[PendingTicketSale, list[PendingTicket]]:
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_ticket_sale.uuid)
         if uuid_exists:
             raise InvalidArgument("This order has already been booked, duplicate order uuid")
@@ -751,7 +753,7 @@ class OrderService(DBService):
 
         known_accounts = await conn.fetch(
             "select user_tag_uid from account where user_tag_uid = ANY($1::numeric(20)[])",
-            new_ticket_sale.customer_tag_uids,
+            [button.customer_tag_uid for button in new_ticket_sale.tickets],
         )
 
         if len(known_accounts) > 0:
@@ -759,102 +761,85 @@ class OrderService(DBService):
                 f"Ticket already has account: " f"{', '.join('%X' % int(a['user_tag_uid']) for a in known_accounts)}"
             )
 
-        expected_tag_counts = {
-            ProductRestriction.under_18.name: 0,
-            ProductRestriction.under_16.name: 0,
-            None: 0,
-        }
-
-        for ticket in new_ticket_sale.tickets:
-            if ticket.till_button_id == ENTRY_BUTTON_ID:
-                expected_tag_counts[None] += ticket.quantity
-            elif ticket.till_button_id == ENTRY_U18_BUTTON_ID:
-                expected_tag_counts[ProductRestriction.under_18.name] += ticket.quantity
-            elif ticket.till_button_id == ENTRY_U16_BUTTON_ID:
-                expected_tag_counts[ProductRestriction.under_16.name] += ticket.quantity
-            else:
-                raise InvalidArgument(f"Invalid till button id: {ticket.till_button_id}")
-        n_expected_tickets = sum(expected_tag_counts.values())
-
-        if n_expected_tickets != len(new_ticket_sale.customer_tag_uids):
-            raise InvalidArgument(
-                f"Should get {n_expected_tickets} scanned tags, " f"but got {len(new_ticket_sale.customer_tag_uids)}"
-            )
-
-        scanned_tags_with_restrictions = {
-            ProductRestriction.under_18.name: 0,
-            ProductRestriction.under_16.name: 0,
-            None: 0,
-        }
-
-        for customer_tag_uid in new_ticket_sale.customer_tag_uids:
-            row = await conn.fetchrow("select uid, restriction from user_tag where uid = $1", customer_tag_uid)
-            scanned_tags_with_restrictions[row["restriction"]] += 1
-
-        for restriction in scanned_tags_with_restrictions:
-            if scanned_tags_with_restrictions[restriction] != expected_tag_counts[restriction]:
-                raise InvalidArgument("Number of tickets (u18 / u16) does not match up with scanned tags")
-
-        line_items = []
-        if expected_tag_counts[None] != 0:
-            ticket_product = await fetch_ticket_product(conn=conn)
-            assert ticket_product.price is not None
-            line_items.append(
-                PendingLineItem(
-                    quantity=expected_tag_counts[None],
-                    product=ticket_product,
-                    product_price=ticket_product.price,
-                    tax_name=ticket_product.tax_name,
-                    tax_rate=ticket_product.tax_rate,
-                )
-            )
-        if expected_tag_counts[ProductRestriction.under_16.name] != 0:
-            ticket_product = await fetch_ticket_product_u16(conn=conn)
-            assert ticket_product.price is not None
-            line_items.append(
-                PendingLineItem(
-                    quantity=expected_tag_counts[ProductRestriction.under_16.name],
-                    product=ticket_product,
-                    product_price=ticket_product.price,
-                    tax_name=ticket_product.tax_name,
-                    tax_rate=ticket_product.tax_rate,
-                )
-            )
-        if expected_tag_counts[ProductRestriction.under_18.name] != 0:
-            ticket_product = await fetch_ticket_product_u18(conn=conn)
-            assert ticket_product.price is not None
-            line_items.append(
-                PendingLineItem(
-                    quantity=expected_tag_counts[ProductRestriction.under_18.name],
-                    product=ticket_product,
-                    product_price=ticket_product.price,
-                    tax_name=ticket_product.tax_name,
-                    tax_rate=ticket_product.tax_rate,
-                )
-            )
+        # mapping of product id to pending line item
+        ticket_line_items: dict[int, PendingLineItem] = {}
+        pending_tickets = []
 
         top_up_product = await fetch_top_up_product(conn=conn)
-        initial_topup_amount = await fetch_initial_topup_amount(conn=conn)
-        line_items.append(
-            PendingLineItem(
-                quantity=1,
-                product=top_up_product,
-                product_price=initial_topup_amount * n_expected_tickets,
-                tax_name=top_up_product.tax_name,
-                tax_rate=top_up_product.tax_rate,
-            )
+        top_up_line_item = PendingLineItem(
+            quantity=1,
+            product=top_up_product,
+            product_price=0,
+            tax_name=top_up_product.tax_name,
+            tax_rate=top_up_product.tax_rate,
         )
 
-        return PendingTicketSale(
-            uuid=new_ticket_sale.uuid,
-            payment_method=new_ticket_sale.payment_method,
-            customer_tag_uids=new_ticket_sale.customer_tag_uids,
-            tickets=new_ticket_sale.tickets,
-            line_items=line_items,
+        for ticket_button in new_ticket_sale.tickets:
+            # till button id is the same as the ticket id since we do not have an indirection there
+            ticket = await fetch_ticket(conn=conn, ticket_id=ticket_button.till_button_id)
+            if ticket is None:
+                raise InvalidArgument(f"Ticket with button id {ticket_button.till_button_id} does not exist")
+            layout_allows_button = await conn.fetchval(
+                "select exists("
+                "   select from till_layout_to_ticket tltt join till_profile tp on tltt.layout_id = tp.layout_id "
+                "   where tltt.ticket_id = $1 and tp.id = $2"
+                ")",
+                ticket.id,
+                current_terminal.till.active_profile_id,
+            )
+            if not layout_allows_button:
+                raise InvalidArgument(f"Till layout is not allowed to book ticket {ticket.name}")
+            ticket_product = await fetch_product(conn=conn, product_id=ticket.product_id)
+            assert ticket_product is not None
+
+            if ticket.product_id in ticket_line_items:
+                ticket_line_items[ticket.product_id].quantity += 1
+            else:
+                ticket_line_items[ticket.product_id] = PendingLineItem(
+                    quantity=1,
+                    product=ticket_product,
+                    product_price=ticket_product.price,
+                    tax_name=ticket_product.tax_name,
+                    tax_rate=ticket_product.tax_rate,
+                )
+            if ticket.initial_top_up_amount > 0:
+                # wtf, pylint does not recognise this member
+                top_up_line_item.product_price += ticket.initial_top_up_amount  # pylint: disable=no-member
+
+            row = await conn.fetchrow(
+                "select uid, restriction from user_tag where uid = $1", ticket_button.customer_tag_uid
+            )
+            if row is None:
+                raise InvalidArgument(f"Tag with uid {ticket_button.customer_tag_uid:X} does not exist")
+            ticket_restriction_name = ticket.restriction.name if ticket.restriction is not None else None
+            tag_restriction = row["restriction"]
+            if tag_restriction != ticket_restriction_name:
+                raise InvalidArgument(
+                    "Ticket restriction does not match up with scanned tag. "
+                    f"Ticket has restriction {ticket_restriction_name}, scanned tag has restriction {tag_restriction}"
+                )
+
+            pending_tickets.append(
+                PendingTicket(
+                    customer_tag_uid=ticket_button.customer_tag_uid,
+                    ticket=ticket,
+                )
+            )
+
+        line_items = list(ticket_line_items.values()) + [top_up_line_item]
+
+        return (
+            PendingTicketSale(
+                uuid=new_ticket_sale.uuid,
+                payment_method=new_ticket_sale.payment_method,
+                tickets=new_ticket_sale.tickets,
+                line_items=line_items,
+            ),
+            pending_tickets,
         )
 
     @staticmethod
-    def _find_oldest_customer(customers: dict[int, Optional[str]]) -> int:
+    def _find_oldest_customer(customers: dict[int, tuple[float, Optional[str]]]) -> int:
         oldest_customer = None
         for account_id, restriction in customers.items():
             if oldest_customer is None:
@@ -886,19 +871,22 @@ class OrderService(DBService):
         new_ticket_sale: NewTicketSale,
     ) -> CompletedTicketSale:
         assert current_user.cashier_account_id is not None
-        pending_ticket_sale: PendingTicketSale = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg
+        pending_ticket_sale, pending_tickets = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_terminal=current_terminal, current_user=current_user, new_ticket_sale=new_ticket_sale
         )
 
-        # create a new customer account for the given tag
-        customers: dict[int, Optional[str]] = {}
-        for customer_tag_uid in new_ticket_sale.customer_tag_uids:
-            restriction = await conn.fetchval("select restriction from user_tag where uid = $1", customer_tag_uid)
+        # create a new customer account for the given tag ,
+        # store the initial topup amount as well as restrictionfor each newly created customer
+        customers: dict[int, tuple[float, Optional[str]]] = {}
+        for pending_ticket in pending_tickets:
+            restriction = await conn.fetchval(
+                "select restriction from user_tag where uid = $1", pending_ticket.customer_tag_uid
+            )
             customer_account_id = await conn.fetchval(
                 "insert into account (user_tag_uid, type) values ($1, 'private') returning id",
-                customer_tag_uid,
+                pending_ticket.customer_tag_uid,
             )
-            customers[customer_account_id] = restriction
+            customers[customer_account_id] = (pending_ticket.ticket.initial_top_up_amount, restriction)
 
         oldest_customer_account_id = self._find_oldest_customer(customers)
 
@@ -916,9 +904,8 @@ class OrderService(DBService):
 
         total_ticket_price = 0.0
         for line_item in pending_ticket_sale.line_items:
-            if line_item.product.id in {TICKET_PRODUCT_ID, TICKET_U18_PRODUCT_ID, TICKET_U16_PRODUCT_ID}:
+            if line_item.product.id != TOP_UP_PRODUCT_ID:
                 total_ticket_price += line_item.total_price
-        initial_top_up_amount = await fetch_initial_topup_amount(conn=conn)
 
         prepared_bookings: dict[BookingIdentifier, float] = {}
         if pending_ticket_sale.payment_method == PaymentMethod.cash:
@@ -931,17 +918,19 @@ class OrderService(DBService):
                 BookingIdentifier(source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=ACCOUNT_SALE_EXIT)
             ] = total_ticket_price
             for customer_account_id in customers.keys():
+                topup_amount = customers[customer_account_id][0]
                 prepared_bookings[
                     BookingIdentifier(source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=customer_account_id)
-                ] = initial_top_up_amount
+                ] = topup_amount
         elif pending_ticket_sale.payment_method == PaymentMethod.sumup:
             prepared_bookings[
                 BookingIdentifier(source_account_id=ACCOUNT_SUMUP, target_account_id=ACCOUNT_SALE_EXIT)
             ] = total_ticket_price
             for customer_account_id in customers.keys():
+                topup_amount = customers[customer_account_id][0]
                 prepared_bookings[
                     BookingIdentifier(source_account_id=ACCOUNT_SUMUP, target_account_id=customer_account_id)
-                ] = initial_top_up_amount
+                ] = topup_amount
         else:
             raise InvalidArgument("Invalid payment method")
 
@@ -961,7 +950,6 @@ class OrderService(DBService):
         return CompletedTicketSale(
             id=order_info.id,
             payment_method=pending_ticket_sale.payment_method,
-            customer_tag_uids=pending_ticket_sale.customer_tag_uids,
             customer_account_id=oldest_customer_account_id,
             line_items=pending_ticket_sale.line_items,
             uuid=order_info.uuid,

@@ -2,13 +2,15 @@ import * as React from "react";
 import { Grid } from "@mui/material";
 import { AvailableButtons } from "./AvailableButtons";
 import { AssignedButtons } from "./AssignedButtons";
+import { Selectable } from "./types";
 
 export interface TillLayoutDesignerProps {
-  buttonIds: number[];
-  onChange: (buttonIds: number[]) => void;
+  selectedIds: number[];
+  onChange: (selectedIds: number[]) => void;
+  selectables: Selectable[];
 }
 
-export const TillLayoutDesigner: React.FC<TillLayoutDesignerProps> = ({ buttonIds, onChange }) => {
+export const TillLayoutDesigner: React.FC<TillLayoutDesignerProps> = ({ selectedIds, onChange, selectables }) => {
   const setAssignedButtonIds = React.useCallback(
     (newButtonIds: number[]) => {
       onChange(newButtonIds);
@@ -19,10 +21,18 @@ export const TillLayoutDesigner: React.FC<TillLayoutDesignerProps> = ({ buttonId
   return (
     <Grid container sx={{ padding: 2 }}>
       <Grid item xs={6}>
-        <AvailableButtons assignedButtonIds={buttonIds} setAssignedButtonIds={setAssignedButtonIds} />
+        <AvailableButtons
+          assignedButtonIds={selectedIds}
+          setAssignedButtonIds={setAssignedButtonIds}
+          selectables={selectables}
+        />
       </Grid>
       <Grid item xs={6}>
-        <AssignedButtons assignedButtonIds={buttonIds} setAssignedButtonIds={setAssignedButtonIds} />
+        <AssignedButtons
+          assignedButtonIds={selectedIds}
+          setAssignedButtonIds={setAssignedButtonIds}
+          selectables={selectables}
+        />
       </Grid>
     </Grid>
   );

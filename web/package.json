@@ -53,6 +53,7 @@
     "@emotion/styled": "^11.10.5",
     "@fontsource/roboto": "^4.5.8",
     "@mui/icons-material": "^5.11.0",
+    "@mui/lab": "^5.0.0-alpha.129",
     "@mui/material": "^5.11.0",
     "@mui/x-data-grid": "^6.0.0",
     "@nivo/pie": "^0.83.0",

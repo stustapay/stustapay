@@ -10,6 +10,7 @@ from stustapay.core.service.config import ConfigService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
+from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.subcommand import SubCommand
@@ -29,6 +30,7 @@ from .routers import (
     user,
     cashier,
     stats,
+    ticket,
 )
 
 
@@ -62,6 +64,7 @@ class Api(SubCommand):
         self.server.add_router(order.router)
         self.server.add_router(cashier.router)
         self.server.add_router(stats.router)
+        self.server.add_router(ticket.router)
 
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)
@@ -82,6 +85,7 @@ class Api(SubCommand):
             account_service=AccountService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             cashier_service=CashierService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             order_service=order_service,
+            ticket_service=TicketService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
         tasks = [asyncio.create_task(self.server.run(self.cfg, context)), asyncio.create_task(order_service.run())]
         try:

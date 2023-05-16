@@ -532,6 +532,30 @@ create or replace view product_as_json as (
     group by p.id
 );
 
+create table if not exists ticket (
+    id bigint primary key generated always as identity (start with 1000),
+    name text not null unique,
+    description text,
+    product_id bigint not null references product(id),
+    initial_top_up_amount numeric not null,
+    restriction text references restriction_type(name),  -- todo: should we derive this from the product somehow??
+    constraint initial_top_up_is_positive check (initial_top_up_amount >= 0)
+    -- TODO: constraint that we can only reference locked, fixed-price products
+);
+
+create or replace view ticket_with_product as (
+    select
+        t.*,
+        p.name as product_name,
+        p.price,
+        p.tax_name,
+        p.tax_rate,
+        p.target_account_id as product_target_account_id,
+        t.initial_top_up_amount + p.price as total_price
+    from ticket t
+    join product_with_tax_and_restrictions p on t.product_id = p.id
+);
+
 create table if not exists till_layout (
     id bigint primary key generated always as identity (start with 1000),
     name text not null unique,
@@ -674,16 +698,30 @@ create table if not exists till_layout_to_button (
     unique (layout_id, button_id, sequence_number)
 );
 
-create or replace view till_layout_with_buttons as (
+create table if not exists till_layout_to_ticket (
+    layout_id bigint not null references till_layout(id) on delete cascade,
+    ticket_id bigint not null references ticket(id),
+    sequence_number bigint not null,
+    primary key (layout_id, ticket_id),
+    unique (layout_id, ticket_id, sequence_number)
+);
+
+create or replace view till_layout_with_buttons_and_tickets as (
     select
        t.*,
-       coalesce(j_view.button_ids, '{}'::bigint array) as button_ids
+       coalesce(j_view.button_ids, '{}'::bigint array) as button_ids,
+       coalesce(t_view.ticket_ids, '{}'::bigint array) as ticket_ids
     from till_layout t
     left join (
         select tltb.layout_id, array_agg(tltb.button_id order by tltb.sequence_number) as button_ids
         from till_layout_to_button tltb
         group by tltb.layout_id
     ) j_view on t.id = j_view.layout_id
+    left join (
+        select tltt.layout_id, array_agg(tltt.ticket_id order by tltt.sequence_number) as ticket_ids
+        from till_layout_to_ticket tltt
+        group by tltt.layout_id
+    ) t_view on t.id = t_view.layout_id
 );
 
 create table if not exists till_profile (
@@ -964,7 +1002,7 @@ end $$;
 
 -- logs all historic till <-> TSE assignments (as registered with the TSE)
 create table if not exists till_tse_history (
-    till_name text not null,
+    till_id text not null,
     tse_id bigint references tse(tse_id) not null,
     what till_tse_history_type not null,
     date timestamptz not null default now()
@@ -1284,7 +1322,7 @@ $$ language plpgsql;
 
 
 do $$ begin
-    create type tse_signature_status as enum ('todo', 'pending', 'done', 'failure');
+    create type tse_signature_status as enum ('new', 'pending', 'done', 'failure');
 exception
     when duplicate_object then null;
 end $$;
@@ -1296,7 +1334,7 @@ create table if not exists tse_signature_status_info (
 );
 
 insert into tse_signature_status_info (enum_value, name, description) values
-    ('todo', 'todo', 'Signature request is enqueued'),
+    ('new', 'new', 'Signature request is enqueued'),
     ('pending', 'pending', 'Signature is being created by TSE'),
     ('done', 'done', 'Signature was successful'),
     ('failure', 'failure', 'Failed to create signature') on conflict do nothing;
@@ -1306,17 +1344,17 @@ insert into tse_signature_status_info (enum_value, name, description) values
 create table if not exists tse_signature (
     id bigint primary key references ordr(id),
 
-    signature_status tse_signature_status not null default 'todo',
+    signature_status tse_signature_status not null default 'new',
     -- TSE signature result message (error message or success message)
     result_message  text,
-    constraint result_message_set check ((result_message is null) = (signature_status = 'todo' or signature_status = 'pending')),
+    constraint result_message_set check ((result_message is null) = (signature_status = 'new' or signature_status = 'pending')),
 
     created timestamptz not null default now(),
     last_update timestamptz not null default now(),
 
     -- id of the TSE that was used to create the signature
     tse_id          bigint references tse(tse_id),
-    constraint tse_id_set check ((tse_id is null) = (signature_status = 'todo')),
+    constraint tse_id_set check ((tse_id is null) = (signature_status = 'new')),
 
     -- signature input for the TSE
     transaction_process_type text,
@@ -1340,7 +1378,7 @@ create table if not exists tse_signature (
 
 
 -- partial index for only the unsigned rows in tse_signature
-create index on tse_signature (id) where signature_status = 'todo';
+create index on tse_signature (id) where signature_status = 'new';
 create index on tse_signature (id) where signature_status = 'pending';
 
 create or replace function tse_signature_update_trigger_procedure()

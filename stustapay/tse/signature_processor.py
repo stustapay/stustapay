@@ -39,7 +39,7 @@ class SignatureProcessor(SubCommand):
             # process was stopped.
             # In theory it might be possible to recover them by checking whether the
             # indicated TSE has actually completed the signature and advancing it to
-            # 'done' if yes, setting it back to 'todo' else.
+            # 'done' if yes, setting it back to 'new' else.
             # This intruduces much complexity and potential for bugs though,
             # so for now we just assume that the signature was interrupted and failed.
             # after this clean-up the database will be in a consistent state where
@@ -90,7 +90,7 @@ class SignatureProcessor(SubCommand):
                         join ordr on ordr.id=tse_signature.id
                         join till on ordr.till_id=till.id
                     where
-                        tse_signature.signature_status='todo' and
+                        tse_signature.signature_status='new' and
                         till.tse_id is Null
                     """
             )

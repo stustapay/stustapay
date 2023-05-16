@@ -28,6 +28,7 @@ import {
   AddShoppingCart as AddShoppingCartIcon,
   Search as SearchIcon,
   Money as MoneyIcon,
+  ConfirmationNumber as ConfirmationNumberIcon,
 } from "@mui/icons-material";
 import { Outlet, Navigate, useLocation, Link as RouterLink } from "react-router-dom";
 import { ExpandableLinkMenu, ListItemLink } from "@components";
@@ -158,12 +159,20 @@ export const AuthenticatedRoot: React.FC = () => {
             </ListItemLink>
           )}
           {user.privileges.includes("product_management") && (
-            <ListItemLink to="/products">
-              <ListItemIcon>
-                <ShoppingCartIcon />
-              </ListItemIcon>
-              <ListItemText primary={t("products")} />
-            </ListItemLink>
+            <>
+              <ListItemLink to="/products">
+                <ListItemIcon>
+                  <ShoppingCartIcon />
+                </ListItemIcon>
+                <ListItemText primary={t("products")} />
+              </ListItemLink>
+              <ListItemLink to="/tickets">
+                <ListItemIcon>
+                  <ConfirmationNumberIcon />
+                </ListItemIcon>
+                <ListItemText primary={t("tickets")} />
+              </ListItemLink>
+            </>
           )}
           {user.privileges.includes("till_management") && (
             <>
