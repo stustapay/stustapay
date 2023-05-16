@@ -275,7 +275,7 @@ class SaleViewModel @Inject constructor(
                         _status.update { terminalConfig.message }
                         SaleConfig()
                     }
-                    is TerminalConfigState.Loading -> {
+                    is TerminalConfigState.NoConfig -> {
                         _status.update { "Loading..." }
                         SaleConfig()
                     }

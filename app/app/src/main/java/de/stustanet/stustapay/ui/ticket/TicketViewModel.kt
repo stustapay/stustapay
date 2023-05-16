@@ -1,12 +1,16 @@
 package de.stustanet.stustapay.ui.ticket
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustanet.stustapay.ec.ECPayment
 import de.stustanet.stustapay.model.CompletedTicketSale
 import de.stustanet.stustapay.model.PaymentMethod
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.net.Response
+import de.stustanet.stustapay.repository.ECPaymentRepository
+import de.stustanet.stustapay.repository.ECPaymentResult
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.repository.TicketRepository
@@ -15,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.math.BigDecimal
 import javax.inject.Inject
 
 
@@ -38,6 +43,7 @@ sealed interface TagScanStatus {
 class TicketViewModel @Inject constructor(
     private val ticketRepository: TicketRepository,
     private val terminalConfigRepository: TerminalConfigRepository,
+    private val ecPaymentRepository: ECPaymentRepository,
 ) : ViewModel() {
 
     // navigation in views
@@ -91,12 +97,18 @@ class TicketViewModel @Inject constructor(
     /**
      * how much do we have to pay? we get this from the PendingTicketSale
      */
-    fun getPrice(): Double {
-        return _ticketStatus.value.checkedSale?.total_price ?: 0.0
+    fun getPrice(): UInt {
+        val price = _ticketStatus.value.checkedSale?.total_price ?: 0.0
+        return (price * 100).toUInt()
     }
 
     /** when confirming the ticket selections by button click */
     suspend fun confirmSelection() {
+        if (_ticketStatus.value.tagScansRequired() == 0) {
+            _status.update { "zero tickets selected" }
+            return
+        }
+
         // now all tickets have to be scanned
         _navState.update { TicketPage.Scan }
 
@@ -113,8 +125,7 @@ class TicketViewModel @Inject constructor(
     suspend fun continueScan() {
         if (_ticketStatus.value.allTagsScanned()) {
             checkSale()
-        }
-        else {
+        } else {
             _tagScanStatus.update {
                 TagScanStatus.Scan(
                     step = _ticketStatus.value.tagScanStepNumber(),
@@ -170,12 +181,20 @@ class TicketViewModel @Inject constructor(
 
 
     /** when the delete-selections button is clicked */
-    suspend fun clearDraft() {
+    fun clearDraft() {
         _ticketStatus.update { TicketStatus() }
     }
 
+    fun dismissSuccess() {
+        clearTicketSale(success = true)
+    }
+
+    fun dismissError() {
+        _navState.update { TicketPage.Amount }
+    }
+
     /** once the sale was booked completely */
-    suspend fun clearTicketSale(success: Boolean = false) {
+    private fun clearTicketSale(success: Boolean = false) {
         _ticketStatus.update { TicketStatus() }
         _navState.update { TicketPage.Amount }
         _saleCompleted.update { null }
@@ -187,7 +206,7 @@ class TicketViewModel @Inject constructor(
         }
     }
 
-    suspend fun checkSale() {
+    private suspend fun checkSale() {
         val selection = _ticketStatus.value
         if (selection.buttonSelection.isEmpty()) {
             _status.update { "Nothing ordered!" }
@@ -229,13 +248,52 @@ class TicketViewModel @Inject constructor(
         }
     }
 
-    suspend fun bookSale(paymentMethod: PaymentMethod) {
+    /** let's start the payment process */
+    suspend fun processSale(context: Activity, paymentMethod: PaymentMethod) {
         // checks
-        if (!_ticketStatus.value.allTagsScanned()) {
+        if (!_ticketStatus.value.allTagsScanned() || _ticketStatus.value.tags.isEmpty()) {
             _status.update { "Not all tags were scanned!" }
             return
         }
 
+        val checkedSale = _ticketStatus.value.checkedSale
+        if (checkedSale == null) {
+            _status.update { "no ticket sale check present" }
+            return
+        }
+
+        val saleUUID = checkedSale.uuid
+        if (saleUUID == null) {
+            _status.update { "checked sale uuid missing" }
+            return
+        }
+
+        // cash payment confirmation was already presented
+        if (paymentMethod == PaymentMethod.Cash) {
+            bookSale(paymentMethod = PaymentMethod.Cash)
+            return
+        }
+
+        // otherwise, perform ec payment
+        val payment = ECPayment(
+            id = saleUUID,
+            amount = BigDecimal(checkedSale.total_price),
+            tag = _ticketStatus.value.tags[0],
+        )
+
+        when (val ecResult = ecPaymentRepository.pay(context = context, ecPayment = payment)) {
+            is ECPaymentResult.Failure -> {
+                _status.update { ecResult.msg }
+            }
+
+            is ECPaymentResult.Success -> {
+                _status.update { ecResult.result.msg }
+                bookSale(PaymentMethod.SumUp)
+            }
+        }
+    }
+
+    private suspend fun bookSale(paymentMethod: PaymentMethod) {
         _saleCompleted.update { null }
 
         val response = ticketRepository.bookTicketSale(
@@ -293,7 +351,7 @@ class TicketViewModel @Inject constructor(
                         TicketConfig()
                     }
 
-                    is TerminalConfigState.Loading -> {
+                    is TerminalConfigState.NoConfig -> {
                         _status.update { "Loading config..." }
                         TicketConfig()
                     }

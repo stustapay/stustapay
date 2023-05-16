@@ -9,38 +9,11 @@ import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.repository.UserRepository
+import de.stustanet.stustapay.ui.common.TerminalLoginState
 import de.stustanet.stustapay.util.Result
 import de.stustanet.stustapay.util.asResult
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
-
-
-class StartPageUiState(
-    private val user: UserState = UserState.NoLogin,
-    private val terminal: TerminalConfigState = TerminalConfigState.Loading
-) {
-    data class StartTitle(val title: String, val subtitle: String? = null)
-
-    fun title(): StartTitle {
-        return if (terminal is TerminalConfigState.Success) {
-            StartTitle(terminal.config.name, terminal.config.description)
-        } else {
-            StartTitle("StuStaPay")
-        }
-    }
-
-    fun checkAccess(access: (CurrentUser, TerminalConfig) -> Boolean): Boolean {
-        return if (user is UserState.LoggedIn && terminal is TerminalConfigState.Success) {
-            access(user.user, terminal.config)
-        } else {
-            false
-        }
-    }
-
-    fun notConfigured(): Boolean {
-        return terminal !is TerminalConfigState.Success
-    }
-}
 
 
 sealed interface LoginProfileUIState {
@@ -66,11 +39,11 @@ class StartpageViewModel @Inject constructor(
     private val _terminal = terminalConfigRepository.terminalConfigState
 
     val uiState = combine(_user, _terminal) { user, terminal ->
-        StartPageUiState(user, terminal)
+        TerminalLoginState(user, terminal)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = StartPageUiState(),
+        initialValue = TerminalLoginState(),
     )
 
     val loginProfileUIState: StateFlow<LoginProfileUIState> = loginProfileUiState(

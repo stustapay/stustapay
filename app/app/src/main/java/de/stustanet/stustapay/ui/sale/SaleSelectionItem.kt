@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.sale
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
@@ -37,15 +38,24 @@ sealed interface SaleSelectionItemType {
 @Preview
 @Composable
 fun PreviewSaleSelectionItem() {
-    SaleSelectionItem(
-        caption = "Robbenfutter",
-        SaleSelectionItemType.FixedPrice(
-            onIncr = {},
-            onDecr = {},
-            price = SaleItemPrice.FixedPrice(13.37),
-            amount = SaleItemAmount.FixedPrice(42),
+    Column {
+        SaleSelectionItem(
+            caption = "Robbenfutter",
+            SaleSelectionItemType.FixedPrice(
+                onIncr = {},
+                onDecr = {},
+                price = SaleItemPrice.FixedPrice(13.37),
+                amount = SaleItemAmount.FixedPrice(42),
+            )
         )
-    )
+        SaleSelectionItem(
+            caption = "Internetkanister",
+            SaleSelectionItemType.FreePrice(
+                onPriceEdit = {},
+                amount = SaleItemAmount.FreePrice(4200u),
+            )
+        )
+    }
 }
 
 /**
@@ -59,7 +69,7 @@ fun SaleSelectionItem(
     var sameSizeButtons = false
 
     val itemPrice: String
-    val itemAmount: String
+    val itemAmount: String?
     var itemAmountDelimiter: String = "×"
 
     when (type) {
@@ -77,9 +87,9 @@ fun SaleSelectionItem(
         }
 
         is SaleSelectionItemType.FreePrice -> {
-            val price: Double = type.amount?.price ?: 0.0
+            val price: Double = (type.amount?.price?.toDouble() ?: 0.0) / 100
             itemPrice = "%.02f".format(price)
-            itemAmount = ""
+            itemAmount = null
         }
 
         is SaleSelectionItemType.Vouchers -> {

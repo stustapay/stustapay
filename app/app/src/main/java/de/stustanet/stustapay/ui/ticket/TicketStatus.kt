@@ -6,6 +6,7 @@ import de.stustanet.stustapay.model.PendingTicketSale
 import de.stustanet.stustapay.model.Ticket
 import de.stustanet.stustapay.model.UserTag
 import java.lang.Integer.max
+import java.util.UUID
 
 
 /**
@@ -85,6 +86,8 @@ data class TicketStatus(
 
     fun decrementButton(buttonId: Int) {
         val current = buttonSelection[buttonId]
+        // require re-scan of all tickets if we remove just one.
+        tags = listOf()
 
         if (current != null) {
             val newAmount = max(0, current - 1)
@@ -104,6 +107,7 @@ data class TicketStatus(
         assert(tags.size == buttonSelection.values.sum()) { "not all tags scanned" }
 
         return NewTicketSale(
+            uuid = checkedSale?.uuid ?: UUID.randomUUID().toString(),
             customer_tag_uids = tags.map { it.uid },
             tickets = buttonSelection.filter {
                 it.value > 0

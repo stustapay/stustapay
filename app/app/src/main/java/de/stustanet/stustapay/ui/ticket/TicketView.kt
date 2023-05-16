@@ -68,13 +68,13 @@ fun TicketView(
         }
         composable(TicketPage.Done.route) {
             TicketSuccess(
-                onDismiss = { viewModel.navTo(TicketPage.Amount) },
-                viewModel
+                viewModel = viewModel,
+                onConfirm = { viewModel.dismissSuccess() },
             )
         }
         composable(TicketPage.Failure.route) {
             TicketError(
-                onDismiss = { viewModel.navTo(TicketPage.Amount) },
+                onDismiss = { viewModel.dismissError() },
                 viewModel
             )
         }

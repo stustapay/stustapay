@@ -140,12 +140,16 @@ class TerminalHTTPAPI @Inject constructor(
         return client.post("user/update-user-roles") { updateUser }
     }
 
-    override suspend fun grantVouchers(grant: GrantVouchers): Response<Account> {
+    override suspend fun grantFreeTicket(newTicket: NewFreeTicketGrant): Response<Customer> {
+        return client.post("user/grant-free-ticket") { newTicket }
+    }
+
+    override suspend fun grantVouchers(grant: GrantVouchers): Response<Customer> {
         return client.post("user/grant-vouchers") { grant }
     }
 
     // customer
-    override suspend fun getCustomer(id: ULong): Response<Account> {
+    override suspend fun getCustomer(id: ULong): Response<Customer> {
         return client.get("customer/$id")
     }
 

@@ -31,7 +31,7 @@ class HttpClient(
 
         if (retry) {
             install(HttpRequestRetry) {
-                // retry for http500 errors
+                // retry for http5xx errors
                 retryOnServerErrors(maxRetries = 5)
                 retryOnException(maxRetries = 3, retryOnTimeout = true)
                 exponentialDelay()

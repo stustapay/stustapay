@@ -14,7 +14,7 @@ import javax.inject.Singleton
  * Terminal configuration including validity state.
  */
 sealed interface TerminalConfigState {
-    object Loading : TerminalConfigState
+    object NoConfig : TerminalConfigState
 
     data class Success(
         var config: TerminalConfig
@@ -30,7 +30,7 @@ class TerminalConfigRepository @Inject constructor(
     private val terminalConfigRemoteDataSource: TerminalConfigRemoteDataSource,
 ) {
     private var _terminalConfigState =
-        MutableStateFlow<TerminalConfigState>(TerminalConfigState.Loading)
+        MutableStateFlow<TerminalConfigState>(TerminalConfigState.NoConfig)
     var terminalConfigState = _terminalConfigState.asStateFlow()
 
     suspend fun fetchConfig() {
