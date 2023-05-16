@@ -195,10 +195,7 @@ class OrderService(DBService):
         for queue in self.admin_order_update_queues:
             queue.queue.put_nowait(order)
 
-    async def _handle_order_update(self, payload: Optional[str]):
-        if payload is None:
-            return
-
+    async def _handle_order_update(self, payload: str):
         try:
             json_payload = json.loads(payload)
             async with self.db_pool.acquire() as conn:
