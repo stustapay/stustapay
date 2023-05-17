@@ -1,4 +1,5 @@
-import { useGetCustomerQuery, useGetDataPrivacyUrlQuery, useSetCustomerInfoMutation } from "@/api/customerApi";
+// import { useGetCustomerQuery, useGetDataPrivacyUrlQuery, useSetCustomerInfoMutation } from "@/api/customerApi";
+import { useGetCustomerQuery, useSetCustomerInfoMutation } from "@/api/customerApi";
 import { Loading } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -20,6 +21,7 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import iban from "iban";
 import i18n from "@/i18n";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 
 const FormSchema = z.object({
   iban: z.string().refine((val) => iban.isValid(val), {
@@ -38,21 +40,17 @@ export const PayoutInfo: React.FC = () => {
   const { t } = useTranslation(undefined, { keyPrefix: "payout" });
   const navigate = useNavigate();
 
+  const config = usePublicConfig();
+
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
-  const { data: dataPrivacyUrl, error: errorPrivacyUrl, isLoading: isLoadingPrivacyUrl } = useGetDataPrivacyUrlQuery();
 
   const [setCustomerInfo] = useSetCustomerInfoMutation();
 
-  if (
-    isCustomerLoading ||
-    (!customer && !customerError) ||
-    isLoadingPrivacyUrl ||
-    (!dataPrivacyUrl && !errorPrivacyUrl)
-  ) {
+  if (isCustomerLoading || (!customer && !customerError)) {
     return <Loading />;
   }
 
-  if (customerError || !customer || errorPrivacyUrl || !dataPrivacyUrl) {
+  if (customerError || !customer) {
     toast.error(t("errorFetchingData"));
     navigate(-1);
     return null;
@@ -144,9 +142,9 @@ export const PayoutInfo: React.FC = () => {
                       />
                     }
                     label={
-                      <Trans i18nKey="payout.privayPolicyCheck">
+                      <Trans i18nKey="payout.privacyPolicyCheck">
                         please accept the
-                        <Link href={dataPrivacyUrl} target="_blank" rel="noopener">
+                        <Link href={config.data_privacy_url} target="_blank" rel="noopener">
                           privacy policy
                         </Link>
                       </Trans>
