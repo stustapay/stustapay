@@ -39,7 +39,9 @@ class Api(SubCommand):
             config=self.cfg,
             db_pool=db_pool,
             config_service=ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
-            customer_service=CustomerService(db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service),
+            customer_service=CustomerService(
+                db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service
+            ),
         )
         try:
             await self.server.run(self.cfg, context)

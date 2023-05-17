@@ -67,6 +67,8 @@ TEST_CONFIG = {
             "sender_iban": "DE89 3704 0044 0532 0130 00",
             "description": "FestivalName, TagID: {user_tag_uid}",
         },
+        "about_page_url": "https://stustapay.de/impressum",
+        "contact_email": "test-beschwerde@stustapay.de",
     },
     "database": get_test_db_config(),
 }
