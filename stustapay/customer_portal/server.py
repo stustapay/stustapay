@@ -33,12 +33,13 @@ class Api(SubCommand):
         db_pool = await self.server.db_connect(self.cfg.database)
 
         auth_service = AuthService(db_pool=db_pool, config=self.cfg)
+        config_service = ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
 
         context = Context(
             config=self.cfg,
             db_pool=db_pool,
             config_service=ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
-            customer_service=CustomerService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            customer_service=CustomerService(db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service),
         )
         try:
             await self.server.run(self.cfg, context)
