@@ -6,7 +6,7 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, ACCOUNT_MONEY_VOUCHER_CREATE, UserTagDetail
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.user import Privilege, User
+from stustapay.core.schema.user import Privilege, User, CurrentUser
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction, requires_user, requires_terminal
@@ -60,6 +60,23 @@ class AccountService(DBService):
         if row is None:
             return None
         return UserTagDetail.parse_obj(row)
+
+    @with_db_transaction
+    @requires_user([Privilege.account_management])
+    async def update_user_tag_comment(
+        self, *, conn: asyncpg.Connection, current_user: CurrentUser, user_tag_uid: int, comment: str
+    ) -> UserTagDetail:
+        ret = await conn.fetchval(
+            "update user_tag set comment = $1 where uid = $2 returning uid", comment, user_tag_uid
+        )
+        if ret is None:
+            raise NotFound(element_typ="user_tag", element_id=user_tag_uid)
+
+        detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg
+            conn=conn, current_user=current_user, user_tag_uid=user_tag_uid
+        )
+        assert detail is not None
+        return detail
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
@@ -221,6 +238,17 @@ class AccountService(DBService):
             )
 
         return True
+
+    @with_db_transaction
+    @requires_user([Privilege.account_management])
+    async def update_account_comment(self, *, conn: asyncpg.Connection, account_id: int, comment: str) -> Account:
+        ret = await conn.fetchval("update account set comment = $1 where id = $2 returning id", comment, account_id)
+        if ret is None:
+            raise NotFound(element_typ="account", element_id=account_id)
+
+        acc = await get_account_by_id(conn=conn, account_id=account_id)
+        assert acc is not None
+        return acc
 
     @staticmethod
     async def _switch_account_tag_uid(

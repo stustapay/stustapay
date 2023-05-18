@@ -1,17 +1,18 @@
 import * as React from "react";
 import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, IconButton, Button, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link as RouterLink } from "react-router-dom";
 import {
   selectAccountById,
   selectOrderAll,
   useDisableAccountMutation,
   useGetAccountByIdQuery,
   useGetOrderByCustomerQuery,
+  useUpdateAccountCommentMutation,
 } from "@api";
 import { Loading } from "@stustapay/components";
 import { toast } from "react-toastify";
-import { ListItemLink, OrderTable } from "@components";
+import { EditableListItem, OrderTable } from "@components";
 import { useCurrencyFormatter } from "@hooks";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { EditAccountBalanceModal } from "./components/EditAccountBalanceModal";
@@ -27,6 +28,7 @@ export const CustomerAccountDetail: React.FC = () => {
 
   const formatCurrency = useCurrencyFormatter();
   const [disableAccount] = useDisableAccountMutation();
+  const [updateComment] = useUpdateAccountCommentMutation();
 
   const [balanceModalOpen, setBalanceModalOpen] = React.useState(false);
   const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
@@ -75,6 +77,10 @@ export const CustomerAccountDetail: React.FC = () => {
       });
   };
 
+  const handleUpdateComment = (newComment: string) => {
+    updateComment({ accountId: Number(accountId), comment: newComment });
+  };
+
   return (
     <Stack spacing={2}>
       <Paper>
@@ -96,20 +102,25 @@ export const CustomerAccountDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("account.type")} secondary={account.type} />
           </ListItem>
-          <ListItemLink to={`/user-tags/${account.user_tag_uid_hex}`}>
-            <ListItemText primary={t("account.user_tag_uid")} secondary={formatUserTagUid(account.user_tag_uid_hex)} />
+          <ListItem>
+            <ListItemText
+              primary={t("account.user_tag_uid")}
+              secondary={
+                <RouterLink to={`/user-tags/${account.user_tag_uid_hex}`}>
+                  {formatUserTagUid(account.user_tag_uid_hex)}
+                </RouterLink>
+              }
+            />
             <ListItemSecondaryAction>
               <IconButton color="primary" onClick={() => setTagModalOpen(true)}>
                 <EditIcon />
               </IconButton>
             </ListItemSecondaryAction>
-          </ListItemLink>
+          </ListItem>
           <ListItem>
             <ListItemText primary={t("account.name")} secondary={account.name} />
           </ListItem>
-          <ListItem>
-            <ListItemText primary={t("account.comment")} secondary={account.comment} />
-          </ListItem>
+          <EditableListItem label={t("account.comment")} value={account.comment ?? ""} onChange={handleUpdateComment} />
           <ListItem>
             <ListItemText primary={t("account.balance")} secondary={formatCurrency(account.balance)} />
             {/* {isAdmin && (
