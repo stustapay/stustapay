@@ -44,7 +44,9 @@ async def get_customer_bank_data(
     conn: asyncpg.Connection, max_export_items_per_batch: int, ith_batch: int = 0
 ) -> List[CustomerBankData]:
     rows = await conn.fetch(
-        "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance from customer c where c.iban is not null limit $1, $2",
+        "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance "
+        "from customer c "
+        "where c.iban is not null limit $1, $2",
         ith_batch * max_export_items_per_batch,
         (ith_batch + 1) * max_export_items_per_batch,
     )
@@ -200,7 +202,8 @@ class CustomerService(DBService):
 
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(
-            "insert into customer_info (customer_account_id, iban, account_name, email) values ($1, $2, $3, $4) on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4",
+            "insert into customer_info (customer_account_id, iban, account_name, email) values ($1, $2, $3, $4) "
+            "on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4",
             current_customer.id,
             iban.compact,
             customer_bank.account_name,

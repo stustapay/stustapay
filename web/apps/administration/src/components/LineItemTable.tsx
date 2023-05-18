@@ -4,7 +4,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { selectProductById, useGetProductsQuery, selectTaxRateById, useGetTaxRatesQuery } from "@api";
-import { Loading } from "@stustapay/components";
+import { Loading, DataGridTitle } from "@stustapay/components";
 import { LineItem } from "@stustapay/models";
 import { useCurrencyFormatter } from "src/hooks";
 
@@ -98,11 +98,11 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
       width: 100,
     },
   ];
-  console.log(lineItems);
 
   return (
     <DataGrid
       autoHeight
+      slots={{ toolbar: () => <DataGridTitle title={t("order.lineItems")} /> }}
       rows={lineItems}
       columns={itemColumns}
       disableRowSelectionOnClick

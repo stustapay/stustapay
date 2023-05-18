@@ -16,7 +16,7 @@ export const LoggedInFooter: React.FC<LoggedInFooterProps> = ({ theme }) => {
 
   let subject = "Support request StuStaPay";
   if (customer && !customerError && !isCustomerLoading) {
-    subject = encodeURIComponent(`Support request StuStaPay, tagUID: ${formatUserTagUid(customer.user_tag_uid)}`);
+    subject = encodeURIComponent(`Support request StuStaPay, tagUID: ${formatUserTagUid(customer.user_tag_uid_hex)}`);
   }
 
   const mailtoLink = `mailto:${config.contact_email}?subject=${subject}`;

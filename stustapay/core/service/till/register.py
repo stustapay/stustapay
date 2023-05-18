@@ -250,7 +250,7 @@ class TillRegisterService(DBService):
             "select usr.cash_register_id, a.* "
             "from usr "
             "join till t on usr.id = t.active_user_id "
-            "join account a on usr.cashier_account_id = a.id "
+            "join account_with_history a on usr.cashier_account_id = a.id "
             "where usr.user_tag_uid = $1",
             cashier_tag_uid,
         )

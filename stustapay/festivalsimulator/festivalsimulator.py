@@ -230,7 +230,7 @@ class Simulator(SubCommand):
             while True:
                 terminal = random.choice(terminals)
                 self.sleep(n_tills=len(terminals))
-                n_customers = 1
+                n_customers = random.randint(1, 3)
                 user_tags = await self.get_free_tags(db_pool=db_pool, limit=n_customers)
                 if len(user_tags) == 0:
                     return
@@ -239,9 +239,7 @@ class Simulator(SubCommand):
                 payload = {
                     "uuid": str(uuid.uuid4()),
                     "payment_method": "cash",
-                    "tickets": [
-                        {"till_button_id": terminal.config.ticket_buttons[0].id, "customer_tag_uid": user_tags[0]}
-                    ],
+                    "customer_tag_uids": user_tags,
                 }
                 resp = await client.post("/order/check-ticket-sale", json=payload, headers=terminal.get_headers())
                 if resp.status != 200:
