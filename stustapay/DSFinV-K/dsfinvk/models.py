@@ -183,9 +183,9 @@ class Bonkopf_USt(Model):
     Z_NR = NumericField(places=0, _d="Nr. des Kassenabschlusses")
     BON_ID = StringField(_d="Vorgangs-ID", max_length=40)
     UST_SCHLUESSEL = NumericField(places=0, _d="ID des USt-Satzes")
-    BON_BRUTTO = NumericField(places=5, _d="Bruttoumsatz")
-    BON_NETTO = NumericField(places=5, _d="Nettoumsatz")
-    BON_UST = NumericField(places=5, _d="USt")
+    BON_BRUTTO = NumericField(places=2, _d="Bruttoumsatz")
+    BON_NETTO = NumericField(places=2, _d="Nettoumsatz")
+    BON_UST = NumericField(places=2, _d="USt")
 
 
 class Bonkopf_AbrKreis(Model):
@@ -466,9 +466,9 @@ class Z_GV_Typ(Model):
     GV_NAME = StringField(_d="Name der Geschäftsvorfall-Art", max_length=40)
     AGENTUR_ID = NumericField(places=0, _d="ID der Agentur")
     UST_SCHLUESSEL = NumericField(places=0, _d="ID des Umsatzsteuersatzes")
-    Z_UMS_BRUTTO = NumericField(places=5, _d="Bruttoumsatz")
-    Z_UMS_NETTO = NumericField(places=5, _d="Nettoumsatz")
-    Z_UST = NumericField(places=5, _d="USt")
+    Z_UMS_BRUTTO = NumericField(places=2, _d="Bruttoumsatz")
+    Z_UMS_NETTO = NumericField(places=2, _d="Nettoumsatz")
+    Z_UST = NumericField(places=2, _d="USt")
 
 
 class Z_Zahlart(Model):

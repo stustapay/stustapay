@@ -14,6 +14,8 @@ from datetime import datetime, timezone
 from dateutil import parser
 from decimal import Decimal
 
+import json
+
 import pytz
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import Stamm_Abschluss, Stamm_Orte, Stamm_Kassen, Stamm_USt, Stamm_TSE, Z_GV_Typ, Z_Zahlart, Z_Waehrungen, Bonkopf, Bonkopf_USt, TSE_Transaktionen, Bonkopf_Zahlarten, Bonpos, Bonpos_USt, Bonpos_Preisfindung
@@ -76,8 +78,9 @@ class Generator:
 
         ### transactions.csv ###
         ### transactions_tse.csv ###
+        ### transactions_vat.csv ###
         #alle orders für diese Kasse und Abschluss abfragen:
-        for row in await self._conn.fetch("select ordr.id, tse_signature.tse_start, tse_signature.tse_end, tse_signature.tse_id, tse_signature.tse_transaction, tse_signature.transaction_process_type, tse_signature.tse_signaturenr, tse_signature.transaction_process_data, tse_signature.tse_signature, ordr.cashier_id, ordr.customer_account_id, ordr.order_type, tse_signature.signature_status, tse_signature.result_message from ordr join tse_signature on ordr.id=tse_signature.id where ordr.till_id = $1 and ordr.z_nr = $2 order by ordr.id", Z_KASSE_ID, Z_NR):
+        for row in await self._conn.fetch("select ordr.id, tse_signature.tse_start, tse_signature.tse_end, tse_signature.tse_id, tse_signature.tse_transaction, tse_signature.transaction_process_type, tse_signature.tse_signaturenr, tse_signature.transaction_process_data, tse_signature.tse_signature, ordr.cashier_id, ordr.customer_account_id, ordr.order_type, tse_signature.signature_status, tse_signature.result_message, order_value.total_price, order_value.line_items from ordr join tse_signature on ordr.id=tse_signature.id join order_value on ordr.id=order_value.id where ordr.till_id = $1 and ordr.z_nr = $2 order by ordr.id", Z_KASSE_ID, Z_NR):
             if row['signature_status'] == 'new' or row['signature_status'] == 'pending':
                 LOGGER.warn("Nicht Signierte Transaktion, wird nicht exportiert")
                 continue #signatur noch nicht fertig
@@ -116,20 +119,29 @@ class Generator:
 
             a.BEDIENER_ID = row['cashier_id']  #Kassierer NR
 
-            a.UMS_BRUTTO = Decimal()
+            a.UMS_BRUTTO = Decimal(row['total_price'])
             a.KUNDE_ID = row['customer_account_id']
+
+            #einmal über alle Umsatzsteuersätze je Order iterieren
+            #leider müssen wir da wieder eine db abfrage machen....
+            for line in await self._conn.fetch('select tax_name, total_price, total_tax, total_no_tax from order_tax_rates where id=$1', row['id']):
+                c=Bonkopf_USt()
+                c.Z_KASSE_ID = Z_KASSE_ID
+                c.Z_ERSTELLUNG = Z_ERSTELLUNG
+                c.Z_NR = Z_NR
+                c.BON_ID = row['id']
+                c.UST_SCHLUESSEL = TAXNAME_TO_SCHLUESSELNUMMER[line['tax_name']]
+                c.BON_BRUTTO = Decimal(line['total_price'])
+                c.BON_NETTO = Decimal(line['total_no_tax'])
+                c.BON_UST = Decimal(line['total_tax'])
+                self.c.add(c)
 
             self.c.add(a)
             self.c.add(b)
+        ### /transactions_vat.csv ###
         ### /transactions_tse.csv ###
         ### /transactions.csv ###
 
-        ### transactions_vat.csv ###
-        a=Bonkopf_USt()
-        a.Z_KASSE_ID = Z_KASSE_ID
-        a.Z_ERSTELLUNG = Z_ERSTELLUNG
-        a.Z_NR = Z_NR
-        ### /transactions_vat.csv ###
 
         ### datapayment.csv ###
         a=Bonkopf_Zahlarten()
