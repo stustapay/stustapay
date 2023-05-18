@@ -743,12 +743,40 @@ create table if not exists till_layout_to_button (
     unique (layout_id, button_id, sequence_number)
 );
 
+create or replace function check_till_layout_contains_tickets_of_unique_restrictions(
+    layout_id bigint,
+    ticket_id bigint
+) returns boolean as
+$$
+<<locals>> declare
+    restriction_type text;
+    n_current_tickets_in_layout int;
+begin
+    select t.restriction into locals.restriction_type
+    from ticket t
+    where t.id = check_till_layout_contains_tickets_of_unique_restrictions.ticket_id;
+
+    select count(*) into locals.n_current_tickets_in_layout
+    from ticket t
+    join till_layout_to_ticket tltt on t.id = tltt.ticket_id
+    where
+        t.id != check_till_layout_contains_tickets_of_unique_restrictions.ticket_id
+        and tltt.layout_id = check_till_layout_contains_tickets_of_unique_restrictions.layout_id
+        and (t.restriction = locals.restriction_type or t.restriction is null and locals.restriction_type is null);
+
+    return locals.n_current_tickets_in_layout < 1;
+end
+$$ language plpgsql;
+
 create table if not exists till_layout_to_ticket (
     layout_id bigint not null references till_layout(id) on delete cascade,
     ticket_id bigint not null references ticket(id),
     sequence_number bigint not null,
     primary key (layout_id, ticket_id),
-    unique (layout_id, ticket_id, sequence_number)
+    unique (layout_id, ticket_id, sequence_number),
+
+    constraint unique_restriction_ticket_per_layout
+        check(check_till_layout_contains_tickets_of_unique_restrictions(layout_id, ticket_id))
 );
 
 create or replace view till_layout_with_buttons_and_tickets as (

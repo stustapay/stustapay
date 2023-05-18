@@ -34,6 +34,9 @@ from stustapay.core.schema.order import (
     PendingTicketSale,
     CompletedTicketSale,
     PaymentMethod,
+    NewTicketScan,
+    TicketScanResult,
+    TicketScanResultEntry,
 )
 from stustapay.core.schema.product import (
     Product,
@@ -65,7 +68,6 @@ from stustapay.core.util import BaseModel
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
-from ..ticket import fetch_ticket
 from ...schema.ticket import Ticket
 
 logger = logging.getLogger(__name__)
@@ -738,9 +740,58 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    async def check_ticket_scan(
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_ticket_scan: NewTicketScan
+    ) -> TicketScanResult:
+        can_sell_tickets = await conn.fetchval(
+            "select allow_ticket_sale from till_profile where id = $1", current_terminal.till.active_profile_id
+        )
+        if not can_sell_tickets:
+            raise TillPermissionException("This terminal is not allowed to sell tickets")
+
+        layout_id = await conn.fetchval(
+            "select layout_id from till_profile tp where id = $1", current_terminal.till.active_profile_id
+        )
+
+        known_accounts = await conn.fetch(
+            "select user_tag_uid from account where user_tag_uid = ANY($1::numeric(20)[])",
+            new_ticket_scan.customer_tag_uids,
+        )
+
+        if len(known_accounts) > 0:
+            raise InvalidArgument(
+                f"Ticket already has account: " f"{', '.join('%X' % int(a['user_tag_uid']) for a in known_accounts)}"
+            )
+
+        scanned_tickets = []
+        for customer_tag_uid in new_ticket_scan.customer_tag_uids:
+            ticket_row = await conn.fetchrow(
+                "select twp.* "
+                "from ticket_with_product twp "
+                "join till_layout_to_ticket tltt on tltt.ticket_id = twp.id "
+                "join user_tag ut "
+                "   on (twp.restriction = ut.restriction or twp.restriction is null and ut.restriction is null) "
+                "where tltt.layout_id = $1 and ut.uid = $2",
+                layout_id,
+                customer_tag_uid,
+            )
+            if ticket_row is None:
+                raise InvalidArgument("This terminal is not allowed to sell this ticket")
+            ticket = Ticket.parse_obj(ticket_row)
+            scanned_tickets.append(TicketScanResultEntry(customer_tag_uid=customer_tag_uid, ticket=ticket))
+
+        return TicketScanResult(scanned_tickets=scanned_tickets)
+
+    @with_retryable_db_transaction()
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_ticket_sale(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_ticket_sale: NewTicketSale
-    ) -> tuple[PendingTicketSale, list[PendingTicket]]:
+        self,
+        *,
+        conn: asyncpg.Connection,
+        current_terminal: Terminal,
+        current_user: CurrentUser,
+        new_ticket_sale: NewTicketSale,
+    ) -> PendingTicketSale:
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_ticket_sale.uuid)
         if uuid_exists:
             raise InvalidArgument("This order has already been booked, duplicate order uuid")
@@ -748,21 +799,12 @@ class OrderService(DBService):
         if new_ticket_sale.payment_method == PaymentMethod.tag:
             raise InvalidArgument("Cannot pay with tag for a ticket")
 
-        can_sell_tickets = await conn.fetchval(
-            "select allow_ticket_sale from till_profile where id = $1", current_terminal.till.active_profile_id
+        ticket_scan_result: TicketScanResult = await self.check_ticket_scan(  # pylint: disable=unexpected-keyword-arg
+            conn=conn,
+            current_terminal=current_terminal,
+            current_user=current_user,
+            new_ticket_scan=NewTicketScan(customer_tag_uids=new_ticket_sale.customer_tag_uids),
         )
-        if not can_sell_tickets:
-            raise TillPermissionException("This terminal is not allowed to sell tickets")
-
-        known_accounts = await conn.fetch(
-            "select user_tag_uid from account where user_tag_uid = ANY($1::numeric(20)[])",
-            [button.customer_tag_uid for button in new_ticket_sale.tickets],
-        )
-
-        if len(known_accounts) > 0:
-            raise InvalidArgument(
-                f"Ticket already has account: " f"{', '.join('%X' % int(a['user_tag_uid']) for a in known_accounts)}"
-            )
 
         # mapping of product id to pending line item
         ticket_line_items: dict[int, PendingLineItem] = {}
@@ -777,21 +819,8 @@ class OrderService(DBService):
             tax_rate=top_up_product.tax_rate,
         )
 
-        for ticket_button in new_ticket_sale.tickets:
-            # till button id is the same as the ticket id since we do not have an indirection there
-            ticket = await fetch_ticket(conn=conn, ticket_id=ticket_button.till_button_id)
-            if ticket is None:
-                raise InvalidArgument(f"Ticket with button id {ticket_button.till_button_id} does not exist")
-            layout_allows_button = await conn.fetchval(
-                "select exists("
-                "   select from till_layout_to_ticket tltt join till_profile tp on tltt.layout_id = tp.layout_id "
-                "   where tltt.ticket_id = $1 and tp.id = $2"
-                ")",
-                ticket.id,
-                current_terminal.till.active_profile_id,
-            )
-            if not layout_allows_button:
-                raise InvalidArgument(f"Till layout is not allowed to book ticket {ticket.name}")
+        for ticket_scan in ticket_scan_result.scanned_tickets:
+            ticket = ticket_scan.ticket
             ticket_product = await fetch_product(conn=conn, product_id=ticket.product_id)
             assert ticket_product is not None
             assert ticket_product.price is not None
@@ -811,10 +840,10 @@ class OrderService(DBService):
                 top_up_line_item.product_price += ticket.initial_top_up_amount  # pylint: disable=no-member
 
             row = await conn.fetchrow(
-                "select uid, restriction from user_tag where uid = $1", ticket_button.customer_tag_uid
+                "select uid, restriction from user_tag where uid = $1", ticket_scan.customer_tag_uid
             )
             if row is None:
-                raise InvalidArgument(f"Tag with uid {ticket_button.customer_tag_uid:X} does not exist")
+                raise InvalidArgument(f"Tag with uid {ticket_scan.customer_tag_uid:X} does not exist")
             ticket_restriction_name = ticket.restriction.name if ticket.restriction is not None else None
             tag_restriction = row["restriction"]
             if tag_restriction != ticket_restriction_name:
@@ -825,21 +854,18 @@ class OrderService(DBService):
 
             pending_tickets.append(
                 PendingTicket(
-                    customer_tag_uid=ticket_button.customer_tag_uid,
+                    customer_tag_uid=ticket_scan.customer_tag_uid,
                     ticket=ticket,
                 )
             )
 
         line_items = list(ticket_line_items.values()) + [top_up_line_item]
 
-        return (
-            PendingTicketSale(
-                uuid=new_ticket_sale.uuid,
-                payment_method=new_ticket_sale.payment_method,
-                tickets=new_ticket_sale.tickets,
-                line_items=line_items,
-            ),
-            pending_tickets,
+        return PendingTicketSale(
+            uuid=new_ticket_sale.uuid,
+            payment_method=new_ticket_sale.payment_method,
+            line_items=line_items,
+            scanned_tickets=ticket_scan_result.scanned_tickets,
         )
 
     @staticmethod
@@ -875,22 +901,22 @@ class OrderService(DBService):
         new_ticket_sale: NewTicketSale,
     ) -> CompletedTicketSale:
         assert current_user.cashier_account_id is not None
-        pending_ticket_sale, pending_tickets = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg
+        pending_ticket_sale = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_terminal=current_terminal, current_user=current_user, new_ticket_sale=new_ticket_sale
         )
 
         # create a new customer account for the given tag ,
         # store the initial topup amount as well as restrictionfor each newly created customer
         customers: dict[int, tuple[float, Optional[str]]] = {}
-        for pending_ticket in pending_tickets:
+        for scanned_ticket in pending_ticket_sale.scanned_tickets:
             restriction = await conn.fetchval(
-                "select restriction from user_tag where uid = $1", pending_ticket.customer_tag_uid
+                "select restriction from user_tag where uid = $1", scanned_ticket.customer_tag_uid
             )
             customer_account_id = await conn.fetchval(
                 "insert into account (user_tag_uid, type) values ($1, 'private') returning id",
-                pending_ticket.customer_tag_uid,
+                scanned_ticket.customer_tag_uid,
             )
-            customers[customer_account_id] = (pending_ticket.ticket.initial_top_up_amount, restriction)
+            customers[customer_account_id] = (scanned_ticket.ticket.initial_top_up_amount, restriction)
 
         oldest_customer_account_id = self._find_oldest_customer(customers)
 
@@ -959,7 +985,7 @@ class OrderService(DBService):
             uuid=order_info.uuid,
             booked_at=order_info.booked_at,
             cashier_id=current_user.id,
-            tickets=pending_ticket_sale.tickets,
+            scanned_tickets=pending_ticket_sale.scanned_tickets,
             till_id=current_terminal.till.id,
         )
 

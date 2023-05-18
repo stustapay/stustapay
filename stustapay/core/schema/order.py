@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import root_validator, validator
 
 from stustapay.core.schema.product import Product
+from stustapay.core.schema.ticket import Ticket
 from stustapay.core.util import BaseModel
 
 
@@ -165,22 +166,38 @@ class CompletedSale(PendingSale):
     till_id: int
 
 
-class TicketButton(BaseModel):
-    till_button_id: int
+class NewTicketScan(BaseModel):
+    customer_tag_uids: list[int]
+
+
+class TicketScanResultEntry(BaseModel):
     customer_tag_uid: int
+    ticket: Ticket
+
+
+class TicketScanResult(BaseModel):
+    scanned_tickets: list[TicketScanResultEntry]
 
 
 class NewTicketSale(BaseModel):
     uuid: UUID
-    tickets: list[TicketButton]
+    customer_tag_uids: list[int]
 
     payment_method: PaymentMethod
 
     _validate_payment_method = validator("payment_method", allow_reuse=True)(is_non_tag_payment_method)
 
 
-class PendingTicketSale(NewTicketSale):
+class PendingTicketSale(BaseModel):
+    uuid: UUID
+
+    payment_method: PaymentMethod
+
+    _validate_payment_method = validator("payment_method", allow_reuse=True)(is_non_tag_payment_method)
+
     line_items: list[PendingLineItem]
+
+    scanned_tickets: list[TicketScanResultEntry]
 
     @property
     def item_count(self) -> int:
