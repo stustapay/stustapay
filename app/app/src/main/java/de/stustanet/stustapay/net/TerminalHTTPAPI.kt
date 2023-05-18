@@ -72,6 +72,10 @@ class TerminalHTTPAPI @Inject constructor(
         return client.post("order/book-topup") { newTopUp }
     }
 
+    override suspend fun checkTicketScan(newTicketScan: NewTicketScan): Response<TicketScanResult> {
+        return client.post("order/check-ticket-scan") { newTicketScan }
+    }
+
     override suspend fun checkTicketSale(newTicketSale: NewTicketSale): Response<PendingTicketSale> {
         return client.post("order/check-ticket-sale") { newTicketSale }
     }

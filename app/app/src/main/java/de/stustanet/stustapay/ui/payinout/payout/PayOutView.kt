@@ -32,6 +32,7 @@ import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustanet.stustapay.ui.common.amountselect.AmountConfig
 import de.stustanet.stustapay.ui.common.amountselect.AmountSelection
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
+import de.stustanet.stustapay.ui.theme.errorButtonColors
 import kotlinx.coroutines.launch
 
 
@@ -127,7 +128,7 @@ fun PayOutView(
                     ) {
                         Text(
                             // unicode "Coin"
-                            "\uD83E\uDE99 Auszahlen...", fontSize = 30.sp,
+                            "\uD83E\uDE99 Auszahlen...", fontSize = 28.sp,
                             textAlign = TextAlign.Center,
                         )
                     }
@@ -154,13 +155,24 @@ fun PayOutView(
                     )
                 }
             } else {
-                Row(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 15.dp,
+                            vertical = 10.dp,
+                        )
+                        .fillMaxWidth()
+                ) {
                     Text("Tag ID: ${currentCustomer.tag}", fontSize = 24.sp)
-                    IconButton(onClick = { viewModel.clearDraft() }) {
+                    Button(
+                        onClick = { viewModel.clearDraft() },
+                        colors = errorButtonColors(),
+                    ) {
                         Icon(Icons.Filled.Clear, "Clear PayOut")
                     }
                 }
-                Text("Guthaben: %.2€".format(currentCustomer.maxAmount.toDouble() / 100.0))
+
+                Text("Guthaben: %.2f€".format(currentCustomer.maxAmount), fontSize = 24.sp)
 
                 AmountSelection(
                     amount = payOutState.getAmount(),

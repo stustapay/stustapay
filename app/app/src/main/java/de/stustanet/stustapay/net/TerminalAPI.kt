@@ -95,6 +95,11 @@ interface TerminalAPI {
     suspend fun bookPayOut(newPayOut: NewPayOut): Response<CompletedPayOut>
 
     /**
+     * Scan a ticket and figure out what it is.
+     */
+    suspend fun checkTicketScan(newTicketScan: NewTicketScan): Response<TicketScanResult>
+
+    /**
      * Check if a ticket can be sold.
      */
     suspend fun checkTicketSale(newTicketSale: NewTicketSale): Response<PendingTicketSale>

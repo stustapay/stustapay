@@ -12,11 +12,14 @@ data class CheckedPayOut(
 
     /** what's the user's tag */
     val tag: UserTag,
+
+    val uuid: String,
 ) {
     fun getNewPayOut(): NewPayOut {
         return NewPayOut(
-            amount = amount,
+            uuid = uuid,
             customer_tag_uid = tag.uid,
+            amount = amount,
         )
     }
 

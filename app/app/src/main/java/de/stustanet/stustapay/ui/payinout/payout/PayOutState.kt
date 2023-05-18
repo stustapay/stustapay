@@ -3,6 +3,7 @@ package de.stustanet.stustapay.ui.payinout.payout
 import de.stustanet.stustapay.model.NewPayOut
 import de.stustanet.stustapay.model.PendingPayOut
 import de.stustanet.stustapay.model.UserTag
+import java.util.UUID
 
 
 data class PayOutState(
@@ -29,7 +30,11 @@ data class PayOutState(
         // payout amount is always negative for the api
         val amount = currentAmount?.toDouble()?.times(-1)
 
-        return NewPayOut(tag.uid, amount)
+        return NewPayOut(
+            uuid = UUID.randomUUID().toString(),
+            customer_tag_uid = tag.uid,
+            amount = amount
+        )
     }
 
     fun getCheckedPayOut(): NewPayOut? {
@@ -38,6 +43,7 @@ data class PayOutState(
 
     fun updateWithPendingPayOut(pendingPayOut: PendingPayOut, tag: UserTag) {
         checkedPayOut = CheckedPayOut(
+            uuid = pendingPayOut.uuid,
             maxAmount = pendingPayOut.old_balance,
             amount = pendingPayOut.amount,
             tag = tag,

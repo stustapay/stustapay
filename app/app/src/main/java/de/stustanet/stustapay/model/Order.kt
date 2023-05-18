@@ -4,6 +4,35 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
+
+/**
+ * OrderType enum from core model.
+ */
+@Serializable
+enum class OrderType {
+    @SerialName("sale")
+    Sale,
+
+    @SerialName("cancel_sale")
+    CancelSale,
+
+    @SerialName("top_up")
+    Topup,
+
+    @SerialName("pay_out")
+    Payout,
+
+    @SerialName("ticket")
+    Ticket,
+
+    @SerialName("money_transfer")
+    MoneyTransfer,
+
+    @SerialName("money_transfer_imbalance")
+    MoneyTransferImbalance,
+}
+
+
 /**
  * TopUpType enum from core model.
  */
@@ -25,10 +54,10 @@ enum class PaymentMethod {
  */
 @Serializable
 data class NewTopUp(
+    val uuid: String,
     val amount: Double,
     val customer_tag_uid: ULong,
     val payment_method: PaymentMethod,
-    val uuid: String,
 )
 
 
@@ -38,10 +67,10 @@ data class NewTopUp(
 @Serializable
 data class PendingTopUp(
     // NewTopUp
+    val uuid: String,
+    val payment_method: PaymentMethod,
     val amount: Double,
     val customer_tag_uid: ULong,
-    val payment_method: PaymentMethod,
-    val uuid: String,
     // PendingTopUp
     val old_balance: Double,
     val new_balance: Double,
@@ -76,6 +105,7 @@ data class CompletedTopUp(
  */
 @Serializable
 data class NewPayOut(
+    val uuid: String,
     val customer_tag_uid: ULong,
     // if no amount is passed, the current customer account balance is assumed as payout
     val amount: Double? = null,
@@ -211,13 +241,33 @@ data class CompletedSale(
     val till_id: Int,
 )
 
+
 /**
- * Ticket class from core model.
+ * A ticket has been scanned, so we can check it in the backend.
+ * NewTicketScan class from core model.
  */
 @Serializable
-data class Ticket(
-    val till_button_id: Int,
-    val quantity: Int,
+data class NewTicketScan(
+    val customer_tag_uids: List<ULong>,
+)
+
+/**
+ * To create a new ticket.
+ * TicketScanResultEntry class from core model.
+ */
+@Serializable
+data class TicketScanResultEntry(
+    val customer_tag_uid: ULong,
+    val ticket: Ticket,
+)
+
+/**
+ * To create a new ticket.
+ * TicketScanResultEntry class from core model.
+ */
+@Serializable
+data class TicketScanResult(
+    val scanned_tickets: List<TicketScanResultEntry>
 )
 
 /**
@@ -228,7 +278,6 @@ data class Ticket(
 data class NewTicketSale(
     val uuid: String,
     val customer_tag_uids: List<ULong>,
-    val tickets: List<Ticket>,
     val payment_method: PaymentMethod,
 )
 
@@ -239,12 +288,10 @@ data class NewTicketSale(
  */
 @Serializable
 data class PendingTicketSale(
-    // NewTicketSale
     val uuid: String,
-    val customer_tag_uids: List<ULong>,
     val payment_method: PaymentMethod,
-    // PendingTicketSale
     val line_items: List<PendingLineItem>,
+    val scanned_tickets: List<TicketScanResultEntry>,
     val total_price: Double,
 )
 
@@ -254,13 +301,11 @@ data class PendingTicketSale(
  */
 @Serializable
 data class CompletedTicketSale(
-    // NewTicketSale
-    val uuid: String,
-    val customer_tag_uids: List<ULong>,
-    val payment_method: PaymentMethod,
-
     // PendingTicketSale
+    val uuid: String,
+    val payment_method: PaymentMethod,
     val line_items: List<PendingLineItem>,
+    val scanned_tickets: List<TicketScanResultEntry>,
     val total_price: Double,
 
     // CompletedTicketSale
@@ -288,28 +333,6 @@ data class LineItem(
     val item_id: Int = 0,
     val total_tax: Double = 0.0,
 )
-
-
-/**
- * OrderType enum from core model.
- */
-@Serializable
-enum class OrderType {
-    @SerialName("sale")
-    Sale,
-
-    @SerialName("cancel_sale")
-    CancelSale,
-
-    @SerialName("top_up")
-    Topup,
-
-    @SerialName("pay_out")
-    Payout,
-
-    @SerialName("ticket")
-    Ticket
-}
 
 
 /**

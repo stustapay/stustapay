@@ -1,6 +1,12 @@
 package de.stustanet.stustapay.ui.cashier
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
@@ -15,7 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
-import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
 
@@ -26,7 +32,7 @@ fun CashierStatusView(
 ) {
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val scanState = rememberNfcScanDialogState()
+    val scanState = rememberDialogDisplayState()
 
     LaunchedEffect(null) {
         viewModel.fetchLocal()
