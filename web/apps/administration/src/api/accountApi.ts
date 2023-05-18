@@ -2,7 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
-import { Account } from "@stustapay/models";
+import { Account, UserTagDetail } from "@stustapay/models";
 
 const accountAdapter = createEntityAdapter<Account>();
 
@@ -30,6 +30,9 @@ export const accountApi = createApi({
       providesTags: (result) =>
         result ? [...result.ids.map((id) => ({ type: "account" as const, id })), "account"] : ["account"],
     }),
+    getUserTagDetail: builder.query<UserTagDetail, string>({
+      query: (uid) => `/user_tags/${uid}`,
+    }),
     findAccounts: builder.mutation<Account[], string>({
       query: (searchTerm) => ({ url: "/accounts/find-accounts/", method: "POST", body: { search_term: searchTerm } }),
     }),
@@ -56,11 +59,11 @@ export const accountApi = createApi({
       }),
       invalidatesTags: ["account"],
     }),
-    updateTagUid: builder.mutation<void, { accountId: number; newTagUid: bigint }>({
-      query: ({ accountId, newTagUid }) => ({
+    updateTagUid: builder.mutation<void, { accountId: number; newTagUidHex: string; comment: string }>({
+      query: ({ accountId, newTagUidHex, comment }) => ({
         url: `/accounts/${accountId}/update-tag-uid`,
         method: "POST",
-        body: { new_tag_uid: newTagUid },
+        body: { new_tag_uid_hex: newTagUidHex, comment },
       }),
       invalidatesTags: ["account"],
     }),
@@ -78,4 +81,5 @@ export const {
   useUpdateVoucherAmountMutation,
   useUpdateTagUidMutation,
   useDisableAccountMutation,
+  useGetUserTagDetailQuery,
 } = accountApi;

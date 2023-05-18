@@ -11,6 +11,11 @@ class Cashier(BaseModel):
     display_name: str
     description: Optional[str] = None
     user_tag_uid: Optional[int] = None
+
+    @property
+    def user_tag_uid_hex(self):
+        return hex(self.user_tag_uid) if self.user_tag_uid is not None else None
+
     transport_account_id: Optional[int] = None
     cashier_account_id: int
     cash_register_id: Optional[int] = None

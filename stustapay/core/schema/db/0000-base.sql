@@ -83,6 +83,8 @@ create table if not exists user_tag (
     -- age restriction information
     restriction text references restriction_type(name),
 
+    comment text,
+
     -- to validate tag authenticity
     -- secret maybe shared with several tags.
     secret bigint references user_tag_secret(id)
@@ -164,6 +166,51 @@ create trigger update_tag_association_history_trigger
     for each row
     when (OLD.user_tag_uid is distinct from NEW.user_tag_uid and OLD.user_tag_uid is not null)
     execute function update_tag_association_history();
+
+create or replace view account_with_history as (
+    select
+        a.*,
+        ut.comment as user_tag_comment,
+        ut.restriction,
+        coalesce(hist.tag_history, '[]'::json) as tag_history
+    from account a
+    left join user_tag ut on a.user_tag_uid = ut.uid
+    left join (
+        select
+            atah.account_id,
+            json_agg(json_build_object(
+                'account_id', atah.account_id,
+                'user_tag_uid', atah.user_tag_uid,
+                'mapping_was_valid_until', atah.mapping_was_valid_until,
+                'comment', ut.comment
+            )) as tag_history
+        from account_tag_association_history atah
+        join user_tag ut on atah.user_tag_uid = ut.uid
+        group by atah.account_id
+    ) hist on a.id = hist.account_id
+);
+
+create or replace view user_tag_with_history as (
+    select
+        ut.uid as user_tag_uid,
+        ut.comment,
+        a.id as account_id,
+        coalesce(hist.account_history, '[]'::json) as account_history
+    from user_tag ut
+    left join account a on a.user_tag_uid = ut.uid
+    left join (
+        select
+            atah.user_tag_uid,
+            json_agg(json_build_object(
+                'account_id', atah.account_id,
+                'mapping_was_valid_until', atah.mapping_was_valid_until,
+                'comment', ut.comment
+            )) as account_history
+        from account_tag_association_history atah
+        join user_tag ut on atah.user_tag_uid = ut.uid
+        group by atah.user_tag_uid
+    ) hist on ut.uid = hist.user_tag_uid
+);
 
 create table if not exists cash_register (
     id bigint primary key generated always as identity,
@@ -1127,12 +1174,12 @@ create or replace view order_value as
 -- aggregates account and customer_info to customer
 create or replace view customer as
     select
-        account.*,
+        a.*,
         customer_info.*
     from
-        account
+        account_with_history a
         left join customer_info
-            on (account.id = customer_info.customer_account_id);
+            on (a.id = customer_info.customer_account_id);
 
 -- show all line items
 create or replace view order_items as

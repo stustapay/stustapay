@@ -317,7 +317,7 @@ class OrderService(DBService):
 
     async def _fetch_customer_by_user_tag(self, conn: asyncpg.Connection, customer_tag_uid: int) -> Account:
         customer = await conn.fetchrow(
-            "select a.*, t.restriction from user_tag t join account a on t.uid = a.user_tag_uid where t.uid = $1",
+            "select a.*, t.restriction from user_tag t join account_with_history a on t.uid = a.user_tag_uid where t.uid = $1",
             customer_tag_uid,
         )
         if customer is None:
@@ -794,6 +794,7 @@ class OrderService(DBService):
                 raise InvalidArgument(f"Till layout is not allowed to book ticket {ticket.name}")
             ticket_product = await fetch_product(conn=conn, product_id=ticket.product_id)
             assert ticket_product is not None
+            assert ticket_product.price is not None
 
             if ticket.product_id in ticket_line_items:
                 ticket_line_items[ticket.product_id].quantity += 1

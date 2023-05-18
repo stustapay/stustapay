@@ -232,6 +232,10 @@ class Order(BaseModel):
     customer_account_id: Optional[int]
     customer_tag_uid: Optional[int]
 
+    @property
+    def customer_tag_uid_hex(self):
+        return hex(self.customer_tag_uid) if self.customer_tag_uid is not None else None
+
     line_items: list[LineItem]
 
 

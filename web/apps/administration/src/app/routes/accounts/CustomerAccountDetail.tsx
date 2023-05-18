@@ -11,13 +11,14 @@ import {
 } from "@api";
 import { Loading } from "@stustapay/components";
 import { toast } from "react-toastify";
-import { OrderTable } from "@components";
+import { ListItemLink, OrderTable } from "@components";
 import { useCurrencyFormatter } from "@hooks";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { EditAccountBalanceModal } from "./components/EditAccountBalanceModal";
 import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAmountModal";
 import { EditAccountTagModal } from "./components/EditAccountTagModal";
 import { formatUserTagUid } from "@stustapay/models";
+import { AccountTagHistoryTable } from "./components/AccountTagHistoryTable";
 
 export const CustomerAccountDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -95,14 +96,14 @@ export const CustomerAccountDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("account.type")} secondary={account.type} />
           </ListItem>
-          <ListItem>
-            <ListItemText primary={t("account.user_tag_uid")} secondary={formatUserTagUid(account.user_tag_uid)} />
+          <ListItemLink to={`/user-tags/${account.user_tag_uid_hex}`}>
+            <ListItemText primary={t("account.user_tag_uid")} secondary={formatUserTagUid(account.user_tag_uid_hex)} />
             <ListItemSecondaryAction>
               <IconButton color="primary" onClick={() => setTagModalOpen(true)}>
                 <EditIcon />
               </IconButton>
             </ListItemSecondaryAction>
-          </ListItem>
+          </ListItemLink>
           <ListItem>
             <ListItemText primary={t("account.name")} secondary={account.name} />
           </ListItem>
@@ -129,6 +130,7 @@ export const CustomerAccountDetail: React.FC = () => {
           </ListItem>
         </List>
       </Paper>
+      {account.tag_history.length > 0 && <AccountTagHistoryTable history={account.tag_history} />}
       {account && (
         <>
           <EditAccountBalanceModal
