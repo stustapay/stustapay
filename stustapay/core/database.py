@@ -37,9 +37,9 @@ class DatabaseManage(subcommand.SubCommand):
     @staticmethod
     def argparse_register(subparser: argparse.ArgumentParser):
         subparsers = subparser.add_subparsers(dest="action")
-        attach_parser = subparsers.add_parser("attach")
-        migrate_parser = subparsers.add_parser("migrate")
-        rebuild_parser = subparsers.add_parser("rebuild")
+        subparsers.add_parser("attach")
+        subparsers.add_parser("migrate")
+        subparsers.add_parser("rebuild")
 
         add_data_parser = subparsers.add_parser("add_data", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         add_data_parser.add_argument(
