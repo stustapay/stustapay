@@ -1,0 +1,87 @@
+name: Python Tests
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "stustapay/**"
+  pull_request:
+
+jobs:
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: python -m pip install -e '.[dev,test]'
+      - name: Analysing the code with pylint
+        run: make pylint
+
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: python -m pip install -e '.[dev,test]'
+      - name: Analysing the code with mypy
+        run: make mypy
+
+  py-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.9]
+        os: [ubuntu-latest]
+        postgres-version: [13-bullseye]
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_PASSWORD: "password"
+          POSTGRES_USER: "stustapay"
+          POSTGRES_DB: "stustapay-test"
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      TEST_DB_USER: "stustapay"
+      TEST_DB_HOST: "localhost"
+      TEST_DB_PORT: "5432"
+      TEST_DB_DATABASE: "stustapay-test"
+      TEST_DB_PASSWORD: "password"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev,test]'
+      - name: Run all tests except ones that require latex to be installed
+        run: pytest stustapay/tests --doctest-modules --junitxml=junit/test-results.xml --cov=stustapay --cov-report=xml --cov-report=html
+
+  py-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: python -m pip install -e '.[dev,test]'
+      - name: Check formatting
+        run: black --check .

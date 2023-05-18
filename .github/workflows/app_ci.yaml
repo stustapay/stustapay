@@ -1,0 +1,60 @@
+name: App Tests
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "app/**"
+  pull_request:
+
+jobs:
+  app-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: get java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+      - name: build with gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build --stacktrace
+          build-root-directory: app/
+      #- name: Upload APK
+      #  uses: actions/upload-artifact@v3
+      #  with:
+      #    name: app-debug
+      #    # release variant: ./app/app/build/outputs/apk/release/app-release-unsigned.apk
+      #    path: ./app/app/build/outputs/apk/debug/app-debug.apk
+  app-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: get java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+      - name: lint with gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: lint
+          build-root-directory: app/
+  app-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: get java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+      - name: test with gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test --stacktrace
+          build-root-directory: app/
