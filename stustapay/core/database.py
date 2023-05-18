@@ -9,12 +9,13 @@ import os
 import re
 import shutil
 import tempfile
+import argparse
 
 from pathlib import Path
 from typing import Optional
 
 from .config import Config, DatabaseConfig
-from .schema import DATA_PATH, REVISION_PATH
+from .schema import DATA_PATH, DEFAULT_EXAMPLE_DATA_FILE, REVISION_PATH
 from . import util
 from . import subcommand
 
@@ -31,10 +32,22 @@ class DatabaseManage(subcommand.SubCommand):
 
         self.config = config
         self.action = args.action
+        self.args = args
 
     @staticmethod
-    def argparse_register(subparser):
-        subparser.add_argument("action", choices=["attach", "migrate", "rebuild", "add_data"])
+    def argparse_register(subparser: argparse.ArgumentParser):
+        subparsers = subparser.add_subparsers(dest="action")
+        subparsers.add_parser("attach")
+        subparsers.add_parser("migrate")
+        subparsers.add_parser("rebuild")
+
+        add_data_parser = subparsers.add_parser("add_data", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        add_data_parser.add_argument(
+            "--sql-file",
+            type=str,
+            help=f"Name of the .sql file in {DATA_PATH} that will get loaded into the DB",
+            default=DEFAULT_EXAMPLE_DATA_FILE,
+        )
 
     async def _attach(self):
         with contextlib.ExitStack() as exitstack:
@@ -95,7 +108,7 @@ class DatabaseManage(subcommand.SubCommand):
             await reset_schema(db_pool=db_pool)
             await apply_revisions(db_pool=db_pool)
         if self.action == "add_data":
-            await add_data(db_pool=db_pool)
+            await add_data(db_pool=db_pool, sql_file=self.args.sql_file)
 
 
 class SchemaRevision:
@@ -243,10 +256,17 @@ async def apply_revisions(db_pool: asyncpg.Pool, revision_path: Optional[Path] =
                 raise ValueError(f"Unknown revision {curr_revision} present in database")
 
 
-async def add_data(db_pool: asyncpg.Pool, data_path: Path = DATA_PATH):
+async def add_data(db_pool: asyncpg.Pool, sql_file: str, data_path: Path = DATA_PATH):
     async with db_pool.acquire() as conn:
         async with conn.transaction():
-            for data in sorted(data_path.glob("*.sql")):
-                content = data.read_text("utf-8")
-                logger.info(f"Applying test data {data}")
-                await conn.execute(content)
+            data = data_path.joinpath(sql_file)
+            content = data.read_text("utf-8")
+            logger.info(f"Applying test data {data}")
+            await conn.execute(content)
+
+
+async def rebuild_with(db_pool: asyncpg.Pool, sql_file: str):
+    "Wipe the DB and fill it with the info in `sql_file`"
+    await reset_schema(db_pool=db_pool)
+    await apply_revisions(db_pool=db_pool)
+    await add_data(db_pool=db_pool, sql_file=sql_file)
