@@ -58,3 +58,32 @@ jobs:
         with:
           arguments: test --stacktrace
           build-root-directory: app/
+
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  py-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  py-format:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  web-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  web-build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  web-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'

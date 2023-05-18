@@ -2,9 +2,10 @@ name: Python Tests
 on:
   push:
     branches: [ "master" ]
-    paths-ignore:
-      - "app/**"
-      - "web/**"
+    paths:
+      - "stustapay/**"
+      - "pyproject.toml"
+      - "Makefile"
   pull_request:
 
 jobs:
@@ -86,3 +87,29 @@ jobs:
         run: python -m pip install -e '.[dev,test]'
       - name: Check formatting
         run: black --check .
+
+
+  app-build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  app-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  app-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  web-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  web-build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  web-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'

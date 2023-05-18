@@ -57,3 +57,32 @@ jobs:
       - name: Build
         run: npx nx run-many --target=test
         working-directory: ./web
+
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  py-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  py-format:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  app-build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  app-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  app-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
