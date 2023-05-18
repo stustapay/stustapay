@@ -8,3 +8,4 @@ export * from "./account";
 export * from "./cashiers";
 export * from "./customer";
 export * from "./tags";
+export * from "./ticket";

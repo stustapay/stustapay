@@ -122,7 +122,8 @@ class PendingLineItem(BaseModel):
 
     @property
     def total_price(self) -> float:
-        return self.product_price * self.quantity
+        # pylint false positive
+        return self.product_price * self.quantity  # pylint: disable=no-member
 
 
 class PendingSale(BaseModel):
@@ -164,15 +165,14 @@ class CompletedSale(PendingSale):
     till_id: int
 
 
-class Ticket(BaseModel):
+class TicketButton(BaseModel):
     till_button_id: int
-    quantity: int
+    customer_tag_uid: int
 
 
 class NewTicketSale(BaseModel):
     uuid: UUID
-    customer_tag_uids: list[int]
-    tickets: list[Ticket]
+    tickets: list[TicketButton]
 
     payment_method: PaymentMethod
 

@@ -27,6 +27,7 @@ export const NewTillLayoutSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
   button_ids: z.array(z.number().int()).nullable(),
+  ticket_ids: z.array(z.number().int()).nullable(),
 });
 
 export type NewTillLayout = z.infer<typeof NewTillLayoutSchema>;

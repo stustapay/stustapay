@@ -109,12 +109,21 @@ class TillLayoutService(DBService):
                     idx,
                 )
 
+        if layout.ticket_ids is not None:
+            for idx, ticket_id in enumerate(layout.ticket_ids):
+                await conn.execute(
+                    "insert into till_layout_to_ticket (layout_id, ticket_id, sequence_number) values ($1, $2, $3)",
+                    layout_id,
+                    ticket_id,
+                    idx,
+                )
+
         return TillLayout.parse_obj(row)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def list_layouts(self, *, conn: asyncpg.Connection) -> list[TillLayout]:
-        cursor = conn.cursor("select * from till_layout_with_buttons")
+        cursor = conn.cursor("select * from till_layout_with_buttons_and_tickets")
         result = []
         async for row in cursor:
             result.append(TillLayout.parse_obj(row))
@@ -123,7 +132,7 @@ class TillLayoutService(DBService):
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def get_layout(self, *, conn: asyncpg.Connection, layout_id: int) -> Optional[TillLayout]:
-        row = await conn.fetchrow("select * from till_layout_with_buttons where id = $1", layout_id)
+        row = await conn.fetchrow("select * from till_layout_with_buttons_and_tickets where id = $1", layout_id)
         if row is None:
             return None
 
@@ -149,6 +158,16 @@ class TillLayoutService(DBService):
                     "insert into till_layout_to_button (layout_id, button_id, sequence_number) values ($1, $2, $3)",
                     layout_id,
                     button_id,
+                    idx,
+                )
+
+        await conn.execute("delete from till_layout_to_ticket where layout_id = $1", layout_id)
+        if layout.ticket_ids:
+            for idx, ticket_id in enumerate(layout.ticket_ids):
+                await conn.execute(
+                    "insert into till_layout_to_ticket (layout_id, ticket_id, sequence_number) values ($1, $2, $3)",
+                    layout_id,
+                    ticket_id,
                     idx,
                 )
 
