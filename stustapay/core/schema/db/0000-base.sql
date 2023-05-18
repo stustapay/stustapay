@@ -457,7 +457,7 @@ values
     ('ust', 0.19, 'normale Umsatzsteuer'),
 
     -- no tax, when we're the payment system of another legal entity.
-    ('transparent', 0.0, 'abgeführt von Begünstigtem')
+    ('transparent', 0.0, 'abgeführt über anderes Kassensystem')
 
     on conflict do nothing;
 
