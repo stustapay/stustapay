@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 """
 this code will simulate the dn TSE webservice (more or less)
 """
@@ -22,7 +20,7 @@ import uvicorn
 from asn1crypto.core import Integer, ObjectIdentifier, Sequence, OctetString, PrintableString, Any
 from fastapi import FastAPI, WebSocket
 
-from .errorcodes import dnerror
+from stustapay.tse.diebold_nixdorf_usb.errorcodes import dnerror
 
 
 class SignatureAlgorithm_seq(Sequence):

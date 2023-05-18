@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import asyncio
 import aiohttp
 import base64
@@ -11,12 +9,13 @@ import typing
 from dateutil import parser
 import pytz
 
-from ..handler import TSEHandler, TSESignature, TSESignatureRequest, TSEMasterData
-from .config import DieboldNixdorfUSBTSEConfig
+from stustapay.tse.diebold_nixdorf_usb.config import DieboldNixdorfUSBTSEConfig
+
+from stustapay.tse.handler import TSEHandler, TSESignature, TSESignatureRequest, TSEMasterData
+
+from stustapay.core.util import create_task_protected
 
 LOGGER = logging.getLogger(__name__)
-
-from ...core.util import create_task_protected
 
 
 class RequestError(RuntimeError):
