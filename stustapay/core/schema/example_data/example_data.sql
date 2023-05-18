@@ -146,6 +146,14 @@ values
     (109, 'under_18')
     on conflict do nothing;
 
+
+insert into ticket (
+    id, name, product_id, initial_top_up_amount
+) overriding system value
+values
+    (0, 'Eintritt', 4, 8);
+
+
 insert into till_button (
     id, name
 ) overriding system value
