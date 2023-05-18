@@ -1,12 +1,12 @@
 import json
 import random
 from pathlib import Path
+from typing import Optional
 
 import asyncpg
 
 from stustapay.bon.pdflatex import render_template, pdflatex
 from stustapay.core.schema.order import Order
-from stustapay.core.service.order.order import fetch_order
 from stustapay.core.util import BaseModel
 
 
@@ -24,6 +24,28 @@ class TaxRateAggregation(BaseModel):
     total_price: float
     total_tax: float
     total_no_tax: float
+
+
+class OrderWithTse(Order):
+    signature_status: str  # new | pending | done | failure
+    transaction_process_type: str
+    transaction_process_data: str
+    tse_transaction: str
+    tse_signaturenr: str
+    tse_start: str
+    tse_end: str
+    tse_hashalgo: str
+    tse_time_format: str
+    tse_signature: str
+    tse_public_key: str
+
+    @property
+    def tse_qr_code_text(self) -> str:
+        return (
+            f"V0;{self.till_id};{self.transaction_process_type};{self.transaction_process_data};"
+            f"{self.tse_transaction};{self.tse_signaturenr};{self.tse_start};{self.tse_end};{self.tse_hashalgo};"
+            f"{self.tse_time_format};{self.tse_signature};{self.tse_public_key}"
+        )
 
 
 class BonTemplateContext(BaseModel):
@@ -47,6 +69,22 @@ async def fetch_base_config(conn: asyncpg.Connection) -> BonConfig:
 async def render_receipt(context: BonTemplateContext, out_file: Path) -> tuple[bool, str]:
     rendered = await render_template("bon.tex", context=context.dict())
     return await pdflatex(file_content=rendered, out_file=out_file)
+
+
+async def fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[OrderWithTse]:
+    row = await conn.fetchrow(
+        "select o.*, sig.*, tse.tse_hashalgo, tse.tse_time_format, tse.tse_public_key "
+        "from order_value o "
+        "join tse_signature sig on sig.id = o.id "
+        "join till t on o.till_id = t.id "
+        "join tse on tse.tse_id = sig.tse_id "
+        "where o.id = $1",
+        order_id,
+    )
+    if row is None:
+        return None
+
+    return OrderWithTse.parse_obj(row)
 
 
 async def generate_bon(conn: asyncpg.Connection, config: BonConfig, order_id: int, out_file: Path) -> tuple[bool, str]:

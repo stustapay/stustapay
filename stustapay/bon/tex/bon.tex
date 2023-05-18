@@ -57,7 +57,7 @@
         ~                    & \textbf{Produkt}        & \textbf{Einzelpreis}   & \textbf{Gesamt}              &                       \\
         \hline
         \BLOCK[ for item in order.line_items ]
-        \VAR[item.quantity]x & \VAR[item.product.name] & \VAR[item.product.price|money] & \VAR[item.total_price|money] & [\VAR[item.tax_name]] \\
+        \VAR[item.quantity]x & \VAR[item.product.name] & \VAR[item.product_price|money] & \VAR[item.total_price|money] & [\VAR[item.tax_name]] \\
         \BLOCK[endfor]
     \end{tabularx}
 
@@ -72,8 +72,8 @@
     \begin{tabularx}{\textwidth}{ RRRR }
         \textbf{MwSt.\%}                                         & \textbf{Brutto}                & \textbf{Netto}                   & \textbf{MwSt.}                 \\
         \hline
-        \BLOCK[ for tax_rate in tax_rate_aggregations ]
-        \VAR[tax_rate.tax_name]=\VAR[ tax_rate.tax_rate|percent] & \VAR[tax_rate.total_price|money] & \VAR[tax_rate.total_no_tax|money] & \VAR[tax_rate.total_tax|money] \\
+        \BLOCK[for tax_rate in tax_rate_aggregations ]
+        \VAR[tax_rate.tax_name]=\VAR[tax_rate.tax_rate|percent] & \VAR[tax_rate.total_price|money] & \VAR[tax_rate.total_no_tax|money] & \VAR[tax_rate.total_tax|money] \\
         \BLOCK[endfor]
         \hline
         ~                                                        & \VAR[order.total_price|money]    & \VAR[order.total_no_tax|money]    & \VAR[order.total_tax|money]    \\
@@ -81,14 +81,25 @@
 
     % sonstige Infos
     \vspace{1cm}
-    \begin{tabularx}{0.8\textwidth}{ RX }
-        Zahlmethode:        & \VAR[order.payment_method]    \\
-        Vorgangszeitpunkt:  & \VAR[order.booked_at.astimezone()]  \\
-        Kasse:              & Festzelt 1              \\
-        Kassierer:          & 1337                    \\
-        TSE Seriennummer:   & rolf                    \\
-        TSE Signaturzähler: & signatur                \\
-        TSE Prüfwert:       & prüfwert                \\
+    \begin{tabularx}{\textwidth}{ Rp{3cm} }
+        Zahlmethode:        & \VAR[order.payment_method.name]    \\
+% We use the TSE start and stop time instead of our order booking time
+%         Vorgangszeitpunkt:  & \VAR[order.booked_at.astimezone()]  \\
+        Kassierer:          & \VAR[order.cashier_id]  \\
+        Seriennummer Kasse: & \VAR[order.till_id]     \\
+        \BLOCK[if order.signature_status == "done"]
+        Transaktionsnummer: & \VAR[order.tse_transaction|latex] \\
+        Signaturzähler:     & \VAR[order.tse_signaturenr|latex] \\
+        Signatur:           & \VAR[order.tse_signature|latex] \\
+        Start-Zeit:         & \VAR[order.tse_start|latex] \\
+        Stop-Zeit:          & \VAR[order.tse_end|latex] \\
+        Public-Key          & \VAR[order.tse_public_key|latex] \\
+        Hash-Algorithmus:   & \VAR[order.tse_hashalgo|latex] \\
+        Zeitformat:         & \VAR[order.tse_time_format|latex] \\
+        QR-Code             & \VAR[order.tse_qr_code_text|latex] \\
+        \BLOCK[else]
+        TSE                 & ausgefallen \\
+        \BLOCK[endif]
     \end{tabularx}
 
     % evtl direkter online Link um die Rechnung abzurufen
