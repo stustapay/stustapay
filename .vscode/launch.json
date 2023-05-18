@@ -19,18 +19,6 @@
             ]
         },
         {
-            "name": "Launch 'terminalserver' in mock-mode",
-            "type": "python",
-            "request": "launch",
-            "module": "stustapay.terminalserver",
-            "justMyCode": true,
-            "args": [
-                "--mock",
-                "-v",
-                "api"
-            ]
-        },
-        {
             "name": "FestivalSimulator DB Setup",
             "type": "python",
             "request": "launch",
