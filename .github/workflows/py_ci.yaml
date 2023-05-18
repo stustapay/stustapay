@@ -2,8 +2,9 @@ name: Python Tests
 on:
   push:
     branches: [ "master" ]
-    paths:
-      - "stustapay/**"
+    paths-ignore:
+      - "app/**"
+      - "web/**"
   pull_request:
 
 jobs:
