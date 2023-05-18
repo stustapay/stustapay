@@ -11,7 +11,11 @@
             "console": "integratedTerminal",
             "module": "stustapay.customer_portal",
             "justMyCode": true,
-            "args": ["-c", "server.yaml", "-vvv", "api"
+            "args": [
+                "-c",
+                "server.yaml",
+                "-vvv",
+                "api"
             ]
         },
         {
@@ -20,7 +24,38 @@
             "request": "launch",
             "module": "stustapay.terminalserver",
             "justMyCode": true,
-            "args": ["--mock", "-v", "api"]
+            "args": [
+                "--mock",
+                "-v",
+                "api"
+            ]
+        },
+        {
+            "name": "FestivalSimulator DB Setup",
+            "type": "python",
+            "request": "launch",
+            "module": "stustapay.festivalsimulator",
+            "justMyCode": true,
+            "args": [
+                "-c",
+                "server.yaml",
+                "-vvv",
+                "setup",
+                "database"
+            ]
+        },
+        {
+            "name": "FestivalSimulator Simulate",
+            "type": "python",
+            "request": "launch",
+            "module": "stustapay.festivalsimulator",
+            "justMyCode": true,
+            "args": [
+                "-c",
+                "server.yaml",
+                "-vvv",
+                "simulate"
+            ]
         }
     ]
 }

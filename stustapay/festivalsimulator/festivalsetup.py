@@ -9,7 +9,7 @@ import asyncpg
 
 from stustapay.administration.server import Api as AdminApi
 from stustapay.core.config import Config
-from stustapay.core.database import create_db_pool, reset_schema, apply_revisions
+from stustapay.core.database import create_db_pool, rebuild_with
 from stustapay.core.schema.till import NewTill, NewCashRegisterStocking, NewCashRegister
 from stustapay.core.schema.user import UserWithoutId, CASHIER_ROLE_NAME
 from stustapay.core.service.auth import AuthService
@@ -50,12 +50,22 @@ class FestivalSetup(SubCommand):
 
     @staticmethod
     def argparse_register(subparser: argparse.ArgumentParser):
-        subparser.add_argument("action", choices=["database", "start-api"])
+        subparsers = subparser.add_subparsers(dest="action")
         subparser.add_argument("--n-tags", type=int, help="number of tags to create", default=1000)
         subparser.add_argument("--n-entry-tills", type=int, help="number of entry tills to create", default=10)
         subparser.add_argument("--n-topup-tills", type=int, help="number of topup tills to create", default=8)
         subparser.add_argument("--n-beer-tills", type=int, help="number of beer tills to create", default=20)
         subparser.add_argument("--n-cocktail-tills", type=int, help="number of cocktail tills to create", default=3)
+
+        database_parser = subparsers.add_parser("database", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        database_parser.add_argument(
+            "--db-init-file",
+            type=str,
+            help="Name of .sql file in the 'core/schema/example_data' that contains the initial DB contents",
+            default="simulator_data",
+        )
+
+        subparsers.add_parser("start-api")
 
     def run_admin_api(self):
         admin_api = AdminApi(args=self.args, config=self.config)
@@ -142,13 +152,12 @@ class FestivalSetup(SubCommand):
             )
 
     async def setup(self):
-        self.db_pool = await create_db_pool(self.config.database)
-        await reset_schema(db_pool=self.db_pool)
-        await apply_revisions(db_pool=self.db_pool)
+        db_init_file: str = self.args.db_init_file
+        if not db_init_file.endswith(".sql"):
+            db_init_file = f"{db_init_file}.sql"
 
-        content = SAMPLE_DATA.read_text("utf-8")
-        self.logger.info(f"Applying test data {SAMPLE_DATA}")
-        await self.db_pool.execute(content)
+        self.db_pool = await create_db_pool(self.config.database)
+        await rebuild_with(self.db_pool, db_init_file)
 
         await self._create_tags()  # pylint: disable=no-value-for-parameter
         auth_service = AuthService(db_pool=self.db_pool, config=self.config)

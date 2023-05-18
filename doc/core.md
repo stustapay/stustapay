@@ -2,10 +2,13 @@
 
 ## Setup
 - Copy `etc/server.yaml` to `server.yaml` and edit accordingly
-- Create a postgres database:
+- Setup Postgres role and DB:
   ```sql
-  $ psql
+  $ sudo -u postgres psql
+  > create role <username> with login;
   > create database stustapay owner <username>;
+  > \c stustapay
+  > alter schema public owner to <username>;
   ```
 - Apply the stustapay schema
   ```shell
