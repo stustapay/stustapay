@@ -35,3 +35,10 @@
 When using DevContainer make sure to forward the port globally. Otherwise the till will not be able to connect.
 In the VSCode Settings set Remote: Local Port Host to `allInterfaces`
 ![https://stackoverflow.com/a/67997839](https://i.stack.imgur.com/oM0zl.png)
+
+Troubles with the database?
+Connect to the database in the devcontainer pstgres-data (below dev volumes), then drop and re-create the schema.
+
+1. `su -postgres -c psql`
+2. `drop schema public cascade;`
+3. `create schema public;`
