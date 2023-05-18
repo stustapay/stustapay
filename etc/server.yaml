@@ -5,7 +5,7 @@ database:
   dbname: "stustapay"
 
 terminalserver:
-  base_url: "localhost:9002"
+  base_url: "http://localhost:9002"
   host: "localhost"
   port: 9002
 

@@ -20,6 +20,7 @@ Setup for each component:
 - [core server](core.md#setup)
 - [web uis](web.md#setup)
 - [customer portal](customerportal.md#setup)
+- [festival simulator](simulator.md#setup)
 
 ## Production setup
 
