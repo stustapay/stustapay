@@ -17,11 +17,6 @@ export const customerApi = createApi({
       providesTags: (result) => ["order"],
     }),
 
-    getDataPrivacyUrl: builder.query<string, void>({
-      query: () => "/data_privacy_url/",
-      providesTags: (result) => ["data_privacy_url"],
-    }),
-
     setCustomerInfo: builder.mutation<void, CustomerInfo>({
       query: (customer) => ({
         url: "/customer_info/",
@@ -32,4 +27,4 @@ export const customerApi = createApi({
   }),
 });
 
-export const { useGetCustomerQuery, useGetOrdersWithBonQuery, useGetDataPrivacyUrlQuery, useSetCustomerInfoMutation } = customerApi;
+export const { useGetCustomerQuery, useGetOrdersWithBonQuery, useSetCustomerInfoMutation } = customerApi;

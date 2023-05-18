@@ -11,7 +11,7 @@
             "console": "integratedTerminal",
             "module": "stustapay.customer_portal",
             "justMyCode": true,
-            "args": ["-c", "server.conf", "-vvv", "api"
+            "args": ["-c", "server.yaml", "-vvv", "api"
             ]
         },
         {

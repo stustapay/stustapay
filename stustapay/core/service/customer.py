@@ -8,7 +8,7 @@ from typing import Optional, List
 import asyncpg
 from pydantic import BaseModel
 from stustapay.core.config import Config
-from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon
+from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon, PublicCustomerApiConfig
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -18,6 +18,8 @@ from stustapay.core.service.common.decorators import (
 from stustapay.core.service.common.error import InvalidArgument
 from schwifty import IBAN
 from sepaxml import SepaTransfer
+
+from stustapay.core.service.config import ConfigService
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -116,9 +118,10 @@ def sepa_export(
 
 
 class CustomerService(DBService):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, config_service: ConfigService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
+        self.config_service = config_service
 
     @with_db_transaction
     async def login_customer(self, *, conn: asyncpg.Connection, uid: int, pin: str) -> Optional[CustomerLoginSuccess]:
@@ -207,5 +210,12 @@ class CustomerService(DBService):
             customer_bank.email,
         )
 
-    def data_privacy_url(self) -> str:
-        return self.cfg.customer_portal.data_privacy_url
+    async def get_public_customer_api_config(self) -> PublicCustomerApiConfig:
+        public_config = await self.config_service.get_public_config()
+        return PublicCustomerApiConfig(
+            currency_identifier=public_config.currency_identifier,
+            currency_symbol=public_config.currency_symbol,
+            data_privacy_url=self.cfg.customer_portal.data_privacy_url,
+            contact_email=self.cfg.customer_portal.contact_email,
+            about_page_url=self.cfg.customer_portal.about_page_url,
+        )
