@@ -16,6 +16,16 @@ export const prepareAuthHeaders = (
   return headers;
 };
 
+export const PublicCustomerApiConfigSchema = z.object({
+  currency_symbol: z.string(),
+  currency_identifier: z.string(),
+  data_privacy_url: z.string(),
+  contact_email: z.string(),
+  about_page_url: z.string(),
+});
+
+export type PublicCustomerApiConfig = z.infer<typeof PublicCustomerApiConfigSchema>;
+
 export const ClientConfigSchema = z.object({
   customerApiEndpoint: z.string(),
 });
@@ -25,6 +35,7 @@ export type ClientConfig = z.infer<typeof ClientConfigSchema>;
 export const ConfigSchema = ClientConfigSchema.merge(
   z.object({
     customerApiBaseUrl: z.string(),
+    publicApiConfig: PublicCustomerApiConfigSchema,
   })
 );
 
@@ -32,18 +43,28 @@ export type Config = z.infer<typeof ConfigSchema>;
 
 export let config: Config;
 
-const generateConfig = (clientConfig: ClientConfig): Config => {
+
+
+const generateConfig = (clientConfig: ClientConfig, publicApiConfig: PublicCustomerApiConfig): Config => {
   return {
     ...clientConfig,
     customerApiBaseUrl: `http://${clientConfig.customerApiEndpoint}`,
+    publicApiConfig: publicApiConfig,
   };
+};
+
+const fetchPublicCustomerApiConfig = async (clientConfig: ClientConfig): Promise<PublicCustomerApiConfig> => {
+  const resp = await fetch(`http://${clientConfig.customerApiEndpoint}/public_customer_config`);
+  const respJson = await resp.json();
+  return PublicCustomerApiConfigSchema.parse(respJson);
 };
 
 export const fetchConfig = async (): Promise<Config> => {
   const resp = await fetch(`http://${siteHost}/assets/config.json`);
   const respJson = await resp.json();
   const clientConfig = ClientConfigSchema.parse(respJson);
-  const c = generateConfig(clientConfig);
+  const publicConfig = await fetchPublicCustomerApiConfig(clientConfig);
+  const c = generateConfig(clientConfig, publicConfig);
   config = c;
   return c;
 };

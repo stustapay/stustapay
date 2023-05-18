@@ -62,21 +62,23 @@ class Generator(SubCommand):
             await self.db_hook.run()
 
     async def cleanup_pending_bons(self):
-        async with self.db_conn.transaction():
-            missing_bons = await self.db_conn.fetch(
-                "select id from bon where not generated and error is null and id % $1 = $2",
-                self.args.n_workers,
-                self.args.worker_id,
-            )
-            for row in missing_bons:
+        self.logger.info("Generating not generated bons")
+        missing_bons = await self.db_conn.fetch(
+            "select id from bon where not generated and error is null and id % $1 = $2",
+            self.args.n_workers,
+            self.args.worker_id,
+        )
+        for row in missing_bons:
+            async with self.db_conn.transaction():
                 await self.process_bon(order_id=row["id"])
+        self.logger.info("Finished generating left-over bons")
 
     async def handle_hook(self, payload):
         self.logger.debug(f"Received hook with payload {payload}")
         try:
             decoded = json.loads(payload)
             bon_id = decoded["bon_id"]
-            if not self._should_process_order(order_id=bon_id):
+            if not await self._should_process_order(order_id=bon_id):
                 return
 
             async with self.db_conn.transaction():
@@ -109,12 +111,12 @@ class Generator(SubCommand):
         self.logger.debug(f"Bon {order_id} generated with result {success}, {msg}")
         if success:
             await self.db_conn.execute(
-                "update bon set generated=$2, output_file=$3 , generated_at=now() where id=$1",
+                "update bon set generated = true, output_file = $2 , generated_at = now() where id = $1",
                 order_id,
-                success,
                 file_name,
             )
         else:
+            self.logger.warning(f"Error while generating bon: {msg}")
             await self.db_conn.execute(
-                "update bon set generated=$2, error=$3, generated_at=now() where id=$1", order_id, success, msg
+                "update bon set generated = $2, error = $3, generated_at = now() where id = $1", order_id, success, msg
             )

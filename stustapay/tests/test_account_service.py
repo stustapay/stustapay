@@ -15,27 +15,35 @@ class AccountServiceTest(TerminalTestCase):
         self.account_service = AccountService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
+
+    async def test_switch_user_tag(self):
         for user_tag_uid in range(1, 20):
             await self.db_conn.execute("insert into user_tag (uid) values ($1)", user_tag_uid)
-        self.account_id = await self.db_conn.fetchval(
+        account_id = await self.db_conn.fetchval(
             "insert into account(user_tag_uid, type, name) values (1, 'private', 'account-1') returning id"
         )
 
-    async def test_switch_user_tag(self):
-        acc = await self.account_service.get_account(token=self.admin_token, account_id=self.account_id)
+        acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
         self.assertIsNotNone(acc)
         self.assertEqual(1, acc.user_tag_uid)
         success = await self.account_service.switch_account_tag_uid_admin(
-            token=self.admin_token, account_id=self.account_id, new_user_tag_uid=2
+            token=self.admin_token, account_id=account_id, new_user_tag_uid=2, comment="foobar"
         )
         self.assertTrue(success)
-        acc = await self.account_service.get_account(token=self.admin_token, account_id=self.account_id)
+        acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
         self.assertIsNotNone(acc)
         self.assertEqual(2, acc.user_tag_uid)
-        n_history_entries = await self.db_pool.fetchval(
-            "select count(*) from account_tag_association_history where account_id = $1", self.account_id
-        )
-        self.assertEqual(1, n_history_entries)
+        self.assertEqual(1, len(acc.tag_history))
+        self.assertEqual("foobar", acc.tag_history[0].comment)
+
+        user_tag_2 = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=2)
+        self.assertIsNotNone(user_tag_2)
+        self.assertEqual(0, len(user_tag_2.account_history))
+
+        user_tag_1 = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
+        self.assertIsNotNone(user_tag_1)
+        self.assertEqual(1, len(user_tag_1.account_history))
+        self.assertEqual(acc.id, user_tag_1.account_history[0].account_id)
 
     async def test_free_ticket_grant_without_vouchers(self):
         voucher_role = await self.user_service.create_user_role(

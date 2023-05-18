@@ -35,6 +35,7 @@ flycheck_*
 # project specific
 config.yaml
 config.devcontainer.yml
+server.yaml
 
 # nodejs
 node_modules/

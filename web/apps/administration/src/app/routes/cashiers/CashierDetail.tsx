@@ -157,9 +157,9 @@ export const CashierDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("cashier.description")} secondary={cashier.description} />
           </ListItem>
-          <ListItem>
-            <ListItemText primary={t("cashier.tagId")} secondary={formatUserTagUid(cashier.user_tag_uid)} />
-          </ListItem>
+          <ListItemLink to={`/user-tags/${cashier.user_tag_uid_hex}`}>
+            <ListItemText primary={t("cashier.tagId")} secondary={formatUserTagUid(cashier.user_tag_uid_hex)} />
+          </ListItemLink>
           {cashier.till_ids.length !== 0 ? (
             cashier.till_ids.map((till_id) => (
               <ListItemLink to={`/tills/${getTill(till_id)?.id}`}>

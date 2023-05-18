@@ -19,7 +19,7 @@ class SignatureProcessor(SubCommand):
     def argparse_register(subparser):
         del subparser  # unused, no extra arguments
 
-    def __init__(self, args: dict, config: Config, **rest):
+    def __init__(self, args, config: Config, **rest):
         del args, rest  # unused
 
         self.config = config
