@@ -89,7 +89,21 @@ async def update_tag_uid(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
 
-@router.get("/user_tags/{user_tag_uid_hex}", response_model=UserTagDetail)
+class UpdateAccountCommentPayload(BaseModel):
+    comment: str
+
+
+@router.post("/accounts/{account_id}/update-comment", response_model=Account)
+async def update_account_comment(
+    token: CurrentAuthToken,
+    account_service: ContextAccountService,
+    account_id: int,
+    payload: UpdateAccountCommentPayload,
+):
+    return await account_service.update_account_comment(token=token, account_id=account_id, comment=payload.comment)
+
+
+@router.get("/user-tags/{user_tag_uid_hex}", response_model=UserTagDetail)
 async def get_user_tag_detail(
     token: CurrentAuthToken,
     account_service: ContextAccountService,
@@ -99,3 +113,20 @@ async def get_user_tag_detail(
     if resp is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return resp
+
+
+class UpdateCommentPayload(BaseModel):
+    comment: str
+
+
+@router.post("/user-tags/{user_tag_uid_hex}/update-comment", response_model=UserTagDetail)
+async def update_user_tag_comment(
+    token: CurrentAuthToken,
+    account_service: ContextAccountService,
+    user_tag_uid_hex: str,
+    payload: UpdateCommentPayload,
+):
+    print("stuff", user_tag_uid_hex, payload)
+    return await account_service.update_user_tag_comment(
+        token=token, user_tag_uid=int(user_tag_uid_hex, 16), comment=payload.comment
+    )

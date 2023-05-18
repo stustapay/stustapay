@@ -1,5 +1,5 @@
-import { useGetUserTagDetailQuery } from "@api";
-import { ListItemLink } from "@components";
+import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@api";
+import { EditableListItem, ListItemLink } from "@components";
 import { Stack, Paper, ListItem, ListItemText, List } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DataGridTitle, Loading } from "@stustapay/components";
@@ -18,6 +18,7 @@ export const UserTagDetail: React.FC = () => {
   const { userTagUidHex } = useParams();
   const navigate = useNavigate();
 
+  const [updateComment] = useUpdateUserTagCommentMutation();
   const { data, error, isLoading } = useGetUserTagDetailQuery(userTagUidHex as string);
 
   if (isLoading || (!data && !error)) {
@@ -48,6 +49,10 @@ export const UserTagDetail: React.FC = () => {
     },
   ];
 
+  const handleUpdateComment = (newComment: string) => {
+    updateComment({ userTagUidHex: userTagUidHex as string, comment: newComment });
+  };
+
   return (
     <Stack spacing={2}>
       <Paper>
@@ -60,9 +65,7 @@ export const UserTagDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("userTag.uid")} secondary={formatUserTagUid(data.user_tag_uid_hex)} />
           </ListItem>
-          <ListItem>
-            <ListItemText primary={t("userTag.comment")} secondary={data.comment} />
-          </ListItem>
+          <EditableListItem label={t("userTag.comment")} value={data.comment ?? ""} onChange={handleUpdateComment} />
           {data.account_id ? (
             <ListItemLink to={`/customer-accounts/${data.account_id}`}>
               <ListItemText primary={t("userTag.account")} secondary={data.account_id} />

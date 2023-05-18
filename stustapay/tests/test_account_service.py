@@ -140,3 +140,32 @@ class AccountServiceTest(TerminalTestCase):
         self.assertTrue(success)
         customer = await self.account_service.get_account_by_tag_uid(token=self.admin_token, user_tag_uid=volunteer_tag)
         self.assertEqual(customer.vouchers, 3)
+
+    async def test_account_comment_updates(self):
+        await self.db_conn.execute("insert into user_tag (uid) values (1)")
+        account_id = await self.db_conn.fetchval(
+            "insert into account(user_tag_uid, type, name) values (1, 'private', 'account-1') returning id"
+        )
+
+        acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
+        self.assertIsNotNone(acc)
+        self.assertIsNone(acc.comment)
+
+        await self.account_service.update_account_comment(
+            token=self.admin_token, account_id=account_id, comment="foobar"
+        )
+        acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
+        self.assertIsNotNone(acc)
+        self.assertEqual("foobar", acc.comment)
+
+    async def test_user_tag_comment_updates(self):
+        await self.db_conn.execute("insert into user_tag (uid) values (1)")
+
+        user_tag_detail = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
+        self.assertIsNotNone(user_tag_detail)
+        self.assertIsNone(user_tag_detail.comment)
+
+        await self.account_service.update_user_tag_comment(token=self.admin_token, user_tag_uid=1, comment="foobar")
+        user_tag_detail = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
+        self.assertIsNotNone(user_tag_detail)
+        self.assertEqual("foobar", user_tag_detail.comment)
