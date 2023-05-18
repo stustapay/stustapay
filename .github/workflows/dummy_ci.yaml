@@ -36,6 +36,11 @@ jobs:
       - run: 'echo "No check required"'
   py-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+        os: [ubuntu-latest]
+        postgres-version: [13-bullseye]
     steps:
       - run: 'echo "No check required"'
   py-format:
