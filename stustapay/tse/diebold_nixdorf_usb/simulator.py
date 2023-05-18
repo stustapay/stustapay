@@ -6,24 +6,23 @@ this code will simulate the dn TSE webservice (more or less)
 
 # TODO should we rename Transaction to Order here as well?
 
-import json
-
-import aiohttp.web
 import base64
 import binascii
-
+import json
+import logging
+import re
+import time
 from datetime import datetime, timezone, timedelta
+from hashlib import sha384, sha256
+from inspect import stack
 from random import randbytes, randrange
 
-import time
-import re
+import ecdsa
+import uvicorn
+from asn1crypto.core import Integer, ObjectIdentifier, Sequence, OctetString, PrintableString, Any
+from fastapi import FastAPI, WebSocket
 
 from .errorcodes import dnerror
-
-from inspect import stack
-import ecdsa
-from hashlib import sha384, sha256
-from asn1crypto.core import Integer, ObjectIdentifier, Sequence, OctetString, PrintableString, Any
 
 
 class SignatureAlgorithm_seq(Sequence):
@@ -572,30 +571,37 @@ class WebsocketInterface:
 
         self.tse = VirtualTSE(delay, fast, real, private_key_hex, gen_key)
 
-    async def websocket_handler(self, request):
+    async def websocket_handler(self, websocket: WebSocket):
         print("Websocket connection starting")
-        ws = aiohttp.web.WebSocketResponse()
-        await ws.prepare(request)
+        await websocket.accept()
         print("Websocket connection ready")
 
-        async for msg in ws:
-            # got message
-            if msg.type == aiohttp.WSMsgType.TEXT:
-                print(f" >>: {str(msg.data).strip()}")
-                # check for STX ETX
-                if msg.data[:1] == "\x02" and msg.data[-2:] == "\x03\n":
-                    resp = self.tse.parse_input(msg.data)
+        while True:
+            data = await websocket.receive_text()
+            print(f" >>: {str(data).strip()}")
+            # check for STX ETX
+            if data[:1] == "\x02" and data[-2:] == "\x03\n":
+                resp = self.tse.parse_input(data)
 
-                    print(f"<< : {str(resp).strip()}")
-                    await ws.send_str(resp)
-                else:
-                    print("ERROR: missing STX and/or ETX framing")
+                print(f"<< : {str(resp).strip()}")
+                await websocket.send_text(resp)
+            else:
+                print("ERROR: missing STX and/or ETX framing")
 
         print("Websocket connection closed")
-        return ws
 
     async def run(self):
-        app = aiohttp.web.Application()
-        app.router.add_route("GET", "/", self.websocket_handler)
+        app = FastAPI(
+            title="TSE Simulator",
+            license_info={"name": "AGPL-3.0"},
+        )
+        app.add_websocket_route("/", self.websocket_handler)
 
-        await aiohttp.web._run_app(app, host=self.host, port=self.port)
+        uvicorn_config = uvicorn.Config(
+            app,
+            host=self.host,
+            port=self.port,
+            log_level=logging.root.level,
+        )
+        webserver = uvicorn.Server(uvicorn_config)
+        await webserver.serve()
