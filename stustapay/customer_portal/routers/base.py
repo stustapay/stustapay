@@ -5,7 +5,7 @@ from fastapi import APIRouter, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
-from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon
+from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon, PublicCustomerApiConfig
 
 router = APIRouter(
     prefix="",
@@ -43,8 +43,8 @@ async def update_customer_info(
     await customer_service.update_customer_info(customer_bank=customer_bank, token=token)
 
 
-@router.get("/data_privacy_url", summary="get the url where data privacy is statically hosted", response_model=str)
-async def get_data_privacy_url(
+@router.get("/public_customer_config", summary="get customer config", response_model=PublicCustomerApiConfig)
+async def get_customer_config(
     customer_service: ContextCustomerService,
 ):
-    return customer_service.data_privacy_url()
+    return await customer_service.get_public_customer_api_config()
