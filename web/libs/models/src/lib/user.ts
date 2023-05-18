@@ -48,6 +48,7 @@ export const NewUserSchema = z.object({
   role_names: z.array(z.string()),
   password: z.string().nullable(),
   user_tag_uid: z.bigint().optional().nullable(),
+  // user_tag_uid_hex: z.string().optional().nullable(),
   transport_account_id: z.number().optional().nullable(),
   cashier_account_id: z.number().optional().nullable(),
 });
@@ -73,7 +74,8 @@ export const getUserName = (user: Pick<User, "login" | "display_name">) => {
 
 export const CurrentUserSchema = UserSchema.merge(
   z.object({
-    user_tag_uid: z.bigint().optional().nullable(),
+    // user_tag_uid: z.bigint().optional().nullable(),
+    user_tag_uid_hex: z.string().optional().nullable(),
     transport_account_id: z.number().optional().nullable(),
     cashier_account_id: z.number().optional().nullable(),
     active_role_id: z.number().optional(),

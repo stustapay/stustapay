@@ -28,7 +28,13 @@ import {
   UserRoleList,
   UserRoleUpdate,
 } from "./routes/users";
-import { SystemAccountList, CustomerAccountDetail, SystemAccountDetail, FindAccounts } from "./routes/accounts";
+import {
+  SystemAccountList,
+  CustomerAccountDetail,
+  SystemAccountDetail,
+  FindAccounts,
+  UserTagDetail,
+} from "./routes/accounts";
 import { OrderList } from "./routes/orders/OrderList";
 import { OrderDetail } from "./routes/orders/OrderDetail";
 import { CashierList, CashierDetail, CashierCloseOut, CashierShiftDetail } from "./routes/cashiers";
@@ -297,6 +303,16 @@ const router = createBrowserRouter([
           {
             path: ":accountId",
             element: <CustomerAccountDetail />,
+          },
+        ],
+      },
+      {
+        path: "user-tags",
+        element: <PrivilegeGuard privilege="account_management" />,
+        children: [
+          {
+            path: ":userTagUidHex",
+            element: <UserTagDetail />,
           },
         ],
       },

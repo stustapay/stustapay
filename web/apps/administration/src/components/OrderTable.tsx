@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { useCurrencyFormatter } from "@hooks";
 import { Order } from "@stustapay/models";
+import { DataGridTitle } from "@stustapay/components";
 import { formatDate } from "@stustapay/utils";
 
 export interface OrderListProps {
@@ -65,6 +66,7 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
     <DataGrid
       autoHeight
       rows={orders ?? []}
+      slots={{ toolbar: () => <DataGridTitle title={t("orders")} /> }}
       columns={columns}
       disableRowSelectionOnClick
       sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}

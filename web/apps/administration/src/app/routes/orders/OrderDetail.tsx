@@ -62,10 +62,13 @@ export const OrderDetail: React.FC = () => {
               <ListItemText primary={t("order.customerAccountId")} secondary={order.customer_account_id} />
             </ListItemLink>
           )}
-          {order.customer_tag_uid != null && (
-            <ListItem>
-              <ListItemText primary={t("order.customerTagUid")} secondary={formatUserTagUid(order.customer_tag_uid)} />
-            </ListItem>
+          {order.customer_tag_uid_hex != null && (
+            <ListItemLink to={`/user-tags/${order.customer_tag_uid_hex}`}>
+              <ListItemText
+                primary={t("order.customerTagUid")}
+                secondary={formatUserTagUid(order.customer_tag_uid_hex)}
+              />
+            </ListItemLink>
           )}
         </List>
       </Paper>

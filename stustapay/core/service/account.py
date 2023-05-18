@@ -4,7 +4,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import Account, ACCOUNT_MONEY_VOUCHER_CREATE
+from stustapay.core.schema.account import Account, ACCOUNT_MONEY_VOUCHER_CREATE, UserTagDetail
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.user import Privilege, User
 from stustapay.core.service.auth import AuthService
@@ -15,14 +15,14 @@ from stustapay.core.service.transaction import book_transaction
 
 
 async def get_account_by_id(*, conn: asyncpg.Connection, account_id: int) -> Optional[Account]:
-    row = await conn.fetchrow("select * from account where id = $1", account_id)
+    row = await conn.fetchrow("select * from account_with_history where id = $1", account_id)
     if row is None:
         return None
     return Account.parse_obj(row)
 
 
 async def get_account_by_tag_uid(*, conn: asyncpg.Connection, tag_uid: int) -> Optional[Account]:
-    row = await conn.fetchrow("select * from account where user_tag_uid = $1", tag_uid)
+    row = await conn.fetchrow("select * from account_with_history where user_tag_uid = $1", tag_uid)
     if row is None:
         return None
     return Account.parse_obj(row)
@@ -30,7 +30,7 @@ async def get_account_by_tag_uid(*, conn: asyncpg.Connection, tag_uid: int) -> O
 
 async def get_cashier_account_by_tag_uid(*, conn: asyncpg.Connection, cashier_tag_uid: int) -> Optional[Account]:
     row = await conn.fetchrow(
-        "select a.* from usr join account a on a.id = usr.cashier_account_id where usr.user_tag_uid = $1",
+        "select a.* from usr join account_with_history a on a.id = usr.cashier_account_id where usr.user_tag_uid = $1",
         cashier_tag_uid,
     )
     if row is None:
@@ -40,7 +40,7 @@ async def get_cashier_account_by_tag_uid(*, conn: asyncpg.Connection, cashier_ta
 
 async def get_transport_account_by_tag_uid(*, conn: asyncpg.Connection, orga_tag_uid: int) -> Optional[Account]:
     row = await conn.fetchrow(
-        "select a.* from usr join account a on a.id = usr.transport_account_id where usr.user_tag_uid = $1",
+        "select a.* from usr join account_with_history a on a.id = usr.transport_account_id where usr.user_tag_uid = $1",
         orga_tag_uid,
     )
     if row is None:
@@ -55,8 +55,16 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    async def get_user_tag_detail(self, *, conn: asyncpg.Connection, user_tag_uid: int) -> Optional[UserTagDetail]:
+        row = await conn.fetchrow("select * from user_tag_with_history utwh where user_tag_uid = $1", user_tag_uid)
+        if row is None:
+            return None
+        return UserTagDetail.parse_obj(row)
+
+    @with_db_transaction
+    @requires_user([Privilege.account_management])
     async def list_system_accounts(self, *, conn: asyncpg.Connection) -> list[Account]:
-        cursor = conn.cursor("select * from account where type != 'private'")
+        cursor = conn.cursor("select * from account_with_history where type != 'private'")
         result = []
         async for row in cursor:
             result.append(Account.parse_obj(row))
@@ -79,11 +87,13 @@ class AccountService(DBService):
         if re.match("[a-f0-9]+", search_term):
             value_as_int = int(search_term, base=16)
 
+        # the following query won't be able to find full uint64 tag uids as we need cast the numeric(20) to bigint in
+        # order to do hex conversion in postgres, therefore loosing one bit of information as bigint is in64 not uint64
         cursor = conn.cursor(
-            "select * from account "
+            "select * from account_with_history "
             "where name like $1 "
             "   or comment like $1 "
-            "   or user_tag_uid::text like $1 "
+            "   or (user_tag_uid is not null and to_hex(user_tag_uid::bigint) like $1) "
             "   or (user_tag_uid is not null and user_tag_uid = $2)",
             f"%{search_term}%",
             value_as_int,
@@ -213,24 +223,34 @@ class AccountService(DBService):
         return True
 
     @staticmethod
-    async def _switch_account_tag_uid(*, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int) -> bool:
-        ret = await conn.fetchval(
+    async def _switch_account_tag_uid(
+        *, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
+    ) -> bool:
+        account_exists = await conn.fetchval("select exists(select from account where id = $1)", account_id)
+        if not account_exists:
+            raise NotFound(element_typ="account", element_id=account_id)
+
+        old_user_tag_uid = await conn.fetchval("select user_tag_uid from account where id = $1", account_id)
+        await conn.fetchval(
             "update account set user_tag_uid = $2 where id = $1 returning id", account_id, new_user_tag_uid
         )
-        if ret is None:
-            raise NotFound(element_typ="account", element_id=account_id)
+        await conn.execute("update user_tag set comment = $2 where uid = $1", old_user_tag_uid, comment)
         return True
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
     async def switch_account_tag_uid_admin(
-        self, *, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int
+        self, *, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
     ) -> bool:
-        return await self._switch_account_tag_uid(conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid)
+        return await self._switch_account_tag_uid(
+            conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid, comment=comment
+        )
 
     @with_db_transaction
     @requires_terminal([Privilege.account_management])
     async def switch_account_tag_uid_terminal(
-        self, *, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int
+        self, *, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
     ) -> bool:
-        return await self._switch_account_tag_uid(conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid)
+        return await self._switch_account_tag_uid(
+            conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid, comment=comment
+        )

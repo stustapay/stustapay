@@ -50,6 +50,19 @@ export const translations = {
     disableSuccess: "Successfully disabled account",
     findAccounts: "Find Accounts",
     searchTerm: "Search Term",
+    history: {
+      title: "Account tag association history",
+      validUntil: "Valid until",
+      account: "Account",
+      comment: "Comment",
+    },
+  },
+  userTag: {
+    uid: "User Tag Uid",
+    comment: "Comment",
+    noAccount: "No account associated",
+    account: "Account",
+    accountHistory: "Account association history",
   },
   auth: {
     username: "Username",
@@ -103,6 +116,7 @@ export const translations = {
   order: {
     id: "ID",
     itemCount: "number of items",
+    lineItems: "Line items",
     status: "Status",
     paymentMethod: "Payment Method",
     customerAccountId: "Customer Account ID",
