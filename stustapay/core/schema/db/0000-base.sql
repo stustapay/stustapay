@@ -1190,10 +1190,10 @@ create or replace view order_value as
     select
         ordr.*,
         a.user_tag_uid as customer_tag_uid,
-        li.total_price,
-        li.total_tax,
-        li.total_no_tax,
-        li.line_items
+        coalesce(li.total_price, 0) as total_price,
+        coalesce(li.total_tax, 0) as total_tax,
+        coalesce(li.total_no_tax, 0) as total_no_tax,
+        coalesce(li.line_items, json_build_array()) as line_items
     from
         ordr
         left join line_item_aggregated_json li on ordr.id = li.order_id
