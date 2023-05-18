@@ -1,0 +1,51 @@
+name: Dummy Tests
+on:
+  push:
+    branches: [ "master" ]
+    paths-ignore:
+      - "app/**"
+      - "web/**"
+      - "stustapay/**"
+  pull_request:
+
+jobs:
+  app-build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  app-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  app-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  py-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  py-format:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  web-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  web-build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
+  web-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No check required"'
