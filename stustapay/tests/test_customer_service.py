@@ -1,6 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import unittest
-from stustapay.core.schema.order import OrderType, PaymentMethod
+from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer import CustomerService
@@ -32,7 +32,6 @@ class CustomerServiceTest(TerminalTestCase):
         self.pin = "pin"
         self.account_id = 10
         self.balance = 1000
-        self.cashier_id = 5
 
         self.bon_path = "test_bon.pdf"
         pc = await self.config_service.get_public_config()
@@ -47,8 +46,7 @@ class CustomerServiceTest(TerminalTestCase):
 
         # usr needed by ordr
         await self.db_conn.execute(
-            "insert into usr (id, login, display_name, user_tag_uid) overriding system value values ($1, $2, $3, $4)",
-            self.cashier_id,
+            "insert into usr (login, display_name, user_tag_uid) values ($1, $2, $3)",
             "test login",
             "test display name",
             self.uid,
@@ -90,7 +88,7 @@ class CustomerServiceTest(TerminalTestCase):
             conn=self.db_conn,
             order_type=OrderType.sale,
             payment_method=PaymentMethod.tag,
-            cashier_id=self.cashier_id,
+            cashier_id=self.cashier.id,
             till_id=self.till.id,
             line_items=line_items,
             bookings={},
@@ -148,30 +146,10 @@ class CustomerServiceTest(TerminalTestCase):
         result = await self.customer_service.get_orders_with_bon(token=result.token)
         self.assertIsNotNone(result)
 
-        self.assertEqual(result[0].id, self.order.id)
-        self.assertEqual(result[0].booked_at, self.order.booked_at)
-        self.assertEqual(result[0].payment_method, self.order.payment_method)
-        self.assertEqual(result[0].order_type, self.order.order_type)
-        self.assertEqual(result[0].cashier_id, self.order.cashier_id)
-        self.assertEqual(result[0].till_id, self.order.till_id)
-        self.assertEqual(result[0].customer_account_id, self.order.customer_account_id)
-
-        self.assertEqual(result[0].line_items[0].item_id, self.order.line_items[0].item_id)
-        self.assertEqual(result[0].line_items[0].product_price, self.order.line_items[0].product_price)
-        self.assertEqual(result[0].line_items[0].quantity, self.order.line_items[0].quantity)
-        self.assertEqual(result[0].line_items[0].tax_name, self.order.line_items[0].tax_name)
-        self.assertEqual(result[0].line_items[0].tax_rate, self.order.line_items[0].tax_rate)
-
-        self.assertEqual(result[0].line_items[1].item_id, self.order.line_items[1].item_id)
-        self.assertEqual(result[0].line_items[1].product_price, self.order.line_items[1].product_price)
-        self.assertEqual(result[0].line_items[1].quantity, self.order.line_items[1].quantity)
-        self.assertEqual(result[0].line_items[1].tax_name, self.order.line_items[1].tax_name)
-        self.assertEqual(result[0].line_items[1].tax_rate, self.order.line_items[1].tax_rate)
+        self.assertEqual(Order(**result[0].dict()), self.order)
 
         # test bon data
         self.assertTrue(result[0].bon_generated)
-        # self.assertEqual(result[0].bon_output_file, self.bon_path)
-
         self.assertEqual(
             result[0].bon_output_file,
             self.test_config.customer_portal.base_bon_url.format(bon_output_file=self.bon_path),
