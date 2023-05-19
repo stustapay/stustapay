@@ -110,6 +110,12 @@ class BaseTestCase(TestCase):
         self.db_pool = await get_test_db()
         self.db_conn: asyncpg.Connection = await self.db_pool.acquire()
 
+        await self.db_conn.execute(
+            "insert into user_tag_secret (id, key0, key1) overriding system value values "
+            "(0, decode('000102030405060708090a0b0c0d0e0f', 'hex'), decode('000102030405060708090a0b0c0d0e0f', 'hex')) "
+            "on conflict do nothing"
+        )
+
         await self.db_conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
         self.test_config = Config.parse_obj(TEST_CONFIG)
 

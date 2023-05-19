@@ -206,7 +206,7 @@ class SchemaRevision:
         return sorted_revisions
 
 
-async def create_db_pool(cfg: DatabaseConfig) -> asyncpg.Pool:
+async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:
     """
     get a connection pool to the database
     """
@@ -215,6 +215,8 @@ async def create_db_pool(cfg: DatabaseConfig) -> asyncpg.Pool:
         password=cfg.password,
         database=cfg.dbname,
         host=cfg.host,
+        max_size=n_connections,
+        min_size=n_connections,
         # the introspection query of asyncpg (defined as introspection.INTRO_LOOKUP_TYPES)
         # can take 1s with the jit.
         # the introspection is triggered to create converters for unknown types,

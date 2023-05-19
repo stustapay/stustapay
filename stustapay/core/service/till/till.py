@@ -322,7 +322,7 @@ class TillService(DBService):
 
         # TODO: only send secrets if profile.allow_top_up:
         row = await conn.fetchrow(
-            "select encode(key0, 'hex') as key0, encode(key1, 'hex') from user_tag_secret limit 1"
+            "select encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 from user_tag_secret limit 1"
         )
         assert row is not None
         user_tag_secret = UserTagSecret.parse_obj(row)
