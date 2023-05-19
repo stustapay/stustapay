@@ -21,7 +21,7 @@ customer_portal:
   base_bon_url: "https://bon.stustapay.de/{bon_output_file}"
   data_privacy_url: "https://stustapay.de/datenschutz"
   sepa_config:
-    sender_name: "Toller Festivalveranstler"
+    sender_name: "Toller Festivalveranstalter"
     # example for valid IBAN
     sender_iban: "DE89 3704 0044 0532 0130 00"
     # ueberweisungszweck
