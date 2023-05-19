@@ -126,7 +126,6 @@ async def update_user_tag_comment(
     user_tag_uid_hex: str,
     payload: UpdateCommentPayload,
 ):
-    print("stuff", user_tag_uid_hex, payload)
     return await account_service.update_user_tag_comment(
         token=token, user_tag_uid=int(user_tag_uid_hex, 16), comment=payload.comment
     )

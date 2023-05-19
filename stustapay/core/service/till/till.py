@@ -11,6 +11,7 @@ from stustapay.core.schema.terminal import (
     TerminalRegistrationSuccess,
     TerminalSecrets,
     TerminalButton,
+    UserTagSecret,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile, UserInfo
 from stustapay.core.schema.user import Privilege, UserTag, UserRole, CurrentUser
@@ -319,9 +320,15 @@ class TillService(DBService):
             for row in db_tickets
         ]
 
-        secrets = None
         # TODO: only send secrets if profile.allow_top_up:
-        secrets = TerminalSecrets(sumup_affiliate_key=self.cfg.core.sumup_affiliate_key)
+        row = await conn.fetchrow(
+            "select encode(key0, 'hex') as key0, encode(key1, 'hex') from user_tag_secret limit 1"
+        )
+        assert row is not None
+        user_tag_secret = UserTagSecret.parse_obj(row)
+        secrets = TerminalSecrets(
+            sumup_affiliate_key=self.cfg.core.sumup_affiliate_key, user_tag_secret=user_tag_secret
+        )
 
         available_roles = await list_user_roles(conn=conn)
 
