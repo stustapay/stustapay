@@ -942,6 +942,12 @@
             <Accuracy>2</Accuracy>
           </Numeric>
         </VariableColumn>
+        <VariableColumn>
+          <Name>KASSENSCHUBLADENNR</Name>
+          <Description>Nummer der Kassenschublade</Description>
+          <AlphaNumeric />
+          <MaxLength>40</MaxLength>
+        </VariableColumn>
       </VariableLength>
     </Table>
     <Table>

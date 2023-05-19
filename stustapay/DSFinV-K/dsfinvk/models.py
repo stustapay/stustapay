@@ -223,7 +223,7 @@ class Bonkopf_Zahlarten(Model):
     ZAHLWAEH_CODE = StringField(_d="Währungscode", max_length=3, regex="^[A-Z]{3}$")
     ZAHLWAEH_BETRAG = NumericField(places=2, _d="Betrag in Fremdwährung")
     BASISWAEH_BETRAG = NumericField(places=2, _d="Betrag in Basiswährung (i.d.R. EUR)")
-    SCHUBLADEN_ID = NumericField(places=0, _d="Nummer der Kassenschublade")
+    KASSENSCHUBLADENNR = StringField(_d="Nummer der Kassenschublade", max_length=40)
 
 
 class Bon_Referenzen(Model):

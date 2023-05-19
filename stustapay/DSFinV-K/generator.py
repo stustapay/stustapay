@@ -26,6 +26,15 @@ import time
 LOGGER = logging.getLogger(__name__)
 
 TAXNAME_TO_SCHLUESSELNUMMER = {'ust': 1, 'eust': 2, 'none': 5, 'transparent': 1337}
+ORDERTYPE_TO_KUNDETYP = {'top_up': 'Kunde', 'sale': 'Kunde', 'cancel_sale': 'Kunde', 'pay_out': 'Kunde', 'ticket': 'Kunde', 'money_transfer': 'intern', 'money_transfer_imbalance': 'intern'}
+
+
+
+class BNU:
+        Brutto = Decimal(0)
+        Netto = Decimal(0)
+        USt = Decimal(0)
+
 
 class Generator:
 
@@ -37,6 +46,7 @@ class Generator:
         self.c = Collection()
         self.simulate = simulate
         self.starttime = time.monotonic()
+        self.GV_SUMME = dict()  #aufsummierte Geschäftsvorfalltypen
 
     async def run(self, db_pool: asyncpg.Pool):
 
@@ -49,7 +59,7 @@ class Generator:
             rows = await self._conn.fetch("select * from config")
             for row in rows:
                 self.systemconfig[row['key']] = row['value']
-            LOGGER.info(self.systemconfig)
+            LOGGER.debug(self.systemconfig)
 
             #iteriere über alle Kassen Z_KASSE_ID (= KASSE_SERIENNR bei uns)
             #alle Kassen mit einer order (und damit auch mit einer TSE und die deshalb ans Finanzamt gemeldet wurden)
@@ -75,12 +85,14 @@ class Generator:
 
 
 
+        self.GV_SUMME = {'MehrzweckgutscheinKauf': {1: BNU(), 2: BNU(), 5: BNU(), 1337: BNU()}, 'Geldtransit': {1: BNU(), 2: BNU(), 5: BNU(), 1337: BNU()}, 'DifferenzSollIst': {1: BNU(), 2: BNU(), 5: BNU(), 1337: BNU()}, 'Pfand': {1: BNU(), 2: BNU(), 5: BNU(), 1337: BNU()}, 'PfandRueckzahlung': {1: BNU(), 2: BNU(), 5: BNU(), 1337: BNU()}, 'MehrzweckgutscheinEinloesung': {1: BNU(), 2: BNU(), 5: BNU(), 1337: BNU()}, 'Umsatz': {1: BNU(), 2: BNU(), 5: BNU(), 1337: BNU()}} #leeren
 
-        ### transactions.csv ###
-        ### transactions_tse.csv ###
-        ### transactions_vat.csv ###
+        ### a transactions.csv ###
+        ### b transactions_tse.csv ###
+        ### c transactions_vat.csv ###
+        ### d datapayment.csv ###
         #alle orders für diese Kasse und Abschluss abfragen:
-        for row in await self._conn.fetch("select ordr.id, tse_signature.tse_start, tse_signature.tse_end, tse_signature.tse_id, tse_signature.tse_transaction, tse_signature.transaction_process_type, tse_signature.tse_signaturenr, tse_signature.transaction_process_data, tse_signature.tse_signature, ordr.cashier_id, ordr.customer_account_id, ordr.order_type, tse_signature.signature_status, tse_signature.result_message, order_value.total_price, order_value.line_items from ordr join tse_signature on ordr.id=tse_signature.id join order_value on ordr.id=order_value.id where ordr.till_id = $1 and ordr.z_nr = $2 order by ordr.id", Z_KASSE_ID, Z_NR):
+        for row in await self._conn.fetch("select ordr.id, ordr.payment_method, ordr.cash_register_id, ordr.cancels_order, tse_signature.tse_start, tse_signature.tse_end, tse_signature.tse_id, tse_signature.tse_transaction, tse_signature.transaction_process_type, tse_signature.tse_signaturenr, tse_signature.transaction_process_data, tse_signature.tse_signature, ordr.cashier_id, ordr.customer_account_id, ordr.order_type, tse_signature.signature_status, tse_signature.result_message, order_value.total_price, order_value.line_items from ordr join tse_signature on ordr.id=tse_signature.id join order_value on ordr.id=order_value.id where ordr.till_id = $1 and ordr.z_nr = $2 order by ordr.id", Z_KASSE_ID, Z_NR):
             if row['signature_status'] == 'new' or row['signature_status'] == 'pending':
                 LOGGER.warn("Nicht Signierte Transaktion, wird nicht exportiert")
                 continue #signatur noch nicht fertig
@@ -121,6 +133,14 @@ class Generator:
 
             a.UMS_BRUTTO = Decimal(row['total_price'])
             a.KUNDE_ID = row['customer_account_id']
+            a.KUNDE_TYP = ORDERTYPE_TO_KUNDETYP[row['order_type']]
+
+            #Storno
+            if row['cancels_order'] is not None:
+                a.BON_NOTIZ = f"Storno von BON_ID {row['cancels_order']}"
+                a.BON_STORNO = True
+            else:
+                pass
 
             #einmal über alle Umsatzsteuersätze je Order iterieren
             #leider müssen wir da wieder eine db abfrage machen....
@@ -129,49 +149,105 @@ class Generator:
                 c.Z_KASSE_ID = Z_KASSE_ID
                 c.Z_ERSTELLUNG = Z_ERSTELLUNG
                 c.Z_NR = Z_NR
+                
                 c.BON_ID = row['id']
                 c.UST_SCHLUESSEL = TAXNAME_TO_SCHLUESSELNUMMER[line['tax_name']]
                 c.BON_BRUTTO = Decimal(line['total_price'])
                 c.BON_NETTO = Decimal(line['total_no_tax'])
                 c.BON_UST = Decimal(line['total_tax'])
+
                 self.c.add(c)
+
+            d=Bonkopf_Zahlarten()  #eigentlich nur eine Zahlart pro Order, AUßER es wird ein Gutschein eingesetzt
+            d.Z_KASSE_ID = Z_KASSE_ID
+            d.Z_ERSTELLUNG = Z_ERSTELLUNG
+            d.Z_NR = Z_NR
+            #TODO Gutscheinfall? vielleicht auch in die Datei Bonpos_Preisfindung, Zahlart ist eh immer 'tag'?
+            d.BON_ID = row['id']
+            d.ZAHLART_TYP = PAYMENT_METHOD_TO_ZAHLUNGSART[row['payment_method']]  #'Bar'/'Unbar'
+            d.ZAHLART_NAME = row['payment_method']
+            d.ZAHLWAEH_CODE = self.systemconfig['currency.identifier']
+            d.ZAHLWAEH_BETRAG = Decimal(0)  #Fremdwährung, bei uns immer 0
+            d.BASISWAEH_BETRAG = Decimal(row['total_price'])  #Bezahlter betrag in Grundwährung
+            d.KASSENSCHUBLADENNR = row['cash_register_id']  #Nummer der Kassenschublade (nur bei Kassen, die Bargeld annehmen), Eigenkreation in Anlehnung an FAQ vom Bundesfinanzministerium zum Kassengesetz
+            self.c.add(d)
 
             self.c.add(a)
             self.c.add(b)
+        ### /datapayment.csv ###
         ### /transactions_vat.csv ###
         ### /transactions_tse.csv ###
         ### /transactions.csv ###
 
 
-        ### datapayment.csv ###
-        a=Bonkopf_Zahlarten()
-        a.Z_KASSE_ID = Z_KASSE_ID
-        a.Z_ERSTELLUNG = Z_ERSTELLUNG
-        a.Z_NR = Z_NR
-        ### /datapayment.csv ###
+            #so, und jetzt noch für jede dieser Transaktionen noch die einzelnen Zeilen
+            ### lines.csv ###
+            for item in json.loads(row['line_items']):
+                e=Bonpos()
+                e.Z_KASSE_ID = Z_KASSE_ID
+                e.Z_ERSTELLUNG = Z_ERSTELLUNG
+                e.Z_NR = Z_NR
+                e.BON_ID = row['id']
+                e.POS_ZEILE = item['item_id'] + 1 #weiß nicht, ob das Finanzamt bei 0 anfängt zu zählen
+                e.ARTIKELTEXT = item['product']['name']
+                e.ART_NR = item['product']['id']
+                e.MENGE = Decimal(item['quantity'])
+                e.INHAUS = False #TODO nachgucken, ob wichtig. jetzt erstmal alles als Außerhausverkauf
+                e.P_STORNO = False #nicht vorgesehen
+                e.AGENTUR_ID = 0 #Agenturen noch nicht implementiert
+
+                #finde den Geschäftsvorfalltyp dieses "Artikels" heraus...
+                if row['order_type'] == 'top_up' or row['order_type'] == 'pay_out':
+                    gvtyp = 'MehrzweckgutscheinKauf'
+                elif row['order_type'] == 'money_transfer':
+                    gvtyp = 'Geldtransit'
+
+                elif row['order_type'] == 'money_transfer_imbalance':
+                    gvtyp = 'DifferenzSollIst'
+
+                elif row['order_type'] == 'sale':
+                    if item['product']['is_returnable'] and item['total_price'] > 0:
+                        gvtyp = 'Pfand'
+
+                    elif item['product']['is_returnable'] and item['total_price'] < 0:
+                        gvtyp = 'PfandRueckzahlung'
+
+                    else:
+                        gvtyp = 'MehrzweckgutscheinEinloesung'
+                else:
+                    gvtyp = 'Umsatz' #alles andere
 
 
-        ### lines.csv ###
-        a=Bonpos()
-        a.Z_KASSE_ID = Z_KASSE_ID
-        a.Z_ERSTELLUNG = Z_ERSTELLUNG
-        a.Z_NR = Z_NR
-        ### /lines.csv ###
+                self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item['tax_name']])].Brutto += Decimal(item['total_price'])
+                self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item['tax_name']])].Netto += Decimal(item['total_tax'])
+                self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item['tax_name']])].USt += (Decimal(item['total_price']) - Decimal(item['total_tax']))
+                e.GV_TYP = gvtyp
+
+                e.GV_NAME = ''
+                
+                f=Bonpos_USt()
+                f.Z_KASSE_ID = Z_KASSE_ID
+                f.Z_ERSTELLUNG = Z_ERSTELLUNG
+                f.Z_NR = Z_NR
+                f.BON_ID = row['id']
+                f.BON_POS = item['item_id'] + 1
+                f.UST_SCHLUESSEL = TAXNAME_TO_SCHLUESSELNUMMER[item['tax_name']]
+                f.POS_BRUTTO = Decimal(item['total_price'])
+                f.POS_UST = Decimal(item['total_tax'])
+                f.POS_NETTO = Decimal(item['total_price']) - Decimal(item['total_tax'])
+
+                self.c.add(e)
+                self.c.add(f)
+    
+            ### /lines.csv ###
 
 
-        ### lines_vat.csv ###
-        a=Bonpos_USt()
-        a.Z_KASSE_ID = Z_KASSE_ID
-        a.Z_ERSTELLUNG = Z_ERSTELLUNG
-        a.Z_NR = Z_NR
-        ### /lines_vat.csv ###
-
-        ### itemamounts.csv ###
-        a=Bonpos_Preisfindung()
-        a.Z_KASSE_ID = Z_KASSE_ID
-        a.Z_ERSTELLUNG = Z_ERSTELLUNG
-        a.Z_NR = Z_NR
-        ### /itemamounts.csv ###
+            ### itemamounts.csv ### ##brauchen wir nicht, weil Gutscheine in den Lineitems als Rabatprodukt auftauchen
+            #a=Bonpos_Preisfindung()
+            #a.Z_KASSE_ID = Z_KASSE_ID
+            #a.Z_ERSTELLUNG = Z_ERSTELLUNG
+            #a.Z_NR = Z_NR
+            ### /itemamounts.csv ###
         
         return
 
@@ -298,27 +374,31 @@ class Generator:
                barzahlungen += Decimal(row['total_price'])
 
         ### businesscases.csv###
-        a = Z_GV_Typ()
-        a.Z_KASSE_ID = Z_KASSE_ID
-        a.Z_ERSTELLUNG = Z_ERSTELLUNG
-        a.Z_NR = Z_NR
-        #a.GV_TYP
-        #a.GV_NAME
-        a.AGENTUR_ID = 0 #TODO: Agentur hart auf 0, andere Agenturen not implemented
-        #a.UST_SCHLUESSEL
-        #a.Z_UMS_BRUTTO
-        #a.Z_UMS_NETTO
-        #a.Z_UST
-        #TODO
+        #wir iterieren über die daten die wir in im einzelaufzeichnungsmodul aggregiert haben
+        for gvtyp, summe in self.GV_SUMME.items():
+            for schluessel, betrag in summe.items():
+                a = Z_GV_Typ()
+                a.Z_KASSE_ID = Z_KASSE_ID
+                a.Z_ERSTELLUNG = Z_ERSTELLUNG
+                a.Z_NR = Z_NR
+                a.GV_TYP = gvtyp
+                a.GV_NAME = ''
+                a.AGENTUR_ID = 0 #TODO: Agentur hart auf 0, andere Agenturen not implemented
+                a.UST_SCHLUESSEL = int(schluessel)
+                a.Z_UMS_BRUTTO = betrag.Brutto
+                a.Z_UMS_NETTO = betrag.Netto
+                a.Z_UST = betrag.USt
+                if betrag.Brutto != 0:
+                    self.c.add(a)
         ### \businesscases.csv###
 
 
         ### payment.csv###
-        a = Z_Zahlart()
-        a.Z_KASSE_ID = Z_KASSE_ID
-        a.Z_ERSTELLUNG = Z_ERSTELLUNG
-        a.Z_NR = Z_NR
         for typ in paymentmethods:
+            a = Z_Zahlart()
+            a.Z_KASSE_ID = Z_KASSE_ID
+            a.Z_ERSTELLUNG = Z_ERSTELLUNG
+            a.Z_NR = Z_NR
             a.ZAHLART_TYP = PAYMENT_METHOD_TO_ZAHLUNGSART[typ['payment_method']]
             a.ZAHLART_NAME = typ['payment_method']
             a.Z_ZAHLART_BETRAG = summe_je_zahlart[typ['payment_method']]
