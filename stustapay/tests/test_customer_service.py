@@ -3,7 +3,12 @@ import unittest
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.service.config import ConfigService
-from stustapay.core.service.customer import CustomerService
+from stustapay.core.service.customer import (
+    CustomerBankData,
+    CustomerService,
+    get_customer_bank_data,
+    get_number_of_customers,
+)
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.tests.common import TEST_CONFIG, TerminalTestCase
@@ -106,6 +111,70 @@ class CustomerServiceTest(TerminalTestCase):
             parse("2023-01-01 15:35:02 UTC+1"),
             self.bon_path,
         )
+
+        self.customers = [
+            {
+                "uid": 12345 * i,
+                "pin": f"pin{i}",
+                "balance": 1000 * i,
+                "iban": f"DE89370400440532013000",
+                "account_name": "Rolf",
+                "email": "rolf@lol.de",
+            }
+            for i in range(10)
+        ]
+
+        await self._add_customers(self.customers)
+
+    async def _add_customers(self, data: list[dict]) -> None:
+        for idx, customer in enumerate(data):
+            await self.db_conn.execute(
+                "insert into user_tag (uid, pin) values ($1, $2)",
+                customer["uid"],
+                customer["pin"],
+            )
+
+            await self.db_conn.execute(
+                "insert into account (id, user_tag_uid, balance, type) overriding system value values ($1, $2, $3, $4)",
+                idx + 100,
+                customer["uid"],
+                customer["balance"],
+                "private",
+            )
+
+            await self.db_conn.execute(
+                "insert into customer_info (customer_account_id, iban, account_name, email) values ($1, $2, $3, $4)",
+                idx + 100,
+                customer["iban"],
+                customer["account_name"],
+                customer["email"],
+            )
+
+    async def test_get_number_of_customers(self):
+        result = await get_number_of_customers(self.db_conn)
+        self.assertEqual(result, len(self.customers))
+
+    async def test_get_customer_bank_data(self):
+        def check_data(result: list[CustomerBankData], leng: int, ith: int = 0) -> None:
+            self.assertEqual(len(result), leng)
+            for result_customer, customer in zip(result, self.customers[ith * leng : (ith + 1) * leng]):
+                self.assertEqual(result_customer.iban, customer["iban"])
+                self.assertEqual(result_customer.account_name, customer["account_name"])
+                self.assertEqual(result_customer.email, customer["email"])
+                self.assertEqual(result_customer.user_tag_uid, customer["uid"])
+                self.assertEqual(result_customer.balance, customer["balance"])
+
+        result = await get_customer_bank_data(self.db_conn, len(self.customers))
+        check_data(result, len(self.customers))
+
+        async def test_scroll(leng: int):
+            for i in range(len(self.customers) // leng):
+                result = await get_customer_bank_data(self.db_conn, leng, i)
+                check_data(result, leng, i)
+
+        await test_scroll(5)
+        await test_scroll(3)
+        await test_scroll(1)
 
     async def test_auth_customer(self):
         # test login_customer
