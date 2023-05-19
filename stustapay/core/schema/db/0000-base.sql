@@ -161,7 +161,8 @@ begin
 end
 $$ language plpgsql;
 
-create or replace trigger update_tag_association_history_trigger
+drop trigger if exists update_tag_association_history_trigger on account;
+create trigger update_tag_association_history_trigger
     after update of user_tag_uid on account
     for each row
     when (OLD.user_tag_uid is distinct from NEW.user_tag_uid and OLD.user_tag_uid is not null)
@@ -342,7 +343,9 @@ begin
 end
 $$ language plpgsql;
 
-create or replace trigger user_to_role_updated_trigger
+
+drop trigger if exists user_to_role_updated_trigger on user_to_role;
+create trigger user_to_role_updated_trigger
     after insert on user_to_role
     for each row
 execute function user_to_role_updated();
@@ -1063,7 +1066,9 @@ begin
 end
 $$ language plpgsql;
 
-create or replace trigger handle_till_user_login_trigger
+
+drop trigger if exists handle_till_user_login_trigger on till;
+create trigger handle_till_user_login_trigger
     before update of active_user_id on till
     for each row
     when (OLD.active_user_id is distinct from NEW.active_user_id)
@@ -1091,7 +1096,9 @@ begin
 end;
 $$;
 
-create or replace trigger till_tse_history_deny_update_delete
+
+drop trigger if exists till_tse_history_deny_update_delete on till_tse_history;
+create trigger till_tse_history_deny_update_delete
 before update or delete on till_tse_history
 for each row execute function deny_in_trigger();
 
@@ -1191,7 +1198,9 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace trigger new_order_trigger
+
+drop trigger if exists new_order_trigger on ordr;
+create trigger new_order_trigger
     after insert
     on ordr
     for each row
@@ -1464,7 +1473,9 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace trigger tse_signature_update_trigger
+
+drop trigger if exists tse_signature_update_trigger on tse_signature;
+create trigger tse_signature_update_trigger
     before update
     on tse_signature
     for each row
@@ -1481,7 +1492,9 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace trigger tse_signature_finished_trigger
+
+drop trigger if exists tse_signature_finished_trigger on till;
+create trigger tse_signature_finished_trigger
     after update of signature_status
     on tse_signature
     for each row
