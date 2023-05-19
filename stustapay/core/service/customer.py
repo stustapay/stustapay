@@ -46,9 +46,9 @@ async def get_customer_bank_data(
     rows = await conn.fetch(
         "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance "
         "from customer c "
-        "where c.iban is not null limit $1, $2",
+        "where c.iban is not null limit $1 offset $2",
+        max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,
-        (ith_batch + 1) * max_export_items_per_batch,
     )
     return [CustomerBankData.parse_obj(row) for row in rows]
 
