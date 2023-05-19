@@ -14,6 +14,7 @@ class Bonpos(Model):
     Bruttomethode wird nur der Bruttopreis aufgeführt, bei der Nettomethode der Nettopreis
     und die darauf entfallende Umsatzsteuer.
     """
+
     _filename = "lines.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -47,6 +48,7 @@ class Bonpos_USt(Model):
     Position oder bei Rabattierungen mehrere Zeilen mit Preisangaben vorkommen können,
     ist diese Detailtabelle notwendig.
     """
+
     _filename = "lines_vat.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -66,6 +68,7 @@ class Bonpos_Preisfindung(Model):
     In dieser Tabelle werden Detailangaben zur Entstehung des Preises abgelegt, z. B.
     spezielle Kunden-Rabatte oder auch Aufschläge.
     """
+
     _filename = "itemamounts.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -73,8 +76,9 @@ class Bonpos_Preisfindung(Model):
     Z_NR = NumericField(places=0, _d="Nr. des Kassenabschlusses")
     BON_ID = StringField(_d="Vorgangs-ID", max_length=40)
     POS_ZEILE = StringField(_d="Zeilennummer", max_length=50)
-    TYP = StringField(_d="Basispreis, Rabatt oder Zuschlag", max_length=20,
-                      regex="^(base_amount|discount|extra_amount)$")
+    TYP = StringField(
+        _d="Basispreis, Rabatt oder Zuschlag", max_length=20, regex="^(base_amount|discount|extra_amount)$"
+    )
     UST_SCHLUESSEL = NumericField(places=0, _d="ID des USt-Satzes")
     PF_BRUTTO = NumericField(places=5, _d="Bruttoumsatz")
     PF_NETTO = NumericField(places=5, _d="Nettoumsatz")
@@ -95,6 +99,7 @@ class Bonpos_Zusatzinfo(Model):
     sichtigt werden, um den tatsächlichen Warenverbrauch festzuhalten (Beispiel: G-yros
     Teller mit Pommes anstatt mit Reis, Beträge werden hier mit 0,00 dargestellt).
     """
+
     _filename = "subitems.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -143,6 +148,7 @@ class Bonkopf(Model):
        •   USt-Betrag (Steuerausweis)
     Zusätzlich ist in der DSFinV-K auch der Umsatz (brutto) auszuweisen.
     """
+
     _filename = "transactions.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -176,6 +182,7 @@ class Bonkopf_USt(Model):
     Da es mehrere US-tSätze pro Bonkopf geben kann, sind diese in einer D-etTabeail lle
     aufgeführt. Hierbei gelten die zum Bonkopf aufgeführten Grundsätze (s. o.).
     """
+
     _filename = "transactions_vat.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -196,6 +203,7 @@ class Bonkopf_AbrKreis(Model):
     mie können über diese ZuordnungS plittbuchungen und Tischverlegungen nachvollzo-
     gen werden.
     """
+
     _filename = "allocation_groups.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -212,6 +220,7 @@ class Bonkopf_Zahlarten(Model):
     aufgeführt. Zu beachten sind die später näher erläuterten Festlegungen zu den Zahlar-
     ten in Anhang D.
     """
+
     _filename = "datapayment.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -234,6 +243,7 @@ class Bon_Referenzen(Model):
     vorliegt, ergibt sich aus dem Typ der Referenzierung. Die einzelnen Felder sind imAn  -
     hang E in der Datei „Bon_Referenzen“ (references.csv) näher erläutert.
     """
+
     _filename = "references.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -241,7 +251,8 @@ class Bon_Referenzen(Model):
     Z_NR = NumericField(places=0, _d="Nr. des Kassenabschlusses")
     BON_ID = StringField(_d="Vorgangs-ID", max_length=40)
     POS_ZEILE = StringField(
-        _d="Zeilennummer des referenzierenden Vorgangs (nicht bei Verweis aus einem Bonkopf heraus)")
+        _d="Zeilennummer des referenzierenden Vorgangs (nicht bei Verweis aus einem Bonkopf heraus)"
+    )
     REF_TYP = StringField(_d="Art der Referenz", max_length=20)
     REF_NAME = StringField(_d="Beschreibung bei Art “ExterneSonstige”", max_length=40)
     REF_DATUM = LocalDateTimeField(_d="Datum des Kassenabschlusses")
@@ -258,6 +269,7 @@ class TSE_Transaktionen(Model):
     zu können sowie um die Gültigkeit der eingesetzten TSE-Zertifikate zum Zeitpunkt der
     Protokollierung prüfen zu können.
     """
+
     _filename = "transactions_tse.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -282,6 +294,7 @@ class Stamm_Abschluss(Model):
     Ebenfalls werden die Unternehmensdaten inkl. Steuernum mberzw.  Umsatzsteuer-
     Identifikationsnummer hier gespeichert.
     """
+
     _filename = "cashpointclosing.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -289,9 +302,7 @@ class Stamm_Abschluss(Model):
     Z_NR = NumericField(places=0, _d="Nr. des Kassenabschlusses")
     Z_BUCHUNGSTAG = StringField(_d="Vom Erstellungsdatum abweichender Verbuchungstag")
     TAXONOMIE_VERSION = StringField(
-        _d="Version der DFKA-Taxonomie-Kasse", max_length=10,
-        regex="^[0-9]+(\\.[0-9]{1,2})?$",
-        default=TAXONOMY_VERSION
+        _d="Version der DFKA-Taxonomie-Kasse", max_length=10, regex="^[0-9]+(\\.[0-9]{1,2})?$", default=TAXONOMY_VERSION
     )
     Z_START_ID = StringField(_d="Erste BON_ID im Abschluss", max_length=40)
     Z_ENDE_ID = StringField(_d="Letzte BON_ID im Abschluss", max_length=40)
@@ -311,6 +322,7 @@ class Stamm_Orte(Model):
     3.2.2  Datei: Stamm_Orte
     Namen und Orte der einzelnen Betriebsstätten mit Kassen.
     """
+
     _filename = "location.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -329,6 +341,7 @@ class Stamm_Kassen(Model):
     3.2.3  Datei: Stamm_Kassen
     Stammdaten der einzelnen eingesetzten Kassen.
     """
+
     _filename = "cashregister.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -336,7 +349,7 @@ class Stamm_Kassen(Model):
     Z_NR = NumericField(places=0, _d="Nr. des Kassenabschlusses")
     KASSE_BRAND = StringField(_d="Marke der Kasse", max_length=50)
     KASSE_MODELL = StringField(_d="Modellbezeichnung", max_length=50)
-    KASSE_SERIENNR = StringField(_d="Seriennummer der Kasse", max_length=70) #must not contain '/' or '_'
+    KASSE_SERIENNR = StringField(_d="Seriennummer der Kasse", max_length=70)  # must not contain '/' or '_'
     KASSE_SW_BRAND = StringField(_d="Markenbezeichnung der Software", max_length=50)
     KASSE_SW_VERSION = StringField(_d="Version der Software", max_length=50)
     KASSE_BASISWAEH_CODE = StringField(_d="Basiswährung der Kasse", max_length=3, regex="[A-Z]{3}")
@@ -349,6 +362,7 @@ class Stamm_Terminals(Model):
     Stammdaten der einzelnen Erfassungs-Terminals (sog. Slave-Kassen), über die nicht
     der Kassenabschluss erfolgt.
     """
+
     _filename = "slaves.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -376,6 +390,7 @@ class Stamm_Agenturen(Model):
     ist eine korrekte Bildung der zu verbuchenden Summen hinsichtlich der Agentur ge-
     währleistet.
     """
+
     _filename = "pa.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -396,6 +411,7 @@ class Stamm_USt(Model):
     3.2.6  Datei: Stamm_USt
     Stammdaten zur Umsatzsteuer (ID, USt-Satz, Beschreibung)
     """
+
     _filename = "vat.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -411,17 +427,19 @@ class Stamm_TSE(Model):
     3.2.7  Datei: Stamm_TSE
     Stammdaten der genutzten technischen Sicherheitseinrichtungen
     """
+
     _filename = "tse.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
     Z_NR = NumericField(places=0, _d="Nr. des Kassenabschlusses")
-    TSE_ID = NumericField(places=0,
-                          _d="ID der TSE - wird nur zur Referenzierung innerhalb eines Kassenabschlusses verwendet")
+    TSE_ID = NumericField(
+        places=0, _d="ID der TSE - wird nur zur Referenzierung innerhalb eines Kassenabschlusses verwendet"
+    )
     TSE_SERIAL = StringField(
         _d="Seriennummer der TSE (Entspricht laut TR-03153 Abschnitt 7.5. dem Hashwert des im Zertifikat enthaltenen "
-           "Schlüssels in Octet-String-Darstellung)",
-        max_length=68
+        "Schlüssels in Octet-String-Darstellung)",
+        max_length=68,
     )
     TSE_SIG_ALGO = StringField(
         _d="Der von der TSE verwendete Signaturalgorithmus",
@@ -429,19 +447,17 @@ class Stamm_TSE(Model):
     )
     TSE_ZEITFORMAT = StringField(
         _d="Das von der TSE verwendete Format für die Log-Time - 'utcTime' = YYMMDDhhmmZ, 'utcTimeWithSeconds' = YYMMDDhhmmssZ, "
-           "'generalizedTime' = YYYYMMDDhhmmssZ, 'generalizedTimeWithMilliseconds' = YYYYMMDDhhmmss.fffZ, 'unixTime'"
+        "'generalizedTime' = YYYYMMDDhhmmssZ, 'generalizedTimeWithMilliseconds' = YYYYMMDDhhmmss.fffZ, 'unixTime'"
     )
     TSE_PD_ENCODING = StringField(
-        _d="Text-Encoding der ProcessData (UTF-8 oder ASCII)",
-        max_length=5,
-        regex="^(UTF-8|ASCII)$"
+        _d="Text-Encoding der ProcessData (UTF-8 oder ASCII)", max_length=5, regex="^(UTF-8|ASCII)$"
     )
     TSE_PUBLIC_KEY = StringField(
-        _d="Öffentlicher Schlüssel – ggf. extrahiert aus dem Zertifikat der TSE – in base64-Codierung",
-        max_length=512
+        _d="Öffentlicher Schlüssel – ggf. extrahiert aus dem Zertifikat der TSE – in base64-Codierung", max_length=512
     )
-    TSE_ZERTIFIKAT_I = StringField(_d="Erste 1.000 Zeichen des Zertifikats der TSE (in base64-Codierung)",
-                                   max_length=1000)
+    TSE_ZERTIFIKAT_I = StringField(
+        _d="Erste 1.000 Zeichen des Zertifikats der TSE (in base64-Codierung)", max_length=1000
+    )
     TSE_ZERTIFIKAT_II = StringField(_d="Ggf. Rest des Zertifikats (in base64-Codierung)", max_length=1000)
     TSE_ZERTIFIKAT_III = StringField(_d="Ggf. Rest des Zertifikats (in base64-Codierung)", max_length=1000)
     TSE_ZERTIFIKAT_IV = StringField(_d="Ggf. Rest des Zertifikats (in base64-Codierung)", max_length=1000)
@@ -457,6 +473,7 @@ class Z_GV_Typ(Model):
     Summen) die weiter zu verarbeitenden Gesamtbeträge dargestellt.
     Die möglichen Geschäftsvorfalltypen sind in Anhang C dargestellt.
     """
+
     _filename = "businesscases.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -479,6 +496,7 @@ class Z_Zahlart(Model):
     tenden Gesamtbeträge dargestellt.
     Die möglichen Zahlarten werden in Anhang D dargestellt.
     """
+
     _filename = "payment.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
@@ -495,6 +513,7 @@ class Z_Waehrungen(Model):
     Für jede Währung („ZAHLART_WAEH“) wird die Summe in dieser Datei dargestellt.
     Damit stellt diese Datei eine jederzeitige Kassensturz-Fähigkeit her.
     """
+
     _filename = "cash_per_currency.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)

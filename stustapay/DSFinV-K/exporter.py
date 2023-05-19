@@ -15,12 +15,19 @@ from .generator import Generator
 
 LOGGER = logging.getLogger(__name__)
 
+
 class Exporter(SubCommand):
     @staticmethod
     def argparse_register(subparser):
-        subparser.add_argument("-f", "--filename", default="dsfinV_k.zip", help="Filename of export ZIP")
-        subparser.add_argument("--xml", default="./stustapay/DSFinV-K/assets/index.xml", help="index.xml file to include")
-        subparser.add_argument("--dtd", default="./stustapay/DSFinV-K/assets/gdpdu-01-09-2004.dtd", help="*.dtd file to include")
+        subparser.add_argument(
+            "-f", "--filename", default="dsfinV_k.zip", help="Filename of export ZIP. Default: %(default)s"
+        )
+        subparser.add_argument(
+            "--xml", default="./stustapay/DSFinV-K/assets/index.xml", help="index.xml file to include"
+        )
+        subparser.add_argument(
+            "--dtd", default="./stustapay/DSFinV-K/assets/gdpdu-01-09-2004.dtd", help="*.dtd file to include"
+        )
         subparser.add_argument("-s", "--simulate", default=False, action="store_true", help="don't export file")
 
     def __init__(self, args, config: Config, **rest):
@@ -36,6 +43,3 @@ class Exporter(SubCommand):
     async def run(self):
         self.db_pool = await create_db_pool(self.config.database)
         await self.generator.run(self.db_pool)
-
-
-

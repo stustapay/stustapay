@@ -35,7 +35,7 @@ class StringField(Field):
 
     def __set__(self, instance, value):
         # TODO: Make it configurable if this should raise an error
-        #if self.max_length and len(value) > self.max_length:
+        # if self.max_length and len(value) > self.max_length:
         #    raise ValueError("Value for {} is longer than {} characters.".format(self.name, self.max_length))
         if self.regex and not self.regex.match(value):
             raise ValueError("Value {} for {} does not have the valid format.".format(value, self.name))
@@ -53,11 +53,13 @@ class NumericField(Field):
         if isinstance(value, int):
             value = Decimal(value)
         if self.places > 0:
-            instance._data[self.name] = ('{:,.%df}' % self.places).format(value.quantize(
-                Decimal('1') / 10 ** self.places, ROUND_HALF_UP
-            )).translate({ord(','): '.', ord('.'): ','})
+            instance._data[self.name] = (
+                ("{:,.%df}" % self.places)
+                .format(value.quantize(Decimal("1") / 10**self.places, ROUND_HALF_UP))
+                .translate({ord(","): ".", ord("."): ","})
+            )
         else:
-            instance._data[self.name] = '{:,d}'.format(int(value)).replace(',', '.')
+            instance._data[self.name] = "{:,d}".format(int(value)).replace(",", ".")
 
 
 class BooleanField(Field):
@@ -80,7 +82,7 @@ class LocalDateTimeField(Field):
             raise TypeError("Value is not a datetime")
         if value.utcoffset() is None:
             raise TypeError("Value is not timezone-aware")
-        instance._data[self.name] = value.strftime('%Y-%m-%dT%H:%M:%S')
+        instance._data[self.name] = value.strftime("%Y-%m-%dT%H:%M:%S")
 
 
 class ISODateTimeField(Field):
@@ -89,4 +91,4 @@ class ISODateTimeField(Field):
             raise TypeError("Value is not a datetime")
         if value.utcoffset() is None:
             raise TypeError("Value is not timezone-aware")
-        instance._data[self.name] = value.astimezone(pytz.UTC).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+        instance._data[self.name] = value.astimezone(pytz.UTC).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
