@@ -8,7 +8,7 @@ from . import festivalsimulator, festivalsetup
 
 def main():
     """
-    main entry point for launching the administration server
+    main entry point for simulating a festival with stustapay.
     """
     parser = Parser()
 

@@ -8,6 +8,7 @@ import de.stustanet.stustapay.model.NfcScanResult
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.repository.NfcRepository
 import de.stustanet.stustapay.util.mapState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -15,19 +16,22 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-sealed interface NfcScanDialogResult {
-    object None : NfcScanDialogResult
+sealed interface NfcScanUiState {
+    object None : NfcScanUiState
+
+    object Scan : NfcScanUiState
+
     data class Success(
         val uid: ULong
-    ) : NfcScanDialogResult
+    ) : NfcScanUiState
 
-    data class Error(val msg: String) : NfcScanDialogResult
-    data class Rescan(val msg: String) : NfcScanDialogResult
-    object Tampered : NfcScanDialogResult
+    data class Error(val msg: String) : NfcScanUiState
+    data class Rescan(val msg: String) : NfcScanUiState
+    object Tampered : NfcScanUiState
 }
 
 
-data class NfcScanDialogUiState(
+data class NfcScanState(
     val status: String = "",
     val scanTag: UserTag? = null,
 )
@@ -37,34 +41,41 @@ data class NfcScanDialogUiState(
 class NfcScanDialogViewModel @Inject constructor(
     private val nfcRepository: NfcRepository
 ) : ViewModel() {
-    private val _scanState = MutableStateFlow<NfcScanDialogResult>(NfcScanDialogResult.None)
+    private val _scanState = MutableStateFlow<NfcScanUiState>(NfcScanUiState.None)
 
-    val scanState: StateFlow<NfcScanDialogUiState> =
-        _scanState.mapState(NfcScanDialogUiState(), viewModelScope) { scanResult ->
+    private var scanJob : Job? = null
+
+    val scanState: StateFlow<NfcScanState> =
+        _scanState.mapState(NfcScanState(), viewModelScope) { scanResult ->
             when (scanResult) {
-                is NfcScanDialogResult.None -> {
-                    NfcScanDialogUiState(
+                is NfcScanUiState.None -> {
+                    NfcScanState(
+                        status = "No scan active.",
+                    )
+                }
+                is NfcScanUiState.Scan -> {
+                    NfcScanState(
                         status = "Waiting for tag...",
                     )
                 }
-                is NfcScanDialogResult.Success -> {
-                    NfcScanDialogUiState(
+                is NfcScanUiState.Success -> {
+                    NfcScanState(
                         status = "Scan success!",
                         scanTag = UserTag(uid = scanResult.uid),
                     )
                 }
-                is NfcScanDialogResult.Error -> {
-                    NfcScanDialogUiState(
+                is NfcScanUiState.Error -> {
+                    NfcScanState(
                         status = "Error reading tag: ${scanResult.msg}",
                     )
                 }
-                is NfcScanDialogResult.Rescan -> {
-                    NfcScanDialogUiState(
+                is NfcScanUiState.Rescan -> {
+                    NfcScanState(
                         status = "Try again! ${scanResult.msg}",
                     )
                 }
-                is NfcScanDialogResult.Tampered -> {
-                    NfcScanDialogUiState(
+                is NfcScanUiState.Tampered -> {
+                    NfcScanState(
                         status = "Signature mismatch!",
                     )
                 }
@@ -72,37 +83,47 @@ class NfcScanDialogViewModel @Inject constructor(
         }
 
     fun scan() {
-        viewModelScope.launch {
+        // if running, cancel old scan job
+        if (scanJob?.isActive == true) {
+            scanJob?.cancel()
+        }
+
+        scanJob = viewModelScope.launch {
+            _scanState.update { NfcScanUiState.Scan }
             var res = nfcRepository.read(auth = true, cmac = true)
             while (true) {
                 when (res) {
                     is NfcScanResult.Read -> {
                         if (res.chipContent.startsWith(nfcRepository.tagContent)) {
-                            _scanState.emit(NfcScanDialogResult.Success(res.chipUid))
+                            _scanState.emit(NfcScanUiState.Success(res.chipUid))
                             break
                         } else {
-                            _scanState.update { NfcScanDialogResult.Tampered }
+                            _scanState.update { NfcScanUiState.Tampered }
                         }
                     }
+
                     is NfcScanResult.Fail -> when (val reason = res.reason) {
-                        NfcScanFailure.Other -> _scanState.update { NfcScanDialogResult.None }
+                        NfcScanFailure.Other -> _scanState.update { NfcScanUiState.None }
                         is NfcScanFailure.Incompatible -> _scanState.update {
-                            NfcScanDialogResult.Error(
+                            NfcScanUiState.Error(
                                 reason.msg
                             )
                         }
+
                         is NfcScanFailure.Lost -> _scanState.update {
-                            NfcScanDialogResult.Rescan(
+                            NfcScanUiState.Rescan(
                                 reason.msg
                             )
                         }
+
                         is NfcScanFailure.Auth -> _scanState.update {
-                            NfcScanDialogResult.Error(
+                            NfcScanUiState.Error(
                                 reason.msg
                             )
                         }
                     }
-                    else -> _scanState.update { NfcScanDialogResult.None }
+
+                    else -> _scanState.update { NfcScanUiState.None }
                 }
 
                 res = nfcRepository.read(true, true)
@@ -110,9 +131,11 @@ class NfcScanDialogViewModel @Inject constructor(
         }
     }
 
-    fun close() {
-        viewModelScope.launch {
-            _scanState.emit(NfcScanDialogResult.None)
+    fun stopScan() {
+        if (scanJob?.isActive == true) {
+            scanJob?.cancel()
         }
+
+        _scanState.update { NfcScanUiState.None }
     }
 }

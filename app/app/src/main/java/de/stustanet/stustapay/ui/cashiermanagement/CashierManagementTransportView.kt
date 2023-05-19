@@ -13,7 +13,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
-import de.stustanet.stustapay.ui.priceselect.PriceSelection
+import de.stustanet.stustapay.ui.common.amountselect.AmountConfig
+import de.stustanet.stustapay.ui.common.amountselect.AmountSelection
 import kotlinx.coroutines.launch
 
 @Composable
@@ -42,7 +43,11 @@ fun CashierManagementTransportView(viewModel: CashierManagementViewModel) {
     Scaffold(
         content = {
             Box(modifier = Modifier.padding(it)) {
-                PriceSelection(onEnter = { amount = it }, onClear = { amount = 0u })
+                AmountSelection(
+                    config = AmountConfig.Money(),
+                    onAmountUpdate = { amount = it },
+                    onClear = { amount = 0u },
+                )
             }
         },
         bottomBar = {

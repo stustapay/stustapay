@@ -11,11 +11,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
-import de.stustanet.stustapay.ui.priceselect.PriceSelection
+import de.stustanet.stustapay.ui.common.amountselect.AmountConfig
+import de.stustanet.stustapay.ui.common.amountselect.AmountSelection
 import kotlinx.coroutines.launch
+
+enum class VaultBookingType {
+    Take,
+    Return
+}
 
 @Composable
 fun CashierManagementVaultView(viewModel: CashierManagementViewModel) {
@@ -43,7 +48,11 @@ fun CashierManagementVaultView(viewModel: CashierManagementViewModel) {
     Scaffold(
         content = {
             Box(modifier = Modifier.padding(it)) {
-                PriceSelection(onEnter = { amount = it }, onClear = { amount = 0u })
+                AmountSelection(
+                    config = AmountConfig.Money(),
+                    onAmountUpdate = { newAmount -> amount = newAmount },
+                    onClear = { amount = 0u },
+                )
             }
         },
         bottomBar = {
@@ -84,9 +93,4 @@ fun CashierManagementVaultView(viewModel: CashierManagementViewModel) {
             }
         }
     )
-}
-
-enum class VaultBookingType {
-    Take,
-    Return
 }

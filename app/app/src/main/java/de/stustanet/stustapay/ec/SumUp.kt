@@ -48,7 +48,7 @@ val sumUpActionDependencies: Map<SumUpAction, List<SumUpAction>> = mapOf(
     Pair(SumUpAction.CardReader, listOf(SumUpAction.Login)),
 )
 
-data class PaymentState(
+data class SumUpPaymentState(
     /**
      * since the activity launching returns by callbacks,
      * we need to remember what we wanted to do...
@@ -67,6 +67,7 @@ data class PaymentState(
 class SumUp @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
 ) {
+    // numbers we chose to mark activity result callbacks from the sumup activity.
     private val ecPaymentActivityCallbackId = 50309
     private val ecLoginActivityCallbackId = 50310
     private val ecSettingsActivityCallbackId = 50311
@@ -108,7 +109,7 @@ class SumUp @Inject constructor(
     /**
      * global configuration for our statemachine...
      */
-    private var paymentState = PaymentState()
+    private var sumUpPaymentState = SumUpPaymentState()
 
     fun init(activityCallback: ActivityCallback) {
         val activity = activityCallback.context as Activity
@@ -144,26 +145,26 @@ class SumUp @Inject constructor(
 
 
     private fun nextAction(context: Activity) {
-        val deps = sumUpActionDependencies[paymentState.targetAction]
+        val deps = sumUpActionDependencies[sumUpPaymentState.targetAction]
         if (deps == null) {
-            Log.e("StuStaPay", "unknown ec action dependencies for ${paymentState.targetAction}")
+            Log.e("StuStaPay", "unknown ec action dependencies for ${sumUpPaymentState.targetAction}")
             return
         }
 
-        var nextAction: SumUpAction = paymentState.targetAction
-        if (nextAction in paymentState.actionsDone) {
+        var nextAction: SumUpAction = sumUpPaymentState.targetAction
+        if (nextAction in sumUpPaymentState.actionsDone) {
             return
         }
 
         for (elem in deps) {
-            if (elem !in paymentState.actionsDone) {
+            if (elem !in sumUpPaymentState.actionsDone) {
                 nextAction = elem
                 break
             }
         }
 
         // record the soon-done action.
-        paymentState.actionsDone.add(nextAction)
+        sumUpPaymentState.actionsDone.add(nextAction)
 
         when (nextAction) {
             SumUpAction.None -> {}
@@ -211,7 +212,7 @@ class SumUp @Inject constructor(
                 _paymentStatus.update { SumUpState.None }
 
                 // set up the state machine
-                paymentState = PaymentState(
+                sumUpPaymentState = SumUpPaymentState(
                     targetAction = target,
                     config = sumUpConfig.cfg,
                     payment = payment,
@@ -319,7 +320,7 @@ class SumUp @Inject constructor(
     private fun openLogin(context: Activity) {
         // TODO: maybe don't do anything if SumUpAPI.isLoggedIn()
 
-        val cfg = paymentState.config
+        val cfg = sumUpPaymentState.config
         if (cfg == null) {
             _paymentStatus.update { SumUpState.Error("no config present in login") }
             return
@@ -374,13 +375,13 @@ class SumUp @Inject constructor(
             return
         }
 
-        val payment = paymentState.payment
+        val payment = sumUpPaymentState.payment
         if (payment == null) {
             _paymentStatus.update { SumUpState.Error("no payment status") }
             return
         }
 
-        val cfg = paymentState.config
+        val cfg = sumUpPaymentState.config
         if (cfg == null) {
             _paymentStatus.update { SumUpState.Error("no payment status") }
             return
@@ -395,13 +396,12 @@ class SumUp @Inject constructor(
             .currency(SumUpPayment.Currency.EUR)
             // optional: include a tip amount in addition to the total
             .tip(payment.tip)
-            .title("StuStaCulum ${payment.tag.uid.toString(16)}")
-            //.receiptEmail("dummy@sft.lol")
+            .title("StuStaCulum 2023 ${payment.tag.toString()} ${payment.id}")
+            //.receiptEmail("dummy@sft.lol") // todo: pre-set if the user has provided their email
             //.receiptSMS("+00000000000")
             .addAdditionalInfo("Terminal", cfg.terminal.name)
             .addAdditionalInfo("TerminalID", cfg.terminal.id)
-            // TODO convert UID to hex
-            .addAdditionalInfo("Tag UID", payment.tag.uid.toString(16))
+            .addAdditionalInfo("Tag UID", payment.tag.toString())
             // stustapay order uuid
             .foreignTransactionId(payment.id)
             // optional: skip the success screen

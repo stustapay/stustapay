@@ -4,6 +4,35 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
+
+/**
+ * OrderType enum from core model.
+ */
+@Serializable
+enum class OrderType {
+    @SerialName("sale")
+    Sale,
+
+    @SerialName("cancel_sale")
+    CancelSale,
+
+    @SerialName("top_up")
+    Topup,
+
+    @SerialName("pay_out")
+    Payout,
+
+    @SerialName("ticket")
+    Ticket,
+
+    @SerialName("money_transfer")
+    MoneyTransfer,
+
+    @SerialName("money_transfer_imbalance")
+    MoneyTransferImbalance,
+}
+
+
 /**
  * TopUpType enum from core model.
  */
@@ -25,10 +54,10 @@ enum class PaymentMethod {
  */
 @Serializable
 data class NewTopUp(
+    val uuid: String,
     val amount: Double,
     val customer_tag_uid: ULong,
     val payment_method: PaymentMethod,
-    val uuid: String? = null,
 )
 
 
@@ -38,10 +67,10 @@ data class NewTopUp(
 @Serializable
 data class PendingTopUp(
     // NewTopUp
+    val uuid: String,
+    val payment_method: PaymentMethod,
     val amount: Double,
     val customer_tag_uid: ULong,
-    val payment_method: PaymentMethod,
-    val uuid: String? = null,
     // PendingTopUp
     val old_balance: Double,
     val new_balance: Double,
@@ -76,7 +105,8 @@ data class CompletedTopUp(
  */
 @Serializable
 data class NewPayOut(
-    val customer_tag_uid: Int,
+    val uuid: String,
+    val customer_tag_uid: ULong,
     // if no amount is passed, the current customer account balance is assumed as payout
     val amount: Double? = null,
 )
@@ -88,7 +118,8 @@ data class NewPayOut(
 @Serializable
 data class PendingPayOut(
     // NewPayOut
-    val customer_tag_uid: Int,
+    val uuid: String,
+    val customer_tag_uid: ULong,
 
     // PendingPayOut
     val amount: Double,
@@ -103,16 +134,18 @@ data class PendingPayOut(
  */
 @Serializable
 data class CompletedPayOut(
-    val customer_tag_uid: Int,
-    val customer_account_id: Int,
+    // NewPayOut
+    val uuid: String,
+    val customer_tag_uid: ULong,
 
+    // PendingPayOut
     val amount: Double,
+    val customer_account_id: Int,
     val old_balance: Double,
     val new_balance: Double,
 
-    val uuid: String,
+    // CompletedPayOut
     val booked_at: String,
-
     val cashier_id: Int,
     val till_id: Int,
 )
@@ -141,6 +174,7 @@ data class Button(
  */
 @Serializable
 data class NewSale(
+    val uuid: String,
     val buttons: List<Button>,
     val customer_tag_uid: ULong,
     val used_vouchers: Int? = null,
@@ -167,6 +201,7 @@ data class PendingLineItem(
  */
 @Serializable
 data class PendingSale(
+    val uuid: String,
     val buttons: List<Button>,
     val old_balance: Double,
     val new_balance: Double,
@@ -187,6 +222,7 @@ data class PendingSale(
 @Serializable
 data class CompletedSale(
     // PendingSale
+    val uuid: String,
     val buttons: List<Button>,
     val old_balance: Double,
     val new_balance: Double,
@@ -200,19 +236,38 @@ data class CompletedSale(
 
     // CompletedSale
     val id: Int,
-    val uuid: String,
     val booked_at: String,
     val cashier_id: Int,
     val till_id: Int,
 )
 
+
 /**
- * Ticket class from core model.
+ * A ticket has been scanned, so we can check it in the backend.
+ * NewTicketScan class from core model.
  */
 @Serializable
-data class Ticket(
-    val till_button_id: Int,
-    val quantity: Int,
+data class NewTicketScan(
+    val customer_tag_uids: List<ULong>,
+)
+
+/**
+ * To create a new ticket.
+ * TicketScanResultEntry class from core model.
+ */
+@Serializable
+data class TicketScanResultEntry(
+    val customer_tag_uid: ULong,
+    val ticket: Ticket,
+)
+
+/**
+ * To create a new ticket.
+ * TicketScanResultEntry class from core model.
+ */
+@Serializable
+data class TicketScanResult(
+    val scanned_tickets: List<TicketScanResultEntry>
 )
 
 /**
@@ -221,9 +276,8 @@ data class Ticket(
  */
 @Serializable
 data class NewTicketSale(
-    val uuid: String? = null,
+    val uuid: String,
     val customer_tag_uids: List<ULong>,
-    val tickets: List<Ticket>,
     val payment_method: PaymentMethod,
 )
 
@@ -234,12 +288,10 @@ data class NewTicketSale(
  */
 @Serializable
 data class PendingTicketSale(
-    // NewTicketSale
-    val uuid: String? = null,
-    val customer_tag_uids: List<ULong>,
+    val uuid: String,
     val payment_method: PaymentMethod,
-    // PendingTicketSale
     val line_items: List<PendingLineItem>,
+    val scanned_tickets: List<TicketScanResultEntry>,
     val total_price: Double,
 )
 
@@ -249,18 +301,15 @@ data class PendingTicketSale(
  */
 @Serializable
 data class CompletedTicketSale(
-    // NewTicketSale
-    // val uuid: String? = null, // not null below
-    val customer_tag_uids: List<ULong>,
-    val payment_method: PaymentMethod,
-
     // PendingTicketSale
+    val uuid: String,
+    val payment_method: PaymentMethod,
     val line_items: List<PendingLineItem>,
+    val scanned_tickets: List<TicketScanResultEntry>,
     val total_price: Double,
 
     // CompletedTicketSale
     val id: Int,
-    val uuid: String,
     val booked_at: String,
     val customer_account_id: Int,
     val cashier_id: Int,
@@ -287,28 +336,6 @@ data class LineItem(
 
 
 /**
- * OrderType enum from core model.
- */
-@Serializable
-enum class OrderType {
-    @SerialName("sale")
-    Sale,
-
-    @SerialName("cancel_sale")
-    CancelSale,
-
-    @SerialName("top_up")
-    Topup,
-
-    @SerialName("pay_out")
-    Payout,
-
-    @SerialName("ticket")
-    Ticket
-}
-
-
-/**
  * Returned when listing past orders.
  * Order from core model.
  */
@@ -326,4 +353,14 @@ data class Order(
     val till_id: Int,
     val customer_account_id: Int,
     val line_items: List<LineItem>,
+)
+
+/**
+ * To register a free volunteer ticket.
+ * NewFreeTicketGrant from core model.
+ */
+@Serializable
+data class NewFreeTicketGrant(
+    val user_tag_uid: ULong,
+    val initial_voucher_amount: UInt = 0u,
 )

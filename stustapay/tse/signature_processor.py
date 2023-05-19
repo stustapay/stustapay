@@ -70,7 +70,7 @@ class SignatureProcessor(SubCommand):
 
             # pylint: disable=attribute-defined-outside-init
             db_hook_conn = await aes.enter_async_context(pool.acquire())
-            db_hook = DBHook(db_hook_conn, "tse_signature", self.handle_hook)
+            db_hook = DBHook(db_hook_conn, "tse_signature", self.handle_hook, initial_run=True)
             await db_hook.run()
 
     async def handle_hook(self, payload):

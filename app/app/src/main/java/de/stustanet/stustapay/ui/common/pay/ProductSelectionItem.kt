@@ -45,7 +45,7 @@ fun PreviewSelectionItem() {
  */
 @Composable
 fun ProductSelectionItem(
-    itemPrice: String,
+    itemPrice: String? = null,
     itemAmount: String? = null,
     itemAmountDelimiter: String = "×",
     leftButtonText: String,
@@ -72,7 +72,7 @@ fun ProductSelectionItem(
             // TODO: highlight background if not 0
 
             Text(
-                text = itemPrice,
+                text = itemPrice ?: "",
                 textAlign = TextAlign.Right,
                 modifier = Modifier.weight(0.6f),
                 fontSize = 24.sp,
@@ -120,8 +120,7 @@ fun ProductSelectionItem(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         rightButtonPress()
                     },
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     colors = if (sameSizeButtons) {
                         ButtonDefaults.buttonColors()
                     } else {

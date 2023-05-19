@@ -18,6 +18,7 @@ dist/
 
 # testing
 /*.conf
+/*.yaml
 /test
 /build
 
