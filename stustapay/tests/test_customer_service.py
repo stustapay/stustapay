@@ -1,4 +1,7 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+import csv
+import datetime
+import os
 import unittest
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
@@ -6,6 +9,7 @@ from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer import (
     CustomerBankData,
     CustomerService,
+    csv_export,
     get_customer_bank_data,
     get_number_of_customers,
 )
@@ -116,8 +120,8 @@ class CustomerServiceTest(TerminalTestCase):
             {
                 "uid": 12345 * i,
                 "pin": f"pin{i}",
-                "balance": 1000 * i,
-                "iban": f"DE89370400440532013000",
+                "balance": 1000.123456 * i,
+                "iban": "DE89370400440532013000",
                 "account_name": "Rolf",
                 "email": "rolf@lol.de",
             }
@@ -175,6 +179,31 @@ class CustomerServiceTest(TerminalTestCase):
         await test_scroll(5)
         await test_scroll(3)
         await test_scroll(1)
+
+    async def test_csv_export(self):
+        test_currency_symbol = "€"
+        customers_bank_data = await get_customer_bank_data(self.db_conn, len(self.customers))
+        csv_export(
+            customers_bank_data,
+            os.path.join(self.tmp_dir, "test.csv"),
+            self.test_config,
+            test_currency_symbol,
+            datetime.date.today(),
+        )
+
+        # read the csv back in
+        with open(os.path.join(self.tmp_dir, "test.csv")) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row, customer in zip(reader, self.customers):
+                self.assertEqual(row["beneficiary_name"], customer["account_name"])
+                self.assertEqual(row["iban"], customer["iban"])
+                self.assertEqual(float(row["amount"]), round(customer["balance"], 2))
+                self.assertEqual(row["currency"], test_currency_symbol)
+                self.assertEqual(
+                    row["reference"],
+                    self.test_config.customer_portal.sepa_config.description.format(user_tag_uid=customer["uid"]),
+                )
+                self.assertEqual(row["execution_date"], datetime.date.today().isoformat())
 
     async def test_auth_customer(self):
         # test login_customer

@@ -60,18 +60,21 @@ def csv_export(
     currency_ident: str,
     execution_date: Optional[datetime.date],
 ) -> None:
+    """If execution_date is None, the execution date will be set to today + 2 days."""
     with open(output_path, "w") as f:
+        execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
         writer = csv.writer(f)
-        fields = ["beneficiary_name", "iban", "amount", "currency", "reference"]
+        fields = ["beneficiary_name", "iban", "amount", "currency", "reference", "execution_date"]
         writer.writerow(fields)
         for customer in customers_bank_data:
             writer.writerow(
                 [
                     customer.account_name,
                     customer.iban,
-                    customer.balance,
+                    round(customer.balance, 2),
                     currency_ident,
                     cfg.customer_portal.sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
+                    execution_date.isoformat(),
                 ]
             )
 
@@ -83,6 +86,7 @@ def sepa_export(
     currency_ident: str,
     execution_date: Optional[datetime.date],
 ) -> None:
+    """If execution_date is None, the execution date will be set to today + 2 days."""
     if len(customers_bank_data) == 0:
         # avoid error in sepa library
         logging.warning("No customers with bank data found. Nothing to export.")
