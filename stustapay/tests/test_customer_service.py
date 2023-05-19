@@ -1,9 +1,21 @@
-# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,disable=protected-access
+import copy
+import csv
+import datetime
+import os
 import unittest
-from stustapay.core.schema.order import OrderType, PaymentMethod
+from stustapay.core.customer_bank_export import CustomerExportCli
+from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.service.config import ConfigService
-from stustapay.core.service.customer import CustomerService
+from stustapay.core.service.customer import (
+    CustomerBankData,
+    CustomerService,
+    csv_export,
+    get_customer_bank_data,
+    get_number_of_customers,
+    sepa_export,
+)
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.tests.common import TEST_CONFIG, TerminalTestCase
@@ -32,7 +44,6 @@ class CustomerServiceTest(TerminalTestCase):
         self.pin = "pin"
         self.account_id = 10
         self.balance = 1000
-        self.cashier_id = 5
 
         self.bon_path = "test_bon.pdf"
         pc = await self.config_service.get_public_config()
@@ -47,8 +58,7 @@ class CustomerServiceTest(TerminalTestCase):
 
         # usr needed by ordr
         await self.db_conn.execute(
-            "insert into usr (id, login, display_name, user_tag_uid) overriding system value values ($1, $2, $3, $4)",
-            self.cashier_id,
+            "insert into usr (login, display_name, user_tag_uid) values ($1, $2, $3)",
             "test login",
             "test display name",
             self.uid,
@@ -90,7 +100,7 @@ class CustomerServiceTest(TerminalTestCase):
             conn=self.db_conn,
             order_type=OrderType.sale,
             payment_method=PaymentMethod.tag,
-            cashier_id=self.cashier_id,
+            cashier_id=self.cashier.id,
             till_id=self.till.id,
             line_items=line_items,
             bookings={},
@@ -108,6 +118,194 @@ class CustomerServiceTest(TerminalTestCase):
             parse("2023-01-01 15:35:02 UTC+1"),
             self.bon_path,
         )
+
+        self.customers = [
+            {
+                "uid": 12345 * (i + 1),
+                "pin": f"pin{i}",
+                "balance": 1000.321 * i + 0.0012,
+                "iban": "DE89370400440532013000",
+                "account_name": "Rolf",
+                "email": "rolf@lol.de",
+            }
+            for i in range(10)
+        ]
+
+        await self._add_customers(self.customers)
+
+        # first customer with uid 12345 should not be included as he has a balance of 0
+        self.customers_to_transfer = self.customers[1:]
+
+    async def _add_customers(self, data: list[dict]) -> None:
+        for idx, customer in enumerate(data):
+            await self.db_conn.execute(
+                "insert into user_tag (uid, pin) values ($1, $2)",
+                customer["uid"],
+                customer["pin"],
+            )
+
+            await self.db_conn.execute(
+                "insert into account (id, user_tag_uid, balance, type) overriding system value values ($1, $2, $3, $4)",
+                idx + 100,
+                customer["uid"],
+                customer["balance"],
+                "private",
+            )
+
+            await self.db_conn.execute(
+                "insert into customer_info (customer_account_id, iban, account_name, email) values ($1, $2, $3, $4)",
+                idx + 100,
+                customer["iban"],
+                customer["account_name"],
+                customer["email"],
+            )
+
+    async def test_get_number_of_customers(self):
+        result = await get_number_of_customers(self.db_conn)
+        self.assertEqual(result, len(self.customers_to_transfer))
+
+    async def test_get_customer_bank_data(self):
+        def check_data(result: list[CustomerBankData], leng: int, ith: int = 0) -> None:
+            self.assertEqual(len(result), leng)
+            for result_customer, customer in zip(result, self.customers_to_transfer[ith * leng : (ith + 1) * leng]):
+                self.assertEqual(result_customer.iban, customer["iban"])
+                self.assertEqual(result_customer.account_name, customer["account_name"])
+                self.assertEqual(result_customer.email, customer["email"])
+                self.assertEqual(result_customer.user_tag_uid, customer["uid"])
+                self.assertEqual(result_customer.balance, customer["balance"])
+
+        result = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
+        check_data(result, len(self.customers_to_transfer))
+
+        async def test_batches(leng: int):
+            for i in range(len(self.customers_to_transfer) // leng):
+                result = await get_customer_bank_data(self.db_conn, leng, i)
+                check_data(result, leng, i)
+
+        await test_batches(5)
+        await test_batches(3)
+        await test_batches(1)
+
+    async def test_csv_export(self):
+        test_currency = "EUR"
+        test_file_name = "test.csv"
+        execution_date = datetime.date.today()
+        customers_bank_data = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
+        csv_export(
+            customers_bank_data,
+            os.path.join(self.tmp_dir, test_file_name),
+            self.test_config,
+            test_currency,
+            execution_date,
+        )
+
+        self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
+
+        # read the csv back in
+        with open(os.path.join(self.tmp_dir, test_file_name)) as csvfile:
+            reader = csv.DictReader(csvfile)
+            self.assertEqual(len(list(reader)), len(self.customers_to_transfer))
+            for row, customer in zip(reader, self.customers_to_transfer):
+                self.assertEqual(row["beneficiary_name"], customer["account_name"])
+                self.assertEqual(row["iban"], customer["iban"])
+                self.assertEqual(float(row["amount"]), round(customer["balance"], 2))
+                self.assertEqual(row["currency"], test_currency)
+                self.assertEqual(
+                    row["reference"],
+                    self.test_config.customer_portal.sepa_config.description.format(user_tag_uid=customer["uid"]),
+                )
+                self.assertEqual(row["execution_date"], execution_date.isoformat())
+
+    async def test_sepa_export(self):
+        test_currency = "EUR"
+        test_file_name = "test_sepa.xml"
+        customers_bank_data = await get_customer_bank_data(self.db_conn, max_export_items_per_batch=1)
+        cfg = copy.deepcopy(self.test_config)
+        # allowed symbols
+        cfg.customer_portal.sepa_config.description += "-.,:()/?'+"
+        sepa_export(
+            customers_bank_data,
+            os.path.join(self.tmp_dir, test_file_name),
+            cfg,
+            test_currency,
+            datetime.date.today(),
+        )
+        self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
+
+        test_file_name = "test_sepa_multiple.xml"
+        customers_bank_data = await get_customer_bank_data(
+            self.db_conn, max_export_items_per_batch=len(self.customers_to_transfer)
+        )
+        sepa_export(
+            customers_bank_data,
+            os.path.join(self.tmp_dir, test_file_name),
+            self.test_config,
+            test_currency,
+            datetime.date.today(),
+        )
+        self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
+
+        customers_bank_data = await get_customer_bank_data(self.db_conn, max_export_items_per_batch=1)
+
+        # test invalid iban customer
+        invalid_iban = "DE89370400440532013001"
+        tmp_bank_data = copy.deepcopy(customers_bank_data)
+        tmp_bank_data[0].iban = invalid_iban
+
+        with self.assertRaises(ValueError):
+            sepa_export(
+                tmp_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                self.test_config,
+                test_currency,
+                datetime.date.today(),
+            )
+
+        # test invalid iban sender
+        cfg = copy.deepcopy(self.test_config)
+        cfg.customer_portal.sepa_config.sender_iban = invalid_iban
+        with self.assertRaises(ValueError):
+            sepa_export(
+                customers_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                cfg,
+                test_currency,
+                datetime.date.today(),
+            )
+
+        # test invalid execution date
+        with self.assertRaises(ValueError):
+            sepa_export(
+                customers_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                self.test_config,
+                test_currency,
+                datetime.date.today() - datetime.timedelta(days=1),
+            )
+
+        # test invalid amount
+        tmp_bank_data = copy.deepcopy(customers_bank_data)
+        tmp_bank_data[0].balance = -1
+        with self.assertRaises(ValueError):
+            sepa_export(
+                tmp_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                self.test_config,
+                test_currency,
+                datetime.date.today(),
+            )
+
+        # test invalid description
+        cfg = copy.deepcopy(self.test_config)
+        cfg.customer_portal.sepa_config.description = "invalid {user_tag_uid}#%^;&*"
+        with self.assertRaises(ValueError):
+            sepa_export(
+                customers_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                cfg,
+                test_currency,
+                datetime.date.today(),
+            )
 
     async def test_auth_customer(self):
         # test login_customer
@@ -148,30 +346,10 @@ class CustomerServiceTest(TerminalTestCase):
         result = await self.customer_service.get_orders_with_bon(token=result.token)
         self.assertIsNotNone(result)
 
-        self.assertEqual(result[0].id, self.order.id)
-        self.assertEqual(result[0].booked_at, self.order.booked_at)
-        self.assertEqual(result[0].payment_method, self.order.payment_method)
-        self.assertEqual(result[0].order_type, self.order.order_type)
-        self.assertEqual(result[0].cashier_id, self.order.cashier_id)
-        self.assertEqual(result[0].till_id, self.order.till_id)
-        self.assertEqual(result[0].customer_account_id, self.order.customer_account_id)
-
-        self.assertEqual(result[0].line_items[0].item_id, self.order.line_items[0].item_id)
-        self.assertEqual(result[0].line_items[0].product_price, self.order.line_items[0].product_price)
-        self.assertEqual(result[0].line_items[0].quantity, self.order.line_items[0].quantity)
-        self.assertEqual(result[0].line_items[0].tax_name, self.order.line_items[0].tax_name)
-        self.assertEqual(result[0].line_items[0].tax_rate, self.order.line_items[0].tax_rate)
-
-        self.assertEqual(result[0].line_items[1].item_id, self.order.line_items[1].item_id)
-        self.assertEqual(result[0].line_items[1].product_price, self.order.line_items[1].product_price)
-        self.assertEqual(result[0].line_items[1].quantity, self.order.line_items[1].quantity)
-        self.assertEqual(result[0].line_items[1].tax_name, self.order.line_items[1].tax_name)
-        self.assertEqual(result[0].line_items[1].tax_rate, self.order.line_items[1].tax_rate)
+        self.assertEqual(Order(**result[0].dict()), self.order)
 
         # test bon data
         self.assertTrue(result[0].bon_generated)
-        # self.assertEqual(result[0].bon_output_file, self.bon_path)
-
         self.assertEqual(
             result[0].bon_output_file,
             self.test_config.customer_portal.base_bon_url.format(bon_output_file=self.bon_path),
@@ -238,6 +416,29 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(result.data_privacy_url, cpc.data_privacy_url)
         self.assertEqual(result.contact_email, cpc.contact_email)
         self.assertEqual(result.about_page_url, cpc.about_page_url)
+
+    async def test_export_customer_bank_data(self):
+        cli = CustomerExportCli(None, config=self.test_config)
+        output_path = os.path.join(self.tmp_dir, "test_export")
+
+        await cli._export_customer_bank_data(db_pool=self.db_pool, output_path=output_path)
+        self.assertTrue(os.path.exists(output_path + "_1.xml"))
+
+        await cli._export_customer_bank_data(db_pool=self.db_pool, output_path=output_path, data_format="csv")
+        self.assertTrue(os.path.exists(output_path + "_1.csv"))
+
+        # test several batches
+        await cli._export_customer_bank_data(
+            db_pool=self.db_pool, output_path=output_path, max_export_items_per_batch=1
+        )
+        for i in range(len(self.customers_to_transfer)):
+            self.assertTrue(os.path.exists(output_path + f"_{i+1}.xml"))
+
+        await cli._export_customer_bank_data(
+            db_pool=self.db_pool, output_path=output_path, data_format="csv", max_export_items_per_batch=1
+        )
+        for i in range(len(self.customers_to_transfer)):
+            self.assertTrue(os.path.exists(output_path + f"_{i+1}.csv"))
 
 
 if __name__ == "__main__":
