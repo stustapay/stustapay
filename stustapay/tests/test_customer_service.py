@@ -177,25 +177,26 @@ class CustomerServiceTest(TerminalTestCase):
         result = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
         check_data(result, len(self.customers_to_transfer))
 
-        async def test_scroll(leng: int):
+        async def test_batches(leng: int):
             for i in range(len(self.customers_to_transfer) // leng):
                 result = await get_customer_bank_data(self.db_conn, leng, i)
                 check_data(result, leng, i)
 
-        await test_scroll(5)
-        await test_scroll(3)
-        await test_scroll(1)
+        await test_batches(5)
+        await test_batches(3)
+        await test_batches(1)
 
     async def test_csv_export(self):
         test_currency = "EUR"
         test_file_name = "test.csv"
+        execution_date = datetime.date.today()
         customers_bank_data = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
         csv_export(
             customers_bank_data,
             os.path.join(self.tmp_dir, test_file_name),
             self.test_config,
             test_currency,
-            datetime.date.today(),
+            execution_date,
         )
 
         self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
@@ -203,6 +204,7 @@ class CustomerServiceTest(TerminalTestCase):
         # read the csv back in
         with open(os.path.join(self.tmp_dir, test_file_name)) as csvfile:
             reader = csv.DictReader(csvfile)
+            self.assertEqual(len(list(reader)), len(self.customers_to_transfer))
             for row, customer in zip(reader, self.customers_to_transfer):
                 self.assertEqual(row["beneficiary_name"], customer["account_name"])
                 self.assertEqual(row["iban"], customer["iban"])
@@ -212,7 +214,7 @@ class CustomerServiceTest(TerminalTestCase):
                     row["reference"],
                     self.test_config.customer_portal.sepa_config.description.format(user_tag_uid=customer["uid"]),
                 )
-                self.assertEqual(row["execution_date"], datetime.date.today().isoformat())
+                self.assertEqual(row["execution_date"], execution_date.isoformat())
 
     async def test_sepa_export(self):
         test_currency = "EUR"
