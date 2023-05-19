@@ -3,6 +3,7 @@
 import csv
 import datetime
 import logging
+import re
 from typing import Optional, List
 
 import asyncpg
@@ -36,8 +37,8 @@ class CustomerBankData(BaseModel):
 
 
 async def get_number_of_customers(conn: asyncpg.Connection) -> int:
-    # number of customers with iban not null
-    return await conn.fetchval("select count(*) from customer c where c.iban is not null")
+    # number of customers with iban not null and balance > 0
+    return await conn.fetchval("select count(*) from customer c where c.iban is not null and round(c.balance, 2) > 0")
 
 
 async def get_customer_bank_data(
@@ -46,7 +47,8 @@ async def get_customer_bank_data(
     rows = await conn.fetch(
         "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance "
         "from customer c "
-        "where c.iban is not null limit $1 offset $2",
+        "where c.iban is not null and round(c.balance, 2) > 0 "
+        "limit $1 offset $2",
         max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,
     )
@@ -98,10 +100,14 @@ def sepa_export(
         "name": cfg.customer_portal.sepa_config.sender_name,
         "IBAN": iban.compact,
         "BIC": str(iban.bic),
-        "batch": True,
+        "batch": len(customers_bank_data) > 1,
         "currency": currency_ident,  # ISO 4217
     }
     sepa = SepaTransfer(config, clean=True)
+    if config["BIC"] == "None":
+        raise ValueError("BIC couldn't calculated correctly from given IBAN")
+    if execution_date < datetime.date.today():
+        raise ValueError("Execution date cannot be in the past")
 
     for customer in customers_bank_data:
         payment = {
@@ -112,6 +118,14 @@ def sepa_export(
             "execution_date": execution_date,
             "description": cfg.customer_portal.sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
         }
+
+        if not re.match(r"^[a-zA-Z0-9 \-.,:()/?'+]*$", payment["description"]):  # type: ignore
+            raise ValueError("Description contains invalid characters")
+        if payment["amount"] <= 0:  # type: ignore
+            raise ValueError("Amount must be greater than 0")
+        if payment["BIC"] == "None":
+            raise ValueError("BIC couldn't calculated correctly from given IBAN")
+
         sepa.add_payment(payment)
 
     sepa_xml = sepa.export(validate=True, pretty_print=True)
