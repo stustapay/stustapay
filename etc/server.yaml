@@ -5,7 +5,7 @@ database:
   dbname: "stustapay"
 
 terminalserver:
-  base_url: "localhost:9002"
+  base_url: "http://localhost:9002"
   host: "localhost"
   port: 9002
 
@@ -26,3 +26,6 @@ customer_portal:
     sender_iban: "DE89 3704 0044 0532 0130 00"
     # ueberweisungszweck
     description: "FestivalName, TagID: {user_tag_uid}"
+
+  about_page_url: "https://stustapay.de/impressum"
+  contact_email: "test-beschwerde@stustapay.de"

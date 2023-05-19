@@ -1,7 +1,9 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import asyncio
+import json
 import logging
 import os
+import tempfile
 from unittest import IsolatedAsyncioTestCase as TestCase
 
 import asyncpg
@@ -67,6 +69,8 @@ TEST_CONFIG = {
             "sender_iban": "DE89 3704 0044 0532 0130 00",
             "description": "FestivalName, TagID: {user_tag_uid}",
         },
+        "about_page_url": "https://stustapay.de/impressum",
+        "contact_email": "test-beschwerde@stustapay.de",
     },
     "database": get_test_db_config(),
 }
@@ -105,6 +109,8 @@ class BaseTestCase(TestCase):
         await testing_lock.acquire()
         self.db_pool = await get_test_db()
         self.db_conn: asyncpg.Connection = await self.db_pool.acquire()
+
+        await self.db_conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
         self.test_config = Config.parse_obj(TEST_CONFIG)
 
         self.auth_service = AuthService(db_pool=self.db_pool, config=self.test_config)
@@ -159,6 +165,10 @@ class BaseTestCase(TestCase):
 
         self.cashier_token = (await self.user_service.login_user(username=self.cashier.login, password="rolf")).token
 
+        # create tmp folder for tests which handle files
+        self.tmp_dir_obj = tempfile.TemporaryDirectory()
+        self.tmp_dir = self.tmp_dir_obj.name
+
     async def _get_account_balance(self, account_id: int) -> float:
         account = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
         self.assertIsNotNone(account)
@@ -173,6 +183,9 @@ class BaseTestCase(TestCase):
         await self.db_pool.close()
 
         testing_lock.release()
+
+        # delete tmp folder for tests which handle files with all its content
+        self.tmp_dir_obj.cleanup()
 
 
 class TerminalTestCase(BaseTestCase):

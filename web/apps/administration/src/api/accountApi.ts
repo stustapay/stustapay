@@ -2,14 +2,14 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
-import { Account } from "@stustapay/models";
+import { Account, UserTagDetail } from "@stustapay/models";
 
 const accountAdapter = createEntityAdapter<Account>();
 
 export const accountApi = createApi({
   reducerPath: "accountApi",
   baseQuery: adminApiBaseQuery,
-  tagTypes: ["account"],
+  tagTypes: ["account", "userTag"],
   refetchOnFocus: true,
   refetchOnMountOrArgChange: true,
   refetchOnReconnect: true,
@@ -29,6 +29,11 @@ export const accountApi = createApi({
       },
       providesTags: (result) =>
         result ? [...result.ids.map((id) => ({ type: "account" as const, id })), "account"] : ["account"],
+    }),
+    getUserTagDetail: builder.query<UserTagDetail, string>({
+      query: (uid) => `/user-tags/${uid}`,
+      providesTags: (result) =>
+        result ? [{ type: "userTag" as const, id: result.user_tag_uid_hex }, "userTag"] : ["userTag"],
     }),
     findAccounts: builder.mutation<Account[], string>({
       query: (searchTerm) => ({ url: "/accounts/find-accounts/", method: "POST", body: { search_term: searchTerm } }),
@@ -56,13 +61,29 @@ export const accountApi = createApi({
       }),
       invalidatesTags: ["account"],
     }),
-    updateTagUid: builder.mutation<void, { accountId: number; newTagUid: bigint }>({
-      query: ({ accountId, newTagUid }) => ({
+    updateTagUid: builder.mutation<void, { accountId: number; newTagUidHex: string; comment: string }>({
+      query: ({ accountId, newTagUidHex, comment }) => ({
         url: `/accounts/${accountId}/update-tag-uid`,
         method: "POST",
-        body: { new_tag_uid: newTagUid },
+        body: { new_tag_uid_hex: newTagUidHex, comment },
       }),
       invalidatesTags: ["account"],
+    }),
+    updateAccountComment: builder.mutation<void, { accountId: number; comment: string }>({
+      query: ({ accountId, comment }) => ({
+        url: `/accounts/${accountId}/update-comment`,
+        method: "POST",
+        body: { comment },
+      }),
+      invalidatesTags: ["account"],
+    }),
+    updateUserTagComment: builder.mutation<void, { userTagUidHex: string; comment: string }>({
+      query: ({ userTagUidHex, comment }) => ({
+        url: `/user-tags/${userTagUidHex}/update-comment`,
+        method: "POST",
+        body: { comment },
+      }),
+      invalidatesTags: ["userTag"],
     }),
   }),
 });
@@ -78,4 +99,7 @@ export const {
   useUpdateVoucherAmountMutation,
   useUpdateTagUidMutation,
   useDisableAccountMutation,
+  useGetUserTagDetailQuery,
+  useUpdateAccountCommentMutation,
+  useUpdateUserTagCommentMutation,
 } = accountApi;

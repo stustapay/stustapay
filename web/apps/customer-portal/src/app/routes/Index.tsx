@@ -63,7 +63,7 @@ export const Index: React.FC = () => {
                   {t("tagUid")}
                 </Typography>
                 <Typography component="div" variant="subtitle2">
-                  {formatUserTagUid(customer.user_tag_uid)}
+                  {formatUserTagUid(customer.user_tag_uid_hex)}
                 </Typography>
               </div>
             </Stack>

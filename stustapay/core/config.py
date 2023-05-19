@@ -48,6 +48,8 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     port: int = 8082
     base_bon_url: str
     data_privacy_url: str
+    about_page_url: str
+    contact_email: str
     sepa_config: SEPAConfig
 
 

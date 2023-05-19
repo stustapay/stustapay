@@ -1,10 +1,10 @@
 import enum
+from datetime import datetime
 from typing import Optional
-
-from pydantic import BaseModel
 
 from stustapay.core.schema.order import OrderType
 from stustapay.core.schema.product import Product, ProductRestriction
+from stustapay.core.util import BaseModel
 
 # Global Account IDs for virtual accounts
 # The virtual accounts are all fixed in the database
@@ -47,6 +47,36 @@ def get_target_account(order_type: OrderType, product: Product, customer_account
     raise NotImplementedError()
 
 
+class UserTagAccountAssociation(BaseModel):
+    account_id: int
+    mapping_was_valid_until: datetime
+
+
+class UserTagDetail(BaseModel):
+    user_tag_uid: int
+
+    @property
+    def user_tag_uid_hex(self):
+        return hex(self.user_tag_uid) if self.user_tag_uid is not None else None
+
+    comment: Optional[str] = None
+    account_id: Optional[int] = None
+
+    account_history: list[UserTagAccountAssociation]
+
+
+class UserTagHistoryEntry(BaseModel):
+    user_tag_uid: int
+
+    @property
+    def user_tag_uid_hex(self):
+        return hex(self.user_tag_uid) if self.user_tag_uid is not None else None
+
+    account_id: int
+    comment: Optional[str] = None
+    mapping_was_valid_until: datetime
+
+
 class Account(BaseModel):
     id: int
     type: AccountType
@@ -57,4 +87,12 @@ class Account(BaseModel):
 
     # metadata relevant to a tag
     user_tag_uid: Optional[int]
+
+    @property
+    def user_tag_uid_hex(self):
+        return hex(self.user_tag_uid) if self.user_tag_uid is not None else None
+
+    user_tag_comment: Optional[str] = None
     restriction: Optional[ProductRestriction]
+
+    tag_history: list[UserTagHistoryEntry]

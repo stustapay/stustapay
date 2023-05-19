@@ -1,3 +1,3 @@
-export const formatUserTagUid = (uid: bigint | null): string => {
-  return uid ? uid.toString(16) : "";
+export const formatUserTagUid = (uid: string | null): string => {
+  return uid ? (uid.startsWith("0x") ? uid.slice(2) : uid) : "";
 };

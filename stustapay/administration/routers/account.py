@@ -1,9 +1,11 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextAccountService
-from stustapay.core.schema.account import Account
+from stustapay.core.schema.account import Account, UserTagDetail
 
 router = APIRouter(
     prefix="",
@@ -69,10 +71,11 @@ async def update_voucher_amount(
 
 
 class UpdateTagUidPayload(BaseModel):
-    new_tag_uid: int
+    new_tag_uid_hex: str
+    comment: Optional[str] = None
 
 
-@router.post("/accounts/{account_id}/update-tag_uid")
+@router.post("/accounts/{account_id}/update-tag-uid")
 async def update_tag_uid(
     token: CurrentAuthToken,
     account_service: ContextAccountService,
@@ -80,7 +83,50 @@ async def update_tag_uid(
     payload: UpdateTagUidPayload,
 ):
     success = await account_service.switch_account_tag_uid_admin(
-        token=token, account_id=account_id, new_user_tag_uid=payload.new_tag_uid
+        token=token, account_id=account_id, new_user_tag_uid=int(payload.new_tag_uid_hex, 16), comment=payload.comment
     )
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateAccountCommentPayload(BaseModel):
+    comment: str
+
+
+@router.post("/accounts/{account_id}/update-comment", response_model=Account)
+async def update_account_comment(
+    token: CurrentAuthToken,
+    account_service: ContextAccountService,
+    account_id: int,
+    payload: UpdateAccountCommentPayload,
+):
+    return await account_service.update_account_comment(token=token, account_id=account_id, comment=payload.comment)
+
+
+@router.get("/user-tags/{user_tag_uid_hex}", response_model=UserTagDetail)
+async def get_user_tag_detail(
+    token: CurrentAuthToken,
+    account_service: ContextAccountService,
+    user_tag_uid_hex: str,
+):
+    resp = await account_service.get_user_tag_detail(token=token, user_tag_uid=int(user_tag_uid_hex, 16))
+    if resp is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return resp
+
+
+class UpdateCommentPayload(BaseModel):
+    comment: str
+
+
+@router.post("/user-tags/{user_tag_uid_hex}/update-comment", response_model=UserTagDetail)
+async def update_user_tag_comment(
+    token: CurrentAuthToken,
+    account_service: ContextAccountService,
+    user_tag_uid_hex: str,
+    payload: UpdateCommentPayload,
+):
+    print("stuff", user_tag_uid_hex, payload)
+    return await account_service.update_user_tag_comment(
+        token=token, user_tag_uid=int(user_tag_uid_hex, 16), comment=payload.comment
+    )
