@@ -1,4 +1,5 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+import copy
 import csv
 import datetime
 import os
@@ -12,6 +13,7 @@ from stustapay.core.service.customer import (
     csv_export,
     get_customer_bank_data,
     get_number_of_customers,
+    sepa_export,
 )
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
@@ -118,9 +120,9 @@ class CustomerServiceTest(TerminalTestCase):
 
         self.customers = [
             {
-                "uid": 12345 * i,
+                "uid": 12345 * (i + 1),
                 "pin": f"pin{i}",
-                "balance": 1000.123456 * i,
+                "balance": 1000.321 * i + 0.0012,
                 "iban": "DE89370400440532013000",
                 "account_name": "Rolf",
                 "email": "rolf@lol.de",
@@ -129,6 +131,9 @@ class CustomerServiceTest(TerminalTestCase):
         ]
 
         await self._add_customers(self.customers)
+
+        # first customer with uid 12345 should not be included as he has a balance of 0
+        self.customers_to_transfer = self.customers[1:]
 
     async def _add_customers(self, data: list[dict]) -> None:
         for idx, customer in enumerate(data):
@@ -156,23 +161,23 @@ class CustomerServiceTest(TerminalTestCase):
 
     async def test_get_number_of_customers(self):
         result = await get_number_of_customers(self.db_conn)
-        self.assertEqual(result, len(self.customers))
+        self.assertEqual(result, len(self.customers_to_transfer))
 
     async def test_get_customer_bank_data(self):
         def check_data(result: list[CustomerBankData], leng: int, ith: int = 0) -> None:
             self.assertEqual(len(result), leng)
-            for result_customer, customer in zip(result, self.customers[ith * leng : (ith + 1) * leng]):
+            for result_customer, customer in zip(result, self.customers_to_transfer[ith * leng : (ith + 1) * leng]):
                 self.assertEqual(result_customer.iban, customer["iban"])
                 self.assertEqual(result_customer.account_name, customer["account_name"])
                 self.assertEqual(result_customer.email, customer["email"])
                 self.assertEqual(result_customer.user_tag_uid, customer["uid"])
                 self.assertEqual(result_customer.balance, customer["balance"])
 
-        result = await get_customer_bank_data(self.db_conn, len(self.customers))
-        check_data(result, len(self.customers))
+        result = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
+        check_data(result, len(self.customers_to_transfer))
 
         async def test_scroll(leng: int):
-            for i in range(len(self.customers) // leng):
+            for i in range(len(self.customers_to_transfer) // leng):
                 result = await get_customer_bank_data(self.db_conn, leng, i)
                 check_data(result, leng, i)
 
@@ -181,29 +186,123 @@ class CustomerServiceTest(TerminalTestCase):
         await test_scroll(1)
 
     async def test_csv_export(self):
-        test_currency_symbol = "€"
-        customers_bank_data = await get_customer_bank_data(self.db_conn, len(self.customers))
+        test_currency = "EUR"
+        test_file_name = "test.csv"
+        customers_bank_data = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
         csv_export(
             customers_bank_data,
-            os.path.join(self.tmp_dir, "test.csv"),
+            os.path.join(self.tmp_dir, test_file_name),
             self.test_config,
-            test_currency_symbol,
+            test_currency,
             datetime.date.today(),
         )
 
+        self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
+
         # read the csv back in
-        with open(os.path.join(self.tmp_dir, "test.csv")) as csvfile:
+        with open(os.path.join(self.tmp_dir, test_file_name)) as csvfile:
             reader = csv.DictReader(csvfile)
-            for row, customer in zip(reader, self.customers):
+            for row, customer in zip(reader, self.customers_to_transfer):
                 self.assertEqual(row["beneficiary_name"], customer["account_name"])
                 self.assertEqual(row["iban"], customer["iban"])
                 self.assertEqual(float(row["amount"]), round(customer["balance"], 2))
-                self.assertEqual(row["currency"], test_currency_symbol)
+                self.assertEqual(row["currency"], test_currency)
                 self.assertEqual(
                     row["reference"],
                     self.test_config.customer_portal.sepa_config.description.format(user_tag_uid=customer["uid"]),
                 )
                 self.assertEqual(row["execution_date"], datetime.date.today().isoformat())
+
+    async def test_sepa_export(self):
+        test_currency = "EUR"
+        test_file_name = "test_sepa.xml"
+        customers_bank_data = await get_customer_bank_data(self.db_conn, max_export_items_per_batch=1)
+        cfg = copy.deepcopy(self.test_config)
+        # allowed symbols
+        cfg.customer_portal.sepa_config.description += "-.,:()/?'+"
+        sepa_export(
+            customers_bank_data,
+            os.path.join(self.tmp_dir, test_file_name),
+            cfg,
+            test_currency,
+            datetime.date.today(),
+        )
+        self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
+
+        test_file_name = "test_sepa_multiple.xml"
+        customers_bank_data = await get_customer_bank_data(
+            self.db_conn, max_export_items_per_batch=len(self.customers_to_transfer)
+        )
+        sepa_export(
+            customers_bank_data,
+            os.path.join(self.tmp_dir, test_file_name),
+            self.test_config,
+            test_currency,
+            datetime.date.today(),
+        )
+        self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
+
+        customers_bank_data = await get_customer_bank_data(self.db_conn, max_export_items_per_batch=1)
+
+        # test invalid iban customer
+        invalid_iban = "DE89370400440532013001"
+        tmp_bank_data = copy.deepcopy(customers_bank_data)
+        tmp_bank_data[0].iban = invalid_iban
+
+        with self.assertRaises(ValueError):
+            sepa_export(
+                tmp_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                self.test_config,
+                test_currency,
+                datetime.date.today(),
+            )
+
+        # test invalid iban sender
+        cfg = copy.deepcopy(self.test_config)
+        cfg.customer_portal.sepa_config.sender_iban = invalid_iban
+        with self.assertRaises(ValueError):
+            sepa_export(
+                customers_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                cfg,
+                test_currency,
+                datetime.date.today(),
+            )
+
+        # test invalid execution date
+        with self.assertRaises(ValueError):
+            sepa_export(
+                customers_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                self.test_config,
+                test_currency,
+                datetime.date.today() - datetime.timedelta(days=1),
+            )
+
+        # test invalid amount
+        tmp_bank_data = copy.deepcopy(customers_bank_data)
+        tmp_bank_data[0].balance = -1
+        with self.assertRaises(ValueError):
+            sepa_export(
+                tmp_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                self.test_config,
+                test_currency,
+                datetime.date.today(),
+            )
+
+        # test invalid description
+        cfg = copy.deepcopy(self.test_config)
+        cfg.customer_portal.sepa_config.description = "invalid {user_tag_uid}#%^;&*"
+        with self.assertRaises(ValueError):
+            sepa_export(
+                customers_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                cfg,
+                test_currency,
+                datetime.date.today(),
+            )
 
     async def test_auth_customer(self):
         # test login_customer
