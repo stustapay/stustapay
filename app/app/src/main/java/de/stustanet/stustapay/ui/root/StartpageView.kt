@@ -38,7 +38,7 @@ fun StartpageView(
     navigateTo: (NavDest) -> Unit = {},
     viewModel: StartpageViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
     val scope = rememberCoroutineScope()
 
@@ -71,7 +71,7 @@ fun StartpageView(
                 .padding(top = 5.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val title = uiState.title()
+            val title = loginState.title()
             Text(
                 text = title.title,
                 fontSize = 30.sp,
@@ -91,7 +91,7 @@ fun StartpageView(
                 val scroll = rememberScrollState()
                 Column(Modifier.verticalScroll(state = scroll).weight(1.0f)) {
                     for (item in startpageItems) {
-                        if (uiState.checkAccess(item.canAccess)) {
+                        if (loginState.checkAccess(item.canAccess)) {
                             StartpageEntry(item = item, navigateTo = navigateTo)
                         }
                     }
@@ -108,7 +108,7 @@ fun StartpageView(
                     navigateTo = navigateTo
                 )
 
-                if (uiState.checkAccess { u, _ -> Access.canChangeConfig(u) } || uiState.notConfigured()) {
+                if (loginState.checkAccess { u, _ -> Access.canChangeConfig(u) } || !loginState.hasConfig()) {
                     StartpageEntry(
                         item = StartpageItem(
                             icon = Icons.Filled.Settings,
@@ -119,7 +119,7 @@ fun StartpageView(
                     )
                 }
 
-                if (uiState.checkAccess { u, _ -> Access.canHackTheSystem(u) }) {
+                if (loginState.checkAccess { u, _ -> Access.canHackTheSystem(u) }) {
                     StartpageEntry(
                         item = StartpageItem(
                             icon = Icons.Filled.Send,

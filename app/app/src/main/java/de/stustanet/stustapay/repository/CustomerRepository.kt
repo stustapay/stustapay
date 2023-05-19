@@ -1,6 +1,7 @@
 package de.stustanet.stustapay.repository
 
-import de.stustanet.stustapay.model.Account
+import de.stustanet.stustapay.model.Customer
+import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.netsource.CustomerRemoteDataSource
 import javax.inject.Inject
@@ -10,15 +11,19 @@ import javax.inject.Singleton
 class CustomerRepository @Inject constructor(
     private val customerRemoteDataSource: CustomerRemoteDataSource
 ) {
-    suspend fun getCustomer(id: ULong): Response<Account> {
+    suspend fun getCustomer(id: ULong): Response<Customer> {
         return customerRemoteDataSource.getCustomer(id)
     }
 
-    suspend fun grantVouchers(id: ULong, vouchers: Int): Response<Account> {
-        return customerRemoteDataSource.grantVouchers(id, vouchers)
+    suspend fun grantFreeTicket(tag: UserTag, vouchers: UInt = 0u): Response<Customer> {
+        return customerRemoteDataSource.grantFreeTicket(tag, vouchers)
     }
 
-    suspend fun switchTag(customerId: ULong, newTagId: ULong): Response<Unit> {
-        return customerRemoteDataSource.switchTag(customerId, newTagId)
+    suspend fun grantVouchers(tag: UserTag, vouchers: UInt): Response<Customer> {
+        return customerRemoteDataSource.grantVouchers(tag, vouchers)
+    }
+
+    suspend fun switchTag(customerID: ULong, newTag: UserTag): Response<Unit> {
+        return customerRemoteDataSource.switchTag(customerID, newTag)
     }
 }

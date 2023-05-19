@@ -15,7 +15,7 @@ class PayOutRemoteDataSource @Inject constructor(
         return terminalAPI.checkPayOut(newPayOut)
     }
 
-    suspend fun bookTopUp(newPayOut: NewPayOut): Response<CompletedPayOut> {
+    suspend fun bookPayOut(newPayOut: NewPayOut): Response<CompletedPayOut> {
         return terminalAPI.bookPayOut(newPayOut)
     }
 }

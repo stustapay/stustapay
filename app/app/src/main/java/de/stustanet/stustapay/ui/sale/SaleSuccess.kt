@@ -28,10 +28,10 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
 
     // so we have a regular variable..
-    val completedSale = saleCompleted
-    if (completedSale == null) {
+    val saleCompletedV = saleCompleted
+    if (saleCompletedV == null) {
         Text(
-            text = "no completed sale information available",
+            text = "no completed sale information present",
             modifier = Modifier
                 .fillMaxSize()
                 .padding(10.dp),
@@ -71,30 +71,30 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
                     ProductConfirmItem(
                         name = "Preis",
-                        price = completedSale.total_price,
+                        price = saleCompletedV.total_price,
                         fontSize = 40.sp,
                     )
 
                     ProductConfirmItem(
                         name = "neues Guthaben",
-                        price = completedSale.new_balance,
+                        price = saleCompletedV.new_balance,
                         fontSize = 30.sp,
                     )
 
-                    if (completedSale.used_vouchers > 0 || completedSale.new_voucher_balance > 0) {
+                    if (saleCompletedV.used_vouchers > 0 || saleCompletedV.new_voucher_balance > 0) {
                         Divider(modifier = Modifier.padding(bottom = 10.dp))
 
-                        if (completedSale.used_vouchers > 0) {
+                        if (saleCompletedV.used_vouchers > 0) {
                             ProductConfirmItem(
                                 name = "Gutscheine",
-                                quantity = completedSale.used_vouchers,
+                                quantity = saleCompletedV.used_vouchers,
                             )
                         }
 
-                        if (completedSale.new_voucher_balance > 0) {
+                        if (saleCompletedV.new_voucher_balance > 0) {
                             ProductConfirmItem(
                                 name = "übrige Gutscheine",
-                                quantity = completedSale.new_voucher_balance,
+                                quantity = saleCompletedV.new_voucher_balance,
                             )
                         }
                     }

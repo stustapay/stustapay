@@ -30,7 +30,11 @@ data class CurrentUser(
 @Serializable
 data class UserTag(
     val uid: ULong,
-)
+) {
+    override fun toString(): String {
+        return uid.toString(16).uppercase()
+    }
+}
 
 @Serializable
 data class NewUser(

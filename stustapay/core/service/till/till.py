@@ -301,31 +301,12 @@ class TillService(DBService):
         )
         buttons = [TerminalButton.parse_obj(db_button) for db_button in db_buttons]
 
-        db_tickets = await conn.fetch(
-            "select * "
-            "from ticket_with_product twp "
-            "join till_layout_to_ticket tltt on tltt.ticket_id = twp.id "
-            "where tltt.layout_id = $1 "
-            "order by tltt.sequence_number asc",
-            profile.layout_id,
-        )
-        ticket_buttons = [
-            TerminalButton(
-                id=row["id"],
-                name=row["name"],
-                price=row["total_price"],
-                is_returnable=False,
-                fixed_price=True,
-            )
-            for row in db_tickets
-        ]
-
-        # TODO: only send secrets if profile.allow_top_up:
         row = await conn.fetchrow(
             "select encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 from user_tag_secret limit 1"
         )
         assert row is not None
         user_tag_secret = UserTagSecret.parse_obj(row)
+        # TODO: only send secrets if profile.allow_top_up:
         secrets = TerminalSecrets(
             sumup_affiliate_key=self.cfg.core.sumup_affiliate_key, user_tag_secret=user_tag_secret
         )
@@ -340,7 +321,6 @@ class TillService(DBService):
             allow_top_up=profile.allow_top_up,
             allow_cash_out=profile.allow_cash_out,
             allow_ticket_sale=profile.allow_ticket_sale,
-            ticket_buttons=ticket_buttons,
             buttons=buttons,
             secrets=secrets,
             available_roles=available_roles,

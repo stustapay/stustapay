@@ -36,8 +36,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun CashConfirmView(
     goBack: () -> Unit,
-    getAmount: () -> Double,
-    status: String,
+    getAmount: () -> UInt,
+    status: @Composable () -> Unit = {},
+    question: String = "received?",
     onPay: CashECCallback,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -69,8 +70,8 @@ fun CashConfirmView(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("%.2f€".format(getAmount()), fontSize = 48.sp)
-                    Text("received?", fontSize = 48.sp)
+                    Text("%.2f€".format(getAmount().toDouble() * 100), fontSize = 48.sp)
+                    Text(question, fontSize = 48.sp)
                 }
             }
         },
@@ -82,7 +83,7 @@ fun CashConfirmView(
                     .fillMaxWidth()
             ) {
                 Divider(modifier = Modifier.fillMaxWidth())
-                Text(status, fontSize = 32.sp)
+                status()
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
