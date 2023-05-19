@@ -1,9 +1,10 @@
-# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,disable=protected-access
 import copy
 import csv
 import datetime
 import os
 import unittest
+from stustapay.core.customer_bank_export import CustomerExportCli
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.service.config import ConfigService
@@ -413,6 +414,29 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(result.data_privacy_url, cpc.data_privacy_url)
         self.assertEqual(result.contact_email, cpc.contact_email)
         self.assertEqual(result.about_page_url, cpc.about_page_url)
+
+    async def test_export_customer_bank_data(self):
+        cli = CustomerExportCli(None, config=self.test_config)
+        output_path = os.path.join(self.tmp_dir, "test_export")
+
+        await cli._export_customer_bank_data(db_pool=self.db_pool, output_path=output_path)
+        self.assertTrue(os.path.exists(output_path + "_1.xml"))
+
+        await cli._export_customer_bank_data(db_pool=self.db_pool, output_path=output_path, data_format="csv")
+        self.assertTrue(os.path.exists(output_path + "_1.csv"))
+
+        # test several batches
+        await cli._export_customer_bank_data(
+            db_pool=self.db_pool, output_path=output_path, max_export_items_per_batch=1
+        )
+        for i in range(len(self.customers_to_transfer)):
+            self.assertTrue(os.path.exists(output_path + f"_{i+1}.xml"))
+
+        await cli._export_customer_bank_data(
+            db_pool=self.db_pool, output_path=output_path, data_format="csv", max_export_items_per_batch=1
+        )
+        for i in range(len(self.customers_to_transfer)):
+            self.assertTrue(os.path.exists(output_path + f"_{i+1}.csv"))
 
 
 if __name__ == "__main__":
