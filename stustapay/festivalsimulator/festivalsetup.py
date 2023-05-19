@@ -10,8 +10,8 @@ from pathlib import Path
 import asyncpg
 
 from stustapay.administration.server import Api as AdminApi
-from stustapay.bon.generator import Generator
 from stustapay.bon.config import read_config as read_bon_config
+from stustapay.bon.generator import Generator
 from stustapay.core.config import Config
 from stustapay.core.database import create_db_pool, rebuild_with
 from stustapay.core.schema.till import NewTill, NewCashRegisterStocking, NewCashRegister
@@ -65,7 +65,7 @@ class FestivalSetup(SubCommand):
             self.args.n_entry_tills + self.args.n_topup_tills + self.args.n_beer_tills + self.args.n_cocktail_tills
         )
 
-        self.n_cashiers = self.n_tills
+        self.n_cashiers = max(int(self.n_tills * 1.5), self.args.n_cashiers or 0)
 
     @staticmethod
     def argparse_register(subparser: argparse.ArgumentParser):
@@ -80,6 +80,9 @@ class FestivalSetup(SubCommand):
         subparser.add_argument("--n-topup-tills", type=int, help="number of topup tills to create", default=8)
         subparser.add_argument("--n-beer-tills", type=int, help="number of beer tills to create", default=20)
         subparser.add_argument("--n-cocktail-tills", type=int, help="number of cocktail tills to create", default=3)
+        subparser.add_argument(
+            "--n-cashiers", type=int, help="number of cashiers to create, default is number of tills plus 50%"
+        )
 
         subparsers = subparser.add_subparsers(dest="action")
         database_parser = subparsers.add_parser("database", formatter_class=argparse.ArgumentDefaultsHelpFormatter)

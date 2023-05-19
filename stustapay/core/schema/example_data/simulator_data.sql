@@ -8,6 +8,12 @@ begin;
 set plpgsql.extra_warnings to 'all';
 set datestyle to 'ISO';
 
+insert into user_tag_secret (
+    id, key0, key1
+) overriding system value
+values
+    (0, decode('000102030405060708090a0b0c0d0e0f', 'hex'), decode('000102030405060708090a0b0c0d0e0f', 'hex'))
+on conflict do nothing;
 
 insert into user_tag (
     uid, pin, serial, restriction, secret

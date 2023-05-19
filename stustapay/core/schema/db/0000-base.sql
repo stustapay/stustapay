@@ -1039,7 +1039,7 @@ begin
 
             insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate)
             values
-                (locals.new_order_id, 1, 7, locals.new_cash_register_balance, 1, 'none', 0);
+                (locals.new_order_id, 0, 7, locals.new_cash_register_balance, 1, 'none', 0);
             NEW.active_cash_register_id := locals.new_cash_register_id;
         end if;
     end if;
@@ -1058,7 +1058,7 @@ begin
 
             insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate)
             values
-                (locals.old_order_id, 1, 7, -locals.old_cash_register_balance, 1, 'none', 0);
+                (locals.old_order_id, 0, 7, -locals.old_cash_register_balance, 1, 'none', 0);
         end if;
     end if;
 
