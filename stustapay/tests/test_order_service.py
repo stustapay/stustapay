@@ -41,12 +41,13 @@ from stustapay.core.schema.user import (
 )
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.order import OrderService, NotEnoughVouchersException
-from stustapay.core.service.order.order import NotEnoughFundsException
+from stustapay.core.service.order.order import NotEnoughFundsException, fetch_max_account_balance
 from stustapay.core.service.order.order import TillPermissionException, InvalidSaleException
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
 from .common import TerminalTestCase
+from ..core.service.common.error import InvalidArgument
 
 START_BALANCE = 100
 
@@ -306,6 +307,22 @@ class OrderLogicTest(TerminalTestCase):
         completed_sale = await self.order_service.book_sale(token=self.terminal_token, new_sale=new_sale)
         self.assertIsNotNone(completed_sale)
 
+    async def test_deposit_returns_cannot_exceed_account_limit(self):
+        max_limit = await fetch_max_account_balance(conn=self.db_conn)
+        n_deposits = int(max_limit / self.deposit_product.price) + 3
+        new_sale = NewSale(
+            uuid=uuid.uuid4(),
+            buttons=[
+                Button(till_button_id=self.deposit_button.id, quantity=-n_deposits),
+            ],
+            customer_tag_uid=self.customer_uid,
+        )
+        with self.assertRaises(InvalidArgument):
+            await self.order_service.check_sale(
+                token=self.terminal_token,
+                new_sale=new_sale,
+            )
+
     async def test_basic_sale_flow_with_vouchers(self):
         await self.db_conn.execute("update account set vouchers = 3 where id = $1", self.customer_account_id)
         new_sale = NewSale(
@@ -421,6 +438,17 @@ class OrderLogicTest(TerminalTestCase):
         await self._assert_account_balance(
             account_id=ACCOUNT_CASH_SALE_SOURCE, expected_balance=cash_sale_source_start_balance - 20
         )
+
+    async def test_topup_exceeding_max_limit_fails(self):
+        max_limit = await fetch_max_account_balance(conn=self.db_conn)
+        new_topup = NewTopUp(
+            uuid=uuid.uuid4(),
+            amount=max_limit + 1,
+            payment_method=PaymentMethod.cash,
+            customer_tag_uid=self.customer_uid,
+        )
+        with self.assertRaises(InvalidArgument):
+            await self.order_service.check_topup(token=self.terminal_token, new_topup=new_topup)
 
     async def test_topup_sumup_order_flow(self):
         new_topup = NewTopUp(

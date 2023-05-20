@@ -48,7 +48,7 @@ values
     ('currency.symbol', '€'),
     -- Must conform to ISO 4217 for SEPA transfer
     ('currency.identifier', 'EUR'),
-    ('entry.initial_topup_amount', '8')
+    ('max_account_balance', '150')
     on conflict do nothing;
 
 
@@ -110,6 +110,29 @@ values
     -- todo: cash_drawer, deposit,
     on conflict do nothing;
 
+create or replace function check_account_balance(
+    type text,
+    balance numeric
+) returns boolean as
+$$
+<<locals>> declare
+    max_balance numeric;
+begin
+    select value::numeric into locals.max_balance from config where key = 'max_account_balance';
+
+    if check_account_balance.type = 'private' and check_account_balance.balance > locals.max_balance then
+        raise 'Customers can have a maximum balance of at most %. New balance would be %.',
+            locals.max_balance, check_account_balance.balance;
+    end if;
+
+    if check_account_balance.type = 'private' and check_account_balance.balance < 0 then
+        raise 'Customers cannot have a negative balance. New balance would be %.', check_account_balance.balance;
+    end if;
+
+    return true;
+end
+$$ language plpgsql;
+
 -- bookkeeping account
 create table if not exists account (
     id bigint primary key generated always as identity (start with 1000),
@@ -121,7 +144,9 @@ create table if not exists account (
     -- current balance, updated on each transaction
     balance numeric not null default 0,
     -- current number of vouchers, updated on each transaction
-    vouchers bigint not null default 0
+    vouchers bigint not null default 0,
+
+    constraint max_balance_limited check(check_account_balance(type, balance))
 
     -- todo: topup-config
 );
