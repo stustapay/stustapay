@@ -20,9 +20,10 @@ LatexEncoder = UnicodeToLatexEncoder(
             rule_type=RULE_REGEX,
             rule=[
                 # format newlines really as line breaks. Needed in the address Field
-                (re.compile(r"\n"), r"\\newline"),
+                (re.compile(r"\n"), r"\\\\"),
                 # remove nullbytes
                 (re.compile("\0"), r""),
+                (re.compile(r"\^"), r"\^"),
             ],
         ),
         "defaults",

@@ -11,6 +11,7 @@ from stustapay.core.schema.terminal import (
     TerminalRegistrationSuccess,
     TerminalSecrets,
     TerminalButton,
+    UserTagSecret,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile, UserInfo
 from stustapay.core.schema.user import Privilege, UserTag, UserRole, CurrentUser
@@ -287,6 +288,11 @@ class TillService(DBService):
             current_terminal.till.active_profile_id,
         )
         profile: TillProfile = TillProfile.parse_obj(db_profile)
+        layout_has_tickets = await conn.fetchval(
+            "select exists (select from till_layout_to_ticket tltt where layout_id = $1)", profile.layout_id
+        )
+        allow_ticket_sale = layout_has_tickets and profile.allow_ticket_sale
+
         user_privileges = await conn.fetchval(
             "select privileges from user_with_privileges where id = $1", current_terminal.till.active_user_id
         )
@@ -300,28 +306,15 @@ class TillService(DBService):
         )
         buttons = [TerminalButton.parse_obj(db_button) for db_button in db_buttons]
 
-        db_tickets = await conn.fetch(
-            "select * "
-            "from ticket_with_product twp "
-            "join till_layout_to_ticket tltt on tltt.ticket_id = twp.id "
-            "where tltt.layout_id = $1 "
-            "order by tltt.sequence_number asc",
-            profile.layout_id,
+        row = await conn.fetchrow(
+            "select encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 from user_tag_secret limit 1"
         )
-        ticket_buttons = [
-            TerminalButton(
-                id=row["id"],
-                name=row["name"],
-                price=row["total_price"],
-                is_returnable=False,
-                fixed_price=True,
-            )
-            for row in db_tickets
-        ]
-
-        secrets = None
+        assert row is not None
+        user_tag_secret = UserTagSecret.parse_obj(row)
         # TODO: only send secrets if profile.allow_top_up:
-        secrets = TerminalSecrets(sumup_affiliate_key=self.cfg.core.sumup_affiliate_key)
+        secrets = TerminalSecrets(
+            sumup_affiliate_key=self.cfg.core.sumup_affiliate_key, user_tag_secret=user_tag_secret
+        )
 
         available_roles = await list_user_roles(conn=conn)
 
@@ -332,8 +325,7 @@ class TillService(DBService):
             user_privileges=user_privileges,
             allow_top_up=profile.allow_top_up,
             allow_cash_out=profile.allow_cash_out,
-            allow_ticket_sale=profile.allow_ticket_sale,
-            ticket_buttons=ticket_buttons,
+            allow_ticket_sale=allow_ticket_sale,
             buttons=buttons,
             secrets=secrets,
             available_roles=available_roles,
@@ -341,10 +333,10 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def get_customer(self, *, conn: asyncpg.Connection, customer_tag_uid: int) -> Optional[Customer]:
+    async def get_customer(self, *, conn: asyncpg.Connection, customer_tag_uid: int) -> Customer:
         customer = await conn.fetchrow(
             "select * from account_with_history a where a.user_tag_uid = $1", customer_tag_uid
         )
         if customer is None:
-            return None
+            raise InvalidArgument(f"Customer with tag uid {customer_tag_uid:x} does not exist")
         return Customer.parse_obj(customer)

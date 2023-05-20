@@ -5,18 +5,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.ui.cashiermanagement.CashierManagementView
-import de.stustanet.stustapay.ui.cashierstatus.CashierStatusView
+import de.stustanet.stustapay.ui.cashier.CashierStatusView
 import de.stustanet.stustapay.ui.debug.DebugView
 import de.stustanet.stustapay.ui.history.SaleHistoryView
 import de.stustanet.stustapay.ui.nav.NavChangeHandler
 import de.stustanet.stustapay.ui.nav.navigateDestination
 import de.stustanet.stustapay.ui.sale.SaleView
 import de.stustanet.stustapay.ui.settings.SettingsView
-import de.stustanet.stustapay.ui.status.CustomerStatusView
+import de.stustanet.stustapay.ui.customer.CustomerStatusView
 import de.stustanet.stustapay.ui.ticket.TicketView
-import de.stustanet.stustapay.ui.topup.TopUpView
+import de.stustanet.stustapay.ui.payinout.CashInOutView
 import de.stustanet.stustapay.ui.user.UserView
-import de.stustanet.stustapay.ui.vouchers.VouchersView
+import de.stustanet.stustapay.ui.reward.RewardView
 import de.stustanet.stustapay.util.SysUiController
 
 
@@ -50,7 +50,7 @@ fun RootView(uictrl: SysUiController? = null) {
             SaleView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.topup.route) {
-            TopUpView(leaveView = { navController.navigateUp() })
+            CashInOutView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.status.route) {
             CustomerStatusView(leaveView = { navController.navigateUp() })
@@ -67,8 +67,8 @@ fun RootView(uictrl: SysUiController? = null) {
         composable(RootNavDests.history.route) {
             SaleHistoryView(leaveView = { navController.navigateUp() })
         }
-        composable(RootNavDests.vouchers.route) {
-            VouchersView(leaveView = { navController.navigateUp() })
+        composable(RootNavDests.rewards.route) {
+            RewardView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.cashierManagement.route) {
             CashierManagementView(leaveView = { navController.navigateUp() })

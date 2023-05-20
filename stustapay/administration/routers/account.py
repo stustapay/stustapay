@@ -82,11 +82,9 @@ async def update_tag_uid(
     account_id: int,
     payload: UpdateTagUidPayload,
 ):
-    success = await account_service.switch_account_tag_uid_admin(
+    await account_service.switch_account_tag_uid_admin(
         token=token, account_id=account_id, new_user_tag_uid=int(payload.new_tag_uid_hex, 16), comment=payload.comment
     )
-    if not success:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
 
 class UpdateAccountCommentPayload(BaseModel):
@@ -126,7 +124,6 @@ async def update_user_tag_comment(
     user_tag_uid_hex: str,
     payload: UpdateCommentPayload,
 ):
-    print("stuff", user_tag_uid_hex, payload)
     return await account_service.update_user_tag_comment(
         token=token, user_tag_uid=int(user_tag_uid_hex, 16), comment=payload.comment
     )

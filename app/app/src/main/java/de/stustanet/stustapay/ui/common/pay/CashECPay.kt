@@ -20,23 +20,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
-import de.stustanet.stustapay.ui.nav.TopAppBar
-import de.stustanet.stustapay.ui.nav.TopAppBarIcon
 import de.stustanet.stustapay.ui.nav.navigateTo
 
-sealed interface CashECCallback {
-    data class Tag(
-        val onEC: (UserTag) -> Unit,
-        val onCash: (UserTag) -> Unit
-    ) : CashECCallback
-
-    data class NoTag(
-        val onEC: () -> Unit,
-        val onCash: () -> Unit
-    ) : CashECCallback
+enum class CashECPage(val route: String) {
+    Selection("selection"),
+    CashConfirm("cash_confirm"),
 }
 
 /**
@@ -44,75 +34,67 @@ sealed interface CashECCallback {
  */
 @Composable
 fun CashECPay(
-    goBack: () -> Unit = {},
-    onPay: CashECCallback,
+    modifier: Modifier = Modifier,
+    onPaymentRequested: CashECCallback,
     checkAmount: () -> Boolean = { true },
     ready: Boolean,
-    getAmount: () -> Double,
-    status: String,
-    title: String = "",
+    getAmount: () -> UInt,
+    status: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val nav = rememberNavController()
 
     NavHost(
+        modifier = modifier,
         navController = nav,
-        startDestination = "select"
+        startDestination = CashECPage.Selection.route,
     ) {
-        composable("select") {
+        composable(CashECPage.Selection.route) {
             CashECSelection(
                 goToCash = {
                     if (checkAmount()) {
-                        nav.navigateTo("cash_confirm")
+                        nav.navigateTo(CashECPage.CashConfirm.route)
                     }
                 },
-                leaveView = goBack,
-                onPay = onPay,
+                onPayRequested = onPaymentRequested,
                 ready = ready,
                 status = status,
-                title = title,
                 checkAmount = checkAmount,
                 content = content,
             )
         }
-        composable("cash_confirm") {
+        composable(CashECPage.CashConfirm.route) {
             CashConfirmView(
-                goBack = { nav.navigateTo("select") },
+                goBack = { nav.navigateTo(CashECPage.Selection.route) },
                 getAmount = getAmount,
                 status = status,
-                onPay = onPay,
+                onPay = onPaymentRequested,
             )
         }
     }
 }
 
+/**
+ * Container for payment selections.
+ * Has Cash/EC button in the bottom bar.
+ */
 @Composable
 fun CashECSelection(
     goToCash: () -> Unit,
-    leaveView: () -> Unit = {},
-    onPay: CashECCallback,
+    onPayRequested: CashECCallback,
     ready: Boolean,
-    status: String,
-    title: String = "",
     checkAmount: () -> Boolean,
+    status: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(title) },
-                icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
-                    leaveView()
-                },
-            )
-        },
         content = content,
         bottomBar = {
             Column(modifier = Modifier.padding(20.dp)) {
                 Divider(modifier = Modifier.fillMaxWidth())
-                Text(status, fontSize = 32.sp)
+                status()
 
                 Row(modifier = Modifier.padding(top = 10.dp)) {
                     // Cash flow
@@ -138,9 +120,9 @@ fun CashECSelection(
                     NfcScanDialog(
                         state = scanState,
                         onScan = { tag ->
-                            when (onPay) {
+                            when (onPayRequested) {
                                 is CashECCallback.Tag -> {
-                                    onPay.onEC(tag)
+                                    onPayRequested.onEC(tag)
                                 }
 
                                 is CashECCallback.NoTag -> {
@@ -158,13 +140,13 @@ fun CashECSelection(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             if (checkAmount()) {
-                                when (onPay) {
+                                when (onPayRequested) {
                                     is CashECCallback.Tag -> {
                                         scanState.open()
                                     }
 
                                     is CashECCallback.NoTag -> {
-                                        onPay.onEC()
+                                        onPayRequested.onEC()
                                     }
                                 }
                             }

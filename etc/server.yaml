@@ -10,18 +10,22 @@ terminalserver:
   port: 9002
 
 administration:
-  base_url: "localhost:8080"
+  base_url: "http://localhost:8080"
+  host: "localhost"
+  port: 8080
 
 core:
   secret_key: "very secret"
   sumup_affiliate_key: "pretty secret"
 
 customer_portal:
-  base_url: "localhost:8082"
+  base_url: "http://localhost:8082"
+  host: "localhost"
+  port: 8082
   base_bon_url: "https://bon.stustapay.de/{bon_output_file}"
   data_privacy_url: "https://stustapay.de/datenschutz"
   sepa_config:
-    sender_name: "Toller Festivalveranstler"
+    sender_name: "Toller Festivalveranstalter"
     # example for valid IBAN
     sender_iban: "DE89 3704 0044 0532 0130 00"
     # ueberweisungszweck

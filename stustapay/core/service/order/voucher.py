@@ -27,7 +27,7 @@ class VoucherService(DBService):
             return VoucherUsage(used_vouchers=0, additional_line_items=[])
 
         used_vouchers = 0
-        additional_line_items = []
+        additional_line_items_by_tax = {}
         line_items_by_price_per_voucher = list(
             sorted(
                 line_items,
@@ -51,15 +51,19 @@ class VoucherService(DBService):
 
             price_deduction = current_line_item.product.price_per_voucher * vouchers_for_product
 
-            additional_line_items.append(
-                PendingLineItem(
+            if current_line_item.tax_name not in additional_line_items_by_tax:
+                additional_line_items_by_tax[current_line_item.tax_name] = PendingLineItem(
                     product=discount_product,
                     tax_rate=current_line_item.tax_rate,
                     tax_name=current_line_item.tax_name,
                     product_price=-price_deduction,
                     quantity=1,
                 )
-            )
+            else:
+                additional_line_items_by_tax[current_line_item.tax_name].product_price -= price_deduction
+
             used_vouchers += vouchers_for_product
 
-        return VoucherUsage(used_vouchers=used_vouchers, additional_line_items=additional_line_items)
+        return VoucherUsage(
+            used_vouchers=used_vouchers, additional_line_items=list(additional_line_items_by_tax.values())
+        )

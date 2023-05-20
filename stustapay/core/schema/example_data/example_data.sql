@@ -45,21 +45,37 @@ values
     (202, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0),
     (203, 5424726016640516, 'private', 'test-tag3', 'test token 3', 15.00, 2),
     (204, 5424726268326916, 'private', 'test-tag4', 'test token 4', 20.00, 2),
-    (205, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0)
+    (205, null, 'internal', 'test-tag4-internal', 'tag4 internal account', 0.0, 0)
     on conflict do nothing;
 select setval('account_id_seq', 300);
 
 
-insert into usr (
-    id, login, password, description, transport_account_id, cashier_account_id, user_tag_uid
+insert into cash_register (
+    id, name
 ) overriding system value
 values
-    (0, 'test-cashier', null, 'Some Description', null, 100, 1234),
+    (0, 'Stahlkasse'),
+    (1, 'Blechkasse 1'),
+    (2, 'Blechkasse 2')
+    on conflict do nothing;
+
+insert into cash_register_stocking (
+    id, name, euro20, euro10, euro5, euro2, euro1
+) overriding system value
+values
+    (0, 'default', 5, 10, 10, 1, 1)
+    on conflict do nothing;
+
+insert into usr (
+    id, login, password, description, transport_account_id, cashier_account_id, cash_register_id, user_tag_uid
+) overriding system value
+values
+    (0, 'test-cashier', null, 'Some Description', null, 100, null, 1234),
     -- password is admin
-    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null),
-    (2, 'tag2', null, null, null, 202, 5424726191074820),
-    (4, 'tag4', null, null, null, 205, 5424726268326916),
-    (5, 'finanzorga' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null)
+    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null, null),
+    (2, 'tag2', null, null, null, 202, 0, 5424726191074820),
+    (4, 'tag4', null, null, null, 205, null, 5424726268326916),
+    (5, 'finanzorga' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null, null)
     on conflict do nothing;
 select setval('usr_id_seq', 100);
 
@@ -68,19 +84,20 @@ insert into user_to_role (
 )
 values
     (0, 2), -- cashier
-    (1, 0), -- admin
-    (1, 1), -- finanzorga
+    (1, 0), -- admin -> admin
+    (1, 1), -- admin -> finanzorga
     (2, 0), -- tag #2, admin
     (2, 1), -- tag #2, finanzorga
     (2, 2), -- tag #2, cashier
     (4, 2), -- tag #4, cashier
-    (5, 1)  -- tag #4, cashier
+    (5, 1)  -- finanzorga -> finanzorga
     on conflict do nothing;
 
 insert into user_role_to_privilege (
     role_id, privilege
 )
 values
+    -- admin normally can't book orders, but for testing it's useful.
     (0, 'can_book_orders')
     on conflict do nothing;
 
@@ -129,6 +146,14 @@ values
     (109, 'under_18')
     on conflict do nothing;
 
+
+insert into ticket (
+    id, name, product_id, initial_top_up_amount
+) overriding system value
+values
+    (0, 'Eintritt', 4, 8);
+
+
 insert into till_button (
     id, name
 ) overriding system value
@@ -166,7 +191,8 @@ insert into till_layout (
 values
     (0, 'Alles', 'Alle Features zum Testen'),
     (1, 'Bierkasse', 'Allgemeine Bierkasse'),
-    (2, 'Aufladekasse', 'Allgemeine Aufladekasse')
+    (2, 'Aufladekasse', 'Allgemeine Aufladekasse'),
+    (3, 'Brotladen', 'Brotladen-Kasse')
     on conflict do nothing;
 select setval('till_layout_id_seq', 100);
 
@@ -184,7 +210,9 @@ insert into till_layout_to_button (
     (1, 0, 0),
     (1, 1, 1),
     (1, 2, 2),
-    (1, 3, 3)
+    (1, 3, 3),
+    -- brotladen
+    (3, 4, 1)
     on conflict do nothing;
 
 insert into till_profile (
@@ -193,7 +221,8 @@ insert into till_profile (
 values
     (0, 'Develop', 'Allmächtige Kasse', 0, true, true, true),
     (1, 'Pot', 'Allgemeine Pot Bierkasse', 1, false, false, false),
-    (2, 'Festzelt Aufladung', 'Aufladekasse', 2, true, true, false)
+    (2, 'Festzelt Aufladung', 'Aufladekasse', 2, true, true, false),
+    (3, 'Brotladen', 'Brotladen-Kasse', 3, false, false, false)
     on conflict do nothing;
 select setval('till_profile_id_seq', 100);
 
@@ -208,12 +237,27 @@ values
     (1, 1),
     (1, 2),
     (1, 3),
-    (1, 4);
+    (1, 4),
+    (2, 0),
+    (2, 1),
+    (2, 2),
+    (2, 3),
+    (2, 4),
+    (3, 0),
+    (3, 1),
+    (3, 2),
+    (3, 3),
+    (3, 4)
+    on conflict do nothing;
 
 
---configure one TSE 'tse1'
-insert into tse ( tse_name) values
-    ('tse1');
+-- configure one TSE 'tse1' for testing
+insert into tse (
+    tse_id, tse_name
+) overriding system value
+values
+    (0, 'tse1')
+    on conflict do nothing;
 
 
 insert into till (
@@ -221,8 +265,10 @@ insert into till (
 ) overriding system value
 values
     (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, null, null),
+    -- 1 is virtual till!
+    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, null, null),
     (3, 'ssc-pot-1', 'Pot Bierkasse', 1, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, null, null),
-    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, null, null)
+    (4, 'ssc-brotladen-1', 'Brotladen', 3, null, null, '6450c106-207c-4f17-b451-249c98ae6f19'::uuid, null, null, null)
     on conflict do nothing;
 select setval('till_id_seq', 100);
 
@@ -280,14 +326,13 @@ values
     on conflict do nothing;
 select setval('transaction_id_seq', 100);
 
-INSERT INTO bon (
+insert into bon (
     id, generated, generated_at, error, output_file
 )
-VALUES
-    (0, true, '2023-01-01 15:34:57 UTC+1', null, 'test_bon.pdf'),
-    (1, false, null, null, null)
-ON CONFLICT (id) DO UPDATE
-SET
+values
+    (0, true, '2023-01-01 15:34:57 UTC+1', null, 'test_bon.pdf')
+on conflict (id) do update
+set
     generated = EXCLUDED.generated,
     generated_at = EXCLUDED.generated_at,
     error = EXCLUDED.error,
@@ -297,27 +342,9 @@ insert into tse_signature (
     id
 )
 values
-    (0),
+    -- 0 already has bon entry
     (1),
     (2)
     on conflict do nothing;
-
-insert into cash_register (
-    name
-) overriding system value
-values
-    ('Blechkasse 1'),
-    ('Blechkasse 2'),
-    ('Blechkasse 3'),
-    ('Blechkasse 4'),
-    ('Blechkasse 5'),
-    ('Blechkasse 6'),
-    ('Blechkasse 7');
-
-insert into cash_register_stocking (
-    name, euro20, euro10, euro5, euro2, euro1
-)
-values
-    ('default', 5, 10, 10, 1, 1);
 
 commit;

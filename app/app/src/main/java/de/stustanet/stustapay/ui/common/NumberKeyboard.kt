@@ -21,6 +21,9 @@ fun NumberKeyboard(
 ) {
     val haptic = LocalHapticFeedback.current
 
+    val buttonHeight = 85.dp
+    val buttonPadding = 5.dp
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -36,8 +39,8 @@ fun NumberKeyboard(
                     Button(
                         modifier = Modifier
                             .weight(1f, true)
-                            .height(90.dp)
-                            .padding(5.dp),
+                            .height(buttonHeight)
+                            .padding(buttonPadding),
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onDigitEntered(nr)
@@ -56,8 +59,8 @@ fun NumberKeyboard(
             Button(
                 modifier = Modifier
                     .weight(1f, true)
-                    .height(90.dp)
-                    .padding(5.dp),
+                    .height(buttonHeight)
+                    .padding(buttonPadding),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDigitEntered(0u)
@@ -69,8 +72,8 @@ fun NumberKeyboard(
             Button(
                 modifier = Modifier
                     .weight(1f, true)
-                    .height(90.dp)
-                    .padding(5.dp),
+                    .height(buttonHeight)
+                    .padding(buttonPadding),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDigitEntered(0u)
@@ -81,8 +84,8 @@ fun NumberKeyboard(
             Button(
                 modifier = Modifier
                     .weight(1f, true)
-                    .height(90.dp)
-                    .padding(5.dp),
+                    .height(buttonHeight)
+                    .padding(buttonPadding),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onClear()

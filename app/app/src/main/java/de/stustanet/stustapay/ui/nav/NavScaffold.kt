@@ -18,7 +18,8 @@ fun NavScaffold(
     navigateBack: () -> Unit = {},
     title: @Composable () -> Unit,
     state: ScaffoldState = rememberScaffoldState(),
-    content: @Composable (PaddingValues) -> Unit
+    bottomBar: @Composable () -> Unit = {},
+    content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
         scaffoldState = state,
@@ -39,7 +40,9 @@ fun NavScaffold(
             ) {
                 content(innerPadding)
             }
-        }
+        },
+        
+        bottomBar = bottomBar,
     )
 }
 

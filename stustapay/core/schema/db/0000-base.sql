@@ -48,7 +48,7 @@ values
     ('currency.symbol', '€'),
     -- Must conform to ISO 4217 for SEPA transfer
     ('currency.identifier', 'EUR'),
-    ('entry.initial_topup_amount', '8')
+    ('max_account_balance', '150')
     on conflict do nothing;
 
 
@@ -110,6 +110,32 @@ values
     -- todo: cash_drawer, deposit,
     on conflict do nothing;
 
+create or replace function check_account_balance() returns trigger as
+$$
+<<locals>> declare
+    new_balance numeric;
+    max_balance numeric;
+begin
+    select value::numeric into locals.max_balance from config where key = 'max_account_balance';
+
+    -- Since this constraint function runs at the end of a db transaction we need to fetch the current balance
+    -- from the table manually. If we were to use NEW.balance we'd still have the old balance at the time of
+    -- the insert / update.
+    select balance into locals.new_balance from account where id = NEW.id;
+
+    if NEW.type = 'private' and locals.new_balance > locals.max_balance then
+        raise 'Customers can have a maximum balance of at most %. New balance would be %.',
+            locals.max_balance, locals.new_balance;
+    end if;
+
+    if NEW.type = 'private' and locals.new_balance < 0 then
+        raise 'Customers cannot have a negative balance. New balance would be %.', locals.new_balance;
+    end if;
+
+    return NEW;
+end
+$$ language plpgsql;
+
 -- bookkeeping account
 create table if not exists account (
     id bigint primary key generated always as identity (start with 1000),
@@ -125,6 +151,14 @@ create table if not exists account (
 
     -- todo: topup-config
 );
+
+-- we need to use a constraint trigger for the balance check as normal table level check constraints do not support
+-- the deferrable initially deferred setting
+create constraint trigger max_balance_limited
+ after insert or update on account
+ deferrable initially deferred
+ for each row execute function check_account_balance();
+
 insert into account (
     id, user_tag_uid, type, name, comment
 ) overriding system value
@@ -161,6 +195,7 @@ begin
 end
 $$ language plpgsql;
 
+drop trigger if exists update_tag_association_history_trigger on account;
 create trigger update_tag_association_history_trigger
     after update of user_tag_uid on account
     for each row
@@ -342,6 +377,8 @@ begin
 end
 $$ language plpgsql;
 
+
+drop trigger if exists user_to_role_updated_trigger on user_to_role;
 create trigger user_to_role_updated_trigger
     after insert on user_to_role
     for each row
@@ -401,7 +438,8 @@ values
     -- infozelt helfer
     (4, 'supervised_terminal_login'),
     (4, 'grant_free_tickets'),
-    (4, 'grant_vouchers');
+    (4, 'grant_vouchers')
+    on conflict do nothing;
 
 create or replace view user_role_with_privileges as (
     select
@@ -544,9 +582,10 @@ values
     (3, 'Auszahlen', false, null, 'none', true),
     (4, 'Eintritt', true, 12, 'ust', true),
     (5, 'Eintritt U18', true, 12, 'ust', true),
-    (6, 'Eintritt U16', true, 12, 'ust', true),
+    (6, 'Eintritt U16', true, 0, 'none', true),
     (7, 'Geldtransit', false, null, 'none', true),
-    (8, 'DifferenzSollIst', false, null, 'none', true);
+    (8, 'DifferenzSollIst', false, null, 'none', true)
+    on conflict do nothing;
 
 -- which products are not allowed to be bought with the user tag restriction (eg beer, below 16)
 create table if not exists product_restriction (
@@ -890,9 +929,13 @@ comment on column cash_register_stocking.cent2 is 'number of rolls, one roll = 5
 comment on column cash_register_stocking.cent1 is 'number of rolls, one roll = 50 pcs = 0,50€';
 
 
+do $$ begin
+    create type tse_status_enum as enum ('new', 'active', 'disabled', 'failed');
+exception
+    when duplicate_object then null;
+end $$;
 
-create type tse_status_enum as enum ('new', 'active', 'disabled', 'failed');
-create table tse_status_info (
+create table if not exists tse_status_info (
     enum_value tse_status_enum primary key,
     name text not null,
     description text not null
@@ -908,7 +951,7 @@ insert into tse_status_info (enum_value, name, description) values
 
 -- list of TSEs with static TSE info
 create table if not exists tse (
-    tse_id                    bigserial primary key, -- now integer!
+    tse_id                    bigint primary key generated always as identity,
     tse_name                  text unique not null,
     tse_status                tse_status_enum not null default 'new',
     tse_serial                text,
@@ -972,11 +1015,25 @@ create or replace view cash_register_with_cashier as (
     left join till t on t.active_cash_register_id = c.id
 );
 
-insert into till_layout (id, name, description) overriding system value values (1, 'Virtual Till Layout', '') ;
-insert into till_profile (id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id)
-    overriding system value values (1, 'Virtual till profile', '', false, false, false, 1);
-insert into till (id, name, description, active_profile_id, registration_uuid, tse_id) overriding system value
-values (1, 'Virtual Till', '', 1, gen_random_uuid(), null);
+insert into till_layout (
+    id, name, description
+) overriding system value
+values
+    (1, 'Virtual Till Layout', '')
+    on conflict do nothing;
+
+insert into till_profile (
+    id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id
+) overriding system value
+values
+    (1, 'Virtual till profile', '', false, false, false, 1)
+    on conflict do nothing;
+insert into till (
+    id, name, description, active_profile_id, registration_uuid, tse_id
+) overriding system value
+values
+    (1, 'Virtual Till', '', 1, gen_random_uuid(), null)
+    on conflict do nothing;
 
 
 create or replace function handle_till_user_login() returns trigger as
@@ -1016,7 +1073,7 @@ begin
 
             insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate)
             values
-                (locals.new_order_id, 1, 7, locals.new_cash_register_balance, 1, 'none', 0);
+                (locals.new_order_id, 0, 7, locals.new_cash_register_balance, 1, 'none', 0);
             NEW.active_cash_register_id := locals.new_cash_register_id;
         end if;
     end if;
@@ -1035,7 +1092,7 @@ begin
 
             insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate)
             values
-                (locals.old_order_id, 1, 7, -locals.old_cash_register_balance, 1, 'none', 0);
+                (locals.old_order_id, 0, 7, -locals.old_cash_register_balance, 1, 'none', 0);
         end if;
     end if;
 
@@ -1043,13 +1100,19 @@ begin
 end
 $$ language plpgsql;
 
+
+drop trigger if exists handle_till_user_login_trigger on till;
 create trigger handle_till_user_login_trigger
     before update of active_user_id on till
     for each row
     when (OLD.active_user_id is distinct from NEW.active_user_id)
 execute function handle_till_user_login();
 
-create type till_tse_history_type as enum ('register', 'deregister');
+do $$ begin
+    create type till_tse_history_type as enum ('register', 'deregister');
+exception
+    when duplicate_object then null;
+end $$;
 
 -- logs all historic till <-> TSE assignments (as registered with the TSE)
 create table if not exists till_tse_history (
@@ -1067,6 +1130,8 @@ begin
 end;
 $$;
 
+
+drop trigger if exists till_tse_history_deny_update_delete on till_tse_history;
 create trigger till_tse_history_deny_update_delete
 before update or delete on till_tse_history
 for each row execute function deny_in_trigger();
@@ -1166,6 +1231,7 @@ begin
     return NEW;
 end;
 $$ language plpgsql;
+
 
 drop trigger if exists new_order_trigger on ordr;
 create trigger new_order_trigger
@@ -1373,13 +1439,17 @@ end;
 $$ language plpgsql;
 
 
-create type tse_signature_status as enum ('new', 'pending', 'done', 'failure');
-create table tse_signature_status_info (
+do $$ begin
+    create type tse_signature_status as enum ('new', 'pending', 'done', 'failure');
+exception
+    when duplicate_object then null;
+end $$;
+
+create table if not exists tse_signature_status_info (
     enum_value tse_signature_status primary key,
     name text not null,
     description text not null
 );
-
 
 insert into tse_signature_status_info (enum_value, name, description) values
     ('new', 'new', 'Signature request is enqueued'),
@@ -1437,14 +1507,15 @@ begin
 end;
 $$ language plpgsql;
 
+
+drop trigger if exists tse_signature_update_trigger on tse_signature;
 create trigger tse_signature_update_trigger
     before update
     on tse_signature
     for each row
 execute function tse_signature_update_trigger_procedure();
 
-
---TODO: trigger on tse done, then update bon
+-- notify the bon generator about a new job
 create or replace function tse_signature_finished_trigger_procedure()
 returns trigger as $$
 begin
@@ -1455,6 +1526,8 @@ begin
 end;
 $$ language plpgsql;
 
+
+drop trigger if exists tse_signature_finished_trigger on till;
 create trigger tse_signature_finished_trigger
     after update of signature_status
     on tse_signature

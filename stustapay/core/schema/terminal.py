@@ -10,8 +10,14 @@ class Terminal(BaseModel):
     till: Till
 
 
+class UserTagSecret(BaseModel):
+    key0: str
+    key1: str
+
+
 class TerminalSecrets(BaseModel):
     sumup_affiliate_key: str
+    user_tag_secret: UserTagSecret
 
 
 class TerminalButton(BaseModel):
@@ -33,7 +39,6 @@ class TerminalConfig(BaseModel):
     allow_top_up: bool
     allow_cash_out: bool
     allow_ticket_sale: bool
-    ticket_buttons: Optional[list[TerminalButton]]
     buttons: Optional[list[TerminalButton]]
     secrets: Optional[TerminalSecrets]
 

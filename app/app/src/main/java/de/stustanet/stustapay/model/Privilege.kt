@@ -33,6 +33,9 @@ enum class Privilege {
     @SerialName("order_management")
     order_management,
 
+    @SerialName("festival_overview")
+    festival_overview,
+
     // festival workflow privileges
     @SerialName("terminal_login")
     terminal_login,

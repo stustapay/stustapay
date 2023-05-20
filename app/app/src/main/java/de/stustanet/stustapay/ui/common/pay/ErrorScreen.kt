@@ -27,14 +27,16 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ErrorScreen(
     onDismiss: () -> Unit,
-    topBarTitle: String,
+    topBarTitle: String? = null,
     content: @Composable () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(topBarTitle) })
+            if (topBarTitle != null) {
+                TopAppBar(title = { Text(topBarTitle) })
+            }
         },
         content = { padding ->
             Box(

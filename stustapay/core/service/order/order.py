@@ -179,6 +179,10 @@ async def fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[Or
     return Order.parse_obj(row)
 
 
+async def fetch_max_account_balance(*, conn: asyncpg.Connection) -> float:
+    return await conn.fetchval("select value::double precision from config where key = 'max_account_balance'")
+
+
 class OrderService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -199,10 +203,7 @@ class OrderService(DBService):
         for queue in self.admin_order_update_queues:
             queue.queue.put_nowait(order)
 
-    async def _handle_order_update(self, payload: Optional[str]):
-        if payload is None:
-            return
-
+    async def _handle_order_update(self, payload: str):
         try:
             json_payload = json.loads(payload)
             async with self.db_pool.acquire() as conn:
@@ -317,9 +318,12 @@ class OrderService(DBService):
 
         return line_items
 
-    async def _fetch_customer_by_user_tag(self, conn: asyncpg.Connection, customer_tag_uid: int) -> Account:
+    @staticmethod
+    async def _fetch_customer_by_user_tag(*, conn: asyncpg.Connection, customer_tag_uid: int) -> Account:
         customer = await conn.fetchrow(
-            "select a.*, t.restriction from user_tag t join account_with_history a on t.uid = a.user_tag_uid where t.uid = $1",
+            "select a.*, t.restriction "
+            "from user_tag t join account_with_history a on t.uid = a.user_tag_uid "
+            "where t.uid = $1 and a.type = 'private'",
             customer_tag_uid,
         )
         if customer is None:
@@ -347,10 +351,6 @@ class OrderService(DBService):
         if new_topup.amount <= 1.00:
             raise InvalidArgument("Minimum TopUp is 1.00€")
 
-        max_limit = 150.00
-        if new_topup.amount > max_limit:
-            raise InvalidArgument(f"Maximum TopUp amount is {max_limit:.02f}€")
-
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_topup.uuid)
         if uuid_exists:
             raise InvalidArgument("This order has already been booked, duplicate order uuid")
@@ -359,11 +359,12 @@ class OrderService(DBService):
             conn=conn, customer_tag_uid=new_topup.customer_tag_uid
         )
 
+        max_limit = await fetch_max_account_balance(conn=conn)
         new_balance = customer_account.balance + new_topup.amount
         if new_balance > max_limit:
             too_much = new_balance - max_limit
             raise InvalidArgument(
-                f"More than {max_limit:.02f}€ on account is disallowed! "
+                f"More than {max_limit:.02f}€ on accounts is disallowed! "
                 f"New balance would be {new_balance:.02f}€, which is {too_much:.02f}€ too much."
             )
 
@@ -495,6 +496,19 @@ class OrderService(DBService):
             raise NotEnoughFundsException(needed_fund=order.total_price, available_fund=customer_account.balance)
         order.new_balance = customer_account.balance - order.total_price
 
+        max_limit = await fetch_max_account_balance(conn=conn)
+        if order.new_balance > max_limit:
+            too_much = order.new_balance - max_limit
+            raise InvalidArgument(
+                f"More than {max_limit:.02f}€ on accounts is disallowed! "
+                f"New balance would be {order.new_balance:.02f}€, which is {too_much:.02f}€ too much."
+            )
+
+        if order.new_balance < 0:
+            raise InvalidArgument(
+                f"Account balance would be less than 0€. New balance would be {order.new_balance:.02f}€"
+            )
+
         return order
 
     @with_retryable_db_transaction()
@@ -512,18 +526,16 @@ class OrderService(DBService):
             new_sale=new_sale,
         )
 
-        line_items = []
-
-        for line_item in pending_sale.line_items:
-            line_items.append(
-                NewLineItem(
-                    quantity=line_item.quantity,
-                    product_id=line_item.product.id,
-                    product_price=line_item.product_price,
-                    tax_name=line_item.tax_name,
-                    tax_rate=line_item.tax_rate,
-                )
+        line_items = [
+            NewLineItem(
+                quantity=line_item.quantity,
+                product_id=line_item.product.id,
+                product_price=line_item.product_price,
+                tax_name=line_item.tax_name,
+                tax_rate=line_item.tax_rate,
             )
+            for line_item in pending_sale.line_items
+        ]
 
         # combine booking based on (source, target) -> amount
         bookings: Dict[BookingIdentifier, float] = defaultdict(lambda: 0.0)

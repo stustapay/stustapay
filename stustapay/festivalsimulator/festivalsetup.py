@@ -10,8 +10,8 @@ from pathlib import Path
 import asyncpg
 
 from stustapay.administration.server import Api as AdminApi
-from stustapay.bon.generator import Generator
 from stustapay.bon.config import read_config as read_bon_config
+from stustapay.bon.generator import Generator
 from stustapay.core.config import Config
 from stustapay.core.database import create_db_pool, rebuild_with
 from stustapay.core.schema.till import NewTill, NewCashRegisterStocking, NewCashRegister
@@ -61,12 +61,6 @@ class FestivalSetup(SubCommand):
 
         self.db_pool = None
 
-        self.n_tills = (
-            self.args.n_entry_tills + self.args.n_topup_tills + self.args.n_beer_tills + self.args.n_cocktail_tills
-        )
-
-        self.n_cashiers = self.n_tills
-
     @staticmethod
     def argparse_register(subparser: argparse.ArgumentParser):
         subparser.add_argument(
@@ -75,11 +69,6 @@ class FestivalSetup(SubCommand):
             help="number of tags to create",
             default=str(Path(__file__).parent.parent.parent / "etc" / "tse.yaml"),
         )
-        subparser.add_argument("--n-tags", type=int, help="number of tags to create", default=1000)
-        subparser.add_argument("--n-entry-tills", type=int, help="number of entry tills to create", default=10)
-        subparser.add_argument("--n-topup-tills", type=int, help="number of topup tills to create", default=8)
-        subparser.add_argument("--n-beer-tills", type=int, help="number of beer tills to create", default=20)
-        subparser.add_argument("--n-cocktail-tills", type=int, help="number of cocktail tills to create", default=3)
 
         subparsers = subparser.add_subparsers(dest="action")
         database_parser = subparsers.add_parser("database", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -89,8 +78,20 @@ class FestivalSetup(SubCommand):
             help="Name of .sql file in the 'core/schema/example_data' that contains the initial DB contents",
             default="simulator_data",
         )
+        database_parser.add_argument("--n-tags", type=int, help="number of tags to create", default=1000)
+        database_parser.add_argument("--n-entry-tills", type=int, help="number of entry tills to create", default=10)
+        database_parser.add_argument("--n-topup-tills", type=int, help="number of topup tills to create", default=8)
+        database_parser.add_argument("--n-beer-tills", type=int, help="number of beer tills to create", default=20)
+        database_parser.add_argument(
+            "--n-cocktail-tills", type=int, help="number of cocktail tills to create", default=3
+        )
+        database_parser.add_argument(
+            "--n-cashiers", type=int, help="number of cashiers to create, default is number of tills plus 50%"
+        )
 
-        subparsers.add_parser("start-api")
+        start_api_parser = subparsers.add_parser("start-api")
+        start_api_parser.add_argument("--no-tse", action="store_true")
+        start_api_parser.add_argument("--no-bon", action="store_true")
 
     def run_admin_api(self):
         parser = argparse.ArgumentParser()
@@ -128,6 +129,7 @@ class FestivalSetup(SubCommand):
         parser = argparse.ArgumentParser()
         TseSimulator.argparse_register(parser)
         with empty_sysargs():
+            sys.argv = ["-f"]
             args = parser.parse_args()
         simulator = TseSimulator(args=args, config=self.tse_config)
         asyncio.run(simulator.run())
@@ -144,26 +146,7 @@ class FestivalSetup(SubCommand):
         if self.args.action == "database":
             await self.setup()
         elif self.args.action == "start-api":
-            admin_api_thread = threading.Thread(target=self.run_admin_api)
-            terminal_api_thread = threading.Thread(target=self.run_terminal_api)
-            customer_api_thread = threading.Thread(target=self.run_customer_api)
-            bon_generator_thread = threading.Thread(target=self.run_bon_generator)
-            signature_processor_thread = threading.Thread(target=self.run_tse_signature_processor)
-            tse_simulator_thread = threading.Thread(target=self.run_tse_simulator)
-
-            admin_api_thread.start()
-            terminal_api_thread.start()
-            customer_api_thread.start()
-            bon_generator_thread.start()
-            signature_processor_thread.start()
-            tse_simulator_thread.start()
-
-            admin_api_thread.join()
-            terminal_api_thread.join()
-            customer_api_thread.join()
-            bon_generator_thread.join()
-            signature_processor_thread.join()
-            tse_simulator_thread.join()
+            await self.start()
         else:
             self.logger.error(f"Unknown action: {self.args.action}")
 
@@ -173,8 +156,8 @@ class FestivalSetup(SubCommand):
         for i in range(self.args.n_tags):
             await conn.execute("insert into user_tag (uid, pin) values ($1, $2)", i + CUSTOMER_TAG_START, "pin")
 
-    async def _create_tills(self, admin_token: str, till_service: TillService):
-        self.logger.info(f"Creating {self.n_tills} tills")
+    async def _create_tills(self, admin_token: str, till_service: TillService, n_tills: int):
+        self.logger.info(f"Creating {n_tills} tills")
         for i in range(self.args.n_topup_tills):
             await till_service.create_till(
                 token=admin_token,
@@ -195,7 +178,7 @@ class FestivalSetup(SubCommand):
                 token=admin_token,
                 till=NewTill(name=f"Cocktailkasse {i}", active_profile_id=PROFILE_ID_COCKTAIL),
             )
-        for i in range(self.n_tills):
+        for i in range(n_tills):
             await till_service.register.create_cash_register(
                 token=admin_token, new_register=NewCashRegister(name=f"Blechkasse {i}")
             )
@@ -204,11 +187,11 @@ class FestivalSetup(SubCommand):
             token=admin_token, stocking=NewCashRegisterStocking(name="Stocking", euro20=2, euro10=1)
         )
 
-    async def _create_cashiers(self, user_service: UserService):
+    async def _create_cashiers(self, user_service: UserService, n_cashiers: int):
         assert self.db_pool is not None
 
-        self.logger.info(f"Creating {self.n_cashiers} cashiers")
-        for i in range(self.n_cashiers):
+        self.logger.info(f"Creating {n_cashiers} cashiers")
+        for i in range(n_cashiers):
             cashier_tag_uid = await self.db_pool.fetchval(
                 "insert into user_tag (uid) values ($1) returning uid", i + CASHIER_TAG_START
             )
@@ -228,6 +211,10 @@ class FestivalSetup(SubCommand):
 
         self.db_pool = await create_db_pool(self.config.database)
         await rebuild_with(self.db_pool, db_init_file)
+        n_tills = (
+            self.args.n_entry_tills + self.args.n_topup_tills + self.args.n_beer_tills + self.args.n_cocktail_tills
+        )
+        n_cashiers = max(int(n_tills * 1.5), self.args.n_cashiers or 0)
 
         await self._create_tags()  # pylint: disable=no-value-for-parameter
         auth_service = AuthService(db_pool=self.db_pool, config=self.config)
@@ -236,5 +223,34 @@ class FestivalSetup(SubCommand):
         admin_login = await user_service.login_user(username="admin", password="admin")  # pylint: disable=missing-kwoa
         assert admin_login is not None
         admin_token = admin_login.token
-        await self._create_tills(admin_token=admin_token, till_service=till_service)
-        await self._create_cashiers(user_service=user_service)
+        await self._create_tills(admin_token=admin_token, till_service=till_service, n_tills=n_tills)
+        await self._create_cashiers(user_service=user_service, n_cashiers=n_cashiers)
+
+    async def start(self):
+        admin_api_thread = threading.Thread(target=self.run_admin_api)
+        terminal_api_thread = threading.Thread(target=self.run_terminal_api)
+        customer_api_thread = threading.Thread(target=self.run_customer_api)
+        threads = [admin_api_thread, terminal_api_thread, customer_api_thread]
+        if not self.args.no_bon:
+            bon_generator_thread = threading.Thread(target=self.run_bon_generator)
+            bon_generator_thread.start()
+            threads.append(bon_generator_thread)
+
+        if not self.args.no_tse:
+            signature_processor_thread = threading.Thread(target=self.run_tse_signature_processor)
+            tse_simulator_thread = threading.Thread(target=self.run_tse_simulator)
+            signature_processor_thread.start()
+            tse_simulator_thread.start()
+            threads.append(tse_simulator_thread)
+            threads.append(signature_processor_thread)
+
+        admin_api_thread.start()
+        terminal_api_thread.start()
+        customer_api_thread.start()
+
+        admin_api_thread.join()
+        terminal_api_thread.join()
+        customer_api_thread.join()
+
+        for thread in threads:
+            thread.join()
