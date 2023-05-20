@@ -36,7 +36,7 @@ class DBHook:
         assert inspect.iscoroutinefunction(event_handler)
         self.initial_run = initial_run
 
-        self.events: asyncio.Queue[Union[str, Type[StopIteration]]] = asyncio.Queue(maxsize=256)
+        self.events: asyncio.Queue[Union[str, Type[StopIteration]]] = asyncio.Queue(maxsize=2048)
         self.logger = logging.getLogger(__name__)
 
         self.hooks_active = False

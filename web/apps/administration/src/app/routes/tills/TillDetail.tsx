@@ -1,16 +1,4 @@
-import {
-  Paper,
-  ListItem,
-  IconButton,
-  Typography,
-  ListItemText,
-  List,
-  Checkbox,
-  Tooltip,
-  Box,
-  Button,
-  Stack,
-} from "@mui/material";
+import { Paper, ListItem, IconButton, ListItemText, List, Checkbox, Tooltip, Box, Button, Stack } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink, OrderTable } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import * as React from "react";
@@ -26,6 +14,8 @@ import {
   selectUserById,
   useGetUsersQuery,
   useForceLogoutUserMutation,
+  useGetTillProfilesQuery,
+  selectTillProfileById,
 } from "@api";
 import { Loading } from "@stustapay/components";
 import QRCode from "react-qr-code";
@@ -59,10 +49,11 @@ export const TillDetail: React.FC = () => {
       orders: data ? selectOrderAll(data) : undefined,
     }),
   });
+  const { data: profiles, error: profileError } = useGetTillProfilesQuery();
   const { data: users, error: userError } = useGetUsersQuery();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
-  if (tillError || orderError || userError) {
+  if (tillError || orderError || userError || profileError) {
     toast.error("Error loading tills or orders");
     return <Navigate to="/tills" />;
   }
@@ -106,6 +97,19 @@ export const TillDetail: React.FC = () => {
     return getUserName(user);
   };
 
+  const renderProfile = (id: number) => {
+    if (!profiles) {
+      return "";
+    }
+
+    const profile = selectTillProfileById(profiles, id);
+    if (!profile) {
+      return "";
+    }
+
+    return profile.name;
+  };
+
   const openConfirmLogoutDialog = () => {
     setShowForceLogoutDlg(true);
   };
@@ -143,7 +147,6 @@ export const TillDetail: React.FC = () => {
         >
           <ListItemText primary={till.name} />
         </ListItem>
-        <Typography variant="body1">{}</Typography>
       </Paper>
       <Paper>
         <List>
@@ -159,6 +162,9 @@ export const TillDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("till.tseSerial")} secondary={till.tse_serial} />
           </ListItem>
+          <ListItemLink to={`/till-profiles/${till.active_profile_id}`}>
+            <ListItemText primary={t("till.profile")} secondary={renderProfile(till.active_profile_id)} />
+          </ListItemLink>
           {till.active_user_id != null && (
             <>
               <ListItemLink to={`/cashiers/${till.active_user_id}`}>

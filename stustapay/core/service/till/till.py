@@ -288,6 +288,11 @@ class TillService(DBService):
             current_terminal.till.active_profile_id,
         )
         profile: TillProfile = TillProfile.parse_obj(db_profile)
+        layout_has_tickets = await conn.fetchval(
+            "select exists (select from till_layout_to_ticket tltt where layout_id = $1)", profile.layout_id
+        )
+        allow_ticket_sale = layout_has_tickets and profile.allow_ticket_sale
+
         user_privileges = await conn.fetchval(
             "select privileges from user_with_privileges where id = $1", current_terminal.till.active_user_id
         )
@@ -320,7 +325,7 @@ class TillService(DBService):
             user_privileges=user_privileges,
             allow_top_up=profile.allow_top_up,
             allow_cash_out=profile.allow_cash_out,
-            allow_ticket_sale=profile.allow_ticket_sale,
+            allow_ticket_sale=allow_ticket_sale,
             buttons=buttons,
             secrets=secrets,
             available_roles=available_roles,
@@ -328,10 +333,10 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def get_customer(self, *, conn: asyncpg.Connection, customer_tag_uid: int) -> Optional[Customer]:
+    async def get_customer(self, *, conn: asyncpg.Connection, customer_tag_uid: int) -> Customer:
         customer = await conn.fetchrow(
             "select * from account_with_history a where a.user_tag_uid = $1", customer_tag_uid
         )
         if customer is None:
-            return None
+            raise InvalidArgument(f"Customer with tag uid {customer_tag_uid:x} does not exist")
         return Customer.parse_obj(customer)

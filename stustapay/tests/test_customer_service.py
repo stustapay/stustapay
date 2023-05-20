@@ -43,7 +43,7 @@ class CustomerServiceTest(TerminalTestCase):
         self.uid = 1234
         self.pin = "pin"
         self.account_id = 10
-        self.balance = 1000
+        self.balance = 120
 
         self.bon_path = "test_bon.pdf"
         pc = await self.config_service.get_public_config()
@@ -123,7 +123,7 @@ class CustomerServiceTest(TerminalTestCase):
             {
                 "uid": 12345 * (i + 1),
                 "pin": f"pin{i}",
-                "balance": 1000.321 * i + 0.0012,
+                "balance": 10.321 * i + 0.0012,
                 "iban": "DE89370400440532013000",
                 "account_name": "Rolf",
                 "email": "rolf@lol.de",

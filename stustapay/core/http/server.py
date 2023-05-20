@@ -39,6 +39,7 @@ class Server:
         self.api.add_exception_handler(
             asyncpg.exceptions.IntegrityConstraintViolationError, bad_request_exception_handler
         )
+        self.api.add_exception_handler(asyncpg.exceptions.RaiseError, bad_request_exception_handler)
         self.api.add_exception_handler(Exception, exception_handler)
 
         if cors:

@@ -76,10 +76,13 @@ class Simulator(SubCommand):
             "-b", "--bookings-per-second", type=float, help="number of bookings per second", default=100.0
         )
 
-    def sleep(self, n_tills: int):
-        assert self.n_tills_total is not None
+    def sleep(self):
+        to_sleep = 1.0 / self.args.bookings_per_second
+        to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
+        time.sleep(to_sleep)
 
-        to_sleep = (float(n_tills) / float(self.n_tills_total)) * (1.0 / self.args.bookings_per_second)
+    def sleep_topup(self):
+        to_sleep = 10.0 / self.args.bookings_per_second
         to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
         time.sleep(to_sleep)
 
@@ -155,15 +158,19 @@ class Simulator(SubCommand):
         )
 
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
-            resp = await client.post("/auth/register_terminal", json={"registration_uuid": str(registration_uuid)})
-            if resp.status != 200:
-                self.logger.warning(f"Error registering terminal {resp.status = } payload = {await resp.text()}")
-                raise RuntimeError("foobar")
-            success = TerminalRegistrationSuccess.parse_obj(await resp.json())
-            resp = await client.get("/config", headers={"Authorization": f"Bearer {success.token}"})
-            if resp.status != 200:
-                self.logger.error(f"Error fetching terminal config, { resp.status = }, payload = {await resp.json()}")
-            config = TerminalConfig.parse_obj(await resp.json())
+            async with client.post(
+                "/auth/register_terminal", json={"registration_uuid": str(registration_uuid)}
+            ) as resp:
+                if resp.status != 200:
+                    self.logger.warning(f"Error registering terminal {resp.status = } payload = {await resp.text()}")
+                    raise RuntimeError("foobar")
+                success = TerminalRegistrationSuccess.parse_obj(await resp.json())
+            async with client.get("/config", headers={"Authorization": f"Bearer {success.token}"}) as resp:
+                if resp.status != 200:
+                    self.logger.error(
+                        f"Error fetching terminal config, { resp.status = }, payload = {await resp.json()}"
+                    )
+                config = TerminalConfig.parse_obj(await resp.json())
             return Terminal(token=success.token, till=success.till, config=config)
 
     async def voucher_granting(self):
@@ -171,16 +178,20 @@ class Simulator(SubCommand):
         async with aiohttp.ClientSession(base_url=self.admin_url) as client:
             while True:
                 rows = await db_pool.fetch("select * from account where user_tag_uid is not null")
+                if len(rows) == 0:  # no tickets were sold yet
+                    time.sleep(1)
+                    continue
+
                 r = random.choice([(row["id"], row["vouchers"]) for row in rows])
-                resp = await client.post(
+                async with client.post(
                     f"/accounts/{r[0]}/update-voucher-amount",
                     json={"new_voucher_amount": r[1] + random.randint(1, 8)},
                     headers=self.admin_headers,
-                )
-                if resp.status != 200:
-                    self.logger.warning(
-                        f"Error while updating voucher amount {resp.status = }, payload = {await resp.json()}"
-                    )
+                ) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(
+                            f"Error while updating voucher amount {resp.status = }, payload = {await resp.json()}"
+                        )
 
                 time.sleep(0.3)
 
@@ -199,10 +210,10 @@ class Simulator(SubCommand):
     ) -> bool:
         stocking_id = await db_pool.fetchval("select id from cash_register_stocking limit 1")
         async with aiohttp.ClientSession(base_url=self.base_url, headers=terminal.get_headers()) as client:
-            resp = await client.post(
+            async with client.post(
                 "/user/login", json={"user_tag": {"uid": self.admin_tag_uid}, "user_role_id": ADMIN_ROLE_ID}
-            )
-            assert resp.status == 200
+            ) as resp:
+                assert resp.status == 200
 
             has_cash_register = await db_pool.fetchval(
                 "select exists (select from usr where user_tag_uid = $1 and cash_register_id is not null)",
@@ -214,24 +225,24 @@ class Simulator(SubCommand):
                     self.logger.warning("Did not find enough cash registers to stock all cashiers")
                     return False
                 register_id = random.choice(cash_register_ids)
-                resp = await client.post(
+                async with client.post(
                     "/stock-up-cash-register",
                     json={
                         "cashier_tag_uid": cashier_tag_uid,
                         "register_stocking_id": stocking_id,
                         "cash_register_id": register_id,
                     },
-                )
-                if resp.status != 200:
-                    self.logger.warning(
-                        f"Error while stocking up cashier {resp.status = }, payload = {await resp.json()}"
-                    )
-                assert resp.status == 200
+                ) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(
+                            f"Error while stocking up cashier {resp.status = }, payload = {await resp.json()}"
+                        )
+                    assert resp.status == 200
 
-            resp = await client.post(
+            async with client.post(
                 "/user/login", json={"user_tag": {"uid": cashier_tag_uid}, "user_role_id": CASHIER_ROLE_ID}
-            )
-            assert resp.status == 200
+            ) as resp:
+                assert resp.status == 200
 
             return True
 
@@ -268,17 +279,17 @@ class Simulator(SubCommand):
     async def _preform_cashier_close_out(self, cashier_id: int) -> bool:
         async with aiohttp.ClientSession(base_url=self.admin_url) as client:
             self.logger.info(f"Closing out cashier with id {cashier_id = }")
-            resp = await client.get(f"/cashiers/{cashier_id}", headers=self.admin_headers)
-            if resp.status != 200:
-                self.logger.info(
-                    f"Failed to get cashier detail for {cashier_id = }, {resp.status = } payload = {await resp.json()}"
-                )
-                return False
+            async with client.get(f"/cashiers/{cashier_id}", headers=self.admin_headers) as resp:
+                if resp.status != 200:
+                    self.logger.info(
+                        f"Failed to get cashier detail for {cashier_id = }, {resp.status = } payload = {await resp.json()}"
+                    )
+                    return False
 
-            drawer_balance = (await resp.json())["cash_drawer_balance"]
-            if drawer_balance == 0:
-                self.logger.info(f"Skipping cashier close out ({cashier_id = }) since drawer balance is zero")
-                return True
+                drawer_balance = (await resp.json())["cash_drawer_balance"]
+                if drawer_balance == 0:
+                    self.logger.info(f"Skipping cashier close out ({cashier_id = }) since drawer balance is zero")
+                    return True
 
             payload = {
                 "comment": "some shift this was",
@@ -286,28 +297,30 @@ class Simulator(SubCommand):
                 + round(random.uniform(-drawer_balance * 0.1, drawer_balance * 0.1)),
                 "closing_out_user_id": random.randint(1, 5),  # one of 5 finanzorgas
             }
-            resp = await client.post(f"/cashiers/{cashier_id}/close-out", json=payload, headers=self.admin_headers)
-            if resp.status != 200:
-                self.logger.warning(f"Closing out cashier failed: {resp.status = }, payload = {await resp.json()}")
-                return False
+            async with client.post(
+                f"/cashiers/{cashier_id}/close-out", json=payload, headers=self.admin_headers
+            ) as resp:
+                if resp.status != 200:
+                    self.logger.warning(f"Closing out cashier failed: {resp.status = }, payload = {await resp.json()}")
+                    return False
 
             return True
 
     async def perform_cashier_shift_change(self, db_pool: asyncpg.Pool, terminal: Terminal, perform_close_out=False):
         with self.cashier_lock:
             async with aiohttp.ClientSession(base_url=self.base_url) as client:
-                resp = await client.get("/user", headers=terminal.get_headers())
-                if resp.status != 200:
-                    self.logger.warning(
-                        f"Current user fetching failed, {resp.status = }, payload = {await resp.json()}"
-                    )
-                    return
-                cashier_id = (await resp.json())["id"]
+                async with client.get("/user", headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(
+                            f"Current user fetching failed, {resp.status = }, payload = {await resp.json()}"
+                        )
+                        return
+                    cashier_id = (await resp.json())["id"]
 
-                resp = await client.post("/user/logout", headers=terminal.get_headers())
-                if resp.status != 204:
-                    self.logger.warning(f"Terminal log out failed, {resp.status = }, payload = {await resp.json()}")
-                    return
+                async with client.post("/user/logout", headers=terminal.get_headers()) as resp:
+                    if resp.status != 204:
+                        self.logger.warning(f"Terminal log out failed, {resp.status = }, payload = {await resp.json()}")
+                        return
 
                 if perform_close_out:
                     await self._preform_cashier_close_out(cashier_id=cashier_id)
@@ -332,7 +345,7 @@ class Simulator(SubCommand):
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
             while True:
                 terminal = random.choice(terminals)
-                self.sleep(n_tills=len(terminals))
+                self.sleep()
                 n_customers = random.randint(1, 3)
                 user_tags = await self.get_free_tags(db_pool=db_pool, limit=n_customers)
                 if len(user_tags) == 0:
@@ -344,14 +357,20 @@ class Simulator(SubCommand):
                     "payment_method": "cash",
                     "customer_tag_uids": user_tags,
                 }
-                resp = await client.post("/order/check-ticket-sale", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    self.logger.warning(f"Error in check ticket sale, { resp.status = }, payload = {await resp.json()}")
-                    continue
-                resp = await client.post("/order/book-ticket-sale", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    self.logger.warning(f"Error in book ticket sale, { resp.status = }, payload = {await resp.json()}")
-                    continue
+                async with client.post(
+                    "/order/check-ticket-sale", json=payload, headers=terminal.get_headers()
+                ) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(
+                            f"Error in check ticket sale, { resp.status = }, payload = {await resp.json()}"
+                        )
+                        continue
+                async with client.post("/order/book-ticket-sale", json=payload, headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(
+                            f"Error in book ticket sale, { resp.status = }, payload = {await resp.json()}"
+                        )
+                        continue
 
                 if random.randint(0, 100) == 0:
                     await self.perform_cashier_shift_change(db_pool=db_pool, terminal=terminal, perform_close_out=True)
@@ -367,7 +386,7 @@ class Simulator(SubCommand):
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
             while True:
                 terminal = random.choice(terminals)
-                self.sleep(n_tills=len(terminals))
+                self.sleep_topup()
                 customer_tags = await self.get_customer_tags(db_pool=db_pool)
                 if len(customer_tags) == 0:
                     continue
@@ -384,17 +403,19 @@ class Simulator(SubCommand):
                     "payment_method": "cash",
                     "amount": random.randint(10, 50),
                 }
-                resp = await client.post("/order/check-topup", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    if "More than" not in await resp.text():
-                        self.logger.warning(f"Error in check topup, { resp.status = }, payload = {await resp.json()}")
-                    self.unlock_customer(customer_tag_uid)
-                    continue
-                resp = await client.post("/order/book-topup", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    self.logger.warning(f"Error in book topup, { resp.status = }, payload = {await resp.json()}")
-                    self.unlock_customer(customer_tag_uid)
-                    continue
+                async with client.post("/order/check-topup", json=payload, headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        if "More than" not in await resp.text():
+                            self.logger.warning(
+                                f"Error in check topup, { resp.status = }, payload = {await resp.json()}"
+                            )
+                        self.unlock_customer(customer_tag_uid)
+                        continue
+                async with client.post("/order/book-topup", json=payload, headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(f"Error in book topup, { resp.status = }, payload = {await resp.json()}")
+                        self.unlock_customer(customer_tag_uid)
+                        continue
                 self.unlock_customer(customer_tag_uid)
 
                 if random.randint(0, 100) == 0:
@@ -416,7 +437,7 @@ class Simulator(SubCommand):
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
             while True:
                 terminal: Terminal = random.choice(terminals)
-                self.sleep(n_tills=len(terminals))
+                self.sleep()
 
                 customer_tags = await self.get_customer_tags(db_pool=db_pool)
                 if len(customer_tags) == 0:
@@ -433,17 +454,19 @@ class Simulator(SubCommand):
                     "customer_tag_uid": customer_tag_uid,
                     "buttons": terminal.get_random_button_selection(),
                 }
-                resp = await client.post("/order/check-sale", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    if "Not enough funds" not in await resp.text():
-                        self.logger.warning(f"Error in check sale, { resp.status = }, payload = {await resp.json()}")
-                    self.unlock_customer(customer_tag_uid)
-                    continue
-                resp = await client.post("/order/book-sale", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    self.logger.warning(f"Error in book sale, { resp.status = }, payload = {await resp.json()}")
-                    self.unlock_customer(customer_tag_uid)
-                    continue
+                async with client.post("/order/check-sale", json=payload, headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        if "Not enough funds" not in await resp.text():
+                            self.logger.warning(
+                                f"Error in check sale, { resp.status = }, payload = {await resp.json()}"
+                            )
+                        self.unlock_customer(customer_tag_uid)
+                        continue
+                async with client.post("/order/book-sale", json=payload, headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(f"Error in book sale, { resp.status = }, payload = {await resp.json()}")
+                        self.unlock_customer(customer_tag_uid)
+                        continue
                 self.unlock_customer(customer_tag_uid)
 
                 if random.randint(0, 100) == 0:
@@ -451,10 +474,10 @@ class Simulator(SubCommand):
 
     async def login_admin(self) -> str:
         async with aiohttp.ClientSession(base_url=self.admin_url) as client:
-            resp = await client.post("/auth/login", data={"username": "admin", "password": "admin"})
-            if resp.status != 200:
-                raise RuntimeError("Error trying to log in admin user")
-            payload = await resp.json()
+            async with client.post("/auth/login", data={"username": "admin", "password": "admin"}) as resp:
+                if resp.status != 200:
+                    raise RuntimeError("Error trying to log in admin user")
+                payload = await resp.json()
             return payload["access_token"]
 
     async def run(self):

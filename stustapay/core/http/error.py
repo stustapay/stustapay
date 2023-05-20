@@ -4,9 +4,6 @@ from fastapi.responses import JSONResponse
 from stustapay.core.service.common.error import NotFound, ServiceException, AccessDenied, Unauthorized
 
 
-# these exception messages are parsed in the frontends
-
-
 def not_found_exception_handler(request: Request, exc: NotFound):
     del request
     return JSONResponse(
