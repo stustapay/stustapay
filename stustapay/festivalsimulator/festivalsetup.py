@@ -131,6 +131,7 @@ class FestivalSetup(SubCommand):
         parser = argparse.ArgumentParser()
         TseSimulator.argparse_register(parser)
         with empty_sysargs():
+            sys.argv = ["-f"]
             args = parser.parse_args()
         simulator = TseSimulator(args=args, config=self.tse_config)
         asyncio.run(simulator.run())
