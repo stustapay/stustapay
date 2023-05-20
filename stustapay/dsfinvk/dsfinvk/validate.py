@@ -36,8 +36,8 @@ def validate_files(filemap):
 
             try:
                 validate_table(filemap[url], table)
-            except ValidationException as e:
-                errors.append("{}: {}".format(url, str(e)))
+            except ValidationException as exce:
+                errors.append("{}: {}".format(url, str(exce)))
     return errors
 
 
@@ -56,7 +56,7 @@ def validate_table(f, table):
 
     if range_start != 2:
         raise ValidationException(
-            "Range is != [2, End], this is not technically invalid but prevents " "column header validation."
+            "Range is != [2, End], this is not technically invalid but prevents ' ' column header validation."
         )
 
     if table.findall("./FixedLength"):
@@ -111,7 +111,8 @@ def validate_table(f, table):
                     elif c.findall("./Date"):
                         raise ValidationException("Date validation currently not supported")
                     else:
-                        raise ValidationException("Unsupported data type for column {}".format(j=j + 1))
+                        j = j + 1
+                        raise ValidationException("Unsupported data type for column {}".format(j))
 
 
 def validate_dir(dirname):

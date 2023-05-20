@@ -1,14 +1,13 @@
 import contextlib
-import functools
 import logging
-
+from typing import Dict
 import asyncpg
 
-from ..core.subcommand import SubCommand
-from .config import Config
+# from ..core.subcommand import SubCommand
+# from .config import Config
 
-from stustapay.core.database import create_db_pool
-from stustapay.core.service.common.dbhook import DBHook
+# from stustapay.core.database import create_db_pool
+# from stustapay.core.service.common.dbhook import DBHook
 
 from datetime import datetime, timezone
 from dateutil import parser
@@ -16,7 +15,7 @@ from decimal import Decimal
 
 import json
 
-import pytz
+# import pytz
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import (
     Stamm_Abschluss,
@@ -33,7 +32,6 @@ from .dsfinvk.models import (
     Bonkopf_Zahlarten,
     Bonpos,
     Bonpos_USt,
-    Bonpos_Preisfindung,
 )
 
 from ..tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
@@ -67,7 +65,9 @@ class Generator:
         self.c = Collection()
         self.simulate = simulate
         self.starttime = time.monotonic()
-        self.GV_SUMME = dict()  # aufsummierte Geschäftsvorfalltypen
+        self.GV_SUMME: Dict = dict()  # aufsummierte Geschäftsvorfalltypen
+        self.systemconfig: Dict = dict()
+        self._conn: asyncpg.Connection = None
 
     async def run(self, db_pool: asyncpg.Pool):
         async with contextlib.AsyncExitStack() as es:
@@ -129,7 +129,7 @@ class Generator:
             Z_NR,
         ):
             if row["signature_status"] == "new" or row["signature_status"] == "pending":
-                LOGGER.warn("Nicht Signierte Transaktion, wird nicht exportiert")
+                LOGGER.warning("Nicht Signierte Transaktion, wird nicht exportiert")
                 continue  # signatur noch nicht fertig
 
             a = Bonkopf()
@@ -251,16 +251,26 @@ class Generator:
 
                     else:
                         gvtyp = "MehrzweckgutscheinEinloesung"
+                elif row["order_type"] == "ticket":
+                    if item["product"]["name"].startswith(
+                        "Eintritt"
+                    ):  # TODO Eintritt kann nicht anders benannt werden, muss evtl noch spezielles Flag bekommen
+                        gvtyp = "Umsatz"  # Eintritt
+                    elif (
+                        item["product"]["name"] == "Aufladen"
+                    ):  # TODO besser noch, alle Aufladeoperationen bekommen ein bestimmtes Flag
+                        gvtyp = "MehrzweckgutscheinKauf"
+
                 else:
                     gvtyp = "Umsatz"  # alles andere
 
                 self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]])].Brutto += Decimal(
                     item["total_price"]
                 )
-                self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]])].Netto += Decimal(
+                self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]])].USt += Decimal(
                     item["total_tax"]
                 )
-                self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]])].USt += Decimal(
+                self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]])].Netto += Decimal(
                     item["total_price"]
                 ) - Decimal(item["total_tax"])
                 e.GV_TYP = gvtyp
@@ -405,7 +415,7 @@ class Generator:
             LOGGER.error(
                 f"Zertifikat zu lang. Länge: {len(row['tse_certificate'])} Zeichen. Maximal unterstützt: 2000 Zeichen"
             )
-            raise NotImplemented
+            raise NotImplementedError
 
         self.c.add(a)
         ### \tse.csv ###

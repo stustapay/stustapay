@@ -1,5 +1,3 @@
-import contextlib
-import functools
 import logging
 
 import asyncpg
@@ -8,7 +6,6 @@ from ..core.subcommand import SubCommand
 from .config import Config
 
 from stustapay.core.database import create_db_pool
-from stustapay.core.service.common.dbhook import DBHook
 
 from .generator import Generator
 
@@ -23,10 +20,10 @@ class Exporter(SubCommand):
             "-f", "--filename", default="dsfinV_k.zip", help="Filename of export ZIP. Default: %(default)s"
         )
         subparser.add_argument(
-            "--xml", default="./stustapay/DSFinV-K/assets/index.xml", help="index.xml file to include"
+            "--xml", default="./stustapay/dsfinvk/assets/index.xml", help="index.xml file to include"
         )
         subparser.add_argument(
-            "--dtd", default="./stustapay/DSFinV-K/assets/gdpdu-01-09-2004.dtd", help="*.dtd file to include"
+            "--dtd", default="./stustapay/dsfinvk/assets/gdpdu-01-09-2004.dtd", help="*.dtd file to include"
         )
         subparser.add_argument("-s", "--simulate", default=False, action="store_true", help="don't export file")
 

@@ -10,6 +10,7 @@ class Field:
         self.required = required
         self.default = default
         self.__doc__ = _d
+        self.name = ''
         super().__init__()
 
     def __get__(self, instance, objtype):
