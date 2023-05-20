@@ -219,7 +219,8 @@ class OrderLogicTest(TerminalTestCase):
         self.assertIsNotNone(completed_sale)
         order: Order = await self.order_service.get_order(token=self.admin_token, order_id=completed_sale.id)
         self.assertIsNotNone(order)
-        await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, expected_balance=order.total_price)
+        await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, expected_balance=2 * self.beer_product.price)
+        await self._assert_account_balance(account_id=ACCOUNT_DEPOSIT, expected_balance=2 * self.deposit_product.price)
 
         # test that we can cancel this order
         success = await self.order_service.cancel_sale(token=self.terminal_token, order_id=order.id)
@@ -228,6 +229,7 @@ class OrderLogicTest(TerminalTestCase):
         self.assertIsNotNone(customer)
         self.assertEqual(starting_balance, customer.balance)
         await self._assert_account_balance(account_id=ACCOUNT_SALE_EXIT, expected_balance=0)
+        await self._assert_account_balance(account_id=ACCOUNT_DEPOSIT, expected_balance=0)
 
         # after logging out a user with bookings the z_nr should not be incremented
         await self.till_service.logout_user(token=self.terminal_token)
