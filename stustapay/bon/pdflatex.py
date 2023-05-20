@@ -23,7 +23,7 @@ LatexEncoder = UnicodeToLatexEncoder(
                 (re.compile(r"\n"), r"\\\\"),
                 # remove nullbytes
                 (re.compile("\0"), r""),
-                (re.compile("\^"), r"\^"),
+                (re.compile(r"\^"), r"\^"),
             ],
         ),
         "defaults",
