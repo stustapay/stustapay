@@ -526,18 +526,16 @@ class OrderService(DBService):
             new_sale=new_sale,
         )
 
-        line_items = []
-
-        for line_item in pending_sale.line_items:
-            line_items.append(
-                NewLineItem(
-                    quantity=line_item.quantity,
-                    product_id=line_item.product.id,
-                    product_price=line_item.product_price,
-                    tax_name=line_item.tax_name,
-                    tax_rate=line_item.tax_rate,
-                )
+        line_items = [
+            NewLineItem(
+                quantity=line_item.quantity,
+                product_id=line_item.product.id,
+                product_price=line_item.product_price,
+                tax_name=line_item.tax_name,
+                tax_rate=line_item.tax_rate,
             )
+            for line_item in pending_sale.line_items
+        ]
 
         # combine booking based on (source, target) -> amount
         bookings: Dict[BookingIdentifier, float] = defaultdict(lambda: 0.0)

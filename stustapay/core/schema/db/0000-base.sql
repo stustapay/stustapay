@@ -110,26 +110,29 @@ values
     -- todo: cash_drawer, deposit,
     on conflict do nothing;
 
-create or replace function check_account_balance(
-    type text,
-    balance numeric
-) returns boolean as
+create or replace function check_account_balance() returns trigger as
 $$
 <<locals>> declare
+    new_balance numeric;
     max_balance numeric;
 begin
     select value::numeric into locals.max_balance from config where key = 'max_account_balance';
 
-    if check_account_balance.type = 'private' and check_account_balance.balance > locals.max_balance then
+    -- Since this constraint function runs at the end of a db transaction we need to fetch the current balance
+    -- from the table manually. If we were to use NEW.balance we'd still have the old balance at the time of
+    -- the insert / update.
+    select balance into locals.new_balance from account where id = NEW.id;
+
+    if NEW.type = 'private' and locals.new_balance > locals.max_balance then
         raise 'Customers can have a maximum balance of at most %. New balance would be %.',
-            locals.max_balance, check_account_balance.balance;
+            locals.max_balance, locals.new_balance;
     end if;
 
-    if check_account_balance.type = 'private' and check_account_balance.balance < 0 then
-        raise 'Customers cannot have a negative balance. New balance would be %.', check_account_balance.balance;
+    if NEW.type = 'private' and locals.new_balance < 0 then
+        raise 'Customers cannot have a negative balance. New balance would be %.', locals.new_balance;
     end if;
 
-    return true;
+    return NEW;
 end
 $$ language plpgsql;
 
@@ -144,12 +147,18 @@ create table if not exists account (
     -- current balance, updated on each transaction
     balance numeric not null default 0,
     -- current number of vouchers, updated on each transaction
-    vouchers bigint not null default 0,
-
-    constraint max_balance_limited check(check_account_balance(type, balance))
+    vouchers bigint not null default 0
 
     -- todo: topup-config
 );
+
+-- we need to use a constraint trigger for the balance check as normal table level check constraints do not support
+-- the deferrable initially deferred setting
+create constraint trigger max_balance_limited
+ after insert or update on account
+ deferrable initially deferred
+ for each row execute function check_account_balance();
+
 insert into account (
     id, user_tag_uid, type, name, comment
 ) overriding system value

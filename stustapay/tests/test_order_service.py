@@ -7,6 +7,7 @@ from stustapay.core.schema.account import (
     ACCOUNT_SUMUP,
     ACCOUNT_CASH_EXIT,
     ACCOUNT_CASH_SALE_SOURCE,
+    ACCOUNT_DEPOSIT,
 )
 from stustapay.core.schema.order import (
     NewSale,
@@ -106,7 +107,7 @@ class OrderLogicTest(TerminalTestCase):
                 price=2,
                 fixed_price=True,
                 tax_name="none",
-                target_account_id=None,
+                target_account_id=ACCOUNT_DEPOSIT,
                 is_locked=True,
                 is_returnable=True,
             ),
@@ -263,14 +264,20 @@ class OrderLogicTest(TerminalTestCase):
         self.assertEqual(pending_sale.total_price, -self.deposit_product.price)
 
     async def test_basic_sale_flow_with_deposit(self):
+        # this test also checks if we can temporarily go below 0 balance due to different account bookings
+        start_balance = self.beer_product.price * 5.0 - self.deposit_product.price / 2.0
+        await self.db_conn.execute(
+            "update account set balance = $1 where id = $2", start_balance, self.customer_account_id
+        )
+        sale_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_SALE_EXIT)
+        deposit_start_balance = await self._get_account_balance(account_id=ACCOUNT_DEPOSIT)
         new_sale = NewSale(
             uuid=uuid.uuid4(),
             buttons=[
                 Button(till_button_id=self.beer_button.id, quantity=3),
                 Button(till_button_id=self.beer_button.id, quantity=2),
                 Button(till_button_id=self.deposit_button.id, quantity=-1),
-                Button(till_button_id=self.deposit_button.id, quantity=-1),
-                Button(till_button_id=self.deposit_button.id, quantity=-2),
+                Button(till_button_id=self.deposit_button.id, quantity=-5),
             ],
             customer_tag_uid=self.customer_uid,
         )
@@ -278,15 +285,26 @@ class OrderLogicTest(TerminalTestCase):
             token=self.terminal_token,
             new_sale=new_sale,
         )
-        self.assertEqual(pending_sale.old_balance, START_BALANCE)
+        self.assertEqual(pending_sale.old_balance, start_balance)
         # our initial order gets aggregated into one line item for beer and one for deposit
         self.assertEqual(len(pending_sale.line_items), 2)
-        self.assertEqual(pending_sale.total_price, 5 * self.beer_product.price + self.deposit_product.price)
-        self.assertEqual(pending_sale.new_balance, START_BALANCE - pending_sale.total_price)
+        self.assertEqual(pending_sale.total_price, 5 * self.beer_product.price - self.deposit_product.price)
+        self.assertEqual(pending_sale.new_balance, start_balance - pending_sale.total_price)
         completed_sale = await self.order_service.book_sale(token=self.terminal_token, new_sale=new_sale)
         self.assertIsNotNone(completed_sale)
 
+        await self._assert_account_balance(
+            account_id=self.customer_account_id, expected_balance=completed_sale.new_balance
+        )
+        await self._assert_account_balance(
+            account_id=ACCOUNT_SALE_EXIT, expected_balance=sale_exit_start_balance + self.beer_product.price * 5
+        )
+        await self._assert_account_balance(
+            account_id=ACCOUNT_DEPOSIT, expected_balance=deposit_start_balance - self.deposit_product.price
+        )
+
     async def test_basic_sale_flow_with_only_deposit_return(self):
+        deposit_start_balance = await self._get_account_balance(account_id=ACCOUNT_DEPOSIT)
         new_sale = NewSale(
             uuid=uuid.uuid4(),
             buttons=[
@@ -306,6 +324,12 @@ class OrderLogicTest(TerminalTestCase):
         self.assertEqual(pending_sale.new_balance, START_BALANCE - pending_sale.total_price)
         completed_sale = await self.order_service.book_sale(token=self.terminal_token, new_sale=new_sale)
         self.assertIsNotNone(completed_sale)
+        await self._assert_account_balance(
+            account_id=self.customer_account_id, expected_balance=completed_sale.new_balance
+        )
+        await self._assert_account_balance(
+            account_id=ACCOUNT_DEPOSIT, expected_balance=deposit_start_balance - 3 * self.deposit_product.price
+        )
 
     async def test_deposit_returns_cannot_exceed_account_limit(self):
         max_limit = await fetch_max_account_balance(conn=self.db_conn)
