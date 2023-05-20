@@ -76,10 +76,13 @@ class Simulator(SubCommand):
             "-b", "--bookings-per-second", type=float, help="number of bookings per second", default=100.0
         )
 
-    def sleep(self, n_tills: int):
-        assert self.n_tills_total is not None
+    def sleep(self):
+        to_sleep = 1.0 / self.args.bookings_per_second
+        to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
+        time.sleep(to_sleep)
 
-        to_sleep = (float(n_tills) / float(self.n_tills_total)) * (1.0 / self.args.bookings_per_second)
+    def sleep_topup(self):
+        to_sleep = 10.0 / self.args.bookings_per_second
         to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
         time.sleep(to_sleep)
 
@@ -342,7 +345,7 @@ class Simulator(SubCommand):
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
             while True:
                 terminal = random.choice(terminals)
-                self.sleep(n_tills=len(terminals))
+                self.sleep()
                 n_customers = random.randint(1, 3)
                 user_tags = await self.get_free_tags(db_pool=db_pool, limit=n_customers)
                 if len(user_tags) == 0:
@@ -383,7 +386,7 @@ class Simulator(SubCommand):
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
             while True:
                 terminal = random.choice(terminals)
-                self.sleep(n_tills=len(terminals))
+                self.sleep_topup()
                 customer_tags = await self.get_customer_tags(db_pool=db_pool)
                 if len(customer_tags) == 0:
                     continue
@@ -434,7 +437,7 @@ class Simulator(SubCommand):
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
             while True:
                 terminal: Terminal = random.choice(terminals)
-                self.sleep(n_tills=len(terminals))
+                self.sleep()
 
                 customer_tags = await self.get_customer_tags(db_pool=db_pool)
                 if len(customer_tags) == 0:
