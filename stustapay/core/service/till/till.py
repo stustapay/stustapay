@@ -333,10 +333,10 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def get_customer(self, *, conn: asyncpg.Connection, customer_tag_uid: int) -> Optional[Customer]:
+    async def get_customer(self, *, conn: asyncpg.Connection, customer_tag_uid: int) -> Customer:
         customer = await conn.fetchrow(
             "select * from account_with_history a where a.user_tag_uid = $1", customer_tag_uid
         )
         if customer is None:
-            return None
+            raise InvalidArgument(f"Customer with tag uid {customer_tag_uid:x} does not exist")
         return Customer.parse_obj(customer)
