@@ -43,7 +43,7 @@ class NfcScanDialogViewModel @Inject constructor(
 ) : ViewModel() {
     private val _scanState = MutableStateFlow<NfcScanUiState>(NfcScanUiState.None)
 
-    private var scanJob : Job? = null
+    private var scanJob: Job? = null
 
     val scanState: StateFlow<NfcScanState> =
         _scanState.mapState(NfcScanState(), viewModelScope) { scanResult ->
@@ -53,27 +53,32 @@ class NfcScanDialogViewModel @Inject constructor(
                         status = "No scan active.",
                     )
                 }
+
                 is NfcScanUiState.Scan -> {
                     NfcScanState(
                         status = "Waiting for tag...",
                     )
                 }
+
                 is NfcScanUiState.Success -> {
                     NfcScanState(
                         status = "Scan success!",
                         scanTag = UserTag(uid = scanResult.uid),
                     )
                 }
+
                 is NfcScanUiState.Error -> {
                     NfcScanState(
                         status = "Error reading tag: ${scanResult.msg}",
                     )
                 }
+
                 is NfcScanUiState.Rescan -> {
                     NfcScanState(
                         status = "Try again! ${scanResult.msg}",
                     )
                 }
+
                 is NfcScanUiState.Tampered -> {
                     NfcScanState(
                         status = "Signature mismatch!",
@@ -103,7 +108,10 @@ class NfcScanDialogViewModel @Inject constructor(
                     }
 
                     is NfcScanResult.Fail -> when (val reason = res.reason) {
-                        NfcScanFailure.Other -> _scanState.update { NfcScanUiState.None }
+                        is NfcScanFailure.Other -> _scanState.update {
+                            NfcScanUiState.Error(reason.msg)
+                        }
+
                         is NfcScanFailure.Incompatible -> _scanState.update {
                             NfcScanUiState.Error(
                                 reason.msg

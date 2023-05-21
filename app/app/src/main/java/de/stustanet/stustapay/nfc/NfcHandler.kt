@@ -70,7 +70,7 @@ class NfcHandler @Inject constructor(
             dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Lost(e.message ?: "security error")))
         } catch (e: Exception) {
             e.printStackTrace()
-            dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Other))
+            dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Other(e.localizedMessage ?: "unknown exception")))
         }
 
         mfUlAesTag.close()

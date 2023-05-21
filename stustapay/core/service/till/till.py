@@ -311,7 +311,7 @@ class TillService(DBService):
         )
         assert row is not None
         user_tag_secret = UserTagSecret.parse_obj(row)
-        # TODO: only send secrets if profile.allow_top_up:
+        # TODO: only send sumup secrets if ec is needed (profile.allow_top_up, allow_ticket_sale)
         secrets = TerminalSecrets(
             sumup_affiliate_key=self.cfg.core.sumup_affiliate_key, user_tag_secret=user_tag_secret
         )

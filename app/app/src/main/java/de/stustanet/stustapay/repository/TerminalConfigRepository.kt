@@ -28,6 +28,7 @@ sealed interface TerminalConfigState {
 @Singleton
 class TerminalConfigRepository @Inject constructor(
     private val terminalConfigRemoteDataSource: TerminalConfigRemoteDataSource,
+    private val nfcRepository: NfcRepository,
 ) {
     private var _terminalConfigState =
         MutableStateFlow<TerminalConfigState>(TerminalConfigState.NoConfig)
@@ -37,6 +38,10 @@ class TerminalConfigRepository @Inject constructor(
         when (val response = terminalConfigRemoteDataSource.getTerminalConfig()) {
             is Response.OK -> {
                 _terminalConfigState.update { TerminalConfigState.Success(response.data) }
+                // if we have secrets, save them
+                response.data.secrets?.let {
+                    nfcRepository.setTagKeys(it.user_tag_secret)
+                }
             }
             is Response.Error -> {
                 _terminalConfigState.update { TerminalConfigState.Error(response.msg()) }
