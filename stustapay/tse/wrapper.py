@@ -134,8 +134,8 @@ class TSEWrapper:
         # listed as assigned to the TSE in the database.
         # These tills need to be unregistered from the TSE.
         extra_tills = set(self._tills)
-        for row in await self._conn.fetch("select name from till where tse_id=$1", self.tse_id):
-            till = row["name"]
+        for row in await self._conn.fetch("select id from till where tse_id=$1", self.tse_id):
+            till = str(row["id"])
             extra_tills.discard(till)  # no need to unregister this till
             if till not in self._tills:
                 # let's register the till with the TSE!
