@@ -91,9 +91,10 @@ class Generator:
                     "select z_nr from ordr where till_id = $1 group by z_nr order by z_nr", Z_KASSE_ID
                 ):  # alle Kassenabschlussids
                     Z_NR = row["z_nr"]
-                    Z_ERSTELLUNG = datetime.now(
-                        timezone.utc
-                    ).astimezone()  # TODO Zeitpunkt des Kassenabschlusses aus der db herausfinden
+
+                    #hole alle order dieser Kasse und Kassenabschluss und nimm den Zeitpunkt der letzten für den Kassenabschluss
+                    last_order_time = await self._conn.fetchval("select booked_at from ordr where till_id = $1 and z_nr = $2 order by id desc", Z_KASSE_ID, Z_NR)
+                    Z_ERSTELLUNG = last_order_time
 
                     await self.einzelaufzeichnungsmodul(
                         Z_NR, Z_ERSTELLUNG, Z_KASSE_ID
@@ -282,7 +283,7 @@ class Generator:
                 f.Z_ERSTELLUNG = Z_ERSTELLUNG
                 f.Z_NR = Z_NR
                 f.BON_ID = row["id"]
-                f.BON_POS = item["item_id"] + 1
+                f.POS_ZEILE = int(item["item_id"]) + 1
                 f.UST_SCHLUESSEL = TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]]
                 f.POS_BRUTTO = Decimal(item["total_price"])
                 f.POS_UST = Decimal(item["total_tax"])
@@ -323,7 +324,7 @@ class Generator:
             "select id from ordr where ordr.till_id = $1 and ordr.z_nr = $2 order by ordr.id asc", Z_KASSE_ID, Z_NR
         )  # erste BON_ID in diesem Abschluss
         a.Z_ENDE_ID = await self._conn.fetchval(
-            "select id from ordr where ordr.till_id = $1 and ordr.z_nr = $2 order by ordr.id asc", Z_KASSE_ID, Z_NR
+            "select id from ordr where ordr.till_id = $1 and ordr.z_nr = $2 order by ordr.id desc", Z_KASSE_ID, Z_NR
         )  # letzte BON_ID in diesem Abschluss
 
         Z_SE_ZAHLUNGEN = Decimal()
@@ -395,11 +396,34 @@ class Generator:
         a.Z_KASSE_ID = Z_KASSE_ID
         a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
+
+
+        #Prüfe, ob diese Kasse verschiedene TSEs hatte, wenn nicht, dann müssen wir nichts weiter tun. Das sollte der Normalfall sein:
+        till_history = await self._conn.fetch("select * from till_tse_history where till_id = $1 order by date", str(Z_KASSE_ID))
+        tses = list()
+        for entry in till_history:
+            if entry['what'] == 'register':
+                tses.append(entry['tse_id'])
+        if len(tses) == 1:
+            pass #all fine
+        elif len(tses) == 0:
+            print(f"Kasse {Z_KASSE_ID} wurde bei keiner TSE registriert")
+            raise ValueError #sollte nicht passieren
+        else:
+            print(f"KASSE {Z_KASSE_ID} wurde bei mehreren TSEs registriert, nämlich bei {tses}")
+            raise NotImplemented
+
+
+
+
+
         row = await self._conn.fetchrow(
-            "select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from till join tse on till.tse_id = tse.tse_id where till.id = $1 and till.z_nr = $2",
+                "select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from till join tse on till.tse_id = tse.tse_id where till.id = $1", ## TODO: cannot select for Z_NR, because we keep no history. is important, when we change tse!. and till.z_nr = $2",
             Z_KASSE_ID,
-            Z_NR,
+            #Z_NR,
         )
+        #LOGGER.info(row)
+        #LOGGER.info(f'Z_KASSE_ID: {Z_KASSE_ID}, Z_NR: {Z_NR}')
         a.TSE_ID = int(row["tse_id"])
         a.TSE_SERIAL = row["tse_serial"]
         a.TSE_SIG_ALGO = row["tse_hashalgo"]

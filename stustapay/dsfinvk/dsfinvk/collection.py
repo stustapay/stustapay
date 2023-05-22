@@ -1,7 +1,7 @@
 import csv
 from collections import defaultdict
 from io import StringIO
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from .table import Model
 
@@ -14,7 +14,7 @@ class Collection:
         self.records[record._filename].append(record)
 
     def write(self, name, xml_path, dtd_path):
-        with ZipFile(name, "w") as zf:
+        with ZipFile(name, "w", compression=ZIP_DEFLATED, compresslevel=9) as zf:
             for k, l in self.records.items():
                 b = StringIO()
                 w = csv.DictWriter(b, fieldnames=[f.name for f in l[0]._fields], delimiter=";", lineterminator="\r\n")
