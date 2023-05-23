@@ -7,6 +7,7 @@ import traceback
 
 import asyncpg
 import time
+import datetime
 
 # from stustapay.core.schema.order import Order
 from .handler import TSEHandler, TSESignatureRequest, TSESignature
@@ -73,6 +74,72 @@ class TSEWrapper:
                 if self._stop:
                     return
                 LOGGER.error(f"{self.name!r}: waiting before reconnect")
+
+                ##############################################
+                LOGGER.error("checking for new transactions and fail those older than 10 seconds")
+                self.tse_id, tse_status = await self._conn.fetchrow(
+                    "select tse_id, tse_status from tse where tse_name=$1", self.name
+                )
+                assert self.tse_id is not None
+                assert tse_status is not None
+
+                new_sig_requests = await self._conn.fetch(
+                    """
+                    with currently_signing as (
+                        select
+                            till_id
+                        from
+                            tse_signature
+                            join ordr on ordr.id=tse_signature.id
+                        where
+                            tse_signature.signature_status = 'pending'
+                    )
+                    select
+                        ordr.id as order_id,
+                        till.id as till_id,
+                        ordr.booked_at as booked_at
+                    from
+                        tse_signature
+                        join ordr on ordr.id=tse_signature.id
+                        join till on ordr.till_id=till.id
+                    where
+                        tse_signature.signature_status='new' and
+                        till.tse_id = $1 and
+                        not exists (
+                            select
+                                1
+                            from
+                                currently_signing
+                            where
+                                currently_signing.till_id=ordr.till_id
+                        )
+                    order by ordr.id
+                    """,
+                    self.tse_id,
+                )
+                print(self.tse_id)
+                for request in new_sig_requests:
+                    # check order time
+                    delta = datetime.datetime.now().astimezone() - request["booked_at"]
+                    if delta > datetime.timedelta(seconds=10):
+                        LOGGER.warning(f"new signing request for ordr {request['order_id']} is to old -> failing")
+                        await self._conn.execute(
+                            """ 
+                            update
+                                tse_signature
+                            set
+                                signature_status='failure',
+                                result_message='TSE did not react, signature timeout',
+                                tse_id=$2
+                            where
+                                id=$1
+                            """,
+                            request["order_id"],
+                            self.tse_id,
+                        )
+                        # set tse_status to failed
+                        await self._conn.execute("update tse set tse_status='failed' where tse_id=$1", self.tse_id)
+
                 await asyncio.sleep(2)
 
     async def _tse_handler_loop(self):
@@ -87,6 +154,7 @@ class TSEWrapper:
             "select tse_id, tse_status from tse where tse_name=$1", self.name
         )
         assert self.tse_id is not None
+        assert tse_status is not None
 
         # get master data
         masterdata = self._tse_handler.get_master_data()
@@ -115,15 +183,40 @@ class TSEWrapper:
                 masterdata.tse_process_data_encoding,
                 self.tse_id,
             )
+            LOGGER.info("New TSE registered in database")
         elif tse_status == "active":
-            # TODO verify
-            pass
+            # check public key
+            tse_public_key_in_db = await self._conn.fetchval(
+                "select tse_public_key from tse where tse_name=$1", self.name
+            )
+            if tse_public_key_in_db != masterdata.tse_public_key:
+                LOGGER.error(f"TSE public key:  {masterdata.tse_public_key}\nKey in database: {tse_public_key_in_db}")
+                raise RuntimeError(
+                    f"TSE missmatch: TSE recorded in database different from TSE connected for TSE name {self.name}"
+                )
+            LOGGER.info("TSE matches with database entry")
+
         elif tse_status == "disabled":
-            # TODO abort, switch till to new tse in processor
-            pass
+            # TODO switch till to new tse in processor (manual intervention neccessary)
+            raise RuntimeError(f"TSE {self.name} is disabled, please remove from config")
         elif tse_status == "failed":
-            # TODO abort, switch till to new tse in processor
-            pass
+            LOGGER.warning(
+                f"TSE {self.name} is recorded as failed in database. Help! Do something!, but apparently we can connect, so we check and then set to active again"
+            )
+            # check public key
+            tse_public_key_in_db = await self._conn.fetchval(
+                "select tse_public_key from tse where tse_name=$1", self.name
+            )
+            if tse_public_key_in_db != masterdata.tse_public_key:
+                LOGGER.error(f"TSE public key:  {masterdata.tse_public_key}\nKey in database: {tse_public_key_in_db}")
+                raise RuntimeError(
+                    f"TSE missmatch: TSE recorded in database different from TSE connected for TSE name {self.name}"
+                )
+            LOGGER.info("TSE matches with database entry")
+
+            LOGGER.warning(f"setting TSE {self.name} to active again")
+            await self._conn.execute("update tse set tse_status='active' where tse_name=$1", self.name)
+
         else:
             raise RuntimeError("TSE has no state, forbidden db state")
 
@@ -158,7 +251,8 @@ class TSEWrapper:
                 LOGGER.info(f"signature result: {result!r}")
                 if result is None:
                     # the signature was cleanly aborted and should be reattempted.
-                    await self._return_request(next_request)
+                    # await self._return_request(next_request)
+                    await self._fail_request(next_request, "TSE operation failed, timeout")
                 else:
                     # the signature was completed successfully
                     await self._request_done(next_request, result)
@@ -290,6 +384,18 @@ class TSEWrapper:
             request.order_id,
         )
 
+    async def _fail_request(self, request: TSESignatureRequest, reason: str):
+        """
+        Set the request in the database to failed
+        """
+        await self._conn.execute(
+            """
+            update tse_signature set signature_status='failure', result_message=$2 where id=$1
+            """,
+            request.order_id,
+            reason,
+        )
+
     async def _request_done(self, request: TSESignatureRequest, result: TSESignature):
         """
         Writes the results from the request to the database, marking the signature
@@ -329,9 +435,15 @@ class TSEWrapper:
         assert self._tse_handler is not None
         # must be called when the TSE is connected and operational.
         if signing_request.till_id not in self._tills:
+            LOGGER.info(f"registering new ClientID {signing_request.till_id} with TSE {self.name}")
             await self._till_add(signing_request.till_id)
         start = time.monotonic()
-        result = await self._tse_handler.sign(signing_request)
+        try:
+            result = await self._tse_handler.sign(signing_request)
+        except asyncio.TimeoutError:
+            LOGGER.warning("WARNING: TSE request timeout")
+            return None
+
         stop = time.monotonic()
         # TODO handle failures
         # (return None if the signature was cleanly aborted,

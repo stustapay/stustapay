@@ -101,16 +101,16 @@ class SignatureProcessor(SubCommand):
                 LOGGER.info(f"{len(feral_till_id_rows)} till(s) need a TSE")
                 # assign TSEs
                 for till in feral_till_id_rows:
-                    # get number of assigned tills per tse
+                    # get number of assigned tills per tse, but only of active TSEs
                     tse_stats = dict()
                     for tse_name in self.tses.keys():
                         # TODO optimize this statement for really really large installations...
                         tse_stats[tse_name] = await psql.fetchval(
-                            "select count(*) from till join tse on till.tse_id = tse.tse_id where tse.tse_name=$1",
+                            "select count(*) from till join tse on till.tse_id = tse.tse_id where tse.tse_name=$1 and tse.tse_status='active'",
                             tse_name,
                         )
                     tse_ranked = sorted(tse_stats.items(), key=lambda x: x[1])
-                    # assigm this till to tse with lowest number
+                    # assign this till to tse with lowest number
                     till_id_to_assign_to_tse = till["till_id"]
                     tse_name_to_assign_to_till = tse_ranked[0][0]
                     tse_id = await psql.fetchval(

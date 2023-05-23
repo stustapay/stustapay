@@ -58,10 +58,11 @@ MAGIC_PRODUCTION_CLIENT = "DN TSEProduction ef82abcedf"
 
 
 class VirtualTSE:
-    def __init__(self, delay: float, fast: bool, real: bool, private_key_hex: str, gen_key: bool):
+    def __init__(self, delay: float, fast: bool, real: bool, private_key_hex: str, gen_key: bool, broken: bool):
         self._fast: bool = fast
         self._real: bool = real
         self._delay: float = delay
+        self._broken: bool = broken
 
         self.password_block_counter = 0
         self.puk_block_counter = 0
@@ -198,6 +199,11 @@ class VirtualTSE:
         if number_of_open_transactions > 512:  # max number of open transactions is 512 for Dn TSE
             return dnerror(21)
 
+        if self._broken:
+            if self.transnr >= 30:
+                print("TIIIIIIIME TOOOOOOOOO SAY GOODBYE........")
+                return dnerror(33)
+
         # generate transaction
         self.signctr += 1
         self.transnr += 1
@@ -282,6 +288,13 @@ class VirtualTSE:
             # error this transaction was not started
             return dnerror(5017)
         self.current_transactions[msg["ClientID"]].remove(msg["TransactionNumber"])
+
+        if self._broken:
+            if self.transnr >= 20:
+                self.transnr = 40
+                print("TIIIIIIIME TOOOOOOOOO SAY GOODBYE........")
+                while True:
+                    pass
 
         response["Status"] = "ok"
         self.signctr += 1
@@ -563,11 +576,21 @@ class VirtualTSE:
 
 
 class WebsocketInterface:
-    def __init__(self, host: str, port: int, delay: float, fast: bool, real: bool, private_key_hex: str, gen_key: bool):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        delay: float,
+        fast: bool,
+        real: bool,
+        private_key_hex: str,
+        gen_key: bool,
+        broken: bool,
+    ):
         self.host: str = host
         self.port: int = port
 
-        self.tse = VirtualTSE(delay, fast, real, private_key_hex, gen_key)
+        self.tse = VirtualTSE(delay, fast, real, private_key_hex, gen_key, broken)
 
     async def websocket_handler(self, websocket: WebSocket):
         print("Websocket connection starting")
