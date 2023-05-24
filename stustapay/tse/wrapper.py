@@ -138,7 +138,9 @@ class TSEWrapper:
                             self.tse_id,
                         )
                         # set tse_status to failed
-                        await self._conn.execute("update tse set tse_status='failed' where tse_id=$1", self.tse_id)
+                        await self._conn.execute(
+                            "update tse set tse_status='failed' where tse_id=$1 and tse_status='active'", self.tse_id
+                        )
 
                 await asyncio.sleep(2)
 
@@ -215,7 +217,10 @@ class TSEWrapper:
             LOGGER.info("TSE matches with database entry")
 
             LOGGER.warning(f"setting TSE {self.name} to active again")
-            await self._conn.execute("update tse set tse_status='active' where tse_name=$1", self.name)
+            # only reactivate a failed tse, dont reactivate it, when it was set disabled
+            await self._conn.execute(
+                "update tse set tse_status='active' where tse_name=$1 and tse_status='failed'", self.name
+            )
 
         else:
             raise RuntimeError("TSE has no state, forbidden db state")
