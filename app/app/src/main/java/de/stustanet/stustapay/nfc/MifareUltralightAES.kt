@@ -21,6 +21,47 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     var sessionKey: BitVector? = null
     var sessionCounter: UShort? = null
 
+    fun fastRead(key: BitVector): ULong {
+        if (key.len != 16uL * 8uL) { throw IllegalArgumentException() }
+        if (chipState != ChipState.ACTIVE) { throw Exception("Already authenticated") }
+
+        val nonce = ByteArray(16)
+        SecureRandom().nextBytes(nonce)
+
+        val rndA = nonce.asBitVector()
+        val rndB: BitVector
+
+        try {
+            val ekRndB = cmdAuthenticate1(KeyType.DATA_PROT_KEY.code, nfcaTag)
+            rndB = ekRndB.aesDecrypt(key)
+
+            val rndAB = rndA + rndB.rotl(8uL)
+            val ekRndAB = rndAB.aesEncrypt(key)
+
+            val ekRndA = cmdAuthenticate2(ekRndAB, nfcaTag)
+            val rndAResp = ekRndA.aesDecrypt(key)
+
+            if (!rndAResp.equals(rndA.rotl(8uL))) {
+                throw TagAuthException("Key mismatch")
+            }
+        } catch (e: IOException) {
+            throw TagAuthException("Auth failed")
+        }
+
+        sessionKey = genSessionKey(key, rndA, rndB)
+        sessionCounter = 0u
+
+        val readBuffer = cmdRead(0x00u, sessionKey!!, sessionCounter!!, nfcaTag)
+        sessionCounter = (sessionCounter!! + 2u).toUShort()
+
+        var ser = 0uL
+        for (i in 0uL until 7uL) {
+            ser = ser or (readBuffer.gbe(i).toULong() shl (i * 8u).toInt())
+        }
+
+        return ser
+    }
+
     fun setAuth0(page: UByte) {
         if (!isAuthenticated() && (auth0State == null || auth0State!! <= 0x29u)) { throw TagAuthException("Authentication required") }
 

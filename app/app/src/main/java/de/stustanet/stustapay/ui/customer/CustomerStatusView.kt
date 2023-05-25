@@ -1,15 +1,12 @@
 package de.stustanet.stustapay.ui.customer
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -18,9 +15,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import de.stustanet.stustapay.ui.common.TagTextField
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
-import java.lang.NumberFormatException
+import java.text.DecimalFormat
 
 @Preview
 @Composable
@@ -30,7 +28,7 @@ fun CustomerStatusView(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scanState = rememberNfcScanDialogState()
-    var targetTagID by remember { mutableStateOf("") }
+    var targetId by remember { mutableStateOf(0uL) }
 
     val scope = rememberCoroutineScope()
 
@@ -86,7 +84,7 @@ fun CustomerStatusView(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text("Cash", fontSize = 48.sp)
-                                    Text("${customer.balance}€", fontSize = 24.sp)
+                                    Text("${DecimalFormat("#.00").format(customer.balance)}€", fontSize = 24.sp)
                                 }
 
                                 Row(
@@ -138,13 +136,14 @@ fun CustomerStatusView(
                                         fontSize = 48.sp,
                                         modifier = Modifier.padding(end = 20.dp)
                                     )
-                                    TextField(
+                                    TagTextField(
+                                        targetId,
                                         modifier = Modifier.fillMaxWidth(),
-                                        value = targetTagID,
-                                        onValueChange = { id -> targetTagID = id },
-                                        singleLine = true,
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                                    )
+                                    ) {
+                                        if (it != null) {
+                                            targetId = it
+                                        }
+                                    }
                                 }
 
                                 Button(
@@ -159,7 +158,7 @@ fun CustomerStatusView(
                                 }
 
                                 NfcScanDialog(state = scanState, onScan = { tag ->
-                                    targetTagID = tag.uid.toString()
+                                    targetId = tag.uid
                                 })
                             }
 
@@ -180,7 +179,7 @@ fun CustomerStatusView(
                         ) {
                             Button(
                                 modifier = Modifier
-                                    .fillMaxWidth(0.75f)
+                                    .fillMaxWidth(0.6f)
                                     .padding(end = 10.dp),
                                 onClick = {
                                     viewModel.startScan()
@@ -220,10 +219,10 @@ fun CustomerStatusView(
                                     scope.launch {
                                         try {
                                             viewModel.completeSwap(
-                                                targetTagID.toULong(),
-                                                state.newTag
+                                                targetId,
+                                                (uiState.state as CustomerStatusRequestState.Swap).newTag
                                             )
-                                            targetTagID = ""
+                                            targetId = 0uL
                                         } catch (_: NumberFormatException) {
                                         }
                                     }

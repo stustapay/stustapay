@@ -51,6 +51,7 @@
             jinja2
             aiohttp
             pylatexenc
+            schwifty
           ]))
           nodejs
         ];
