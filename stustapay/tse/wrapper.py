@@ -255,8 +255,7 @@ class TSEWrapper:
                 result = await self._sign(next_request)
                 LOGGER.info(f"signature result: {result!r}")
                 if result is None:
-                    # the signature was cleanly aborted and should be reattempted.
-                    # await self._return_request(next_request)
+                    # fail this request
                     await self._fail_request(next_request, "TSE operation failed, timeout")
                 else:
                     # the signature was completed successfully

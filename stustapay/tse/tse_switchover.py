@@ -261,7 +261,12 @@ class TseSwitchover(SubCommand):
                     print("Aborting till reasignment")
                     return
 
+                # check login status for tills again to prevent, that somebody has logged in in the meantime
                 still_logged_in_tills = 0
+                tills = await psql.fetch(
+                    "select till.id as id, name, active_user_id, display_name from till join cashier on till.active_user_id=cashier.id where tse_id=$1 order by id",
+                    tse["tse_id"],
+                )
                 for till in tills:
                     print(
                         f"{till['id']:5}:  {till['name']:50}, Logged in user: {till['active_user_id']} {till['display_name']}"

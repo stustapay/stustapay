@@ -294,7 +294,7 @@ class VirtualTSE:
                 self.transnr = 40
                 print("TIIIIIIIME TOOOOOOOOO SAY GOODBYE........")
                 while True:
-                    pass
+                    time.sleep(1)
 
         response["Status"] = "ok"
         self.signctr += 1
