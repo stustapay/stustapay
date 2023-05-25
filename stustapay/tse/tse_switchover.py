@@ -178,34 +178,64 @@ class TseSwitchover(SubCommand):
                 print("TSE to disable")
                 for key, item in tse.items():
                     print(f"{key}: {item}")
-                    print("-------------------------------------------------------")
+                print("-------------------------------------------------------")
 
                 manualfailed = ""
 
                 if tse["tse_status"] != "failed":
                     print(f"TSE is currently in status {tse['tse_status']}")
                     print("Only a TSE in status 'failed' can be disabled")
-                    print("Do you want to set the TSE to status failed anyway and then disable it")
+                    print("Do you want to set the TSE to status 'failed' anyway and then disable it?")
                     manualfailed = input("Type 'yes' in uppercase: ")
                     if manualfailed != "YES":
                         print("Aborting...\n..\n.")
                         return
-                    print("setting TSE to failed")
-                    await psql.execute("update tse set tse_status='failed' where tse_name=$1", self.tse_to_disable)
+                    print("will set the TSE to 'failed'. but nothing was done yet. You can still abort.")
 
                 # print assigned tills
                 print("These tills are currently assigned to this TSE:\n\n")
-                tills = await psql.fetch("select id, name from till where tse_id=$1 order by id", tse["tse_id"])
+                tills = await psql.fetch(
+                    "select till.id as id, name, active_user_id, display_name from till join cashier on till.active_user_id=cashier.id where tse_id=$1 order by id",
+                    tse["tse_id"],
+                )
                 for till in tills:
-                    print(f"{till['id']:5}:  {till['name']:50}")
+                    print(
+                        f"{till['id']:5}:  {till['name']:50}, Logged in user: {till['active_user_id']} {till['display_name']}"
+                    )
 
                 print("ALL OF THESE TILLS NEED TO BE LOGGED OUT!")
-                input("confirm with enter when ready...")
+                input("confirm with enter when done...")
+
+                # check again for logout
+                tills = await psql.fetch(
+                    "select till.id as id, name, active_user_id, display_name from till join cashier on till.active_user_id=cashier.id where tse_id=$1 order by id",
+                    tse["tse_id"],
+                )
+                still_logged_in_tills = 0
+                force_logout = ""
+                for till in tills:
+                    print(
+                        f"{till['id']:5}:  {till['name']:50}, Logged in user: {till['active_user_id']} {till['display_name']}"
+                    )
+                    if till["active_user_id"] is not None:
+                        still_logged_in_tills += 1
+                if still_logged_in_tills > 0:
+                    print(f"ERROR: There are still {still_logged_in_tills} tills with logged in users!")
+                    print("DO YOU WANT TO FORCE A LOGOUT NOW!")
+                    force_logout = input("Type 'yes' in uppercase to FORCE A LOGOUT on these tills: ")
+                    if force_logout != "YES":
+                        print("Cannot switch TSE with still logged in chashiers.")
+                        print("Aborting...")
+                        return
+                    print("Will perform a forced logout of users later, but nothing was done yet. You can still abort.")
+                else:
+                    print("All cashiers are logged out.")
+
                 # are you really sure?
                 print(f"Disabling TSE {self.tse_to_disable}, Serial {tse['tse_serial']}")
                 print("THIS CAN NOT BE UNDONE")
                 print("DO YOU REALY WANT TO PROCEED?")
-                confirmation = input("This is the last confirmation! Type 'yes' in uppercase: ")
+                confirmation = input("THIS IS THE LAST CONFIRMATION! Type 'yes' in uppercase: ")
                 if confirmation != "YES":
                     print("Aborting...\n..\n.")
                     return
@@ -225,27 +255,58 @@ class TseSwitchover(SubCommand):
                 # check
                 tse = await psql.fetchrow("select * from tse where tse_name=$1", self.tse_to_disable)
                 if tse["tse_status"] == "disabled":
-                    print("SUCCESS: TSE set to disabled")
+                    print("SUCCESS: TSE set to 'disabled'")
                 else:
-                    print("ERROR: could not set TSE to disabled, perhaps it was not in state failed")
+                    print("ERROR: could not set TSE to 'disabled', perhaps it was not in state failed")
                     print("Aborting till reasignment")
                     return
 
+                still_logged_in_tills = 0
+                for till in tills:
+                    print(
+                        f"{till['id']:5}:  {till['name']:50}, Logged in user: {till['active_user_id']} {till['display_name']}"
+                    )
+                    if till["active_user_id"] is not None:
+                        still_logged_in_tills += 1
+                if still_logged_in_tills > 0:
+                    print(f"ERROR: There are still {still_logged_in_tills} tills with logged in users!")
+                    print("DO YOU WANT TO FORCE A LOGOUT NOW!")
+                    force_logout = input("Type 'yes' in uppercase to FORCE A LOGOUT on these tills NOW: ")
+                    if force_logout != "YES":
+                        print(
+                            "Cannot switch TSE with still logged in chashiers, but TSE was already set to 'disabled'."
+                        )
+                        print("Aborting...")
+                        return
+                    print("Will perform a forced logout of users later, but nothing was done yet. You can still abort.")
+
+                # force logout
+                if force_logout == "YES":
+                    print("Forcing logout of cashiers for the assigned tills...")
+                    force_logout_result = await psql.fetch(
+                        "update till set active_user_id = null, active_user_role_id = null where tse_id = $1 returning id",
+                        tse["tse_id"],
+                    )
+                    if force_logout_result is not None:
+                        print("SUCCESS: Forced logout of still logged in cashiers.")
+                    else:
+                        print("?????: No forced logout necessary because no tills assigned???.")
+
                 # reset till to tse assignment
-                print("resetting till to TSE assignment")
+                print("Resetting till to TSE assignment")
                 await psql.execute("update till set tse_id=NULL where tse_id=$1", tse["tse_id"])
 
                 # check
                 print("checking...")
                 tills = await psql.fetch("select id, name from till where tse_id=$1 order by id", tse["tse_id"])
                 if tills:
-                    print("there are still tills assigned to this TSE:")
+                    print("ERROR: There are still tills assigned to this TSE:")
                     for till in tills:
                         print(f"{till['id']:5}:  {till['name']:50}")
-                        print("Aborted")
-                        return
+                    print("Aborted, need manual checking of status")
+                    return
                 elif not tills:
-                    print("success, no more tills are assigned to this TSE")
+                    print("SUCCESS: No more tills are assigned to this TSE")
                 else:
                     raise RuntimeError("Error, this should not happen")
 

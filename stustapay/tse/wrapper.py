@@ -461,8 +461,13 @@ class TSEWrapper:
         assert self._tse_handler is not None
         LOGGER.info(f"{self.name!r}: adding till {till!r}")
         await self._tse_handler.register_client_id(str(till))
+        # get z_nr
+        z_nr = await self._conn.fetchval("select z_nr from till where id=$1", int(till))
         await self._conn.execute(
-            "insert into till_tse_history (till_id, tse_id, what) values ($1, $2, 'register')", till, self.tse_id
+            "insert into till_tse_history (till_id, tse_id, what, z_nr) values ($1, $2, 'register', $3)",
+            till,
+            self.tse_id,
+            z_nr,
         )
         self._tills.add(till)
 
@@ -470,7 +475,14 @@ class TSEWrapper:
         assert self._tse_handler is not None
         LOGGER.info(f"{self.name!r}: removing till {till!r}")
         await self._tse_handler.deregister_client_id(str(till))
+        if str(till).isnumeric():
+            z_nr = await self._conn.fetchval("select z_nr from till where id=$1", int(till))
+        else:
+            z_nr = 0
         await self._conn.execute(
-            "insert into till_tse_history (till_id, tse_id, what) values ($1, $2, 'deregister')", till, self.tse_id
+            "insert into till_tse_history (till_id, tse_id, what, z_nr) values ($1, $2, 'deregister', $2)",
+            till,
+            self.tse_id,
+            z_nr,
         )
         self._tills.remove(till)
