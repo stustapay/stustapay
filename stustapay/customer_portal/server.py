@@ -9,6 +9,7 @@ from stustapay.core.service.user import AuthService
 from stustapay.core.subcommand import SubCommand
 from stustapay.customer_portal.routers import base
 from .routers import auth
+from ..core import database
 
 
 class Api(SubCommand):
@@ -31,6 +32,7 @@ class Api(SubCommand):
 
     async def run(self):
         db_pool = await self.server.db_connect(self.cfg.database)
+        await database.check_revision_version(db_pool)
 
         auth_service = AuthService(db_pool=db_pool, config=self.cfg)
         config_service = ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)

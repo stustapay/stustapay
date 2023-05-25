@@ -52,5 +52,6 @@ class AdminCli(SubCommand):
 
     async def run(self):
         db_pool = await database.create_db_pool(self.config.database)
+        await database.check_revision_version(db_pool)
         if self.action == "add-user":
             return await self._add_user(db_pool)
