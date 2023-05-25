@@ -1302,18 +1302,27 @@ create or replace view order_tax_rates as
         group by
             ordr.id, tax_rate, tax_name;
 
-create or replace view product_stats as (
-select p.*, s.quantity_sold
-from product_with_tax_and_restrictions p
-join (
-    select li.product_id, sum(li.quantity) as quantity_sold
+-- sql type function to the query planner can optimize it
+create or replace function product_stats(
+    from_timestamp timestamptz,
+    to_timestamp timestamptz
+)
+returns table (
+--     till_profile_id bigint,  -- does not make much sense as the profile could change
+    till_id bigint,
+    product_id bigint,
+    quantity_sold bigint
+) as $$
+    select o.till_id, li.product_id, sum(li.quantity) as quantity_sold
     from line_item li
     join ordr o on li.order_id = o.id
     where o.order_type != 'cancel_order'
-    group by li.product_id
- ) s on s.product_id = p.id
-);
-
+      and (from_timestamp is not null and o.booked_at >= from_timestamp or from_timestamp is null)
+      and (to_timestamp is not null and o.booked_at <= to_timestamp or to_timestamp is null)
+    group by o.till_id, li.product_id;
+$$ language sql
+    stable
+    security invoker;
 
 create table if not exists transaction (
     -- represents a transaction of one account to another

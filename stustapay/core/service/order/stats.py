@@ -1,3 +1,7 @@
+from collections import defaultdict
+from datetime import datetime
+from typing import Optional
+
 import asyncpg
 
 from stustapay.core.config import Config
@@ -14,7 +18,8 @@ class ProductSoldStats(Product):
 
 
 class ProductStats(BaseModel):
-    ten_most_sold_products: list[ProductSoldStats]
+    product_quantities: list[ProductSoldStats]
+    product_quantities_by_till: dict[int, list[ProductSoldStats]]
 
 
 class OrderStatsService(DBService):
@@ -24,7 +29,36 @@ class OrderStatsService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
-    async def get_product_stats(self, *, conn: asyncpg.Connection) -> ProductStats:
-        rows = await conn.fetch("select * from product_stats order by quantity_sold desc limit 10")
+    async def get_product_stats(
+        self, *, conn: asyncpg.Connection, from_timestamp: Optional[datetime], to_timestamp: Optional[datetime]
+    ) -> ProductStats:
+        stats_by_products = await conn.fetch(
+            "select p.*, coalesce(stats.quantity_sold, 0) as quantity_sold "
+            "from product_with_tax_and_restrictions p "
+            "join ( "
+            "   select s.product_id, sum(s.quantity_sold) as quantity_sold "
+            "   from product_stats(from_timestamp => $1, to_timestamp => $2) s"
+            "   group by s.product_id "
+            ") stats on stats.product_id = p.id "
+            "order by stats.quantity_sold desc ",
+            from_timestamp,
+            to_timestamp,
+        )
 
-        return ProductStats(ten_most_sold_products=[ProductSoldStats.parse_obj(row) for row in rows])
+        stats_by_till = await conn.fetch(
+            "select p.*, stats.till_id, stats.quantity_sold "
+            "from product_with_tax_and_restrictions p "
+            "join product_stats(from_timestamp => $1, to_timestamp => $2) stats on p.id = stats.product_id "
+            "order by stats.till_id, stats.quantity_sold desc ",
+            from_timestamp,
+            to_timestamp,
+        )
+
+        product_quantities_by_till = defaultdict(list)
+        for row in stats_by_till:
+            product_quantities_by_till[row["till_id"]].append(ProductSoldStats.parse_obj(row))
+
+        return ProductStats(
+            product_quantities=[ProductSoldStats.parse_obj(row) for row in stats_by_products],
+            product_quantities_by_till=product_quantities_by_till,
+        )

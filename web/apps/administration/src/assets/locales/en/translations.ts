@@ -139,8 +139,13 @@ export const translations = {
   },
   overview: {
     title: "Overview",
+    fromTimestamp: "From",
+    toTimestamp: "To",
     mostSoldProducts: "Most sold products",
     showDetails: "Show Details",
+    quantitySold: "# Sold",
+    selectedTill: "Till",
+    statsByTill: "Products sold by till",
   },
   ticket: {
     name: "Name",
