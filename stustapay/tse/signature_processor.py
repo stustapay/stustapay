@@ -113,14 +113,24 @@ class SignatureProcessor(SubCommand):
                     tse_ranked = sorted(tse_stats.items(), key=lambda x: x[1])
                     # assign this till to tse with lowest number
                     till_id_to_assign_to_tse = till["till_id"]
-                    tse_name_to_assign_to_till = tse_ranked[0][0]
-                    tse_id = await psql.fetchval(
-                        "select tse_id from tse where tse_name = $1 ", tse_name_to_assign_to_till
-                    )
-                    await psql.execute("update till set tse_id = $1 where id = $2", tse_id, till_id_to_assign_to_tse)
-                    LOGGER.info(
-                        f"Till with ID={till_id_to_assign_to_tse} is assigned to TSE: {tse_name_to_assign_to_till}"
-                    )
+                    try:
+                        tse_name_to_assign_to_till = tse_ranked[0][0]
+
+                        tse_id = await psql.fetchval(
+                            "select tse_id from tse where tse_name = $1 ", tse_name_to_assign_to_till
+                        )
+                        await psql.execute(
+                            "update till set tse_id = $1 where id = $2", tse_id, till_id_to_assign_to_tse
+                        )
+                        LOGGER.info(
+                            f"Till with ID={till_id_to_assign_to_tse} is assigned to TSE: {tse_name_to_assign_to_till}"
+                        )
+                    except IndexError:
+                        LOGGER.error("ERROR: no more active TSEs available")
+                        LOGGER.warning("will set all signature requests to 'failure'")
+                        await psql.execute(
+                            "update tse_signature set signature_status='failure',result_message='TSE failure, no active TSE available', tse_id=1 where signature_status='new'"
+                        )
 
         # notify all of the TSEs
         for tse in self.tses.values():
