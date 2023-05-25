@@ -228,7 +228,7 @@ class UserService(DBService):
             user_tag_uid=user_tag_uid,
             display_name=new_user.display_name,
         )
-        return await self._create_user(conn=conn, current_user=current_user, new_user=user)
+        return await self._create_user(conn=conn, creating_user_id=current_user.id, new_user=user)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])

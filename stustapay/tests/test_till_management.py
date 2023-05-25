@@ -164,7 +164,7 @@ class TillManagementTest(TerminalTestCase):
             "where o.payment_method = 'cash' "
             "group by o.till_id"
         )
-        self.assertNotEquals(0, len(balances))
+        self.assertIsNot(0, len(balances))
         for balance in balances:
             self.assertEqual(
                 0,
