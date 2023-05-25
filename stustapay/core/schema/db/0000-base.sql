@@ -276,6 +276,7 @@ create table if not exists usr (
     transport_account_id bigint references account(id),
     cashier_account_id bigint references account(id),
     cash_register_id bigint references cash_register(id) unique,
+    created_by bigint references usr(id),
     constraint cash_register_need_cashier_acccount
         check (((cash_register_id is not null) and (cashier_account_id is not null)) or cash_register_id is null),
     -- depending on the transfer action, the correct account is booked
