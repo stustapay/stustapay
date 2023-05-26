@@ -17,6 +17,8 @@ export const prepareAuthHeaders = (
 };
 
 export const PublicCustomerApiConfigSchema = z.object({
+  test_mode: z.boolean(),
+  test_mode_message: z.string(),
   currency_symbol: z.string(),
   currency_identifier: z.string(),
   data_privacy_url: z.string(),
@@ -42,8 +44,6 @@ export const ConfigSchema = ClientConfigSchema.merge(
 export type Config = z.infer<typeof ConfigSchema>;
 
 export let config: Config;
-
-
 
 const generateConfig = (clientConfig: ClientConfig, publicApiConfig: PublicCustomerApiConfig): Config => {
   return {

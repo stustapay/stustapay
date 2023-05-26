@@ -44,6 +44,9 @@ class TerminalConfig(BaseModel):
 
     available_roles: list[UserRole]
 
+    test_mode: bool
+    test_mode_message: str
+
 
 class TerminalRegistrationSuccess(BaseModel):
     till: Till

@@ -329,6 +329,8 @@ class TillService(DBService):
             buttons=buttons,
             secrets=secrets,
             available_roles=available_roles,
+            test_mode=self.cfg.core.test_mode,
+            test_mode_message=self.cfg.core.test_mode_message,
         )
 
     @with_db_transaction

@@ -146,7 +146,7 @@ export const TillStatsTable: React.FC<TillStatsTableProps> = ({ toTimestamp, fro
             <InputLabel>{t("overview.selectedTill")}</InputLabel>
             <Select
               variant="standard"
-              value={selectedTill}
+              value={selectedTill ?? ""}
               onChange={(e) => setSelectedTill(e.target.value ? Number(e.target.value) : null)}
             >
               {selectTillAll(tills).map((till) => (

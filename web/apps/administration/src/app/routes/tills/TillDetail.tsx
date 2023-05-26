@@ -127,9 +127,13 @@ export const TillDetail: React.FC = () => {
         <ListItem
           secondaryAction={
             <>
-              <IconButtonLink to={`/tills/${tillId}/edit`} color="primary" sx={{ mr: 1 }}>
-                <EditIcon />
-              </IconButtonLink>
+              <Tooltip title={t("edit")}>
+                <span>
+                  <IconButtonLink to={`/tills/${tillId}/edit`} color="primary" sx={{ mr: 1 }}>
+                    <EditIcon />
+                  </IconButtonLink>
+                </span>
+              </Tooltip>
               {till.session_uuid != null && (
                 <Tooltip title={t("till.logout")}>
                   <IconButton onClick={openUnregisterTillDialog} color="warning">
