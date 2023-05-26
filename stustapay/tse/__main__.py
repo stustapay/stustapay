@@ -5,6 +5,7 @@ from stustapay.core.args import Parser
 
 from .signature_processor import SignatureProcessor
 from .simulator import Simulator
+from .tse_switchover import TseSwitchover
 
 
 def main():
@@ -18,6 +19,7 @@ def main():
     ### module registration
     parser.add_subcommand("signature_processor", SignatureProcessor)
     parser.add_subcommand("simulator", Simulator)
+    parser.add_subcommand("tse_switchover", TseSwitchover)
     ### / module registration
 
     loop = asyncio.new_event_loop()
