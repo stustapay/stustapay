@@ -34,7 +34,6 @@ fun NfcScanDialog(
         Text("Scan a Chip \uD83D\uDCE1", textAlign = TextAlign.Center, fontSize = 40.sp)
     },
 ) {
-
     if (state.isOpen()) {
         Dialog(
             onDismissRequest = {

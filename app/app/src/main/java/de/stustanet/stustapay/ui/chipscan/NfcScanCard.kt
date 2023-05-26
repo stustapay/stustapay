@@ -1,14 +1,10 @@
 package de.stustanet.stustapay.ui.chipscan
 
 
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
@@ -17,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +36,7 @@ fun NfcScanCard(
     },
 ) {
     val scanResult by viewModel.scanState.collectAsStateWithLifecycle()
+    val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
 
     LaunchedEffect(scanResult, scan) {
         val tag = scanResult.scanTag
@@ -49,13 +47,13 @@ fun NfcScanCard(
             } else {
                 viewModel.stopScan()
             }
-        }
-        else {
+        } else {
             // we've scanned a tag
             // if the tag is good, return it, and maybe continue scanning
             // of stop scanning
             if (scan) {
                 if (checkScan(tag)) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(300, 200))
                     viewModel.stopScan()
                     onScan(tag)
 
@@ -64,8 +62,7 @@ fun NfcScanCard(
                         viewModel.scan()
                     }
                 }
-            }
-            else {
+            } else {
                 viewModel.stopScan()
             }
         }

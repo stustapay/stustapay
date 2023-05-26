@@ -1119,6 +1119,7 @@ create table if not exists till_tse_history (
     till_id text not null,
     tse_id bigint references tse(tse_id) not null,
     what till_tse_history_type not null,
+    z_nr bigint not null,
     date timestamptz not null default now()
 );
 
