@@ -50,6 +50,7 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     data_privacy_url: str
     about_page_url: str
     contact_email: str
+    sumup_client_secret: str
     sepa_config: SEPAConfig
 
 

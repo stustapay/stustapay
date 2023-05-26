@@ -1,3 +1,4 @@
+import datetime
 from typing import Optional
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.config import PublicConfig
@@ -11,18 +12,24 @@ class Customer(Account):
     email: Optional[str]
 
 
-class CustomerBank(BaseModel):
-    iban: str
-    account_name: str
-    email: str
-
-
 class OrderWithBon(Order):
     bon_generated: Optional[bool]
     bon_output_file: Optional[str]
 
 
-class PublicCustomerApiConfig(PublicConfig):
-    data_privacy_url: str
-    contact_email: str
-    about_page_url: str
+class BaseCustomerCheckout(BaseModel):
+    checkout_reference: str
+    amount: float
+    currency: str
+    merchant_code: str
+    pay_to_email: str
+    description: str
+    return_url: str
+    id: str
+    status: str
+    date: datetime.datetime
+    valid_until: datetime.datetime
+
+
+class CustomerCheckout(BaseCustomerCheckout):
+    customer_id: int

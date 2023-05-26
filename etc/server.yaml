@@ -29,3 +29,5 @@ customer_portal:
 
   about_page_url: "https://stustapay.de/impressum"
   contact_email: "test-beschwerde@stustapay.de"
+
+  sumup_client_secret: "super secret"

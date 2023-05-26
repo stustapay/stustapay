@@ -5,7 +5,8 @@ from fastapi import APIRouter, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
-from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon, PublicCustomerApiConfig
+from stustapay.core.schema.customer import Customer, OrderWithBon
+from stustapay.core.service.customer import CustomerBank, PublicCustomerApiConfig
 
 router = APIRouter(
     prefix="",
@@ -48,3 +49,15 @@ async def get_customer_config(
     customer_service: ContextCustomerService,
 ):
     return await customer_service.get_public_customer_api_config()
+
+
+# TODO: move this to a separate router
+# TODO: create endpoint for return_url which should check the status of the checkout and redirect to the correct page
+@router.get("/create_checkout", summary="initiate customer checkout", response_model=int)
+async def create_checkout(
+    customer_service: ContextCustomerService,
+    amount: float,
+):
+    return await customer_service.create_checkout(amount=amount)
+
+

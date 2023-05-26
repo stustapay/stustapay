@@ -71,6 +71,7 @@ TEST_CONFIG = {
         },
         "about_page_url": "https://stustapay.de/impressum",
         "contact_email": "test-beschwerde@stustapay.de",
+        "sumup_client_secret": "sumup_client_secret",
     },
     "database": get_test_db_config(),
 }

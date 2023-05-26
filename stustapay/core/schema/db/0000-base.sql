@@ -225,6 +225,22 @@ create table if not exists customer_info (
     email text
 );
 
+-- customer checkout
+create table if not exists customer_checkout (
+    checkout_reference text primary key unique,
+    amount numeric not null,
+    currency text not null,
+    merchant_code text,
+    pay_to_email text,
+    description text,
+    return_url text,
+    id: text,
+    status text,
+    date timestamptz,
+    valid_until timestamptz,
+    customer_id numeric(20) references account(user_tag_uid) on delete cascade,
+)
+
 -- people working with the payment system
 create table if not exists usr (
     id bigint primary key generated always as identity,

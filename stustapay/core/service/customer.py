@@ -1,22 +1,26 @@
 # pylint: disable=unexpected-keyword-arg
 # pylint: disable=unused-argument
+import asyncio
 import csv
 import datetime
 import logging
 import re
+import uuid
 from typing import Optional, List
+import aiohttp
 
 import asyncpg
 from pydantic import BaseModel
 from stustapay.core.config import Config
-from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon, PublicCustomerApiConfig
+from stustapay.core.schema.config import PublicConfig
+from stustapay.core.schema.customer import BaseCustomerCheckout, Customer, OrderWithBon
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_customer,
     with_db_transaction,
 )
-from stustapay.core.service.common.error import InvalidArgument
+from stustapay.core.service.common.error import InvalidArgument, ServiceException
 from schwifty import IBAN
 from sepaxml import SepaTransfer
 
@@ -34,6 +38,37 @@ class CustomerBankData(BaseModel):
     email: str
     user_tag_uid: int
     balance: float
+
+
+class CustomerBank(BaseModel):
+    iban: str
+    account_name: str
+    email: str
+
+
+class PublicCustomerApiConfig(PublicConfig):
+    data_privacy_url: str
+    contact_email: str
+    about_page_url: str
+
+class CreateCheckout(BaseModel):
+    amount: float
+
+
+class SumupCreateCheckout(BaseModel):
+    checkout_reference: str
+    amount: float
+    currency: str
+    merchant_code: str
+    pay_to_email: Optional[str]
+    description: Optional[str]
+    return_url: Optional[str]
+    customer_id: Optional[str]
+    redirect_url: Optional[str]
+
+
+class SumupCreateCheckoutResponse(BaseCustomerCheckout):
+    customer_id: str
 
 
 async def get_number_of_customers(conn: asyncpg.Connection) -> int:
@@ -75,7 +110,7 @@ def csv_export(
                     customer.iban,
                     round(customer.balance, 2),
                     currency_ident,
-                    cfg.customer_portal.sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
+                    cfg.customer_portal.sepa_config.description.format(user_tag_uid=hex(customer.user_tag_uid)),
                     execution_date.isoformat(),
                 ]
             )
@@ -116,7 +151,7 @@ def sepa_export(
             "BIC": str(IBAN(customer.iban).bic),
             "amount": round(customer.balance * 100),  # in cents
             "execution_date": execution_date,
-            "description": cfg.customer_portal.sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
+            "description": cfg.customer_portal.sepa_config.description.format(user_tag_uid=hex(customer.user_tag_uid)),
         }
 
         if not re.match(r"^[a-zA-Z0-9 \-.,:()/?'+]*$", payment["description"]):  # type: ignore
@@ -136,6 +171,7 @@ def sepa_export(
 
 
 class CustomerService(DBService):
+    SUMUP_URL = "https://api.sumup.com/v0.1/checkouts"
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, config_service: ConfigService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
@@ -237,3 +273,90 @@ class CustomerService(DBService):
             contact_email=self.cfg.customer_portal.contact_email,
             about_page_url=self.cfg.customer_portal.about_page_url,
         )
+
+    @with_db_transaction
+    @requires_customer
+    async def create_checkout(self, *, conn: asyncpg.Connection, current_customer: Customer, 
+                              amount: float) -> str:
+        # check amount
+        if amount <= 0:
+            raise InvalidArgument("Amount must be greater than 0")
+
+        amount = round(amount, 2)
+
+        # create checkout reference as uuid
+        checkout_reference = uuid.uuid4()
+        # check if checkout reference already exists
+        while await conn.fetchval("select exists(select * from checkout where checkout_reference = $1)", checkout_reference):
+            checkout_reference = uuid.uuid4()
+        
+
+        create_checkout = SumupCreateCheckout(
+            checkout_reference=checkout_reference,
+            amount=amount,
+            currency=self.config_service.get_public_config().currency_identifier,
+            merchant_code="",
+            pay_to_email="",
+            description="",
+            return_url="",
+            customer_id=f"{current_customer.user_tag_uid_hex}",
+            redirect_url="",
+        )
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': f'Bearer {self.cfg.customer_portal.sumup_client_secret}'
+        }
+
+        # response = requests.request("POST", self.SUMUP_URL, headers=headers, data=create_checkout.json())
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            try:
+                async with session.post(self.SUMUP_URL, data=create_checkout.json(), timeout=2) as response:
+
+                    if not response.ok:
+                        logging.error(f"Sumup API returned status code {response.status} with body {response.text}")
+                        raise ServiceException("Sumup API returned an error")
+
+
+                    response_text = await response.text()
+
+            except asyncio.TimeoutError as e:
+                logging.error("Sumup API timeout")
+                raise ServiceException("Sumup API timeout") from e
+            
+
+        checkout_response = SumupCreateCheckoutResponse.parse_obj(response_text)
+
+        if checkout_response.status == "FAILED":
+            logging.error(f"Sumup API returned status FAILED with body {response.text}")
+            raise ServiceException("Sumup API returned FAILED")
+
+        
+        # save to database
+        customer_checkout = checkout_response.dict().update({"customer_id": int(checkout_response.customer_id)})
+        await conn.execute(
+            "insert into customer_checkout (checkout_reference, amount, currency, merchant_code, pay_to_email, description, return_url, id, status, date, valid_until, customer_id "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+            customer_checkout.checkout_reference,
+            customer_checkout.amount,
+            customer_checkout.currency,
+            customer_checkout.merchant_code,
+            customer_checkout.pay_to_email,
+            customer_checkout.description,
+            customer_checkout.return_url,
+            customer_checkout.id,
+            customer_checkout.status,
+            customer_checkout.date,
+            customer_checkout.valid_until,
+            customer_checkout.customer_id,
+        )
+
+        return checkout_response.id
+
+    # TODO: create async thread which regularly checks the pending actions over the sumup api
+    # https://developer.sumup.com/docs/api/retrieve-a-checkout/
+
+    # TODO: create service function that checks the checkout status when the client is redirected to the return_url
+

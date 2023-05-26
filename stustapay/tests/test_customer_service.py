@@ -9,6 +9,7 @@ from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer import (
+    CustomerBank,
     CustomerBankData,
     CustomerService,
     csv_export,
@@ -20,7 +21,6 @@ from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.tests.common import TEST_CONFIG, TerminalTestCase
 from stustapay.core.config import CustomerPortalApiConfig
-from stustapay.core.schema.customer import CustomerBank
 from stustapay.core.service.common.error import InvalidArgument, Unauthorized
 from dateutil.parser import parse
 
@@ -212,7 +212,7 @@ class CustomerServiceTest(TerminalTestCase):
                 self.assertEqual(row["currency"], test_currency)
                 self.assertEqual(
                     row["reference"],
-                    self.test_config.customer_portal.sepa_config.description.format(user_tag_uid=customer["uid"]),
+                    self.test_config.customer_portal.sepa_config.description.format(user_tag_uid=hex(customer["uid"])),
                 )
                 self.assertEqual(row["execution_date"], execution_date.isoformat())
 
