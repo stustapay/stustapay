@@ -73,7 +73,7 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
         }
 
         val uid = scanViewUid
-        Text("UID: $uid")
+        Text("UID: ${uid.toString(16)}")
 
         Spacer(modifier = Modifier.height(32.dp))
         Text(text = "Settings", fontSize = 24.sp)
@@ -259,12 +259,13 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
                             else -> "No"
                         }
                     )
-                    Text("UID: " + result.uid)
+                    Text("UID: ${result.uid.toString(16)}")
                     Text("Content:\n" + result.content)
                 }
                 is NfcDebugScanResult.WriteSuccess -> Text("Written")
                 is NfcDebugScanResult.Failure -> {
                     when (val reason = result.reason) {
+                        is NfcScanFailure.NoKey -> Text("no secret key present")
                         is NfcScanFailure.Other -> Text("Failure: ${reason.msg}")
                         is NfcScanFailure.Incompatible -> Text("Tag incompatible")
                         is NfcScanFailure.Lost -> Text("Tag lost")

@@ -23,6 +23,7 @@ data class CheckedPayOut(
         )
     }
 
+    /** max amount in cents */
     fun getMaxAmount(): UInt {
         return (maxAmount * 100).toUInt()
     }

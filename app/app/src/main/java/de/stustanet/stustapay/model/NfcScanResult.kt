@@ -16,6 +16,7 @@ sealed interface NfcScanResult {
 }
 
 sealed interface NfcScanFailure {
+    object NoKey : NfcScanFailure
     data class Other(val msg: String): NfcScanFailure
     data class Incompatible(val msg: String): NfcScanFailure
     data class Lost(val msg: String): NfcScanFailure

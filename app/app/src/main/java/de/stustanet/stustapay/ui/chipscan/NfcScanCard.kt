@@ -33,41 +33,41 @@ fun NfcScanCard(
     onScan: (UserTag) -> Unit = {},
     scan: Boolean = true,  // is scanning active?
     keepScanning: Boolean = false,  // after a successfull scan, keep on scanning?
-    content: @Composable () -> Unit = {
+    showStatus: Boolean = true,  // display scan status below the content.
+    content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
         Text("Scan a Chip \uD83D\uDCE1", textAlign = TextAlign.Center, fontSize = 40.sp)
     },
 ) {
-    val scanResult by viewModel.scanState.collectAsStateWithLifecycle()
+    val scanState by viewModel.scanState.collectAsStateWithLifecycle()
+    val scanning by viewModel.scanning.collectAsStateWithLifecycle()
+    val scanResult by viewModel.scanResult.collectAsStateWithLifecycle()
 
-    LaunchedEffect(scanResult, scan) {
-        val tag = scanResult.scanTag
-        if (tag == null) {
-            // no scanned tag yet -> set desired scan state
-            if (scan) {
-                viewModel.scan()
-            } else {
+    LaunchedEffect(scanResult) {
+        val tag = scanResult
+        if (tag != null) {
+            if (checkScan(tag)) {
+                // this also resets tag to null
                 viewModel.stopScan()
-            }
-        }
-        else {
-            // we've scanned a tag
-            // if the tag is good, return it, and maybe continue scanning
-            // of stop scanning
-            if (scan) {
-                if (checkScan(tag)) {
-                    viewModel.stopScan()
-                    onScan(tag)
+                onScan(tag)
 
-                    // continue scanning
-                    if (keepScanning) {
-                        viewModel.scan()
-                    }
+                // continue scanning
+                if (keepScanning) {
+                    viewModel.scan()
                 }
             }
-            else {
-                viewModel.stopScan()
+        }
+    }
+
+    LaunchedEffect(scan) {
+        // we want to enable scanning
+        if (scan) {
+            // we're not currently scanning
+            if (!scanning) {
+                viewModel.scan()
             }
+        } else {
+            viewModel.stopScan()
         }
     }
 
@@ -87,13 +87,15 @@ fun NfcScanCard(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center
             ) {
-                content()
+                content(scanState.status)
 
-                Text(
-                    scanResult.status,
-                    textAlign = TextAlign.Left,
-                    fontSize = 20.sp,
-                )
+                if (showStatus) {
+                    Text(
+                        scanState.status,
+                        textAlign = TextAlign.Left,
+                        fontSize = 20.sp,
+                    )
+                }
             }
         }
     }
