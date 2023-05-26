@@ -8,6 +8,9 @@ from typing import Optional, List
 
 import asyncpg
 from pydantic import BaseModel
+from schwifty import IBAN
+from sepaxml import SepaTransfer
+
 from stustapay.core.config import Config
 from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon, PublicCustomerApiConfig
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
@@ -17,9 +20,6 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument
-from schwifty import IBAN
-from sepaxml import SepaTransfer
-
 from stustapay.core.service.config import ConfigService
 
 
@@ -231,6 +231,8 @@ class CustomerService(DBService):
     async def get_public_customer_api_config(self) -> PublicCustomerApiConfig:
         public_config = await self.config_service.get_public_config()
         return PublicCustomerApiConfig(
+            test_mode=self.cfg.core.test_mode,
+            test_mode_message=self.cfg.core.test_mode_message,
             currency_identifier=public_config.currency_identifier,
             currency_symbol=public_config.currency_symbol,
             data_privacy_url=self.cfg.customer_portal.data_privacy_url,

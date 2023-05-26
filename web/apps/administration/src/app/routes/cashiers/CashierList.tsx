@@ -56,7 +56,11 @@ export const CashierList: React.FC = () => {
       return "";
     }
 
-    return <RouterLink to={`/tills/${till.id}`}>{till.name}</RouterLink>;
+    return (
+      <RouterLink key={id} to={`/tills/${till.id}`}>
+        {till.name}
+      </RouterLink>
+    );
   };
 
   const columns: GridColDef<Cashier>[] = [

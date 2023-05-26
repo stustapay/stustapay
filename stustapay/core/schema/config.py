@@ -9,5 +9,7 @@ class ConfigEntry(BaseModel):
 
 
 class PublicConfig(BaseModel):
+    test_mode: bool
+    test_mode_message: str
     currency_symbol: str
     currency_identifier: str

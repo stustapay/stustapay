@@ -15,6 +15,7 @@ from stustapay.core.service.customer import (
 from stustapay.core.subcommand import SubCommand
 from . import database
 from .config import Config
+from .service.auth import AuthService
 
 
 class CustomerExportCli(SubCommand):
@@ -92,7 +93,9 @@ class CustomerExportCli(SubCommand):
                 )
 
                 # just to get currency identifier from db
-                cfg_srvc = ConfigService(db_pool=None, config=None, auth_service=None)  # type: ignore
+                cfg_srvc = ConfigService(
+                    db_pool=db_pool, config=self.config, auth_service=AuthService(db_pool=db_pool, config=self.config)
+                )
                 currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
 
                 output_path_file_extension = f"{output_path}_{i + 1}.{file_extension}"

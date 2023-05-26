@@ -17,9 +17,15 @@ class ProductSoldStats(Product):
     quantity_sold: int
 
 
+class VoucherStats(BaseModel):
+    vouchers_issued: int
+    vouchers_spent: int
+
+
 class ProductStats(BaseModel):
     product_quantities: list[ProductSoldStats]
     product_quantities_by_till: dict[int, list[ProductSoldStats]]
+    voucher_stats: VoucherStats
 
 
 class OrderStatsService(DBService):
@@ -54,6 +60,10 @@ class OrderStatsService(DBService):
             to_timestamp,
         )
 
+        voucher_stats = await conn.fetchrow(
+            "select * from voucher_stats(from_timestamp => $1, to_timestamp => $2)", from_timestamp, to_timestamp
+        )
+
         product_quantities_by_till = defaultdict(list)
         for row in stats_by_till:
             product_quantities_by_till[row["till_id"]].append(ProductSoldStats.parse_obj(row))
@@ -61,4 +71,5 @@ class OrderStatsService(DBService):
         return ProductStats(
             product_quantities=[ProductSoldStats.parse_obj(row) for row in stats_by_products],
             product_quantities_by_till=product_quantities_by_till,
+            voucher_stats=VoucherStats.parse_obj(voucher_stats),
         )

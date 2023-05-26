@@ -22,7 +22,12 @@ class ConfigService(DBService):
             "   (select value from config where key = 'currency.identifier') as currency_identifier"
         )
 
-        return PublicConfig.parse_obj(row)
+        return PublicConfig(
+            currency_symbol=row["currency_symbol"],
+            currency_identifier=row["currency_identifier"],
+            test_mode=self.cfg.core.test_mode,
+            test_mode_message=self.cfg.core.test_mode_message,
+        )
 
     @with_db_transaction
     @requires_user([Privilege.config_management])

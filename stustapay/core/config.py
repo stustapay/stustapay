@@ -30,6 +30,8 @@ class DatabaseConfig(BaseModel):
 
 
 class CoreConfig(BaseModel):
+    test_mode: bool = False
+    test_mode_message: str = ""
     secret_key: str
     jwt_token_algorithm: str = "HS256"
     sumup_affiliate_key: str = "unset"

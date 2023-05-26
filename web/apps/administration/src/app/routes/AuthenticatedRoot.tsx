@@ -36,6 +36,8 @@ import { useTranslation } from "react-i18next";
 import { useAppSelector, selectCurrentUser } from "@store";
 import { AppBar, Main, DrawerHeader, drawerWidth } from "@components";
 import { CurrentUser } from "@stustapay/models";
+import { TestModeDisclaimer } from "@stustapay/components";
+import { config } from "@api/common";
 
 const AdvancedMenu: React.FC<{ user: CurrentUser }> = ({ user }) => {
   const { t } = useTranslation();
@@ -251,6 +253,7 @@ export const AuthenticatedRoot: React.FC = () => {
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
+        <TestModeDisclaimer testMode={config.testMode} testModeMessage={config.testModeMessage} />
         <React.Suspense fallback={<CircularProgress />}>
           <Outlet />
         </React.Suspense>

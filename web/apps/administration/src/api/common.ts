@@ -23,6 +23,8 @@ export const StaticAdminConfigSchema = z.object({
 export type StaticAdminConfig = z.infer<typeof StaticAdminConfigSchema>;
 
 export const PublicApiConfigSchema = z.object({
+  test_mode: z.boolean(),
+  test_mode_message: z.string(),
   terminal_api_endpoint: z.string(),
   currency_symbol: z.string(),
   currency_identifier: z.string(),
@@ -32,6 +34,8 @@ export type PublicApiConfig = z.infer<typeof PublicApiConfigSchema>;
 
 export const ConfigSchema = StaticAdminConfigSchema.merge(
   z.object({
+    testMode: z.boolean(),
+    testModeMessage: z.string(),
     adminApiEndpoint: z.string(),
     adminApiBaseUrl: z.string(),
     adminApiBaseWebsocketUrl: z.string(),
@@ -53,6 +57,8 @@ const generateConfig = (staticConfig: StaticAdminConfig, publicApiConfig: Public
     adminApiBaseWebsocketUrl: `ws://${staticConfig.adminApiEndpoint}`,
     currencyIdentifier: publicApiConfig.currency_identifier,
     currencySymbol: publicApiConfig.currency_symbol,
+    testMode: publicApiConfig.test_mode,
+    testModeMessage: publicApiConfig.test_mode_message,
   };
 };
 

@@ -38,6 +38,12 @@ export const EditAccountVoucherAmountModal: React.FC<EditAccountVoucherAmountMod
       });
   };
 
+  const handleChange = (newVal: number | null) => {
+    if (newVal != null) {
+      setVoucherAmount(newVal);
+    }
+  };
+
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle>{t("account.changeVoucherAmount")}</DialogTitle>
@@ -45,12 +51,7 @@ export const EditAccountVoucherAmountModal: React.FC<EditAccountVoucherAmountMod
         <ListItem sx={{ pl: 0 }}>
           <ListItemText primary={t("account.oldVoucherAmount")} secondary={account.vouchers} />
         </ListItem>
-        <NumericInput
-          value={voucherAmount}
-          fullWidth
-          onChange={setVoucherAmount}
-          label={t("account.newVoucherAmount")}
-        />
+        <NumericInput value={voucherAmount} fullWidth onChange={handleChange} label={t("account.newVoucherAmount")} />
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} color="error">

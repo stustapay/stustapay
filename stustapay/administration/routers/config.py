@@ -22,6 +22,8 @@ async def get_public_config(context: Annotated[Context, Depends(get_context)], c
     terminal_endpoint = context.config.terminalserver.base_url.replace("http://", "")
     config: PublicConfig = await config_service.get_public_config()
     return Config(
+        test_mode=context.config.core.test_mode,
+        test_mode_message=context.config.core.test_mode_message,
         terminal_api_endpoint=terminal_endpoint,
         currency_symbol=config.currency_symbol,
         currency_identifier=config.currency_identifier,

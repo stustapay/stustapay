@@ -7,6 +7,7 @@ export type ProductSoldStats = Product & { quantity_sold: number };
 export interface ProductStats {
   product_quantities: ProductSoldStats[];
   product_quantities_by_till: { [k: number]: ProductSoldStats[] };
+  voucher_stats: { vouchers_issued: number; vouchers_spent: number };
 }
 
 export const statsApi = createApi({

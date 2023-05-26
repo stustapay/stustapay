@@ -3,6 +3,8 @@ import { Link as RouterLink, Outlet, Navigate, useSearchParams } from "react-rou
 import { AppBar, Box, Button, CircularProgress, Container, CssBaseline, Toolbar, Typography } from "@mui/material";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { useTranslation } from "react-i18next";
+import { TestModeDisclaimer } from "@stustapay/components";
+import { config } from "@/api";
 
 export const UnauthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
@@ -40,6 +42,10 @@ export const UnauthenticatedRoot: React.FC = () => {
       >
         <Toolbar />
         <Container maxWidth="lg" sx={{ padding: { xs: 0, md: 1, lg: 3 } }}>
+          <TestModeDisclaimer
+            testMode={config.publicApiConfig.test_mode}
+            testModeMessage={config.publicApiConfig.test_mode_message}
+          />
           <React.Suspense fallback={<CircularProgress />}>
             <Outlet />
           </React.Suspense>
