@@ -26,10 +26,9 @@ class AccountServiceTest(TerminalTestCase):
         acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
         self.assertIsNotNone(acc)
         self.assertEqual(1, acc.user_tag_uid)
-        success = await self.account_service.switch_account_tag_uid_admin(
+        await self.account_service.switch_account_tag_uid_admin(
             token=self.admin_token, account_id=account_id, new_user_tag_uid=2, comment="foobar"
         )
-        self.assertTrue(success)
         acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
         self.assertIsNotNone(acc)
         self.assertEqual(2, acc.user_tag_uid)

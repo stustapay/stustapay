@@ -2,7 +2,7 @@ import * as React from "react";
 import { TextField, TextFieldProps } from "@mui/material";
 
 export type NumericInputProps = {
-  onChange: (value: number) => void;
+  onChange: (value: number | null) => void;
   value?: number | undefined | null;
 } & Omit<TextFieldProps, "value" | "onChange" | "onBlur" | "onKeyUp">;
 
@@ -18,6 +18,11 @@ export const NumericInput: React.FC<NumericInputProps> = ({ value, onChange, ...
   };
 
   const propagateChange = () => {
+    if (internalValue === "") {
+      onChange(null);
+      return;
+    }
+
     const parsedValue = parseFloat(internalValue);
     if (!isNaN(parsedValue)) {
       setInternalValue(String(parsedValue));

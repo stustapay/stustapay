@@ -1,4 +1,4 @@
-# pylint: disable=unexpected-keyword-arg,missing-kwoa
+# pylint: disable=unexpected-keyword-arg,missing-kwoa,attribute-defined-outside-init
 import argparse
 import asyncio
 import logging
@@ -56,6 +56,7 @@ class Simulator(SubCommand):
         self.config = config
 
         self.base_url = self.config.terminalserver.base_url
+        self.admin_url = self.config.administration.base_url
         self.admin_tag_uid = None
         self.n_tills_total = None
 
@@ -75,10 +76,13 @@ class Simulator(SubCommand):
             "-b", "--bookings-per-second", type=float, help="number of bookings per second", default=100.0
         )
 
-    def sleep(self, n_tills: int):
-        assert self.n_tills_total is not None
+    def sleep(self):
+        to_sleep = 1.0 / self.args.bookings_per_second
+        to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
+        time.sleep(to_sleep)
 
-        to_sleep = (float(n_tills) / float(self.n_tills_total)) * (1.0 / self.args.bookings_per_second)
+    def sleep_topup(self):
+        to_sleep = 10.0 / self.args.bookings_per_second
         to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
         time.sleep(to_sleep)
 
@@ -121,8 +125,8 @@ class Simulator(SubCommand):
             for row in await db_pool.fetch(
                 "select cr.id "
                 "from cash_register cr "
-                "left join till t on t.active_cash_register_id = cr.id "
-                "where t.id is null"
+                "left join usr u on u.cash_register_id = cr.id "
+                "where u.id is null"
             )
         ]
 
@@ -154,14 +158,42 @@ class Simulator(SubCommand):
         )
 
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
-            resp = await client.post("/auth/register_terminal", json={"registration_uuid": str(registration_uuid)})
-            if resp.status != 200:
-                print("Error registering terminal", resp.status, await resp.text())
-                raise RuntimeError("foobar")
-            success = TerminalRegistrationSuccess.parse_obj(await resp.json())
-            resp = await client.get("/config", headers={"Authorization": f"Bearer {success.token}"})
-            config = TerminalConfig.parse_obj(await resp.json())
+            async with client.post(
+                "/auth/register_terminal", json={"registration_uuid": str(registration_uuid)}
+            ) as resp:
+                if resp.status != 200:
+                    self.logger.warning(f"Error registering terminal {resp.status = } payload = {await resp.text()}")
+                    raise RuntimeError("foobar")
+                success = TerminalRegistrationSuccess.parse_obj(await resp.json())
+            async with client.get("/config", headers={"Authorization": f"Bearer {success.token}"}) as resp:
+                if resp.status != 200:
+                    self.logger.error(
+                        f"Error fetching terminal config, { resp.status = }, payload = {await resp.json()}"
+                    )
+                config = TerminalConfig.parse_obj(await resp.json())
             return Terminal(token=success.token, till=success.till, config=config)
+
+    async def voucher_granting(self):
+        db_pool = await create_db_pool(self.config.database, n_connections=1)
+        async with aiohttp.ClientSession(base_url=self.admin_url) as client:
+            while True:
+                rows = await db_pool.fetch("select * from account where user_tag_uid is not null")
+                if len(rows) == 0:  # no tickets were sold yet
+                    time.sleep(1)
+                    continue
+
+                r = random.choice([(row["id"], row["vouchers"]) for row in rows])
+                async with client.post(
+                    f"/accounts/{r[0]}/update-voucher-amount",
+                    json={"new_voucher_amount": r[1] + random.randint(1, 8)},
+                    headers=self.admin_headers,
+                ) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(
+                            f"Error while updating voucher amount {resp.status = }, payload = {await resp.json()}"
+                        )
+
+                time.sleep(0.3)
 
     async def reporter(self):
         while True:
@@ -173,53 +205,137 @@ class Simulator(SubCommand):
 
             time.sleep(10)
 
-    async def _register_terminals(self, db_pool: asyncpg.Pool, till_ids: list[int], stock_up=False) -> list[Terminal]:
+    async def _login_cashier(
+        self, db_pool: asyncpg.Pool, terminal: Terminal, cashier_tag_uid: int, stock_up: bool = False
+    ) -> bool:
         stocking_id = await db_pool.fetchval("select id from cash_register_stocking limit 1")
+        async with aiohttp.ClientSession(base_url=self.base_url, headers=terminal.get_headers()) as client:
+            async with client.post(
+                "/user/login", json={"user_tag": {"uid": self.admin_tag_uid}, "user_role_id": ADMIN_ROLE_ID}
+            ) as resp:
+                assert resp.status == 200
+
+            has_cash_register = await db_pool.fetchval(
+                "select exists (select from usr where user_tag_uid = $1 and cash_register_id is not null)",
+                cashier_tag_uid,
+            )
+            if stock_up and not has_cash_register:
+                cash_register_ids = await self.get_unused_cash_registers(db_pool=db_pool)
+                if len(cash_register_ids) == 0:
+                    self.logger.warning("Did not find enough cash registers to stock all cashiers")
+                    return False
+                register_id = random.choice(cash_register_ids)
+                async with client.post(
+                    "/stock-up-cash-register",
+                    json={
+                        "cashier_tag_uid": cashier_tag_uid,
+                        "register_stocking_id": stocking_id,
+                        "cash_register_id": register_id,
+                    },
+                ) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(
+                            f"Error while stocking up cashier {resp.status = }, payload = {await resp.json()}"
+                        )
+                    assert resp.status == 200
+
+            async with client.post(
+                "/user/login", json={"user_tag": {"uid": cashier_tag_uid}, "user_role_id": CASHIER_ROLE_ID}
+            ) as resp:
+                assert resp.status == 200
+
+            return True
+
+    async def _register_terminals(self, db_pool: asyncpg.Pool, till_ids: list[int], stock_up=False) -> list[Terminal]:
         terminals: list[Terminal] = []
         for till_id in till_ids:
             terminal = await self._register_terminal(db_pool=db_pool, till_id=till_id)
 
             if terminal.till.active_user_id is not None:
-                terminals.append(terminal)
-                continue
+                is_cashier = await db_pool.fetchval(
+                    "select exists(select from usr where id = $1 and cashier_account_id is not null)",
+                    terminal.till.active_user_id,
+                )
+                if is_cashier:
+                    self.logger.info("Terminal already has a logged in cashier")
+                    terminals.append(terminal)
+                    continue
 
             with self.cashier_lock:
                 cashier_tag_uids = await self.get_unused_cashiers(db_pool=db_pool)
                 if len(cashier_tag_uids) == 0:
                     return terminals
                 cashier_tag_uid = cashier_tag_uids[0]
-                async with aiohttp.ClientSession(base_url=self.base_url, headers=terminal.get_headers()) as client:
-                    resp = await client.post(
-                        "/user/login", json={"user_tag": {"uid": self.admin_tag_uid}, "user_role_id": ADMIN_ROLE_ID}
-                    )
-                    assert resp.status == 200
 
-                    if stock_up:
-                        cash_register_ids = await self.get_unused_cash_registers(db_pool=db_pool)
-                        if len(cash_register_ids) == 0:
-                            self.logger.warning("Did not find enough cash registers to stock all cashiers")
-                            return terminals
-                        register_id = random.choice(cash_register_ids)
-                        resp = await client.post(
-                            "/stock-up-cash-register",
-                            json={
-                                "cashier_tag_uid": cashier_tag_uid,
-                                "register_stocking_id": stocking_id,
-                                "cash_register_id": register_id,
-                            },
-                        )
-                        assert resp.status == 200
-
-                    resp = await client.post(
-                        "/user/login", json={"user_tag": {"uid": cashier_tag_uid}, "user_role_id": CASHIER_ROLE_ID}
-                    )
-                    assert resp.status == 200
+                login_success = await self._login_cashier(
+                    db_pool=db_pool, terminal=terminal, cashier_tag_uid=cashier_tag_uid, stock_up=stock_up
+                )
+                if not login_success:
+                    raise RuntimeError("Error logging in cashier")
             terminals.append(terminal)
 
         return terminals
 
+    async def _preform_cashier_close_out(self, cashier_id: int) -> bool:
+        async with aiohttp.ClientSession(base_url=self.admin_url) as client:
+            self.logger.info(f"Closing out cashier with id {cashier_id = }")
+            async with client.get(f"/cashiers/{cashier_id}", headers=self.admin_headers) as resp:
+                if resp.status != 200:
+                    self.logger.info(
+                        f"Failed to get cashier detail for {cashier_id = }, {resp.status = } payload = {await resp.json()}"
+                    )
+                    return False
+
+                drawer_balance = (await resp.json())["cash_drawer_balance"]
+                if drawer_balance == 0:
+                    self.logger.info(f"Skipping cashier close out ({cashier_id = }) since drawer balance is zero")
+                    return True
+
+            payload = {
+                "comment": "some shift this was",
+                "actual_cash_drawer_balance": drawer_balance
+                + round(random.uniform(-drawer_balance * 0.1, drawer_balance * 0.1)),
+                "closing_out_user_id": random.randint(1, 5),  # one of 5 finanzorgas
+            }
+            async with client.post(
+                f"/cashiers/{cashier_id}/close-out", json=payload, headers=self.admin_headers
+            ) as resp:
+                if resp.status != 200:
+                    self.logger.warning(f"Closing out cashier failed: {resp.status = }, payload = {await resp.json()}")
+                    return False
+
+            return True
+
+    async def perform_cashier_shift_change(self, db_pool: asyncpg.Pool, terminal: Terminal, perform_close_out=False):
+        with self.cashier_lock:
+            async with aiohttp.ClientSession(base_url=self.base_url) as client:
+                async with client.get("/user", headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(
+                            f"Current user fetching failed, {resp.status = }, payload = {await resp.json()}"
+                        )
+                        return
+                    cashier_id = (await resp.json())["id"]
+
+                async with client.post("/user/logout", headers=terminal.get_headers()) as resp:
+                    if resp.status != 204:
+                        self.logger.warning(f"Terminal log out failed, {resp.status = }, payload = {await resp.json()}")
+                        return
+
+                if perform_close_out:
+                    await self._preform_cashier_close_out(cashier_id=cashier_id)
+
+                cashier_tag_uids = await self.get_unused_cashiers(db_pool=db_pool)
+                if len(cashier_tag_uids) == 0:
+                    self.logger.warning("Did not find a not logged in cashier")
+                    return
+
+                await self._login_cashier(
+                    db_pool=db_pool, terminal=terminal, cashier_tag_uid=cashier_tag_uids[0], stock_up=perform_close_out
+                )
+
     async def entry_till(self):
-        db_pool = await create_db_pool(self.config.database)
+        db_pool = await create_db_pool(self.config.database, n_connections=2)
         async with db_pool.acquire() as conn:
             rows = await conn.fetch("select id from till where id != 1 and active_profile_id = $1", PROFILE_ID_TICKET)
             terminals = await self._register_terminals(
@@ -229,7 +345,7 @@ class Simulator(SubCommand):
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
             while True:
                 terminal = random.choice(terminals)
-                self.sleep(n_tills=len(terminals))
+                self.sleep()
                 n_customers = random.randint(1, 3)
                 user_tags = await self.get_free_tags(db_pool=db_pool, limit=n_customers)
                 if len(user_tags) == 0:
@@ -241,17 +357,26 @@ class Simulator(SubCommand):
                     "payment_method": "cash",
                     "customer_tag_uids": user_tags,
                 }
-                resp = await client.post("/order/check-ticket-sale", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    self.logger.warning(f"Error in check ticket sale, { resp.status = }, payload = {await resp.json()}")
-                    continue
-                resp = await client.post("/order/book-ticket-sale", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    self.logger.warning(f"Error in book ticket sale, { resp.status = }, payload = {await resp.json()}")
-                    continue
+                async with client.post(
+                    "/order/check-ticket-sale", json=payload, headers=terminal.get_headers()
+                ) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(
+                            f"Error in check ticket sale, { resp.status = }, payload = {await resp.json()}"
+                        )
+                        continue
+                async with client.post("/order/book-ticket-sale", json=payload, headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(
+                            f"Error in book ticket sale, { resp.status = }, payload = {await resp.json()}"
+                        )
+                        continue
+
+                if random.randint(0, 100) == 0:
+                    await self.perform_cashier_shift_change(db_pool=db_pool, terminal=terminal, perform_close_out=True)
 
     async def topup_till(self):
-        db_pool = await create_db_pool(self.config.database)
+        db_pool = await create_db_pool(self.config.database, n_connections=2)
         async with db_pool.acquire() as conn:
             rows = await conn.fetch("select id from till where id != 1 and active_profile_id = $1", PROFILE_ID_TOPUP)
             terminals = await self._register_terminals(
@@ -261,7 +386,7 @@ class Simulator(SubCommand):
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
             while True:
                 terminal = random.choice(terminals)
-                self.sleep(n_tills=len(terminals))
+                self.sleep_topup()
                 customer_tags = await self.get_customer_tags(db_pool=db_pool)
                 if len(customer_tags) == 0:
                     continue
@@ -278,20 +403,26 @@ class Simulator(SubCommand):
                     "payment_method": "cash",
                     "amount": random.randint(10, 50),
                 }
-                resp = await client.post("/order/check-topup", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    self.logger.warning(f"Error in check topup, { resp.status = }, payload = {await resp.json()}")
-                    self.unlock_customer(customer_tag_uid)
-                    continue
-                resp = await client.post("/order/book-topup", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    self.logger.warning(f"Error in book topup, { resp.status = }, payload = {await resp.json()}")
-                    self.unlock_customer(customer_tag_uid)
-                    continue
+                async with client.post("/order/check-topup", json=payload, headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        if "More than" not in await resp.text():
+                            self.logger.warning(
+                                f"Error in check topup, { resp.status = }, payload = {await resp.json()}"
+                            )
+                        self.unlock_customer(customer_tag_uid)
+                        continue
+                async with client.post("/order/book-topup", json=payload, headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(f"Error in book topup, { resp.status = }, payload = {await resp.json()}")
+                        self.unlock_customer(customer_tag_uid)
+                        continue
                 self.unlock_customer(customer_tag_uid)
 
+                if random.randint(0, 100) == 0:
+                    await self.perform_cashier_shift_change(db_pool=db_pool, terminal=terminal, perform_close_out=True)
+
     async def sale_till(self):
-        db_pool = await create_db_pool(self.config.database)
+        db_pool = await create_db_pool(self.config.database, n_connections=2)
         async with db_pool.acquire() as conn:
             rows = await conn.fetch(
                 "select id from till where id != 1 and (active_profile_id = $1 or active_profile_id = $2)",
@@ -306,7 +437,7 @@ class Simulator(SubCommand):
         async with aiohttp.ClientSession(base_url=self.base_url) as client:
             while True:
                 terminal: Terminal = random.choice(terminals)
-                self.sleep(n_tills=len(terminals))
+                self.sleep()
 
                 customer_tags = await self.get_customer_tags(db_pool=db_pool)
                 if len(customer_tags) == 0:
@@ -323,40 +454,58 @@ class Simulator(SubCommand):
                     "customer_tag_uid": customer_tag_uid,
                     "buttons": terminal.get_random_button_selection(),
                 }
-                resp = await client.post("/order/check-sale", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    if "Not enough funds" not in await resp.text():
-                        self.logger.warning(f"Error in check sale, { resp.status = }, payload = {await resp.json()}")
-                    self.unlock_customer(customer_tag_uid)
-                    continue
-                resp = await client.post("/order/book-sale", json=payload, headers=terminal.get_headers())
-                if resp.status != 200:
-                    self.logger.warning(f"Error in book sale, { resp.status = }, payload = {await resp.json()}")
-                    self.unlock_customer(customer_tag_uid)
-                    continue
+                async with client.post("/order/check-sale", json=payload, headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        if "Not enough funds" not in await resp.text():
+                            self.logger.warning(
+                                f"Error in check sale, { resp.status = }, payload = {await resp.json()}"
+                            )
+                        self.unlock_customer(customer_tag_uid)
+                        continue
+                async with client.post("/order/book-sale", json=payload, headers=terminal.get_headers()) as resp:
+                    if resp.status != 200:
+                        self.logger.warning(f"Error in book sale, { resp.status = }, payload = {await resp.json()}")
+                        self.unlock_customer(customer_tag_uid)
+                        continue
                 self.unlock_customer(customer_tag_uid)
 
+                if random.randint(0, 100) == 0:
+                    await self.perform_cashier_shift_change(db_pool=db_pool, terminal=terminal, perform_close_out=False)
+
+    async def login_admin(self) -> str:
+        async with aiohttp.ClientSession(base_url=self.admin_url) as client:
+            async with client.post("/auth/login", data={"username": "admin", "password": "admin"}) as resp:
+                if resp.status != 200:
+                    raise RuntimeError("Error trying to log in admin user")
+                payload = await resp.json()
+            return payload["access_token"]
+
     async def run(self):
-        db_pool = await create_db_pool(self.config.database)
+        db_pool = await create_db_pool(self.config.database, n_connections=1)
 
         self.start_time = datetime.now()
 
         self.admin_tag_uid = int(
             await db_pool.fetchval("select user_tag_uid from user_with_roles where $1=any(role_names) limit 1", "admin")
         )
+        self.admin_token = await self.login_admin()
+        self.admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
         self.n_tills_total = await db_pool.fetchval("select count(*) from till")
 
         entry_till_thread = threading.Thread(target=lambda: asyncio.run(self.entry_till()))
         topup_till_thread = threading.Thread(target=lambda: asyncio.run(self.topup_till()))
         sale_till_thread = threading.Thread(target=lambda: asyncio.run(self.sale_till()))
+        voucher_thread = threading.Thread(target=lambda: asyncio.run(self.voucher_granting()))
         reporter_thread = threading.Thread(target=lambda: asyncio.run(self.reporter()))
 
         entry_till_thread.start()
         topup_till_thread.start()
         sale_till_thread.start()
+        voucher_thread.start()
         reporter_thread.start()
 
         entry_till_thread.join()
         topup_till_thread.join()
         sale_till_thread.join()
+        voucher_thread.join()
         reporter_thread.join()

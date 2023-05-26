@@ -139,8 +139,18 @@ export const translations = {
   },
   overview: {
     title: "Overview",
+    fromTimestamp: "From",
+    toTimestamp: "To",
     mostSoldProducts: "Most sold products",
     showDetails: "Show Details",
+    quantitySold: "# Sold",
+    selectedTill: "Till",
+    statsByTill: "Products sold by till",
+    depositBalance: "Deposit balance (# collected deposits)",
+    hideDeposits: "Hide deposits",
+    voucherStats: "Vouchers",
+    vouchersIssued: "Issued",
+    vouchersSpent: "Spent",
   },
   ticket: {
     name: "Name",

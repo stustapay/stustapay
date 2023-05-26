@@ -9,6 +9,7 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./i18n";
+import "./styles.css";
 
 import App from "./app/App";
 

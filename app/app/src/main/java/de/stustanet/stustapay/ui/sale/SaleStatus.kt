@@ -4,6 +4,7 @@ import android.util.Log
 import de.stustanet.stustapay.model.*
 import java.lang.Integer.max
 import java.lang.Integer.min
+import java.util.UUID
 
 
 /**
@@ -34,7 +35,7 @@ sealed interface SaleItemPrice {
  */
 sealed interface SaleItemAmount {
     data class FixedPrice(var amount: Int) : SaleItemAmount
-    data class FreePrice(var price: Double) : SaleItemAmount
+    data class FreePrice(var price: UInt) : SaleItemAmount
 }
 
 
@@ -105,7 +106,7 @@ data class SaleStatus(
             val amount: Pair<Int, SaleItemAmount>? = if (quantity != null) {
                 Pair(it.till_button_id, SaleItemAmount.FixedPrice(quantity))
             } else if (price != null) {
-                Pair(it.till_button_id, SaleItemAmount.FreePrice(price))
+                Pair(it.till_button_id, SaleItemAmount.FreePrice((price * 100).toUInt()))
             } else {
                 null
             }
@@ -198,14 +199,12 @@ data class SaleStatus(
             is SaleItemPrice.FreePrice -> {
                 when (setPrice) {
                     is FreePrice.Set -> {
-                        // convert from cents to euro here.
-                        val newPrice = setPrice.price.toDouble() / 100
                         if (current is SaleItemAmount.FreePrice) {
-                            current.price = newPrice
+                            current.price = setPrice.price
                         } else {
                             buttonSelection += Pair(
                                 buttonId,
-                                SaleItemAmount.FreePrice(price = newPrice)
+                                SaleItemAmount.FreePrice(price = setPrice.price)
                             )
                         }
                     }
@@ -244,13 +243,14 @@ data class SaleStatus(
                     is SaleItemAmount.FreePrice -> {
                         Button(
                             till_button_id = it.key,
-                            price = amount.price,
+                            price = amount.price.toDouble() / 100,
                         )
                     }
                 }
             }.toList(),
             customer_tag_uid = tag.uid,
             used_vouchers = voucherAmount,
+            uuid = checkedSale?.uuid ?: UUID.randomUUID().toString()
         )
     }
 }

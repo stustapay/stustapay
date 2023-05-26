@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 from contextlib import AsyncExitStack
+from uuid import UUID
 
 import asyncpg
 from asyncpg.exceptions import PostgresError
@@ -42,7 +43,7 @@ class Generator(SubCommand):
         subparser.add_argument("-n", "--n-workers", type=int, default=1, help="Number of bon generator indices")
         subparser.add_argument("-i", "--worker-id", type=int, default=0, help="Index of this worker instance")
 
-    async def _should_process_order(self, order_id: int) -> bool:
+    def _should_process_order(self, order_id: int) -> bool:
         return order_id % self.args.n_workers == self.args.worker_id
 
     async def run(self):
@@ -58,20 +59,21 @@ class Generator(SubCommand):
             # initial processing of pending bons
             await self.cleanup_pending_bons()
 
-            # pylint: disable=attribute-defined-outside-init# pylint: disable=attribute-defined-outside-init
             self.db_hook = DBHook(self.db_conn, "bon", self.handle_hook)
             await self.db_hook.run()
 
     async def cleanup_pending_bons(self):
         self.logger.info("Generating not generated bons")
         missing_bons = await self.db_conn.fetch(
-            "select id from bon where not generated and error is null and id % $1 = $2",
+            "select bon.id, o.uuid "
+            "from bon join ordr o on bon.id = o.id "
+            "where not generated and error is null and bon.id % $1 = $2",
             self.args.n_workers,
             self.args.worker_id,
         )
         for row in missing_bons:
             async with self.db_conn.transaction():
-                await self.process_bon(order_id=row["id"])
+                await self.process_bon(order_id=row["id"], order_uuid=row["uuid"])
         self.logger.info("Finished generating left-over bons")
 
     async def handle_hook(self, payload):
@@ -79,11 +81,13 @@ class Generator(SubCommand):
         try:
             decoded = json.loads(payload)
             bon_id = decoded["bon_id"]
-            if not await self._should_process_order(order_id=bon_id):
+            if not self._should_process_order(order_id=bon_id):
                 return
 
             async with self.db_conn.transaction():
-                await self.process_bon(order_id=bon_id)
+                order_uuid = await self.db_conn.fetchval("select uuid from ordr where id = $1", bon_id)
+                assert order_uuid is not None
+                await self.process_bon(order_id=bon_id, order_uuid=order_uuid)
         except json.JSONDecodeError as e:
             self.logger.error(f"Error while trying to decode database payload for bon notification: {e}")
         except PostgresError as e:
@@ -96,12 +100,12 @@ class Generator(SubCommand):
                 f"Unexpected error while processing bon: {traceback.format_exception(exc_type, exc_value, exc_traceback)}"
             )
 
-    async def process_bon(self, order_id: int):
+    async def process_bon(self, order_id: int, order_uuid: UUID):
         """
         Queries the database for the bon data and generates it.
         Then saves the result back to the database
         """
-        file_name = f"{order_id:010}.pdf"
+        file_name = f"{order_uuid}.pdf"
         out_file = self.config.bon.output_folder.joinpath(file_name)
 
         # Generate the PDF and store the result back in the database

@@ -95,6 +95,11 @@ interface TerminalAPI {
     suspend fun bookPayOut(newPayOut: NewPayOut): Response<CompletedPayOut>
 
     /**
+     * Scan a ticket and figure out what it is.
+     */
+    suspend fun checkTicketScan(newTicketScan: NewTicketScan): Response<TicketScanResult>
+
+    /**
      * Check if a ticket can be sold.
      */
     suspend fun checkTicketSale(newTicketSale: NewTicketSale): Response<PendingTicketSale>
@@ -150,15 +155,20 @@ interface TerminalAPI {
     suspend fun userUpdate(updateUser: UpdateUser): Response<CurrentUser>
 
     /**
+     * Registers a new free ticket.
+     */
+    suspend fun grantFreeTicket(newTicket: NewFreeTicketGrant): Response<Customer>
+
+    /**
      * Grant drink vouchers to a customer tag
      */
-    suspend fun grantVouchers(grant: GrantVouchers): Response<Account>
+    suspend fun grantVouchers(grant: GrantVouchers): Response<Customer>
 
     // customer
     /**
      * Get the account status for a customer tag.
      */
-    suspend fun getCustomer(id: ULong): Response<Account>
+    suspend fun getCustomer(id: ULong): Response<Customer>
 
     /**
      * Move customer account to a new tag.

@@ -6,50 +6,36 @@ package de.stustanet.stustapay.model
 object Access {
     // User permissions
 
-    fun canSellFreeTicket(user: CurrentUser): Boolean {
-        return user.privileges.any {
-            it == Privilege.grant_free_tickets
-        }
-    }
-
     fun canCreateUser(user: CurrentUser): Boolean {
-        return user.privileges.any {
-            it == Privilege.user_management
-        }
+        return user.privileges.contains(Privilege.user_management)
     }
 
-    fun canSell(user: CurrentUser): Boolean {
-        return user.privileges.any {
-            it == Privilege.can_book_orders
-        }
+    fun canSell(user: CurrentUser, terminal: TerminalConfig): Boolean {
+        return user.privileges.contains(Privilege.can_book_orders) && (((terminal.buttons?.size) ?: 0) > 0)
     }
 
     fun canHackTheSystem(user: CurrentUser): Boolean {
         return user.active_role_name == "admin"
     }
 
+    fun canGiveFreeTickets(user: CurrentUser): Boolean {
+        return user.privileges.contains(Privilege.grant_free_tickets)
+    }
+
     fun canGiveVouchers(user: CurrentUser): Boolean {
-        return user.privileges.any {
-            it == Privilege.grant_vouchers
-        }
+        return user.privileges.contains(Privilege.grant_vouchers)
     }
 
     fun canManageCashiers(user: CurrentUser): Boolean {
-        return user.privileges.any {
-            it == Privilege.cashier_management
-        }
+        return user.privileges.contains(Privilege.cashier_management)
     }
 
     fun canLogInOtherUsers(user: CurrentUser): Boolean {
-        return user.privileges.any {
-            it == Privilege.terminal_login
-        }
+        return user.privileges.contains(Privilege.terminal_login)
     }
 
     fun canChangeConfig(user: CurrentUser): Boolean {
-        return user.privileges.any {
-            it == Privilege.config_management
-        }
+        return user.privileges.contains(Privilege.config_management)
     }
 
     // Till features
@@ -59,5 +45,9 @@ object Access {
 
     fun canTopUp(terminal: TerminalConfig): Boolean {
         return terminal.allow_top_up
+    }
+
+    fun canPayOut(terminal: TerminalConfig): Boolean {
+        return terminal.allow_cash_out
     }
 }

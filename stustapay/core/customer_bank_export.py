@@ -15,6 +15,7 @@ from stustapay.core.service.customer.customer import (
 from stustapay.core.subcommand import SubCommand
 from . import database
 from .config import Config
+from .service.auth import AuthService
 
 
 class CustomerExportCli(SubCommand):
@@ -92,10 +93,12 @@ class CustomerExportCli(SubCommand):
                 )
 
                 # just to get currency identifier from db
-                cfg_srvc = ConfigService(db_pool=None, config=None, auth_service=None)  # type: ignore
+                cfg_srvc = ConfigService(
+                    db_pool=db_pool, config=self.config, auth_service=AuthService(db_pool=db_pool, config=self.config)
+                )
                 currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
 
-                output_path_file_extension = f"{output_path}_{i + 1}.{file_extension}"
+                output_path_file_extension = f"{output_path}_{i+1}.{file_extension}"
 
                 export_function(
                     customers_bank_data=customers_bank_data,
@@ -111,6 +114,7 @@ class CustomerExportCli(SubCommand):
 
     async def run(self):
         db_pool = await database.create_db_pool(self.config.database)
+        await database.check_revision_version(db_pool)
         if self.args.action == "sepa":
             execution_date = (
                 datetime.datetime.strptime(self.args.execution_date, "%Y-%m-%d").date()

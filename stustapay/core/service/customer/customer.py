@@ -250,6 +250,8 @@ class CustomerService(DBService):
     async def get_public_customer_api_config(self) -> PublicCustomerApiConfig:
         public_config = await self.config_service.get_public_config()
         return PublicCustomerApiConfig(
+            test_mode=self.cfg.core.test_mode,
+            test_mode_message=self.cfg.core.test_mode_message,
             sumup_topup_enabled=public_config.sumup_topup_enabled,
             currency_identifier=public_config.currency_identifier,
             currency_symbol=public_config.currency_symbol,

@@ -8,14 +8,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
-import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
-import de.stustanet.stustapay.ui.nav.navigateTo
-import kotlinx.coroutines.launch
 
 
 @Composable
@@ -43,38 +38,31 @@ fun TicketView(
 
     NavHost(
         navController = nav,
-        startDestination = TicketPage.Amount.route
+        startDestination = TicketPage.Scan.route
     ) {
-        composable(TicketPage.Amount.route) {
-            // pick ticket amounts, scan tickets
-            TicketSelection(
-                viewModel = viewModel,
-                leaveView = leaveView,
-            )
-        }
         composable(TicketPage.Scan.route) {
             // scan all the bought tickets
-            TicketScanning(
+            TicketScan(
                 viewModel = viewModel,
-                goBack = { viewModel.navTo(TicketPage.Amount) },
+                leaveView = leaveView,
             )
         }
         composable(TicketPage.Confirm.route) {
             // payment type selection
             TicketConfirm(
                 viewModel = viewModel,
-                goBack = { viewModel.navTo(TicketPage.Amount) },
+                goBack = { viewModel.navTo(TicketPage.Scan) },
             )
         }
         composable(TicketPage.Done.route) {
             TicketSuccess(
-                onDismiss = { viewModel.navTo(TicketPage.Amount) },
-                viewModel
+                viewModel = viewModel,
+                onConfirm = { viewModel.dismissSuccess() },
             )
         }
-        composable(TicketPage.Failure.route) {
+        composable(TicketPage.Error.route) {
             TicketError(
-                onDismiss = { viewModel.navTo(TicketPage.Amount) },
+                onDismiss = { viewModel.dismissError() },
                 viewModel
             )
         }

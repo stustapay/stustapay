@@ -28,12 +28,14 @@ class ConfigService(DBService):
         row = await conn.fetchrow(
             "select "
             "   (select value from config where key = 'currency.symbol') as currency_symbol,"
-            "   (select value from config where key = 'currency.identifier') as currency_identifier "
+            "   (select value from config where key = 'currency.identifier') as currency_identifier"
         )
 
         return PublicConfig(
             currency_symbol=row["currency_symbol"],
             currency_identifier=row["currency_identifier"],
+            test_mode=self.cfg.core.test_mode,
+            test_mode_message=self.cfg.core.test_mode_message,
             sumup_topup_enabled=await self.is_sumup_topup_enabled(conn=conn),
         )
 

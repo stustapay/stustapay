@@ -48,18 +48,26 @@ export const ProductDetail: React.FC = () => {
         <ListItem
           secondaryAction={
             <>
-              <IconButtonLink to={`/products/${productId}/edit`} color="primary">
-                <EditIcon />
-              </IconButtonLink>
+              <Tooltip title={t("edit")}>
+                <span>
+                  <IconButtonLink to={`/products/${productId}/edit`} color="primary">
+                    <EditIcon />
+                  </IconButtonLink>
+                </span>
+              </Tooltip>
               <Tooltip title={t("product.lock")}>
-                <IconButton disabled={product.is_locked} onClick={() => lockProduct(product)} color="error">
-                  <LockIcon />
-                </IconButton>
+                <span>
+                  <IconButton disabled={product.is_locked} onClick={() => lockProduct(product)} color="error">
+                    <LockIcon />
+                  </IconButton>
+                </span>
               </Tooltip>
               <Tooltip title={t("delete")}>
-                <IconButton disabled={product.is_locked} onClick={openConfirmDeleteDialog} color="error">
-                  <DeleteIcon />
-                </IconButton>
+                <span>
+                  <IconButton disabled={product.is_locked} onClick={openConfirmDeleteDialog} color="error">
+                    <DeleteIcon />
+                  </IconButton>
+                </span>
               </Tooltip>
             </>
           }

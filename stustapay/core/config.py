@@ -30,6 +30,8 @@ class DatabaseConfig(BaseModel):
 
 
 class CoreConfig(BaseModel):
+    test_mode: bool = False
+    test_mode_message: str = ""
     secret_key: str
     jwt_token_algorithm: str = "HS256"
     sumup_affiliate_key: str = "unset"
@@ -44,11 +46,11 @@ class SEPAConfig(BaseModel):
 
 class SumupConfig(BaseModel):
     enabled: bool = False
-    client_id: str
-    client_secret: str
-    merchant_code: str
-    return_url: str
-    redirect_url: str
+    client_id: str = ""
+    client_secret: str = ""
+    merchant_code: str = ""
+    return_url: str = ""
+    redirect_url: str = ""
 
 
 class CustomerPortalApiConfig(HTTPServerConfig):
@@ -60,7 +62,7 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     about_page_url: str
     contact_email: str
 
-    sumup_config: SumupConfig
+    sumup_config: SumupConfig = SumupConfig()
     sepa_config: SEPAConfig
 
 

@@ -1,12 +1,17 @@
 package de.stustanet.stustapay.ui.ticket
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustanet.stustapay.ec.ECPayment
 import de.stustanet.stustapay.model.CompletedTicketSale
+import de.stustanet.stustapay.model.NewTicketScan
 import de.stustanet.stustapay.model.PaymentMethod
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.net.Response
+import de.stustanet.stustapay.repository.ECPaymentRepository
+import de.stustanet.stustapay.repository.ECPaymentResult
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.repository.TicketRepository
@@ -15,22 +20,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.math.BigDecimal
 import javax.inject.Inject
 
 
 enum class TicketPage(val route: String) {
-    Amount("amount"),
     Scan("scan"),
     Confirm("confirm"),
     Done("done"),
-    Failure("aborted"),
+    Error("aborted"),
 }
 
 sealed interface TagScanStatus {
     object NoScan : TagScanStatus
-    data class Scan(val step: Int, val wanted: Int) : TagScanStatus
-    data class ScanNext(val step: Int, val wanted: Int) : TagScanStatus
-    data class Duplicate(val step: Int, val wanted: Int) : TagScanStatus
+    object Scan : TagScanStatus
+    object Duplicate : TagScanStatus
 }
 
 
@@ -38,22 +42,23 @@ sealed interface TagScanStatus {
 class TicketViewModel @Inject constructor(
     private val ticketRepository: TicketRepository,
     private val terminalConfigRepository: TerminalConfigRepository,
+    private val ecPaymentRepository: ECPaymentRepository,
 ) : ViewModel() {
 
     // navigation in views
-    private val _navState = MutableStateFlow(TicketPage.Amount)
+    private val _navState = MutableStateFlow(TicketPage.Scan)
     val navState = _navState.asStateFlow()
 
     private val _status = MutableStateFlow("")
     val status = _status.asStateFlow()
 
     // tag scanning
-    private val _tagScanStatus = MutableStateFlow<TagScanStatus>(TagScanStatus.NoScan)
+    private val _tagScanStatus = MutableStateFlow<TagScanStatus>(TagScanStatus.Scan)
     val tagScanStatus = _tagScanStatus.asStateFlow()
 
     // ticket purchase selection
-    private val _ticketStatus = MutableStateFlow(TicketStatus())
-    val ticketDraft = _ticketStatus.asStateFlow()
+    private val _ticketDraft = MutableStateFlow(TicketDraft())
+    val ticketDraft = _ticketDraft.asStateFlow()
 
     // when we finished a ticket sale
     private val _saleCompleted = MutableStateFlow<CompletedTicketSale?>(null)
@@ -72,56 +77,12 @@ class TicketViewModel @Inject constructor(
         _navState.update { page }
     }
 
-    fun incrementButton(buttonId: Int) {
-        _ticketStatus.update { status ->
-            val newStatus = status.copy()
-            newStatus.incrementButton(buttonId)
-            newStatus
-        }
-    }
-
-    fun decrementButton(buttonId: Int) {
-        _ticketStatus.update { status ->
-            val newStatus = status.copy()
-            newStatus.decrementButton(buttonId)
-            newStatus
-        }
-    }
-
     /**
      * how much do we have to pay? we get this from the PendingTicketSale
      */
-    fun getPrice(): Double {
-        return _ticketStatus.value.checkedSale?.total_price ?: 0.0
-    }
-
-    /** when confirming the ticket selections by button click */
-    suspend fun confirmSelection() {
-        // now all tickets have to be scanned
-        _navState.update { TicketPage.Scan }
-
-        continueScan()
-    }
-
-
-    /** when one clicks away the scan dialog */
-    fun tagScanDismissed() {
-        _tagScanStatus.update { TagScanStatus.NoScan }
-    }
-
-    /** one resumes scanning tickets. also triggered by button press in the scanning view */
-    suspend fun continueScan() {
-        if (_ticketStatus.value.allTagsScanned()) {
-            checkSale()
-        }
-        else {
-            _tagScanStatus.update {
-                TagScanStatus.Scan(
-                    step = _ticketStatus.value.tagScanStepNumber(),
-                    wanted = _ticketStatus.value.tagScansRequired(),
-                )
-            }
-        }
+    fun getPrice(): UInt {
+        val price = _ticketDraft.value.checkedSale?.total_price ?: 0.0
+        return (price * 100).toUInt()
     }
 
     /**
@@ -129,55 +90,88 @@ class TicketViewModel @Inject constructor(
      * if this returns false, the scan dialog will remain open.
      */
     fun checkTagScan(tag: UserTag): Boolean {
-        return if (_ticketStatus.value.tagKnown(tag)) {
+        return if (_ticketDraft.value.tagKnown(tag)) {
             _tagScanStatus.update {
-                TagScanStatus.Duplicate(
-                    step = _ticketStatus.value.tagScanStepNumber(),
-                    wanted = _ticketStatus.value.tagScansRequired(),
-                )
+                TagScanStatus.Duplicate
             }
             false
         } else {
+            _tagScanStatus.update {
+                TagScanStatus.Scan
+            }
             true
         }
     }
 
     /**
-     * when checkTagScan above returned true, we end up here after the scan dialog closed.
+     * when checkTagScan above returned true, we end up here after a successful tag scan.
+     * this function is only called if the tag is not already known.
      */
     suspend fun tagScanned(tag: UserTag) {
-        _ticketStatus.update { status ->
-            val newStatus = status.copy()
-            if (!newStatus.tagScanned(tag)) {
-                // this tag was already scanned
-                _status.update { "scan accepted even though ticket was already scanned!" }
-            }
-            newStatus
-        }
+        val response = ticketRepository.checkTicketScan(
+            NewTicketScan(
+                customer_tag_uids = listOf(tag.uid)
+            )
+        )
 
-        if (_ticketStatus.value.allTagsScanned()) {
-            checkSale()
-        } else {
-            // scan another one
-            _tagScanStatus.update {
-                TagScanStatus.ScanNext(
-                    step = _ticketStatus.value.tagScanStepNumber(),
-                    wanted = _ticketStatus.value.tagScansRequired(),
-                )
+        when (response) {
+            is Response.OK -> {
+                _ticketDraft.update { status ->
+                    val scanned = response.data.scanned_tickets
+                    if (scanned.isEmpty()) {
+                        _status.update { "ticket unknown" }
+                        return
+                    }
+
+                    val scanResult = scanned[0]
+                    if (scanResult.customer_tag_uid != tag.uid) {
+                        _status.update { "returned ticket id != ticket unknown" }
+                        return
+                    }
+
+                    val newStatus = status.copy()
+                    val ret = newStatus.addTicket(
+                        ScannedTicket(
+                            tag = tag,
+                            ticket = scanResult.ticket
+                        )
+                    )
+                    if (!ret) {
+                        _status.update { "failed to store new ticket" }
+                    }
+                    newStatus
+                }
+                _status.update { "Ticket order validated!" }
+            }
+
+            is Response.Error.Service -> {
+                _status.update { response.msg() }
+            }
+
+            is Response.Error -> {
+                _status.update { response.msg() }
             }
         }
     }
 
-
     /** when the delete-selections button is clicked */
-    suspend fun clearDraft() {
-        _ticketStatus.update { TicketStatus() }
+    fun clearDraft() {
+        _tagScanStatus.update { TagScanStatus.Scan }
+        _ticketDraft.update { TicketDraft() }
+    }
+
+    fun dismissSuccess() {
+        clearTicketSale(success = true)
+    }
+
+    fun dismissError() {
+        _navState.update { TicketPage.Scan }
     }
 
     /** once the sale was booked completely */
-    suspend fun clearTicketSale(success: Boolean = false) {
-        _ticketStatus.update { TicketStatus() }
-        _navState.update { TicketPage.Amount }
+    private fun clearTicketSale(success: Boolean = false) {
+        _ticketDraft.update { TicketDraft() }
+        _navState.update { TicketPage.Scan }
         _saleCompleted.update { null }
 
         if (success) {
@@ -187,17 +181,9 @@ class TicketViewModel @Inject constructor(
         }
     }
 
+    /** test if we can sell this */
     suspend fun checkSale() {
-        val selection = _ticketStatus.value
-        if (selection.buttonSelection.isEmpty()) {
-            _status.update { "Nothing ordered!" }
-            return
-        }
-
-        if (!selection.allTagsScanned()) {
-            _status.update { "Not all tickets scanned" }
-            return
-        }
+        val selection = _ticketDraft.value
 
         _status.update { "Checking order..." }
 
@@ -209,7 +195,7 @@ class TicketViewModel @Inject constructor(
 
         when (response) {
             is Response.OK -> {
-                _ticketStatus.update { status ->
+                _ticketDraft.update { status ->
                     val newSale = status.copy()
                     newSale.updateWithPendingTicketSale(response.data)
                     newSale
@@ -220,7 +206,7 @@ class TicketViewModel @Inject constructor(
 
             is Response.Error.Service -> {
                 _status.update { response.msg() }
-                _navState.update { TicketPage.Failure }
+                _navState.update { TicketPage.Error }
             }
 
             is Response.Error -> {
@@ -229,17 +215,51 @@ class TicketViewModel @Inject constructor(
         }
     }
 
-    suspend fun bookSale(paymentMethod: PaymentMethod) {
+    /** let's start the payment process */
+    suspend fun processSale(context: Activity, paymentMethod: PaymentMethod) {
         // checks
-        if (!_ticketStatus.value.allTagsScanned()) {
+        if (_ticketDraft.value.scans.isEmpty()) {
             _status.update { "Not all tags were scanned!" }
             return
         }
 
+        val checkedSale = _ticketDraft.value.checkedSale
+        if (checkedSale == null) {
+            _status.update { "no ticket sale check present" }
+            return
+        }
+
+
+        // if we do cash payment, the confirmation was already presented by CashECPay
+        if (paymentMethod == PaymentMethod.Cash) {
+            bookSale(paymentMethod = PaymentMethod.Cash)
+            return
+        }
+
+        // otherwise, perform ec payment
+        val payment = ECPayment(
+            id = checkedSale.uuid,
+            amount = BigDecimal(checkedSale.total_price),
+            tag = _ticketDraft.value.scans[0].tag,
+        )
+
+        when (val ecResult = ecPaymentRepository.pay(context = context, ecPayment = payment)) {
+            is ECPaymentResult.Failure -> {
+                _status.update { ecResult.msg }
+            }
+
+            is ECPaymentResult.Success -> {
+                _status.update { ecResult.result.msg }
+                bookSale(PaymentMethod.SumUp)
+            }
+        }
+    }
+
+    private suspend fun bookSale(paymentMethod: PaymentMethod) {
         _saleCompleted.update { null }
 
         val response = ticketRepository.bookTicketSale(
-            _ticketStatus.value.getNewTicketSale(paymentMethod)
+            _ticketDraft.value.getNewTicketSale(paymentMethod)
         )
 
         when (response) {
@@ -253,7 +273,7 @@ class TicketViewModel @Inject constructor(
             }
 
             is Response.Error.Service -> {
-                _navState.update { TicketPage.Failure }
+                _navState.update { TicketPage.Error }
                 _status.update { response.msg() }
             }
 
@@ -275,16 +295,6 @@ class TicketViewModel @Inject constructor(
                         TicketConfig(
                             ready = true,
                             tillName = terminalConfig.config.name,
-                            tickets = terminalConfig.config.ticket_buttons?.associate {
-                                Pair(
-                                    it.id,
-                                    TicketItemConfig(
-                                        it.id,
-                                        it.name,
-                                        it.price ?: 0.0
-                                    )
-                                )
-                            } ?: mapOf(),
                         )
                     }
 
@@ -293,7 +303,7 @@ class TicketViewModel @Inject constructor(
                         TicketConfig()
                     }
 
-                    is TerminalConfigState.Loading -> {
+                    is TerminalConfigState.NoConfig -> {
                         _status.update { "Loading config..." }
                         TicketConfig()
                     }

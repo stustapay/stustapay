@@ -1,16 +1,4 @@
-import {
-  Paper,
-  ListItem,
-  IconButton,
-  Typography,
-  ListItemText,
-  List,
-  Tooltip,
-  Divider,
-  Stack,
-  Tab,
-  Box,
-} from "@mui/material";
+import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Stack, Tab, Box } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";

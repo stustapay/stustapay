@@ -1,6 +1,9 @@
 package de.stustanet.stustapay.model
 
 sealed interface NfcScanResult {
+    data class FastRead(
+        val chipUid: ULong
+    ): NfcScanResult
     data class Read(
         val chipProtected: Boolean,
         val chipUid: ULong,

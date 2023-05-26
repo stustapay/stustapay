@@ -2,28 +2,29 @@
 perform schema updates and get a db shell.
 """
 
-import logging
-import asyncpg
+import argparse
 import contextlib
+import logging
 import os
 import re
 import shutil
 import tempfile
-import argparse
-
 from pathlib import Path
 from typing import Optional
 
+import asyncpg
+
+from . import subcommand
+from . import util
 from .config import Config, DatabaseConfig
 from .schema import DATA_PATH, DEFAULT_EXAMPLE_DATA_FILE, REVISION_PATH
-from . import util
-from . import subcommand
 
 logger = logging.getLogger(__name__)
 
 REVISION_VERSION_RE = re.compile(r"^-- revision: (?P<version>\w+)$")
 REVISION_REQUIRES_RE = re.compile(r"^-- requires: (?P<version>\w+)$")
 REVISION_TABLE = "schema_revision"
+CURRENT_REVISION = "62df6b55"
 
 
 class DatabaseManage(subcommand.SubCommand):
@@ -206,15 +207,17 @@ class SchemaRevision:
         return sorted_revisions
 
 
-async def create_db_pool(cfg: DatabaseConfig) -> asyncpg.Pool:
+async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:
     """
     get a connection pool to the database
     """
-    ret = await asyncpg.create_pool(
+    pool = await asyncpg.create_pool(
         user=cfg.user,
         password=cfg.password,
         database=cfg.dbname,
         host=cfg.host,
+        max_size=n_connections,
+        min_size=n_connections,
         # the introspection query of asyncpg (defined as introspection.INTRO_LOOKUP_TYPES)
         # can take 1s with the jit.
         # the introspection is triggered to create converters for unknown types,
@@ -222,10 +225,18 @@ async def create_db_pool(cfg: DatabaseConfig) -> asyncpg.Pool:
         # see https://github.com/MagicStack/asyncpg/issues/530
         server_settings={"jit": "off"},
     )
-    if ret is None:
+    if pool is None:
         raise Exception("failed to get db pool")
 
-    return ret
+    return pool
+
+
+async def check_revision_version(db_pool: asyncpg.Pool):
+    curr_revision = await db_pool.fetchval(f"select version from {REVISION_TABLE} limit 1")
+    if curr_revision != CURRENT_REVISION:
+        raise RuntimeError(
+            f"Invalid database revision, expected {CURRENT_REVISION}, database is at revision {curr_revision}"
+        )
 
 
 async def reset_schema(db_pool: asyncpg.Pool):
@@ -266,7 +277,7 @@ async def add_data(db_pool: asyncpg.Pool, sql_file: str, data_path: Path = DATA_
 
 
 async def rebuild_with(db_pool: asyncpg.Pool, sql_file: str):
-    "Wipe the DB and fill it with the info in `sql_file`"
+    """Wipe the DB and fill it with the info in `sql_file`"""
     await reset_schema(db_pool=db_pool)
     await apply_revisions(db_pool=db_pool)
     await add_data(db_pool=db_pool, sql_file=sql_file)

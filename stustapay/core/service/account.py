@@ -253,7 +253,7 @@ class AccountService(DBService):
     @staticmethod
     async def _switch_account_tag_uid(
         *, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
-    ) -> bool:
+    ):
         account_exists = await conn.fetchval("select exists(select from account where id = $1)", account_id)
         if not account_exists:
             raise NotFound(element_typ="account", element_id=account_id)
@@ -263,14 +263,13 @@ class AccountService(DBService):
             "update account set user_tag_uid = $2 where id = $1 returning id", account_id, new_user_tag_uid
         )
         await conn.execute("update user_tag set comment = $2 where uid = $1", old_user_tag_uid, comment)
-        return True
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
     async def switch_account_tag_uid_admin(
         self, *, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
-    ) -> bool:
-        return await self._switch_account_tag_uid(
+    ):
+        await self._switch_account_tag_uid(
             conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid, comment=comment
         )
 
@@ -278,7 +277,7 @@ class AccountService(DBService):
     @requires_terminal([Privilege.account_management])
     async def switch_account_tag_uid_terminal(
         self, *, conn: asyncpg.Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
-    ) -> bool:
-        return await self._switch_account_tag_uid(
+    ):
+        await self._switch_account_tag_uid(
             conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid, comment=comment
         )

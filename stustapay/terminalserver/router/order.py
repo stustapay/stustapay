@@ -19,6 +19,8 @@ from stustapay.core.schema.order import (
     NewPayOut,
     CompletedPayOut,
     PendingTicketSale,
+    NewTicketScan,
+    TicketScanResult,
     NewTicketSale,
     CompletedTicketSale,
 )
@@ -71,6 +73,15 @@ async def book_topup(
     order_service: ContextOrderService,
 ):
     return await order_service.book_topup(token=token, new_topup=topup)
+
+
+@router.post("/check-ticket-scan", summary="check if a ticket sale is valid", response_model=TicketScanResult)
+async def check_ticket_scan(
+    ticket_scan: NewTicketScan,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+):
+    return await order_service.check_ticket_scan(token=token, new_ticket_scan=ticket_scan)
 
 
 @router.post("/check-ticket-sale", summary="check if a ticket sale is valid", response_model=PendingTicketSale)
