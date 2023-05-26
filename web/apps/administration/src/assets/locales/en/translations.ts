@@ -146,6 +146,11 @@ export const translations = {
     quantitySold: "# Sold",
     selectedTill: "Till",
     statsByTill: "Products sold by till",
+    depositBalance: "Deposit balance (# collected deposits)",
+    hideDeposits: "Hide deposits",
+    voucherStats: "Vouchers",
+    vouchersIssued: "Issued",
+    vouchersSpent: "Spent",
   },
   ticket: {
     name: "Name",

@@ -1352,6 +1352,25 @@ create table if not exists transaction (
     constraint vouchers_positive check (vouchers >= 0)
 );
 
+create or replace function voucher_stats(
+    from_timestamp timestamptz,
+    to_timestamp timestamptz
+)
+    returns table (
+                      vouchers_issued bigint,
+                      vouchers_spent bigint
+                  ) as $$
+select
+    sum(case when t.source_account = 6 then t.vouchers else 0 end) as vouchers_issued,
+    sum(case when t.source_account != 6 then t.vouchers else 0 end) as vouchers_spent
+from transaction t
+where
+    (from_timestamp is not null and t.booked_at >= from_timestamp or from_timestamp is null)
+  and (to_timestamp is not null and t.booked_at <= to_timestamp or to_timestamp is null);
+$$ language sql
+    stable
+    security invoker;
+
 create table if not exists cashier_shift (
     id bigint primary key generated always as identity,
     -- TODO: constraint that we can only reference users with a cashier account id

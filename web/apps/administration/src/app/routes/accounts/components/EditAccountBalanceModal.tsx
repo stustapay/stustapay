@@ -46,6 +46,12 @@ export const EditAccountBalanceModal: React.FC<EditAccountBalanceModalProps> = (
       });
   };
 
+  const handleChange = (newVal: number | null) => {
+    if (newVal != null) {
+      setBalance(newVal);
+    }
+  };
+
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle>{t("account.changeBalance")}</DialogTitle>
@@ -56,7 +62,7 @@ export const EditAccountBalanceModal: React.FC<EditAccountBalanceModalProps> = (
         <NumericInput
           value={balance}
           fullWidth
-          onChange={setBalance}
+          onChange={handleChange}
           label={t("account.newBalance")}
           InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
         />
