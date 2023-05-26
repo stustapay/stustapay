@@ -1543,7 +1543,7 @@ create trigger tse_signature_finished_trigger
     after update of signature_status
     on tse_signature
     for each row
-    when (NEW.signature_status = 'done')
+    when (NEW.signature_status = 'done' or NEW.signature_status = 'failure')
 execute function tse_signature_finished_trigger_procedure();
 
 -- requests the bon generator to create a new receipt
