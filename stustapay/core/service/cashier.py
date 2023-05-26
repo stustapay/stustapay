@@ -273,5 +273,6 @@ class CashierService(DBService):
         )
 
         await conn.execute("update usr set cash_register_id = null where id = $1", cashier.id)
+        await conn.execute("update till set z_nr = z_nr + 1 where id = $1", VIRTUAL_TILL_ID)
 
         return CloseOutResult(cashier_id=cashier.id, imbalance=imbalance)

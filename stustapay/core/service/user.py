@@ -115,15 +115,21 @@ class UserService(DBService):
             await conn.execute("insert into user_to_role (user_id, role_id) values ($1, $2)", user_id, role_id)
 
     async def _create_user(
-        self, *, conn: asyncpg.Connection, new_user: UserWithoutId, password: Optional[str] = None
+        self,
+        *,
+        conn: asyncpg.Connection,
+        new_user: UserWithoutId,
+        creating_user_id: Optional[int],
+        password: Optional[str] = None,
     ) -> User:
         hashed_password = None
         if password:
             hashed_password = self._hash_password(password)
 
         user_id = await conn.fetchval(
-            "insert into usr (login, description, password, display_name, user_tag_uid, transport_account_id, cashier_account_id) "
-            "values ($1, $2, $3, $4, $5, $6, $7) returning id",
+            "insert into usr (login, description, password, display_name, user_tag_uid, transport_account_id, "
+            "   cashier_account_id, created_by) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8) returning id",
             new_user.login,
             new_user.description,
             hashed_password,
@@ -131,6 +137,7 @@ class UserService(DBService):
             new_user.user_tag_uid,
             new_user.transport_account_id,
             new_user.cashier_account_id,
+            creating_user_id,
         )
 
         await self._update_user_roles(conn=conn, user_id=user_id, role_names=new_user.role_names)
@@ -140,16 +147,27 @@ class UserService(DBService):
 
     @with_db_transaction
     async def create_user_no_auth(
-        self, *, conn: asyncpg.Connection, new_user: UserWithoutId, password: Optional[str] = None
+        self,
+        *,
+        conn: asyncpg.Connection,
+        new_user: UserWithoutId,
+        password: Optional[str] = None,
     ) -> User:
-        return await self._create_user(conn=conn, new_user=new_user, password=password)
+        return await self._create_user(conn=conn, creating_user_id=None, new_user=new_user, password=password)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
     async def create_user(
-        self, *, conn: asyncpg.Connection, new_user: UserWithoutId, password: Optional[str] = None
+        self,
+        *,
+        conn: asyncpg.Connection,
+        current_user: CurrentUser,
+        new_user: UserWithoutId,
+        password: Optional[str] = None,
     ) -> User:
-        return await self._create_user(conn=conn, new_user=new_user, password=password)
+        return await self._create_user(
+            conn=conn, creating_user_id=current_user.id, new_user=new_user, password=password
+        )
 
     @staticmethod
     async def _contains_privileged_roles(conn: asyncpg.Connection, role_names: list[str]) -> bool:
@@ -186,7 +204,9 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
-    async def create_user_with_tag(self, *, conn: asyncpg.Connection, new_user: NewUser) -> User:
+    async def create_user_with_tag(
+        self, *, conn: asyncpg.Connection, current_user: CurrentUser, new_user: NewUser
+    ) -> User:
         """
         Create a user at a Terminal, where a name and the user tag must be provided
         If a user with the given tag already exists, this user is returned, without updating the name
@@ -208,7 +228,7 @@ class UserService(DBService):
             user_tag_uid=user_tag_uid,
             display_name=new_user.display_name,
         )
-        return await self._create_user(conn=conn, new_user=user)
+        return await self._create_user(conn=conn, creating_user_id=current_user.id, new_user=user)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])

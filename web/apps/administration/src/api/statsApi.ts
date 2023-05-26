@@ -2,8 +2,11 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { adminApiBaseQuery } from "./common";
 import { Product } from "@stustapay/models";
 
+export type ProductSoldStats = Product & { quantity_sold: number };
+
 export interface ProductStats {
-  ten_most_sold_products: Array<Product & { quantity_sold: number }>;
+  product_quantities: ProductSoldStats[];
+  product_quantities_by_till: { [k: number]: ProductSoldStats[] };
 }
 
 export const statsApi = createApi({
@@ -14,8 +17,17 @@ export const statsApi = createApi({
   refetchOnMountOrArgChange: true,
   refetchOnReconnect: true,
   endpoints: (builder) => ({
-    getProductStats: builder.query<ProductStats, void>({
-      query: () => "/stats/products/",
+    getProductStats: builder.query<ProductStats, { fromTimestamp: string | null; toTimestamp: string | null }>({
+      query: ({ fromTimestamp, toTimestamp }) => {
+        const queryArgs = new URLSearchParams();
+        if (fromTimestamp) {
+          queryArgs.append("from_timestamp", fromTimestamp);
+        }
+        if (toTimestamp) {
+          queryArgs.append("to_timestamp", toTimestamp);
+        }
+        return `/stats/products?${queryArgs.toString()}`;
+      },
     }),
   }),
 });
