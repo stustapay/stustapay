@@ -40,6 +40,11 @@ export const translations = {
     updatedBankData: "Successfully updated bank data.",
     errorWhileUpdatingBankData: "Error occurred while updating bank data.",
   },
+  topup: {
+    info: "You can topup your festival account balance with credit card",
+    amount: "Amount",
+    errorWhileCreatingCheckout: "Error while trying to create sumup checkout",
+  },
 } as const;
 
 export type Translations = typeof translations;

@@ -1,4 +1,4 @@
-import { authApi } from "@/api/authApi";
+import { authApi, customerApi, topupApi } from "@/api";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/dist/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
@@ -6,7 +6,6 @@ import { authSlice } from "./authSlice";
 import { uiSlice } from "./uiSlice";
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { customerApi } from "@/api/customerApi";
 import { errorMiddleware } from "./errorMiddleware";
 
 const authPersistConfig = {
@@ -27,6 +26,7 @@ export const store = configureStore({
     [authSlice.name]: persistReducer(authPersistConfig, authSlice.reducer),
     [uiSlice.name]: persistReducer(uiPersistConfig, uiSlice.reducer),
     [customerApi.reducerPath]: customerApi.reducer,
+    [topupApi.reducerPath]: topupApi.reducer,
   }),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -34,6 +34,7 @@ export const store = configureStore({
     })
       .concat(authApi.middleware)
       .concat(customerApi.middleware)
+      .concat(topupApi.middleware)
       .concat(errorMiddleware),
 });
 

@@ -9,5 +9,6 @@ class ConfigEntry(BaseModel):
 
 
 class PublicConfig(BaseModel):
+    sumup_topup_enabled: bool
     currency_symbol: str
     currency_identifier: str

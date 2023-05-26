@@ -24,6 +24,7 @@ class PaymentMethod(enum.Enum):
     cash = "cash"
     sumup = "sumup"
     tag = "tag"
+    sumup_online = "sumup_online"
 
 
 def is_non_tag_payment_method(payment_method: PaymentMethod):
@@ -244,8 +245,8 @@ class Order(BaseModel):
     order_type: OrderType
 
     # foreign keys
-    cashier_id: int
-    till_id: int
+    cashier_id: Optional[int]
+    till_id: Optional[int]
     customer_account_id: Optional[int]
     customer_tag_uid: Optional[int]
 

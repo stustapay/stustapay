@@ -3,18 +3,18 @@ import logging
 import math
 from typing import Optional
 
-from stustapay.core.service.config import ConfigService
-from .config import Config
-from stustapay.core.subcommand import SubCommand
 import asyncpg
 
-from stustapay.core.service.customer import (
+from stustapay.core.service.config import ConfigService
+from stustapay.core.service.customer.customer import (
     csv_export,
     get_customer_bank_data,
     get_number_of_customers,
     sepa_export,
 )
+from stustapay.core.subcommand import SubCommand
 from . import database
+from .config import Config
 
 
 class CustomerExportCli(SubCommand):
@@ -95,7 +95,7 @@ class CustomerExportCli(SubCommand):
                 cfg_srvc = ConfigService(db_pool=None, config=None, auth_service=None)  # type: ignore
                 currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
 
-                output_path_file_extension = f"{output_path}_{i+1}.{file_extension}"
+                output_path_file_extension = f"{output_path}_{i + 1}.{file_extension}"
 
                 export_function(
                     customers_bank_data=customers_bank_data,
@@ -106,7 +106,7 @@ class CustomerExportCli(SubCommand):
                 )
 
         logging.info(
-            f"Exported bank data of {number_of_customers} customers into #{i+1} files named {output_path}_x.{file_extension}"
+            f"Exported bank data of {number_of_customers} customers into #{i + 1} files named {output_path}_x.{file_extension}"
         )
 
     async def run(self):

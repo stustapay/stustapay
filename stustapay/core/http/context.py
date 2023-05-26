@@ -13,7 +13,7 @@ from stustapay.core.config import Config
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
-from stustapay.core.service.customer import CustomerService
+from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService

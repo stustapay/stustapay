@@ -42,6 +42,15 @@ class SEPAConfig(BaseModel):
     description: str
 
 
+class SumupConfig(BaseModel):
+    enabled: bool = False
+    client_id: str
+    client_secret: str
+    merchant_code: str
+    return_url: str
+    redirect_url: str
+
+
 class CustomerPortalApiConfig(HTTPServerConfig):
     base_url: str
     host: str = "localhost"
@@ -50,7 +59,8 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     data_privacy_url: str
     about_page_url: str
     contact_email: str
-    sumup_client_secret: str
+
+    sumup_config: SumupConfig
     sepa_config: SEPAConfig
 
 

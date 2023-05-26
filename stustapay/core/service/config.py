@@ -9,20 +9,33 @@ from stustapay.core.service.common.decorators import requires_user, with_db_tran
 from stustapay.core.service.common.error import NotFound
 
 
+async def get_currency_identifier(*, conn: asyncpg.Connection) -> str:
+    return await conn.fetchval("select value from config where key = 'currency.identifier' limit 1")
+
+
 class ConfigService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
 
     @with_db_transaction
+    async def is_sumup_topup_enabled(self, *, conn: asyncpg.Connection) -> bool:
+        db_config_entry = await conn.fetchval("select value from config where key = 'sumup_topup.enabled'")
+        return self.cfg.customer_portal.sumup_config.enabled and db_config_entry == "true"
+
+    @with_db_transaction
     async def get_public_config(self, *, conn: asyncpg.Connection) -> PublicConfig:
         row = await conn.fetchrow(
             "select "
             "   (select value from config where key = 'currency.symbol') as currency_symbol,"
-            "   (select value from config where key = 'currency.identifier') as currency_identifier"
+            "   (select value from config where key = 'currency.identifier') as currency_identifier "
         )
 
-        return PublicConfig.parse_obj(row)
+        return PublicConfig(
+            currency_symbol=row["currency_symbol"],
+            currency_identifier=row["currency_identifier"],
+            sumup_topup_enabled=await self.is_sumup_topup_enabled(conn=conn),
+        )
 
     @with_db_transaction
     @requires_user([Privilege.config_management])
