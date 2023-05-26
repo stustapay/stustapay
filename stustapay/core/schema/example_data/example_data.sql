@@ -23,6 +23,7 @@ insert into user_tag (
 values
     (1234, 'pin', null, null, null),
     (13876489173, null, null, null, null),
+    (5424727861184004, 'LOL-tag1', 'serial1', null, 0),
     (5424726191074820, 'LOL-tag2', 'serial2', null, 0),
     (5424726016640516, 'LOL-tag3', 'serial3', null, 0),
     (5424726268326916, 'LOL-tag4', 'serial4', null, 0)
@@ -39,8 +40,8 @@ values
     (101, null, 'internal', 'Rucksack 0', 'Finanzer-rucksack', 200.00, 0),
 
     -- guests (which would need token IDs)
-    (200, 1234, 'private', 'Guest 0', 'Token Balance of Guest 0', 2000000.00, 0),
-    (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 30000000.20, 0),
+    (200, 1234, 'private', 'Guest 0', 'Token Balance of Guest 0', 150.00, 0),
+    (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 149.20, 0),
     (201, 5424726191074820, 'private', 'test-tag2', 'test token 2', 30.00, 5),
     (202, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0),
     (203, 5424726016640516, 'private', 'test-tag3', 'test token 3', 15.00, 2),
@@ -73,8 +74,11 @@ values
     (0, 'test-cashier', null, 'Some Description', null, 100, null, 1234),
     -- password is admin
     (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null, null),
+    -- tag2 is admin but not customer
     (2, 'tag2', null, null, null, 202, 0, 5424726191074820),
+    -- tag4 is customer and cashier
     (4, 'tag4', null, null, null, 205, null, 5424726268326916),
+    -- password is admin
     (5, 'finanzorga' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null, null)
     on conflict do nothing;
 select setval('usr_id_seq', 100);
@@ -189,10 +193,10 @@ insert into till_layout (
     id, name, description
 ) overriding system value
 values
-    (0, 'Alles', 'Alle Features zum Testen'),
-    (1, 'Bierkasse', 'Allgemeine Bierkasse'),
-    (2, 'Aufladekasse', 'Allgemeine Aufladekasse'),
-    (3, 'Brotladen', 'Brotladen-Kasse')
+    (2, 'Alles', 'Alle Features zum Testen'),
+    (3, 'Bierkasse', 'Allgemeine Bierkasse'),
+    (4, 'Aufladekasse', 'Allgemeine Aufladekasse'),
+    (5, 'Brotladen', 'Brotladen-Kasse')
     on conflict do nothing;
 select setval('till_layout_id_seq', 100);
 
@@ -200,44 +204,36 @@ insert into till_layout_to_button (
     layout_id, button_id, sequence_number
 ) values
     -- dev
-    (0, 0, 0),
-    (0, 1, 1),
-    (0, 2, 2),
-    (0, 3, 3),
-    (0, 4, 4),
-    (0, 5, 5),
-    -- pot
-    (1, 0, 0),
-    (1, 1, 1),
-    (1, 2, 2),
-    (1, 3, 3),
+    (2, 0, 0),
+    (2, 1, 1),
+    (2, 2, 2),
+    (2, 3, 3),
+    (2, 4, 4),
+    (2, 5, 5),
+    -- bierkasse
+    (3, 0, 0),
+    (3, 1, 1),
+    (3, 2, 2),
+    (3, 3, 3),
+    -- aufladekasse has no buttons
     -- brotladen
-    (3, 4, 1)
+    (5, 4, 1)
     on conflict do nothing;
 
 insert into till_profile (
     id, name, description, layout_id, allow_top_up, allow_cash_out, allow_ticket_sale
 ) overriding system value
 values
-    (0, 'Develop', 'Allmächtige Kasse', 0, true, true, true),
-    (1, 'Pot', 'Allgemeine Pot Bierkasse', 1, false, false, false),
-    (2, 'Festzelt Aufladung', 'Aufladekasse', 2, true, true, false),
-    (3, 'Brotladen', 'Brotladen-Kasse', 3, false, false, false)
+    (2, 'Develop', 'Allmächtige Kasse', 2, true, true, true),
+    (3, 'Pot', 'Pot Bierkasse', 3, false, false, false),
+    (4, 'Festzelt Aufladung', 'Aufladekasse', 4, true, true, false),
+    (5, 'Brotladen', 'Brotladen-Kasse', 5, false, false, false)
     on conflict do nothing;
 select setval('till_profile_id_seq', 100);
 
+-- what roles can be used on this till profile
 insert into allowed_user_roles_for_till_profile (profile_id, role_id)
 values
-    (0, 0),
-    (0, 1),
-    (0, 2),
-    (0, 3),
-    (0, 4),
-    (1, 0),
-    (1, 1),
-    (1, 2),
-    (1, 3),
-    (1, 4),
     (2, 0),
     (2, 1),
     (2, 2),
@@ -247,7 +243,17 @@ values
     (3, 1),
     (3, 2),
     (3, 3),
-    (3, 4)
+    (3, 4),
+    (4, 0),
+    (4, 1),
+    (4, 2),
+    (4, 3),
+    (4, 4),
+    (5, 0),
+    (5, 1),
+    (5, 2),
+    (5, 3),
+    (5, 4)
     on conflict do nothing;
 
 
@@ -264,11 +270,11 @@ insert into till (
     id, name, description, active_profile_id, active_user_id, active_user_role_id, registration_uuid, session_uuid, tse_id, active_shift
 ) overriding system value
 values
-    (0, 'stustapay-dev', 'Allmachtskasse', 0, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, null, null),
     -- 1 is virtual till!
-    (2, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 2, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, null, null),
-    (3, 'ssc-pot-1', 'Pot Bierkasse', 1, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, null, null),
-    (4, 'ssc-brotladen-1', 'Brotladen', 3, null, null, '6450c106-207c-4f17-b451-249c98ae6f19'::uuid, null, null, null)
+    (10, 'stustapay-dev', 'Allmachtskasse', 2, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, null, null),
+    (11, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 4, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, null, null),
+    (12, 'ssc-pot-1', 'Pot Bierkasse', 3, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, null, null),
+    (13, 'ssc-brotladen-1', 'Brotladen', 5, null, null, '6450c106-207c-4f17-b451-249c98ae6f19'::uuid, null, null, null)
     on conflict do nothing;
 select setval('till_id_seq', 100);
 
@@ -278,13 +284,13 @@ insert into ordr (
 ) overriding system value
 values
     -- simple beer with deposit
-    (0, 2, '2023-01-01 15:35:02 UTC+1', 'tag', 'sale', 0, 1, 200, 1),
-    (3, 2, '2023-01-01 16:35:02 UTC+1', 'tag', 'sale', 0, 0, 200, 1),
-    (4, 2, '2023-01-01 17:35:02 UTC+1', 'tag', 'sale', 0, 0, 200, 1),
+    (0, 2, '2023-01-01 15:35:02 UTC+1', 'tag', 'sale', 0, 12, 200, 1),
+    (3, 2, '2023-01-01 16:35:02 UTC+1', 'tag', 'sale', 0, 12, 200, 1),
+    (4, 2, '2023-01-01 17:35:02 UTC+1', 'tag', 'sale', 0, 12, 200, 1),
     -- items with different tax rates
-    (1, 3, '2023-01-02 17:00:07 UTC+1', 'tag', 'sale', 0, 3, 201, 1),
+    (1, 3, '2023-01-02 17:00:07 UTC+1', 'tag', 'sale', 0, 13, 201, 1),
     -- Top Up EC
-    (2, 1, '2023-01-01 17:00:07 UTC+1', 'tag', 'sale', 0, 3, 201, 1)
+    (2, 1, '2023-01-01 17:00:07 UTC+1', 'tag', 'sale', 0, 11, 201, 1)
     on conflict do nothing;
 select setval('ordr_id_seq', 100);
 
