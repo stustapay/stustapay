@@ -40,8 +40,8 @@ values
     (101, null, 'internal', 'Rucksack 0', 'Finanzer-rucksack', 200.00, 0),
 
     -- guests (which would need token IDs)
-    (200, 1234, 'private', 'Guest 0', 'Token Balance of Guest 0', 150.00, 0),
-    (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 149.20, 0),
+    (200, 1234, 'private', 'Guest 0', 'Token Balance of Guest 0', 120.00, 0),
+    (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 130.20, 0),
     (201, 5424726191074820, 'private', 'test-tag2', 'test token 2', 30.00, 5),
     (202, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0),
     (203, 5424726016640516, 'private', 'test-tag3', 'test token 3', 15.00, 2),

@@ -52,6 +52,7 @@
             aiohttp
             pylatexenc
             schwifty
+            sepaxml
           ]))
           nodejs
         ];

@@ -3,21 +3,15 @@ package de.stustanet.stustapay.ui.user
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustanet.stustapay.model.Access
-import de.stustanet.stustapay.model.Role
-import de.stustanet.stustapay.model.UserState
-import de.stustanet.stustapay.model.UserTag
+import de.stustanet.stustapay.model.*
+import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.repository.UserRepository
+import de.stustanet.stustapay.ui.cashiermanagement.CashierManagementStatus
 import de.stustanet.stustapay.util.Result
 import de.stustanet.stustapay.util.asResult
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 sealed interface UserUIState {
@@ -41,6 +35,8 @@ class UserViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val terminalConfigRepository: TerminalConfigRepository
 ) : ViewModel() {
+    private var _status = MutableStateFlow("idle")
+
     val userUIState: StateFlow<UserUIState> = userUiState(
         userRepo = userRepository
     )
@@ -65,6 +61,12 @@ class UserViewModel @Inject constructor(
         initialValue = List(0) { Role() },
     )
 
+    val status = _status.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(3000),
+        initialValue = "Idle"
+    )
+
     fun clearErrors() {
         userStatus.update { null }
     }
@@ -85,12 +87,32 @@ class UserViewModel @Inject constructor(
         userRepository.logout()
     }
 
+    fun resetStatus() {
+        _status.update { "idle" }
+    }
+
     suspend fun create(login: String, tag: ULong, roles: List<Role>) {
-        userRepository.create(login, UserTag(tag), roles)
+        _status.update { "creating" }
+        when (val res = userRepository.create(login, UserTag(tag), roles)) {
+            is UserCreateState.Created -> {
+                _status.update { "created" }
+            }
+            is UserCreateState.Error -> {
+                _status.update { res.msg }
+            }
+        }
     }
 
     suspend fun update(tag: ULong, roles: List<Role>) {
-        userRepository.update(UserTag(tag), roles)
+        _status.update { "updating" }
+        when (val res = userRepository.update(UserTag(tag), roles)) {
+            is UserUpdateState.Created -> {
+                _status.update { "updated" }
+            }
+            is UserUpdateState.Error -> {
+                _status.update { res.msg }
+            }
+        }
     }
 }
 
@@ -111,12 +133,19 @@ private fun userUiState(
                 is Result.Success -> {
                     when (val userState = userStateResult.data) {
                         is UserState.LoggedIn -> {
-                            UserUIState.LoggedIn(
-                                username = userState.user.login,
-                                activeRole = userState.user.active_role_name,
-                                showCreateUser = Access.canCreateUser(userState.user),
-                                showLoginUser = Access.canLogInOtherUsers(userState.user),
-                            )
+                            if (userState.user.active_role_name != null) {
+                                UserUIState.LoggedIn(
+                                    username = userState.user.login,
+                                    activeRole = userState.user.active_role_name!!,
+                                    showCreateUser = Access.canCreateUser(userState.user),
+                                    showLoginUser = Access.canLogInOtherUsers(userState.user),
+                                )
+                            } else {
+                                UserUIState.Error(
+                                    message = "no active role provided",
+                                )
+                            }
+
                         }
 
                         is UserState.NoLogin -> {

@@ -76,10 +76,16 @@ private fun loginProfileUiState(
                 is Result.Success -> {
                     when (val state = userStateResult.data) {
                         is UserState.LoggedIn -> {
-                            LoginProfileUIState.LoggedIn(
-                                username = state.user.login,
-                                role = state.user.active_role_name
-                            )
+                            if (state.user.active_role_name != null) {
+                                LoginProfileUIState.LoggedIn(
+                                    username = state.user.login,
+                                    role = state.user.active_role_name!!
+                                )
+                            } else {
+                                LoginProfileUIState.Error(
+                                    message = "no active role provided",
+                                )
+                            }
                         }
                         is UserState.NoLogin -> {
                             LoginProfileUIState.NotLoggedIn
