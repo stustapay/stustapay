@@ -11,7 +11,7 @@ data class CashierEquip(
 
 @Serializable
 data class CashierStocking(
-    val name: String = "",
+    val name: String,
     val euro200: Int = 0,
     val euro100: Int = 0,
     val euro50: Int = 0,
@@ -50,13 +50,19 @@ data class UserInfoPayload(
 
 @Serializable
 data class UserInfo(
-    val user_tag_uid: ULong = 0uL,
+    val user_tag_uid: ULong,
     val cash_drawer_balance: Double? = 0.0,
     val transport_account_balance: Double? = 0.0
 )
 
 @Serializable
 data class CashRegister(
-    val name: String = "",
-    val id: ULong = 0uL
+    // NewCashRegister
+    val name: String,
+
+    // CashRegister
+    val id: ULong,
+    val current_cashier_id: Int?,
+    val current_till_id: Int?,
+    val current_balance: Double,
 )
