@@ -70,7 +70,7 @@ fun CashConfirmView(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("%.2f€".format(getAmount().toDouble() * 100), fontSize = 48.sp)
+                    Text("%.2f€".format(getAmount().toDouble() / 100), fontSize = 48.sp)
                     Text(question, fontSize = 48.sp)
                 }
             }

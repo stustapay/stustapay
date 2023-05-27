@@ -70,7 +70,7 @@ class UserTagHistoryEntry(BaseModel):
 
     @property
     def user_tag_uid_hex(self):
-        return hex(self.user_tag_uid) if self.user_tag_uid is not None else None
+        return hex(self.user_tag_uid)
 
     account_id: int
     comment: Optional[str] = None

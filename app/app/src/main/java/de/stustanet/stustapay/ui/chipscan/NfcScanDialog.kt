@@ -29,7 +29,7 @@ fun NfcScanDialog(
     onDismiss: () -> Unit = {},
     checkScan: (UserTag) -> Boolean = { true },
     onScan: (UserTag) -> Unit = {},
-    content: @Composable () -> Unit = {
+    content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
         Text("Scan a Chip \uD83D\uDCE1", textAlign = TextAlign.Center, fontSize = 40.sp)
     },

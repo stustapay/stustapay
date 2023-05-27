@@ -28,10 +28,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.CompletedPayOut
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.common.DialogDisplayState
@@ -117,17 +119,17 @@ fun CashOutSuccessCard(
                             .clip(shape = CircleShape)
                             .padding(top = 2.dp),
                         colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-                        contentDescription = "Success!",
+                        contentDescription = stringResource(R.string.success),
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     ProductConfirmItem(
-                        name = "Auszahlung",
+                        name = stringResource(R.string.payout),
                         price = completedPayOut.amount,
                         fontSize = 35.sp,
                     )
                     Divider(thickness = 2.dp)
                     ProductConfirmItem(
-                        name = "übriges Guthaben",
+                        name = stringResource(R.string.credit_left),
                         price = completedPayOut.new_balance,
                     )
 
@@ -145,7 +147,7 @@ fun CashOutSuccessCard(
                         .fillMaxWidth()
                         .height(70.dp)
                 ) {
-                    Text(text = "Done")
+                    Text(text = stringResource(R.string.done))
                 }
             }
         )

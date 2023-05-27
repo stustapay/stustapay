@@ -7,47 +7,78 @@ import java.util.UUID
 
 
 data class PayOutState(
-    /** desired cash-out amount in cents.
+    /** what tag is this payout for? */
+    private var tag: UserTag? = null,
+
+    /**
+     * desired cash-out amount in cents.
      * if null, use maximum amount.
      */
-    var currentAmount: UInt? = null,
+    private var currentAmount: UInt? = null,
+
+    /** true once we changed the amount - so we need another check */
+    private var amountChanged: Boolean = false,
 
     /** after we scanned a customer, what's their account balance */
-    var checkedPayOut: CheckedPayOut? = null,
+    private var checkedPayOut: CheckedPayOut? = null,
 
     /** so the objects become different... */
-    var serial: ULong = 0u
+    private var serial: ULong = 0u,
 ) {
+
+    fun setAmount(newAmount: UInt) {
+        currentAmount = newAmount
+        amountChanged = true
+    }
+
+    /** currently selected amount - in cents */
     fun getAmount(): UInt {
         return currentAmount ?: checkedPayOut?.getMaxAmount() ?: 0u
     }
 
-    fun getMaxAmount(): UInt {
-        return checkedPayOut?.getMaxAmount() ?: 30000u
-    }
+    fun getNewPayOut(): NewPayOut? {
+        val tagV = tag ?: return null
 
-    fun getNewPayOut(tag: UserTag): NewPayOut {
         // payout amount is always negative for the api
-        val amount = currentAmount?.toDouble()?.times(-1)
+        val amount = currentAmount?.let { it.toDouble() / -100 }
 
         return NewPayOut(
-            uuid = UUID.randomUUID().toString(),
-            customer_tag_uid = tag.uid,
+            uuid = checkedPayOut?.uuid ?: UUID.randomUUID().toString(),
+            customer_tag_uid = tagV.uid,
             amount = amount
         )
     }
 
-    fun getCheckedPayOut(): NewPayOut? {
-        return checkedPayOut?.getNewPayOut()
+    fun getCheckedPayout(): CheckedPayOut? {
+        return checkedPayOut
     }
 
-    fun updateWithPendingPayOut(pendingPayOut: PendingPayOut, tag: UserTag) {
+    fun wasChanged(): Boolean {
+        return amountChanged
+    }
+
+    /** maximum amount - in cents */
+    fun getMaxAmount(): UInt {
+        return checkedPayOut?.getMaxAmount() ?: 30000u
+    }
+
+    fun updateWithPendingPayOut(pendingPayOut: PendingPayOut) {
         checkedPayOut = CheckedPayOut(
             uuid = pendingPayOut.uuid,
             maxAmount = pendingPayOut.old_balance,
             amount = pendingPayOut.amount,
-            tag = tag,
+            // we couldn't have created a newpayout to request the pendingpayout
+            // in getNewPayout if tag was null.
+            tag = tag!!,
         )
+        amountChanged = false
         serial += 1u
+    }
+
+    fun getCheckedNewPayout(): NewPayOut? {
+        if (wasChanged()) {
+            return null
+        }
+        return checkedPayOut?.getNewPayOut()
     }
 }

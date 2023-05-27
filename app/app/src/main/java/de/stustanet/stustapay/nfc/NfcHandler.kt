@@ -93,7 +93,7 @@ class NfcHandler @Inject constructor(
             )
         } catch (e: Exception) {
             e.printStackTrace()
-            dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Other))
+            dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Other(e.localizedMessage ?: "unknown exception")))
         }
     }
 

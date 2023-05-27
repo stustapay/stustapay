@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.CompletedPayOut
-import de.stustanet.stustapay.model.NewPayOut
-import de.stustanet.stustapay.model.PendingPayOut
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.PayOutRepository
@@ -34,9 +32,6 @@ class PayOutViewModel @Inject constructor(
     private val _payOutState = MutableStateFlow(PayOutState())
     val payOutState = _payOutState.asStateFlow()
 
-    private val _tagScanStatus = MutableStateFlow(false)
-    val tagScanStatus = _tagScanStatus.asStateFlow()
-
     // when we finished a payout
     private val _completedPayOut = MutableStateFlow<CompletedPayOut?>(null)
     val completedPayOut = _completedPayOut.asStateFlow()
@@ -61,15 +56,26 @@ class PayOutViewModel @Inject constructor(
         userRepository.fetchLogin()
     }
 
+    suspend fun tagScanned(tag: UserTag) {
+        _payOutState.update {
+            PayOutState(tag = tag)
+        }
+        checkPayOut()
+    }
+
     fun setAmount(amount: UInt) {
         _payOutState.update {
-            it.copy(currentAmount = amount)
+            val newState = it.copy()
+            newState.setAmount(amount)
+            newState
         }
     }
 
     fun clearAmount() {
         _payOutState.update {
-            it.copy(currentAmount = 0u)
+            val newState = it.copy()
+            newState.setAmount(0u)
+            newState
         }
     }
 
@@ -79,29 +85,22 @@ class PayOutViewModel @Inject constructor(
         _status.update { "ready" }
     }
 
+    /** the big payout button was pressed */
     suspend fun requestPayOut() {
-        val currentCustomer = _payOutState.value.checkedPayOut
-        if (currentCustomer == null) {
-            _tagScanStatus.update { true }
+        var showConfirm = true
+        if (!_payOutState.value.wasChanged()) {
+            showConfirm = checkPayOut()
         }
-        else {
-            checkPayOut(currentCustomer.tag)
+
+        if (showConfirm) {
+            _showPayOutConfirm.update { true }
         }
-    }
-
-    fun tagScanCancelled() {
-        _tagScanStatus.update { false }
-    }
-
-    suspend fun tagScanned(tag: UserTag) {
-        _tagScanStatus.update { false }
-        checkPayOut(tag)
     }
 
     /** when the confirmation dialog is confirmed */
     suspend fun confirmPayOut() {
         _showPayOutConfirm.update { false }
-        _status.update { "processing payout..."}
+        _status.update { "processing payout..." }
 
         bookPayOut()
     }
@@ -120,18 +119,29 @@ class PayOutViewModel @Inject constructor(
     /**
      * validates the cashout amount so we can continue to payment
      */
-    private suspend fun checkPayOut(tag: UserTag): Boolean {
-        val newPayOut = _payOutState.value.getNewPayOut(tag)
+    private suspend fun checkPayOut(): Boolean {
+        val newPayOut = _payOutState.value.getNewPayOut()
+        if (newPayOut == null) {
+            _status.update { "No tag known" }
+            return false
+        }
+
+        // local check
+        if (newPayOut.amount != null && newPayOut.amount <= 0.0) {
+            _status.update { "Amount is zero" }
+            return false
+        }
 
         // server-side check
+        _status.update { "Checking PayOut" }
         return when (val response = payOutRepository.checkPayOut(newPayOut)) {
             is Response.OK -> {
-                _status.update { "PayOut valid" }
                 _payOutState.update {
                     val state = it.copy()
-                    state.updateWithPendingPayOut(response.data, tag)
+                    state.updateWithPendingPayOut(response.data)
                     state
                 }
+                _status.update { "PayOut valid" }
                 true
             }
 
@@ -148,7 +158,8 @@ class PayOutViewModel @Inject constructor(
     }
 
     private suspend fun bookPayOut() {
-        val newPayOut = _payOutState.value.getCheckedPayOut()
+        val newPayOut = _payOutState.value.getCheckedNewPayout()
+
         if (newPayOut == null) {
             _status.update { "payout was not checked before" }
             return

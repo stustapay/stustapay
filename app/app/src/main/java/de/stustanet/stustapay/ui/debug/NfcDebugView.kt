@@ -73,7 +73,7 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
         }
 
         val uid = scanViewUid
-        Text("UID: $uid")
+        Text("UID: ${uid.toString(16)}")
 
         Spacer(modifier = Modifier.height(32.dp))
         Text(text = "Settings", fontSize = 24.sp)
@@ -250,29 +250,30 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
             horizontalAlignment = Alignment.Start,
             modifier = Modifier.fillMaxWidth()
         ) {
-            when (uiState.result) {
+            when (val result = uiState.result) {
                 is NfcDebugScanResult.None -> {}
                 is NfcDebugScanResult.ReadSuccess -> {
                     Text("Protected: " +
-                        when ((uiState.result as NfcDebugScanResult.ReadSuccess).protected) {
+                        when (result.protected) {
                             true -> "Yes"
                             else -> "No"
                         }
                     )
-                    Text("UID: " + (uiState.result as NfcDebugScanResult.ReadSuccess).uid)
-                    Text("Content:\n" + (uiState.result as NfcDebugScanResult.ReadSuccess).content)
+                    Text("UID: ${result.uid.toString(16)}")
+                    Text("Content:\n" + result.content)
                 }
                 is NfcDebugScanResult.WriteSuccess -> Text("Written")
                 is NfcDebugScanResult.Failure -> {
-                    when ((uiState.result as NfcDebugScanResult.Failure).reason) {
-                        is NfcScanFailure.Other -> Text("Other failure")
+                    when (val reason = result.reason) {
+                        is NfcScanFailure.NoKey -> Text("no secret key present")
+                        is NfcScanFailure.Other -> Text("Failure: ${reason.msg}")
                         is NfcScanFailure.Incompatible -> Text("Tag incompatible")
                         is NfcScanFailure.Lost -> Text("Tag lost")
                         is NfcScanFailure.Auth -> Text("Authentication failed")
                     }
                 }
                 is NfcDebugScanResult.Test -> {
-                    for (line in (uiState.result as NfcDebugScanResult.Test).log) {
+                    for (line in result.log) {
                         if (line.second) {
                             Text(line.first, color = Color.Green)
                         } else {

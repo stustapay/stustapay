@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.common.DialogDisplayState
 import de.stustanet.stustapay.ui.common.pay.CashConfirmView
 import de.stustanet.stustapay.ui.common.pay.CashECCallback
@@ -68,7 +67,7 @@ fun CashOutConfirmCard(
     Card(
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier
-            .padding(0.dp, 50.dp)
+            .padding(horizontal = 0.dp, vertical = 10.dp)
             .fillMaxWidth(),
         elevation = 8.dp,
     ) {

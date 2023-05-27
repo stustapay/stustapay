@@ -4,11 +4,22 @@ import kotlinx.serialization.Serializable
 
 
 /**
+ * nfc tag communication secrets.
+ */
+@Serializable
+data class UserTagSecret(
+    val key0: String,
+    val key1: String,
+)
+
+
+/**
  * access keys for external apis.
  */
 @Serializable
 data class TerminalSecrets(
     val sumup_affiliate_key: String,
+    val user_tag_secret: UserTagSecret,
 )
 
 /**

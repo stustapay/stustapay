@@ -20,6 +20,11 @@ class HttpClient(
 ) {
     val httpClient = HttpClient(CIO) {
 
+        engine {
+            https {
+            }
+        }
+
         // automatic json conversions
         install(ContentNegotiation) {
             json(Json {
@@ -40,8 +45,8 @@ class HttpClient(
 
         install(HttpTimeout) {
             connectTimeoutMillis = 2000
-            requestTimeoutMillis = 3000
-            socketTimeoutMillis = 3000
+            requestTimeoutMillis = 6000
+            socketTimeoutMillis = 10000
         }
 
         if (logRequests) {

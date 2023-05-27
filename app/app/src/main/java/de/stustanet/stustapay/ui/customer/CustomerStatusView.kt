@@ -73,7 +73,7 @@ fun CustomerStatusView(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text("Name", fontSize = 48.sp)
-                                    Text(customer.name, fontSize = 24.sp)
+                                    Text(customer.name ?: "no name", fontSize = 24.sp)
                                 }
 
                                 Row(
@@ -115,7 +115,7 @@ fun CustomerStatusView(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(customer.comment, fontSize = 24.sp)
+                                    Text(customer.comment ?: "", fontSize = 24.sp)
                                 }
                             }
 
@@ -192,7 +192,10 @@ fun CustomerStatusView(
                                 modifier = Modifier
                                     .fillMaxWidth(),
                                 onClick = {
-                                    viewModel.startSwap(UserTag(state.customer.user_tag_uid))
+                                    val uid = state.customer.user_tag_uid
+                                    if (uid != null) {
+                                        viewModel.startSwap(UserTag(uid))
+                                    }
                                 }
                             ) {
                                 Text("Swap", fontSize = 24.sp)

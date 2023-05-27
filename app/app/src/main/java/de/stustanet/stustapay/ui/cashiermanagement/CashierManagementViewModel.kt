@@ -7,35 +7,31 @@ import de.stustanet.stustapay.model.CashRegister
 import de.stustanet.stustapay.model.CashierStocking
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.CashierRepository
-import kotlinx.coroutines.flow.*
+import de.stustanet.stustapay.util.mapState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
 class CashierManagementViewModel @Inject constructor(
     private val cashierRepository: CashierRepository,
 ) : ViewModel() {
-    private val _stockings = MutableStateFlow(List(0) { CashierStocking() })
-    private val _registers = MutableStateFlow(List(0) { CashRegister() })
     private val _status = MutableStateFlow<CashierManagementStatus>(CashierManagementStatus.None)
 
-    val stockings = _stockings.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(3000),
-        initialValue = List(0) { CashierStocking() }
-    )
+    private val _stockings = MutableStateFlow<List<CashierStocking>>(listOf())
+    val stockings = _stockings.asStateFlow()
 
-    val registers = _registers.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(3000),
-        initialValue = List(0) { CashRegister() }
-    )
+    private val _registers = MutableStateFlow<List<CashRegister>>(listOf())
+    val registers = _registers.asStateFlow()
 
-    val status = _status.map { status ->
+    val status = _status.mapState("Idle", viewModelScope) { status ->
         if (status is CashierManagementStatus.Done) {
             when (val res = status.res) {
                 is Response.OK -> {
                     "Done"
                 }
+
                 is Response.Error -> {
                     res.msg()
                 }
@@ -43,19 +39,16 @@ class CashierManagementViewModel @Inject constructor(
         } else {
             "Idle"
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(3000),
-        initialValue = "Idle"
-    )
+    }
 
     suspend fun getData() {
         when (val stockings = cashierRepository.getCashierStockings()) {
             is Response.OK -> {
                 _stockings.update { stockings.data }
             }
+
             else -> {
-                _stockings.update { List(0) { CashierStocking() } }
+                _stockings.update { listOf() }
             }
         }
 
@@ -63,8 +56,9 @@ class CashierManagementViewModel @Inject constructor(
             is Response.OK -> {
                 _registers.update { registers.data }
             }
+
             else -> {
-                _registers.update { List(0) { CashRegister() } }
+                _registers.update { listOf() }
             }
         }
     }

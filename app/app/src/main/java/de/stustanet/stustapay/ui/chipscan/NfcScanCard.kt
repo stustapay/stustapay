@@ -4,7 +4,13 @@ package de.stustanet.stustapay.ui.chipscan
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
@@ -29,42 +35,45 @@ fun NfcScanCard(
     checkScan: (UserTag) -> Boolean = { true },
     onScan: (UserTag) -> Unit = {},
     scan: Boolean = true,  // is scanning active?
-    keepScanning: Boolean = false,  // after a successfull scan, keep on scanning?
-    content: @Composable () -> Unit = {
+    keepScanning: Boolean = false,  // after a successful scan, keep on scanning?
+    showStatus: Boolean = true,  // display scan status below the content.
+    content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
         Text("Scan a Chip \uD83D\uDCE1", textAlign = TextAlign.Center, fontSize = 40.sp)
     },
 ) {
-    val scanResult by viewModel.scanState.collectAsStateWithLifecycle()
+
+    val scanState by viewModel.scanState.collectAsStateWithLifecycle()
+    val scanning by viewModel.scanning.collectAsStateWithLifecycle()
+    val scanResult by viewModel.scanResult.collectAsStateWithLifecycle()
     val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
 
-    LaunchedEffect(scanResult, scan) {
-        val tag = scanResult.scanTag
-        if (tag == null) {
-            // no scanned tag yet -> set desired scan state
-            if (scan) {
-                viewModel.scan()
-            } else {
+    LaunchedEffect(scanResult) {
+        val tag = scanResult
+        if (tag != null) {
+            if (checkScan(tag)) {
+                vibrator.vibrate(VibrationEffect.createOneShot(300, 200))
+                // this also resets tag to null
                 viewModel.stopScan()
+                onScan(tag)
+
+                // continue scanning
+                if (keepScanning) {
+                    viewModel.scan()
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(scan) {
+        // we want to enable scanning
+        if (scan) {
+            // we're not currently scanning
+            if (!scanning) {
+                viewModel.scan()
             }
         } else {
-            // we've scanned a tag
-            // if the tag is good, return it, and maybe continue scanning
-            // of stop scanning
-            if (scan) {
-                if (checkScan(tag)) {
-                    vibrator.vibrate(VibrationEffect.createOneShot(300, 200))
-                    viewModel.stopScan()
-                    onScan(tag)
-
-                    // continue scanning
-                    if (keepScanning) {
-                        viewModel.scan()
-                    }
-                }
-            } else {
-                viewModel.stopScan()
-            }
+            viewModel.stopScan()
         }
     }
 
@@ -84,13 +93,15 @@ fun NfcScanCard(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center
             ) {
-                content()
+                content(scanState.status)
 
-                Text(
-                    scanResult.status,
-                    textAlign = TextAlign.Left,
-                    fontSize = 20.sp,
-                )
+                if (showStatus) {
+                    Text(
+                        scanState.status,
+                        textAlign = TextAlign.Left,
+                        fontSize = 20.sp,
+                    )
+                }
             }
         }
     }
