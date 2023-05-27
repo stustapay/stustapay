@@ -1,3 +1,6 @@
+#based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz
+#with modifications by StuStaPay, 2023
+
 from .fields import BooleanField, LocalDateTimeField, NumericField, StringField  # , ISODateTimeField
 from .table import Model
 

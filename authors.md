@@ -1,5 +1,5 @@
 Any file in this project that doesn't state otherwise, and isn't listed as an
-exception below, is Copyright 2022-2022 The StuStaPay authors, and licensed
+exception below, is Copyright 2022-2023 The StuStaPay authors, and licensed
 under the terms of the GNU Affero General Public License Version 3, or
 (at your option) any later version ("AGPL3+").
 A copy of the license can be found in [LICENSE](LICENSE).
@@ -15,6 +15,7 @@ _the StuStaPay authors_ are:
 | Michael Enßlin                    | mic_e                       | mic á sft dawt lol                                |
 | Janis Heims                       | TechnoElf                   | janis.heims á stusta dawt de                      |
 | Tobias Jülg                       | juelg,jobi                  | jobi á stusta dawt de                             |
+| Markus Hefele                     |                             | markus dawt hefele á stusta dawt de               |
 
 
 If you're a first-time committer, add yourself to the above list. This is not
@@ -44,3 +45,7 @@ If you wish to include a file from StuStaPay in your project, make sure to
 include all required legal info. The easiest way to do this would probably
 be to include a copy of this file (`authors.md`), and to leave the file's
 copyright header untouched.
+
+Exceptions:
+DSFinV-K library in stustapay/dsfinvk/dsfinvk: Based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz; with modifications by StuStaPay Team, 2023
+

@@ -1,3 +1,6 @@
+#based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz
+#with modifications by StuStaPay, 2023
+
 import re
 from datetime import date, datetime
 from decimal import ROUND_HALF_UP, Decimal
