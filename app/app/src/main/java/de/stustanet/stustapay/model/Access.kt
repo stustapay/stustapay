@@ -38,6 +38,10 @@ object Access {
         return user.privileges.contains(Privilege.config_management)
     }
 
+    fun canSwap(user: CurrentUser): Boolean {
+        return user.privileges.contains(Privilege.account_management)
+    }
+
     // Till features
     fun canSellTicket(terminal: TerminalConfig): Boolean {
         return terminal.allow_ticket_sale

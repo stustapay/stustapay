@@ -3,15 +3,16 @@ package de.stustanet.stustapay.ui.customer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustanet.stustapay.model.Access
 import de.stustanet.stustapay.model.Customer
+import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.CustomerRepository
+import de.stustanet.stustapay.repository.UserRepository
+import de.stustanet.stustapay.util.mapState
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
@@ -32,18 +33,27 @@ sealed interface CustomerStatusRequestState {
 
 @HiltViewModel
 class CustomerStatusViewModel @Inject constructor(
-    private val customerRepository: CustomerRepository
+    private val customerRepository: CustomerRepository,
+    userRepository: UserRepository
 ) : ViewModel() {
     private val _requestState =
         MutableStateFlow<CustomerStatusRequestState>(CustomerStatusRequestState.Fetching)
 
-    val uiState: StateFlow<CustomerStatusUiState> = _requestState.map { result ->
-        CustomerStatusUiState(result)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = CustomerStatusUiState()
-    )
+    val uiState: StateFlow<CustomerStatusUiState> =
+        _requestState.mapState(CustomerStatusUiState(), viewModelScope) { result ->
+            CustomerStatusUiState(result)
+        }
+
+    val swapVisible = userRepository.userState.mapState(false, viewModelScope) {
+        when (it) {
+            is UserState.LoggedIn -> {
+                Access.canSwap(it.user)
+            }
+            else -> {
+                false
+            }
+        }
+    }
 
     fun startScan() {
         _requestState.update { CustomerStatusRequestState.Fetching }
