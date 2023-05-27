@@ -9,7 +9,7 @@ import asyncpg
 # from stustapay.core.database import create_db_pool
 # from stustapay.core.service.common.dbhook import DBHook
 
-from datetime import datetime, timezone
+#from datetime import datetime, timezone
 from dateutil import parser
 from decimal import Decimal
 
@@ -92,8 +92,10 @@ class Generator:
                 ):  # alle Kassenabschlussids
                     Z_NR = row["z_nr"]
 
-                    #hole alle order dieser Kasse und Kassenabschluss und nimm den Zeitpunkt der letzten für den Kassenabschluss
-                    last_order_time = await self._conn.fetchval("select booked_at from ordr where till_id = $1 and z_nr = $2 order by id desc", Z_KASSE_ID, Z_NR)
+                    # hole alle order dieser Kasse und Kassenabschluss und nimm den Zeitpunkt der letzten für den Kassenabschluss
+                    last_order_time = await self._conn.fetchval(
+                        "select booked_at from ordr where till_id = $1 and z_nr = $2 order by id desc", Z_KASSE_ID, Z_NR
+                    )
                     Z_ERSTELLUNG = last_order_time
 
                     await self.einzelaufzeichnungsmodul(
@@ -397,33 +399,88 @@ class Generator:
         a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
 
-
-        #Prüfe, ob diese Kasse verschiedene TSEs hatte, wenn nicht, dann müssen wir nichts weiter tun. Das sollte der Normalfall sein:
-        till_history = await self._conn.fetch("select * from till_tse_history where till_id = $1 order by date", str(Z_KASSE_ID))
+        # Prüfe, ob diese Kasse verschiedene TSEs hatte, wenn nicht, dann müssen wir nichts weiter tun. Das sollte der Normalfall sein:
+        till_history = await self._conn.fetch(
+            "select what, tse_id, z_nr, date from till_tse_history where till_id = $1 order by z_nr", str(Z_KASSE_ID)
+        )
         tses = list()
         for entry in till_history:
-            if entry['what'] == 'register':
-                tses.append(entry['tse_id'])
+            if entry["what"] == "register":
+                tses.append(entry["tse_id"])
         if len(tses) == 1:
-            pass #all fine
+            # Fall, dass wir nur eine TSE für diese Kasse haben: Einfach
+            row = await self._conn.fetchrow(
+                "select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from till join tse on till.tse_id = tse.tse_id where till.id = $1",
+                Z_KASSE_ID,
+            )
+
+            # oh gott, es gibt noch einen Fall: eine Kasse wird von der defekten TSE geschoben, aber hat noch keine Buchung gemacht und somit noch keine neue TSE erhalten -> das Feld tse_id in till ist Null
+            # damit schlägt natürlich der join fehl und es kommt None zurück.
+            if row is None:
+                # jetze müssen wir in der history nachschauen, auf welcher TSE diese Kasse registriert war, kann natürlich auch wieder mehrere geben, ahrg
+                # dazu kopieren wir jetzt einfach den code von unten
+                kassenschlussgrenzen = await self._conn.fetch(
+                    "select z_nr from till_tse_history where till_id = $1 and what='register' order by z_nr",
+                    str(Z_KASSE_ID),
+                )
+                aeltereschluesse = list()
+
+                for schluss in kassenschlussgrenzen:
+                    # ist der Kassenschluss bei dem die Kasse auf die TSE registriert wurde älter und damit kleiner gleich als der aktuel abgefragte Z_NR?
+                    if Z_NR >= schluss["z_nr"]:
+                        aeltereschluesse.append(schluss["z_nr"])
+                # nimm jetzt den größten weil ältesten Kassenschluss in der Liste und hole die TSE
+                aeltereschluesse.sort(reverse=True)
+                aktuelle_tse_id = await self._conn.fetchval(
+                    "select tse_id from till_tse_history where till_id = $1 and what='register' and z_nr = $2",
+                    str(Z_KASSE_ID),
+                    aeltereschluesse[0],
+                )
+                print(
+                    f"Kasse {Z_KASSE_ID} hat beim Abschluss {Z_NR} die TSE: {aktuelle_tse_id} und wurde bisher noch nicht auf eine neue TSE registriert"
+                )
+
+                # und jetzt die stammdaten dieser TSE
+                row = await self._conn.fetchrow(
+                    "select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from tse  where tse_id = $1",
+                    aktuelle_tse_id,
+                )
+
         elif len(tses) == 0:
             print(f"Kasse {Z_KASSE_ID} wurde bei keiner TSE registriert")
-            raise ValueError #sollte nicht passieren
+            raise ValueError  # sollte nicht passieren
         else:
             print(f"KASSE {Z_KASSE_ID} wurde bei mehreren TSEs registriert, nämlich bei {tses}")
-            raise NotImplemented
+            # Fall, dass bei dieser Kasse die TSE gewechselt wurde: Kompliziert :(
+            # Erstens: Herausfinden, welche TSE für diesen Kassenschluss zuständig war:
+            # ich habe mehrere Einträge, davon muss ich den mit dem kleinsten z_nr nehmen und vergleichen, ob der größer gleich dem aktuellen z_nr ist.
+            kassenschlussgrenzen = await self._conn.fetch(
+                "select z_nr from till_tse_history where till_id = $1 and what='register' order by z_nr",
+                str(Z_KASSE_ID),
+            )
+            aeltereschluesse = list()
 
+            for schluss in kassenschlussgrenzen:
+                # ist der Kassenschluss bei dem die Kasse auf die TSE registriert wurde älter und damit kleiner gleich als der aktuel abgefragte Z_NR?
+                if Z_NR >= schluss["z_nr"]:
+                    aeltereschluesse.append(schluss["z_nr"])
+            # nimm jetzt den größten weil ältesten Kassenschluss in der Liste und hole die TSE
+            aeltereschluesse.sort(reverse=True)
+            aktuelle_tse_id = await self._conn.fetchval(
+                "select tse_id from till_tse_history where till_id = $1 and what='register' and z_nr = $2",
+                str(Z_KASSE_ID),
+                aeltereschluesse[0],
+            )
+            print(f"Kasse {Z_KASSE_ID} hat beim Abschluss {Z_NR} die TSE: {aktuelle_tse_id}")
 
+            # und jetzt die stammdaten dieser TSE
+            row = await self._conn.fetchrow(
+                "select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from tse  where tse_id = $1",
+                aktuelle_tse_id,
+            )
 
-
-
-        row = await self._conn.fetchrow(
-                "select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from till join tse on till.tse_id = tse.tse_id where till.id = $1", ## TODO: cannot select for Z_NR, because we keep no history. is important, when we change tse!. and till.z_nr = $2",
-            Z_KASSE_ID,
-            #Z_NR,
-        )
-        #LOGGER.info(row)
-        #LOGGER.info(f'Z_KASSE_ID: {Z_KASSE_ID}, Z_NR: {Z_NR}')
+        # LOGGER.info(row)
+        # LOGGER.info(f'Z_KASSE_ID: {Z_KASSE_ID}, Z_NR: {Z_NR}')
         a.TSE_ID = int(row["tse_id"])
         a.TSE_SERIAL = row["tse_serial"]
         a.TSE_SIG_ALGO = row["tse_hashalgo"]

@@ -8,7 +8,7 @@ from .fields import Field
 class BaseTableMeta(type):
     @classmethod
     def __prepare__(self, name, bases):
-        del name #make pylint happy
+        del name  # make pylint happy
         del bases
         return collections.OrderedDict()
 
