@@ -17,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
+import de.stustanet.stustapay.ui.common.tagIDtoString
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
 
@@ -64,7 +65,7 @@ fun CashierStatusView(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text("ID", fontSize = 24.sp)
-                                        Text("${state.userInfo.user_tag_uid}", fontSize = 36.sp)
+                                        Text(tagIDtoString(state.userInfo.user_tag_uid), fontSize = 36.sp)
                                     }
 
                                     Divider()
