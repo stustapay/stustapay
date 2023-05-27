@@ -479,7 +479,7 @@ class TSEWrapper:
         else:
             z_nr = 0
         await self._conn.execute(
-            "insert into till_tse_history (till_id, tse_id, what, z_nr) values ($1, $2, 'deregister', $2)",
+            "insert into till_tse_history (till_id, tse_id, what, z_nr) values ($1, $2, 'deregister', $3)",
             till,
             self.tse_id,
             z_nr,
