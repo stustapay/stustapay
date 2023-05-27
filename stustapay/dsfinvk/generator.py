@@ -3,19 +3,11 @@ import logging
 from typing import Dict
 import asyncpg
 
-# from ..core.subcommand import SubCommand
-# from .config import Config
-
-# from stustapay.core.database import create_db_pool
-# from stustapay.core.service.common.dbhook import DBHook
-
-# from datetime import datetime, timezone
 from dateutil import parser
 from decimal import Decimal
 
 import json
 
-# import pytz
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import (
     Stamm_Abschluss,
@@ -127,7 +119,39 @@ class Generator:
         ### d datapayment.csv ###
         # alle orders für diese Kasse und Abschluss abfragen:
         for row in await self._conn.fetch(
-            "select ordr.id, ordr.payment_method, ordr.cash_register_id, ordr.cancels_order, tse_signature.tse_start, tse_signature.tse_end, tse_signature.tse_id, tse_signature.tse_transaction, tse_signature.transaction_process_type, tse_signature.tse_signaturenr, tse_signature.transaction_process_data, tse_signature.tse_signature, ordr.cashier_id, ordr.customer_account_id, ordr.order_type, tse_signature.signature_status, tse_signature.result_message, order_value.total_price, order_value.line_items from ordr join tse_signature on ordr.id=tse_signature.id join order_value on ordr.id=order_value.id where ordr.till_id = $1 and ordr.z_nr = $2 order by ordr.id",
+            """
+            select
+                ordr.id,
+                ordr.payment_method,
+                ordr.cash_register_id,
+                ordr.cancels_order,
+                tse_signature.tse_start,
+                tse_signature.tse_end,
+                tse_signature.tse_id,
+                tse_signature.tse_transaction,
+                tse_signature.transaction_process_type,
+                tse_signature.tse_signaturenr,
+                tse_signature.transaction_process_data,
+                tse_signature.tse_signature,
+                ordr.cashier_id,
+                ordr.customer_account_id,
+                ordr.order_type,
+                tse_signature.signature_status,
+                tse_signature.result_message,
+                order_value.total_price,
+                order_value.line_items
+            from
+                ordr
+            join
+                tse_signature on ordr.id=tse_signature.id
+            join
+                order_value on ordr.id=order_value.id
+            where
+                ordr.till_id = $1
+                and ordr.z_nr = $2
+            order by
+                ordr.id
+            """,
             Z_KASSE_ID,
             Z_NR,
         ):

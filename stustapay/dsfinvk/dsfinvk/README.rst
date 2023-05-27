@@ -1,12 +1,6 @@
 DSFinV-K for python
 ===================
 
-.. image:: https://travis-ci.com/pretix/python-dsfinvk.svg?branch=master
-   :target: https://travis-ci.com/pretix/python-dsfinvk
-
-.. image:: http://img.shields.io/pypi/v/dsfinvk.svg
-   :target: https://pypi.python.org/pypi/dsfinvk
-
 This is a reusable python implementation of DSFinV-K, the export format every cash register in Germany has to
 provide starting in 2020. **This library comes without any warranties, you are responsible to make sure that your
 cash register outputs the correct data. Depending on your system, it might be required to export MORE data than this
