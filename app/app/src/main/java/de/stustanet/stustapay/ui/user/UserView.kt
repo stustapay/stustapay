@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.user
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
@@ -31,55 +32,60 @@ object UserNavDest {
 fun UserView(
     leaveView: () -> Unit = {}, viewModel: UserViewModel = hiltViewModel()
 ) {
-
     val navController = rememberNavController()
     val scaffoldState = rememberScaffoldState()
 
-    NavScaffold(
-        title = { Text(text = "User Management") },
-        state = scaffoldState,
-        navigateBack = {
-            if (navController.currentDestination?.route == UserNavDest.info.route) {
-                leaveView()
-            } else {
-                navController.popBackStack()
-            }
-        },
-    ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = UserNavDest.info.route,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
-        ) {
-            composable(UserNavDest.info.route) {
-                UserLoginView(
-                    viewModel,
-                    goToUserCreateView = {
-                        navController.navigateTo(
-                            UserNavDest.create.route
-                        )
-                    },
-                    goToUserUpdateView = {
-                        navController.navigateTo(
-                            UserNavDest.update.route
-                        )
+    NavHost(
+        navController = navController,
+        startDestination = UserNavDest.info.route,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        composable(UserNavDest.info.route) {
+            NavScaffold(
+                title = { Text(text = "User Management") },
+                state = scaffoldState,
+                navigateBack = {
+                    if (navController.currentDestination?.route == UserNavDest.info.route) {
+                        leaveView()
+                    } else {
+                        navController.popBackStack()
                     }
-                )
-            }
-            composable(UserNavDest.create.route) {
-                UserCreateView(viewModel) {
-                    navController.navigateTo(
-                        UserNavDest.info.route
+                }
+            ) {
+                Box(modifier = Modifier.padding(it)) {
+                    UserLoginView(
+                        viewModel,
+                        goToUserCreateView = {
+                            navController.navigateTo(UserNavDest.create.route)
+                        },
+                        goToUserUpdateView = {
+                            navController.navigateTo(UserNavDest.update.route)
+                        }
                     )
                 }
             }
-            composable(UserNavDest.update.route) {
-                UserUpdateView(viewModel) {
-                    navController.navigateTo(
-                        UserNavDest.info.route
-                    )
+        }
+        composable(UserNavDest.create.route) {
+            NavScaffold(
+                title = { Text("Create User") },
+                navigateBack = {
+                    viewModel.resetStatus()
+                    navController.navigateTo(UserNavDest.info.route)
+                }) {
+                Box(modifier = Modifier.padding(it)) {
+                    UserCreateView(viewModel)
+                }
+            }
+        }
+        composable(UserNavDest.update.route) {
+            NavScaffold(
+                title = { Text("Update User") },
+                navigateBack = {
+                    viewModel.resetStatus()
+                    navController.navigateTo(UserNavDest.info.route)
+                }) {
+                Box(modifier = Modifier.padding(it)) {
+                    UserUpdateView(viewModel)
                 }
             }
         }
