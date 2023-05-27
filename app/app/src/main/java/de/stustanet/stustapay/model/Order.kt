@@ -351,7 +351,7 @@ data class Order(
     val order_type: OrderType,
     val cashier_id: Int,
     val till_id: Int,
-    val customer_account_id: Int,
+    val customer_account_id: Int?,
     val line_items: List<LineItem>,
 )
 

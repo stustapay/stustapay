@@ -20,7 +20,7 @@ fun SaleSelectionFreePrice(
     AmountSelection(
         amount = amount?.price ?: 0u,
         modifier = modifier,
-        config = AmountConfig.Money(cents = true, limit = 50000u),
+        config = AmountConfig.Money(cents = true, limit = 15000u),
         onAmountUpdate = {
             viewModel.adjustPrice(buttonId, newPrice = FreePrice.Set(it))
         },

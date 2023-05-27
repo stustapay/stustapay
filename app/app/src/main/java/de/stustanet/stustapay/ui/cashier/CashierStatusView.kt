@@ -1,13 +1,8 @@
 package de.stustanet.stustapay.ui.cashier
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
+import androidx.compose.material.Divider
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
+import de.stustanet.stustapay.ui.common.tagIDtoString
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
 
@@ -59,50 +55,63 @@ fun CashierStatusView(
                         ) {
                             when (val state = uiState.state) {
                                 is CashierStatusRequestState.Fetching -> {
-                                    Text("Fetching", fontSize = 48.sp)
+                                    Text("Fetching", fontSize = 36.sp)
                                 }
                                 is CashierStatusRequestState.Done -> {
                                     Row(
                                         modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 10.dp),
+                                            .fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("ID", fontSize = 48.sp)
-                                        Text("${state.userInfo.user_tag_uid}", fontSize = 24.sp)
+                                        Text("ID", fontSize = 24.sp)
+                                        Text(tagIDtoString(state.userInfo.user_tag_uid), fontSize = 36.sp)
                                     }
+
+                                    Divider()
 
                                     Row(
                                         modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 10.dp),
+                                            .fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Cashier", fontSize = 48.sp)
-                                        Text("${state.userInfo.cash_drawer_balance}€", fontSize = 24.sp)
+                                        Text("Cashier", fontSize = 24.sp)
+                                        if (state.userInfo.cash_drawer_balance == null) {
+                                            Text("N/A", fontSize = 36.sp)
+                                        } else {
+                                            Text("${state.userInfo.cash_drawer_balance}€", fontSize = 36.sp)
+                                        }
                                     }
+
+                                    Divider()
 
                                     Row(
                                         modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 10.dp),
+                                            .fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Bag", fontSize = 48.sp)
-                                        Text("${state.userInfo.transport_account_balance}€", fontSize = 24.sp)
+                                        Text("Bag", fontSize = 24.sp)
+                                        if (state.userInfo.transport_account_balance == null) {
+                                            Text("N/A", fontSize = 36.sp)
+                                        } else {
+                                            Text("${state.userInfo.transport_account_balance}€", fontSize = 36.sp)
+                                        }
                                     }
                                 }
                                 is CashierStatusRequestState.Failed -> {
-                                    Text("Failed", fontSize = 48.sp)
+                                    Text("Failed", fontSize = 36.sp)
                                 }
                             }
                         }
                     }
                 },
                 bottomBar = {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Divider()
+                    Spacer(modifier = Modifier.height(20.dp))
+
                     Button(
                         onClick = {
                             scanState.open()

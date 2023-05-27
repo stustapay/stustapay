@@ -59,7 +59,7 @@ fun TopUpSelection(
             onAmountUpdate = { viewModel.setAmount(it) },
             onClear = { viewModel.clearDraft() },
             config = AmountConfig.Money(
-                limit = 30000u,
+                limit = 150u,
                 cents = false,
             )
         )

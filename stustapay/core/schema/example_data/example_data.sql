@@ -23,10 +23,10 @@ insert into user_tag (
 values
     (1234, 'pin', null, null, null),
     (13876489173, null, null, null, null),
-    (5424727861184004, 'LOL-tag1', 'serial1', null, 0),
-    (5424726191074820, 'LOL-tag2', 'serial2', null, 0),
-    (5424726016640516, 'LOL-tag3', 'serial3', null, 0),
-    (5424726268326916, 'LOL-tag4', 'serial4', null, 0)
+    (40553586977621508, 'LOL-tag1', 'serial1', null, 0),
+    (40553586985233924, 'LOL-tag2', 'serial2', null, 0),
+    (40553586978571780, 'LOL-tag3', 'serial3', null, 0),
+    (40553586978599940, 'LOL-tag4', 'serial4', null, 0)
     on conflict do nothing;
 
 
@@ -42,10 +42,10 @@ values
     -- guests (which would need token IDs)
     (200, 1234, 'private', 'Guest 0', 'Token Balance of Guest 0', 120.00, 0),
     (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 130.20, 0),
-    (201, 5424726191074820, 'private', 'test-tag2', 'test token 2', 30.00, 5),
+    (201, 40553586985233924, 'private', 'test-tag2', 'test token 2', 30.00, 5),
     (202, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0),
-    (203, 5424726016640516, 'private', 'test-tag3', 'test token 3', 15.00, 2),
-    (204, 5424726268326916, 'private', 'test-tag4', 'test token 4', 20.00, 2),
+    (203, 40553586978571780, 'private', 'test-tag3', 'test token 3', 15.00, 2),
+    (204, 40553586978599940, 'private', 'test-tag4', 'test token 4', 20.00, 2),
     (205, null, 'internal', 'test-tag4-internal', 'tag4 internal account', 0.0, 0)
     on conflict do nothing;
 select setval('account_id_seq', 300);
@@ -75,9 +75,9 @@ values
     -- password is admin
     (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null, null),
     -- tag2 is admin but not customer
-    (2, 'tag2', null, null, null, 202, 0, 5424726191074820),
+    (2, 'tag2', null, null, null, 202, 0, 40553586985233924),
     -- tag4 is customer and cashier
-    (4, 'tag4', null, null, null, 205, null, 5424726268326916),
+    (4, 'tag4', null, null, null, 205, null, 40553586978599940),
     -- password is admin
     (5, 'finanzorga' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null, null)
     on conflict do nothing;
