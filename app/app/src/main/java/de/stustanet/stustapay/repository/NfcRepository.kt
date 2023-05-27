@@ -11,6 +11,11 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
 
+sealed interface ReadMode {
+    object Fast : ReadMode
+    data class Full(val auth: Boolean, val cmac: Boolean) : ReadMode
+}
+
 @Singleton
 class NfcRepository @Inject constructor(
     private val nfcDataSource: NfcDataSource
@@ -26,9 +31,17 @@ class NfcRepository @Inject constructor(
         key1.update { secrets.key1.decodeHex() }
     }
 
-    suspend fun read(auth: Boolean, cmac: Boolean): NfcScanResult {
+    suspend fun read(mode: ReadMode): NfcScanResult {
         val key = key0.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
-        return nfcDataSource.scan(NfcScanRequest.Read(auth, cmac, key))
+        return when (mode) {
+            is ReadMode.Fast -> {
+                nfcDataSource.scan(NfcScanRequest.FastRead(key))
+            }
+
+            is ReadMode.Full -> {
+                nfcDataSource.scan(NfcScanRequest.Read(mode.auth, mode.cmac, key))
+            }
+        }
     }
 
     suspend fun readMultiKey(auth: Boolean, cmac: Boolean): NfcScanResult {

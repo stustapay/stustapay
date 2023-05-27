@@ -1,30 +1,51 @@
-import { Card, CardContent, Grid, Typography } from "@mui/material";
+import { Card, CardContent, Checkbox, FormControlLabel, Alert, Typography } from "@mui/material";
 import * as React from "react";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
 import { useGetProductStatsQuery } from "@api";
 import { Loading } from "@stustapay/components";
 
-const ProductStatsGraph: React.FC = () => {
+export interface ProductStatsCardProps {
+  fromTimestamp: null | string;
+  toTimestamp: null | string;
+}
+
+export const ProductStatsCard: React.FC<ProductStatsCardProps> = ({ fromTimestamp, toTimestamp }) => {
   const { t } = useTranslation();
-  const { data } = useGetProductStatsQuery();
+  const { data, error } = useGetProductStatsQuery({
+    fromTimestamp: fromTimestamp,
+    toTimestamp: toTimestamp,
+  });
+
+  const [hideDeposits, setHideDeposits] = React.useState(true);
 
   if (!data) {
     return <Loading />;
   }
 
-  const mappedData = data.ten_most_sold_products.map((d) => ({
-    id: d.id,
-    label: d.name,
-    value: d.quantity_sold,
-  }));
+  if (error) {
+    return <Alert severity="error">Error loading stats</Alert>;
+  }
+
+  const mappedData = data.product_quantities
+    .filter((d) => !hideDeposits || !d.is_returnable)
+    .slice(0, 10)
+    .map((d) => ({
+      id: d.id,
+      label: d.name,
+      value: d.quantity_sold,
+    }));
 
   return (
     <Card sx={{ height: 300 }}>
-      <CardContent>
+      <CardContent sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
         <Typography gutterBottom variant="h6" component="div">
           {t("overview.mostSoldProducts")}
         </Typography>
+        <FormControlLabel
+          control={<Checkbox checked={hideDeposits} onChange={(evt) => setHideDeposits(evt.target.checked)} />}
+          label={t("overview.hideDeposits")}
+        />
       </CardContent>
       <ResponsivePie
         data={mappedData}
@@ -76,21 +97,5 @@ const ProductStatsGraph: React.FC = () => {
         ]}
       />
     </Card>
-  );
-};
-
-export const FestivalOverview: React.FC = () => {
-  return (
-    <Grid container spacing={2}>
-      <Grid item xs={4}>
-        <ProductStatsGraph />
-      </Grid>
-      <Grid item xs={4}>
-        <Card>foobar</Card>
-      </Grid>
-      <Grid item xs={4}>
-        <Card>foobar</Card>
-      </Grid>
-    </Grid>
   );
 };

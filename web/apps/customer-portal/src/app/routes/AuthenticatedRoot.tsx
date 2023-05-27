@@ -4,6 +4,8 @@ import { Outlet, Navigate, useLocation, Link as RouterLink } from "react-router-
 import { useTranslation } from "react-i18next";
 import { useAppSelector, selectIsAuthenticated } from "@/store";
 import { LanguageSelect } from "@/components/LanguageSelect";
+import { TestModeDisclaimer } from "@stustapay/components";
+import { config } from "@/api";
 
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
@@ -40,6 +42,10 @@ export const AuthenticatedRoot: React.FC = () => {
       >
         <Toolbar />
         <Container maxWidth="lg" sx={{ padding: { xs: 0, md: 1, lg: 3 } }}>
+          <TestModeDisclaimer
+            testMode={config.publicApiConfig.test_mode}
+            testModeMessage={config.publicApiConfig.test_mode_message}
+          />
           <React.Suspense fallback={<CircularProgress />}>
             <Outlet />
           </React.Suspense>

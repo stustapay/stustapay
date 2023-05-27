@@ -276,6 +276,7 @@ create table if not exists usr (
     transport_account_id bigint references account(id),
     cashier_account_id bigint references account(id),
     cash_register_id bigint references cash_register(id) unique,
+    created_by bigint references usr(id),
     constraint cash_register_need_cashier_acccount
         check (((cash_register_id is not null) and (cashier_account_id is not null)) or cash_register_id is null),
     -- depending on the transfer action, the correct account is booked
@@ -1119,6 +1120,7 @@ create table if not exists till_tse_history (
     till_id text not null,
     tse_id bigint references tse(tse_id) not null,
     what till_tse_history_type not null,
+    z_nr bigint not null,
     date timestamptz not null default now()
 );
 
@@ -1301,18 +1303,27 @@ create or replace view order_tax_rates as
         group by
             ordr.id, tax_rate, tax_name;
 
-create or replace view product_stats as (
-select p.*, s.quantity_sold
-from product_with_tax_and_restrictions p
-join (
-    select li.product_id, sum(li.quantity) as quantity_sold
+-- sql type function to the query planner can optimize it
+create or replace function product_stats(
+    from_timestamp timestamptz,
+    to_timestamp timestamptz
+)
+returns table (
+--     till_profile_id bigint,  -- does not make much sense as the profile could change
+    till_id bigint,
+    product_id bigint,
+    quantity_sold bigint
+) as $$
+    select o.till_id, li.product_id, sum(li.quantity) as quantity_sold
     from line_item li
     join ordr o on li.order_id = o.id
     where o.order_type != 'cancel_order'
-    group by li.product_id
- ) s on s.product_id = p.id
-);
-
+      and (from_timestamp is not null and o.booked_at >= from_timestamp or from_timestamp is null)
+      and (to_timestamp is not null and o.booked_at <= to_timestamp or to_timestamp is null)
+    group by o.till_id, li.product_id;
+$$ language sql
+    stable
+    security invoker;
 
 create table if not exists transaction (
     -- represents a transaction of one account to another
@@ -1340,6 +1351,25 @@ create table if not exists transaction (
     vouchers bigint not null,
     constraint vouchers_positive check (vouchers >= 0)
 );
+
+create or replace function voucher_stats(
+    from_timestamp timestamptz,
+    to_timestamp timestamptz
+)
+    returns table (
+                      vouchers_issued bigint,
+                      vouchers_spent bigint
+                  ) as $$
+select
+    sum(case when t.source_account = 6 then t.vouchers else 0 end) as vouchers_issued,
+    sum(case when t.source_account != 6 then t.vouchers else 0 end) as vouchers_spent
+from transaction t
+where
+    (from_timestamp is not null and t.booked_at >= from_timestamp or from_timestamp is null)
+  and (to_timestamp is not null and t.booked_at <= to_timestamp or to_timestamp is null);
+$$ language sql
+    stable
+    security invoker;
 
 create table if not exists cashier_shift (
     id bigint primary key generated always as identity,
@@ -1532,7 +1562,7 @@ create trigger tse_signature_finished_trigger
     after update of signature_status
     on tse_signature
     for each row
-    when (NEW.signature_status = 'done')
+    when (NEW.signature_status = 'done' or NEW.signature_status = 'failure')
 execute function tse_signature_finished_trigger_procedure();
 
 -- requests the bon generator to create a new receipt

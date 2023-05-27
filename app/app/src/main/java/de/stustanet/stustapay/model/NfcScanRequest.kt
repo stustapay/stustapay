@@ -3,6 +3,10 @@ package de.stustanet.stustapay.model
 import de.stustanet.stustapay.util.BitVector
 
 sealed interface NfcScanRequest {
+    data class FastRead(
+        val key: BitVector
+    ): NfcScanRequest
+
     data class Read(
         val auth: Boolean,
         val cmac: Boolean,

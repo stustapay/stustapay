@@ -1,6 +1,8 @@
 package de.stustanet.stustapay.ui.chipscan
 
 
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,21 +35,24 @@ fun NfcScanCard(
     checkScan: (UserTag) -> Boolean = { true },
     onScan: (UserTag) -> Unit = {},
     scan: Boolean = true,  // is scanning active?
-    keepScanning: Boolean = false,  // after a successfull scan, keep on scanning?
+    keepScanning: Boolean = false,  // after a successful scan, keep on scanning?
     showStatus: Boolean = true,  // display scan status below the content.
     content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
         Text("Scan a Chip \uD83D\uDCE1", textAlign = TextAlign.Center, fontSize = 40.sp)
     },
 ) {
+
     val scanState by viewModel.scanState.collectAsStateWithLifecycle()
     val scanning by viewModel.scanning.collectAsStateWithLifecycle()
     val scanResult by viewModel.scanResult.collectAsStateWithLifecycle()
+    val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
 
     LaunchedEffect(scanResult) {
         val tag = scanResult
         if (tag != null) {
             if (checkScan(tag)) {
+                vibrator.vibrate(VibrationEffect.createOneShot(300, 200))
                 // this also resets tag to null
                 viewModel.stopScan()
                 onScan(tag)

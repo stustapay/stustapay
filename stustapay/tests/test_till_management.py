@@ -156,6 +156,21 @@ class TillManagementTest(TerminalTestCase):
             "select count(*) from ordr where order_type = $1", OrderType.money_transfer_imbalance.name
         )
         self.assertEqual(1, n_orders)
+        # the sum of cash order values at all tills should be 0 as we closed out the tills
+        balances = await self.db_conn.fetch(
+            "select o.till_id, sum(li.total_price) as till_balance "
+            "from line_item li "
+            "join ordr o on li.order_id = o.id "
+            "where o.payment_method = 'cash' "
+            "group by o.till_id"
+        )
+        self.assertIsNot(0, len(balances))
+        for balance in balances:
+            self.assertEqual(
+                0,
+                balance["till_balance"],
+                msg=f"Till with id {balance['till_id']} does not have a cash balance of 0, received {balance['till_balance']}",
+            )
 
     async def test_transport_and_cashier_account_management(self):
         admin_terminal_token = await self.create_terminal(name="Admin terminal")

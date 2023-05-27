@@ -28,16 +28,16 @@ class TaxRateAggregation(BaseModel):
 
 class OrderWithTse(Order):
     signature_status: str  # new | pending | done | failure
-    transaction_process_type: str
-    transaction_process_data: str
-    tse_transaction: str
-    tse_signaturenr: str
-    tse_start: str
-    tse_end: str
-    tse_hashalgo: str
-    tse_time_format: str
-    tse_signature: str
-    tse_public_key: str
+    transaction_process_type: Optional[str]
+    transaction_process_data: Optional[str]
+    tse_transaction: Optional[str]
+    tse_signaturenr: Optional[str]
+    tse_start: Optional[str]
+    tse_end: Optional[str]
+    tse_hashalgo: Optional[str]
+    tse_time_format: Optional[str]
+    tse_signature: Optional[str]
+    tse_public_key: Optional[str]
 
     @property
     def tse_qr_code_text(self) -> str:

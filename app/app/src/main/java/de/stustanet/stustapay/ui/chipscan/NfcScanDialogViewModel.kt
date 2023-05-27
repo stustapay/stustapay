@@ -7,6 +7,7 @@ import de.stustanet.stustapay.model.NfcScanFailure
 import de.stustanet.stustapay.model.NfcScanResult
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.repository.NfcRepository
+import de.stustanet.stustapay.repository.ReadMode
 import de.stustanet.stustapay.util.mapState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -105,9 +106,17 @@ class NfcScanDialogViewModel @Inject constructor(
                 _scanState.update { NfcScanUiState.Scan }
                 var trying = true
                 while (trying) {
-                    val res = nfcRepository.read(auth = true, cmac = true)
+                    // perform fast read only:
+                    // cmac + auth enable
+                    val res = nfcRepository.read(ReadMode.Fast)
 
                     when (res) {
+                        is NfcScanResult.FastRead -> {
+                            _scanState.update { NfcScanUiState.Success(res.chipUid) }
+                            trying = false
+                        }
+
+                        // when fast = false, we read the chip content.
                         is NfcScanResult.Read -> {
                             if (res.chipContent.startsWith(nfcRepository.tagContent)) {
                                 _scanState.update { NfcScanUiState.Success(res.chipUid) }
