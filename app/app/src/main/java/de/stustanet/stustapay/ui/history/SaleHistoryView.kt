@@ -45,7 +45,7 @@ fun SaleHistoryView(
         viewModel.fetchHistory()
     }
 
-    NavScaffold(title = { Text("Transaction History") }, navigateBack = leaveView) {
+    NavScaffold(title = { Text("Order History") }, navigateBack = leaveView) {
         Column(
             modifier = Modifier
                 .fillMaxSize()

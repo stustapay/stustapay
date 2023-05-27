@@ -27,7 +27,7 @@ fun SaleSelectionList(
 
     AmountSelectionDialog(
         state = priceSelectionState,
-        config = AmountConfig.Money(cents = true, limit = 50000u),
+        config = AmountConfig.Money(cents = true, limit = 15000u),
         initialAmount = { (saleStatus.buttonSelection[priceTargetButtonId.value] as? SaleItemAmount.FreePrice)?.price ?: 0u },
         onEnter = {
             viewModel.adjustPrice(priceTargetButtonId.value, newPrice = FreePrice.Set(it))

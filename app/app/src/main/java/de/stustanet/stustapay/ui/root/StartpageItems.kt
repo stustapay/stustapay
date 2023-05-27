@@ -32,7 +32,7 @@ val startpageItems = listOf(
     ),
     StartpageItem(
         icon = Icons.Filled.List,
-        label = "Transaction History",
+        label = "Order History",
         navDestination = RootNavDests.history,
         canAccess = { u, t -> Access.canSell(u, t) }
     ),
