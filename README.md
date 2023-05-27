@@ -6,7 +6,7 @@ Electronic Payment System for Festivals, developed for [StuStaCulum](https://stu
 Use NFC wristbands to quickly pay at events!
 
 
-<img style="float: right; width: 25%;" src="doc/logo.png" alt="StuStaPay logo"/>
+<img style="float: right; width: 25%;" src="doc/assets/logo.png" alt="StuStaPay logo"/>
 
 
 ## Idea
@@ -30,14 +30,18 @@ Use NFC wristbands to quickly pay at events!
 ### Core
 All transactions go through the core.
 
-#### Database
+It provides library functions to process changes in the database.
+
 The database ensures transaction-safe handling of the payment processing logic.
 It's the source of truth for account funds, order processing and offered products.
 
-#### Core Server
-Python tool which handles PoS requests over websocket.
+### Terminalserver
+API contacted by point of sale terminal requests, uses features from the core.
 
-#### TSE signatures
+### Administration
+API contacted by the management interface, uses features from the core.
+
+### TSE signatures
 All transactions need to be signed by a [federally approved security module](https://de.wikipedia.org/wiki/Technische_Sicherheitseinrichtung) (as defined by [Kassensicherungsverordnung - KassenSichV](https://de.wikipedia.org/wiki/Kassensicherungsverordnung))
 
 ### App
