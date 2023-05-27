@@ -1,5 +1,5 @@
-#based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz
-#with modifications by StuStaPay, 2023
+# based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz
+# with modifications by StuStaPay, 2023
 
 import collections
 import sys
@@ -29,10 +29,10 @@ class BaseTableMeta(type):
 
 class Model(metaclass=BaseTableMeta):
     def __init__(self, **kwargs):
-        self._data = OrderedDict([(f.name, f.default) for f in self._fields])
+        self.data = OrderedDict([(f.name, f.default) for f in self._fields])  # pylint: disable=no-member
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     @property
-    def _filename(self):
+    def filename(self):
         raise NotImplementedError

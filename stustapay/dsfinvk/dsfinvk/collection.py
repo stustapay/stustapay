@@ -1,5 +1,5 @@
-#based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz
-#with modifications by StuStaPay, 2023
+# based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz
+# with modifications by StuStaPay, 2023
 
 import csv
 from collections import defaultdict
@@ -14,7 +14,7 @@ class Collection:
         self.records = defaultdict(list)
 
     def add(self, record: Model):
-        self.records[record._filename].append(record)
+        self.records[record.filename].append(record)
 
     def write(self, name, xml_path, dtd_path):
         with ZipFile(name, "w", compression=ZIP_DEFLATED, compresslevel=9) as zf:
@@ -23,8 +23,8 @@ class Collection:
                 w = csv.DictWriter(b, fieldnames=[f.name for f in l[0]._fields], delimiter=";", lineterminator="\r\n")
                 w.writeheader()
                 for r in l:
-                    if r._data:
-                        w.writerow(r._data)
+                    if r.data:
+                        w.writerow(r.data)
                 b.seek(0)
                 zf.writestr(k, b.read())
             zf.write(xml_path, "index.xml")

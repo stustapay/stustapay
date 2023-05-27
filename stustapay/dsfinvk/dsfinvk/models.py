@@ -1,5 +1,5 @@
-#based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz
-#with modifications by StuStaPay, 2023
+# based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz
+# with modifications by StuStaPay, 2023
 
 from .fields import BooleanField, LocalDateTimeField, NumericField, StringField  # , ISODateTimeField
 from .table import Model
@@ -18,7 +18,7 @@ class Bonpos(Model):
     und die darauf entfallende Umsatzsteuer.
     """
 
-    _filename = "lines.csv"
+    filename = "lines.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -52,7 +52,7 @@ class Bonpos_USt(Model):
     ist diese Detailtabelle notwendig.
     """
 
-    _filename = "lines_vat.csv"
+    filename = "lines_vat.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -72,7 +72,7 @@ class Bonpos_Preisfindung(Model):
     spezielle Kunden-Rabatte oder auch Aufschläge.
     """
 
-    _filename = "itemamounts.csv"
+    filename = "itemamounts.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -103,7 +103,7 @@ class Bonpos_Zusatzinfo(Model):
     Teller mit Pommes anstatt mit Reis, Beträge werden hier mit 0,00 dargestellt).
     """
 
-    _filename = "subitems.csv"
+    filename = "subitems.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -152,7 +152,7 @@ class Bonkopf(Model):
     Zusätzlich ist in der DSFinV-K auch der Umsatz (brutto) auszuweisen.
     """
 
-    _filename = "transactions.csv"
+    filename = "transactions.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -186,7 +186,7 @@ class Bonkopf_USt(Model):
     aufgeführt. Hierbei gelten die zum Bonkopf aufgeführten Grundsätze (s. o.).
     """
 
-    _filename = "transactions_vat.csv"
+    filename = "transactions_vat.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -207,7 +207,7 @@ class Bonkopf_AbrKreis(Model):
     gen werden.
     """
 
-    _filename = "allocation_groups.csv"
+    filename = "allocation_groups.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -224,7 +224,7 @@ class Bonkopf_Zahlarten(Model):
     ten in Anhang D.
     """
 
-    _filename = "datapayment.csv"
+    filename = "datapayment.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -247,7 +247,7 @@ class Bon_Referenzen(Model):
     hang E in der Datei „Bon_Referenzen“ (references.csv) näher erläutert.
     """
 
-    _filename = "references.csv"
+    filename = "references.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -273,7 +273,7 @@ class TSE_Transaktionen(Model):
     Protokollierung prüfen zu können.
     """
 
-    _filename = "transactions_tse.csv"
+    filename = "transactions_tse.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -298,7 +298,7 @@ class Stamm_Abschluss(Model):
     Identifikationsnummer hier gespeichert.
     """
 
-    _filename = "cashpointclosing.csv"
+    filename = "cashpointclosing.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -326,7 +326,7 @@ class Stamm_Orte(Model):
     Namen und Orte der einzelnen Betriebsstätten mit Kassen.
     """
 
-    _filename = "location.csv"
+    filename = "location.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -345,7 +345,7 @@ class Stamm_Kassen(Model):
     Stammdaten der einzelnen eingesetzten Kassen.
     """
 
-    _filename = "cashregister.csv"
+    filename = "cashregister.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -366,7 +366,7 @@ class Stamm_Terminals(Model):
     der Kassenabschluss erfolgt.
     """
 
-    _filename = "slaves.csv"
+    filename = "slaves.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -394,7 +394,7 @@ class Stamm_Agenturen(Model):
     währleistet.
     """
 
-    _filename = "pa.csv"
+    filename = "pa.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -415,7 +415,7 @@ class Stamm_USt(Model):
     Stammdaten zur Umsatzsteuer (ID, USt-Satz, Beschreibung)
     """
 
-    _filename = "vat.csv"
+    filename = "vat.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -431,7 +431,7 @@ class Stamm_TSE(Model):
     Stammdaten der genutzten technischen Sicherheitseinrichtungen
     """
 
-    _filename = "tse.csv"
+    filename = "tse.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -477,7 +477,7 @@ class Z_GV_Typ(Model):
     Die möglichen Geschäftsvorfalltypen sind in Anhang C dargestellt.
     """
 
-    _filename = "businesscases.csv"
+    filename = "businesscases.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -500,7 +500,7 @@ class Z_Zahlart(Model):
     Die möglichen Zahlarten werden in Anhang D dargestellt.
     """
 
-    _filename = "payment.csv"
+    filename = "payment.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
@@ -517,7 +517,7 @@ class Z_Waehrungen(Model):
     Damit stellt diese Datei eine jederzeitige Kassensturz-Fähigkeit her.
     """
 
-    _filename = "cash_per_currency.csv"
+    filename = "cash_per_currency.csv"
 
     Z_KASSE_ID = StringField(_d="ID der (Abschluss-) Kasse", max_length=50)
     Z_ERSTELLUNG = LocalDateTimeField(_d="Zeitpunkt des Kassenabschlusses")
