@@ -5,7 +5,8 @@ from fastapi import APIRouter, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
-from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon, PublicCustomerApiConfig
+from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon
+from stustapay.core.service.customer import PublicCustomerApiConfig
 
 router = APIRouter(
     prefix="",

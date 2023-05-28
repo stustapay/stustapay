@@ -37,13 +37,6 @@ class CoreConfig(BaseModel):
     sumup_affiliate_key: str = "unset"
 
 
-class SEPAConfig(BaseModel):
-    sender_name: str
-    sender_iban: str
-    # ueberweisungszweck
-    description: str
-
-
 class CustomerPortalApiConfig(HTTPServerConfig):
     base_url: str
     host: str = "localhost"
@@ -51,8 +44,6 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     base_bon_url: str
     data_privacy_url: str
     about_page_url: str
-    contact_email: str
-    sepa_config: SEPAConfig
 
 
 class Config(BaseModel):

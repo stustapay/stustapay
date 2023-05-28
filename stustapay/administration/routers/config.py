@@ -27,6 +27,7 @@ async def get_public_config(context: Annotated[Context, Depends(get_context)], c
         terminal_api_endpoint=terminal_endpoint,
         currency_symbol=config.currency_symbol,
         currency_identifier=config.currency_identifier,
+        contact_email=config.contact_email,
     )
 
 

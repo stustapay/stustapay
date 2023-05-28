@@ -1,7 +1,7 @@
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.config import ConfigEntry, PublicConfig
+from stustapay.core.schema.config import ConfigEntry, PublicConfig, SEPAConfig
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -19,7 +19,8 @@ class ConfigService(DBService):
         row = await conn.fetchrow(
             "select "
             "   (select value from config where key = 'currency.symbol') as currency_symbol,"
-            "   (select value from config where key = 'currency.identifier') as currency_identifier"
+            "   (select value from config where key = 'currency.identifier') as currency_identifier,"
+            "   (select value from config where key = 'customer_portal.contact_email') as contact_email"
         )
 
         return PublicConfig(
@@ -27,6 +28,22 @@ class ConfigService(DBService):
             currency_identifier=row["currency_identifier"],
             test_mode=self.cfg.core.test_mode,
             test_mode_message=self.cfg.core.test_mode_message,
+            contact_email=row["contact_email"],
+        )
+
+    @with_db_transaction
+    async def get_sepa_config(self, *, conn: asyncpg.Connection) -> SEPAConfig:
+        row = await conn.fetchrow(
+            "select "
+            "   (select value from config where key = 'customer_portal.sepa.sender_name') as sender_name,"
+            "   (select value from config where key = 'customer_portal.sepa.sender_iban') as sender_iban,"
+            "   (select value from config where key = 'customer_portal.sepa.description') as description"
+        )
+
+        return SEPAConfig(
+            sender_name=row["sender_name"],
+            sender_iban=row["sender_iban"],
+            description=row["description"],
         )
 
     @with_db_transaction
