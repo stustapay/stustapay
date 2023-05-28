@@ -1,15 +1,15 @@
 import contextlib
 import functools
 import logging
+from typing import Optional
 
 import asyncpg
 
-from ..core.subcommand import SubCommand
-from .config import Config
-from .wrapper import TSEWrapper
-
 from stustapay.core.database import create_db_pool
 from stustapay.core.service.common.dbhook import DBHook
+from stustapay.core.subcommand import SubCommand
+from .config import Config
+from .wrapper import TSEWrapper
 
 LOGGER = logging.getLogger(__name__)
 
@@ -24,16 +24,13 @@ class SignatureProcessor(SubCommand):
 
         self.config = config
         self.tses = dict[str, TSEWrapper]()
-        self.db_pool: asyncpg.Pool = None
+        self.db_pool: Optional[asyncpg.Pool] = None
         # contains event objects for each object that is waiting for new events.
 
     async def run(self) -> None:
-        pool = await create_db_pool(self.config.database)
-        self.db_pool = pool
+        self.db_pool = await create_db_pool(self.config.database)
 
         async with contextlib.AsyncExitStack() as aes:
-            psql: asyncpg.Connection = await aes.enter_async_context(pool.acquire())
-
             # Clean up pending signatures.
             # We have no idea what state the assigned TSE was in when our predecessor
             # process was stopped.
@@ -45,7 +42,7 @@ class SignatureProcessor(SubCommand):
             # after this clean-up the database will be in a consistent state where
             # the till <-> tse mapping can be obtained via select name, tse_id from till;
             # see the next request.
-            await psql.execute(
+            await self.db_pool.execute(
                 """
                 update
                     tse_signature
@@ -61,7 +58,7 @@ class SignatureProcessor(SubCommand):
             self.tses = dict[str, TSEWrapper]()
             for name, factory_function in self.config.tses.all_factories():
                 tse = TSEWrapper(name=name, factory_function=functools.partial(factory_function, name=name))
-                tse.start(pool)
+                tse.start(self.db_pool)
                 aes.push_async_callback(tse.stop)
                 self.tses[name] = tse
 
@@ -69,9 +66,10 @@ class SignatureProcessor(SubCommand):
             LOGGER.info(f"Configured TSEs: {self.tses}")
 
             # pylint: disable=attribute-defined-outside-init
-            db_hook_conn = await aes.enter_async_context(pool.acquire())
-            db_hook = DBHook(db_hook_conn, "tse_signature", self.handle_hook, initial_run=True)
+            db_hook = DBHook(self.db_pool, "tse_signature", self.handle_hook, initial_run=True)
             await db_hook.run()
+
+        await self.db_pool.close()
 
     async def handle_hook(self, payload):
         del payload  # unused

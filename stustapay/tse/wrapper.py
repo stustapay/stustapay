@@ -1,19 +1,19 @@
 import asyncio
 import contextlib
+import datetime
 import logging
-from typing import Callable
-import typing
+import time
 import traceback
+import typing
+from typing import Callable
 
 import asyncpg
-import time
-import datetime
+
+from stustapay.core.util import create_task_protected
 
 # from stustapay.core.schema.order import Order
 from .handler import TSEHandler, TSESignatureRequest, TSESignature
 from .kassenbeleg_v1 import Kassenbeleg_V1
-
-from ..core.util import create_task_protected
 
 LOGGER = logging.getLogger(__name__)
 
@@ -452,7 +452,7 @@ class TSEWrapper:
         # TODO handle failures
         # (return None if the signature was cleanly aborted,
         #  e.g. because self._tse_handler is no longer valid)
-        LOGGER.info(f"{self.name!r}: signature done ({signing_request}) in TIME {stop-start:.3f}s")
+        LOGGER.info(f"{self.name!r}: signature done ({signing_request}) in TIME {stop - start:.3f}s")
         result.tse_duration = float(stop - start)  # duratoion
         return result
 

@@ -26,7 +26,7 @@ from .dsfinvk.models import (
     Bonpos_USt,
 )
 
-from ..tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
+from stustapay.tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
 import time
 
 LOGGER = logging.getLogger(__name__)
