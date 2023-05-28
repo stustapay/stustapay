@@ -4,6 +4,7 @@ import { RootState, selectAuthToken } from "@store";
 import { z } from "zod";
 
 export const siteHost = window.location.host;
+export const siteProtocol = window.location.protocol;
 
 export const prepareAuthHeaders = (
   headers: Headers,
@@ -52,9 +53,9 @@ export let config: Config;
 const generateConfig = (staticConfig: StaticAdminConfig, publicApiConfig: PublicApiConfig): Config => {
   return {
     ...staticConfig,
-    terminalApiBaseUrl: `http://${publicApiConfig.terminal_api_endpoint}`,
-    adminApiBaseUrl: `http://${staticConfig.adminApiEndpoint}`,
-    adminApiBaseWebsocketUrl: `ws://${staticConfig.adminApiEndpoint}`,
+    terminalApiBaseUrl: `${publicApiConfig.terminal_api_endpoint}`,
+    adminApiBaseUrl: `${staticConfig.adminApiEndpoint}`,
+    adminApiBaseWebsocketUrl: `${siteProtocol === "https" ? "wss" : "ws"}://${staticConfig.adminApiEndpoint}`,
     currencyIdentifier: publicApiConfig.currency_identifier,
     currencySymbol: publicApiConfig.currency_symbol,
     testMode: publicApiConfig.test_mode,
@@ -63,13 +64,13 @@ const generateConfig = (staticConfig: StaticAdminConfig, publicApiConfig: Public
 };
 
 const fetchPublicConfig = async (clientConfig: StaticAdminConfig): Promise<PublicApiConfig> => {
-  const resp = await fetch(`http://${clientConfig.adminApiEndpoint}/public-config`);
+  const resp = await fetch(`${clientConfig.adminApiEndpoint}/public-config`);
   const respJson = await resp.json();
   return PublicApiConfigSchema.parse(respJson);
 };
 
 export const fetchConfig = async (): Promise<Config> => {
-  const resp = await fetch(`http://${siteHost}/assets/config.json`);
+  const resp = await fetch(`${siteProtocol}://${siteHost}/assets/config.json`);
   if (resp.status !== 200) {
     throw new Error("error while fetching config");
   }
