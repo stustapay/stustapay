@@ -3,7 +3,9 @@ perform schema updates and get a db shell.
 """
 
 import argparse
+import asyncio
 import contextlib
+import json
 import logging
 import os
 import re
@@ -13,6 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 import asyncpg
+import asyncpg.exceptions
 
 from . import subcommand
 from . import util
@@ -207,26 +210,37 @@ class SchemaRevision:
         return sorted_revisions
 
 
+async def init_connection(conn: asyncpg.Connection):
+    await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
+
+
 async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:
     """
     get a connection pool to the database
     """
-    pool = await asyncpg.create_pool(
-        user=cfg.user,
-        password=cfg.password,
-        database=cfg.dbname,
-        host=cfg.host,
-        max_size=n_connections,
-        min_size=n_connections,
-        # the introspection query of asyncpg (defined as introspection.INTRO_LOOKUP_TYPES)
-        # can take 1s with the jit.
-        # the introspection is triggered to create converters for unknown types,
-        # for example the integer[] (oid = 1007).
-        # see https://github.com/MagicStack/asyncpg/issues/530
-        server_settings={"jit": "off"},
-    )
-    if pool is None:
-        raise Exception("failed to get db pool")
+    pool = None
+
+    while pool is None:
+        try:
+            pool = await asyncpg.create_pool(
+                user=cfg.user,
+                password=cfg.password,
+                database=cfg.dbname,
+                host=cfg.host,
+                max_size=n_connections,
+                min_size=n_connections,
+                # the introspection query of asyncpg (defined as introspection.INTRO_LOOKUP_TYPES)
+                # can take 1s with the jit.
+                # the introspection is triggered to create converters for unknown types,
+                # for example the integer[] (oid = 1007).
+                # see https://github.com/MagicStack/asyncpg/issues/530
+                server_settings={"jit": "off"},
+                init=init_connection,
+            )
+        except OSError as e:
+            sleep_amount = 2
+            logger.warning(f"Failed to create database pool: {e}, waiting {sleep_amount} seconds and trying again...")
+            await asyncio.sleep(sleep_amount)
 
     return pool
 

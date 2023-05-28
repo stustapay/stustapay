@@ -1,4 +1,3 @@
-import json
 from functools import wraps
 from inspect import signature
 from typing import Optional
@@ -17,9 +16,6 @@ def with_db_connection(func):
             return await func(self, **kwargs)
 
         async with self.db_pool.acquire() as conn:
-            # leads to slow queries in some cases
-            await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
-
             return await func(self, conn=conn, **kwargs)
 
     return wrapper
@@ -32,9 +28,6 @@ def with_db_transaction(func):
             return await func(self, **kwargs)
 
         async with self.db_pool.acquire() as conn:
-            # leads to slow queries in some cases
-            await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
-
             async with conn.transaction():
                 return await func(self, conn=conn, **kwargs)
 
@@ -50,9 +43,6 @@ def with_retryable_db_transaction(n_retries=3):
                 return await func(self, **kwargs)
 
             async with self.db_pool.acquire() as conn:
-                # leads to slow queries in some cases
-                await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
-
                 exception = None
                 while current_retries > 0:
                     try:
