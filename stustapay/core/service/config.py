@@ -23,6 +23,7 @@ class ConfigService(DBService):
         )
 
         return PublicConfig(
+            contact_email=self.cfg.customer_portal.contact_email,
             currency_symbol=row["currency_symbol"],
             currency_identifier=row["currency_identifier"],
             test_mode=self.cfg.core.test_mode,

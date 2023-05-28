@@ -2,9 +2,9 @@
 import asyncio
 import threading
 
+from stustapay.core.database import create_db_pool
 from stustapay.core.service.common.dbhook import DBHook
 from .common import BaseTestCase
-from ..core.database import create_db_pool
 
 
 class DBHookTest(BaseTestCase):
@@ -24,6 +24,7 @@ class DBHookTest(BaseTestCase):
 
         def hook_thread(**hook_args):
             hook_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(hook_loop)
             db_pool = hook_loop.run_until_complete(create_db_pool(self.test_config.database))
             hook = DBHook(pool=db_pool, **hook_args)
             hook_loop.run_until_complete(hook.run())
