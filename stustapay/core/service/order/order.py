@@ -195,9 +195,8 @@ class OrderService(DBService):
         self.order_hook: Optional[DBHook] = None
 
     async def run(self):
-        async with self.db_pool.acquire() as conn:
-            self.order_hook = DBHook(connection=conn, channel="order", event_handler=self._handle_order_update)
-            await self.order_hook.run()
+        self.order_hook = DBHook(pool=self.db_pool, channel="order", event_handler=self._handle_order_update)
+        await self.order_hook.run()
 
     async def _propagate_order_update(self, order: Order):
         for queue in self.admin_order_update_queues:

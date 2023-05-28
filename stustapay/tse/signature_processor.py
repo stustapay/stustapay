@@ -31,8 +31,6 @@ class SignatureProcessor(SubCommand):
         self.db_pool = await create_db_pool(self.config.database)
 
         async with contextlib.AsyncExitStack() as aes:
-            psql: asyncpg.Connection = await aes.enter_async_context(self.db_pool.acquire())
-
             # Clean up pending signatures.
             # We have no idea what state the assigned TSE was in when our predecessor
             # process was stopped.
@@ -44,7 +42,7 @@ class SignatureProcessor(SubCommand):
             # after this clean-up the database will be in a consistent state where
             # the till <-> tse mapping can be obtained via select name, tse_id from till;
             # see the next request.
-            await psql.execute(
+            await self.db_pool.execute(
                 """
                 update
                     tse_signature
@@ -68,8 +66,7 @@ class SignatureProcessor(SubCommand):
             LOGGER.info(f"Configured TSEs: {self.tses}")
 
             # pylint: disable=attribute-defined-outside-init
-            db_hook_conn = await aes.enter_async_context(self.db_pool.acquire())
-            db_hook = DBHook(db_hook_conn, "tse_signature", self.handle_hook, initial_run=True)
+            db_hook = DBHook(self.db_pool, "tse_signature", self.handle_hook, initial_run=True)
             await db_hook.run()
 
         await self.db_pool.close()
