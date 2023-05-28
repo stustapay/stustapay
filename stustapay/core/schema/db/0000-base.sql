@@ -48,7 +48,15 @@ values
     ('currency.symbol', '€'),
     -- Must conform to ISO 4217 for SEPA transfer
     ('currency.identifier', 'EUR'),
-    ('max_account_balance', '150')
+    ('max_account_balance', '150'),
+
+    -- Options for customer portal
+    ('customer_portal.contact_email', 'test-beschwerde@stustapay.de'),
+
+    ('customer_portal.sepa.sender_name', 'Toller Festivalveranstalter'),
+    ('customer_portal.sepa.sender_iban', 'DE89 3704 0044 0532 0130 00'),
+    -- Verwendungszweck, {user_tag_uid} is replaced with the tag uid
+    ('customer_portal.sepa.description', 'FestivalName, TagID: {user_tag_uid}')
     on conflict do nothing;
 
 

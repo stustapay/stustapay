@@ -13,3 +13,11 @@ class PublicConfig(BaseModel):
     test_mode_message: str
     currency_symbol: str
     currency_identifier: str
+    contact_email: str
+
+
+class SEPAConfig(BaseModel):
+    sender_name: str
+    sender_iban: str
+    # verwendungsungszweck
+    description: str

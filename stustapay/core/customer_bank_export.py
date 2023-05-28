@@ -92,18 +92,18 @@ class CustomerExportCli(SubCommand):
                     conn=conn, max_export_items_per_batch=max_export_items_per_batch, ith_batch=i
                 )
 
-                # just to get currency identifier from db
                 cfg_srvc = ConfigService(
                     db_pool=db_pool, config=self.config, auth_service=AuthService(db_pool=db_pool, config=self.config)
                 )
                 currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
+                sepa_config = await cfg_srvc.get_sepa_config(conn=conn)
 
                 output_path_file_extension = f"{output_path}_{i + 1}.{file_extension}"
 
-                export_function(
+                await export_function(
                     customers_bank_data=customers_bank_data,
                     output_path=output_path_file_extension,
-                    cfg=self.config,
+                    sepa_config=sepa_config,
                     currency_ident=currency_ident,
                     execution_date=execution_date,
                 )

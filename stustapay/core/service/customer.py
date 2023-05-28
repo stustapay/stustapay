@@ -12,7 +12,8 @@ from schwifty import IBAN
 from sepaxml import SepaTransfer
 
 from stustapay.core.config import Config
-from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon, PublicCustomerApiConfig
+from stustapay.core.schema.config import PublicConfig, SEPAConfig
+from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -21,6 +22,12 @@ from stustapay.core.service.common.decorators import (
 )
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.config import ConfigService
+
+
+class PublicCustomerApiConfig(PublicConfig):
+    data_privacy_url: str
+    contact_email: str
+    about_page_url: str
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -55,10 +62,10 @@ async def get_customer_bank_data(
     return [CustomerBankData.parse_obj(row) for row in rows]
 
 
-def csv_export(
+async def csv_export(
     customers_bank_data: list[CustomerBankData],
     output_path: str,
-    cfg: Config,
+    sepa_config: SEPAConfig,
     currency_ident: str,
     execution_date: Optional[datetime.date],
 ) -> None:
@@ -75,16 +82,16 @@ def csv_export(
                     customer.iban,
                     round(customer.balance, 2),
                     currency_ident,
-                    cfg.customer_portal.sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
+                    sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
                     execution_date.isoformat(),
                 ]
             )
 
 
-def sepa_export(
+async def sepa_export(
     customers_bank_data: list[CustomerBankData],
     output_path: str,
-    cfg: Config,
+    sepa_config: SEPAConfig,
     currency_ident: str,
     execution_date: Optional[datetime.date],
 ) -> None:
@@ -95,9 +102,10 @@ def sepa_export(
         return
 
     execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
-    iban = IBAN(cfg.customer_portal.sepa_config.sender_iban)
+
+    iban = IBAN(sepa_config.sender_iban)
     config = {
-        "name": cfg.customer_portal.sepa_config.sender_name,
+        "name": sepa_config.sender_name,
         "IBAN": iban.compact,
         "BIC": str(iban.bic),
         "batch": len(customers_bank_data) > 1,
@@ -116,7 +124,7 @@ def sepa_export(
             "BIC": str(IBAN(customer.iban).bic),
             "amount": round(customer.balance * 100),  # in cents
             "execution_date": execution_date,
-            "description": cfg.customer_portal.sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
+            "description": sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
         }
 
         if not re.match(r"^[a-zA-Z0-9 \-.,:()/?'+]*$", payment["description"]):  # type: ignore
@@ -230,12 +238,13 @@ class CustomerService(DBService):
 
     async def get_public_customer_api_config(self) -> PublicCustomerApiConfig:
         public_config = await self.config_service.get_public_config()
+
         return PublicCustomerApiConfig(
             test_mode=self.cfg.core.test_mode,
             test_mode_message=self.cfg.core.test_mode_message,
             currency_identifier=public_config.currency_identifier,
             currency_symbol=public_config.currency_symbol,
             data_privacy_url=self.cfg.customer_portal.data_privacy_url,
-            contact_email=self.cfg.customer_portal.contact_email,
+            contact_email=public_config.contact_email,
             about_page_url=self.cfg.customer_portal.about_page_url,
         )

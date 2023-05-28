@@ -49,6 +49,7 @@ class CustomerServiceTest(TerminalTestCase):
         pc = await self.config_service.get_public_config()
         self.currency_symbol = pc.currency_symbol
         self.currency_identifier = pc.currency_identifier
+        self.contact_email = pc.contact_email
 
         await self.db_conn.execute(
             "insert into user_tag (uid, pin) values ($1, $2)",
@@ -187,15 +188,17 @@ class CustomerServiceTest(TerminalTestCase):
         await test_batches(1)
 
     async def test_csv_export(self):
-        test_currency = "EUR"
         test_file_name = "test.csv"
         execution_date = datetime.date.today()
         customers_bank_data = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
-        csv_export(
+
+        currency_ident = (await self.config_service.get_public_config(conn=self.db_conn)).currency_identifier
+        sepa_config = await self.config_service.get_sepa_config(conn=self.db_conn)
+        await csv_export(
             customers_bank_data,
             os.path.join(self.tmp_dir, test_file_name),
-            self.test_config,
-            test_currency,
+            sepa_config,
+            currency_ident,
             execution_date,
         )
 
@@ -209,25 +212,29 @@ class CustomerServiceTest(TerminalTestCase):
                 self.assertEqual(row["beneficiary_name"], customer["account_name"])
                 self.assertEqual(row["iban"], customer["iban"])
                 self.assertEqual(float(row["amount"]), round(customer["balance"], 2))
-                self.assertEqual(row["currency"], test_currency)
+                self.assertEqual(row["currency"], currency_ident)
                 self.assertEqual(
                     row["reference"],
-                    self.test_config.customer_portal.sepa_config.description.format(user_tag_uid=customer["uid"]),
+                    sepa_config.description.format(user_tag_uid=customer["uid"]),
                 )
                 self.assertEqual(row["execution_date"], execution_date.isoformat())
 
     async def test_sepa_export(self):
-        test_currency = "EUR"
         test_file_name = "test_sepa.xml"
         customers_bank_data = await get_customer_bank_data(self.db_conn, max_export_items_per_batch=1)
-        cfg = copy.deepcopy(self.test_config)
+
+        currency_ident = (await self.config_service.get_public_config(conn=self.db_conn)).currency_identifier
+        sepa_config = await self.config_service.get_sepa_config(conn=self.db_conn)
+
+        test_sepa_config = copy.deepcopy(sepa_config)
+
         # allowed symbols
-        cfg.customer_portal.sepa_config.description += "-.,:()/?'+"
-        sepa_export(
+        test_sepa_config.description += "-.,:()/?'+"
+        await sepa_export(
             customers_bank_data,
             os.path.join(self.tmp_dir, test_file_name),
-            cfg,
-            test_currency,
+            test_sepa_config,
+            currency_ident,
             datetime.date.today(),
         )
         self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
@@ -236,11 +243,11 @@ class CustomerServiceTest(TerminalTestCase):
         customers_bank_data = await get_customer_bank_data(
             self.db_conn, max_export_items_per_batch=len(self.customers_to_transfer)
         )
-        sepa_export(
+        await sepa_export(
             customers_bank_data,
             os.path.join(self.tmp_dir, test_file_name),
-            self.test_config,
-            test_currency,
+            sepa_config,
+            currency_ident,
             datetime.date.today(),
         )
         self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
@@ -253,33 +260,33 @@ class CustomerServiceTest(TerminalTestCase):
         tmp_bank_data[0].iban = invalid_iban
 
         with self.assertRaises(ValueError):
-            sepa_export(
+            await sepa_export(
                 tmp_bank_data,
                 os.path.join(self.tmp_dir, test_file_name),
-                self.test_config,
-                test_currency,
+                sepa_config,
+                currency_ident,
                 datetime.date.today(),
             )
 
         # test invalid iban sender
-        cfg = copy.deepcopy(self.test_config)
-        cfg.customer_portal.sepa_config.sender_iban = invalid_iban
+        test_sepa_config = copy.deepcopy(sepa_config)
+        test_sepa_config.sender_iban = invalid_iban
         with self.assertRaises(ValueError):
-            sepa_export(
+            await sepa_export(
                 customers_bank_data,
                 os.path.join(self.tmp_dir, test_file_name),
-                cfg,
-                test_currency,
+                test_sepa_config,
+                currency_ident,
                 datetime.date.today(),
             )
 
         # test invalid execution date
         with self.assertRaises(ValueError):
-            sepa_export(
+            await sepa_export(
                 customers_bank_data,
                 os.path.join(self.tmp_dir, test_file_name),
-                self.test_config,
-                test_currency,
+                sepa_config,
+                currency_ident,
                 datetime.date.today() - datetime.timedelta(days=1),
             )
 
@@ -287,23 +294,23 @@ class CustomerServiceTest(TerminalTestCase):
         tmp_bank_data = copy.deepcopy(customers_bank_data)
         tmp_bank_data[0].balance = -1
         with self.assertRaises(ValueError):
-            sepa_export(
+            await sepa_export(
                 tmp_bank_data,
                 os.path.join(self.tmp_dir, test_file_name),
-                self.test_config,
-                test_currency,
+                sepa_config,
+                currency_ident,
                 datetime.date.today(),
             )
 
         # test invalid description
-        cfg = copy.deepcopy(self.test_config)
-        cfg.customer_portal.sepa_config.description = "invalid {user_tag_uid}#%^;&*"
+        test_sepa_config = copy.deepcopy(sepa_config)
+        test_sepa_config.description = "invalid {user_tag_uid}#%^;&*"
         with self.assertRaises(ValueError):
-            sepa_export(
+            await sepa_export(
                 customers_bank_data,
                 os.path.join(self.tmp_dir, test_file_name),
-                cfg,
-                test_currency,
+                test_sepa_config,
+                currency_ident,
                 datetime.date.today(),
             )
 
@@ -409,12 +416,12 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.currency_identifier, self.currency_identifier)
         self.assertEqual(result.currency_symbol, self.currency_symbol)
+        self.assertEqual(result.contact_email, self.contact_email)
 
         # TODO: change when config is refactored
         # test config keys from yaml config
         cpc = CustomerPortalApiConfig.parse_obj(TEST_CONFIG["customer_portal"])
         self.assertEqual(result.data_privacy_url, cpc.data_privacy_url)
-        self.assertEqual(result.contact_email, cpc.contact_email)
         self.assertEqual(result.about_page_url, cpc.about_page_url)
 
     async def test_export_customer_bank_data(self):
