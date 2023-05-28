@@ -114,17 +114,20 @@ class CustomerExportCli(SubCommand):
 
     async def run(self):
         db_pool = await database.create_db_pool(self.config.database)
-        await database.check_revision_version(db_pool)
-        if self.args.action == "sepa":
-            execution_date = (
-                datetime.datetime.strptime(self.args.execution_date, "%Y-%m-%d").date()
-                if self.args.execution_date
-                else None
+        try:
+            await database.check_revision_version(db_pool)
+            if self.args.action == "sepa":
+                execution_date = (
+                    datetime.datetime.strptime(self.args.execution_date, "%Y-%m-%d").date()
+                    if self.args.execution_date
+                    else None
+                )
+            # self.args.action is either sepa or csv
+            await self._export_customer_bank_data(
+                db_pool=db_pool,
+                output_path=self.args.output_path,
+                execution_date=execution_date,
+                data_format=self.args.action,
             )
-        # self.args.action is either sepa or csv
-        await self._export_customer_bank_data(
-            db_pool=db_pool,
-            output_path=self.args.output_path,
-            execution_date=execution_date,
-            data_format=self.args.action,
-        )
+        finally:
+            await db_pool.close()

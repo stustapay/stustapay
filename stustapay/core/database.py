@@ -114,6 +114,8 @@ class DatabaseManage(subcommand.SubCommand):
         if self.action == "add_data":
             await add_data(db_pool=db_pool, sql_file=self.args.sql_file)
 
+        await db_pool.close()
+
 
 class SchemaRevision:
     def __init__(self, file_name: Path, code: str, version: str, requires: Optional[str]):
@@ -229,6 +231,7 @@ async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:
                 host=cfg.host,
                 max_size=n_connections,
                 min_size=n_connections,
+                ssl="verify-full" if cfg.require_ssl else "prefer",
                 # the introspection query of asyncpg (defined as introspection.INTRO_LOOKUP_TYPES)
                 # can take 1s with the jit.
                 # the introspection is triggered to create converters for unknown types,
