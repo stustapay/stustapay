@@ -325,17 +325,17 @@ class UserService(DBService):
         return result != "DELETE 0"
 
     @with_db_transaction
-    async def login_user(self, *, conn: asyncpg.Connection, username: str, password: str) -> Optional[UserLoginSuccess]:
+    async def login_user(self, *, conn: asyncpg.Connection, username: str, password: str) -> UserLoginSuccess:
         row = await conn.fetchrow(
             "select * from usr where login = $1",
             username,
         )
         if row is None:
-            return None
+            raise AccessDenied("Invalid username or password")
 
         user_id = row["id"]
         if not self._check_password(password, row["password"]):
-            return None
+            raise AccessDenied("Invalid username or password")
 
         session_id = await conn.fetchval("insert into usr_session (usr) values ($1) returning id", user_id)
         token = self.auth_service.create_user_access_token(UserTokenMetadata(user_id=user_id, session_id=session_id))
@@ -349,11 +349,8 @@ class UserService(DBService):
     @requires_user()
     async def logout_user(self, *, conn: asyncpg.Connection, current_user: User, token: str) -> bool:
         token_payload = self.auth_service.decode_user_jwt_payload(token)
-        if token_payload is None:
-            return False
-
-        if current_user.id != token_payload.user_id:
-            return False
+        assert token_payload is not None
+        assert current_user.id == token_payload.user_id
 
         result = await conn.execute(
             "delete from usr_session where usr = $1 and id = $2", current_user.id, token_payload.session_id

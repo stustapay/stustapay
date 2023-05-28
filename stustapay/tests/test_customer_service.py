@@ -11,7 +11,7 @@ from stustapay.core.config import CustomerPortalApiConfig
 from stustapay.core.customer_bank_export import CustomerExportCli
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
-from stustapay.core.service.common.error import InvalidArgument, Unauthorized
+from stustapay.core.service.common.error import InvalidArgument, Unauthorized, AccessDenied
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import (
     CustomerBank,
@@ -339,8 +339,8 @@ class CustomerServiceTest(TerminalTestCase):
             await self.customer_service.get_customer(token=auth.token)
 
         # test wrong pin
-        result = await self.customer_service.login_customer(uid=self.uid, pin="wrong")
-        self.assertIsNone(result)
+        with self.assertRaises(AccessDenied):
+            await self.customer_service.login_customer(uid=self.uid, pin="wrong")
 
     async def test_get_orders_with_bon(self):
         # test get_orders_with_bon with wrong token, should raise Unauthorized error

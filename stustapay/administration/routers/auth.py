@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 
@@ -27,9 +27,6 @@ async def login(
     user_service: ContextUserService,
 ):
     response = await user_service.login_user(username=payload.username, password=payload.password)
-    if response is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-
     return {"user": response.user, "access_token": response.token, "grant_type": "bearer"}
 
 
@@ -42,6 +39,4 @@ async def logout(
     token: CurrentAuthToken,
     user_service: ContextUserService,
 ):
-    logged_out = await user_service.logout_user(token=token)
-    if not logged_out:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    await user_service.logout_user(token=token)

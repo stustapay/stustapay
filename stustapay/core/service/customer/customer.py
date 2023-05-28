@@ -12,15 +12,15 @@ from schwifty import IBAN
 from sepaxml import SepaTransfer
 
 from stustapay.core.config import Config
-from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.schema.config import PublicConfig, SEPAConfig
+from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_customer,
     with_db_transaction,
 )
-from stustapay.core.service.common.error import InvalidArgument
+from stustapay.core.service.common.error import InvalidArgument, AccessDenied
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.sumup import SumupService
 
@@ -162,7 +162,7 @@ class CustomerService(DBService):
         )
 
     @with_db_transaction
-    async def login_customer(self, *, conn: asyncpg.Connection, uid: int, pin: str) -> Optional[CustomerLoginSuccess]:
+    async def login_customer(self, *, conn: asyncpg.Connection, uid: int, pin: str) -> CustomerLoginSuccess:
         # Customer has hardware tag and pin
         row = await conn.fetchrow(
             "select c.* from user_tag u join customer c on u.uid = c.user_tag_uid where u.uid = $1 and u.pin = $2",
@@ -170,7 +170,7 @@ class CustomerService(DBService):
             pin,
         )
         if row is None:
-            return None
+            raise AccessDenied("Invalid user tag uid or pin")
 
         customer = Customer.parse_obj(row)
 
@@ -189,11 +189,8 @@ class CustomerService(DBService):
     @requires_customer
     async def logout_customer(self, *, conn: asyncpg.Connection, current_customer: Customer, token: str) -> bool:
         token_payload = self.auth_service.decode_customer_jwt_payload(token)
-        if token_payload is None:
-            return False
-
-        if current_customer.id != token_payload.customer_id:
-            return False
+        assert token_payload is not None
+        assert current_customer.id == token_payload.customer_id
 
         result = await conn.execute(
             "delete from customer_session where customer = $1 and id = $2",

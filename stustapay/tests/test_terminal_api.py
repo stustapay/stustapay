@@ -74,8 +74,7 @@ class TerminalAPiTest(TerminalTestCase):
         self.assertEqual(cashier_role.name, user.active_role_name)
         self.assertEqual(cashier_role.id, user.active_role_id)
 
-        logged_out = await self.till_service.logout_user(token=self.terminal_token)
-        self.assertTrue(logged_out)
+        await self.till_service.logout_user(token=self.terminal_token)
         user = await self.till_service.get_current_user(token=self.terminal_token)
         self.assertIsNone(user)
 
