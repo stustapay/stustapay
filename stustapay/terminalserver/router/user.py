@@ -84,9 +84,7 @@ async def grant_free_ticket(
     account_service: ContextAccountService,
     till_service: ContextTillService,
 ):
-    success = await account_service.grant_free_tickets(token=token, new_free_ticket_grant=grant)
-    if not success:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    await account_service.grant_free_tickets(token=token, new_free_ticket_grant=grant)
     return await till_service.get_customer(token=token, customer_tag_uid=grant.user_tag_uid)
 
 

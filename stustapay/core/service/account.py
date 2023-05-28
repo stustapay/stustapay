@@ -215,11 +215,16 @@ class AccountService(DBService):
     async def grant_free_tickets(
         self, *, conn: asyncpg.Connection, current_user: User, new_free_ticket_grant: NewFreeTicketGrant
     ) -> bool:
-        user_tag_found = await conn.fetchval(
-            "select true from user_tag where uid = $1", new_free_ticket_grant.user_tag_uid
+        user_tag = await conn.fetchrow(
+            "select true as found, a.id as account_id "
+            "from user_tag u left join account a on a.user_tag_uid = u.uid where u.uid = $1",
+            new_free_ticket_grant.user_tag_uid,
         )
-        if user_tag_found is None:
+        if user_tag is None:
             raise NotFound(element_typ="user_tag", element_id=str(new_free_ticket_grant.user_tag_uid))
+
+        if user_tag["account_id"] is not None:
+            raise InvalidArgument("Tag is already registered")
 
         # create a new customer account for the given tag
         account_id = await conn.fetchval(
