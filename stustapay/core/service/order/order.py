@@ -775,6 +775,14 @@ class OrderService(DBService):
                 f"Ticket already has account: " f"{', '.join('%X' % int(a['user_tag_uid']) for a in known_accounts)}"
             )
 
+        known_uids = await conn.fetch(
+            "select uid from user_tag where uid = ANY($1::numeric(20)[])",
+            new_ticket_scan.customer_tag_uids,
+        )
+        if len(known_uids) != len(new_ticket_scan.customer_tag_uids):
+            unknown_ids = set(new_ticket_scan.customer_tag_uids) - set(i["id"] for i in known_uids)
+            raise InvalidArgument(f"Unknown Ticket ID: {', '.join('%X' % i for i in unknown_ids)}")
+
         scanned_tickets = []
         for customer_tag_uid in new_ticket_scan.customer_tag_uids:
             ticket_row = await conn.fetchrow(
