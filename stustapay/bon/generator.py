@@ -53,7 +53,6 @@ class Generator(SubCommand):
 
         async with AsyncExitStack() as stack:
             self.db_conn = await stack.enter_async_context(self.pool.acquire())
-            await self.db_conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
             self.bon_config = await fetch_base_config(conn=self.db_conn)
 
             # initial processing of pending bons

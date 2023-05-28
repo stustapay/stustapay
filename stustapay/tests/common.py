@@ -1,6 +1,5 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import asyncio
-import json
 import logging
 import os
 import tempfile
@@ -10,7 +9,8 @@ import asyncpg
 from asyncpg.pool import Pool
 
 from stustapay.core import database
-from stustapay.core.config import Config
+from stustapay.core.config import Config, DatabaseConfig
+from stustapay.core.database import create_db_pool
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import (
@@ -37,14 +37,14 @@ from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 
 
-def get_test_db_config() -> dict:
-    return {
-        "user": os.environ.get("TEST_DB_USER", None),
-        "password": os.environ.get("TEST_DB_PASSWORD", None),
-        "host": os.environ.get("TEST_DB_HOST", None),
-        "port": int(os.environ.get("TEST_DB_PORT", 0)) or None,
-        "dbname": os.environ.get("TEST_DB_DATABASE", "stustapay_test"),
-    }
+def get_test_db_config() -> DatabaseConfig:
+    return DatabaseConfig(
+        user=os.environ.get("TEST_DB_USER", None),
+        password=os.environ.get("TEST_DB_PASSWORD", None),
+        host=os.environ.get("TEST_DB_HOST", None),
+        port=int(os.environ.get("TEST_DB_PORT", 0)) or None,
+        dbname=os.environ.get("TEST_DB_DATABASE", "stustapay_test"),
+    )
 
 
 # input structure for core.config.Config
@@ -81,15 +81,7 @@ async def get_test_db() -> Pool:
     get a connection pool to the test database
     """
     cfg = get_test_db_config()
-    pool = await asyncpg.create_pool(
-        user=cfg["user"],
-        password=cfg["password"],
-        database=cfg["dbname"],
-        host=cfg["host"],
-        port=cfg["port"],
-        min_size=5,
-        max_size=5,
-    )
+    pool = await create_db_pool(cfg=cfg)
 
     await database.reset_schema(pool)
     await database.apply_revisions(pool)
@@ -116,7 +108,6 @@ class BaseTestCase(TestCase):
             "on conflict do nothing"
         )
 
-        await self.db_conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
         self.test_config = Config.parse_obj(TEST_CONFIG)
 
         self.auth_service = AuthService(db_pool=self.db_pool, config=self.test_config)
