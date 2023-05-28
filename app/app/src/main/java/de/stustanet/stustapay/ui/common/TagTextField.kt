@@ -38,7 +38,7 @@ fun tagIDtoString(id: ULong): String {
     var ret = ""
 
     for (i in 0 until 7) {
-        val b = (id shr (i * 8)) and 0xffu
+        val b = (id shr ((6 - i) * 8)) and 0xffu
         ret += hexChar[((b shr 4) and 0x0fu).toInt()]
         ret += hexChar[(b and 0x0fu).toInt()]
     }
@@ -62,7 +62,7 @@ fun tagIDfromString(s: String): ULong? {
     for (i in 0 until 7) {
         val h = hexChar.indexOf(s[i * 2]).toULong()
         val l = hexChar.indexOf(s[i * 2 + 1]).toULong()
-        ret += ((h shl 4) or l) shl (i * 8)
+        ret += ((h shl 4) or l) shl ((6 - i) * 8)
     }
 
     return ret

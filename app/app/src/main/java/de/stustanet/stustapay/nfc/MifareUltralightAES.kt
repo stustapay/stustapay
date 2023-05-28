@@ -56,11 +56,13 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
 
         var ser = 0uL
         for (i in 0uL until 3uL) {
-            ser = ser or (readBuffer.gbe(i).toULong() shl (i * 8u).toInt())
+            ser = ser or (readBuffer.gbe(i).toULong() shl ((6u - i) * 8u).toInt())
         }
         for (i in 3uL until 7uL) {
-            ser = ser or (readBuffer.gbe(i + 1u).toULong() shl (i * 8u).toInt())
+            ser = ser or (readBuffer.gbe(i + 1u).toULong() shl ((6u - i) * 8u).toInt())
         }
+
+        println(ser)
 
         return ser
     }
@@ -300,10 +302,10 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
 
         var ser = 0uL
         for (i in 0uL until 3uL) {
-            ser = ser or (readBuffer.gbe(i).toULong() shl (i * 8u).toInt())
+            ser = ser or (readBuffer.gbe(i).toULong() shl ((6u - i) * 8u).toInt())
         }
         for (i in 3uL until 7uL) {
-            ser = ser or (readBuffer.gbe(i + 1u).toULong() shl (i * 8u).toInt())
+            ser = ser or (readBuffer.gbe(i + 1u).toULong() shl ((6u - i) * 8u).toInt())
         }
 
         return ser
