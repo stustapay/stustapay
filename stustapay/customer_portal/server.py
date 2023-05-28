@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from stustapay.core.config import Config
@@ -49,7 +50,10 @@ class Api(SubCommand):
             customer_service=customer_service,
         )
         try:
-            await self.server.run(self.cfg, context)
-            # TODO: add scheduled task to check status of sumup payments
+            await asyncio.gather(
+                self.server.run(self.cfg, context),
+                # scheduled task to check status of sumup payments
+                customer_service.sumup.run_sumup_checkout_processing(),
+            )
         finally:
             await db_pool.close()
