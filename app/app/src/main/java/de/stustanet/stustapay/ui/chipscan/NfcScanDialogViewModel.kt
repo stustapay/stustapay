@@ -96,9 +96,7 @@ class NfcScanDialogViewModel @Inject constructor(
 
     fun scan() {
         // if running, cancel old scan job
-        if (scanJob?.isActive == true) {
-            scanJob?.cancel()
-        }
+        clearScan()
 
         scanJob = viewModelScope.launch {
             try {
@@ -106,7 +104,7 @@ class NfcScanDialogViewModel @Inject constructor(
                 _scanState.update { NfcScanUiState.Scan }
                 var trying = true
                 while (trying) {
-                    // perform fast read only:
+                    // perform fast read only (no content tamper check)
                     // cmac + auth enable
                     val res = nfcRepository.read(ReadMode.Fast)
 
@@ -173,11 +171,14 @@ class NfcScanDialogViewModel @Inject constructor(
     }
 
     fun stopScan() {
+        clearScan()
+        _scanState.update { NfcScanUiState.None }
+    }
+
+    fun clearScan() {
         if (scanJob?.isActive == true) {
             scanJob?.cancel()
         }
-
         _scanResult.update { null }
-        _scanState.update { NfcScanUiState.None }
     }
 }

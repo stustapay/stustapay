@@ -156,6 +156,7 @@ class TicketViewModel @Inject constructor(
 
     /** when the delete-selections button is clicked */
     fun clearDraft() {
+        _status.update { "cleared" }
         _tagScanStatus.update { TagScanStatus.Scan }
         _ticketDraft.update { TicketDraft() }
     }

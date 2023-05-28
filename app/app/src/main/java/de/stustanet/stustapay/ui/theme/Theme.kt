@@ -49,10 +49,11 @@ fun Theme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () ->
     }
 
     val view = LocalView.current
+
     SideEffect {
         val window = (view.context as Activity).window
-        window.statusBarColor = colors.background.toArgb()
-        window.navigationBarColor = colors.background.toArgb()
+        window.statusBarColor = colors.primary.toArgb()
+        window.navigationBarColor = colors.primary.toArgb()
     }
 
     MaterialTheme(
