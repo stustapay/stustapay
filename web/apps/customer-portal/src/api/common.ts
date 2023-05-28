@@ -48,7 +48,7 @@ export let config: Config;
 const generateConfig = (clientConfig: ClientConfig, publicApiConfig: PublicCustomerApiConfig): Config => {
   return {
     ...clientConfig,
-    customerApiBaseUrl: `${window.location.protocol}//${clientConfig.customerApiEndpoint}`,
+    customerApiBaseUrl: clientConfig.customerApiEndpoint,
     publicApiConfig: publicApiConfig,
   };
 };

@@ -53,8 +53,8 @@ export let config: Config;
 const generateConfig = (staticConfig: StaticAdminConfig, publicApiConfig: PublicApiConfig): Config => {
   return {
     ...staticConfig,
-    terminalApiBaseUrl: `${publicApiConfig.terminal_api_endpoint}`,
-    adminApiBaseUrl: `${staticConfig.adminApiEndpoint}`,
+    terminalApiBaseUrl: publicApiConfig.terminal_api_endpoint,
+    adminApiBaseUrl: staticConfig.adminApiEndpoint,
     adminApiBaseWebsocketUrl: `${siteProtocol === "https" ? "wss" : "ws"}://${staticConfig.adminApiEndpoint}`,
     currencyIdentifier: publicApiConfig.currency_identifier,
     currencySymbol: publicApiConfig.currency_symbol,
@@ -70,7 +70,7 @@ const fetchPublicConfig = async (clientConfig: StaticAdminConfig): Promise<Publi
 };
 
 export const fetchConfig = async (): Promise<Config> => {
-  const resp = await fetch(`${siteProtocol}://${siteHost}/assets/config.json`);
+  const resp = await fetch(`${siteProtocol}//${siteHost}/assets/config.json`);
   if (resp.status !== 200) {
     throw new Error("error while fetching config");
   }
