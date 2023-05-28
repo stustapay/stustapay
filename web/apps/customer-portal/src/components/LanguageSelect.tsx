@@ -14,8 +14,8 @@ export const LanguageSelect: React.FC<LanguageSelectProps> = (props) => {
 
   return (
     <Select value={i18n.language} onChange={handleSetLanguage} {...props}>
-      <MenuItem value="en">{t(`languages.en`)}</MenuItem>
-      <MenuItem value="de">{t(`languages.de`)}</MenuItem>
+      <MenuItem value="en-US">{t(`languages.en`)}</MenuItem>
+      <MenuItem value="de-DE">{t(`languages.de`)}</MenuItem>
     </Select>
   );
 };

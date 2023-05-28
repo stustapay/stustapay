@@ -9,10 +9,19 @@ from stustapay.core.service.common.decorators import requires_user, with_db_tran
 from stustapay.core.service.common.error import NotFound
 
 
+async def get_currency_identifier(*, conn: asyncpg.Connection) -> str:
+    return await conn.fetchval("select value from config where key = 'currency.identifier' limit 1")
+
+
 class ConfigService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
+
+    @with_db_transaction
+    async def is_sumup_topup_enabled(self, *, conn: asyncpg.Connection) -> bool:
+        db_config_entry = await conn.fetchval("select value from config where key = 'sumup_topup.enabled'")
+        return self.cfg.customer_portal.sumup_config.enabled and db_config_entry == "true"
 
     @with_db_transaction
     async def get_public_config(self, *, conn: asyncpg.Connection) -> PublicConfig:
@@ -29,6 +38,7 @@ class ConfigService(DBService):
             test_mode=self.cfg.core.test_mode,
             test_mode_message=self.cfg.core.test_mode_message,
             contact_email=row["contact_email"],
+            sumup_topup_enabled=await self.is_sumup_topup_enabled(conn=conn),
         )
 
     @with_db_transaction

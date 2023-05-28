@@ -6,7 +6,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.service.config import ConfigService
-from stustapay.core.service.customer import (
+from stustapay.core.service.customer.customer import (
     csv_export,
     get_customer_bank_data,
     get_number_of_customers,
@@ -98,7 +98,7 @@ class CustomerExportCli(SubCommand):
                 currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
                 sepa_config = await cfg_srvc.get_sepa_config(conn=conn)
 
-                output_path_file_extension = f"{output_path}_{i + 1}.{file_extension}"
+                output_path_file_extension = f"{output_path}_{i+1}.{file_extension}"
 
                 await export_function(
                     customers_bank_data=customers_bank_data,

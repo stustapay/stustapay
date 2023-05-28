@@ -37,6 +37,15 @@ class CoreConfig(BaseModel):
     sumup_affiliate_key: str = "unset"
 
 
+class SumupConfig(BaseModel):
+    enabled: bool = False
+    client_id: str = ""
+    client_secret: str = ""
+    merchant_code: str = ""
+    return_url: str = ""
+    redirect_url: str = ""
+
+
 class CustomerPortalApiConfig(HTTPServerConfig):
     base_url: str
     host: str = "localhost"
@@ -44,6 +53,8 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     base_bon_url: str
     data_privacy_url: str
     about_page_url: str
+
+    sumup_config: SumupConfig = SumupConfig()
 
 
 class Config(BaseModel):

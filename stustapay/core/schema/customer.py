@@ -1,4 +1,8 @@
+import datetime
+import enum
+import uuid
 from typing import Optional
+
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.order import Order
 from stustapay.core.util import BaseModel
@@ -10,12 +14,26 @@ class Customer(Account):
     email: Optional[str]
 
 
-class CustomerBank(BaseModel):
-    iban: str
-    account_name: str
-    email: str
-
-
 class OrderWithBon(Order):
     bon_generated: Optional[bool]
     bon_output_file: Optional[str]
+
+
+class SumupCheckoutStatus(enum.Enum):
+    PENDING = "PENDING"
+    FAILED = "FAILED"
+    PAID = "PAID"
+
+
+class CustomerCheckout(BaseModel):
+    checkout_reference: uuid.UUID
+    amount: float
+    currency: str
+    merchant_code: str
+    description: str
+    return_url: str
+    id: str
+    status: SumupCheckoutStatus
+    date: datetime.datetime
+    valid_until: datetime.datetime
+    customer_account_id: str

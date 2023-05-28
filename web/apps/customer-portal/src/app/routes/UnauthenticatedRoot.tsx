@@ -5,6 +5,7 @@ import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { useTranslation } from "react-i18next";
 import { TestModeDisclaimer } from "@stustapay/components";
 import { config } from "@/api";
+import { LanguageSelect } from "@/components/LanguageSelect";
 
 export const UnauthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
@@ -28,6 +29,7 @@ export const UnauthenticatedRoot: React.FC = () => {
               {t("StuStaPay")}
             </RouterLink>
           </Typography>
+          <LanguageSelect sx={{ color: "inherit" }} variant="outlined" />
           <Button component={RouterLink} color="inherit" to="/login">
             {t("login")}
           </Button>

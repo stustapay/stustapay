@@ -4,11 +4,17 @@ import csv
 import datetime
 import os
 import unittest
+
+from dateutil.parser import parse
+
+from stustapay.core.config import CustomerPortalApiConfig
 from stustapay.core.customer_bank_export import CustomerExportCli
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
+from stustapay.core.service.common.error import InvalidArgument, Unauthorized
 from stustapay.core.service.config import ConfigService
-from stustapay.core.service.customer import (
+from stustapay.core.service.customer.customer import (
+    CustomerBank,
     CustomerBankData,
     CustomerService,
     csv_export,
@@ -19,10 +25,6 @@ from stustapay.core.service.customer import (
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.tests.common import TEST_CONFIG, TerminalTestCase
-from stustapay.core.config import CustomerPortalApiConfig
-from stustapay.core.schema.customer import CustomerBank
-from stustapay.core.service.common.error import InvalidArgument, Unauthorized
-from dateutil.parser import parse
 
 
 class CustomerServiceTest(TerminalTestCase):
@@ -439,13 +441,13 @@ class CustomerServiceTest(TerminalTestCase):
             db_pool=self.db_pool, output_path=output_path, max_export_items_per_batch=1
         )
         for i in range(len(self.customers_to_transfer)):
-            self.assertTrue(os.path.exists(output_path + f"_{i+1}.xml"))
+            self.assertTrue(os.path.exists(output_path + f"_{i + 1}.xml"))
 
         await cli._export_customer_bank_data(
             db_pool=self.db_pool, output_path=output_path, data_format="csv", max_export_items_per_batch=1
         )
         for i in range(len(self.customers_to_transfer)):
-            self.assertTrue(os.path.exists(output_path + f"_{i+1}.csv"))
+            self.assertTrue(os.path.exists(output_path + f"_{i + 1}.csv"))
 
 
 if __name__ == "__main__":

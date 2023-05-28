@@ -11,6 +11,7 @@ class ConfigEntry(BaseModel):
 class PublicConfig(BaseModel):
     test_mode: bool
     test_mode_message: str
+    sumup_topup_enabled: bool
     currency_symbol: str
     currency_identifier: str
     contact_email: str

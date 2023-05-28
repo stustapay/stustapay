@@ -22,7 +22,7 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    lng: "en",
+    lng: "en-US",
     fallbackLng: "en",
     debug: true,
     defaultNS: "translations",

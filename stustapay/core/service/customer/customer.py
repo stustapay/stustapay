@@ -12,8 +12,8 @@ from schwifty import IBAN
 from sepaxml import SepaTransfer
 
 from stustapay.core.config import Config
+from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.schema.config import PublicConfig, SEPAConfig
-from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -22,6 +22,7 @@ from stustapay.core.service.common.decorators import (
 )
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.config import ConfigService
+from stustapay.core.service.customer.sumup import SumupService
 
 
 class PublicCustomerApiConfig(PublicConfig):
@@ -41,6 +42,12 @@ class CustomerBankData(BaseModel):
     email: str
     user_tag_uid: int
     balance: float
+
+
+class CustomerBank(BaseModel):
+    iban: str
+    account_name: str
+    email: str
 
 
 async def get_number_of_customers(conn: asyncpg.Connection) -> int:
@@ -82,7 +89,7 @@ async def csv_export(
                     customer.iban,
                     round(customer.balance, 2),
                     currency_ident,
-                    sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
+                    sepa_config.description.format(user_tag_uid=hex(customer.user_tag_uid)),
                     execution_date.isoformat(),
                 ]
             )
@@ -124,7 +131,7 @@ async def sepa_export(
             "BIC": str(IBAN(customer.iban).bic),
             "amount": round(customer.balance * 100),  # in cents
             "execution_date": execution_date,
-            "description": sepa_config.description.format(user_tag_uid=customer.user_tag_uid),
+            "description": sepa_config.description.format(user_tag_uid=hex(customer.user_tag_uid)),
         }
 
         if not re.match(r"^[a-zA-Z0-9 \-.,:()/?'+]*$", payment["description"]):  # type: ignore
@@ -148,6 +155,11 @@ class CustomerService(DBService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
         self.config_service = config_service
+        self.logger = logging.getLogger("customer")
+
+        self.sumup = SumupService(
+            db_pool=db_pool, config=config, auth_service=auth_service, config_service=config_service
+        )
 
     @with_db_transaction
     async def login_customer(self, *, conn: asyncpg.Connection, uid: int, pin: str) -> Optional[CustomerLoginSuccess]:
@@ -242,6 +254,7 @@ class CustomerService(DBService):
         return PublicCustomerApiConfig(
             test_mode=self.cfg.core.test_mode,
             test_mode_message=self.cfg.core.test_mode_message,
+            sumup_topup_enabled=public_config.sumup_topup_enabled,
             currency_identifier=public_config.currency_identifier,
             currency_symbol=public_config.currency_symbol,
             data_privacy_url=self.cfg.customer_portal.data_privacy_url,

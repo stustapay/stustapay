@@ -40,6 +40,23 @@ export const translations = {
     updatedBankData: "Successfully updated bank data.",
     errorWhileUpdatingBankData: "Error occurred while updating bank data.",
   },
+  topup: {
+    info: "You can topup your festival account balance with credit card",
+    amount: "Amount",
+    errorWhileCreatingCheckout: "Error while trying to create sumup checkout",
+    errorAmountGreaterZero: "Amount must be greater than 0",
+    errorAmountMustBeIntegral: "Cent amounts are not allowed",
+    sumupTopupDisabled: "Online Topup is disabled",
+    tryAgain: "Try again",
+    success: {
+      title: "Top Up succeeded",
+      message: "Please continue to the <1>overview page</1>.",
+    },
+    error: {
+      title: "Top Up failed",
+      message: "An unknown error occured.",
+    },
+  },
 } as const;
 
 export type Translations = typeof translations;

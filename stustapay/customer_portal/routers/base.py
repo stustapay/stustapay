@@ -3,10 +3,10 @@ some basic api endpoints.
 """
 from fastapi import APIRouter, status
 
-from stustapay.core.http.auth_till import CurrentAuthToken
+from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
-from stustapay.core.schema.customer import Customer, CustomerBank, OrderWithBon
-from stustapay.core.service.customer import PublicCustomerApiConfig
+from stustapay.core.schema.customer import Customer, OrderWithBon
+from stustapay.core.service.customer.customer import CustomerBank, PublicCustomerApiConfig
 
 router = APIRouter(
     prefix="",
