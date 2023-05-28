@@ -802,7 +802,7 @@ begin
     where
         t.id != check_till_layout_contains_tickets_of_unique_restrictions.ticket_id
         and tltt.layout_id = check_till_layout_contains_tickets_of_unique_restrictions.layout_id
-        and (t.restriction = locals.restriction_type or t.restriction is null and locals.restriction_type is null);
+        and (t.restriction = locals.restriction_type or (t.restriction is null and locals.restriction_type is null));
 
     return locals.n_current_tickets_in_layout < 1;
 end
