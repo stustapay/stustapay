@@ -60,7 +60,7 @@ const fetchPublicCustomerApiConfig = async (clientConfig: ClientConfig): Promise
 };
 
 export const fetchConfig = async (): Promise<Config> => {
-  const resp = await fetch(`${window.location.protocol}://${siteHost}/assets/config.json`);
+  const resp = await fetch(`${window.location.protocol}//${siteHost}/assets/config.json`);
   const respJson = await resp.json();
   const clientConfig = ClientConfigSchema.parse(respJson);
   const publicConfig = await fetchPublicCustomerApiConfig(clientConfig);
