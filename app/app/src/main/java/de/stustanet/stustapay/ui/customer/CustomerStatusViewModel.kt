@@ -13,21 +13,21 @@ import de.stustanet.stustapay.repository.UserRepository
 import de.stustanet.stustapay.util.mapState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 
 data class CustomerStatusUiState(
-    val state: CustomerStatusRequestState = CustomerStatusRequestState.Fetching
+    val customer: CustomerStatusRequestState = CustomerStatusRequestState.Fetching
 )
 
 
 sealed interface CustomerStatusRequestState {
+    object Idle : CustomerStatusRequestState
     object Fetching : CustomerStatusRequestState
     data class Done(val customer: Customer) : CustomerStatusRequestState
     data class Failed(val msg: String) : CustomerStatusRequestState
-    data class Swap(val newTag: UserTag) : CustomerStatusRequestState
-    object SwapDone : CustomerStatusRequestState
 }
 
 
@@ -55,11 +55,18 @@ class CustomerStatusViewModel @Inject constructor(
         }
     }
 
-    fun startScan() {
-        _requestState.update { CustomerStatusRequestState.Fetching }
+    private val _newTagId = MutableStateFlow(0uL)
+    val newTagId = _newTagId.asStateFlow()
+    private val _oldTagId = MutableStateFlow(0uL)
+    val oldTagId = _oldTagId.asStateFlow()
+
+    fun idleState() {
+        _requestState.update { CustomerStatusRequestState.Idle }
     }
 
-    suspend fun completeScan(id: ULong) {
+    suspend fun setNewTagId(id: ULong) {
+        _requestState.update { CustomerStatusRequestState.Fetching }
+        _newTagId.update { id }
         when (val customer = customerRepository.getCustomer(id)) {
             is Response.OK -> {
                 _requestState.update { CustomerStatusRequestState.Done(customer.data) }
@@ -71,19 +78,23 @@ class CustomerStatusViewModel @Inject constructor(
         }
     }
 
-    fun startSwap(newTag: UserTag) {
-        _requestState.update { CustomerStatusRequestState.Swap(newTag) }
+    fun setOldTagId(id: ULong) {
+        _oldTagId.update { id }
     }
 
-    suspend fun completeSwap(customerTagId: ULong, newTag: UserTag) {
-        when (val customer = customerRepository.getCustomer(customerTagId)) {
+    suspend fun swap() {
+        _requestState.update { CustomerStatusRequestState.Fetching }
+        when (val customer = customerRepository.getCustomer(oldTagId.value)) {
             is Response.OK -> {
-                if (customerRepository.switchTag(customer.data.id, newTag) is Response.OK) {
-                    _requestState.update { CustomerStatusRequestState.SwapDone }
-                    return
+                when (val switch = customerRepository.switchTag(customer.data.id, newTagId.value, "")) {
+                    is Response.OK -> {
+                        _requestState.update { CustomerStatusRequestState.Done(customer.data) }
+                    }
+                    is Response.Error -> {
+                        _requestState.update { CustomerStatusRequestState.Failed(switch.msg()) }
+                    }
                 }
             }
-
             is Response.Error -> {
                 _requestState.update { CustomerStatusRequestState.Failed(customer.msg()) }
             }

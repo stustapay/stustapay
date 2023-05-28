@@ -62,8 +62,6 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
             ser = ser or (readBuffer.gbe(i + 1u).toULong() shl ((6u - i) * 8u).toInt())
         }
 
-        println(ser)
-
         return ser
     }
 

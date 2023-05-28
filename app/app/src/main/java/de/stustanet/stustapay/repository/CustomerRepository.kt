@@ -23,7 +23,7 @@ class CustomerRepository @Inject constructor(
         return customerRemoteDataSource.grantVouchers(tag, vouchers)
     }
 
-    suspend fun switchTag(customerID: ULong, newTag: UserTag): Response<Unit> {
-        return customerRemoteDataSource.switchTag(customerID, newTag)
+    suspend fun switchTag(customerID: ULong, newTag: ULong, comment: String): Response<Unit> {
+        return customerRemoteDataSource.switchTag(customerID, newTag, comment)
     }
 }

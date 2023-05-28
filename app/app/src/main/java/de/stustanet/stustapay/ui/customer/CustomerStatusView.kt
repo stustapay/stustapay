@@ -13,11 +13,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustanet.stustapay.model.UserTag
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import de.stustanet.stustapay.ui.chipscan.NfcScanCard
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustanet.stustapay.ui.common.TagTextField
 import de.stustanet.stustapay.ui.nav.NavScaffold
+import de.stustanet.stustapay.ui.nav.navigateTo
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
@@ -27,111 +31,204 @@ fun CustomerStatusView(
     leaveView: () -> Unit = {},
     viewModel: CustomerStatusViewModel = hiltViewModel(),
 ) {
+    val nav = rememberNavController()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val swapVisible by viewModel.swapVisible.collectAsStateWithLifecycle()
     val scanState = rememberNfcScanDialogState()
-    var targetId by remember { mutableStateOf(0uL) }
-
+    val newTagId by viewModel.newTagId.collectAsStateWithLifecycle()
+    val oldTagId by viewModel.oldTagId.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(scanState) {
-        viewModel.startScan()
-        scanState.open()
-    }
-
     NavScaffold(title = { Text("Account Status") }, navigateBack = leaveView) {
-        Scaffold(
-            content = {
-                Box(modifier = Modifier.padding(it)) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(10.dp)
-                    ) {
-                        when (val state = uiState.state) {
-                            is CustomerStatusRequestState.Fetching -> {
-                                Text("Fetching status...", fontSize = 36.sp)
+        NavHost(navController = nav, startDestination = CustomerStatusNavDests.Scan.route) {
+            composable(CustomerStatusNavDests.Scan.route) {
+                Box(modifier = Modifier.padding(20.dp)) {
+                    NfcScanCard(onScan = {
+                        scope.launch {
+                            viewModel.setNewTagId(it.uid)
+                            nav.navigateTo(CustomerStatusNavDests.Display.route)
+                        }
+                    })
+                }
+            }
+
+            composable(CustomerStatusNavDests.Display.route) {
+                Scaffold(
+                    content = {
+                        Box(modifier = Modifier.padding(it)) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(10.dp)
+                            ) {
+                                if (uiState.customer is CustomerStatusRequestState.Done) {
+                                    val customer = (uiState.customer as CustomerStatusRequestState.Done).customer
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("ID", fontSize = 24.sp)
+                                        Text(customer.id.toString(), fontSize = 36.sp)
+                                    }
+
+                                    Divider()
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("Name", fontSize = 24.sp)
+                                        Text(customer.name ?: "no name", fontSize = 36.sp)
+                                    }
+
+                                    Divider()
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("Cash", fontSize = 24.sp)
+                                        Text(
+                                            "${DecimalFormat("#.00").format(customer.balance)}€",
+                                            fontSize = 36.sp
+                                        )
+                                    }
+
+                                    Divider()
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("Coupons", fontSize = 24.sp)
+                                        Text(customer.vouchers.toString(), fontSize = 36.sp)
+                                    }
+
+                                    Divider()
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("Comment", fontSize = 24.sp)
+                                    }
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(customer.comment ?: "", fontSize = 36.sp)
+                                    }
+                                }
                             }
+                        }
+                    },
+                    bottomBar = {
+                        Column {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Divider()
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+                                val text = when (val state = uiState.customer) {
+                                    is CustomerStatusRequestState.Idle -> {
+                                        "idle"
+                                    }
+                                    is CustomerStatusRequestState.Fetching -> {
+                                        "fetching"
+                                    }
+                                    is CustomerStatusRequestState.Done -> {
+                                        "done"
+                                    }
+                                    is CustomerStatusRequestState.Failed -> {
+                                        state.msg
+                                    }
+                                }
+                                Text(text, fontSize = 24.sp)
+                            }
+                            Spacer(modifier = Modifier.height(20.dp))
 
-                            is CustomerStatusRequestState.Done -> {
-                                val customer = state.customer
-
-                                Row(
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp)
+                            ) {
+                                Button(
                                     modifier = Modifier
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                        .weight(1.0f),
+                                    onClick = {
+                                        viewModel.idleState()
+                                        nav.navigateTo(CustomerStatusNavDests.Scan.route)
+                                    }
                                 ) {
-                                    Text("ID", fontSize = 24.sp)
-                                    Text(customer.id.toString(), fontSize = 36.sp)
+                                    Text("Scan", fontSize = 24.sp)
                                 }
 
-                                Divider()
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("Name", fontSize = 24.sp)
-                                    Text(customer.name ?: "no name", fontSize = 36.sp)
+                                if (swapVisible) {
+                                    Button(
+                                        modifier = Modifier
+                                            .padding(start = 10.dp)
+                                            .weight(0.5f),
+                                        onClick = {
+                                            viewModel.idleState()
+                                            nav.navigateTo(CustomerStatusNavDests.Swap.route)
+                                        }
+                                    ) {
+                                        Text("Swap", fontSize = 24.sp)
+                                    }
                                 }
+                            }
+                        }
+                    }
+                )
+            }
 
-                                Divider()
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("Cash", fontSize = 24.sp)
-                                    Text(
-                                        "${DecimalFormat("#.00").format(customer.balance)}€",
-                                        fontSize = 36.sp
-                                    )
-                                }
-
-                                Divider()
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("Coupons", fontSize = 24.sp)
-                                    Text(customer.vouchers.toString(), fontSize = 36.sp)
-                                }
-
-                                Divider()
-
+            composable(CustomerStatusNavDests.Swap.route) {
+                Scaffold(
+                    content = {
+                        Box(modifier = Modifier.padding(it)) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(10.dp)
+                            ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 10.dp),
+                                        .padding(bottom = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Comment", fontSize = 24.sp)
+                                    Text(
+                                        "New Tag",
+                                        fontSize = 48.sp,
+                                        modifier = Modifier.padding(end = 20.dp)
+                                    )
+                                    TagTextField(
+                                        newTagId,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {id ->
+                                        if (id != null) {
+                                            scope.launch {
+                                                viewModel.setNewTagId(id)
+                                            }
+                                        }
+                                    }
                                 }
 
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(customer.comment ?: "", fontSize = 36.sp)
-                                }
-                            }
-
-                            is CustomerStatusRequestState.Failed -> {
-                                Text("Request failed", fontSize = 36.sp)
-                            }
-
-                            is CustomerStatusRequestState.Swap -> {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -145,11 +242,11 @@ fun CustomerStatusView(
                                         modifier = Modifier.padding(end = 20.dp)
                                     )
                                     TagTextField(
-                                        targetId,
+                                        oldTagId,
                                         modifier = Modifier.fillMaxWidth(),
-                                    ) {
-                                        if (it != null) {
-                                            targetId = it
+                                    ) {id ->
+                                        if (id != null) {
+                                            viewModel.setOldTagId(id)
                                         }
                                     }
                                 }
@@ -162,53 +259,62 @@ fun CustomerStatusView(
                                         scanState.open()
                                     }
                                 ) {
-                                    Text("Scan", fontSize = 24.sp)
+                                    Text("Scan Old Tag", fontSize = 24.sp)
                                 }
 
                                 NfcScanDialog(state = scanState, onScan = { tag ->
-                                    targetId = tag.uid
+                                    viewModel.setOldTagId(tag.uid)
                                 })
                             }
-
-                            is CustomerStatusRequestState.SwapDone -> {
-                                Text("Swapped tag accounts", fontSize = 36.sp)
-                            }
                         }
-                    }
-                }
-            },
-            bottomBar = {
-                Spacer(modifier = Modifier.height(20.dp))
-                Divider()
-                Spacer(modifier = Modifier.height(20.dp))
-
-                when (val state = uiState.state) {
-                    is CustomerStatusRequestState.Done -> {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(10.dp)
-                        ) {
-                            Button(
-                                modifier = Modifier
-                                    .weight(1.0f),
-                                onClick = {
-                                    viewModel.startScan()
-                                    scanState.open()
+                    },
+                    bottomBar = {
+                        Column() {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Divider()
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+                                val text = when (val state = uiState.customer) {
+                                    is CustomerStatusRequestState.Idle -> {
+                                        "idle"
+                                    }
+                                    is CustomerStatusRequestState.Fetching -> {
+                                        "swapping"
+                                    }
+                                    is CustomerStatusRequestState.Done -> {
+                                        "done"
+                                    }
+                                    is CustomerStatusRequestState.Failed -> {
+                                        state.msg
+                                    }
                                 }
-                            ) {
-                                Text("Scan", fontSize = 24.sp)
+                                Text(text, fontSize = 24.sp)
                             }
+                            Spacer(modifier = Modifier.height(20.dp))
 
-                            if (swapVisible) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp)
+                            ) {
                                 Button(
                                     modifier = Modifier
-                                        .padding(start = 10.dp)
-                                        .weight(0.5f),
+                                        .weight(1.0f),
                                     onClick = {
-                                        val uid = state.customer.user_tag_uid
-                                        if (uid != null) {
-                                            viewModel.startSwap(UserTag(uid))
+                                        viewModel.idleState()
+                                        nav.navigateTo(CustomerStatusNavDests.Scan.route)
+                                    }
+                                ) {
+                                    Text("Cancel", fontSize = 24.sp)
+                                }
+
+                                Button(
+                                    modifier = Modifier
+                                        .weight(1.0f)
+                                        .padding(start = 10.dp),
+                                    onClick = {
+                                        scope.launch {
+                                            viewModel.swap()
                                         }
                                     }
                                 ) {
@@ -216,67 +322,15 @@ fun CustomerStatusView(
                                 }
                             }
                         }
-
-                        NfcScanDialog(
-                            state = scanState,
-                            onScan = { tag ->
-                                scope.launch {
-                                    viewModel.completeScan(tag.uid)
-                                }
-                            }
-                        )
                     }
-
-                    is CustomerStatusRequestState.Swap -> {
-                        Button(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(10.dp),
-                            onClick = {
-                                try {
-                                    scope.launch {
-                                        try {
-                                            viewModel.completeSwap(
-                                                targetId,
-                                                (uiState.state as CustomerStatusRequestState.Swap).newTag
-                                            )
-                                            targetId = 0uL
-                                        } catch (_: NumberFormatException) {
-                                        }
-                                    }
-                                } catch (e: NumberFormatException) {
-                                    e.printStackTrace()
-                                }
-                            }
-                        ) {
-                            Text("Confirm Swap", fontSize = 24.sp)
-                        }
-                    }
-
-                    else -> {
-                        Button(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(10.dp),
-                            onClick = {
-                                viewModel.startScan()
-                                scanState.open()
-                            }
-                        ) {
-                            Text("Scan", fontSize = 24.sp)
-                        }
-
-                        NfcScanDialog(
-                            state = scanState,
-                            onScan = { tag ->
-                                scope.launch {
-                                    viewModel.completeScan(tag.uid)
-                                }
-                            }
-                        )
-                    }
-                }
+                )
             }
-        )
+        }
     }
+}
+
+enum class CustomerStatusNavDests(val route: String) {
+    Scan("scan"),
+    Display("display"),
+    Swap("swap"),
 }
