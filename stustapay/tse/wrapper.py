@@ -77,11 +77,11 @@ class TSEWrapper:
 
                 ##############################################
                 LOGGER.error("checking for new transactions and fail those older than 10 seconds")
-                self.tse_id, tse_status = await self._conn.fetchrow(
-                    "select tse_id, tse_status from tse where tse_name=$1", self.name
-                )
-                assert self.tse_id is not None
-                assert tse_status is not None
+                self.tse_id = await self._conn.fetchval("select tse_id from tse where tse_name=$1", self.name)
+                if self.tse_id is None:
+                    LOGGER.error(f"ERROR: TSE {self.name} is not in Database, cannot start, retrying in 10 seconds")
+                    await asyncio.sleep(10)
+                    continue
 
                 new_sig_requests = await self._conn.fetch(
                     """
