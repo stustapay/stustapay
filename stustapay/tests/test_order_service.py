@@ -223,8 +223,7 @@ class OrderLogicTest(TerminalTestCase):
         await self._assert_account_balance(account_id=ACCOUNT_DEPOSIT, expected_balance=2 * self.deposit_product.price)
 
         # test that we can cancel this order
-        success = await self.order_service.cancel_sale(token=self.terminal_token, order_id=order.id)
-        self.assertTrue(success)
+        await self.order_service.cancel_sale(token=self.terminal_token, order_id=order.id)
         customer = await self.till_service.get_customer(token=self.terminal_token, customer_tag_uid=self.customer_uid)
         self.assertIsNotNone(customer)
         self.assertEqual(starting_balance, customer.balance)

@@ -89,8 +89,11 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
-    async def get_account(self, *, conn: asyncpg.Connection, account_id: int) -> Optional[Account]:
-        return await get_account_by_id(conn=conn, account_id=account_id)
+    async def get_account(self, *, conn: asyncpg.Connection, account_id: int) -> Account:
+        account = await get_account_by_id(conn=conn, account_id=account_id)
+        if account is None:
+            raise NotFound(element_typ="account", element_id=str(account_id))
+        return account
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
@@ -122,12 +125,10 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
-    async def disable_account(self, *, conn: asyncpg.Connection, account_id: int) -> bool:
+    async def disable_account(self, *, conn: asyncpg.Connection, account_id: int):
         row = await conn.fetchval("update account set user_tag_uid = null where id = $1 returning id", account_id)
         if row is None:
             raise NotFound(element_typ="account", element_id=str(account_id))
-
-        return True
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
@@ -214,7 +215,7 @@ class AccountService(DBService):
     @requires_terminal([Privilege.grant_free_tickets])
     async def grant_free_tickets(
         self, *, conn: asyncpg.Connection, current_user: User, new_free_ticket_grant: NewFreeTicketGrant
-    ) -> bool:
+    ) -> Account:
         user_tag = await conn.fetchrow(
             "select true as found, a.id as account_id "
             "from user_tag u left join account a on a.user_tag_uid = u.uid where u.uid = $1",
@@ -242,7 +243,9 @@ class AccountService(DBService):
                 conducting_user_id=current_user.id,
             )
 
-        return True
+        account = await get_account_by_id(conn=conn, account_id=account_id)
+        assert account is not None
+        return account
 
     @with_db_transaction
     @requires_user([Privilege.account_management])

@@ -598,18 +598,18 @@ class OrderService(DBService):
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def cancel_sale(
         self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, order_id: int
-    ) -> bool:
+    ):
         is_order_cancelled = await conn.fetchval("select true from ordr where cancels_order = $1", order_id)
         if is_order_cancelled:
             raise InvalidArgument("Order has already been cancelled")
 
         order = await fetch_order(conn=conn, order_id=order_id)
         if order is None:
-            return False
+            raise InvalidArgument("Order does not exist")
         if order.order_type != OrderType.sale:
-            return False
+            raise InvalidArgument("Can only cancel sales")
         if order.payment_method != PaymentMethod.tag:
-            return False
+            raise InvalidArgument("Can only cancel orders payed with a tag")
 
         line_items = []
         for line_item in order.line_items:
@@ -652,8 +652,6 @@ class OrderService(DBService):
                 transaction["amount"],
                 transaction["vouchers"],
             )
-
-        return True
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])

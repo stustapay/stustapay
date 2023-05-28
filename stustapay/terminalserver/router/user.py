@@ -1,10 +1,10 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService, ContextUserService, ContextAccountService
-from stustapay.core.schema.customer import Customer
+from stustapay.core.schema.account import Account
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.user import NewUser, User, UserTag, CurrentUser, CheckLoginResult, LoginPayload
 from stustapay.core.util import BaseModel
@@ -51,9 +51,7 @@ async def logout_user(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    logged_out = await till_service.logout_user(token=token)
-    if not logged_out:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    await till_service.logout_user(token=token)
 
 
 @router.post("/create-user", summary="Create a new user with the given roles", response_model=User)
@@ -77,15 +75,13 @@ async def create_finanzorga(token: CurrentAuthToken, user_service: ContextUserSe
     )
 
 
-@router.post("/grant-free-ticket", summary="grant a free ticket, e.g. to a volunteer", response_model=Customer)
+@router.post("/grant-free-ticket", summary="grant a free ticket, e.g. to a volunteer", response_model=Account)
 async def grant_free_ticket(
     grant: NewFreeTicketGrant,
     token: CurrentAuthToken,
     account_service: ContextAccountService,
-    till_service: ContextTillService,
 ):
-    await account_service.grant_free_tickets(token=token, new_free_ticket_grant=grant)
-    return await till_service.get_customer(token=token, customer_tag_uid=grant.user_tag_uid)
+    return await account_service.grant_free_tickets(token=token, new_free_ticket_grant=grant)
 
 
 class GrantVoucherPayload(BaseModel):
@@ -93,16 +89,10 @@ class GrantVoucherPayload(BaseModel):
     user_tag_uid: int
 
 
-@router.post("/grant-vouchers", summary="grant vouchers to a customer", response_model=Customer)
+@router.post("/grant-vouchers", summary="grant vouchers to a customer", response_model=Account)
 async def grant_vouchers(
     grant: GrantVoucherPayload,
     token: CurrentAuthToken,
     account_service: ContextAccountService,
-    till_service: ContextTillService,
 ):
-    success = await account_service.grant_vouchers(
-        token=token, user_tag_uid=grant.user_tag_uid, vouchers=grant.vouchers
-    )
-    if not success:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-    return await till_service.get_customer(token=token, customer_tag_uid=grant.user_tag_uid)
+    return await account_service.grant_vouchers(token=token, user_tag_uid=grant.user_tag_uid, vouchers=grant.vouchers)
