@@ -13,7 +13,7 @@ export const LoggedOutFooter: React.FC<LoggedOutFooterProps> = ({ theme }) => {
   const mailtoLink = `mailto:${config.contact_email}?subject=${subject}`;
 
   return (
-    <Link sx={{ ml: 2 }} href={mailtoLink} target="_blank" rel="noopener noreferrer">
+    <Link sx={{ ml: 4 }} href={mailtoLink} target="_blank" rel="noopener noreferrer">
       {t("contact")}
     </Link>
   );

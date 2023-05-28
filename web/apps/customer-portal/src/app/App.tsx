@@ -45,8 +45,15 @@ export function App() {
   function AboutLink() {
     const config = usePublicConfig();
     return (
-      <Link sx={{ mr: 2 }} href={config.about_page_url} target="_blank">
+      <Link href={config.about_page_url} target="_blank">
         {t("about")}
+      </Link>
+    );
+  }
+  function GithubLink() {
+    return (
+      <Link sx={{ ml: 4 }} href="https://github.com/stustanet/stustapay" target="_blank">
+        Github
       </Link>
     );
   }
@@ -83,8 +90,8 @@ export function App() {
           ) : (
             <>
               <AboutLink />
-              <span>|</span>
               {authenticated ? <LoggedInFooter theme={theme} /> : <LoggedOutFooter theme={theme} />}
+              <GithubLink />
             </>
           )}
         </Box>
