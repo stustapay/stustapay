@@ -19,6 +19,7 @@ export const prepareAuthHeaders = (
 export const PublicCustomerApiConfigSchema = z.object({
   test_mode: z.boolean(),
   test_mode_message: z.string(),
+  sumup_topup_enabled: z.boolean(),
   currency_symbol: z.string(),
   currency_identifier: z.string(),
   data_privacy_url: z.string(),

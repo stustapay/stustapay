@@ -48,10 +48,11 @@ async def create_checkout(
 
 
 @router.post("/check-checkout", summary="after payment check checkout state", response_model=CheckCheckoutResponse)
-async def create_checkout(
+async def check_checkout(
     token: CurrentAuthToken,
     customer_service: ContextCustomerService,
     payload: CheckCheckoutPayload,
 ):
-    update = await customer_service.sumup.check_checkout(token=token, checkout_id=payload.checkout_id)
-    return CheckCheckoutResponse(status=update, checkout_id=payload.checkout_id)
+    # checkout = await customer_service.sumup.check_checkout(token=token, checkout_id=payload.checkout_id)
+    # return CheckCheckoutResponse(status=checkout.status, checkout_id=checkout.id)
+    return CheckCheckoutResponse(status=SumupCheckoutStatus.FAILED, checkout_id=str(uuid.uuid4()))

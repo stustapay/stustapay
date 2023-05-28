@@ -1,101 +1,176 @@
 import * as React from "react";
 import { useGetCustomerQuery } from "@/api/customerApi";
 import { Loading, NumericInput } from "@stustapay/components";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { Alert, Button, Grid, InputAdornment, Stack } from "@mui/material";
+import { Navigate, Link as RouterLink } from "react-router-dom";
+import { Alert, AlertTitle, Box, Button, Grid, InputAdornment, Stack, Link } from "@mui/material";
 import { Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { useCreateCheckoutMutation } from "@/api/topupApi";
+import { useCreateCheckoutMutation, useUpdateCheckoutMutation } from "@/api/topupApi";
 import i18n from "@/i18n";
-import loadScript from 'load-script';
+import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
+import { SumUpCardMock } from "./SumupCardMock";
+import type { SumUpCard, SumUpResponseType } from "./SumUpCard";
+import { CheckCircle as CheckCircleIcon } from "@mui/icons-material";
+import { Cancel as CancelIcon } from "@mui/icons-material";
 
 const FormSchema = z.object({
-  amount: z.number().refine((val) => val > 0 && Number.isInteger(val), {
-    message: i18n.t("topup.errorAmountGreaterZeroAndInt"),
-  }),
+  amount: z.number().int(i18n.t("topup.errorAmountMustBeIntegral")).positive(i18n.t("topup.errorAmountGreaterZero")),
 });
-
 
 type FormVal = z.infer<typeof FormSchema>;
 
 const initialValues: FormVal = { amount: 0 };
 
-
-
-
 declare global {
-  interface SumUpCard {
-    mount: (config: any) => void;
-  }
+  const SumUpCard: SumUpCard;
 }
 
+type TopUpState =
+  | { stage: "initial" }
+  | { stage: "sumup"; topupAmount: number; checkoutId: string }
+  | { stage: "success" }
+  | { stage: "error"; message?: string };
 
+const initialState: TopUpState = { stage: "initial" };
 
-// todo
+type TopUpStateAction =
+  | { type: "created-checkout"; topupAmount: number; checkoutId: string }
+  | { type: "sumup-success" }
+  | { type: "sumup-error"; message?: string }
+  | { type: "reset" };
+
+const reducer = (state: TopUpState, action: TopUpStateAction): TopUpState => {
+  console.log("processing action", action, "prev state", state);
+  switch (action.type) {
+    case "created-checkout":
+      if (state.stage !== "initial") {
+        return state;
+      }
+      return { stage: "sumup", topupAmount: action.topupAmount, checkoutId: action.checkoutId };
+    case "sumup-success":
+      if (state.stage !== "sumup") {
+        return state;
+      }
+      return { stage: "success" };
+    case "sumup-error":
+      if (state.stage !== "sumup") {
+        return state;
+      }
+      return { stage: "error", message: action.message };
+    case "reset":
+      return initialState;
+  }
+};
+
+const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <Grid container justifyItems="center" justifyContent="center" sx={{ paddingX: 0.5 }}>
+      <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
+        {children}
+      </Grid>
+    </Grid>
+  );
+};
+
 export const TopUp: React.FC = () => {
-  const { t } = useTranslation(undefined, { keyPrefix: "topup" });
-  const navigate = useNavigate();
+  const { t, i18n } = useTranslation(undefined, { keyPrefix: "topup" });
+  const formatCurrency = useCurrencyFormatter();
 
   const config = usePublicConfig();
 
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
-
-  // const [createCheckout, {data: checkoutResponse, isError: responseError, isLoading: isResponseLoading}] = useCreateCheckoutMutation();
   const [createCheckout] = useCreateCheckoutMutation();
-  const [checkoutId, setCheckoutId] = React.useState<string | undefined>(undefined);
+  const [updateCheckout] = useUpdateCheckoutMutation();
+
+  const sumupCard = React.useRef<any | undefined>(undefined);
+  const handleSumupCardResp = React.useRef<any | undefined>(undefined);
+  const handleSumupCardLoad = React.useRef<any | undefined>(undefined);
+
+  const [state, dispatch] = React.useReducer(reducer, initialState);
+
+  const reset = () => {
+    dispatch({ type: "reset" });
+  };
 
   React.useEffect(() => {
-    if (!checkoutId) {
+    handleSumupCardResp.current = (type: SumUpResponseType, body: any) => {
+      console.log("handle sumup resp called");
+      if (state.stage !== "sumup") {
+        return;
+      }
+      console.log("Type", type);
+      console.log("Body", body);
+      if (type === "invalid" && body?.message) {
+        toast.error(body.message);
+      }
+
+      if (type === "error" || type === "success") {
+        console.log("updating checkout");
+        updateCheckout({ checkoutId: state.checkoutId })
+          .unwrap()
+          .then((resp) => {
+            console.log("update checkout returned with resp", resp);
+            if (sumupCard.current) {
+              sumupCard.current.unmount();
+              sumupCard.current = undefined;
+            }
+
+            if (resp.status === "FAILED") {
+              dispatch({ type: "sumup-error" });
+            } else if (resp.status === "PAID") {
+              dispatch({ type: "sumup-success" });
+            }
+            // TODO: retry somehow as the status is still pending
+          })
+          .catch(() => {
+            // TODO: handle this
+            toast.error("unexpected ");
+          });
+      }
+    };
+
+    handleSumupCardLoad.current = () => {
+      console.log("sumup card loaded");
+    };
+  }, [updateCheckout, dispatch, state]);
+
+  React.useEffect(() => {
+    if (state.stage !== "sumup") {
       return;
     }
-    console.log("checkoutId", checkoutId);
-    const mountSumUpCard = async () => {
-    try {
-      await new Promise<void>((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const card = SumUpCard.mount({
-        id: "sumup-card",
-        checkoutId: checkoutId,
-        currency: config.currency_identifier,
-        // showAmount: 0,
-        onResponse: (type: any, body: any) => {
-          console.log("Type", type);
-          console.log("Body", body);
-        },
-        onError: (foo: any) => {
-          console.error("sumup on erron", foo);
-        },
-        onComplete: () => {
-          resolve();
-        },
-      });
-      });
-    } catch (e) {
-      console.error("sumup error", e);
+    console.log("checkoutId", state.checkoutId);
+    const config = {
+      id: "sumup-card",
+      checkoutId: state.checkoutId,
+      onLoad: handleSumupCardLoad.current,
+      onResponse: handleSumupCardResp.current,
+      locale: i18n.language,
+    };
+    if (sumupCard.current) {
+      console.log("updating sumup card with config", config);
+      sumupCard.current.update(config);
+    } else {
+      // sumupCard.current = SumUpCard.mount(config);
+      sumupCard.current = SumUpCardMock.mount(config);
     }
-  };
-  }, [config, checkoutId]);
+  }, [config, state, i18n, updateCheckout, dispatch]);
+
+  if (!config.sumup_topup_enabled) {
+    toast.error(t("sumupTopupDisabled"));
+    return <Navigate to="/" />;
+  }
 
   if (isCustomerLoading || (!customer && !customerError)) {
     return <Loading />;
   }
 
-  // if (isResponseLoading || !responseError) {
-  //   return <Loading />;
-  // }
-
-  // if (checkoutResponse){
-  //   setCheckoutId(checkoutResponse.checkout_reference)
-  // }
-
   if (customerError || !customer) {
-    navigate(-1);
-    return null;
+    toast.error("Error loading customer");
+    return <Navigate to="/" />;
   }
 
   const onSubmit = (values: FormVal, { setSubmitting }: FormikHelpers<FormVal>) => {
@@ -103,7 +178,8 @@ export const TopUp: React.FC = () => {
     createCheckout(values)
       .unwrap()
       .then((checkout) => {
-        setCheckoutId(checkout.checkout_reference);
+        console.log("created checkout with reference", checkout);
+        dispatch({ type: "created-checkout", checkoutId: checkout.checkout_id, topupAmount: values.amount });
         setSubmitting(false);
       })
       .catch((error) => {
@@ -113,16 +189,13 @@ export const TopUp: React.FC = () => {
       });
   };
 
-  return (
-    <Grid container justifyItems="center" justifyContent="center" sx={{ paddingX: 0.5 }}>
-      <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
-        <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
-          {t("info")}
-        </Alert>
-        {checkoutId ? (
-          <div id="sumup-card"></div>
-          // <div>{checkoutId}</div> 
-        ) : (
+  switch (state.stage) {
+    case "initial":
+      return (
+        <Container>
+          <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
+            {t("info")}
+          </Alert>
           <Formik
             initialValues={initialValues}
             validationSchema={toFormikValidationSchema(FormSchema)}
@@ -151,8 +224,58 @@ export const TopUp: React.FC = () => {
               </form>
             )}
           </Formik>
-        )}
-      </Grid>
-    </Grid>
-  );
+        </Container>
+      );
+    case "sumup":
+      return (
+        <Container>
+          <div>You are topping up {formatCurrency(state.topupAmount)}</div>
+          <div id="sumup-card"></div>
+        </Container>
+      );
+    case "success":
+      return (
+        <Container>
+          <Alert severity="success">
+            <AlertTitle>{t("success.title")}</AlertTitle>
+            <Trans i18nKey={"topup.success.message"}>
+              continue to to the
+              <Link component={RouterLink} to="/">
+                overview page
+              </Link>
+            </Trans>
+          </Alert>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <CheckCircleIcon color="success" sx={{ fontSize: "15em" }} />
+          </Box>
+        </Container>
+      );
+    case "error":
+      return (
+        <Container>
+          <Alert severity="error" action={<Button onClick={reset}>{t("tryAgain")}</Button>}>
+            <AlertTitle>{t("error.title")}</AlertTitle>
+            {t("error.message")}
+            {/* <Trans i18nKey={"topup.error.message"}>An error occurred: {{ message: state.message }}, please</Trans> */}
+          </Alert>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <CancelIcon color="error" sx={{ fontSize: "15em" }} />
+          </Box>
+        </Container>
+      );
+  }
 };

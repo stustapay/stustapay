@@ -2,6 +2,7 @@ import asyncio
 import logging
 import uuid
 from datetime import datetime, timedelta
+from functools import wraps
 from typing import Optional
 
 import aiohttp
@@ -97,6 +98,24 @@ class SumupAuthResponse(BaseModel):
 class SumupAuth(BaseModel):
     access_token: str
     valid_until: datetime
+
+
+def requires_sumup_enabled(func):
+    @wraps(func)
+    async def wrapper(self, **kwargs):
+        if "conn" not in kwargs:
+            raise RuntimeError(
+                "requires_sumup_enabled needs a database connection, "
+                "with_db_transaction needs to be put before this decorator"
+            )
+        conn = kwargs["conn"]
+        is_sumup_enabled = await self.config_service.is_sumup_topup_enabled(conn=conn)
+        if not is_sumup_enabled:
+            raise InvalidArgument("Online Top Up is currently dissabled")
+
+        return await func(self, **kwargs)
+
+    return wrapper
 
 
 class SumupService(DBService):
@@ -236,59 +255,69 @@ class SumupService(DBService):
             bookings=bookings,
         )
 
-    async def _pending_checkouts(self, conn: asyncpg.Connection) -> list[CustomerCheckout]:
-        rows = await conn.fetchrows(
-            "select * from customer_sumup_checkout where status = $1", SumupCheckoutStatus.pending
+    @staticmethod
+    async def _get_pending_checkouts(*, conn: asyncpg.Connection) -> list[CustomerCheckout]:
+        rows = await conn.fetchrow(
+            "select * from customer_sumup_checkout where status = $1", SumupCheckoutStatus.PENDING.value
         )
         return [CustomerCheckout.parse_obj(row) for row in rows]
 
-    async def run_sumup_checkout_processing(self, db_pool: asyncpg.pool.Pool):
+    async def run_sumup_checkout_processing(self):
+        sumup_enabled = await self.config_service.is_sumup_topup_enabled()
+        if not sumup_enabled:
+            return
+
         while True:
             await asyncio.sleep(self.SUMUP_CHECKOUT_PULL_INTERVAL.seconds)
-            # get all pending checkouts
-            with await db_pool.acquire() as conn:
-                pending_checkouts = await self._pending_checkouts(conn=conn)
+            try:
+                # get all pending checkouts
+                async with self.db_pool.acquire() as conn:
+                    pending_checkouts = await self._get_pending_checkouts(conn=conn)
 
-                # for each pending checkout, check the status with sumup
-                for pending_checkout in pending_checkouts:
-                    status = await self._update_checkout_status(conn=conn, checkout_id=pending_checkout.id)
-                    if status != SumupCheckoutStatus.PENDING:
-                        self.logger.info(f"Sumup checkout {pending_checkout.id} updated to status {status}")
+                    # for each pending checkout, check the status with sumup
+                    for pending_checkout in pending_checkouts:
+                        async with conn.transaction():
+                            status = await self._update_checkout_status(conn=conn, checkout_id=pending_checkout.id)
+                            if status != SumupCheckoutStatus.PENDING:
+                                self.logger.info(f"Sumup checkout {pending_checkout.id} updated to status {status}")
+            except Exception as e:
+                self.logger.error(f"process pending checkouts threw an error: {e}")
 
     async def _update_checkout_status(self, conn: asyncpg.Connection, checkout_id: str) -> SumupCheckoutStatus:
-        async with conn.transaction():
-            stored_checkout = await self._get_db_checkout(conn=conn, checkout_id=checkout_id)
-            sumup_checkout = await self._get_checkout(checkout_id=stored_checkout.id)
+        stored_checkout = await self._get_db_checkout(conn=conn, checkout_id=checkout_id)
+        sumup_checkout = await self._get_checkout(checkout_id=stored_checkout.id)
 
-            if stored_checkout.status != SumupCheckoutStatus.PENDING:
-                return stored_checkout.status
+        if stored_checkout.status != SumupCheckoutStatus.PENDING:
+            return stored_checkout.status
 
-            # validate that the stored checkout matches up with the checkout info given by sumup
-            if (
-                sumup_checkout.checkout_reference != stored_checkout.checkout_reference
-                or sumup_checkout.amount != stored_checkout.amount
-                or sumup_checkout.currency != stored_checkout.currency
-                or sumup_checkout.merchant_code != stored_checkout.merchant_code
-                or sumup_checkout.description != stored_checkout.description
-                or sumup_checkout.return_url != stored_checkout.return_url
-                or sumup_checkout.id != stored_checkout.id
-                or sumup_checkout.date != stored_checkout.date
-            ):
-                raise SumUpError("Inconsistency! Sumup checkout info does not match stored checkout info!!!")
+        # validate that the stored checkout matches up with the checkout info given by sumup
+        if (
+            sumup_checkout.checkout_reference != stored_checkout.checkout_reference
+            or sumup_checkout.amount != stored_checkout.amount
+            or sumup_checkout.currency != stored_checkout.currency
+            or sumup_checkout.merchant_code != stored_checkout.merchant_code
+            or sumup_checkout.description != stored_checkout.description
+            or sumup_checkout.return_url != stored_checkout.return_url
+            or sumup_checkout.id != stored_checkout.id
+            or sumup_checkout.date != stored_checkout.date
+        ):
+            raise SumUpError("Inconsistency! Sumup checkout info does not match stored checkout info!!!")
 
-            if sumup_checkout.status == SumupCheckoutStatus.PAID:
-                await self._process_topup(conn=conn, checkout=sumup_checkout)
+        if sumup_checkout.status == SumupCheckoutStatus.PAID:
+            await self._process_topup(conn=conn, checkout=sumup_checkout)
 
-            # update both valid_until and status in db
-            await conn.fetchrow(
-                "update customer_sumup_checkout set status = $1, valid_until = $2 where id = $3",
-                sumup_checkout.status,
-                sumup_checkout.valid_until,
-                stored_checkout.id,
-            )
-            return sumup_checkout.status
+        # update both valid_until and status in db
+        await conn.fetchrow(
+            "update customer_sumup_checkout set status = $1, valid_until = $2 where id = $3",
+            sumup_checkout.status,
+            sumup_checkout.valid_until,
+            stored_checkout.id,
+        )
+        return sumup_checkout.status
 
+    @with_db_transaction
     @requires_customer
+    @requires_sumup_enabled
     async def check_checkout(
         self, *, conn: asyncpg.Connection, current_customer: Customer, checkout_id: str
     ) -> SumupCheckoutStatus:
@@ -297,10 +326,11 @@ class SumupService(DBService):
         # check that current customer is the one referenced in this checkout
         if stored_checkout.customer_account_id != current_customer.id:
             raise Unauthorized("Found checkout does not belong to current customer")
-        return self._update_checkout_status(conn=conn, current_customer=current_customer, checkout_id=checkout_id)
+        return await self._update_checkout_status(conn=conn, checkout_id=checkout_id)
 
     @with_db_transaction
     @requires_customer
+    @requires_sumup_enabled
     async def create_checkout(
         self, *, conn: asyncpg.Connection, current_customer: Customer, amount: float
     ) -> SumupCheckout:
@@ -339,7 +369,7 @@ class SumupService(DBService):
             amount=amount_rounded,
             currency=currency_identifier,
             merchant_code=self.cfg.customer_portal.sumup_config.merchant_code,
-            description=f"Online TopUp, Tag UUID: {current_customer.user_tag_uid_hex}, amount: {amount_rounded}",
+            description=f"StuStaPay Online TopUp, Tag UUID: {current_customer.user_tag_uid_hex}, amount: {amount_rounded}",
             return_url=self.cfg.customer_portal.sumup_config.return_url,
             customer_id=str(current_customer.id),
             # redirect_url=self.cfg.customer_portal.sumup_config.redirect_url,

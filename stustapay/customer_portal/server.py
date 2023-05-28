@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from stustapay.core import database
 from stustapay.core.config import Config
 from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
@@ -8,7 +9,6 @@ from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.user import AuthService
 from stustapay.core.subcommand import SubCommand
-from stustapay.core import database
 from .routers import auth, base, sumup
 
 
