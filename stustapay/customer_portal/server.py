@@ -50,5 +50,6 @@ class Api(SubCommand):
         )
         try:
             await self.server.run(self.cfg, context)
+            # TODO: add scheduled task to check status of sumup payments
         finally:
             await db_pool.close()

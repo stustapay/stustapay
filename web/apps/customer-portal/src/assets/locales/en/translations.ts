@@ -44,6 +44,7 @@ export const translations = {
     info: "You can topup your festival account balance with credit card",
     amount: "Amount",
     errorWhileCreatingCheckout: "Error while trying to create sumup checkout",
+    errorAmountGreaterZeroAndInt: "Amount must be greater than 0 and cents amounts are not allowed",
   },
 } as const;
 

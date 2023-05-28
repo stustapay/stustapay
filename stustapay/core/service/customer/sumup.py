@@ -14,9 +14,10 @@ from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction, requires_customer
-from stustapay.core.service.common.error import ServiceException, InvalidArgument, NotFound
+from stustapay.core.service.common.error import ServiceException, InvalidArgument, NotFound, Unauthorized
 from stustapay.core.service.config import ConfigService, get_currency_identifier
 from stustapay.core.service.order.booking import NewLineItem, BookingIdentifier, book_order
+from stustapay.core.service.order.order import fetch_max_account_balance
 from stustapay.core.service.product import fetch_top_up_product
 from stustapay.core.util import BaseModel
 
@@ -190,8 +191,6 @@ class SumupService(DBService):
 
         return SumupCheckout.parse_obj(response_json)
 
-    # TODO: create async thread which regularly checks the pending actions over the sumup api
-    # https://developer.sumup.com/docs/api/retrieve-a-checkout/
 
     @staticmethod
     async def _get_db_checkout(*, conn: asyncpg.Connection, checkout_id: str) -> CustomerCheckout:
@@ -233,23 +232,46 @@ class SumupService(DBService):
             bookings=bookings,
         )
 
+    # TODO: create async thread which regularly checks the pending actions over the sumup api
+    # https://developer.sumup.com/docs/api/retrieve-a-checkout/
+
+    # TODO: this function must be called by the async thread and by return url
     @with_db_transaction
     @requires_customer
-    async def check_checkout(self, *, conn: asyncpg.Connection, checkout_id: str) -> SumupCheckoutStatus:
-        # TODO: check that current customer is the one referenced in this checkout
-        checkout = await self._get_checkout(checkout_id=checkout_id)
+    async def check_checkout(self, *, conn: asyncpg.Connection, current_customer: Customer, checkout_id: str) -> SumupCheckoutStatus:
+
+        sumup_checkout = await self._get_checkout(checkout_id=checkout_id)
+
+        # check that current customer is the one referenced in this checkout
+        if sumup_checkout.customer_id != current_customer.id:
+            raise Unauthorized("You are not allowed to access this checkout")
+
+
         stored_checkout = await self._get_db_checkout(conn=conn, checkout_id=checkout_id)
         if stored_checkout.status != SumupCheckoutStatus.PENDING:
             return stored_checkout.status
 
-        # TODO: validate that the stored checkout matches up with the checkout info given by sumup
+        # validate that the stored checkout matches up with the checkout info given by sumup
+        if sumup_checkout.id != stored_checkout.id \
+            or sumup_checkout.amount != stored_checkout.amount \
+            or sumup_checkout.date != stored_checkout.date:
+            raise SumUpError("Sumup checkout info does not match stored checkout info")
 
-        if checkout.status == SumupCheckoutStatus.PAID:
-            await self._process_topup(conn=conn, checkout=checkout)
 
-        # TODO: store updated checkout info in db
 
-        return checkout.status
+        if sumup_checkout.status == SumupCheckoutStatus.PAID:
+            await self._process_topup(conn=conn, checkout=sumup_checkout)
+
+
+        # update both valid_until and status in db
+        await conn.fetchrow(
+            "update customer_sumup_checkout set status = $1, valid_until = $2 where id = $3",
+            sumup_checkout.status,
+            sumup_checkout.valid_until,
+            checkout_id,
+        )
+
+        return sumup_checkout.status
 
     @with_db_transaction
     @requires_customer
@@ -257,13 +279,22 @@ class SumupService(DBService):
         self, *, conn: asyncpg.Connection, current_customer: Customer, amount: float
     ) -> SumupCheckout:
         currency_identifier = await get_currency_identifier(conn=conn)
+
+        amount_rounded = round(amount, 2)
+
         # check amount
-        if amount <= 0:
+        if amount_rounded <= 0:
             raise InvalidArgument("Amount must be greater than 0")
 
-        amount = round(amount, 2)
+            
+        max_account_balance = await fetch_max_account_balance(conn=conn)
 
-        # todo check max topup amount
+        if amount_rounded > max_account_balance-current_customer.balance:
+            raise InvalidArgument(f"Amount balance cannot become more than {max_account_balance}")
+        if amount_rounded != int(amount_rounded):
+            raise InvalidArgument("Amount must be an integer")
+
+
 
         # create checkout reference as uuid
         checkout_reference = uuid.uuid4()
@@ -275,7 +306,7 @@ class SumupService(DBService):
 
         create_checkout = SumupCreateCheckout(
             checkout_reference=checkout_reference,
-            amount=amount,
+            amount=amount_rounded,
             currency=currency_identifier,
             merchant_code=self.cfg.customer_portal.sumup_config.merchant_code,
             description="foooooobar test test",  # TODO: add customer tag uid and other stuff

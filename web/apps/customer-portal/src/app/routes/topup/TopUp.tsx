@@ -10,12 +10,22 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { useCreateCheckoutMutation } from "@/api/topupApi";
+import i18n from "@/i18n";
+import loadScript from 'load-script';
 
-const FormSchema = z.object({ amount: z.number() });
+const FormSchema = z.object({
+  amount: z.number().refine((val) => val > 0 && Number.isInteger(val), {
+    message: i18n.t("topup.errorAmountGreaterZeroAndInt"),
+  }),
+});
+
 
 type FormVal = z.infer<typeof FormSchema>;
 
 const initialValues: FormVal = { amount: 0 };
+
+
+
 
 declare global {
   interface SumUpCard {
@@ -23,6 +33,9 @@ declare global {
   }
 }
 
+
+
+// todo
 export const TopUp: React.FC = () => {
   const { t } = useTranslation(undefined, { keyPrefix: "topup" });
   const navigate = useNavigate();
@@ -31,6 +44,7 @@ export const TopUp: React.FC = () => {
 
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
 
+  // const [createCheckout, {data: checkoutResponse, isError: responseError, isLoading: isResponseLoading}] = useCreateCheckoutMutation();
   const [createCheckout] = useCreateCheckoutMutation();
   const [checkoutId, setCheckoutId] = React.useState<string | undefined>(undefined);
 
@@ -38,14 +52,17 @@ export const TopUp: React.FC = () => {
     if (!checkoutId) {
       return;
     }
+    console.log("checkoutId", checkoutId);
+    const mountSumUpCard = async () => {
     try {
+      await new Promise<void>((resolve, reject) => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const card = SumUpCard.mount({
         id: "sumup-card",
         checkoutId: checkoutId,
         currency: config.currency_identifier,
-        showAmount: 0,
+        // showAmount: 0,
         onResponse: (type: any, body: any) => {
           console.log("Type", type);
           console.log("Body", body);
@@ -53,18 +70,30 @@ export const TopUp: React.FC = () => {
         onError: (foo: any) => {
           console.error("sumup on erron", foo);
         },
+        onComplete: () => {
+          resolve();
+        },
+      });
       });
     } catch (e) {
       console.error("sumup error", e);
     }
+  };
   }, [config, checkoutId]);
 
   if (isCustomerLoading || (!customer && !customerError)) {
     return <Loading />;
   }
 
+  // if (isResponseLoading || !responseError) {
+  //   return <Loading />;
+  // }
+
+  // if (checkoutResponse){
+  //   setCheckoutId(checkoutResponse.checkout_reference)
+  // }
+
   if (customerError || !customer) {
-    // toast.error(t("errorFetchingData"));
     navigate(-1);
     return null;
   }
@@ -74,7 +103,7 @@ export const TopUp: React.FC = () => {
     createCheckout(values)
       .unwrap()
       .then((checkout) => {
-        setCheckoutId(checkout.id);
+        setCheckoutId(checkout.checkout_reference);
         setSubmitting(false);
       })
       .catch((error) => {
@@ -92,6 +121,7 @@ export const TopUp: React.FC = () => {
         </Alert>
         {checkoutId ? (
           <div id="sumup-card"></div>
+          // <div>{checkoutId}</div> 
         ) : (
           <Formik
             initialValues={initialValues}
@@ -101,7 +131,6 @@ export const TopUp: React.FC = () => {
             {({ handleSubmit, values, setFieldValue, touched, errors, isSubmitting }) => (
               <form onSubmit={handleSubmit}>
                 <Stack spacing={2}>
-                  {/* lookup how to do number field */}
                   <NumericInput
                     name="amount"
                     label={t("amount")}

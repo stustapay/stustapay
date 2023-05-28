@@ -31,5 +31,7 @@ async def create_checkout(
     customer_service: ContextCustomerService,
     payload: CreateCheckoutPayload,
 ):
-    checkout = await customer_service.sumup.create_checkout(token=token, amount=payload.amount)
-    return CreateCheckoutResponse(checkout_reference=checkout.checkout_reference)
+    # TODO: change this back!!
+    # checkout = await customer_service.sumup.create_checkout(token=token, amount=payload.amount)
+    # return CreateCheckoutResponse(checkout_reference=checkout.checkout_reference)
+    return CreateCheckoutResponse(checkout_reference=uuid.uuid4())
