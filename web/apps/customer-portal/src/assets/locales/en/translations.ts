@@ -23,6 +23,7 @@ export const translations = {
     quantity: "Quantity",
     total: "Total",
     viewReceipt: "View Receipt",
+    bookedAt: "Booked at: {{date}}",
     orderType: {
       sale: "Purchase",
       cancel_sale: "Canceled Purchase",
