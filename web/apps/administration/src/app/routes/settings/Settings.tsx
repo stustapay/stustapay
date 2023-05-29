@@ -56,7 +56,7 @@ export const Settings: React.FC = () => {
         </Box>
         <List>
           <ListItem>
-            <ListItemText primary={t("settings.language")} secondary={"de"} />
+            <ListItemText primary={t("settings.language")} secondary={"en"} />
           </ListItem>
         </List>
       </Paper>
