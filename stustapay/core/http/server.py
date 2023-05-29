@@ -55,11 +55,18 @@ class Server:
                 allow_headers=["*"],
             )
 
+        forward_allowed_ips = None
+
+        # TODO: IPv6
+        if config.host == "localhost" or config.host.startswith("127."):
+            forward_allowed_ips = "*"
+
         self.uvicorn_config = uvicorn.Config(
             self.api,
             host=config.host,
             port=config.port,
             log_level=logging.root.level,
+            forwarded_allow_ips=forward_allowed_ips,
         )
 
     def add_router(self, router):
