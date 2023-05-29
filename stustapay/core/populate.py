@@ -84,6 +84,7 @@ class PopulateCli(SubCommand):
             )
 
         self.logger.info(f"Created secret '{secret.description}. ID {secret_id = }")
+        db_pool.close()
 
     async def load_tags(self):
         if not os.path.exists(self.args.csv_file) or not os.path.isfile(self.args.csv_file):
@@ -96,6 +97,7 @@ class PopulateCli(SubCommand):
         restrictions = [row["name"] for row in restriction_rows]
         if self.args.restriction_type is not None and self.args.restriction_type not in restrictions:
             self.logger.error(f"Restriction type '{self.args.restriction_type}' does not exist")
+            db_pool.close()
             return
 
         with open(self.args.csv_file, "r") as csvfile:
@@ -121,6 +123,7 @@ class PopulateCli(SubCommand):
                                 self.args.restriction_type,
                                 self.args.tag_secret_id,
                             )
+        db_pool.close()
 
     async def run(self):
         if self.args.action == "load-tags":
