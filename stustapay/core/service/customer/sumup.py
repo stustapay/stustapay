@@ -119,9 +119,10 @@ def requires_sumup_enabled(func):
 
 
 class SumupService(DBService):
-    SUMUP_API_URL = "https://api.sumup.com/v0.1"
+    SUMUP_BASE_URL = "https://api.sumup.com"
+    SUMUP_API_URL = f"{SUMUP_BASE_URL}/v0.1"
     SUMUP_CHECKOUT_URL = f"{SUMUP_API_URL}/checkouts"
-    SUMUP_AUTH_URL = "https://api.sumup.com/token"
+    SUMUP_AUTH_URL = f"{SUMUP_BASE_URL}/token"
     SUMUP_AUTH_REFRESH_THRESHOLD = timedelta(seconds=180)
     SUMUP_CHECKOUT_PULL_INTERVAL = timedelta(seconds=20)
 
@@ -200,7 +201,7 @@ class SumupService(DBService):
     async def _get_checkout(self, *, checkout_id: str) -> SumupCheckout:
         async with aiohttp.ClientSession(headers=await self._get_sumup_auth_headers()) as session:
             try:
-                async with session.get(f"{self.SUMUP_API_URL}/checkouts/{checkout_id}", timeout=2) as response:
+                async with session.get(f"{self.SUMUP_CHECKOUT_URL}/{checkout_id}", timeout=2) as response:
                     if not response.ok:
                         self.logger.error(
                             f"Sumup API returned status code {response.status} with body {await response.text()}"
@@ -257,7 +258,7 @@ class SumupService(DBService):
 
     @staticmethod
     async def _get_pending_checkouts(*, conn: asyncpg.Connection) -> list[CustomerCheckout]:
-        rows = await conn.fetchrow(
+        rows = await conn.fetch(
             "select * from customer_sumup_checkout where status = $1", SumupCheckoutStatus.PENDING.value
         )
         return [CustomerCheckout.parse_obj(row) for row in rows]

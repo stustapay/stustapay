@@ -1,9 +1,8 @@
-// import { useGetCustomerQuery, useGetDataPrivacyUrlQuery, useSetCustomerInfoMutation } from "@/api/customerApi";
-import { useGetCustomerQuery, useSetCustomerInfoMutation } from "@/api/customerApi";
+import { useGetCustomerQuery, useSetCustomerInfoMutation } from "@/api";
 import { Loading } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import {
   Alert,
   Button,
@@ -52,8 +51,7 @@ export const PayoutInfo: React.FC = () => {
 
   if (customerError || !customer) {
     toast.error(t("errorFetchingData"));
-    navigate(-1);
-    return null;
+    return <Navigate to="/" />;
   }
 
   const initialValues: FormVal = {
@@ -70,15 +68,14 @@ export const PayoutInfo: React.FC = () => {
       .unwrap()
       .then(() => {
         toast.success(t("updatedBankData"));
-        navigate(-1);
+        navigate("/");
+        setSubmitting(false);
       })
       .catch((error) => {
         toast.error(t("errorWhileUpdatingBankData"));
         console.error(error);
+        setSubmitting(false);
       });
-
-    console.log(values);
-    setSubmitting(false);
   };
 
   return (
