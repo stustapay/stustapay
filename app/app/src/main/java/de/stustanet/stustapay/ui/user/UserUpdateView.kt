@@ -7,9 +7,11 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustanet.stustapay.ui.common.TagTextField
@@ -40,7 +42,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("ID", fontSize = 48.sp, modifier = Modifier.padding(end = 20.dp))
+                        Text(stringResource(R.string.user_id), fontSize = 48.sp, modifier = Modifier.padding(end = 20.dp))
                         TagTextField(
                             newTagId,
                             modifier = Modifier.fillMaxWidth(),
@@ -52,12 +54,15 @@ fun UserUpdateView(viewModel: UserViewModel) {
                     Button(modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 10.dp), onClick = { scanState.open() }) {
-                        Text(text = "Scan", fontSize = 24.sp)
+                        Text(text = stringResource(R.string.common_action_scan), fontSize = 24.sp)
                     }
 
                     NfcScanDialog(state = scanState, onScan = { tag ->
                         newTagId = tag.uid
                     })
+
+                    Divider()
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier
@@ -68,7 +73,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                     ) {
                         var expanded by remember { mutableStateOf(false) }
 
-                        Text("Roles", fontSize = 48.sp, modifier = Modifier.padding(end = 20.dp))
+                        Text(stringResource(R.string.user_roles), fontSize = 48.sp, modifier = Modifier.padding(end = 20.dp))
                         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
                             TextField(
                                 readOnly = true,
@@ -116,13 +121,13 @@ fun UserUpdateView(viewModel: UserViewModel) {
         },
         bottomBar = {
             Column {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Divider()
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
                     Text(status, fontSize = 24.sp)
                 }
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Button(modifier = Modifier
                     .fillMaxWidth()
@@ -137,7 +142,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                             }
                         }
                     }) {
-                    Text(text = "Update", fontSize = 24.sp)
+                    Text(text = stringResource(R.string.common_action_update), fontSize = 24.sp)
                 }
             }
         }

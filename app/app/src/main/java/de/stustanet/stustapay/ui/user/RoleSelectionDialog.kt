@@ -16,11 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.UserRole
 import de.stustanet.stustapay.model.UserRolesState
 import de.stustanet.stustapay.model.UserTag
@@ -98,8 +100,10 @@ fun RoleSelectionCard(
                 .fillMaxWidth(),
         ) {
             Text(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 15.dp),
-                text = "Select login role:",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 15.dp),
+                text = stringResource(R.string.user_select),
                 textAlign = TextAlign.Center,
                 fontSize = 30.sp,
             )
@@ -119,7 +123,7 @@ fun RoleSelectionCard(
                 }
             ) {
                 // Leftwards arrow
-                Text(text = "← Back", fontSize = 24.sp)
+                Text(stringResource(R.string.common_action_cancel), fontSize = 24.sp)
             }
         }
 

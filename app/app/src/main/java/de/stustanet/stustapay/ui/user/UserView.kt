@@ -7,11 +7,13 @@ import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.nav.NavDest
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import de.stustanet.stustapay.ui.nav.navigateTo
@@ -42,7 +44,7 @@ fun UserView(
     ) {
         composable(UserNavDest.info.route) {
             NavScaffold(
-                title = { Text(text = "User Management") },
+                title = { Text(stringResource(R.string.user_title)) },
                 state = scaffoldState,
                 navigateBack = {
                     if (navController.currentDestination?.route == UserNavDest.info.route) {
@@ -67,7 +69,7 @@ fun UserView(
         }
         composable(UserNavDest.create.route) {
             NavScaffold(
-                title = { Text("Create User") },
+                title = { Text(stringResource(R.string.user_create_title)) },
                 navigateBack = {
                     viewModel.resetStatus()
                     navController.navigateTo(UserNavDest.info.route)
@@ -79,7 +81,7 @@ fun UserView(
         }
         composable(UserNavDest.update.route) {
             NavScaffold(
-                title = { Text("Update User") },
+                title = { Text(stringResource(R.string.user_update_title)) },
                 navigateBack = {
                     viewModel.resetStatus()
                     navController.navigateTo(UserNavDest.info.route)

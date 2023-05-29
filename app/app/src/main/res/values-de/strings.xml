@@ -24,6 +24,8 @@
 
     <string name="common_action_scan">Scannen</string>
     <string name="common_action_cancel">Abbrechen</string>
+    <string name="common_action_create">Erstellen</string>
+    <string name="common_action_update">Änderungen übernehmen</string>
 
     <string name="root_item_ticket">Bändchen</string>
     <string name="root_item_sale">Verkauf</string>
@@ -68,4 +70,14 @@
     <string name="management_vault_return">Auspacken</string>
 
     <string name="nfc_scan_prompt">Scanne ein Bändchen 📡</string>
+
+    <string name="user_title">Benutzer</string>
+    <string name="user_login">Einloggen</string>
+    <string name="user_logout">Ausloggen</string>
+    <string name="user_id">ID</string>
+    <string name="user_username">Benutzername</string>
+    <string name="user_roles">Rollen</string>
+    <string name="user_create_title">Benutzer Erstellen</string>
+    <string name="user_update_title">Benutzer Verwalten</string>
+    <string name="user_select">Rolle auswählen:</string>
 </resources>
