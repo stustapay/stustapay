@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useGetUserByIdQuery, useDeleteUserMutation, selectUserById } from "@api";
 import { Loading } from "@stustapay/components";
+import { formatUserTagUid } from "@stustapay/models";
 
 export const UserDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -66,6 +67,12 @@ export const UserDetail: React.FC = () => {
           </ListItem>
           <ListItem>
             <ListItemText primary={t("userDescription")} secondary={user.description} />
+          </ListItem>
+          <ListItem>
+            <ListItemText
+              primary={t("user.tagUid")}
+              secondary={user.user_tag_uid_hex ? formatUserTagUid(user.user_tag_uid_hex) : t("user.noTagAssigned")}
+            />
           </ListItem>
           <ListItem>
             <ListItemText

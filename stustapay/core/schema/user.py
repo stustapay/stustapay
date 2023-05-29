@@ -1,7 +1,7 @@
 import enum
 from typing import Optional
 
-from pydantic import BaseModel
+from stustapay.core.util import BaseModel
 
 ADMIN_ROLE_ID = 0
 ADMIN_ROLE_NAME = "admin"
@@ -12,6 +12,13 @@ CASHIER_ROLE_NAME = "cashier"
 STANDLEITER_ROLE_ID = 3
 INFOZELT_ROLE_ID = 4
 INFOZELT_ROLE_NAME = "infozelt helfer"
+
+
+def format_user_tag_uid(uid: Optional[int]) -> Optional[str]:
+    if uid is None:
+        return None
+
+    return hex(uid)[2:].upper()
 
 
 class UserTag(BaseModel):
@@ -78,6 +85,10 @@ class UserWithoutId(BaseModel):
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None
 
+    @property
+    def user_tag_uid_hex(self):
+        return format_user_tag_uid(self.user_tag_uid)
+
 
 class User(UserWithoutId):
     id: int
@@ -103,7 +114,7 @@ class CurrentUser(BaseModel):
 
     @property
     def user_tag_uid_hex(self):
-        return hex(self.user_tag_uid) if self.user_tag_uid is not None else None
+        return format_user_tag_uid(self.user_tag_uid)
 
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None

@@ -78,6 +78,19 @@ export const UserCreate: React.FC = () => {
               variant="standard"
               margin="normal"
               fullWidth
+              name="user_tag_uid_hex"
+              label={t("user.tagUid")}
+              error={touched.user_tag_uid_hex && !!errors.user_tag_uid_hex}
+              helperText={(touched.user_tag_uid_hex && errors.user_tag_uid_hex) as string}
+              onBlur={handleBlur}
+              onChange={handleChange}
+              value={values.user_tag_uid_hex}
+            />
+
+            <TextField
+              variant="standard"
+              margin="normal"
+              fullWidth
               name="description"
               label={t("userDescription")}
               error={touched.description && !!errors.description}
