@@ -43,15 +43,15 @@ object Access {
     }
 
     // Till features
-    fun canSellTicket(terminal: TerminalConfig): Boolean {
-        return terminal.allow_ticket_sale
+    fun canSellTicket(terminal: TerminalConfig, user: CurrentUser): Boolean {
+        return terminal.allow_ticket_sale && user.privileges.contains(Privilege.can_book_orders)
     }
 
-    fun canTopUp(terminal: TerminalConfig): Boolean {
-        return terminal.allow_top_up
+    fun canTopUp(terminal: TerminalConfig, user: CurrentUser): Boolean {
+        return terminal.allow_top_up && user.privileges.contains(Privilege.can_book_orders)
     }
 
-    fun canPayOut(terminal: TerminalConfig): Boolean {
-        return terminal.allow_cash_out
+    fun canPayOut(terminal: TerminalConfig, user: CurrentUser): Boolean {
+        return terminal.allow_cash_out && user.privileges.contains(Privilege.can_book_orders)
     }
 }

@@ -12,7 +12,7 @@ val startpageItems = listOf(
         icon = Icons.Filled.Face,
         label = R.string.root_item_ticket,
         navDestination = RootNavDests.ticket,
-        canAccess = { _, t -> Access.canSellTicket(t) }
+        canAccess = { u, t -> Access.canSellTicket(t, u) }
     ),
     StartpageItem(
         icon = Icons.Filled.ShoppingCart,
@@ -24,7 +24,7 @@ val startpageItems = listOf(
         icon = Icons.Filled.KeyboardArrowUp,
         label = R.string.root_item_topup,
         navDestination = RootNavDests.topup,
-        canAccess = { _, t -> Access.canTopUp(t) }
+        canAccess = { u, t -> Access.canTopUp(t, u) }
     ),
     StartpageItem(
         icon = Icons.Filled.Info,
