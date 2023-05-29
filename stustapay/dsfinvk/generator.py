@@ -6,8 +6,6 @@ import asyncpg
 from dateutil import parser
 from decimal import Decimal
 
-import json
-
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import (
     Stamm_Abschluss,
@@ -246,7 +244,7 @@ class Generator:
 
             # so, und jetzt noch für jede dieser Transaktionen noch die einzelnen Zeilen
             ### lines.csv ###
-            for item in json.loads(row["line_items"]):
+            for item in row["line_items"]:
                 e = Bonpos()
                 e.Z_KASSE_ID = Z_KASSE_ID
                 e.Z_ERSTELLUNG = Z_ERSTELLUNG
@@ -516,9 +514,24 @@ class Generator:
         elif len(row["tse_certificate"]) > 1000 and len(row["tse_certificate"]) < 2001:
             a.TSE_ZERTIFIKAT_I = row["tse_certificate"][0:1000]
             a.TSE_ZERTIFIKAT_II = row["tse_certificate"][1001:]
+        elif len(row["tse_certificate"]) > 2001 and len(row["tse_certificate"]) < 3001:
+            a.TSE_ZERTIFIKAT_I = row["tse_certificate"][0:1000]
+            a.TSE_ZERTIFIKAT_II = row["tse_certificate"][1000:2001]
+            a.TSE_ZERTIFIKAT_III = row["tse_certificate"][2000:3001]
+        elif len(row["tse_certificate"]) > 3001 and len(row["tse_certificate"]) < 4001:
+            a.TSE_ZERTIFIKAT_I = row["tse_certificate"][0:1000]
+            a.TSE_ZERTIFIKAT_II = row["tse_certificate"][1000:2001]
+            a.TSE_ZERTIFIKAT_III = row["tse_certificate"][2000:3001]
+            a.TSE_ZERTIFIKAT_IV = row["tse_certificate"][3000:4001]
+        elif len(row["tse_certificate"]) > 4001 and len(row["tse_certificate"]) < 5001:
+            a.TSE_ZERTIFIKAT_I = row["tse_certificate"][0:1000]
+            a.TSE_ZERTIFIKAT_II = row["tse_certificate"][1000:2001]
+            a.TSE_ZERTIFIKAT_III = row["tse_certificate"][2000:3001]
+            a.TSE_ZERTIFIKAT_IV = row["tse_certificate"][3000:4001]
+            a.TSE_ZERTIFIKAT_V = row["tse_certificate"][4000:5001]
         else:
             LOGGER.error(
-                f"Zertifikat zu lang. Länge: {len(row['tse_certificate'])} Zeichen. Maximal unterstützt: 2000 Zeichen"
+                f"Zertifikat zu lang. Länge: {len(row['tse_certificate'])} Zeichen. Maximal unterstützt: 5000 Zeichen"
             )
             raise NotImplementedError
 
