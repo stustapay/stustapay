@@ -30,6 +30,22 @@ async def login(
     return {"user": response.user, "access_token": response.token, "grant_type": "bearer"}
 
 
+class ChangePasswordPayload(BaseModel):
+    old_password: str
+    new_password: str
+
+
+@router.post("/change-password", summary="change password")
+async def change_password(
+    token: CurrentAuthToken,
+    payload: ChangePasswordPayload,
+    user_service: ContextUserService,
+):
+    await user_service.change_password(
+        token=token, old_password=payload.old_password, new_password=payload.new_password
+    )
+
+
 @router.post(
     "/logout",
     summary="sign out of the current session",

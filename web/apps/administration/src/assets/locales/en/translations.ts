@@ -69,6 +69,14 @@ export const translations = {
     password: "Password",
     login: "Login",
     loginFailed: "Login failed: {{reason}}.",
+    profile: "Profile",
+    changePassword: "Change Password",
+    oldPassword: "Old password",
+    newPassword: "New password",
+    confirmNewPassword: "Confirm new password",
+    successfullyChangedPassword: "Successfully changed password",
+    passwordsDontMatch: "Passwords do not match",
+    passwordChangeFailed: "Changing password failed: {{reason}}.",
   },
   cashier: {
     login: "Login",
@@ -314,6 +322,9 @@ export const translations = {
   deleteUserDescription: "Confirm user deletion",
   user: {
     roles: "Roles",
+    login: "Login",
+    displayName: "Display Name",
+    description: "Description",
   },
   userRole: {
     name: "Name",
