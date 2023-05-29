@@ -11,12 +11,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[Product])
+@router.get("", response_model=list[Product])
 async def list_products(token: CurrentAuthToken, product_service: ContextProductService):
     return await product_service.list_products(token=token)
 
 
-@router.post("/", response_model=Product)
+@router.post("", response_model=Product)
 async def create_product(
     product: NewProduct,
     token: CurrentAuthToken,

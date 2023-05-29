@@ -11,12 +11,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[CashRegister])
+@router.get("", response_model=list[CashRegister])
 async def list_register_stockings(token: CurrentAuthToken, till_service: ContextTillService):
     return await till_service.register.list_cash_registers_admin(token=token)
 
 
-@router.post("/", response_model=CashRegister)
+@router.post("", response_model=CashRegister)
 async def create_register(
     register: NewCashRegister,
     token: CurrentAuthToken,

@@ -17,7 +17,7 @@ user_router = APIRouter(prefix="/users")
 user_role_router = APIRouter(prefix="/user_roles")
 
 
-@user_router.get("/", response_model=list[User])
+@user_router.get("", response_model=list[User])
 async def list_users(token: CurrentAuthToken, user_service: ContextUserService):
     return await user_service.list_users(token=token)
 
@@ -36,7 +36,7 @@ class CreateUserPayload(UpdateUserPayload):
     password: Optional[str] = None
 
 
-@user_router.post("/", response_model=User)
+@user_router.post("", response_model=User)
 async def create_user(
     new_user: CreateUserPayload,
     token: CurrentAuthToken,
@@ -99,12 +99,12 @@ async def delete_user(user_id: int, token: CurrentAuthToken, user_service: Conte
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@user_role_router.get("/", response_model=list[UserRole])
+@user_role_router.get("", response_model=list[UserRole])
 async def list_user_roles(token: CurrentAuthToken, user_service: ContextUserService):
     return await user_service.list_user_roles(token=token)
 
 
-@user_role_router.post("/", response_model=UserRole)
+@user_role_router.post("", response_model=UserRole)
 async def create_user_role(
     new_user_role: NewUserRole,
     token: CurrentAuthToken,

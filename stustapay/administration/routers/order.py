@@ -18,7 +18,7 @@ async def list_orders_by_till(token: CurrentAuthToken, till_id: int, order_servi
     return await order_service.list_orders_by_till(token=token, till_id=till_id)
 
 
-@router.get("/", response_model=list[Order])
+@router.get("", response_model=list[Order])
 async def list_orders(
     token: CurrentAuthToken, order_service: ContextOrderService, customer_account_id: Optional[int] = None
 ):
