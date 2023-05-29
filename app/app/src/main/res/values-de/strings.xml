@@ -66,4 +66,6 @@
     <string name="management_vault_title">Keller / Rucksack</string>
     <string name="management_vault_take">Einpacken</string>
     <string name="management_vault_return">Auspacken</string>
+
+    <string name="nfc_scan_prompt">Scanne ein Bändchen 📡</string>
 </resources>

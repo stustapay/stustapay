@@ -65,4 +65,6 @@
     <string name="management_vault_title">Vault</string>
     <string name="management_vault_take">Take\nVault -> Bag</string>
     <string name="management_vault_return">Return\nBag -> Vault</string>
+
+    <string name="nfc_scan_prompt">Scan a Chip 📡</string>
 </resources>
