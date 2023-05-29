@@ -125,7 +125,7 @@ fun CashOutSuccessCard(
                     ProductConfirmItem(
                         name = stringResource(R.string.payout),
                         price = completedPayOut.amount,
-                        fontSize = 35.sp,
+                        bigStyle = true,
                     )
                     Divider(thickness = 2.dp)
                     ProductConfirmItem(

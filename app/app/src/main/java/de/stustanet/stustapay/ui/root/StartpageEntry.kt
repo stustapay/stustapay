@@ -12,9 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustanet.stustapay.ui.nav.NavDest
+import de.stustanet.stustapay.ui.theme.StartpageItemStyle
 
 
 @Composable
@@ -31,7 +33,7 @@ fun StartpageEntry(
                     navigateTo(item.navDestination)
                 }
             }
-            .padding(horizontal = 24.dp, vertical = 10.dp),
+            .padding(horizontal = 24.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -57,8 +59,7 @@ fun StartpageEntry(
         Text(
             modifier = Modifier.padding(start = 16.dp),
             text = item.label,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Medium,
+            style = StartpageItemStyle,
         )
     }
 }

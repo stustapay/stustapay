@@ -16,13 +16,13 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustanet.stustapay.ui.nav.navigateTo
+import de.stustanet.stustapay.ui.theme.LargeButtonStyle
 
 enum class CashECPage(val route: String) {
     Selection("selection"),
@@ -110,8 +110,9 @@ fun CashECSelection(
                     ) {
                         // unicode "Coin"
                         Text(
-                            "\uD83E\uDE99 cash", fontSize = 48.sp,
+                            "\uD83E\uDE99\ncash",
                             textAlign = TextAlign.Center,
+                            style = LargeButtonStyle,
                         )
                     }
 
@@ -155,8 +156,9 @@ fun CashECSelection(
                     ) {
                         // unicode "Credit Card"
                         Text(
-                            "\uD83D\uDCB3 card", fontSize = 48.sp,
-                            textAlign = TextAlign.Center
+                            "\uD83D\uDCB3\ncard",
+                            textAlign = TextAlign.Center,
+                            style = LargeButtonStyle,
                         )
                     }
                 }

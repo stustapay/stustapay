@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.model.PaymentMethod
+import de.stustanet.stustapay.ui.common.StatusText
 import de.stustanet.stustapay.ui.common.pay.CashECCallback
 import de.stustanet.stustapay.ui.common.pay.CashECPay
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
@@ -50,7 +52,7 @@ fun TicketConfirm(
     ) { pv ->
         CashECPay(
             modifier = Modifier.padding(pv),
-            status = { Text(status, fontSize = 32.sp) },
+            status = { StatusText(status) },
             onPaymentRequested = CashECCallback.NoTag(
                 onEC = {
                     scope.launch {
@@ -85,7 +87,7 @@ fun TicketConfirm(
                     ProductConfirmItem(
                         name = "Preis",
                         price = checkedSale.total_price,
-                        fontSize = 35.sp,
+                        bigStyle = true,
                     )
                     Divider(thickness = 2.dp)
                 }

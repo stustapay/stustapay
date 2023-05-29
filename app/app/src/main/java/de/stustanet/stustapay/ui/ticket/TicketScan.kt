@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanCard
+import de.stustanet.stustapay.ui.common.StatusText
 import de.stustanet.stustapay.ui.common.pay.ProductSelectionBottomBar
 import de.stustanet.stustapay.ui.nav.TopAppBar
 import de.stustanet.stustapay.ui.nav.TopAppBarIcon
@@ -113,12 +114,7 @@ fun TicketScan(
                     .padding(horizontal = 10.dp)
                     .padding(bottom = 5.dp),
                 status = {
-                    Text(
-                        text = status,
-                        modifier = Modifier.fillMaxWidth(),
-                        fontSize = 18.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
+                    StatusText(status)
                 },
                 ready = ticketConfig.ready,
                 onAbort = {

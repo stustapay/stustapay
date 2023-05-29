@@ -207,7 +207,7 @@ fun QRScanView(
                 modifier = Modifier.fillMaxSize(),
                 width = 300.dp,
                 height = 300.dp,
-                offsetY = 200.dp,
+                offsetY = 150.dp,
                 color = if (code != null) {
                     MaterialTheme.colors.primary
                 } else {

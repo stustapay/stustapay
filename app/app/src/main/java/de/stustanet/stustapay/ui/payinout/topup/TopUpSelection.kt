@@ -56,6 +56,7 @@ fun TopUpSelection(
                 .fillMaxSize()
                 .padding(horizontal = 10.dp)
                 .padding(bottom = paddingValues.calculateBottomPadding()),
+            initialAmount = { topUpState.currentAmount },
             onAmountUpdate = { viewModel.setAmount(it) },
             onClear = { viewModel.clearDraft() },
             config = AmountConfig.Money(

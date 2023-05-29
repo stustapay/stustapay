@@ -48,7 +48,7 @@ fun SaleConfirm(
                 ProductConfirmItem(
                     name = "Preis",
                     price = checkedSale.total_price,
-                    fontSize = 35.sp,
+                    bigStyle = true,
                 )
                 Divider(thickness = 2.dp)
                 ProductConfirmItem(

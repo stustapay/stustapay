@@ -72,13 +72,13 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                     ProductConfirmItem(
                         name = "Preis",
                         price = saleCompletedV.total_price,
-                        fontSize = 40.sp,
+                        bigStyle = true,
                     )
 
                     ProductConfirmItem(
                         name = "neues Guthaben",
                         price = saleCompletedV.new_balance,
-                        fontSize = 30.sp,
+                        bigStyle = true,
                     )
 
                     if (saleCompletedV.used_vouchers > 0 || saleCompletedV.new_voucher_balance > 0) {

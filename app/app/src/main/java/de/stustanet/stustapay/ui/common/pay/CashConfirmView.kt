@@ -51,6 +51,7 @@ fun CashConfirmView(
             when (onPay) {
                 is CashECCallback.Tag -> {
                     onPay.onCash(tag)
+                    goBack()
                 }
 
                 is CashECCallback.NoTag -> {
@@ -110,6 +111,7 @@ fun CashConfirmView(
 
                                 is CashECCallback.NoTag -> {
                                     onPay.onCash()
+                                    goBack()
                                 }
                             }
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)

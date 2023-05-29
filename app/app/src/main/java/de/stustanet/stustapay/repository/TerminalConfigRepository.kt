@@ -27,6 +27,7 @@ sealed interface TerminalConfigState {
 
 @Singleton
 class TerminalConfigRepository @Inject constructor(
+    private val registrationRepository: RegistrationRepository,
     private val terminalConfigRemoteDataSource: TerminalConfigRemoteDataSource,
     private val nfcRepository: NfcRepository,
 ) {
@@ -35,6 +36,11 @@ class TerminalConfigRepository @Inject constructor(
     var terminalConfigState = _terminalConfigState.asStateFlow()
 
     suspend fun fetchConfig() {
+        if (!registrationRepository.isRegistered()) {
+            _terminalConfigState.update { TerminalConfigState.NoConfig }
+            return
+        }
+
         when (val response = terminalConfigRemoteDataSource.getTerminalConfig()) {
             is Response.OK -> {
                 _terminalConfigState.update { TerminalConfigState.Success(response.data) }
@@ -43,9 +49,14 @@ class TerminalConfigRepository @Inject constructor(
                     nfcRepository.setTagKeys(it.user_tag_secret)
                 }
             }
+
             is Response.Error -> {
                 _terminalConfigState.update { TerminalConfigState.Error(response.msg()) }
             }
         }
+    }
+
+    fun clearConfig() {
+        _terminalConfigState.update { TerminalConfigState.NoConfig }
     }
 }
