@@ -25,6 +25,22 @@ from stustapay.core.service.till.register import TillRegisterService
 from stustapay.core.service.user import AuthService, list_user_roles
 
 
+async def create_till(*, conn: asyncpg.Connection, till: NewTill) -> Till:
+    row = await conn.fetchrow(
+        "insert into till "
+        "   (name, description, registration_uuid, active_shift, active_profile_id) "
+        "values ($1, $2, $3, $4, $5) returning id, name, description, registration_uuid, session_uuid, "
+        "   tse_id, active_shift, active_profile_id, z_nr",
+        till.name,
+        till.description,
+        uuid.uuid4(),
+        till.active_shift,
+        till.active_profile_id,
+    )
+
+    return Till.parse_obj(row)
+
+
 class TillService(DBService):
     def __init__(
         self,
@@ -42,19 +58,7 @@ class TillService(DBService):
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def create_till(self, *, conn: asyncpg.Connection, till: NewTill) -> Till:
-        row = await conn.fetchrow(
-            "insert into till "
-            "   (name, description, registration_uuid, active_shift, active_profile_id) "
-            "values ($1, $2, $3, $4, $5) returning id, name, description, registration_uuid, session_uuid, "
-            "   tse_id, active_shift, active_profile_id, z_nr",
-            till.name,
-            till.description,
-            uuid.uuid4(),
-            till.active_shift,
-            till.active_profile_id,
-        )
-
-        return Till.parse_obj(row)
+        return await create_till(conn=conn, till=till)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])

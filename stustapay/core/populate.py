@@ -4,8 +4,13 @@ import json
 import logging
 import os.path
 
+import asyncpg
+
 from stustapay.core.config import Config
 from stustapay.core.database import create_db_pool
+from stustapay.core.schema.till import NewCashRegister, NewTill
+from stustapay.core.service.till.register import create_cash_register
+from stustapay.core.service.till.till import create_till
 from stustapay.core.subcommand import SubCommand
 from stustapay.core.util import BaseModel
 
@@ -60,7 +65,40 @@ class PopulateCli(SubCommand):
             "--dry-run", action="store_true", help="perform a dry run, i.e. do not write anything to the database"
         )
 
-    async def load_tag_secret(self):
+        till_parser = subparsers.add_parser("create-tills", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        till_parser.add_argument("-n", "--n-tills", type=int, required=True, help="Number of tills to create")
+        till_parser.add_argument(
+            "--profile-id",
+            type=int,
+            help="Till profile id which will be assigned to the till",
+        )
+        till_parser.add_argument(
+            "--name-format",
+            type=str,
+            default="Kasse {i}",
+            help="Format string used as the till name, available format variables: 'i'",
+        )
+        till_parser.add_argument(
+            "--dry-run", action="store_true", help="perform a dry run, i.e. do not write anything to the database"
+        )
+
+        cash_register_parser = subparsers.add_parser(
+            "create-cash-registers", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+        cash_register_parser.add_argument(
+            "-n", "--n-registers", type=int, required=True, help="Number of cash registers to create"
+        )
+        cash_register_parser.add_argument(
+            "--name-format",
+            type=str,
+            default="Blechkasse {i}",
+            help="Format string used as the cash register name, available format variables: 'i'",
+        )
+        cash_register_parser.add_argument(
+            "--dry-run", action="store_true", help="perform a dry run, i.e. do not write anything to the database"
+        )
+
+    async def load_tag_secret(self, db_pool: asyncpg.Pool):
         if not os.path.exists(self.args.secret_file) or not os.path.isfile(self.args.secret_file):
             self.logger.error(f"Secret file: {self.args.secret_file} does not exist")
             return
@@ -69,7 +107,6 @@ class PopulateCli(SubCommand):
 
         self.logger.info(f"Creating secret '{secret.description}'")
 
-        db_pool = await create_db_pool(cfg=self.config.database)
         key0 = secret.key0.replace(" ", "")
         key1 = secret.key1.replace(" ", "")
 
@@ -84,20 +121,16 @@ class PopulateCli(SubCommand):
             )
 
         self.logger.info(f"Created secret '{secret.description}. ID {secret_id = }")
-        db_pool.close()
 
-    async def load_tags(self):
+    async def load_tags(self, db_pool: asyncpg.Pool):
         if not os.path.exists(self.args.csv_file) or not os.path.isfile(self.args.csv_file):
             self.logger.error(f"CSV file: {self.args.csv_file} does not exist")
             return
-
-        db_pool = await create_db_pool(cfg=self.config.database)
 
         restriction_rows = await db_pool.fetch("select * from restriction_type")
         restrictions = [row["name"] for row in restriction_rows]
         if self.args.restriction_type is not None and self.args.restriction_type not in restrictions:
             self.logger.error(f"Restriction type '{self.args.restriction_type}' does not exist")
-            db_pool.close()
             return
 
         with open(self.args.csv_file, "r") as csvfile:
@@ -123,12 +156,39 @@ class PopulateCli(SubCommand):
                                 self.args.restriction_type,
                                 self.args.tag_secret_id,
                             )
-        db_pool.close()
+
+    async def create_tills(self, db_pool: asyncpg.Pool):
+        async with db_pool.acquire() as conn:
+            async with conn.transaction():
+                for i in range(self.args.n_tills):
+                    till_name = self.args.name_format.format(i=i + 1)
+                    self.logger.info(f"Creating till: '{till_name}'")
+
+                    if not self.args.dry_run:
+                        await create_till(
+                            conn=conn, till=NewTill(name=till_name, active_profile_id=self.args.profile_id)
+                        )
+
+    async def create_cash_registers(self, db_pool: asyncpg.Pool):
+        async with db_pool.acquire() as conn:
+            async with conn.transaction():
+                for i in range(self.args.n_registers):
+                    register_name = self.args.name_format.format(i=i + 1)
+                    self.logger.info(f"Creating cash register: '{register_name}'")
+
+                    if not self.args.dry_run:
+                        await create_cash_register(conn=conn, new_register=NewCashRegister(name=register_name))
 
     async def run(self):
+        db_pool = await create_db_pool(cfg=self.config.database)
         if self.args.action == "load-tags":
-            return await self.load_tags()
-        if self.args.action == "load-tag-secret":
-            return await self.load_tag_secret()
+            await self.load_tags(db_pool=db_pool)
+        elif self.args.action == "load-tag-secret":
+            await self.load_tag_secret(db_pool=db_pool)
+        elif self.args.action == "create-tills":
+            await self.create_tills(db_pool=db_pool)
+        elif self.args.action == "create-cash-registers":
+            await self.create_cash_registers(db_pool=db_pool)
         else:
             self.logger.error(f"Unknown action: {self.args.action}")
+        await db_pool.close()

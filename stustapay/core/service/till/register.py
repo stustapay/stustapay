@@ -26,6 +26,20 @@ from stustapay.core.service.transaction import book_transaction
 VIRTUAL_TILL_ID = 1
 
 
+async def get_cash_register(conn: asyncpg.Connection, register_id: int) -> Optional[CashRegister]:
+    row = await conn.fetchrow("select * from cash_register_with_cashier where id = $1", register_id)
+    if row is None:
+        return None
+    return CashRegister.parse_obj(row)
+
+
+async def create_cash_register(*, conn: asyncpg.Connection, new_register: NewCashRegister) -> CashRegister:
+    register_id = await conn.fetchval("insert into cash_register (name) values ($1) returning id", new_register.name)
+    register = await get_cash_register(conn=conn, register_id=register_id)
+    assert register is not None
+    return register
+
+
 class TillRegisterService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -152,22 +166,10 @@ class TillRegisterService(DBService):
     ) -> list[CashRegister]:
         return await self._list_cash_registers(conn=conn, hide_assigned_registers=hide_assigned_registers)
 
-    @staticmethod
-    async def _get_cash_register(conn: asyncpg.Connection, register_id: int) -> Optional[CashRegister]:
-        row = await conn.fetchrow("select * from cash_register_with_cashier where id = $1", register_id)
-        if row is None:
-            return None
-        return CashRegister.parse_obj(row)
-
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def create_cash_register(self, *, conn: asyncpg.Connection, new_register: NewCashRegister) -> CashRegister:
-        register_id = await conn.fetchval(
-            "insert into cash_register (name) values ($1) returning id", new_register.name
-        )
-        register = await self._get_cash_register(conn=conn, register_id=register_id)
-        assert register is not None
-        return register
+        return await create_cash_register(conn=conn, new_register=new_register)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
@@ -179,7 +181,7 @@ class TillRegisterService(DBService):
         )
         if row is None:
             raise NotFound(element_typ="cash_register", element_id=str(register_id))
-        r = await self._get_cash_register(conn=conn, register_id=register_id)
+        r = await get_cash_register(conn=conn, register_id=register_id)
         assert r is not None
         return r
 
