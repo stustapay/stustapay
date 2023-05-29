@@ -22,8 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
@@ -38,7 +40,7 @@ fun CashConfirmView(
     goBack: () -> Unit,
     getAmount: () -> UInt,
     status: @Composable () -> Unit = {},
-    question: String = "received?",
+    question: String = stringResource(R.string.received_q),
     onPay: CashECCallback,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -71,8 +73,14 @@ fun CashConfirmView(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("%.2f€".format(getAmount().toDouble() / 100), fontSize = 48.sp)
-                    Text(question, fontSize = 48.sp)
+                    Text(
+                        text = "%.2f€".format(getAmount().toDouble() / 100),
+                        style = MaterialTheme.typography.h3,
+                    )
+                    Text(
+                        text = question,
+                        style = MaterialTheme.typography.h3,
+                    )
                 }
             }
         },
@@ -100,7 +108,7 @@ fun CashConfirmView(
                             .height(70.dp)
                             .padding(end = 10.dp)
                     ) {
-                        Text(text = "Back", fontSize = 24.sp)
+                        Text(text = stringResource(R.string.back), fontSize = 24.sp)
                     }
                     Button(
                         onClick = {

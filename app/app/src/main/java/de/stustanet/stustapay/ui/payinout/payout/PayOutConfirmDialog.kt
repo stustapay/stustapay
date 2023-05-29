@@ -10,9 +10,11 @@ import androidx.compose.material.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.common.DialogDisplayState
 import de.stustanet.stustapay.ui.common.pay.CashConfirmView
 import de.stustanet.stustapay.ui.common.pay.CashECCallback
@@ -80,7 +82,7 @@ fun CashOutConfirmCard(
             CashConfirmView(
                 status = status,
                 getAmount = getAmount,
-                question = "Payed to user?",
+                question = stringResource(R.string.payed_to_user_q),
                 goBack = onAbort,
                 onPay = CashECCallback.NoTag(onCash = onConfirm)
             )

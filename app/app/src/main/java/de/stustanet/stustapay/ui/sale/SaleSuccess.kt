@@ -14,10 +14,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
 
 
@@ -65,18 +67,17 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                             .clip(shape = CircleShape)
                             .padding(top = 2.dp),
                         colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-                        contentDescription = "Success!",
+                        contentDescription = stringResource(R.string.success),
                     )
 
-
                     ProductConfirmItem(
-                        name = "Preis",
+                        name = stringResource(R.string.price),
                         price = saleCompletedV.total_price,
                         bigStyle = true,
                     )
 
                     ProductConfirmItem(
-                        name = "neues Guthaben",
+                        name = stringResource(R.string.new_balance),
                         price = saleCompletedV.new_balance,
                         bigStyle = true,
                     )
@@ -86,17 +87,15 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
                         if (saleCompletedV.used_vouchers > 0) {
                             ProductConfirmItem(
-                                name = "Gutscheine",
+                                name = stringResource(R.string.used_vouchers),
                                 quantity = saleCompletedV.used_vouchers,
                             )
                         }
 
-                        if (saleCompletedV.new_voucher_balance > 0) {
-                            ProductConfirmItem(
-                                name = "übrige Gutscheine",
-                                quantity = saleCompletedV.new_voucher_balance,
-                            )
-                        }
+                        ProductConfirmItem(
+                            name = stringResource(R.string.remaining_vouchers),
+                            quantity = saleCompletedV.new_voucher_balance,
+                        )
                     }
                 }
             }

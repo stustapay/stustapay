@@ -3,6 +3,8 @@ package de.stustanet.stustapay.ui.common.pay
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -31,12 +33,27 @@ import de.stustanet.stustapay.ui.theme.errorButtonColors
 @Preview
 @Composable
 fun PreviewSelectionItem() {
-    ProductSelectionItem(
-        itemPrice = "13,37",
-        itemAmount = "12",
-        leftButtonText = "Robbenfutter",
-        rightButtonText = "-",
-    )
+    Column {
+        ProductSelectionItem(
+            itemPrice = "13,37€",
+            itemAmount = "12",
+            leftButtonText = "Mischgetränk (Weinzelt)",
+            rightButtonText = "-",
+        )
+        ProductSelectionItem(
+            itemPrice = "13,37€",
+            itemAmount = "12",
+            leftButtonText = "Robbenfutter",
+            rightButtonText = "-",
+        )
+        ProductSelectionItem(
+            itemPrice = "4",
+            itemAmount = "12",
+            leftButtonText = "Gutschein",
+            rightButtonText = "-",
+            itemAmountDelimiter = "/",
+        )
+    }
 }
 
 
@@ -66,7 +83,7 @@ fun ProductSelectionItem(
         Row(
             modifier = Modifier
                 .weight(0.3f)
-                .padding(end = 6.dp),
+                .padding(end = 4.dp),
             horizontalArrangement = Arrangement.End,
         ) {
             // TODO: highlight background if not 0
@@ -88,15 +105,17 @@ fun ProductSelectionItem(
 
         Box(
             modifier = Modifier
-                .weight(0.7f)
+                .weight(0.65f)
                 .padding(vertical = 3.dp)
                 .height(74.dp)
         ) {
+            val innerPadding = PaddingValues(horizontal = 3.dp, vertical = 2.dp)
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier.fillMaxSize(),
             ) {
                 Button(
+                    contentPadding = innerPadding,
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         leftButtonPress()
@@ -111,11 +130,16 @@ fun ProductSelectionItem(
                         )
                         .fillMaxHeight()
                 ) {
-                    Text(text = leftButtonText, fontSize = leftButtonFontSize)
+                    Text(
+                        text = leftButtonText,
+                        fontSize = leftButtonFontSize,
+                        textAlign = TextAlign.Center
+                    )
                 }
                 Spacer(modifier = Modifier.padding(horizontal = 2.dp))
 
                 Button(
+                    contentPadding = innerPadding,
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         rightButtonPress()
@@ -130,6 +154,7 @@ fun ProductSelectionItem(
                     Text(
                         text = rightButtonText,
                         fontSize = rightButtonFontSize,
+                        textAlign = TextAlign.Center,
                     )
                 }
             }

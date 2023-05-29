@@ -28,6 +28,16 @@ val Typography = Typography(
         fontSize = 60.sp,
         letterSpacing = (-0.5).sp
     ),
+    h3 = TextStyle(
+        fontWeight = FontWeight.Normal,
+        fontSize = 48.sp,
+        letterSpacing = 0.sp
+    ),
+    h4 = TextStyle(
+        fontWeight = FontWeight.Normal,
+        fontSize = 32.sp,
+        letterSpacing = 0.25.sp
+    ),
     h5 = TextStyle(
         fontWeight = FontWeight.Normal,
         fontSize = 24.sp,
@@ -55,4 +65,16 @@ val NumberKeyboardStyle = TextStyle(
 val MoneyAmountStyle = TextStyle(
     fontWeight = FontWeight.Bold,
     fontSize = 60.sp,
+)
+
+val ProductConfirmItemSmallStyle = TextStyle(
+    fontWeight = FontWeight.Normal,
+    fontSize = 20.sp,
+    letterSpacing = 0.sp,
+)
+
+val ProductConfirmItemBigStyle = TextStyle(
+    fontWeight = FontWeight.Normal,
+    fontSize = 28.sp,
+    letterSpacing = 0.sp,
 )

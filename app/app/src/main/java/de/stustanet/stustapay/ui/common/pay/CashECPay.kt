@@ -92,11 +92,15 @@ fun CashECSelection(
     Scaffold(
         content = content,
         bottomBar = {
-            Column(modifier = Modifier.padding(20.dp)) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .padding(bottom = 5.dp)
+            ) {
                 Divider(modifier = Modifier.fillMaxWidth())
                 status()
 
-                Row(modifier = Modifier.padding(top = 10.dp)) {
+                Row(modifier = Modifier.padding(top = 5.dp)) {
                     // Cash flow
                     Button(
                         modifier = Modifier

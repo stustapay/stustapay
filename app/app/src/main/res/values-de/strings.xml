@@ -3,7 +3,17 @@
     <string name="welcome_to_stustapay">Wilkommen bei StuStaPay!</string>
     <string name="credit_amount">Guthaben: %.2f€</string>
     <string name="payout">Auszahlung</string>
-    <string name="credit_left">übriges Guthaben</string>
-    <string name="success">Success!</string>
+    <string name="credit_left">Übriges Guthaben</string>
+    <string name="success">Erfolgreich!</string>
     <string name="done">Done</string>
+    <string name="payed_to_user_q">Geld an Kunde gegeben?</string>
+    <string name="back">Zurück</string>
+    <string name="received_q">Erhalten?</string>
+    <string name="remaining_vouchers">Übrige Gutscheine</string>
+    <string name="used_vouchers">Gutscheine eingelöst</string>
+    <string name="new_balance">Neues Guthaben</string>
+    <string name="price">Preis</string>
+    <string name="voucher">Gutschein</string>
+    <string name="edit">↢ Bearbeiten</string>
+    <string name="no_balance_for_payout">Kein Guthaben zum Auszahlen</string>
 </resources>

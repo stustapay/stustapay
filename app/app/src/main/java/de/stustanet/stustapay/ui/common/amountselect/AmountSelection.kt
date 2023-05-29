@@ -65,7 +65,6 @@ fun AmountSelection(
                     }
                 },
                 style = MoneyAmountStyle,
-                modifier = Modifier.padding(vertical = 2.dp),
             )
         }
         NumberKeyboard(

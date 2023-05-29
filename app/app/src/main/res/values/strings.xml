@@ -3,8 +3,18 @@
     <string name="app_name" translatable="false">StuStaPay</string>
     <string name="welcome_to_stustapay">Welcome to StuStaPay!</string>
     <string name="credit_amount">Credit: %.2f€</string>
-    <string name="payout">Auszahlung</string>
-    <string name="credit_left">übriges Guthaben</string>
+    <string name="payout">Payout</string>
+    <string name="credit_left">Credit left</string>
     <string name="success">Success!</string>
     <string name="done">Done</string>
+    <string name="payed_to_user_q">Payed to user?</string>
+    <string name="back">Back</string>
+    <string name="received_q">Received?</string>
+    <string name="remaining_vouchers">Remaining vouchers</string>
+    <string name="used_vouchers">Used vouchers</string>
+    <string name="new_balance">New balance</string>
+    <string name="price">Price</string>
+    <string name="voucher">Voucher</string>
+    <string name="edit">↢ Edit</string>
+    <string name="no_balance_for_payout">No balance for payout</string>
 </resources>

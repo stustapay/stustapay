@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustanet.stustapay.model.PendingLineItem
 import de.stustanet.stustapay.model.Product
+import de.stustanet.stustapay.ui.theme.ProductConfirmItemBigStyle
+import de.stustanet.stustapay.ui.theme.ProductConfirmItemSmallStyle
 
 @Preview
 @Composable
@@ -49,11 +51,20 @@ fun ProductConfirmLineItem(
 @Preview
 @Composable
 fun PreviewSaleConfirmItem() {
-    ProductConfirmItem(
-        name = "Drahtlose Erdbeeren",
-        price = 52.20,
-        bigStyle = true,
-    )
+    Column {
+        ProductConfirmItem(
+            name = "Drahtlose Erdbeeren",
+            price = 52.20,
+            quantity = 13,
+            bigStyle = true,
+        )
+        ProductConfirmItem(
+            name = "Preis",
+            price = 12.34,
+            quantity = 5,
+            bigStyle = true,
+        )
+    }
 }
 
 /**
@@ -68,9 +79,9 @@ fun ProductConfirmItem(
     bigStyle: Boolean = false,
 ) {
     val style: TextStyle = if (bigStyle) {
-        MaterialTheme.typography.body1
+        ProductConfirmItemBigStyle
     } else {
-        MaterialTheme.typography.h4
+        ProductConfirmItemSmallStyle
     }
 
     Row(
@@ -78,9 +89,8 @@ fun ProductConfirmItem(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp)
+            .padding(vertical = 2.dp)
     ) {
-
         Row(
             modifier = Modifier
                 .padding(horizontal = 10.dp)
@@ -89,7 +99,7 @@ fun ProductConfirmItem(
         ) {
             Text(
                 text = if (price != null) {
-                    "%.02f".format(price).replace('.', ',')
+                    "%.02f€".format(price).replace('.', ',')
                 } else {
                     ""
                 },

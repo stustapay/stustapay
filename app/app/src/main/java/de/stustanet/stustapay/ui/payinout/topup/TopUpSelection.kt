@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.ui.common.StatusText
 import de.stustanet.stustapay.ui.common.amountselect.AmountConfig
 import de.stustanet.stustapay.ui.common.amountselect.AmountSelection
 import de.stustanet.stustapay.ui.common.pay.CashECCallback
@@ -35,7 +36,7 @@ fun TopUpSelection(
         checkAmount = {
             viewModel.checkAmountLocal(topUpState.currentAmount.toDouble() / 100.0)
         },
-        status = { Text(status, fontSize = 32.sp) },
+        status = { StatusText(status) },
         onPaymentRequested = CashECCallback.Tag(
             onEC = {
                 scope.launch {
