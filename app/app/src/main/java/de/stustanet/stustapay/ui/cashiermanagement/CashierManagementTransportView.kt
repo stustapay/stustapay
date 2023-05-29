@@ -7,10 +7,13 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
+import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustanet.stustapay.ui.common.amountselect.AmountConfig
@@ -25,7 +28,7 @@ fun CashierManagementTransportView(viewModel: CashierManagementViewModel) {
     var bookingType by remember { mutableStateOf(TransportBookingType.Withdraw) }
     val status by viewModel.status.collectAsStateWithLifecycle()
 
-    NfcScanDialog(state = scanState, onScan =  { tag ->
+    NfcScanDialog(state = scanState, onScan = { tag ->
         when (bookingType) {
             TransportBookingType.Withdraw -> {
                 scope.launch {
@@ -56,7 +59,19 @@ fun CashierManagementTransportView(viewModel: CashierManagementViewModel) {
                 Divider()
                 Spacer(modifier = Modifier.height(10.dp))
                 Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
-                    Text(status, fontSize = 24.sp)
+                    if (status is CashierManagementStatus.Done) {
+                        when (val res = (status as CashierManagementStatus.Done).res) {
+                            is Response.OK -> {
+                                Text(stringResource(R.string.common_status_done), fontSize = 24.sp)
+                            }
+
+                            is Response.Error -> {
+                                Text(res.msg(), fontSize = 24.sp)
+                            }
+                        }
+                    } else {
+                        Text(stringResource(R.string.common_status_idle), fontSize = 24.sp)
+                    }
                 }
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -70,7 +85,11 @@ fun CashierManagementTransportView(viewModel: CashierManagementViewModel) {
                             .padding(5.dp)
                             .height(80.dp)
                     ) {
-                        Text("Withdraw\nCashier -> Bag", fontSize = 20.sp, textAlign = TextAlign.Center)
+                        Text(
+                            stringResource(R.string.management_transport_withdraw),
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
 
                     Button(
@@ -82,7 +101,11 @@ fun CashierManagementTransportView(viewModel: CashierManagementViewModel) {
                             .padding(5.dp)
                             .height(80.dp)
                     ) {
-                        Text("Deposit\nBag -> Cashier", fontSize = 20.sp, textAlign = TextAlign.Center)
+                        Text(
+                            stringResource(R.string.management_transport_deposit),
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }

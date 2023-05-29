@@ -31,7 +31,7 @@
     <string name="root_item_status">Kontostand</string>
     <string name="root_item_history">Bestellverlauf</string>
     <string name="root_item_rewards">Gutscheine</string>
-    <string name="root_item_cashierManagement">Kassiererverwaltung</string>
+    <string name="root_item_cashierManagement">Kassenverwaltung</string>
     <string name="root_item_cashierStatus">Kassiererstatus</string>
     <string name="root_item_user">Benutzer</string>
     <string name="root_item_settings">Einstellungen</string>
@@ -56,4 +56,14 @@
     <string name="customer_oldtag">Alt</string>
     <string name="customer_newtag">Neu</string>
     <string name="customer_scanoldtag">Altes Bändchen Scannen</string>
+
+    <string name="management_title">Kassenverwaltung</string>
+    <string name="management_equip_title">Bestücken</string>
+    <string name="management_equip_equip">Bestücken</string>
+    <string name="management_transport_title">Rucksack / Kasse</string>
+    <string name="management_transport_withdraw">Abschöpfen</string>
+    <string name="management_transport_deposit">Bestücken</string>
+    <string name="management_vault_title">Keller / Rucksack</string>
+    <string name="management_vault_take">Einpacken</string>
+    <string name="management_vault_return">Auspacken</string>
 </resources>

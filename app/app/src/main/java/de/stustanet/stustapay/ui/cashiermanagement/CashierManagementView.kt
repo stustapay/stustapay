@@ -7,12 +7,14 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import de.stustanet.stustapay.ui.nav.navigateTo
 
@@ -34,7 +36,7 @@ fun CashierManagementView(
     NavHost(navController = nav, startDestination = CashierManagementNavDests.Main.route) {
         composable(CashierManagementNavDests.Main.route) {
             NavScaffold(
-                title = { Text(CashierManagementNavDests.Main.title) },
+                title = { Text(stringResource(CashierManagementNavDests.Main.title)) },
                 navigateBack = leaveView
             ) {
                 Column(
@@ -48,7 +50,7 @@ fun CashierManagementView(
                             .padding(bottom = 10.dp),
                         onClick = { nav.navigateTo(CashierManagementNavDests.Equip.route) }
                     ) {
-                        Text(CashierManagementNavDests.Equip.title, fontSize = 24.sp)
+                        Text(stringResource(CashierManagementNavDests.Equip.title), fontSize = 24.sp)
                     }
                     Button(
                         modifier = Modifier
@@ -56,7 +58,7 @@ fun CashierManagementView(
                             .padding(bottom = 10.dp),
                         onClick = { nav.navigateTo(CashierManagementNavDests.Transport.route) }
                     ) {
-                        Text(CashierManagementNavDests.Transport.title, fontSize = 24.sp)
+                        Text(stringResource(CashierManagementNavDests.Transport.title), fontSize = 24.sp)
                     }
                     Button(
                         modifier = Modifier
@@ -64,14 +66,14 @@ fun CashierManagementView(
                             .padding(bottom = 10.dp),
                         onClick = { nav.navigateTo(CashierManagementNavDests.Vault.route) }
                     ) {
-                        Text(CashierManagementNavDests.Vault.title, fontSize = 24.sp)
+                        Text(stringResource(CashierManagementNavDests.Vault.title), fontSize = 24.sp)
                     }
                 }
             }
         }
         composable(CashierManagementNavDests.Equip.route) {
             NavScaffold(
-                title = { Text(CashierManagementNavDests.Equip.title) },
+                title = { Text(stringResource(CashierManagementNavDests.Equip.title)) },
                 navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) }) {
                 Box(modifier = Modifier.padding(it)) {
                     CashierManagementEquipView(viewModel = viewModel)
@@ -80,7 +82,7 @@ fun CashierManagementView(
         }
         composable(CashierManagementNavDests.Transport.route) {
             NavScaffold(
-                title = { Text(CashierManagementNavDests.Transport.title) },
+                title = { Text(stringResource(CashierManagementNavDests.Transport.title)) },
                 navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) }) {
                 Box(modifier = Modifier.padding(it)) {
                     CashierManagementTransportView(viewModel = viewModel)
@@ -89,7 +91,7 @@ fun CashierManagementView(
         }
         composable(CashierManagementNavDests.Vault.route) {
             NavScaffold(
-                title = { Text(CashierManagementNavDests.Vault.title) },
+                title = { Text(stringResource(CashierManagementNavDests.Vault.title)) },
                 navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) }) {
                 Box(modifier = Modifier.padding(it)) {
                     CashierManagementVaultView(viewModel = viewModel)
@@ -99,9 +101,9 @@ fun CashierManagementView(
     }
 }
 
-enum class CashierManagementNavDests(val route: String, val title: String) {
-    Main("main", "Cashier Management"),
-    Equip("equip", "Equip Cashier"),
-    Transport("transport", "Transport"),
-    Vault("vault", "Vault")
+enum class CashierManagementNavDests(val route: String, val title: Int) {
+    Main("main", R.string.management_title),
+    Equip("equip", R.string.management_equip_title),
+    Transport("transport", R.string.management_transport_title),
+    Vault("vault", R.string.management_vault_title)
 }

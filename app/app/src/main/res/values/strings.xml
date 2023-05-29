@@ -55,4 +55,14 @@
     <string name="customer_oldtag">Old Tag</string>
     <string name="customer_newtag">New Tag</string>
     <string name="customer_scanoldtag">Scan Old Tag</string>
+
+    <string name="management_title">Cashier Management</string>
+    <string name="management_equip_title">Equip Cashier</string>
+    <string name="management_equip_equip">Equip</string>
+    <string name="management_transport_title">Transport</string>
+    <string name="management_transport_withdraw">Withdraw\nCashier -> Bag</string>
+    <string name="management_transport_deposit">Deposit\nBag -> Cashier</string>
+    <string name="management_vault_title">Vault</string>
+    <string name="management_vault_take">Take\nVault -> Bag</string>
+    <string name="management_vault_return">Return\nBag -> Vault</string>
 </resources>
