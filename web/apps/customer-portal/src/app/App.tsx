@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useMediaQuery, PaletteMode, createTheme, ThemeProvider, CssBaseline, Box, Link } from "@mui/material";
+import { useMediaQuery, PaletteMode, createTheme, ThemeProvider, CssBaseline, Box, Link, Stack } from "@mui/material";
 import { Router } from "./Router";
 import { toast, ToastContainer } from "react-toastify";
 import { useAppSelector, selectTheme, selectIsAuthenticated } from "@/store";
@@ -62,10 +62,10 @@ export function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ToastContainer position="top-right" autoClose={4000} pauseOnFocusLoss={false} theme={themeMode} />
-      <Box
+      <Stack
+        spacing={2}
         sx={{
           display: "flex",
-          flexDirection: "column",
           minHeight: "100vh",
         }}
       >
@@ -95,7 +95,7 @@ export function App() {
             </>
           )}
         </Box>
-      </Box>
+      </Stack>
     </ThemeProvider>
   );
 }

@@ -9,6 +9,7 @@ import { useLoginMutation } from "@/api/authApi";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import { ReactComponent as PinUidHowToImg } from "@/assets/img/pin_uid_howto.svg";
 
 const validationSchema = z.object({
   userTagUid: z.string(),
@@ -110,6 +111,22 @@ export const Login: React.FC = () => {
             </Form>
           )}
         </Formik>
+        <Box
+          sx={{
+            height: "3em",
+          }}
+        />
+        <Typography variant="h6" gutterBottom>
+          {t("wristbandTagExample")}
+        </Typography>
+        <PinUidHowToImg
+          title={t("wristbandTagExampleTitle")}
+          style={{
+            width: "100%",
+            height: "auto",
+            marginTop: "-1em",
+          }}
+        />
       </Box>
     </Container>
   );

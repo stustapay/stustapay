@@ -15,6 +15,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
   payoutInfo: "Um dein Restguthaben nach dem Festival zu erhalten, <1>trage bitte deine Bankdaten hier ein</1>.",
   about: "Impressum",
   contact: "Kontakt",
+  wristbandTagExample: "Bändchen-Chip Beispiel",
+  wristbandTagExampleTitle: "Bändchen-Chip Beispiel mit PIN und UID",
   languages: {
     en: "English",
     de: "Deutsch",

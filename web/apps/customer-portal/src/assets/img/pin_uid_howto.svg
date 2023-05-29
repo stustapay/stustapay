@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   id="svg2"
+   width="170.24001"
+   height="124.8"
+   viewBox="0 0 170.24001 124.8">
+  <defs
+     id="defs6">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath18">
+      <path
+         d="M 0,93.6 H 127.68 V 0 H 0 Z"
+         id="path16" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath26">
+      <path
+         d="M 9.98251,82.2525 H 117.697 V 14.2275 H 9.98251 Z"
+         id="path24" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath86">
+      <path
+         d="M 0,93.6 H 127.68 V 0 H 0 Z"
+         id="path84" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath94">
+      <path
+         d="m 102.72,69.6 h 8.505 V 26.88 h -8.505 z"
+         id="path92" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath110">
+      <path
+         d="M 0,93.6 H 127.68 V 0 H 0 Z"
+         id="path108" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath118">
+      <path
+         d="m 16.32,69.6 h 8.505 V 26.88 H 16.32 Z"
+         id="path116" />
+    </clipPath>
+  </defs>
+  <path
+     d="m 145.74,32.000002 h -6.22 c -1.41333,0 -2.56,1.146667 -2.56,2.56 v 51.839999 c 0,1.413333 1.14667,2.56 2.56,2.56 h 6.22 c 1.41333,0 2.56,-1.146667 2.56,-2.56 V 34.560002 c 0,-1.413333 -1.14667,-2.56 -2.56,-2.56 m 0,1.333333 c 0.676,0 1.22667,0.550667 1.22667,1.226667 v 51.839999 c 0,0.676 -0.55067,1.226666 -1.22667,1.226666 h -6.22 c -0.676,0 -1.22667,-0.550666 -1.22667,-1.226666 V 34.560002 c 0,-0.676 0.55067,-1.226667 1.22667,-1.226667 z"
+     style="fill:#040606;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.33333"
+     id="path96" />
+  <path
+     d="M 150.53,15.130003 H 19.710003 c -3.534666,0 -6.4,2.865333 -6.4,6.4 v 77.899998 c 0,3.534669 2.865334,6.399999 6.4,6.399999 H 150.53 c 3.53467,0 6.4,-2.86533 6.4,-6.399999 V 21.530003 c 0,-3.534667 -2.86533,-6.4 -6.4,-6.4 m 0,1.333333 c 2.79333,0 5.06667,2.273334 5.06667,5.066667 v 77.899998 c 0,2.793329 -2.27334,5.066669 -5.06667,5.066669 H 19.710003 c -2.793333,0 -5.066666,-2.27334 -5.066666,-5.066669 V 21.530003 c 0,-2.793333 2.273333,-5.066667 5.066666,-5.066667 z"
+     style="fill:#040606;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.33333"
+     id="path28" />
+  <path
+     d="m 30.539999,32.000002 h -6.22 c -1.413333,0 -2.56,1.146667 -2.56,2.56 v 51.839999 c 0,1.413333 1.146667,2.56 2.56,2.56 h 6.22 c 1.413333,0 2.56,-1.146667 2.56,-2.56 V 34.560002 c 0,-1.413333 -1.146667,-2.56 -2.56,-2.56 m 0,1.333333 c 0.676,0 1.226667,0.550667 1.226667,1.226667 v 51.839999 c 0,0.676 -0.550667,1.226666 -1.226667,1.226666 h -6.22 c -0.676,0 -1.226666,-0.550666 -1.226666,-1.226666 V 34.560002 c 0,-0.676 0.550666,-1.226667 1.226666,-1.226667 z"
+     style="fill:#040606;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.33333"
+     id="path120" />
+  <path
+     style="fill:#ffffff;fill-opacity:1;stroke:#4e4ef5;stroke-width:0.067998;stroke-linejoin:round"
+     d="m 18.387056,104.25488 c -0.80577,-0.23495 -1.404631,-0.57528 -2.031134,-1.15426 -0.693229,-0.64064 -1.084027,-1.23861 -1.407958,-2.15433 l -0.249093,-0.70415 V 60.571659 c 0,-33.536261 0.0193,-39.746981 0.124819,-40.165233 0.449194,-1.780505 1.916596,-3.277024 3.658027,-3.730609 0.47126,-0.122748 7.616646,-0.137373 66.648901,-0.13642 57.506882,9.29e-4 66.184972,0.01808 66.611732,0.131648 1.80913,0.481454 3.31788,2.040873 3.68353,3.807275 0.14019,0.67722 0.14019,79.329546 0,80.00677 -0.37532,1.81308 -2.02822,3.46599 -3.8413,3.84131 -0.34354,0.0711 -18.93866,0.0969 -66.567245,0.0923 -62.660018,-0.006 -66.11856,-0.0146 -66.630279,-0.16379 z M 31.683132,88.741171 c 0.600772,-0.295 1.162359,-0.933347 1.342259,-1.525727 0.09146,-0.301144 0.114405,-5.681936 0.114405,-26.823697 V 33.944763 L 32.888811,33.43367 c -0.284349,-0.579037 -0.720179,-1.001596 -1.31867,-1.278517 -0.395429,-0.182965 -0.536512,-0.189416 -4.142534,-0.189416 -3.646289,0 -3.743043,0.0046 -4.157716,0.196131 -0.233504,0.107872 -0.604877,0.381672 -0.825273,0.608443 -0.753403,0.775195 -0.687923,-1.97861 -0.662182,27.848402 0.02263,26.225721 0.02529,26.584595 0.199866,26.936681 0.211185,0.425932 0.736917,0.970465 1.136405,1.177049 0.508146,0.262773 1.047711,0.295812 4.578767,0.280371 l 3.463296,-0.01515 z m 115.089978,0.04442 c 0.60477,-0.273461 1.21549,-0.926127 1.40747,-1.504137 0.13719,-0.413059 0.14693,-2.504976 0.12564,-26.98219 l -0.0231,-26.534415 -0.19446,-0.359823 c -0.28425,-0.525951 -0.72848,-0.941319 -1.28981,-1.206001 l -0.49476,-0.23329 h -3.68818 c -3.65884,0 -3.69177,0.0016 -4.13797,0.207008 -0.56905,0.261901 -0.98496,0.659233 -1.2899,1.232283 l -0.23934,0.449779 v 26.626896 26.626896 l 0.2416,0.457876 c 0.39321,0.745218 1.06814,1.247861 1.86363,1.38792 0.22744,0.04004 1.95177,0.06616 3.83184,0.05804 3.38314,-0.01461 3.42315,-0.01695 3.88733,-0.226843 z"
+     id="path895" />
+  <text
+     xml:space="preserve"
+     style="font-size:13.3333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';stroke-width:1"
+     x="45.277344"
+     y="45.964146"
+     id="text856"><tspan
+       id="tspan854"
+       x="45.277344"
+       y="45.964146"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1">pay.stustaculum.de</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:13.3333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';stroke-width:1"
+     x="69.017281"
+     y="62.950523"
+     id="text856-9"><tspan
+       id="tspan854-8"
+       x="69.017281"
+       y="62.950523"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ff0000;fill-opacity:1;stroke-width:1">K95IL6</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:13.3333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';stroke-width:1"
+     x="47.814682"
+     y="78.686928"
+     id="text856-9-6"><tspan
+       id="tspan854-8-5"
+       x="47.814682"
+       y="78.686928"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ff0000;fill-opacity:1;stroke-width:1">68D4F174A30B37</tspan></text>
+  <ellipse
+     style="mix-blend-mode:multiply;fill:#ff0000;fill-opacity:0;stroke:#4e4ef5;stroke-width:0.747775;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="path894"
+     cx="83.331825"
+     cy="59.972919"
+     rx="20.098549"
+     ry="6.1921463" />
+  <ellipse
+     style="mix-blend-mode:multiply;fill:#ff0000;fill-opacity:0;stroke:#4e4ef5;stroke-width:0.755905;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="path894-5"
+     ry="6.0743675"
+     rx="42.579624"
+     cy="75.75061"
+     cx="83.899025" />
+  <text
+     xml:space="preserve"
+     style="font-size:13.3333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';stroke-width:1.00157;stroke-miterlimit:4;stroke-dasharray:none"
+     x="36.257812"
+     y="68.460007"
+     id="text915"><tspan
+       id="tspan913"
+       x="36.257812"
+       y="68.460007"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#4e4ef5;fill-opacity:1;stroke-width:1.00157;stroke-miterlimit:4;stroke-dasharray:none">PIN</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:13.3333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';stroke-width:1.00157;stroke-miterlimit:4;stroke-dasharray:none"
+     x="36.339844"
+     y="96.598206"
+     id="text915-5"><tspan
+       id="tspan913-8"
+       x="36.339844"
+       y="96.598206"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#4e4ef5;fill-opacity:1;stroke-width:1.00157;stroke-miterlimit:4;stroke-dasharray:none">UID</tspan></text>
+  <path
+     style="fill:none;stroke:#4e4ef5;stroke-width:0.755905;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="m 44.491098,89.899076 16.24682,-8.845491 -0.18052,-0.18052 v 0"
+     id="path953" />
+  <path
+     style="fill:none;stroke:#4e4ef5;stroke-width:0.755905;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="m 62.986136,60.126655 c -9.344008,3.250089 -9.445573,3.351653 -9.445573,3.351653"
+     id="path868" />
+</svg>
