@@ -17,7 +17,7 @@ export const tillRegisterStockingApi = createApi({
   refetchOnReconnect: true,
   endpoints: (builder) => ({
     getTillRegisterStockings: builder.query<EntityState<TillRegisterStocking>, void>({
-      query: () => "/till-register-stockings/",
+      query: () => "/till-register-stockings",
       transformResponse: (response: TillRegisterStocking[]) => {
         return tillRegisterStockingAdapter.addMany(tillRegisterStockingAdapter.getInitialState(), response);
       },
@@ -27,15 +27,15 @@ export const tillRegisterStockingApi = createApi({
           : ["till-register-stockings"],
     }),
     createTillRegisterStocking: builder.mutation<TillRegisterStocking, NewTillRegisterStocking>({
-      query: (till) => ({ url: "/till-register-stockings/", method: "POST", body: till }),
+      query: (till) => ({ url: "/till-register-stockings", method: "POST", body: till }),
       invalidatesTags: ["till-register-stockings"],
     }),
     updateTillRegisterStocking: builder.mutation<TillRegisterStocking, Omit<TillRegisterStocking, "total">>({
-      query: ({ id, ...stocking }) => ({ url: `/till-register-stockings/${id}/`, method: "POST", body: stocking }),
+      query: ({ id, ...stocking }) => ({ url: `/till-register-stockings/${id}`, method: "POST", body: stocking }),
       invalidatesTags: ["till-register-stockings"],
     }),
     deleteTillRegisterStocking: builder.mutation<void, number>({
-      query: (id) => ({ url: `/till-register-stockings/${id}/`, method: "DELETE" }),
+      query: (id) => ({ url: `/till-register-stockings/${id}`, method: "DELETE" }),
       invalidatesTags: ["till-register-stockings"],
     }),
   }),

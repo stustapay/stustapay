@@ -20,7 +20,7 @@ export const cashierApi = createApi({
   refetchOnReconnect: true,
   endpoints: (builder) => ({
     getCashiers: builder.query<EntityState<Cashier>, void>({
-      query: () => "/cashiers/",
+      query: () => "/cashiers",
       transformResponse: (response: Cashier[]) => {
         return cashierAdapter.addMany(cashierAdapter.getInitialState(), response);
       },
@@ -28,7 +28,7 @@ export const cashierApi = createApi({
         result ? [...result.ids.map((id) => ({ type: "cashier" as const, id })), "cashier"] : ["cashier"],
     }),
     getCashierById: builder.query<EntityState<Cashier>, number>({
-      query: (id) => `/cashiers/${id}/`,
+      query: (id) => `/cashiers/${id}`,
       transformResponse: (response: Cashier) => {
         return cashierAdapter.addOne(cashierAdapter.getInitialState(), response);
       },

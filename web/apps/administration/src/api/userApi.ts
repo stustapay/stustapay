@@ -21,14 +21,14 @@ export const userApi = createApi({
   refetchOnReconnect: true,
   endpoints: (builder) => ({
     getUserById: builder.query<EntityState<User>, number>({
-      query: (id) => `/users/${id}/`,
+      query: (id) => `/users/${id}`,
       transformResponse: (response: User) => {
         return userAdapter.addOne(userAdapter.getInitialState(), response);
       },
       providesTags: (result, error, arg) => ["user", { type: "user" as const, id: arg }],
     }),
     getUsers: builder.query<EntityState<User>, void>({
-      query: () => "/users/",
+      query: () => "/users",
       transformResponse: (response: User[]) => {
         return userAdapter.addMany(userAdapter.getInitialState(), response);
       },
@@ -36,19 +36,19 @@ export const userApi = createApi({
         result ? [...result.ids.map((id) => ({ type: "user" as const, id })), "user"] : ["user"],
     }),
     createUser: builder.mutation<User, NewUser>({
-      query: (user) => ({ url: "/users/", method: "POST", body: user }),
+      query: (user) => ({ url: "/users", method: "POST", body: user }),
       invalidatesTags: ["user"],
     }),
     updateUser: builder.mutation<User, User>({
-      query: ({ id, ...user }) => ({ url: `/users/${id}/`, method: "POST", body: user }),
+      query: ({ id, ...user }) => ({ url: `/users/${id}`, method: "POST", body: user }),
       invalidatesTags: (result, error, { id }) => [{ type: "user", id }],
     }),
     deleteUser: builder.mutation<void, number>({
-      query: (id) => ({ url: `/users/${id}/`, method: "DELETE" }),
+      query: (id) => ({ url: `/users/${id}`, method: "DELETE" }),
       invalidatesTags: ["user"],
     }),
     getUserRoles: builder.query<EntityState<UserRole>, void>({
-      query: () => "/user_roles/",
+      query: () => "/user_roles",
       transformResponse: (response: UserRole[]) => {
         return userRoleAdapter.addMany(userRoleAdapter.getInitialState(), response);
       },
@@ -56,15 +56,15 @@ export const userApi = createApi({
         result ? [...result.ids.map((id) => ({ type: "userRole" as const, id })), "userRole"] : ["userRole"],
     }),
     createUserRole: builder.mutation<UserRole, NewUserRole>({
-      query: (userRole) => ({ url: "/user_roles/", method: "POST", body: userRole }),
+      query: (userRole) => ({ url: "/user_roles", method: "POST", body: userRole }),
       invalidatesTags: ["userRole"],
     }),
     updateUserRole: builder.mutation<UserRole, { id: number; privileges: Privilege[] }>({
-      query: ({ id, ...role }) => ({ url: `/user_roles/${id}/`, method: "POST", body: role }),
+      query: ({ id, ...role }) => ({ url: `/user_roles/${id}`, method: "POST", body: role }),
       invalidatesTags: (result, error, { id }) => [{ type: "userRole", id }],
     }),
     deleteUserRole: builder.mutation<void, number>({
-      query: (id) => ({ url: `/user_roles/${id}/`, method: "DELETE" }),
+      query: (id) => ({ url: `/user_roles/${id}`, method: "DELETE" }),
       invalidatesTags: ["userRole"],
     }),
   }),

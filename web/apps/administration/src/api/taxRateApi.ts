@@ -18,14 +18,14 @@ export const taxRateApi = createApi({
   refetchOnReconnect: true,
   endpoints: (builder) => ({
     getTaxRateByName: builder.query<EntityState<TaxRate>, string>({
-      query: (name) => `/tax-rates/${name}/`,
+      query: (name) => `/tax-rates/${name}`,
       transformResponse: (response: TaxRate) => {
         return taxRateAdapter.addOne(taxRateAdapter.getInitialState(), response);
       },
       providesTags: (result, error, arg) => ["taxRate", { type: "taxRate" as const, name: arg }],
     }),
     getTaxRates: builder.query<EntityState<TaxRate>, void>({
-      query: () => "/tax-rates/",
+      query: () => "/tax-rates",
       transformResponse: (response: TaxRate[]) => {
         return taxRateAdapter.addMany(taxRateAdapter.getInitialState(), response);
       },
@@ -33,15 +33,15 @@ export const taxRateApi = createApi({
         result ? [...result.ids.map((name) => ({ type: "taxRate" as const, name })), "taxRate"] : ["taxRate"],
     }),
     createTaxRate: builder.mutation<TaxRate, TaxRate>({
-      query: (taxRate) => ({ url: "/tax-rates/", method: "POST", body: taxRate }),
+      query: (taxRate) => ({ url: "/tax-rates", method: "POST", body: taxRate }),
       invalidatesTags: ["taxRate"],
     }),
     updateTaxRate: builder.mutation<TaxRate, TaxRate>({
-      query: ({ name, ...taxRate }) => ({ url: `/tax-rates/${name}/`, method: "POST", body: taxRate }),
+      query: ({ name, ...taxRate }) => ({ url: `/tax-rates/${name}`, method: "POST", body: taxRate }),
       invalidatesTags: ["taxRate"],
     }),
     deleteTaxRate: builder.mutation<void, string>({
-      query: (name) => ({ url: `/tax-rates/${name}/`, method: "DELETE" }),
+      query: (name) => ({ url: `/tax-rates/${name}`, method: "DELETE" }),
       invalidatesTags: ["taxRate"],
     }),
   }),

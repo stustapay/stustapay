@@ -11,18 +11,18 @@ export const customerApi = createApi({
   tagTypes: ["customer", "order", "data_privacy_url"],
   endpoints: (builder) => ({
     getCustomer: builder.query<Customer, void>({
-      query: () => "/customer/",
+      query: () => "/customer",
       providesTags: (result) => ["customer"],
     }),
 
     getOrdersWithBon: builder.query<OrderWithBon[], void>({
-      query: () => "/orders_with_bon/",
+      query: () => "/orders_with_bon",
       providesTags: (result) => ["order"],
     }),
 
     setCustomerInfo: builder.mutation<void, CustomerInfo>({
       query: (customer) => ({
-        url: "/customer_info/",
+        url: "/customer_info",
         method: "POST",
         body: { iban: customer.iban, account_name: customer.account_name, email: customer.email },
       }),

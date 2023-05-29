@@ -15,7 +15,7 @@ export const accountApi = createApi({
   refetchOnReconnect: true,
   endpoints: (builder) => ({
     getSystemAccounts: builder.query<EntityState<Account>, void>({
-      query: () => "/system-accounts/",
+      query: () => "/system-accounts",
       transformResponse: (response: Account[]) => {
         return accountAdapter.addMany(accountAdapter.getInitialState(), response);
       },
@@ -36,7 +36,7 @@ export const accountApi = createApi({
         result ? [{ type: "userTag" as const, id: result.user_tag_uid_hex }, "userTag"] : ["userTag"],
     }),
     findAccounts: builder.mutation<Account[], string>({
-      query: (searchTerm) => ({ url: "/accounts/find-accounts/", method: "POST", body: { search_term: searchTerm } }),
+      query: (searchTerm) => ({ url: "/accounts/find-accounts", method: "POST", body: { search_term: searchTerm } }),
     }),
     disableAccount: builder.mutation<void, { accountId: number }>({
       query: ({ accountId }) => ({
