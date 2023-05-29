@@ -5,7 +5,7 @@ import { selectUserAll, useDeleteUserMutation, useGetUsersQuery } from "@api";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
-import { User } from "@stustapay/models";
+import { formatUserTagUid, User } from "@stustapay/models";
 import { ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Loading } from "@stustapay/components";
 
@@ -59,6 +59,12 @@ export const UserList: React.FC = () => {
       field: "description",
       headerName: t("userDescription") as string,
       flex: 2,
+    },
+    {
+      field: "user_tag_uid_hex",
+      headerName: t("user.tagUid") as string,
+      flex: 1,
+      valueFormatter: ({ value }) => formatUserTagUid(value),
     },
     {
       field: "role_names",

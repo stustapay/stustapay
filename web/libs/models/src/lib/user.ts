@@ -47,8 +47,8 @@ export const NewUserSchema = z.object({
   description: z.string().optional(),
   role_names: z.array(z.string()),
   password: z.string().nullable(),
-  user_tag_uid: z.bigint().optional().nullable(),
-  // user_tag_uid_hex: z.string().optional().nullable(),
+  // user_tag_uid: z.bigint().optional().nullable(),
+  user_tag_uid_hex: z.string().optional().nullable(),
   transport_account_id: z.number().optional().nullable(),
   cashier_account_id: z.number().optional().nullable(),
 });
@@ -60,6 +60,8 @@ export const UserSchema = z.object({
   login: z.string().min(1),
   display_name: z.string().optional(),
   description: z.string().optional(),
+  // user_tag_uid: z.bigint().optional().nullable(),
+  user_tag_uid_hex: z.string().optional().nullable(),
   role_names: z.array(z.string()),
 });
 

@@ -325,6 +325,8 @@ export const translations = {
     login: "Login",
     displayName: "Display Name",
     description: "Description",
+    tagUid: "User Tag UID",
+    noTagAssigned: "No Tag assigned",
   },
   userRole: {
     name: "Name",

@@ -7,6 +7,7 @@ from pydantic import root_validator, validator
 
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.ticket import Ticket
+from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.util import BaseModel
 
 
@@ -252,7 +253,7 @@ class Order(BaseModel):
 
     @property
     def customer_tag_uid_hex(self):
-        return hex(self.customer_tag_uid) if self.customer_tag_uid is not None else None
+        return format_user_tag_uid(self.customer_tag_uid)
 
     line_items: list[LineItem]
 
