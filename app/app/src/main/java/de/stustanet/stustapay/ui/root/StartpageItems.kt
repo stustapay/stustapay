@@ -28,13 +28,13 @@ val startpageItems = listOf(
     ),
     StartpageItem(
         icon = Icons.Filled.Info,
-        label = R.string.root_item_status,
+        label = R.string.customer_title,
         navDestination = RootNavDests.status,
         canAccess = { _, _ -> true }
     ),
     StartpageItem(
         icon = Icons.Filled.List,
-        label = R.string.root_item_history,
+        label = R.string.history_title,
         navDestination = RootNavDests.history,
         canAccess = { u, t -> Access.canSell(u, t) }
     ),
@@ -46,13 +46,13 @@ val startpageItems = listOf(
     ),
     StartpageItem(
         icon = Icons.Filled.ThumbUp,
-        label = R.string.root_item_cashierManagement,
+        label = R.string.management_title,
         navDestination = RootNavDests.cashierManagement,
         canAccess = { u, _ -> Access.canManageCashiers(u) }
     ),
     StartpageItem(
         icon = Icons.Filled.Info,
-        label = R.string.root_item_cashierStatus,
+        label = R.string.cashier_title,
         navDestination = RootNavDests.cashierStatus,
         canAccess = { _, _ -> true }
     )
