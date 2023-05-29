@@ -9,9 +9,11 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.UserRolesState
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
@@ -176,7 +178,7 @@ fun UserLoginView(
                     target = ScanTarget.Login
                 },
             ) {
-                Text("Login User", fontSize = 24.sp)
+                Text(stringResource(R.string.user_login), fontSize = 24.sp)
             }
         }
 
@@ -192,7 +194,7 @@ fun UserLoginView(
                 },
                 colors = errorButtonColors(),
             ) {
-                Text("Logout", fontSize = 24.sp)
+                Text(stringResource(R.string.user_logout), fontSize = 24.sp)
             }
         }
 
@@ -223,7 +225,7 @@ fun UserLoginView(
                     .padding(8.dp),
                 onClick = { goToUserCreateView() }
             ) {
-                Text("Create new user", fontSize = 24.sp)
+                Text(stringResource(R.string.user_create_title), fontSize = 24.sp)
             }
         }
 
@@ -234,7 +236,7 @@ fun UserLoginView(
                     .padding(8.dp),
                 onClick = { goToUserUpdateView() }
             ) {
-                Text("Update user", fontSize = 24.sp)
+                Text(stringResource(R.string.user_update_title), fontSize = 24.sp)
             }
         }
     }

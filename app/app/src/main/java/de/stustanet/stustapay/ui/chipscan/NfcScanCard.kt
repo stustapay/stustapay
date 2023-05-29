@@ -20,11 +20,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.UserTag
 
 @Composable
@@ -39,7 +41,7 @@ fun NfcScanCard(
     showStatus: Boolean = true,  // display scan status below the content.
     content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
-        Text("Scan a Chip \uD83D\uDCE1", textAlign = TextAlign.Center, fontSize = 40.sp)
+        Text(stringResource(R.string.nfc_scan_prompt), textAlign = TextAlign.Center, fontSize = 40.sp)
     },
 ) {
 

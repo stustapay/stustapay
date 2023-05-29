@@ -24,16 +24,13 @@
 
     <string name="common_action_scan">Scannen</string>
     <string name="common_action_cancel">Abbrechen</string>
+    <string name="common_action_create">Erstellen</string>
+    <string name="common_action_update">Änderungen übernehmen</string>
 
     <string name="root_item_ticket">Bändchen</string>
     <string name="root_item_sale">Verkauf</string>
     <string name="root_item_topup">Einzahlen / Auszahlen</string>
-    <string name="root_item_status">Kontostand</string>
-    <string name="root_item_history">Bestellverlauf</string>
     <string name="root_item_rewards">Gutscheine</string>
-    <string name="root_item_cashierManagement">Kassiererverwaltung</string>
-    <string name="root_item_cashierStatus">Kassiererstatus</string>
-    <string name="root_item_user">Benutzer</string>
     <string name="root_item_settings">Einstellungen</string>
     <string name="root_item_development">Entwicklung</string>
 
@@ -56,4 +53,26 @@
     <string name="customer_oldtag">Alt</string>
     <string name="customer_newtag">Neu</string>
     <string name="customer_scanoldtag">Altes Bändchen Scannen</string>
+
+    <string name="management_title">Kassenverwaltung</string>
+    <string name="management_equip_title">Bestücken</string>
+    <string name="management_equip_equip">Bestücken</string>
+    <string name="management_transport_title">Rucksack / Kasse</string>
+    <string name="management_transport_withdraw">Abschöpfen</string>
+    <string name="management_transport_deposit">Bestücken</string>
+    <string name="management_vault_title">Keller / Rucksack</string>
+    <string name="management_vault_take">Einpacken</string>
+    <string name="management_vault_return">Auspacken</string>
+
+    <string name="nfc_scan_prompt">Scanne ein Bändchen 📡</string>
+
+    <string name="user_title">Benutzer</string>
+    <string name="user_login">Einloggen</string>
+    <string name="user_logout">Ausloggen</string>
+    <string name="user_id">ID</string>
+    <string name="user_username">Benutzername</string>
+    <string name="user_roles">Rollen</string>
+    <string name="user_create_title">Benutzer Erstellen</string>
+    <string name="user_update_title">Benutzer Verwalten</string>
+    <string name="user_select">Rolle auswählen:</string>
 </resources>

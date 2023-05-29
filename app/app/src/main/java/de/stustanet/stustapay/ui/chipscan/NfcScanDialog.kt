@@ -5,11 +5,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.common.DialogDisplayState
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
@@ -31,7 +33,7 @@ fun NfcScanDialog(
     onScan: (UserTag) -> Unit = {},
     content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
-        Text("Scan a Chip \uD83D\uDCE1", textAlign = TextAlign.Center, fontSize = 40.sp)
+        Text(stringResource(R.string.nfc_scan_prompt), textAlign = TextAlign.Center, fontSize = 40.sp)
     },
 ) {
     if (state.isOpen()) {

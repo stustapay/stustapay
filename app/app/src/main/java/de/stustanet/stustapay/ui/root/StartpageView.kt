@@ -112,7 +112,7 @@ fun StartpageView(
                     item = StartpageItem(
                         icon = Icons.Filled.Person,
                         navDestination = RootNavDests.user,
-                        label = R.string.root_item_user,
+                        label = R.string.user_title,
                     ),
                     navigateTo = navigateTo
                 )

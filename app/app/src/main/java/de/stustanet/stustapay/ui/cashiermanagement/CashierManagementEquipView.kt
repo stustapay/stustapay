@@ -4,9 +4,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
@@ -37,7 +39,9 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
                     ExposedDropdownMenuBox(
                         expanded = stockingExpanded,
                         onExpandedChange = { stockingExpanded = it },
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp)
                     ) {
                         TextField(
                             readOnly = true,
@@ -71,7 +75,9 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
                     ExposedDropdownMenuBox(
                         expanded = registerExpanded,
                         onExpandedChange = { registerExpanded = it },
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp)
                     ) {
                         TextField(
                             readOnly = true,
@@ -109,7 +115,19 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
                 Divider()
                 Spacer(modifier = Modifier.height(10.dp))
                 Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
-                    Text(status, fontSize = 24.sp)
+                    if (status is CashierManagementStatus.Done) {
+                        when (val res = (status as CashierManagementStatus.Done).res) {
+                            is Response.OK -> {
+                                Text(stringResource(R.string.common_status_done), fontSize = 24.sp)
+                            }
+
+                            is Response.Error -> {
+                                Text(res.msg(), fontSize = 24.sp)
+                            }
+                        }
+                    } else {
+                        Text(stringResource(R.string.common_status_idle), fontSize = 24.sp)
+                    }
                 }
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -125,7 +143,7 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
                         }
                     }
                 ) {
-                    Text("Equip", fontSize = 24.sp)
+                    Text(stringResource(R.string.management_equip_equip), fontSize = 24.sp)
                 }
             }
         }
