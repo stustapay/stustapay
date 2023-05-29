@@ -4,7 +4,7 @@ import { ErrorPage } from "./ErrorPage";
 import { TillList } from "./routes/tills/TillList";
 import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
 import { TicketCreate, TicketDetail, TicketList, TicketUpdate } from "./routes/tickets";
-import { TaxRateCreate, TaxRateUpdate, TaxRateList } from "./routes/tax-rates";
+import { TaxRateCreate, TaxRateList, TaxRateUpdate } from "./routes/tax-rates";
 import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
 import { Settings } from "./routes/settings/Settings";
 import { Login } from "./routes/auth/Login";
@@ -13,39 +13,40 @@ import { TillCreate } from "./routes/tills/TillCreate";
 import { TillUpdate } from "./routes/tills/TillUpdate";
 import { Logout } from "./routes/auth/Logout";
 import { TillDetail } from "./routes/tills/TillDetail";
-import { TillLayoutCreate, TillLayoutUpdate, TillLayoutList, TillLayoutDetail } from "./routes/till-layouts";
-import { TillProfileCreate, TillProfileUpdate, TillProfileList } from "./routes/till-profiles";
+import { TillLayoutCreate, TillLayoutDetail, TillLayoutList, TillLayoutUpdate } from "./routes/till-layouts";
+import { TillProfileCreate, TillProfileList, TillProfileUpdate } from "./routes/till-profiles";
 import { TillProfileDetail } from "./routes/till-profiles/TillProfileDetail";
 import { TillButtonUpdate } from "./routes/till-buttons/TillButtonUpdate";
 import { TillButtonCreate } from "./routes/till-buttons/TillButtonCreate";
 import { TillButtonList } from "./routes/till-buttons/TillButtonList";
 import {
-  UserUpdate,
+  UserCreate,
   UserDetail,
   UserList,
-  UserCreate,
   UserRoleCreate,
   UserRoleList,
   UserRoleUpdate,
+  UserUpdate,
 } from "./routes/users";
 import {
-  SystemAccountList,
   CustomerAccountDetail,
-  SystemAccountDetail,
   FindAccounts,
+  SystemAccountDetail,
+  SystemAccountList,
   UserTagDetail,
 } from "./routes/accounts";
 import { OrderList } from "./routes/orders/OrderList";
 import { OrderDetail } from "./routes/orders/OrderDetail";
-import { CashierList, CashierDetail, CashierCloseOut, CashierShiftDetail } from "./routes/cashiers";
+import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
 import { PrivilegeGuard } from "./routes/PrivilegeGuard";
 import {
-  TillRegisterStockingList,
   TillRegisterStockingCreate,
+  TillRegisterStockingList,
   TillRegisterStockingUpdate,
 } from "./routes/till-register-stocking";
-import { TillRegisterList, TillRegisterCreate, TillRegisterUpdate } from "./routes/till-registers";
+import { TillRegisterCreate, TillRegisterList, TillRegisterUpdate } from "./routes/till-registers";
 import { FestivalOverview, MoneyOverview } from "./routes/overview";
+import { Profile } from "./routes/auth";
 
 const router = createBrowserRouter([
   {
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
       {
         path: "logout",
         element: <Logout />,
+      },
+      {
+        path: "profile",
+        element: <Profile />,
       },
       {
         path: "overview",

@@ -347,6 +347,20 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user()
+    async def change_password(
+        self, *, conn: asyncpg.Connection, current_user: CurrentUser, old_password: str, new_password: str
+    ):
+        old_password_hashed = await conn.fetchval("select password from usr where id = $1", current_user.id)
+        assert old_password_hashed is not None
+        if not self._check_password(old_password, old_password_hashed):
+            raise AccessDenied("Invalid password")
+
+        new_password_hashed = self._hash_password(new_password)
+
+        await conn.execute("update usr set password = $2 where id = $1", current_user.id, new_password_hashed)
+
+    @with_db_transaction
+    @requires_user()
     async def logout_user(self, *, conn: asyncpg.Connection, current_user: User, token: str) -> bool:
         token_payload = self.auth_service.decode_user_jwt_payload(token)
         assert token_payload is not None

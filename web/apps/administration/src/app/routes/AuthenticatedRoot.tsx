@@ -121,6 +121,9 @@ export const AuthenticatedRoot: React.FC = () => {
               {t("StuStaPay")}
             </RouterLink>
           </Typography>
+          <Button component={RouterLink} color="inherit" to="/profile">
+            {t("auth.profile")}
+          </Button>
           <Button component={RouterLink} color="inherit" to="/logout">
             {t("logout")}
           </Button>

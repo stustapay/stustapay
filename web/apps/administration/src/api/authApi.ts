@@ -34,7 +34,14 @@ export const authApi = createApi({
         method: "POST",
       }),
     }),
+    changePassword: builder.mutation<void, { oldPassword: string; newPassword: string }>({
+      query: (payload) => ({
+        url: "/auth/change-password/",
+        method: "POST",
+        body: { new_password: payload.newPassword, old_password: payload.oldPassword },
+      }),
+    }),
   }),
 });
 
-export const { useLoginMutation, useLogoutMutation } = authApi;
+export const { useLoginMutation, useLogoutMutation, useChangePasswordMutation } = authApi;

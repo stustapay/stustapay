@@ -33,6 +33,13 @@ class UserServiceTest(TerminalTestCase):
             token=self.terminal_token, user_tag=UserTag(uid=admin_tag_uid), user_role_id=ADMIN_ROLE_ID
         )
 
+    async def test_change_password(self):
+        with self.assertRaises(AccessDenied):  # test with invalid password
+            await self.user_service.change_password(token=self.admin_token, old_password="foobar", new_password="asdf")
+        await self.user_service.change_password(token=self.admin_token, old_password="rolf", new_password="asdf")
+
+        await self.user_service.login_user(username=self.admin_user.login, password="asdf")
+
     async def test_user_creation(self):
         cashier = await self.user_service.create_user_terminal(
             token=self.terminal_token,
