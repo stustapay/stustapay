@@ -20,7 +20,6 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import iban from "iban";
 import i18n from "@/i18n";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Link as RouterLink } from "react-router-dom";
 
 const FormSchema = z.object({
