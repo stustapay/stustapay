@@ -70,6 +70,7 @@ export const Login: React.FC = () => {
           {({ values, handleBlur, handleChange, handleSubmit, isSubmitting }) => (
             <Form onSubmit={handleSubmit}>
               <input type="hidden" name="remember" value="true" />
+
               <TextField
                 variant="outlined"
                 margin="normal"
@@ -77,24 +78,23 @@ export const Login: React.FC = () => {
                 fullWidth
                 autoFocus
                 type="text"
-                label={t("userTagUid")}
-                name="userTagUid"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.userTagUid}
-              />
-
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                type="password"
                 name="userTagPin"
                 label={t("userTagPin")}
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.userTagPin}
+              />
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                type="text"
+                label={t("userTagUid")}
+                name="userTagUid"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.userTagUid}
               />
 
               {isSubmitting && <LinearProgress />}

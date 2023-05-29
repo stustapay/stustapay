@@ -97,6 +97,7 @@ export const PayoutInfo: React.FC = () => {
                   name="iban"
                   label="IBAN"
                   variant="outlined"
+                  required
                   fullWidth
                   value={formik.values.iban}
                   onChange={formik.handleChange}
@@ -109,6 +110,7 @@ export const PayoutInfo: React.FC = () => {
                   name="account_name"
                   label="Account Name"
                   variant="outlined"
+                  required
                   fullWidth
                   value={formik.values.account_name}
                   onChange={formik.handleChange}
@@ -121,6 +123,7 @@ export const PayoutInfo: React.FC = () => {
                   name="email"
                   label="Email"
                   variant="outlined"
+                  required
                   fullWidth
                   value={formik.values.email}
                   onChange={formik.handleChange}
