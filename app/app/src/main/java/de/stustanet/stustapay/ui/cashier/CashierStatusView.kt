@@ -11,10 +11,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
 import de.stustanet.stustapay.ui.common.tagIDtoString
@@ -42,7 +44,7 @@ fun CashierStatusView(
 
     NavScaffold(
         navigateBack = leaveView,
-        title = { Text("Cashier Status") }
+        title = { Text(stringResource(R.string.cashier_title)) }
     ) {
         Box(modifier = Modifier.padding(it)) {
             Scaffold(
@@ -55,7 +57,10 @@ fun CashierStatusView(
                         ) {
                             when (val state = uiState.state) {
                                 is CashierStatusRequestState.Fetching -> {
-                                    Text("Fetching", fontSize = 36.sp)
+                                    Text(
+                                        stringResource(R.string.common_status_fetching),
+                                        fontSize = 36.sp
+                                    )
                                 }
                                 is CashierStatusRequestState.Done -> {
                                     Row(
@@ -65,7 +70,10 @@ fun CashierStatusView(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text("ID", fontSize = 24.sp)
-                                        Text(tagIDtoString(state.userInfo.user_tag_uid), fontSize = 36.sp)
+                                        Text(
+                                            tagIDtoString(state.userInfo.user_tag_uid),
+                                            fontSize = 36.sp
+                                        )
                                     }
 
                                     Divider()
@@ -76,11 +84,17 @@ fun CashierStatusView(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Cashier", fontSize = 24.sp)
+                                        Text(
+                                            stringResource(R.string.cashier_drawer),
+                                            fontSize = 24.sp
+                                        )
                                         if (state.userInfo.cash_drawer_balance == null) {
                                             Text("N/A", fontSize = 36.sp)
                                         } else {
-                                            Text("${state.userInfo.cash_drawer_balance}€", fontSize = 36.sp)
+                                            Text(
+                                                "${state.userInfo.cash_drawer_balance}€",
+                                                fontSize = 36.sp
+                                            )
                                         }
                                     }
 
@@ -92,16 +106,22 @@ fun CashierStatusView(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Bag", fontSize = 24.sp)
+                                        Text(stringResource(R.string.cashier_bag), fontSize = 24.sp)
                                         if (state.userInfo.transport_account_balance == null) {
                                             Text("N/A", fontSize = 36.sp)
                                         } else {
-                                            Text("${state.userInfo.transport_account_balance}€", fontSize = 36.sp)
+                                            Text(
+                                                "${state.userInfo.transport_account_balance}€",
+                                                fontSize = 36.sp
+                                            )
                                         }
                                     }
                                 }
                                 is CashierStatusRequestState.Failed -> {
-                                    Text("Failed", fontSize = 36.sp)
+                                    Text(
+                                        stringResource(R.string.common_status_failed),
+                                        fontSize = 36.sp
+                                    )
                                 }
                             }
                         }
@@ -119,7 +139,7 @@ fun CashierStatusView(
                             .fillMaxWidth()
                             .padding(10.dp)
                     ) {
-                        Text("Scan", fontSize = 24.sp)
+                        Text(stringResource(R.string.common_action_scan), fontSize = 24.sp)
                     }
                 }
             )
