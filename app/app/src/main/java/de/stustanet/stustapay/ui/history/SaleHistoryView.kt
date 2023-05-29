@@ -14,12 +14,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.Order
 import de.stustanet.stustapay.model.OrderType
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
@@ -47,7 +49,7 @@ fun SaleHistoryView(
         viewModel.fetchHistory()
     }
 
-    NavScaffold(title = { Text("Order History") }, navigateBack = leaveView) {
+    NavScaffold(title = { Text(stringResource(R.string.history_title)) }, navigateBack = leaveView) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -119,7 +121,7 @@ fun SaleHistoryView(
                     Divider()
 
                     ProductConfirmItem(
-                        name = "Summe",
+                        name = stringResource(R.string.history_sum),
                         price = sale.total_price,
                     )
 
@@ -133,7 +135,7 @@ fun SaleHistoryView(
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 cancelOrder = true
                             }) {
-                            Text("Cancel Sale", fontSize = 24.sp)
+                            Text(stringResource(R.string.history_cancel), fontSize = 24.sp)
                         }
                     }
                 }
@@ -153,7 +155,7 @@ fun SaleHistoryView(
                 elevation = 8.dp,
             ) {
                 Column {
-                    Text("Confirm cancellation", textAlign = TextAlign.Center, fontSize = 48.sp)
+                    Text(stringResource(R.string.history_confirm), textAlign = TextAlign.Center, fontSize = 48.sp)
 
                     Button(modifier = Modifier
                         .fillMaxWidth()
@@ -167,7 +169,7 @@ fun SaleHistoryView(
                                 cancelOrder = false
                             }
                         }) {
-                        Text("Cancel Sale", fontSize = 24.sp)
+                        Text(stringResource(R.string.history_cancel), fontSize = 24.sp)
                     }
                 }
             }

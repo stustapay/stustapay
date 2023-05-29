@@ -27,4 +27,9 @@
     <string name="cashier_title">Kassiererstatus</string>
     <string name="cashier_drawer">Kasse</string>
     <string name="cashier_bag">Rucksack</string>
+
+    <string name="history_title">Bestellverlauf</string>
+    <string name="history_sum">Summe</string>
+    <string name="history_cancel">Stornieren</string>
+    <string name="history_confirm">Stornierung bestätigen</string>
 </resources>

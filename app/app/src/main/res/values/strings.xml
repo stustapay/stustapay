@@ -28,4 +28,9 @@
     <string name="cashier_title">Cashier Status</string>
     <string name="cashier_drawer">Cash Drawer</string>
     <string name="cashier_bag">Bag</string>
+
+    <string name="history_title">Order History</string>
+    <string name="history_sum">Sum</string>
+    <string name="history_cancel">Cancel Sale</string>
+    <string name="history_confirm">Confirm Cancellation</string>
 </resources>
