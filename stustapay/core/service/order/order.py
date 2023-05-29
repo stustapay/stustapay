@@ -348,7 +348,7 @@ class OrderService(DBService):
             raise TillPermissionException("This terminal is not allowed to top up customers")
 
         # amount enforcement
-        if new_topup.amount <= 1.00:
+        if new_topup.amount < 1.00:
             raise InvalidArgument("Minimum TopUp is 1.00€")
 
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_topup.uuid)
