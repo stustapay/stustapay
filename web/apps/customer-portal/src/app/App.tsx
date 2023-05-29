@@ -90,7 +90,7 @@ export function App() {
           ) : (
             <>
               <AboutLink />
-              {authenticated ? <LoggedInFooter theme={theme} /> : <LoggedOutFooter theme={theme} />}
+              {authenticated ? <LoggedInFooter /> : <LoggedOutFooter />}
               <GithubLink />
             </>
           )}

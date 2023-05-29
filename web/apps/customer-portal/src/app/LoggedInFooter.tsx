@@ -1,14 +1,10 @@
 import { useGetCustomerQuery } from "@/api/customerApi";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { Link, Theme } from "@mui/material";
+import { Link } from "@mui/material";
 import { formatUserTagUid } from "@stustapay/models";
 import { useTranslation } from "react-i18next";
 
-interface LoggedInFooterProps {
-  theme: Theme;
-}
-
-export const LoggedInFooter: React.FC<LoggedInFooterProps> = ({ theme }) => {
+export const LoggedInFooter: React.FC = () => {
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
 
   const config = usePublicConfig();

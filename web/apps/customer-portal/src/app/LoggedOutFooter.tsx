@@ -1,12 +1,8 @@
 import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { Link, Theme } from "@mui/material";
+import { Link } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
-interface LoggedOutFooterProps {
-  theme: Theme;
-}
-
-export const LoggedOutFooter: React.FC<LoggedOutFooterProps> = ({ theme }) => {
+export const LoggedOutFooter: React.FC = () => {
   const config = usePublicConfig();
   const { t } = useTranslation();
   const subject = "Support request: ";
