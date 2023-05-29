@@ -1,4 +1,5 @@
 from getpass import getpass
+from pprint import pprint
 
 import asyncpg
 
@@ -6,7 +7,7 @@ from . import database
 from .config import Config
 from .schema.user import UserWithoutId
 from .service.auth import AuthService
-from .service.user import UserService
+from .service.user import UserService, list_user_roles
 from .subcommand import SubCommand
 
 
@@ -28,13 +29,18 @@ class AdminCli(SubCommand):
         try:
             auth_service = AuthService(db_pool=db_pool, config=self.config)
             user_service = UserService(db_pool=db_pool, config=self.config, auth_service=auth_service)
+            async with db_pool.acquire() as conn:
+                available_roles = await list_user_roles(conn=conn)
+                available_roles_formatted = ", ".join([f"'{role.name}'" for role in available_roles])
+
             username = input("Enter username:\n")
             password = getpass("Enter password:\n")
             confirm_password = getpass("Confirm password:\n")
             if password != confirm_password:
                 print("Error, passwords do not match")
                 return
-            role_names = input("Enter roles (comma separated, choose from 'admin', 'finanzorga', 'cashier':\n")
+
+            role_names = input(f"Enter roles (comma separated, choose from {available_roles_formatted}:\n")
             display_name = input("Enter display name:\n")
 
             new_user = UserWithoutId(
@@ -46,7 +52,8 @@ class AdminCli(SubCommand):
             user = await user_service.create_user_no_auth(  # pylint: disable=missing-kwoa
                 new_user=new_user, password=password
             )
-            print(f"created new user {user.login} with user id {user.id}")
+            print("created new user:")
+            pprint(user)
         except KeyboardInterrupt:
             print("Aborting ...")
 
