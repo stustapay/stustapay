@@ -55,6 +55,25 @@ fun PreviewSaleSelectionItem() {
                 amount = SaleItemAmount.FreePrice(4200u),
             )
         )
+        SaleSelectionItem(
+            caption = "Gutschein",
+            type = SaleSelectionItemType.Vouchers(
+                amount = 3,
+                maxAmount = 12,
+                onIncr = { },
+                onDecr = { },
+            )
+        )
+        SaleSelectionItem(
+            caption = "Pfand zurück",
+            type = SaleSelectionItemType.Returnable(
+                price = SaleItemPrice.Returnable(2.0),
+                amount = SaleItemAmount.FixedPrice(2),
+                incrementText = "Extra Glas",
+                onIncr = { },
+                onDecr = { },
+            )
+        )
     }
 }
 
@@ -75,27 +94,27 @@ fun SaleSelectionItem(
     when (type) {
         is SaleSelectionItemType.FixedPrice -> {
             val amount: Int = type.amount?.amount ?: 0
-            itemPrice = "%.02f".format(type.price.price)
+            itemPrice = "%.02f€".format(type.price.price)
             itemAmount = "%2d".format(amount)
         }
 
         is SaleSelectionItemType.Returnable -> {
             sameSizeButtons = true
             val amount: Int = type.amount?.amount ?: 0
-            itemPrice = "%.02f".format(type.price.price)
+            itemPrice = "%.02f€".format(type.price.price)
             itemAmount = "%2d".format(amount)
         }
 
         is SaleSelectionItemType.FreePrice -> {
             val price: Double = (type.amount?.price?.toDouble() ?: 0.0) / 100
-            itemPrice = "%.02f".format(price)
+            itemPrice = "%.02f€".format(price)
             itemAmount = null
         }
 
         is SaleSelectionItemType.Vouchers -> {
-            itemPrice = "%2d ".format(type.amount)
+            itemPrice = "%2d".format(type.amount)
             itemAmount = "%2d".format(type.maxAmount)
-            itemAmountDelimiter = "of "
+            itemAmountDelimiter = "/"
         }
     }
 

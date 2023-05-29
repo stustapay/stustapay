@@ -7,8 +7,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.common.amountselect.AmountConfig
 import de.stustanet.stustapay.ui.common.amountselect.AmountSelectionDialog
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
@@ -39,7 +41,7 @@ fun SaleSelectionList(
 
     LazyColumn(
         modifier = modifier
-            .padding(horizontal = 10.dp)
+            .padding(horizontal = 2.dp)
             .fillMaxSize()
     ) {
         val vouchers = saleStatus.voucherAmount ?: saleStatus.checkedSale?.used_vouchers
@@ -48,7 +50,7 @@ fun SaleSelectionList(
             // allow adjustment here
             item {
                 SaleSelectionItem(
-                    caption = "Gutschein",
+                    caption = stringResource(R.string.voucher),
                     type = SaleSelectionItemType.Vouchers(
                         amount = vouchers,
                         maxAmount = saleStatus.checkedSale?.old_voucher_balance ?: -1,

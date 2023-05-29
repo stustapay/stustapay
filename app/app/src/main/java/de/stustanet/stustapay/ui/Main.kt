@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import de.stustanet.stustapay.ui.root.RootView
+import de.stustanet.stustapay.ui.root.RootWrapper
 import de.stustanet.stustapay.ui.theme.Theme
 import de.stustanet.stustapay.util.SysUiController
 
@@ -19,7 +20,9 @@ fun Main(uictrl: SysUiController? = null) {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colors.background
         ) {
-            RootView(uictrl)
+            RootWrapper {
+                RootView(uictrl)
+            }
         }
     }
 }

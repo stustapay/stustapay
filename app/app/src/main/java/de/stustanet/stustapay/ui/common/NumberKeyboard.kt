@@ -1,6 +1,12 @@
 package de.stustanet.stustapay.ui.common
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -10,8 +16,33 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import de.stustanet.stustapay.ui.theme.NumberKeyboardStyle
+
+@Composable
+fun NumberKeyboardButton(
+    modifier: Modifier,
+    text: String,
+    onClick: () -> Unit,
+) {
+    val buttonHeight = 75.dp
+    val buttonPadding = 5.dp
+    val buttonContentStyle = NumberKeyboardStyle
+    val buttonContentPadding = PaddingValues(
+        horizontal = 8.dp,
+        vertical = 2.dp,
+    )
+
+    Button(
+        modifier = modifier
+            .height(buttonHeight)
+            .padding(buttonPadding),
+        contentPadding = buttonContentPadding,
+        onClick = onClick,
+    ) {
+        Text(text, style = buttonContentStyle)
+    }
+}
+
 
 @Preview
 @Composable
@@ -20,9 +51,6 @@ fun NumberKeyboard(
     onClear: () -> Unit = {},
 ) {
     val haptic = LocalHapticFeedback.current
-
-    val buttonHeight = 85.dp
-    val buttonPadding = 5.dp
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -36,18 +64,15 @@ fun NumberKeyboard(
             ) {
                 for (j in 1u..3u) {
                     val nr = i * 3u + j
-                    Button(
+                    NumberKeyboardButton(
                         modifier = Modifier
-                            .weight(1f, true)
-                            .height(buttonHeight)
-                            .padding(buttonPadding),
+                            .weight(1f, true),
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onDigitEntered(nr)
-                        }
-                    ) {
-                        Text(nr.toString(), fontSize = 24.sp)
-                    }
+                        },
+                        text = nr.toString()
+                    )
                 }
             }
         }
@@ -56,43 +81,34 @@ fun NumberKeyboard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Button(
+            NumberKeyboardButton(
                 modifier = Modifier
-                    .weight(1f, true)
-                    .height(buttonHeight)
-                    .padding(buttonPadding),
+                    .weight(1f, true),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDigitEntered(0u)
                     onDigitEntered(0u)
-                }
-            ) {
-                Text("00", fontSize = 24.sp)
-            }
-            Button(
+                },
+                text = "00",
+            )
+            NumberKeyboardButton(
                 modifier = Modifier
-                    .weight(1f, true)
-                    .height(buttonHeight)
-                    .padding(buttonPadding),
+                    .weight(1f, true),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDigitEntered(0u)
-                }
-            ) {
-                Text("0", fontSize = 24.sp)
-            }
-            Button(
+                },
+                text = "0",
+            )
+            NumberKeyboardButton(
                 modifier = Modifier
-                    .weight(1f, true)
-                    .height(buttonHeight)
-                    .padding(buttonPadding),
+                    .weight(1f, true),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onClear()
-                }
-            ) {
-                Text("❌", fontSize = 24.sp)
-            }
+                },
+                text = "❌",
+            )
         }
     }
 }

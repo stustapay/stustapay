@@ -4,16 +4,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.ListItem
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -24,12 +18,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.chipscan.NfcScanCard
+import de.stustanet.stustapay.ui.common.StatusText
 import de.stustanet.stustapay.ui.common.pay.ProductSelectionBottomBar
 import de.stustanet.stustapay.ui.nav.TopAppBar
 import de.stustanet.stustapay.ui.nav.TopAppBarIcon
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun TicketScan(
     leaveView: () -> Unit,
@@ -91,7 +85,7 @@ fun TicketScan(
                             }
 
                             is TagScanStatus.Duplicate -> {
-                                "Already scanned! Scan new ticket!"
+                                "Already scanned! Scan new ticket."
                             }
 
                             is TagScanStatus.NoScan -> {
@@ -109,18 +103,7 @@ fun TicketScan(
 
                 for (scannedTicket in ticketStatus.scans) {
                     item {
-                        // todo: show price
-                        ListItem(
-                            text = { Text(scannedTicket.ticket.name) },
-                            secondaryText = { Text(scannedTicket.tag.toString()) },
-                            icon = {
-                                Icon(
-                                    Icons.Filled.DateRange,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(40.dp)
-                                )
-                            }
-                        )
+                        TicketListItem(scannedTicket)
                     }
                 }
             }
@@ -131,12 +114,7 @@ fun TicketScan(
                     .padding(horizontal = 10.dp)
                     .padding(bottom = 5.dp),
                 status = {
-                    Text(
-                        text = status,
-                        modifier = Modifier.fillMaxWidth(),
-                        fontSize = 18.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
+                    StatusText(status)
                 },
                 ready = ticketConfig.ready,
                 onAbort = {

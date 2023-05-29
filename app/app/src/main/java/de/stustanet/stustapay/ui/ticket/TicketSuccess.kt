@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.ui.common.StatusText
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustanet.stustapay.ui.nav.NavScaffold
 
@@ -66,11 +67,8 @@ fun TicketSuccess(
                     .fillMaxWidth()
             ) {
                 Divider(modifier = Modifier.padding(top = 10.dp))
-                Text(
-                    text = status,
-                    modifier = Modifier.fillMaxWidth(),
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily.Monospace,
+                StatusText(
+                    status = status,
                 )
 
                 Button(
@@ -112,8 +110,10 @@ fun TicketSuccess(
                 ProductConfirmItem(
                     name = "Preis",
                     price = saleCompletedV.total_price,
-                    fontSize = 40.sp,
+                    bigStyle = true,
                 )
+
+                ProductConfirmItem(name = "Tickets", quantity = saleCompletedV.scanned_tickets.size)
             }
         }
     }

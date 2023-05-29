@@ -8,6 +8,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -16,6 +17,7 @@ import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustanet.stustapay.ui.common.pay.ProductSelectionBottomBar
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmLineItem
 import de.stustanet.stustapay.ui.nav.TopAppBar
+import de.stustanet.stustapay.R
 
 /**
  * View for displaying available purchase items
@@ -46,18 +48,18 @@ fun SaleConfirm(
                 TopAppBar(title = { Text(saleConfig.tillName) })
 
                 ProductConfirmItem(
-                    name = "Preis",
+                    name = stringResource(R.string.price),
                     price = checkedSale.total_price,
-                    fontSize = 35.sp,
+                    bigStyle = true,
                 )
                 Divider(thickness = 2.dp)
                 ProductConfirmItem(
-                    name = "übriges Guthaben",
+                    name = stringResource(R.string.credit_left),
                     price = checkedSale.new_balance,
                 )
                 if (checkedSale.new_voucher_balance > 0) {
                     ProductConfirmItem(
-                        name = "übrige Gutscheine",
+                        name = stringResource(R.string.remaining_vouchers),
                         quantity = checkedSale.new_voucher_balance,
                     )
                 }
@@ -75,7 +77,7 @@ fun SaleConfirm(
                 if (checkedSale.used_vouchers > 0) {
                     item {
                         ProductConfirmItem(
-                            name = "Gutscheine",
+                            name = stringResource(R.string.used_vouchers),
                             quantity = checkedSale.used_vouchers,
                         )
                     }
@@ -92,7 +94,7 @@ fun SaleConfirm(
         },
         bottomBar = {
             ProductSelectionBottomBar(
-                abortText = "↢ Edit",
+                abortText = stringResource(R.string.edit),
                 status = {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(

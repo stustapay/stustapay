@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustanet.stustapay.R
+import de.stustanet.stustapay.ui.common.StatusText
 import de.stustanet.stustapay.ui.common.TagSelectedItem
 import de.stustanet.stustapay.ui.common.amountselect.AmountConfig
 import de.stustanet.stustapay.ui.common.amountselect.AmountSelection
@@ -42,7 +44,7 @@ fun PayOutSelection(
         bottomBar = {
             Column(modifier = Modifier.padding(20.dp)) {
                 Divider(modifier = Modifier.fillMaxWidth())
-                Text(status, fontSize = 24.sp)
+                StatusText(status)
 
                 Row(
                     modifier = Modifier
@@ -72,15 +74,18 @@ fun PayOutSelection(
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(top = 15.dp)
-                .padding(horizontal = 20.dp)
+                .padding(top = 5.dp)
+                .padding(horizontal = 10.dp)
         ) {
             TagSelectedItem(
                 tag = payout.tag,
                 onClear = onClear,
             )
 
-            Text(stringResource(R.string.credit_amount).format(payout.maxAmount), fontSize = 30.sp)
+            Text(
+                stringResource(R.string.credit_amount).format(payout.maxAmount),
+                style = MaterialTheme.typography.h5,
+            )
 
             if (canPayOut) {
                 AmountSelection(
@@ -89,9 +94,11 @@ fun PayOutSelection(
                     onClear = onAmountClear,
                     config = amountConfig
                 )
-            }
-            else {
-                Text("Kein Guthaben zum Auszahlen", fontSize = 26.sp)
+            } else {
+                Text(
+                    stringResource(R.string.no_balance_for_payout),
+                    style = MaterialTheme.typography.h4,
+                )
             }
         }
     }

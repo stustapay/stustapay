@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -38,7 +39,7 @@ fun TagSelectedItem(
     ) {
         Text(
             "Tag ID: $tag",
-            fontSize = 24.sp,
+            style = MaterialTheme.typography.h5,
             modifier = Modifier.weight(1.0f)
         )
         Button(

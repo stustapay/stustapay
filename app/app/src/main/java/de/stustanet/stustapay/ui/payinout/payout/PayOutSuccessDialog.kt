@@ -2,15 +2,16 @@ package de.stustanet.stustapay.ui.payinout.payout
 
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
@@ -31,16 +32,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.CompletedPayOut
-import de.stustanet.stustapay.model.UserTag
-import de.stustanet.stustapay.ui.common.DialogDisplayState
-import de.stustanet.stustapay.ui.common.pay.CashConfirmView
-import de.stustanet.stustapay.ui.common.pay.CashECCallback
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
-import de.stustanet.stustapay.ui.common.pay.ProductSelectionBottomBar
 
 @Preview
 @Composable
@@ -110,7 +105,8 @@ fun CashOutSuccessCard(
                     modifier = Modifier
                         .padding(paddingValues)
                         .padding(horizontal = 10.dp)
-                        .fillMaxSize()
+                        .fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Image(
                         imageVector = Icons.Filled.CheckCircle,
@@ -125,7 +121,7 @@ fun CashOutSuccessCard(
                     ProductConfirmItem(
                         name = stringResource(R.string.payout),
                         price = completedPayOut.amount,
-                        fontSize = 35.sp,
+                        bigStyle = true,
                     )
                     Divider(thickness = 2.dp)
                     ProductConfirmItem(

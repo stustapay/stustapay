@@ -51,16 +51,21 @@ fun NfcScanCard(
     LaunchedEffect(scanResult) {
         val tag = scanResult
         if (tag != null) {
+            vibrator.vibrate(VibrationEffect.createOneShot(300, 200))
             if (checkScan(tag)) {
-                vibrator.vibrate(VibrationEffect.createOneShot(300, 200))
-                // this also resets tag to null
-                viewModel.stopScan()
+
                 onScan(tag)
 
-                // continue scanning
+                // initiate the next scan
                 if (keepScanning) {
                     viewModel.scan()
+                } else {
+                    viewModel.stopScan()
                 }
+            } else {
+                // successful but non-valid scan result
+                // -> keep scanning regularly.
+                viewModel.scan()
             }
         }
     }
@@ -97,6 +102,7 @@ fun NfcScanCard(
 
                 if (showStatus) {
                     Text(
+                        // "scan=$scan, res=$scanResult, scanning=$scanning, status: ${scanState.status}",
                         scanState.status,
                         textAlign = TextAlign.Left,
                         fontSize = 20.sp,

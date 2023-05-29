@@ -1,10 +1,12 @@
 package de.stustanet.stustapay.ui.common.pay
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
@@ -12,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustanet.stustapay.model.PendingLineItem
 import de.stustanet.stustapay.model.Product
+import de.stustanet.stustapay.ui.theme.ProductConfirmItemBigStyle
+import de.stustanet.stustapay.ui.theme.ProductConfirmItemSmallStyle
 
 @Preview
 @Composable
@@ -47,11 +51,20 @@ fun ProductConfirmLineItem(
 @Preview
 @Composable
 fun PreviewSaleConfirmItem() {
-    ProductConfirmItem(
-        name = "Drahtlose Erdbeeren",
-        price = 52.20,
-        fontSize = 40.sp,
-    )
+    Column {
+        ProductConfirmItem(
+            name = "Drahtlose Erdbeeren",
+            price = 52.20,
+            quantity = 13,
+            bigStyle = true,
+        )
+        ProductConfirmItem(
+            name = "Preis",
+            price = 12.34,
+            quantity = 5,
+            bigStyle = true,
+        )
+    }
 }
 
 /**
@@ -63,16 +76,21 @@ fun ProductConfirmItem(
     name: String,
     price: Double? = null,
     quantity: Int? = null,
-    fontSize: TextUnit = 24.sp,
+    bigStyle: Boolean = false,
 ) {
+    val style: TextStyle = if (bigStyle) {
+        ProductConfirmItemBigStyle
+    } else {
+        ProductConfirmItemSmallStyle
+    }
+
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp)
+            .padding(vertical = 2.dp)
     ) {
-
         Row(
             modifier = Modifier
                 .padding(horizontal = 10.dp)
@@ -81,13 +99,13 @@ fun ProductConfirmItem(
         ) {
             Text(
                 text = if (price != null) {
-                    "%.02f".format(price).replace('.', ',')
+                    "%.02f€".format(price).replace('.', ',')
                 } else {
                     ""
                 },
                 textAlign = TextAlign.Right,
                 modifier = Modifier.weight(0.6f),
-                fontSize = fontSize
+                style = style,
             )
 
             Text(
@@ -104,7 +122,7 @@ fun ProductConfirmItem(
                 },
                 textAlign = TextAlign.Right,
                 modifier = Modifier.weight(0.4f),
-                fontSize = fontSize
+                style = style,
             )
         }
 
@@ -113,9 +131,8 @@ fun ProductConfirmItem(
         ) {
             Text(
                 text = name,
-                fontSize = fontSize,
-                modifier = Modifier
-                    .padding(5.dp)
+                style = style,
+                modifier = Modifier.padding(5.dp)
             )
         }
     }

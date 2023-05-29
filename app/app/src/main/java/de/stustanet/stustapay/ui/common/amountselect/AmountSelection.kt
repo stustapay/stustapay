@@ -11,16 +11,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.common.NumberKeyboard
+import de.stustanet.stustapay.ui.theme.MoneyAmountStyle
 
 
 @Composable
 fun AmountSelection(
     modifier: Modifier = Modifier,
-    amount: UInt = 0u,
+    amount: UInt? = null,
+    initialAmount: (() -> UInt)? = null,
     config: AmountConfig,
     onAmountUpdate: (UInt) -> Unit,
     onClear: () -> Unit,
@@ -29,12 +30,20 @@ fun AmountSelection(
 ) {
     val currentAmount by viewModel.amount.collectAsStateWithLifecycle()
 
-    LaunchedEffect(amount) {
-        viewModel.setAmount(amount)
-    }
-
     LaunchedEffect(config) {
         viewModel.updateConfig(config)
+    }
+
+    LaunchedEffect(amount) {
+        if (amount != null) {
+            viewModel.setAmount(amount)
+        }
+    }
+
+    LaunchedEffect(initialAmount) {
+        if (initialAmount != null) {
+            viewModel.setAmount(initialAmount())
+        }
     }
 
     Column(
@@ -55,8 +64,7 @@ fun AmountSelection(
                         currentAmount.toString()
                     }
                 },
-                fontSize = 72.sp,
-                modifier = Modifier.padding(vertical = 15.dp),
+                style = MoneyAmountStyle,
             )
         }
         NumberKeyboard(

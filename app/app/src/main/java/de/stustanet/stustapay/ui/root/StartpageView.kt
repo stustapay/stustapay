@@ -89,6 +89,11 @@ fun StartpageView(
             LoginProfile(viewModel)
 
             Column(verticalArrangement = Arrangement.Bottom) {
+
+                if (startpageItems.isNotEmpty()) {
+                    Divider()
+                }
+
                 val scroll = rememberScrollState()
                 Column(
                     Modifier

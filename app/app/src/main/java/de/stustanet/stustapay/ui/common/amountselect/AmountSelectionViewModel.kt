@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.common.amountselect
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +20,7 @@ class AmountSelectionViewModel @Inject constructor() : ViewModel() {
     private val _amount = MutableStateFlow(0u)
 
     /**
-     * provides the stored amount - if we have money, always returns in cents.
+     * provides the stored amount - if we have money, always provides in cents.
      */
     val amount = _amount.mapState(0u, viewModelScope) { amount ->
         mapAmount(amount)
@@ -46,10 +47,11 @@ class AmountSelectionViewModel @Inject constructor() : ViewModel() {
 
     /**
      * manually update the amount to some value.
-     * if have money, always accepts cents.
+     * if we have money, always accepts cents (no matter the cents config)
      * if cents are disabled in the config, round to euros.
      */
     fun setAmount(amount: UInt) {
+
         when (val cfg = _config.value) {
             is AmountConfig.Money -> {
                 if (cfg.cents) {

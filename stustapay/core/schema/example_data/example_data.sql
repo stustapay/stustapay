@@ -26,7 +26,26 @@ values
     (1203053663687568, 'LOL-tag1', 'serial1', null, 0),
     (1247532345004944, 'LOL-tag2', 'serial2', null, 0),
     (1343851281585040, 'LOL-tag3', 'serial3', null, 0),
-    (1183326878897040, 'LOL-tag4', 'serial4', null, 0)
+    (1183326878897040, 'LOL-tag4', 'serial4', null, 0),
+    (1280032362533776, 'LOL-tag5', 'serial5', null, 0),
+    (1188163012072336, 'LOL-tag6', 'serial6', null, 0),
+    (1179963919504272, 'LOL-tag7', 'serial7', null, 0),
+    (1300927378428816, 'LOL-tag8', 'serial8', null, 0),
+    (1249727073293200, 'LOL-tag9', 'serial9', null, 0),
+    (1292174235079568, 'LOL-tag10', 'serial10', null, 0),
+    (1277214863987600, 'LOL-tag11', 'serial11', null, 0),
+    (1338353723446160, 'LOL-tag12', 'serial12', null, 0),
+    (1251926096548752, 'LOL-tag13', 'serial13', null, 0),
+    (1225043896243088, 'LOL-tag14', 'serial14', null, 0),
+    (1279413887243152, 'LOL-tag15', 'serial15', null, 0),
+    (1336176175027088, 'LOL-tag16', 'serial16', null, 0),
+    (1223944384615312, 'LOL-tag17', 'serial17', null, 0),
+    (1271240564478864, 'LOL-tag18', 'serial18', null, 0),
+    (1313064956007312, 'LOL-tag19', 'serial19', null, 0),
+    (1276802547127184, 'LOL-tag20', 'serial20', null, 0),
+    (1295429820289936, 'LOL-tag21', 'serial21', null, 0),
+    (1353716821463952, 'LOL-tag22', 'serial22', null, 0),
+    (1340518386963344, 'LOL-tag23', 'serial23', null, 0)
     on conflict do nothing;
 
 
@@ -152,10 +171,15 @@ values
 
 
 insert into ticket (
-    id, name, product_id, initial_top_up_amount
+    id, name, product_id, initial_top_up_amount, restriction
 ) overriding system value
 values
-    (0, 'Eintritt', 4, 8);
+    (0, 'Eintritt incl. 8€', 4, 8, null),
+    (1, 'Eintritt', 4, 0, null),
+    (2, 'Eintritt U18 incl. 8€', 5, 8, 'under_18'),
+    (3, 'Eintritt U18', 5, 0, 'under_18'),
+    (4, 'Eintritt U16', 6, 0, 'under_16')
+    on conflict do nothing;
 
 
 insert into till_button (
@@ -196,7 +220,10 @@ values
     (2, 'Alles', 'Alle Features zum Testen'),
     (3, 'Bierkasse', 'Allgemeine Bierkasse'),
     (4, 'Aufladekasse', 'Allgemeine Aufladekasse'),
-    (5, 'Brotladen', 'Brotladen-Kasse')
+    (5, 'Brotladen', 'Brotladen-Kasse'),
+    (6, 'Eintritt + 0€', 'Eintrittskasse ohne Startguthaben'),
+    (7, 'Eintritt + 8€', 'Eintrittskasse mit Startguthaben'),
+    (8, 'Eintritt + Aufladen', 'Hybride Eintritts & Aufladekasse')
     on conflict do nothing;
 select setval('till_layout_id_seq', 100);
 
@@ -218,6 +245,28 @@ insert into till_layout_to_button (
     -- aufladekasse has no buttons
     -- brotladen
     (5, 4, 1)
+    -- eintritt has no buttons
+    on conflict do nothing;
+
+insert into till_layout_to_ticket (
+    layout_id, ticket_id, sequence_number
+) values
+    -- tickets without initial topup for all-features-till
+    (2, 1, 0),
+    (2, 3, 1),
+    (2, 4, 2),
+    -- tickets with initial topup
+    (6, 0, 0),
+    (6, 2, 1),
+    (6, 4, 2),
+    -- tickets without initial topup.
+    (7, 1, 0),
+    (7, 3, 1),
+    (7, 4, 2),
+    -- aufladekasse + eintritt ohne startguthaben
+    (8, 1, 0),
+    (8, 3, 1),
+    (8, 4, 2)
     on conflict do nothing;
 
 insert into till_profile (
@@ -227,7 +276,10 @@ values
     (2, 'Develop', 'Allmächtige Kasse', 2, true, true, true),
     (3, 'Pot', 'Pot Bierkasse', 3, false, false, false),
     (4, 'Festzelt Aufladung', 'Aufladekasse', 4, true, true, false),
-    (5, 'Brotladen', 'Brotladen-Kasse', 5, false, false, false)
+    (5, 'Brotladen', 'Brotladen-Kasse', 5, false, false, false),
+    (6, 'Ticket + Guthaben', 'Mit initialem Guthaben', 6, false, false, true),
+    (7, 'Ticket ohne Guthaben', 'Ohne initiales Guthaben', 7, false, false, true),
+    (8, 'Ticket + Aufladung', 'Tickets ohne initiales Guthaben', 8, false, true, true)
     on conflict do nothing;
 select setval('till_profile_id_seq', 100);
 
@@ -274,7 +326,10 @@ values
     (10, 'stustapay-dev', 'Allmachtskasse', 2, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, null, null),
     (11, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 4, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, null, null),
     (12, 'ssc-pot-1', 'Pot Bierkasse', 3, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, null, null),
-    (13, 'ssc-brotladen-1', 'Brotladen', 5, null, null, '6450c106-207c-4f17-b451-249c98ae6f19'::uuid, null, null, null)
+    (13, 'ssc-brotladen-1', 'Brotladen', 5, null, null, '6450c106-207c-4f17-b451-249c98ae6f19'::uuid, null, null, null),
+    (14, 'ssc-eintritt-1', 'Eintritt ohne Initialguthaben', 7, null, null, 'dc48a5b1-09d3-424f-820d-0452613c172c'::uuid, null, null, null),
+    (15, 'ssc-eintritt-2', 'Eintritt mit Initialguthaben', 6, null, null, 'f98f56ee-0023-47a9-8059-ff645b66b686'::uuid, null, null, null),
+    (16, 'ssc-eintritt-3', 'Eintritt ohne Guthaben und Aufladen', 8, null, null, 'ea847685-d400-414d-a0c0-9cd431791f15'::uuid, null, null, null)
     on conflict do nothing;
 select setval('till_id_seq', 100);
 

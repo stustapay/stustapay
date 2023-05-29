@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.payinout.payout
 
+import android.util.Log
 import de.stustanet.stustapay.model.NewPayOut
 import de.stustanet.stustapay.model.PendingPayOut
 import de.stustanet.stustapay.model.UserTag
@@ -33,6 +34,10 @@ data class PayOutState(
 
     /** currently selected amount - in cents */
     fun getAmount(): UInt {
+        // try one by one:
+        // use locally changed amount
+        // use checked payout maximum account funds
+        // fall back to zero
         return currentAmount ?: checkedPayOut?.getMaxAmount() ?: 0u
     }
 
@@ -40,6 +45,7 @@ data class PayOutState(
         val tagV = tag ?: return null
 
         // payout amount is always negative for the api
+        // pass null (meaning max amount) if we didn't change the amount locally.
         val amount = currentAmount?.let { it.toDouble() / -100 }
 
         return NewPayOut(

@@ -12,6 +12,7 @@ import de.stustanet.stustapay.util.merge
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -26,7 +27,7 @@ sealed interface ForceDeregisterState {
 @Singleton
 class RegistrationRepository @Inject constructor(
     private val registrationRemoteDataSource: RegistrationRemoteDataSource,
-    private val registrationLocalDataSource: RegistrationLocalDataSource
+    private val registrationLocalDataSource: RegistrationLocalDataSource,
 ) {
     // for local insertions of values without the datasources
     private var _regState = MutableSharedFlow<RegistrationState>()
@@ -35,39 +36,53 @@ class RegistrationRepository @Inject constructor(
 
     var forceDeregisterState = MutableStateFlow<ForceDeregisterState>(ForceDeregisterState.Disallow)
 
+    suspend fun isRegistered(): Boolean {
+        return try {
+            val regState = registrationLocalDataSource.registrationState.first()
+            regState is RegistrationState.Registered
+        } catch (e : NoSuchElementException) {
+            false
+        }
+    }
+
     suspend fun register(
         qrcodeB64: String,
-    ) {
+    ): Boolean {
         _regState.tryEmit(RegistrationState.NotRegistered("Registering..."))
         forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
 
         val state = registerAsState(qrcodeB64)
 
         // only persist if registration was successful
-        if (state is RegistrationState.Registered) {
+        return if (state is RegistrationState.Registered) {
             registrationLocalDataSource.setState(state)
+            true
         } else {
             _regState.tryEmit(state)
+            false
         }
     }
 
-    suspend fun deregister(force: Boolean = false) {
-        when (val result = registrationRemoteDataSource.deregister()) {
+    suspend fun deregister(force: Boolean = false): Boolean {
+        return when (val result = registrationRemoteDataSource.deregister()) {
             is DeregistrationState.Error -> {
                 // remote deregistration failed
                 if (force) {
                     // delete the local state anyway
                     registrationLocalDataSource.delete()
                     forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
+                    true
                 } else {
                     // allow deleting local state anyway
                     forceDeregisterState.tryEmit(ForceDeregisterState.Allow(result.message))
+                    false
                 }
             }
 
             is DeregistrationState.Deregistered -> {
                 registrationLocalDataSource.delete()
                 forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
+                true
             }
         }
     }

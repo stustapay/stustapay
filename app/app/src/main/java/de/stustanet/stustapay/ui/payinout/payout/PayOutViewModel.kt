@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.payinout.payout
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -88,7 +89,7 @@ class PayOutViewModel @Inject constructor(
     /** the big payout button was pressed */
     suspend fun requestPayOut() {
         var showConfirm = true
-        if (!_payOutState.value.wasChanged()) {
+        if (_payOutState.value.wasChanged()) {
             showConfirm = checkPayOut()
         }
 
@@ -126,8 +127,8 @@ class PayOutViewModel @Inject constructor(
             return false
         }
 
-        // local check
-        if (newPayOut.amount != null && newPayOut.amount <= 0.0) {
+        // local check: amount has to be negative for payouts
+        if (newPayOut.amount != null && newPayOut.amount >= 0.0) {
             _status.update { "Amount is zero" }
             return false
         }

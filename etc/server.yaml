@@ -10,11 +10,13 @@ terminalserver:
   port: 9002
 
 administration:
-  base_url: "http://localhost:8080"
+  base_url: "http://localhost:8081"
   host: "localhost"
-  port: 8080
+  port: 8081
 
 core:
+  test_mode: false
+  test_mode_message: "awesome test instance"
   secret_key: "very secret"
   sumup_affiliate_key: "pretty secret"
 

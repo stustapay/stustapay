@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.RegistrationState
 import de.stustanet.stustapay.repository.ForceDeregisterState
 import de.stustanet.stustapay.repository.RegistrationRepository
+import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.util.Result
 import de.stustanet.stustapay.util.asResult
 import kotlinx.coroutines.flow.*
@@ -28,7 +29,8 @@ sealed interface RegistrationUiState {
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
-    private val registrationRepo: RegistrationRepository
+    private val registrationRepo: RegistrationRepository,
+    private val terminalConfigRepository: TerminalConfigRepository,
 ) : ViewModel() {
 
     // convert the information flow from the repo to a stateflow (where we only want the latest element)
@@ -42,19 +44,20 @@ class RegistrationViewModel @Inject constructor(
             initialValue = RegistrationUiState.Loading,
         )
 
-    val allowForceDeregister: StateFlow<ForceDeregisterState> =
-        registrationRepo.forceDeregisterState.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = ForceDeregisterState.Disallow,
-        )
+    val allowForceDeregister = registrationRepo.forceDeregisterState
 
     suspend fun register(qrcodeB64: String) {
-        registrationRepo.register(qrcodeB64)
+        val ok = registrationRepo.register(qrcodeB64)
+        if (ok) {
+            terminalConfigRepository.fetchConfig()
+        }
     }
 
     suspend fun deregister(force: Boolean = false) {
-        registrationRepo.deregister(force)
+        val ok = registrationRepo.deregister(force)
+        if (ok) {
+            terminalConfigRepository.clearConfig()
+        }
     }
 }
 
