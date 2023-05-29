@@ -10,7 +10,10 @@
     <string name="common_status_fetching">Anfrage wird ausgeführt</string>
     <string name="common_status_idle">Bereit</string>
     <string name="common_status_failed">Fehlgeschlagen</string>
+    <string name="common_status_done">Fertig</string>
+
     <string name="common_action_scan">Scannen</string>
+    <string name="common_action_cancel">Abbrechen</string>
 
     <string name="root_item_ticket">Bändchen</string>
     <string name="root_item_sale">Verkauf</string>
@@ -32,4 +35,15 @@
     <string name="history_sum">Summe</string>
     <string name="history_cancel">Stornieren</string>
     <string name="history_confirm">Stornierung bestätigen</string>
+
+    <string name="customer_title">Kontostand</string>
+    <string name="customer_id">ID</string>
+    <string name="customer_name">Name</string>
+    <string name="customer_cash">Guthaben</string>
+    <string name="customer_vouchers">Gutscheine</string>
+    <string name="customer_comment">Kommentar</string>
+    <string name="customer_swap">Tauschen</string>
+    <string name="customer_oldtag">Alt</string>
+    <string name="customer_newtag">Neu</string>
+    <string name="customer_scanoldtag">Altes Bändchen Scannen</string>
 </resources>

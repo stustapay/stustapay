@@ -11,7 +11,9 @@
     <string name="common_status_fetching">Fetching</string>
     <string name="common_status_idle">Idle</string>
     <string name="common_status_failed">Failed</string>
+    <string name="common_status_done">Done</string>
     <string name="common_action_scan">Scan</string>
+    <string name="common_action_cancel">Cancel</string>
 
     <string name="root_item_ticket">Ticket Sale</string>
     <string name="root_item_sale">Product Sale</string>
@@ -33,4 +35,15 @@
     <string name="history_sum">Sum</string>
     <string name="history_cancel">Cancel Sale</string>
     <string name="history_confirm">Confirm Cancellation</string>
+
+    <string name="customer_title">Account Status</string>
+    <string name="customer_id">ID</string>
+    <string name="customer_name">Name</string>
+    <string name="customer_cash">Cash</string>
+    <string name="customer_vouchers">Vouchers</string>
+    <string name="customer_comment">Comment</string>
+    <string name="customer_swap">Swap</string>
+    <string name="customer_oldtag">Old Tag</string>
+    <string name="customer_newtag">New Tag</string>
+    <string name="customer_scanoldtag">Scan Old Tag</string>
 </resources>

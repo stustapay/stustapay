@@ -8,6 +8,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -16,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.chipscan.NfcScanCard
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
@@ -39,7 +41,7 @@ fun CustomerStatusView(
     val oldTagId by viewModel.oldTagId.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
-    NavScaffold(title = { Text("Account Status") }, navigateBack = leaveView) {
+    NavScaffold(title = { Text(stringResource(R.string.customer_title)) }, navigateBack = leaveView) {
         NavHost(navController = nav, startDestination = CustomerStatusNavDests.Scan.route) {
             composable(CustomerStatusNavDests.Scan.route) {
                 Box(modifier = Modifier.padding(20.dp)) {
@@ -70,7 +72,7 @@ fun CustomerStatusView(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("ID", fontSize = 24.sp)
+                                        Text(stringResource(R.string.customer_id), fontSize = 24.sp)
                                         Text(customer.id.toString(), fontSize = 36.sp)
                                     }
 
@@ -82,7 +84,7 @@ fun CustomerStatusView(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Name", fontSize = 24.sp)
+                                        Text(stringResource(R.string.customer_name), fontSize = 24.sp)
                                         Text(customer.name ?: "no name", fontSize = 36.sp)
                                     }
 
@@ -94,7 +96,7 @@ fun CustomerStatusView(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Cash", fontSize = 24.sp)
+                                        Text(stringResource(R.string.customer_cash), fontSize = 24.sp)
                                         Text(
                                             "${DecimalFormat("#.00").format(customer.balance)}€",
                                             fontSize = 36.sp
@@ -109,7 +111,7 @@ fun CustomerStatusView(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Coupons", fontSize = 24.sp)
+                                        Text(stringResource(R.string.customer_vouchers), fontSize = 24.sp)
                                         Text(customer.vouchers.toString(), fontSize = 36.sp)
                                     }
 
@@ -122,7 +124,7 @@ fun CustomerStatusView(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Comment", fontSize = 24.sp)
+                                        Text(stringResource(R.string.customer_comment), fontSize = 24.sp)
                                     }
 
                                     Row(
@@ -145,13 +147,13 @@ fun CustomerStatusView(
                             Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
                                 val text = when (val state = uiState.customer) {
                                     is CustomerStatusRequestState.Idle -> {
-                                        "idle"
+                                        stringResource(R.string.common_status_idle)
                                     }
                                     is CustomerStatusRequestState.Fetching -> {
-                                        "fetching"
+                                        stringResource(R.string.common_status_fetching)
                                     }
                                     is CustomerStatusRequestState.Done -> {
-                                        "done"
+                                        stringResource(R.string.common_status_done)
                                     }
                                     is CustomerStatusRequestState.Failed -> {
                                         state.msg
@@ -174,20 +176,20 @@ fun CustomerStatusView(
                                         nav.navigateTo(CustomerStatusNavDests.Scan.route)
                                     }
                                 ) {
-                                    Text("Scan", fontSize = 24.sp)
+                                    Text(stringResource(R.string.common_action_scan), fontSize = 24.sp)
                                 }
 
                                 if (swapVisible) {
                                     Button(
                                         modifier = Modifier
                                             .padding(start = 10.dp)
-                                            .weight(0.5f),
+                                            .weight(0.8f),
                                         onClick = {
                                             viewModel.idleState()
                                             nav.navigateTo(CustomerStatusNavDests.Swap.route)
                                         }
                                     ) {
-                                        Text("Swap", fontSize = 24.sp)
+                                        Text(stringResource(R.string.customer_swap), fontSize = 24.sp)
                                     }
                                 }
                             }
@@ -213,7 +215,7 @@ fun CustomerStatusView(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        "New Tag",
+                                        stringResource(R.string.customer_newtag),
                                         fontSize = 48.sp,
                                         modifier = Modifier.padding(end = 20.dp)
                                     )
@@ -237,7 +239,7 @@ fun CustomerStatusView(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        "Old Tag",
+                                        stringResource(R.string.customer_oldtag),
                                         fontSize = 48.sp,
                                         modifier = Modifier.padding(end = 20.dp)
                                     )
@@ -259,7 +261,7 @@ fun CustomerStatusView(
                                         scanState.open()
                                     }
                                 ) {
-                                    Text("Scan Old Tag", fontSize = 24.sp)
+                                    Text(stringResource(R.string.customer_scanoldtag), fontSize = 24.sp)
                                 }
 
                                 NfcScanDialog(state = scanState, onScan = { tag ->
@@ -276,13 +278,13 @@ fun CustomerStatusView(
                             Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
                                 val text = when (val state = uiState.customer) {
                                     is CustomerStatusRequestState.Idle -> {
-                                        "idle"
+                                        stringResource(R.string.common_status_idle)
                                     }
                                     is CustomerStatusRequestState.Fetching -> {
-                                        "swapping"
+                                        stringResource(R.string.common_status_fetching)
                                     }
                                     is CustomerStatusRequestState.Done -> {
-                                        "done"
+                                        stringResource(R.string.common_status_done)
                                     }
                                     is CustomerStatusRequestState.Failed -> {
                                         state.msg
@@ -305,7 +307,7 @@ fun CustomerStatusView(
                                         nav.navigateTo(CustomerStatusNavDests.Scan.route)
                                     }
                                 ) {
-                                    Text("Cancel", fontSize = 24.sp)
+                                    Text(stringResource(R.string.common_action_cancel), fontSize = 24.sp)
                                 }
 
                                 Button(
@@ -318,7 +320,7 @@ fun CustomerStatusView(
                                         }
                                     }
                                 ) {
-                                    Text("Swap", fontSize = 24.sp)
+                                    Text(stringResource(R.string.customer_swap), fontSize = 24.sp)
                                 }
                             }
                         }
