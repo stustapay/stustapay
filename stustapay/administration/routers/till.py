@@ -11,12 +11,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[Till])
+@router.get("", response_model=list[Till])
 async def list_tills(token: CurrentAuthToken, till_service: ContextTillService):
     return await till_service.list_tills(token=token)
 
 
-@router.post("/", response_model=Till)
+@router.post("", response_model=Till)
 async def create_till(
     till: NewTill,
     token: CurrentAuthToken,

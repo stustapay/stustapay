@@ -11,12 +11,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[TaxRate])
+@router.get("", response_model=list[TaxRate])
 async def list_tax_rates(token: CurrentAuthToken, tax_service: ContextTaxRateService):
     return await tax_service.list_tax_rates(token=token)
 
 
-@router.post("/", response_model=TaxRate)
+@router.post("", response_model=TaxRate)
 async def create_tax_rate(
     tax_rate: TaxRate,
     token: CurrentAuthToken,
