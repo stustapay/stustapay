@@ -17,6 +17,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
   contact: "Kontakt",
   wristbandTagExample: "Beispiel eines Bändchen-Chips",
   wristbandTagExampleTitle: "Bändchen-Chip Beispiel mit PIN und ID",
+  termsAndConditionsHeader: "Die Datenschutzbestimmungen können <1>hier</1> eingesehen werden.",
+  privacyPolicyHeader: "Unsere AGBs können <1>hier</1> eingesehen werden.",
   languages: {
     en: "English",
     de: "Deutsch",

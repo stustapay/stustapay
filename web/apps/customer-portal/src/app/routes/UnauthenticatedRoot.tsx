@@ -1,7 +1,6 @@
 import * as React from "react";
-import { Link as RouterLink, Outlet, Navigate, useSearchParams } from "react-router-dom";
+import { Link as RouterLink, Outlet } from "react-router-dom";
 import { AppBar, Box, Button, CircularProgress, Container, CssBaseline, Toolbar, Typography } from "@mui/material";
-import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { useTranslation } from "react-i18next";
 import { TestModeDisclaimer } from "@stustapay/components";
 import { config } from "@/api";
@@ -9,15 +8,6 @@ import { LanguageSelect, Layout } from "@/components";
 
 export const UnauthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
-  const authenticated = useAppSelector(selectIsAuthenticated);
-
-  const [query] = useSearchParams();
-
-  if (authenticated) {
-    const next = query.get("next");
-    const redirectUrl = next != null ? next : "/";
-    return <Navigate to={redirectUrl} />;
-  }
 
   return (
     <Layout>

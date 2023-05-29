@@ -32,7 +32,7 @@ const SingleQALayout = ({ translationPrefix }: { translationPrefix: string }) =>
 
 export const Faq: React.FC = () => {
   return (
-    <Container component="main" maxWidth="sm">
+    <Container component="main" maxWidth="md">
       <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <Typography
           variant="h2"

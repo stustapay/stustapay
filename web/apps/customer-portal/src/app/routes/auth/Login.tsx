@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React from "react";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { Form, Formik, FormikHelpers } from "formik";
 import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, TextField, Typography } from "@mui/material";
 import { z } from "zod";
@@ -27,16 +27,13 @@ export const Login: React.FC = () => {
   const { t } = useTranslation();
   const isLoggedIn = useAppSelector(selectIsAuthenticated);
   const [query] = useSearchParams();
-  const navigate = useNavigate();
   const [login] = useLoginMutation();
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      const next = query.get("next");
-      const redirectUrl = next != null ? next : "/";
-      navigate(redirectUrl);
-    }
-  }, [isLoggedIn, navigate, query]);
+  if (isLoggedIn) {
+    const next = query.get("next");
+    const redirectUrl = next != null ? next : "/";
+    return <Navigate to={redirectUrl} />;
+  }
 
   const handleSubmit = (values: FormSchema, { setSubmitting }: FormikHelpers<FormSchema>) => {
     setSubmitting(true);
