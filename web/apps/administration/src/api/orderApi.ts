@@ -33,7 +33,7 @@ export const orderApi = createApi({
       },
     }),
     getOrders: builder.query<EntityState<Order>, void>({
-      query: () => "/orders/",
+      query: () => "/orders",
       transformResponse: (response: Order[]) => {
         return orderAdapter.addMany(orderAdapter.getInitialState(), response);
       },

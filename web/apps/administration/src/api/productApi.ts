@@ -17,14 +17,14 @@ export const productApi = createApi({
   refetchOnReconnect: true,
   endpoints: (builder) => ({
     getProductById: builder.query<EntityState<Product>, number>({
-      query: (id) => `/products/${id}/`,
+      query: (id) => `/products/${id}`,
       transformResponse: (response: Product) => {
         return productAdapter.addOne(productAdapter.getInitialState(), response);
       },
       providesTags: (result, error, arg) => ["product", { type: "product" as const, id: arg }],
     }),
     getProducts: builder.query<EntityState<Product>, void>({
-      query: () => "/products/",
+      query: () => "/products",
       transformResponse: (response: Product[]) => {
         return productAdapter.addMany(productAdapter.getInitialState(), response);
       },
@@ -32,23 +32,23 @@ export const productApi = createApi({
         result ? [...result.ids.map((id) => ({ type: "product" as const, id })), "product"] : ["product"],
     }),
     createProduct: builder.mutation<Product, NewProduct>({
-      query: (product) => ({ url: "/products/", method: "POST", body: product }),
+      query: (product) => ({ url: "/products", method: "POST", body: product }),
       invalidatesTags: ["product"],
     }),
     updateProduct: builder.mutation<Product, Product>({
-      query: ({ id, ...product }) => ({ url: `/products/${id}/`, method: "POST", body: product }),
+      query: ({ id, ...product }) => ({ url: `/products/${id}`, method: "POST", body: product }),
       invalidatesTags: ["product"],
     }),
     lockProduct: builder.mutation<Product, Product>({
       query: ({ id, ...product }) => ({
-        url: `/products/${id}/`,
+        url: `/products/${id}`,
         method: "POST",
         body: { ...product, is_locked: true },
       }),
       invalidatesTags: ["product"],
     }),
     deleteProduct: builder.mutation<void, number>({
-      query: (id) => ({ url: `/products/${id}/`, method: "DELETE" }),
+      query: (id) => ({ url: `/products/${id}`, method: "DELETE" }),
       invalidatesTags: ["product"],
     }),
   }),

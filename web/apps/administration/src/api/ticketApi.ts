@@ -17,14 +17,14 @@ export const ticketApi = createApi({
   refetchOnReconnect: true,
   endpoints: (builder) => ({
     getTicketById: builder.query<EntityState<Ticket>, number>({
-      query: (id) => `/tickets/${id}/`,
+      query: (id) => `/tickets/${id}`,
       transformResponse: (response: Ticket) => {
         return ticketAdapter.addOne(ticketAdapter.getInitialState(), response);
       },
       providesTags: (result, error, arg) => ["ticket", { type: "ticket" as const, id: arg }],
     }),
     getTickets: builder.query<EntityState<Ticket>, void>({
-      query: () => "/tickets/",
+      query: () => "/tickets",
       transformResponse: (response: Ticket[]) => {
         return ticketAdapter.addMany(ticketAdapter.getInitialState(), response);
       },
@@ -32,15 +32,15 @@ export const ticketApi = createApi({
         result ? [...result.ids.map((id) => ({ type: "ticket" as const, id })), "ticket"] : ["ticket"],
     }),
     createTicket: builder.mutation<Ticket, NewTicket>({
-      query: (ticket) => ({ url: "/tickets/", method: "POST", body: ticket }),
+      query: (ticket) => ({ url: "/tickets", method: "POST", body: ticket }),
       invalidatesTags: ["ticket"],
     }),
     updateTicket: builder.mutation<Ticket, Ticket>({
-      query: ({ id, ...ticket }) => ({ url: `/tickets/${id}/`, method: "POST", body: ticket }),
+      query: ({ id, ...ticket }) => ({ url: `/tickets/${id}`, method: "POST", body: ticket }),
       invalidatesTags: ["ticket"],
     }),
     deleteTicket: builder.mutation<void, number>({
-      query: (id) => ({ url: `/tickets/${id}/`, method: "DELETE" }),
+      query: (id) => ({ url: `/tickets/${id}`, method: "DELETE" }),
       invalidatesTags: ["ticket"],
     }),
   }),

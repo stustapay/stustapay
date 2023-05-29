@@ -17,7 +17,7 @@ export const tillRegisterApi = createApi({
   refetchOnReconnect: true,
   endpoints: (builder) => ({
     getTillRegisters: builder.query<EntityState<TillRegister>, void>({
-      query: () => "/till-registers/",
+      query: () => "/till-registers",
       transformResponse: (response: TillRegister[]) => {
         return tillRegisterAdapter.addMany(tillRegisterAdapter.getInitialState(), response);
       },
@@ -27,7 +27,7 @@ export const tillRegisterApi = createApi({
           : ["till-register"],
     }),
     createTillRegister: builder.mutation<TillRegister, NewTillRegister>({
-      query: (till) => ({ url: "/till-registers/", method: "POST", body: till }),
+      query: (till) => ({ url: "/till-registers", method: "POST", body: till }),
       invalidatesTags: ["till-register"],
     }),
     updateTillRegister: builder.mutation<TillRegister, TillRegister>({
@@ -35,7 +35,7 @@ export const tillRegisterApi = createApi({
       invalidatesTags: ["till-register"],
     }),
     deleteTillRegister: builder.mutation<void, number>({
-      query: (id) => ({ url: `/till-registers/${id}/`, method: "DELETE" }),
+      query: (id) => ({ url: `/till-registers/${id}`, method: "DELETE" }),
       invalidatesTags: ["till-register"],
     }),
   }),

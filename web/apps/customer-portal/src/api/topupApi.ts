@@ -20,14 +20,14 @@ export const topupApi = createApi({
   endpoints: (builder) => ({
     createCheckout: builder.mutation<CreateCheckoutResponse, { amount: number }>({
       query: (payload) => ({
-        url: "/sumup/create-checkout/",
+        url: "/sumup/create-checkout",
         method: "POST",
         body: payload,
       }),
     }),
     updateCheckout: builder.mutation<UpdateCheckoutResponse, { checkoutId: string }>({
       query: (payload) => ({
-        url: "/sumup/check-checkout/",
+        url: "/sumup/check-checkout",
         method: "POST",
         body: { checkout_id: payload.checkoutId },
       }),
