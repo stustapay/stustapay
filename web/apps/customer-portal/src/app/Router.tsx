@@ -10,6 +10,7 @@ import { PayoutInfo } from "./routes/PayoutInfo";
 import { TopUp } from "./routes/topup";
 import { Faq } from "./routes/Faq";
 import { Agb } from "./routes/Agb";
+import { PrivacyPolicy } from "./routes/PrivacyPolicy";
 
 const router = createBrowserRouter([
   {
@@ -33,14 +34,6 @@ const router = createBrowserRouter([
         path: "logout",
         element: <Logout />,
       },
-      {
-        path: "faq",
-        element: <Faq />,
-      },
-      {
-        path: "agb",
-        element: <Agb />,
-      },
     ],
   },
   {
@@ -58,6 +51,10 @@ const router = createBrowserRouter([
       {
         path: "/agb",
         element: <Agb />,
+      },
+      {
+        path: "datenschutz",
+        element: <PrivacyPolicy />,
       },
     ],
   },

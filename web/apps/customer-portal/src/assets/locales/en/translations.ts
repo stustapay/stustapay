@@ -16,6 +16,10 @@ export const translations = {
   contact: "Contact",
   wristbandTagExample: "Wristband Tag Example",
   wristbandTagExampleTitle: "Wristband Tag Example with PIN and ID",
+  termsAndConditionsHeader:
+    "Our Terms and Conditions are only available in German. You can access our privacy policy on <1>here</1>.",
+  privacyPolicyHeader:
+    "Our Privacy Policy is only available in German. You can access our terms and conditions on <1>here</1>.",
   languages: {
     en: "English",
     de: "Deutsch",

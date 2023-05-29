@@ -21,6 +21,7 @@ import { z } from "zod";
 import iban from "iban";
 import i18n from "@/i18n";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { Link as RouterLink } from "react-router-dom";
 
 const FormSchema = z.object({
   iban: z.string().refine((val) => iban.isValid(val), {
@@ -38,8 +39,6 @@ type FormVal = z.infer<typeof FormSchema>;
 export const PayoutInfo: React.FC = () => {
   const { t } = useTranslation(undefined, { keyPrefix: "payout" });
   const navigate = useNavigate();
-
-  const config = usePublicConfig();
 
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
 
@@ -144,7 +143,9 @@ export const PayoutInfo: React.FC = () => {
                     label={
                       <Trans i18nKey="payout.privacyPolicyCheck">
                         please accept the
-                        <Link href={config.data_privacy_url} target="_blank" rel="noopener">
+                        {/* TODO: remove config */}
+                        {/* <Link href={config.data_privacy_url} target="_blank" rel="noopener"> */}
+                        <Link component={RouterLink} to="/datenschutz" target="_blank" rel="noopener">
                           privacy policy
                         </Link>
                       </Trans>
