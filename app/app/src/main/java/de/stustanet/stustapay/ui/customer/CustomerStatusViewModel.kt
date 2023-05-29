@@ -82,11 +82,11 @@ class CustomerStatusViewModel @Inject constructor(
         _oldTagId.update { id }
     }
 
-    suspend fun swap() {
+    suspend fun swap(comment: String) {
         _requestState.update { CustomerStatusRequestState.Fetching }
         when (val customer = customerRepository.getCustomer(oldTagId.value)) {
             is Response.OK -> {
-                when (val switch = customerRepository.switchTag(customer.data.id, newTagId.value, "")) {
+                when (val switch = customerRepository.switchTag(customer.data.id, newTagId.value, comment)) {
                     is Response.OK -> {
                         _requestState.update { CustomerStatusRequestState.Done(customer.data) }
                     }
