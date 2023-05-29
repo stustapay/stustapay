@@ -15,6 +15,7 @@ router = APIRouter(
 class SwitchTagPayload(BaseModel):
     customer_id: int
     new_user_tag_uid: int
+    comment: str
 
 
 @router.post("/switch_tag", summary="")
@@ -24,7 +25,7 @@ async def switch_tag(
     account_service: ContextAccountService,
 ):
     await account_service.switch_account_tag_uid_terminal(
-        token=token, account_id=payload.customer_id, new_user_tag_uid=payload.new_user_tag_uid
+        token=token, account_id=payload.customer_id, new_user_tag_uid=payload.new_user_tag_uid, comment=payload.comment
     )
 
 

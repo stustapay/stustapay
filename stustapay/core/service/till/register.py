@@ -133,7 +133,7 @@ class TillRegisterService(DBService):
     @staticmethod
     async def _list_cash_registers(*, conn: asyncpg.Connection, hide_assigned_registers: bool) -> list[CashRegister]:
         if hide_assigned_registers:
-            rows = await conn.fetch("select * rom cash_register_with_cashier where current_cashier_id is null")
+            rows = await conn.fetch("select * from cash_register_with_cashier where current_cashier_id is null")
         else:
             rows = await conn.fetch("select * from cash_register_with_cashier")
         return [CashRegister.parse_obj(row) for row in rows]

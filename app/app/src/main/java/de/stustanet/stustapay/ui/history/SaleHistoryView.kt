@@ -26,8 +26,10 @@ import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import de.stustanet.stustapay.ui.theme.errorButtonColors
 import kotlinx.coroutines.launch
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 @Composable
 fun SaleHistoryView(
@@ -65,7 +67,8 @@ fun SaleHistoryView(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        ZonedDateTime.parse(sale.booked_at).toLocalDateTime()
+                        ZonedDateTime.parse(sale.booked_at)
+                            .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                             .format(DateTimeFormatter.ofPattern("E HH:mm:ss")),
                         fontSize = 24.sp
                     )
@@ -91,12 +94,14 @@ fun SaleHistoryView(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            ZonedDateTime.parse(sale.booked_at).toLocalDateTime()
+                            ZonedDateTime.parse(sale.booked_at)
+                                .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                 .format(DateTimeFormatter.ofPattern("dd-MM-yyyy")), fontSize = 24.sp
                         )
 
                         Text(
-                            ZonedDateTime.parse(sale.booked_at).toLocalDateTime()
+                            ZonedDateTime.parse(sale.booked_at)
+                                .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                 .format(DateTimeFormatter.ofPattern("HH:mm:ss")), fontSize = 24.sp
                         )
                     }

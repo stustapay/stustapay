@@ -27,7 +27,7 @@ class CustomerRemoteDataSource @Inject constructor(
         return terminalAPI.grantVouchers(GrantVouchers(vouchers, tag.uid))
     }
 
-    suspend fun switchTag(customerID: ULong, newTag: UserTag): Response<Unit> {
-        return terminalAPI.switchTag(SwitchTag(customerID, newTag.uid))
+    suspend fun switchTag(customerID: ULong, newTag: ULong, comment: String): Response<Unit> {
+        return terminalAPI.switchTag(SwitchTag(customerID, newTag, comment))
     }
 }
