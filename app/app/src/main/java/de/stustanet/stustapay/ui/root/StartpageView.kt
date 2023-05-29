@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.Access
 import de.stustanet.stustapay.ui.nav.NavDest
 import kotlinx.coroutines.launch
@@ -106,7 +107,7 @@ fun StartpageView(
                     item = StartpageItem(
                         icon = Icons.Filled.Person,
                         navDestination = RootNavDests.user,
-                        label = "User",
+                        label = R.string.root_item_user,
                     ),
                     navigateTo = navigateTo
                 )
@@ -115,7 +116,7 @@ fun StartpageView(
                     StartpageEntry(
                         item = StartpageItem(
                             icon = Icons.Filled.Settings,
-                            label = "Settings",
+                            label = R.string.root_item_settings,
                             navDestination = RootNavDests.settings,
                         ),
                         navigateTo = navigateTo
@@ -126,7 +127,7 @@ fun StartpageView(
                     StartpageEntry(
                         item = StartpageItem(
                             icon = Icons.Filled.Send,
-                            label = "Development",
+                            label = R.string.root_item_development,
                             navDestination = RootNavDests.development,
                         ),
                         navigateTo = navigateTo

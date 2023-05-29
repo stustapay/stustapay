@@ -6,4 +6,16 @@
     <string name="credit_left">übriges Guthaben</string>
     <string name="success">Success!</string>
     <string name="done">Done</string>
+
+    <string name="root_item_ticket">Bändchen</string>
+    <string name="root_item_sale">Verkauf</string>
+    <string name="root_item_topup">Einzahlen / Auszahlen</string>
+    <string name="root_item_status">Kontostand</string>
+    <string name="root_item_history">Bestellverlauf</string>
+    <string name="root_item_rewards">Gutscheine</string>
+    <string name="root_item_cashierManagement">Kassiererverwaltung</string>
+    <string name="root_item_cashierStatus">Kassiererstatus</string>
+    <string name="root_item_user">Benutzer</string>
+    <string name="root_item_settings">Einstellungen</string>
+    <string name="root_item_development">Entwicklung</string>
 </resources>
