@@ -154,7 +154,7 @@ class CustomerNotFound(ServiceException):
         self.uid = uid
 
     def __str__(self):
-        return f"Customer not found: {self.uid}"
+        return f"Customer not found: {self.uid:X}"
 
 
 class BookedProduct(BaseModel):
