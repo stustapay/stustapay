@@ -4,6 +4,11 @@ export const translations = {
   login: "Login",
   userTagUid: "Wristband Tag ID",
   userTagPin: "Wristband Tag Pin",
+  nav: {
+    payout: "Pay Out",
+    agb: "AGB",
+    faq: "FAQ",
+  },
   loginFailed: "Login failed: {{reason}}.",
   errorLoadingCustomer: "Error loading customer",
   payoutInfo: "To get your payout after the festival, please <1>enter your bank account details here</1>.",
