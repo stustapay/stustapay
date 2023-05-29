@@ -57,13 +57,13 @@ fun CashierManagementVaultView(viewModel: CashierManagementViewModel) {
         },
         bottomBar = {
             Column {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Divider()
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
                     Text(status, fontSize = 24.sp)
                 }
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Button(
@@ -73,7 +73,7 @@ fun CashierManagementVaultView(viewModel: CashierManagementViewModel) {
                         }, modifier = Modifier
                             .weight(1.0f)
                             .padding(5.dp)
-                            .height(140.dp)
+                            .height(80.dp)
                     ) {
                         Text("Take\nVault -> Bag", fontSize = 24.sp, textAlign = TextAlign.Center)
                     }
@@ -85,7 +85,7 @@ fun CashierManagementVaultView(viewModel: CashierManagementViewModel) {
                         }, modifier = Modifier
                             .weight(1.0f)
                             .padding(5.dp)
-                            .height(140.dp)
+                            .height(80.dp)
                     ) {
                         Text("Return\nBag -> Vault", fontSize = 24.sp, textAlign = TextAlign.Center)
                     }

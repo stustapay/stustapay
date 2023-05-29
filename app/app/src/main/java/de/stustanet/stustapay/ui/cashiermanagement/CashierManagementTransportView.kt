@@ -52,13 +52,13 @@ fun CashierManagementTransportView(viewModel: CashierManagementViewModel) {
         },
         bottomBar = {
             Column {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Divider()
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
                     Text(status, fontSize = 24.sp)
                 }
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Button(
@@ -68,9 +68,9 @@ fun CashierManagementTransportView(viewModel: CashierManagementViewModel) {
                         }, modifier = Modifier
                             .weight(1.0f)
                             .padding(5.dp)
-                            .height(140.dp)
+                            .height(80.dp)
                     ) {
-                        Text("Withdraw\nCashier -> Bag", fontSize = 24.sp, textAlign = TextAlign.Center)
+                        Text("Withdraw\nCashier -> Bag", fontSize = 20.sp, textAlign = TextAlign.Center)
                     }
 
                     Button(
@@ -80,9 +80,9 @@ fun CashierManagementTransportView(viewModel: CashierManagementViewModel) {
                         }, modifier = Modifier
                             .weight(1.0f)
                             .padding(5.dp)
-                            .height(140.dp)
+                            .height(80.dp)
                     ) {
-                        Text("Deposit\nBag -> Cashier", fontSize = 24.sp, textAlign = TextAlign.Center)
+                        Text("Deposit\nBag -> Cashier", fontSize = 20.sp, textAlign = TextAlign.Center)
                     }
                 }
             }

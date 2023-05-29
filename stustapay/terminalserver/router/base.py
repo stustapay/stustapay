@@ -52,7 +52,7 @@ async def list_cash_register_stockings(
 async def list_cash_registers(
     token: CurrentAuthToken,
     till_service: ContextTillService,
-    hide_assigned: bool=True,
+    hide_assigned: bool = True,
 ):
     return await till_service.register.list_cash_registers_terminal(token=token, hide_assigned_registers=hide_assigned)
 

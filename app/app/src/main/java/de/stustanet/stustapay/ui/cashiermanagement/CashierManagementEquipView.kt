@@ -105,13 +105,13 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
         },
         bottomBar = {
             Column {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Divider()
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
                     Text(status, fontSize = 24.sp)
                 }
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Button(
                     modifier = Modifier
