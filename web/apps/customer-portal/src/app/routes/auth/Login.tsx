@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React from "react";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { Form, Formik, FormikHelpers } from "formik";
 import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, TextField, Typography } from "@mui/material";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import { useLoginMutation } from "@/api/authApi";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import { ReactComponent as PinUidHowToImg } from "@/assets/img/pin_uid_howto.svg";
 
 const validationSchema = z.object({
   userTagUid: z.string(),
@@ -26,16 +27,13 @@ export const Login: React.FC = () => {
   const { t } = useTranslation();
   const isLoggedIn = useAppSelector(selectIsAuthenticated);
   const [query] = useSearchParams();
-  const navigate = useNavigate();
   const [login] = useLoginMutation();
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      const next = query.get("next");
-      const redirectUrl = next != null ? next : "/";
-      navigate(redirectUrl);
-    }
-  }, [isLoggedIn, navigate, query]);
+  if (isLoggedIn) {
+    const next = query.get("next");
+    const redirectUrl = next != null ? next : "/";
+    return <Navigate to={redirectUrl} />;
+  }
 
   const handleSubmit = (values: FormSchema, { setSubmitting }: FormikHelpers<FormSchema>) => {
     setSubmitting(true);
@@ -69,6 +67,7 @@ export const Login: React.FC = () => {
           {({ values, handleBlur, handleChange, handleSubmit, isSubmitting }) => (
             <Form onSubmit={handleSubmit}>
               <input type="hidden" name="remember" value="true" />
+
               <TextField
                 variant="outlined"
                 margin="normal"
@@ -76,24 +75,23 @@ export const Login: React.FC = () => {
                 fullWidth
                 autoFocus
                 type="text"
-                label={t("userTagUid")}
-                name="userTagUid"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.userTagUid}
-              />
-
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                type="password"
                 name="userTagPin"
                 label={t("userTagPin")}
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.userTagPin}
+              />
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                type="text"
+                label={t("userTagUid")}
+                name="userTagUid"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.userTagUid}
               />
 
               {isSubmitting && <LinearProgress />}
@@ -110,6 +108,22 @@ export const Login: React.FC = () => {
             </Form>
           )}
         </Formik>
+        <Box
+          sx={{
+            height: "3em",
+          }}
+        />
+        <Typography variant="h6" gutterBottom>
+          {t("wristbandTagExample")}
+        </Typography>
+        <PinUidHowToImg
+          title={t("wristbandTagExampleTitle")}
+          style={{
+            width: "100%",
+            height: "auto",
+            marginTop: "-1em",
+          }}
+        />
       </Box>
     </Container>
   );

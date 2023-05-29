@@ -72,12 +72,12 @@ class TillManagementTest(TerminalTestCase):
             )
         )
         register = await self.till_service.register.create_cash_register(
-            token=self.admin_token, new_register=NewCashRegister(name="Lade")
+            token=self.admin_token, new_register=NewCashRegister(name="Lade 25")
         )
         await self._login_supervised_user(user_tag_uid=self.admin_tag_uid, user_role_id=ADMIN_ROLE_ID)
         stocking = await self.till_service.register.create_cash_register_stockings(
             token=self.admin_token,
-            stocking=NewCashRegisterStocking(name="My fancy stocking", euro20=2),
+            stocking=NewCashRegisterStocking(name="My fancy stocking 25", euro20=2),
         )
         success = await self.till_service.register.stock_up_cash_register(
             token=self.terminal_token,

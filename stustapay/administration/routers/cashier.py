@@ -14,7 +14,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[Cashier])
+@router.get("", response_model=list[Cashier])
 async def list_cashiers(token: CurrentAuthToken, cashier_service: ContextCashierService):
     return await cashier_service.list_cashiers(token=token)
 

@@ -6,7 +6,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.service.config import ConfigService
-from stustapay.core.service.customer import (
+from stustapay.core.service.customer.customer import (
     csv_export,
     get_customer_bank_data,
     get_number_of_customers,
@@ -92,18 +92,18 @@ class CustomerExportCli(SubCommand):
                     conn=conn, max_export_items_per_batch=max_export_items_per_batch, ith_batch=i
                 )
 
-                # just to get currency identifier from db
                 cfg_srvc = ConfigService(
                     db_pool=db_pool, config=self.config, auth_service=AuthService(db_pool=db_pool, config=self.config)
                 )
                 currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
+                sepa_config = await cfg_srvc.get_sepa_config(conn=conn)
 
-                output_path_file_extension = f"{output_path}_{i + 1}.{file_extension}"
+                output_path_file_extension = f"{output_path}_{i+1}.{file_extension}"
 
-                export_function(
+                await export_function(
                     customers_bank_data=customers_bank_data,
                     output_path=output_path_file_extension,
-                    cfg=self.config,
+                    sepa_config=sepa_config,
                     currency_ident=currency_ident,
                     execution_date=execution_date,
                 )
@@ -114,17 +114,20 @@ class CustomerExportCli(SubCommand):
 
     async def run(self):
         db_pool = await database.create_db_pool(self.config.database)
-        await database.check_revision_version(db_pool)
-        if self.args.action == "sepa":
-            execution_date = (
-                datetime.datetime.strptime(self.args.execution_date, "%Y-%m-%d").date()
-                if self.args.execution_date
-                else None
+        try:
+            await database.check_revision_version(db_pool)
+            if self.args.action == "sepa":
+                execution_date = (
+                    datetime.datetime.strptime(self.args.execution_date, "%Y-%m-%d").date()
+                    if self.args.execution_date
+                    else None
+                )
+            # self.args.action is either sepa or csv
+            await self._export_customer_bank_data(
+                db_pool=db_pool,
+                output_path=self.args.output_path,
+                execution_date=execution_date,
+                data_format=self.args.action,
             )
-        # self.args.action is either sepa or csv
-        await self._export_customer_bank_data(
-            db_pool=db_pool,
-            output_path=self.args.output_path,
-            execution_date=execution_date,
-            data_format=self.args.action,
-        )
+        finally:
+            await db_pool.close()

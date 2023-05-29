@@ -5,9 +5,9 @@ cli entrypoint for controlling the core.
 import asyncio
 
 from stustapay.core import customer_bank_export
-
 from . import admin
 from . import database
+from . import populate
 from .args import Parser
 from .config import read_config
 
@@ -23,6 +23,7 @@ def main():
     ### module registration
     parser.add_subcommand("database", database.DatabaseManage)
     parser.add_subcommand("admin", admin.AdminCli)
+    parser.add_subcommand("populate", populate.PopulateCli)
     parser.add_subcommand("customer-bank-export", customer_bank_export.CustomerExportCli)
     ### / module registration
 

@@ -22,7 +22,7 @@ export const authApi = createApi({
         formData.append("username", credentials.username);
         formData.append("password", credentials.password);
         return {
-          url: "/auth/login/",
+          url: "/auth/login",
           method: "POST",
           body: formData,
         };
@@ -30,11 +30,18 @@ export const authApi = createApi({
     }),
     logout: builder.mutation<void, void>({
       query: () => ({
-        url: "/auth/logout/",
+        url: "/auth/logout",
         method: "POST",
+      }),
+    }),
+    changePassword: builder.mutation<void, { oldPassword: string; newPassword: string }>({
+      query: (payload) => ({
+        url: "/auth/change-password",
+        method: "POST",
+        body: { new_password: payload.newPassword, old_password: payload.oldPassword },
       }),
     }),
   }),
 });
 
-export const { useLoginMutation, useLogoutMutation } = authApi;
+export const { useLoginMutation, useLogoutMutation, useChangePasswordMutation } = authApi;

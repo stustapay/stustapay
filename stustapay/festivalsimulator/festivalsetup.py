@@ -66,7 +66,7 @@ class FestivalSetup(SubCommand):
         subparser.add_argument(
             "--tse-config",
             type=str,
-            help="number of tags to create",
+            help="tse config",
             default=str(Path(__file__).parent.parent.parent / "etc" / "tse.yaml"),
         )
 

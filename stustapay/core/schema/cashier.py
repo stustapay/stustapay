@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from stustapay.core.schema.product import Product
+from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.util import BaseModel
 
 
@@ -14,7 +15,7 @@ class Cashier(BaseModel):
 
     @property
     def user_tag_uid_hex(self):
-        return hex(self.user_tag_uid) if self.user_tag_uid is not None else None
+        return format_user_tag_uid(self.user_tag_uid)
 
     transport_account_id: Optional[int] = None
     cashier_account_id: int

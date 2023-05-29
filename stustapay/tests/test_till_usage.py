@@ -12,8 +12,7 @@ class TillUsageTest(TerminalTestCase):
         self.assertEqual(terminal_config.id, till.id)
 
         # logout till from terminal
-        logged_out = await self.till_service.logout_terminal(token=self.terminal_token)
-        self.assertTrue(logged_out)
+        await self.till_service.logout_terminal(token=self.terminal_token)
 
         # logout till from admin
         till = await self.till_service.get_till(token=self.admin_token, till_id=till.id)

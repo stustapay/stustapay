@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 
 class HTTPServerConfig(BaseModel):
+    base_url: str
     host: str
     port: int
 
@@ -27,6 +28,7 @@ class DatabaseConfig(BaseModel):
     host: Optional[str] = None
     port: Optional[int] = 5432
     dbname: str
+    require_ssl: bool = False
 
 
 class CoreConfig(BaseModel):
@@ -37,11 +39,13 @@ class CoreConfig(BaseModel):
     sumup_affiliate_key: str = "unset"
 
 
-class SEPAConfig(BaseModel):
-    sender_name: str
-    sender_iban: str
-    # ueberweisungszweck
-    description: str
+class SumupConfig(BaseModel):
+    enabled: bool = False
+    client_id: str = ""
+    client_secret: str = ""
+    merchant_code: str = ""
+    return_url: str = ""
+    redirect_url: str = ""
 
 
 class CustomerPortalApiConfig(HTTPServerConfig):
@@ -51,8 +55,8 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     base_bon_url: str
     data_privacy_url: str
     about_page_url: str
-    contact_email: str
-    sepa_config: SEPAConfig
+
+    sumup_config: SumupConfig = SumupConfig()
 
 
 class Config(BaseModel):

@@ -2,13 +2,10 @@ import logging
 
 import asyncpg
 
-from ..core.subcommand import SubCommand
-from .config import Config
-
 from stustapay.core.database import create_db_pool
-
+from .config import Config
 from .generator import Generator
-
+from ..core.subcommand import SubCommand
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,4 +36,7 @@ class Exporter(SubCommand):
 
     async def run(self):
         self.db_pool = await create_db_pool(self.config.database)
-        await self.generator.run(self.db_pool)
+        try:
+            await self.generator.run(self.db_pool)
+        finally:
+            await self.db_pool.close()

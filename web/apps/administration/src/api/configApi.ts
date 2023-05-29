@@ -18,7 +18,7 @@ export const configApi = createApi({
   refetchOnReconnect: true,
   endpoints: (builder) => ({
     getConfigEntries: builder.query<EntityState<ConfigEntry>, void>({
-      query: () => "/config/",
+      query: () => "/config",
       transformResponse: (response: ConfigEntry[]) => {
         return configAdaptor.addMany(configAdaptor.getInitialState(), response);
       },
@@ -29,7 +29,7 @@ export const configApi = createApi({
       },
     }),
     setConfigEntry: builder.mutation<ConfigEntry, ConfigEntry>({
-      query: (configEntry) => ({ url: "/config/", method: "POST", body: configEntry }),
+      query: (configEntry) => ({ url: "/config", method: "POST", body: configEntry }),
       invalidatesTags: ["config"],
     }),
   }),

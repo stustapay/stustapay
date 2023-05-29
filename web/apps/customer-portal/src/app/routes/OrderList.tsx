@@ -64,7 +64,9 @@ export const OrderList: React.FC = () => {
           <AccordionDetails>
             <div style={{ width: "100%" }}>
               <div style={{ marginBottom: "0.5em" }}>
-                <Typography variant="subtitle2">Booked at: {new Date(order.booked_at).toLocaleString()}</Typography>
+                <Typography variant="subtitle2">
+                  {t("bookedAt", { date: new Date(order.booked_at).toLocaleString() })}
+                </Typography>
                 {order.bon_generated && order.bon_output_file && (
                   <Link href={order.bon_output_file} target="_blank" rel="noopener">
                     {t("viewReceipt")}

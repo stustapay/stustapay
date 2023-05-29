@@ -1,12 +1,13 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 
-from stustapay.core.http.auth_user import CurrentAuthToken
+from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
 from stustapay.core.schema.customer import Customer
+from stustapay.core.service.common.error import AccessDenied
 
 router = APIRouter(
     prefix="/auth",
@@ -30,12 +31,9 @@ async def login(
     try:
         user_tag_uid = int(payload.username, 16)
     except Exception as e:  # pylint: disable=broad-except
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from e
+        raise AccessDenied("Invalid user tag") from e
 
     response = await customer_service.login_customer(uid=user_tag_uid, pin=payload.password)
-    if response is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-
     return {"customer": response.customer, "access_token": response.token, "grant_type": "bearer"}
 
 
@@ -48,6 +46,4 @@ async def logout(
     token: CurrentAuthToken,
     customer_service: ContextCustomerService,
 ):
-    logged_out = await customer_service.logout_customer(token=token)
-    if not logged_out:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    await customer_service.logout_customer(token=token)

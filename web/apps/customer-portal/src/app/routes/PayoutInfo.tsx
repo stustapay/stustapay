@@ -1,9 +1,8 @@
-// import { useGetCustomerQuery, useGetDataPrivacyUrlQuery, useSetCustomerInfoMutation } from "@/api/customerApi";
-import { useGetCustomerQuery, useSetCustomerInfoMutation } from "@/api/customerApi";
+import { useGetCustomerQuery, useSetCustomerInfoMutation } from "@/api";
 import { Loading } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import {
   Alert,
   Button,
@@ -22,6 +21,7 @@ import { z } from "zod";
 import iban from "iban";
 import i18n from "@/i18n";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { Link as RouterLink } from "react-router-dom";
 
 const FormSchema = z.object({
   iban: z.string().refine((val) => iban.isValid(val), {
@@ -40,8 +40,6 @@ export const PayoutInfo: React.FC = () => {
   const { t } = useTranslation(undefined, { keyPrefix: "payout" });
   const navigate = useNavigate();
 
-  const config = usePublicConfig();
-
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
 
   const [setCustomerInfo] = useSetCustomerInfoMutation();
@@ -52,8 +50,7 @@ export const PayoutInfo: React.FC = () => {
 
   if (customerError || !customer) {
     toast.error(t("errorFetchingData"));
-    navigate(-1);
-    return null;
+    return <Navigate to="/" />;
   }
 
   const initialValues: FormVal = {
@@ -70,15 +67,14 @@ export const PayoutInfo: React.FC = () => {
       .unwrap()
       .then(() => {
         toast.success(t("updatedBankData"));
-        navigate(-1);
+        navigate("/");
+        setSubmitting(false);
       })
       .catch((error) => {
         toast.error(t("errorWhileUpdatingBankData"));
         console.error(error);
+        setSubmitting(false);
       });
-
-    console.log(values);
-    setSubmitting(false);
   };
 
   return (
@@ -100,6 +96,7 @@ export const PayoutInfo: React.FC = () => {
                   name="iban"
                   label="IBAN"
                   variant="outlined"
+                  required
                   fullWidth
                   value={formik.values.iban}
                   onChange={formik.handleChange}
@@ -112,6 +109,7 @@ export const PayoutInfo: React.FC = () => {
                   name="account_name"
                   label="Account Name"
                   variant="outlined"
+                  required
                   fullWidth
                   value={formik.values.account_name}
                   onChange={formik.handleChange}
@@ -124,6 +122,7 @@ export const PayoutInfo: React.FC = () => {
                   name="email"
                   label="Email"
                   variant="outlined"
+                  required
                   fullWidth
                   value={formik.values.email}
                   onChange={formik.handleChange}
@@ -144,7 +143,9 @@ export const PayoutInfo: React.FC = () => {
                     label={
                       <Trans i18nKey="payout.privacyPolicyCheck">
                         please accept the
-                        <Link href={config.data_privacy_url} target="_blank" rel="noopener">
+                        {/* TODO: remove config */}
+                        {/* <Link href={config.data_privacy_url} target="_blank" rel="noopener"> */}
+                        <Link component={RouterLink} to="/datenschutz" target="_blank" rel="noopener">
                           privacy policy
                         </Link>
                       </Trans>

@@ -21,7 +21,7 @@ export const authApi = createApi({
         formData.append("username", credentials.userTagUid);
         formData.append("password", credentials.userTagPin);
         return {
-          url: "/auth/login/",
+          url: "/auth/login",
           method: "POST",
           body: formData,
         };
@@ -29,7 +29,7 @@ export const authApi = createApi({
     }),
     logout: builder.mutation<void, void>({
       query: () => ({
-        url: "/auth/logout/",
+        url: "/auth/logout",
         method: "POST",
       }),
     }),

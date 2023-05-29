@@ -17,22 +17,44 @@ user_router = APIRouter(prefix="/users")
 user_role_router = APIRouter(prefix="/user_roles")
 
 
-@user_router.get("/", response_model=list[User])
+@user_router.get("", response_model=list[User])
 async def list_users(token: CurrentAuthToken, user_service: ContextUserService):
     return await user_service.list_users(token=token)
 
 
-class CreateUserPayload(UserWithoutId):
-    password: Optional[str]
+class UpdateUserPayload(BaseModel):
+    login: str
+    display_name: str
+    role_names: list[str]
+    description: Optional[str] = None
+    user_tag_uid_hex: Optional[str] = None
+    transport_account_id: Optional[int] = None
+    cashier_account_id: Optional[int] = None
 
 
-@user_router.post("/", response_model=User)
+class CreateUserPayload(UpdateUserPayload):
+    password: Optional[str] = None
+
+
+@user_router.post("", response_model=User)
 async def create_user(
     new_user: CreateUserPayload,
     token: CurrentAuthToken,
     user_service: ContextUserService,
 ):
-    return await user_service.create_user(token=token, new_user=new_user, password=new_user.password)
+    return await user_service.create_user(
+        token=token,
+        new_user=UserWithoutId(
+            login=new_user.login,
+            display_name=new_user.display_name,
+            role_names=new_user.role_names,
+            description=new_user.description,
+            user_tag_uid=int(new_user.user_tag_uid_hex, 16) if new_user.user_tag_uid_hex is not None else None,
+            transport_account_id=new_user.transport_account_id,
+            cashier_account_id=new_user.cashier_account_id,
+        ),
+        password=new_user.password,
+    )
 
 
 @user_router.get("/{user_id}", response_model=User)
@@ -47,11 +69,23 @@ async def get_user(user_id: int, token: CurrentAuthToken, user_service: ContextU
 @user_router.post("/{user_id}", response_model=User)
 async def update_user(
     user_id: int,
-    user: UserWithoutId,
+    user: UpdateUserPayload,
     token: CurrentAuthToken,
     user_service: ContextUserService,
 ):
-    user = await user_service.update_user(token=token, user_id=user_id, user=user)
+    user = await user_service.update_user(
+        token=token,
+        user_id=user_id,
+        user=UserWithoutId(
+            login=user.login,
+            display_name=user.display_name,
+            role_names=user.role_names,
+            description=user.description,
+            user_tag_uid=int(user.user_tag_uid_hex, 16) if user.user_tag_uid_hex is not None else None,
+            transport_account_id=user.transport_account_id,
+            cashier_account_id=user.cashier_account_id,
+        ),
+    )
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -65,12 +99,12 @@ async def delete_user(user_id: int, token: CurrentAuthToken, user_service: Conte
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@user_role_router.get("/", response_model=list[UserRole])
+@user_role_router.get("", response_model=list[UserRole])
 async def list_user_roles(token: CurrentAuthToken, user_service: ContextUserService):
     return await user_service.list_user_roles(token=token)
 
 
-@user_role_router.post("/", response_model=UserRole)
+@user_role_router.post("", response_model=UserRole)
 async def create_user_role(
     new_user_role: NewUserRole,
     token: CurrentAuthToken,

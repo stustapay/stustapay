@@ -6,6 +6,7 @@ import logging
 
 import asyncpg
 import uvicorn
+from urllib.parse import urlparse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,10 +27,13 @@ from stustapay.core.service.common.error import NotFound, ServiceException, Acce
 
 class Server:
     def __init__(self, title: str, config: HTTPServerConfig, cors: bool = False):
+        parsed_base_url = urlparse(config.base_url)
+        root_path = parsed_base_url.path
         self.api = FastAPI(
             title=title,
             version=__version__,
             license_info={"name": "AGPL-3.0"},
+            root_path=root_path,
         )
 
         self.api.add_exception_handler(NotFound, not_found_exception_handler)
@@ -51,11 +55,18 @@ class Server:
                 allow_headers=["*"],
             )
 
+        forward_allowed_ips = None
+
+        # TODO: IPv6
+        if config.host == "localhost" or config.host.startswith("127."):
+            forward_allowed_ips = "*"
+
         self.uvicorn_config = uvicorn.Config(
             self.api,
             host=config.host,
             port=config.port,
             log_level=logging.root.level,
+            forwarded_allow_ips=forward_allowed_ips,
         )
 
     def add_router(self, router):

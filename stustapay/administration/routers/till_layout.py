@@ -11,12 +11,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[TillLayout])
+@router.get("", response_model=list[TillLayout])
 async def list_till_layouts(token: CurrentAuthToken, till_service: ContextTillService):
     return await till_service.layout.list_layouts(token=token)
 
 
-@router.post("/", response_model=NewTillLayout)
+@router.post("", response_model=NewTillLayout)
 async def create_till_layout(
     layout: NewTillLayout,
     token: CurrentAuthToken,

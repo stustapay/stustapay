@@ -2,55 +2,57 @@ package de.stustanet.stustapay.ui.root
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.res.stringResource
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.Access
 
 
 val startpageItems = listOf(
     StartpageItem(
         icon = Icons.Filled.Face,
-        label = "Ticket Sale",
+        label = R.string.root_item_ticket,
         navDestination = RootNavDests.ticket,
-        canAccess = { _, t -> Access.canSellTicket(t) }
+        canAccess = { u, t -> Access.canSellTicket(t, u) }
     ),
     StartpageItem(
         icon = Icons.Filled.ShoppingCart,
-        label = "Product Sale",
+        label = R.string.root_item_sale,
         navDestination = RootNavDests.sale,
         canAccess = { u, t -> Access.canSell(u, t) }
     ),
     StartpageItem(
         icon = Icons.Filled.KeyboardArrowUp,
-        label = "Cash In and Out",
+        label = R.string.root_item_topup,
         navDestination = RootNavDests.topup,
-        canAccess = { _, t -> Access.canTopUp(t) }
+        canAccess = { u, t -> Access.canTopUp(t, u) }
     ),
     StartpageItem(
         icon = Icons.Filled.Info,
-        label = "Account Status",
+        label = R.string.root_item_status,
         navDestination = RootNavDests.status,
         canAccess = { _, _ -> true }
     ),
     StartpageItem(
         icon = Icons.Filled.List,
-        label = "Order History",
+        label = R.string.root_item_history,
         navDestination = RootNavDests.history,
         canAccess = { u, t -> Access.canSell(u, t) }
     ),
     StartpageItem(
         icon = Icons.Filled.Favorite,
-        label = "Rewards",
+        label = R.string.root_item_rewards,
         navDestination = RootNavDests.rewards,
         canAccess = { u, _ -> Access.canGiveVouchers(u) || Access.canGiveFreeTickets(u) }
     ),
     StartpageItem(
         icon = Icons.Filled.ThumbUp,
-        label = "Cashier Management",
+        label = R.string.root_item_cashierManagement,
         navDestination = RootNavDests.cashierManagement,
         canAccess = { u, _ -> Access.canManageCashiers(u) }
     ),
     StartpageItem(
         icon = Icons.Filled.Info,
-        label = "Cashier Status",
+        label = R.string.root_item_cashierStatus,
         navDestination = RootNavDests.cashierStatus,
         canAccess = { _, _ -> true }
     )

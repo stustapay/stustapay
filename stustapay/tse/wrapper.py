@@ -1,19 +1,19 @@
 import asyncio
 import contextlib
+import datetime
 import logging
-from typing import Callable
-import typing
+import time
 import traceback
+import typing
+from typing import Callable
 
 import asyncpg
-import time
-import datetime
+
+from stustapay.core.util import create_task_protected
 
 # from stustapay.core.schema.order import Order
 from .handler import TSEHandler, TSESignatureRequest, TSESignature
 from .kassenbeleg_v1 import Kassenbeleg_V1
-
-from ..core.util import create_task_protected
 
 LOGGER = logging.getLogger(__name__)
 
@@ -77,11 +77,11 @@ class TSEWrapper:
 
                 ##############################################
                 LOGGER.error("checking for new transactions and fail those older than 10 seconds")
-                self.tse_id, tse_status = await self._conn.fetchrow(
-                    "select tse_id, tse_status from tse where tse_name=$1", self.name
-                )
-                assert self.tse_id is not None
-                assert tse_status is not None
+                self.tse_id = await self._conn.fetchval("select tse_id from tse where tse_name=$1", self.name)
+                if self.tse_id is None:
+                    LOGGER.error(f"ERROR: TSE {self.name} is not in Database, cannot start, retrying in 10 seconds")
+                    await asyncio.sleep(10)
+                    continue
 
                 new_sig_requests = await self._conn.fetch(
                     """
@@ -452,7 +452,7 @@ class TSEWrapper:
         # TODO handle failures
         # (return None if the signature was cleanly aborted,
         #  e.g. because self._tse_handler is no longer valid)
-        LOGGER.info(f"{self.name!r}: signature done ({signing_request}) in TIME {stop-start:.3f}s")
+        LOGGER.info(f"{self.name!r}: signature done ({signing_request}) in TIME {stop - start:.3f}s")
         result.tse_duration = float(stop - start)  # duratoion
         return result
 

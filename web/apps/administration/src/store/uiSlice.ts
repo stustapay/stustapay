@@ -8,7 +8,7 @@ interface UiState {
 }
 
 const initialState: UiState = {
-  theme: "light",
+  theme: "browser",
 };
 
 export const uiSlice = createSlice({
@@ -21,6 +21,6 @@ export const uiSlice = createSlice({
   },
 });
 
-// export const { } = authSlice.actions;
+export const { setTheme } = uiSlice.actions;
 
 export const selectTheme = (state: RootState) => state.ui.theme;

@@ -11,12 +11,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[Ticket])
+@router.get("", response_model=list[Ticket])
 async def list_tickets(token: CurrentAuthToken, ticket_service: ContextTicketService):
     return await ticket_service.list_tickets(token=token)
 
 
-@router.post("/", response_model=Ticket)
+@router.post("", response_model=Ticket)
 async def create_ticket(
     ticket: NewTicket,
     token: CurrentAuthToken,

@@ -3,11 +3,12 @@ database notification subscriber
 """
 
 import asyncio
+import contextlib
 import inspect
 import logging
 from typing import Callable, Optional, Awaitable, Union, Type
 
-import asyncpg
+import asyncpg.exceptions
 
 
 class DBHook:
@@ -19,9 +20,9 @@ class DBHook:
 
     def __init__(
         self,
-        connection: asyncpg.Connection,
+        pool: asyncpg.Pool,
         channel: str,
-        event_handler: Callable[[Optional[str]], Awaitable[None]],
+        event_handler: Callable[[Optional[str]], Awaitable[Optional[StopIteration]]],
         initial_run: bool = False,
     ):
         """
@@ -30,7 +31,7 @@ class DBHook:
         event_handler: async function which receives the payload of the database notification as argument
         initial_run: true if we shall call the handler once after startup with None as argument.
         """
-        self.connection = connection
+        self.db_pool = pool
         self.channel = channel
         self.event_handler = event_handler
         assert inspect.iscoroutinefunction(event_handler)
@@ -39,24 +40,20 @@ class DBHook:
         self.events: asyncio.Queue[Union[str, Type[StopIteration]]] = asyncio.Queue(maxsize=2048)
         self.logger = logging.getLogger(__name__)
 
-        self.hooks_active = False
+    @contextlib.asynccontextmanager
+    async def acquire_conn(self):
+        async with self.db_pool.acquire() as conn:
+            await self._register(conn=conn)
+            try:
+                yield conn
+            finally:
+                await self._deregister(conn=conn)
 
-    async def register(self):
-        if self.hooks_active:
-            return
+    async def _register(self, conn: asyncpg.Connection):
+        await conn.add_listener(self.channel, self.notification_callback)
 
-        self.connection.add_termination_listener(self.terminate_callback)
-        await self.connection.add_listener(self.channel, self.notification_callback)
-
-        self.hooks_active = True
-
-    async def deregister(self):
-        if not self.hooks_active:
-            return
-
-        await self.connection.remove_listener(self.channel, self.notification_callback)
-        self.connection.remove_termination_listener(self.terminate_callback)
-        self.hooks_active = False
+    async def _deregister(self, conn: asyncpg.Connection):
+        await conn.remove_listener(self.channel, self.notification_callback)
 
     def stop(self):
         # proper way of clearing asyncio queue
@@ -66,39 +63,33 @@ class DBHook:
         self.events.put_nowait(StopIteration)
 
     async def run(self):
-        await self.register()
+        while True:
+            try:
+                async with self.acquire_conn():
+                    if self.initial_run:
+                        # run the handler once to process pending data
+                        ret = await self.event_handler(None)
+                        if ret is StopIteration:
+                            return
 
-        if self.initial_run:
-            # run the handler once to process pending data
-            await self.event_handler(None)
+                    # handle events
+                    while True:
+                        event = await self.events.get()
+                        if event is StopIteration:
+                            return
 
-        try:
-            # handle events
-            while True:
-                event = await self.events.get()
-                if event is StopIteration:
-                    break
+                        ret = await asyncio.wait_for(self.event_handler(event), self.HOOK_TIMELIMIT)
+                        if ret == StopIteration:
+                            return
 
-                ret = await asyncio.wait_for(self.event_handler(event), self.HOOK_TIMELIMIT)
-                if ret == StopIteration:
-                    break
-        finally:
-            await self.deregister()
+            except Exception as e:
+                self.logger.error(f"Error occurred during DBHook.run: {e}")
+                await asyncio.sleep(1)
 
     def notification_callback(self, connection: asyncpg.Connection, pid: int, channel: str, payload: str):
         """
         runs whenever we get a psql notification through pg_notify
         """
-        assert connection == self.connection
+        del connection, pid
         assert channel == self.channel
-        del pid  # unused
         self.events.put_nowait(payload)
-
-    def terminate_callback(self, connection: asyncpg.Connection):
-        """
-        runs when the psql connection is closed
-        """
-        assert connection is self.connection
-        self.logger.info("psql connection closed")
-
-        self.stop()

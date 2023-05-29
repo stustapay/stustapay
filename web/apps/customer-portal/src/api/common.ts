@@ -19,6 +19,7 @@ export const prepareAuthHeaders = (
 export const PublicCustomerApiConfigSchema = z.object({
   test_mode: z.boolean(),
   test_mode_message: z.string(),
+  sumup_topup_enabled: z.boolean(),
   currency_symbol: z.string(),
   currency_identifier: z.string(),
   data_privacy_url: z.string(),
@@ -48,19 +49,19 @@ export let config: Config;
 const generateConfig = (clientConfig: ClientConfig, publicApiConfig: PublicCustomerApiConfig): Config => {
   return {
     ...clientConfig,
-    customerApiBaseUrl: `http://${clientConfig.customerApiEndpoint}`,
+    customerApiBaseUrl: clientConfig.customerApiEndpoint,
     publicApiConfig: publicApiConfig,
   };
 };
 
 const fetchPublicCustomerApiConfig = async (clientConfig: ClientConfig): Promise<PublicCustomerApiConfig> => {
-  const resp = await fetch(`http://${clientConfig.customerApiEndpoint}/public_customer_config`);
+  const resp = await fetch(`${clientConfig.customerApiEndpoint}/public_customer_config`);
   const respJson = await resp.json();
   return PublicCustomerApiConfigSchema.parse(respJson);
 };
 
 export const fetchConfig = async (): Promise<Config> => {
-  const resp = await fetch(`http://${siteHost}/assets/config.json`);
+  const resp = await fetch(`${window.location.protocol}//${siteHost}/assets/config.json`);
   const respJson = await resp.json();
   const clientConfig = ClientConfigSchema.parse(respJson);
   const publicConfig = await fetchPublicCustomerApiConfig(clientConfig);

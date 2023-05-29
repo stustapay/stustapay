@@ -30,17 +30,12 @@ async def find_accounts(token: CurrentAuthToken, account_service: ContextAccount
 
 @router.get("/accounts/{account_id}", response_model=Account)
 async def get_account(token: CurrentAuthToken, account_service: ContextAccountService, account_id: int):
-    account = await account_service.get_account(token=token, account_id=account_id)
-    if not account:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return account
+    return await account_service.get_account(token=token, account_id=account_id)
 
 
 @router.post("/accounts/{account_id}/disable")
 async def disable_account(token: CurrentAuthToken, account_service: ContextAccountService, account_id: int):
-    success = await account_service.disable_account(token=token, account_id=account_id)
-    if not success:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    await account_service.disable_account(token=token, account_id=account_id)
 
 
 class UpdateBalancePayload(BaseModel):

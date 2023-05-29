@@ -16,4 +16,44 @@
     <string name="voucher">Gutschein</string>
     <string name="edit">↢ Bearbeiten</string>
     <string name="no_balance_for_payout">Kein Guthaben zum Auszahlen</string>
+
+    <string name="common_status_fetching">Anfrage wird ausgeführt</string>
+    <string name="common_status_idle">Bereit</string>
+    <string name="common_status_failed">Fehlgeschlagen</string>
+    <string name="common_status_done">Fertig</string>
+
+    <string name="common_action_scan">Scannen</string>
+    <string name="common_action_cancel">Abbrechen</string>
+
+    <string name="root_item_ticket">Bändchen</string>
+    <string name="root_item_sale">Verkauf</string>
+    <string name="root_item_topup">Einzahlen / Auszahlen</string>
+    <string name="root_item_status">Kontostand</string>
+    <string name="root_item_history">Bestellverlauf</string>
+    <string name="root_item_rewards">Gutscheine</string>
+    <string name="root_item_cashierManagement">Kassiererverwaltung</string>
+    <string name="root_item_cashierStatus">Kassiererstatus</string>
+    <string name="root_item_user">Benutzer</string>
+    <string name="root_item_settings">Einstellungen</string>
+    <string name="root_item_development">Entwicklung</string>
+
+    <string name="cashier_title">Kassiererstatus</string>
+    <string name="cashier_drawer">Kasse</string>
+    <string name="cashier_bag">Rucksack</string>
+
+    <string name="history_title">Bestellverlauf</string>
+    <string name="history_sum">Summe</string>
+    <string name="history_cancel">Stornieren</string>
+    <string name="history_confirm">Stornierung bestätigen</string>
+
+    <string name="customer_title">Kontostand</string>
+    <string name="customer_id">ID</string>
+    <string name="customer_name">Name</string>
+    <string name="customer_cash">Guthaben</string>
+    <string name="customer_vouchers">Gutscheine</string>
+    <string name="customer_comment">Kommentar</string>
+    <string name="customer_swap">Tauschen</string>
+    <string name="customer_oldtag">Alt</string>
+    <string name="customer_newtag">Neu</string>
+    <string name="customer_scanoldtag">Altes Bändchen Scannen</string>
 </resources>

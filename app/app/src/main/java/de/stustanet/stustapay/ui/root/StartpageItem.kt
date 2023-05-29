@@ -7,7 +7,7 @@ import de.stustanet.stustapay.ui.nav.NavDest
 
 data class StartpageItem(
     val icon: ImageVector,
-    val label: String,
+    val label: Int,
     val navDestination: NavDest? = null,
     val isUnread: Boolean = false,
     val canAccess: (CurrentUser, TerminalConfig) -> Boolean = { _, _ -> false },

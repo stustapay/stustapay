@@ -1,19 +1,17 @@
+import asyncio
 import contextlib
+import curses
 
 # import functools
 import logging
+from curses import wrapper
+from datetime import datetime
 
 import asyncpg
-import asyncio
-
-from ..core.subcommand import SubCommand
-from .config import Config
 
 from stustapay.core.database import create_db_pool
-
-from curses import wrapper
-import curses
-from datetime import datetime
+from stustapay.core.subcommand import SubCommand
+from .config import Config
 
 LOGGER = logging.getLogger(__name__)
 
@@ -327,3 +325,5 @@ class TseSwitchover(SubCommand):
                     print("=======================================================")
 
             LOGGER.info("exiting")
+
+        await pool.close()

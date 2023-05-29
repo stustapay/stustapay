@@ -48,7 +48,16 @@ values
     ('currency.symbol', '€'),
     -- Must conform to ISO 4217 for SEPA transfer
     ('currency.identifier', 'EUR'),
-    ('max_account_balance', '150')
+    ('max_account_balance', '150'),
+    ('sumup_topup.enabled', 'true'),
+
+    -- Options for customer portal
+    ('customer_portal.contact_email', 'test-beschwerde@stustapay.de'),
+
+    ('customer_portal.sepa.sender_name', 'Toller Festivalveranstalter'),
+    ('customer_portal.sepa.sender_iban', 'DE89 3704 0044 0532 0130 00'),
+    -- Verwendungszweck, {user_tag_uid} is replaced with the tag uid
+    ('customer_portal.sepa.description', 'FestivalName, TagID: {user_tag_uid}')
     on conflict do nothing;
 
 
@@ -172,7 +181,8 @@ values
     (5, null, 'virtual', 'Imbalace', 'Imbalance on a cash register on settlement'),
     (6, null, 'virtual', 'Money / Voucher create', 'Account which will be charged on manual account balance updates and voucher top ups'),
     (7, null, 'virtual', 'Cash Exit', 'target account when cash exists the system, e.g. cash pay outs'),
-    (8, null, 'virtual', 'Cash Sale Source', 'source account for cash good sales or cash top ups')
+    (8, null, 'virtual', 'Cash Sale Source', 'source account for cash good sales or cash top ups'),
+    (9, null, 'virtual', 'Sumup customer topup', 'source account for sumup top ups through the customer portal')
     on conflict do nothing;
 
 create table if not exists account_tag_association_history (
@@ -258,6 +268,21 @@ create table if not exists customer_info (
     iban text,
     account_name text,
     email text
+);
+
+-- customer checkout
+create table if not exists customer_sumup_checkout (
+    checkout_reference uuid primary key unique,
+    amount numeric not null,
+    currency text not null,  -- currency identifier -> EUR
+    merchant_code text not null,
+    description text not null,
+    return_url text not null,
+    id text not null unique,  -- sumup checkout id
+    status text not null,
+    date timestamptz not null,
+    valid_until timestamptz,
+    customer_account_id bigint references account(id) on delete cascade
 );
 
 -- people working with the payment system
@@ -494,7 +519,10 @@ values
     ('sumup'),
 
     -- payment with tag
-    ('tag')
+    ('tag'),
+
+    -- sumup online topup
+    ('sumup_online')
 
     -- todo: paypal
 
@@ -1165,11 +1193,15 @@ create table if not exists ordr (
     constraint only_cancel_orders_can_reference_orders check((order_type != 'cancel_sale') = (cancels_order is null)),
 
     -- who created it
-    cashier_id bigint not null references usr(id),
+    cashier_id bigint references usr(id),
     cash_register_id bigint references cash_register(id),
     constraint cash_orders_need_cash_register
         check ((payment_method = 'cash' and cash_register_id is not null) or (payment_method != 'cash' and cash_register_id is null)),
-    till_id bigint not null references till(id),
+    till_id bigint references till(id),
+
+    constraint till_required_for_non_online_orders
+        check ((payment_method = 'sumup_online' and cashier_id is null and till_id is null)
+                   or (payment_method != 'sumup_online' and cashier_id is not null and till_id is not null)),
     -- customer is allowed to be null, as it is only known on the final booking, not on the creation of the order
     -- canceled orders can have no customer
     customer_account_id bigint references account(id)

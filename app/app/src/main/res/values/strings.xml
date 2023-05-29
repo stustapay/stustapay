@@ -17,4 +17,42 @@
     <string name="voucher">Voucher</string>
     <string name="edit">↢ Edit</string>
     <string name="no_balance_for_payout">No balance for payout</string>
+    <string name="common_status_fetching">Fetching</string>
+    <string name="common_status_idle">Idle</string>
+    <string name="common_status_failed">Failed</string>
+    <string name="common_status_done">Done</string>
+    <string name="common_action_scan">Scan</string>
+    <string name="common_action_cancel">Cancel</string>
+
+    <string name="root_item_ticket">Ticket Sale</string>
+    <string name="root_item_sale">Product Sale</string>
+    <string name="root_item_topup">Cash In and Out</string>
+    <string name="root_item_status">Account Status</string>
+    <string name="root_item_history">Order History</string>
+    <string name="root_item_rewards">Rewards</string>
+    <string name="root_item_cashierManagement">Cashier Management</string>
+    <string name="root_item_cashierStatus">Cashier Status</string>
+    <string name="root_item_user">User</string>
+    <string name="root_item_settings">Settings</string>
+    <string name="root_item_development">Development</string>
+
+    <string name="cashier_title">Cashier Status</string>
+    <string name="cashier_drawer">Cash Drawer</string>
+    <string name="cashier_bag">Bag</string>
+
+    <string name="history_title">Order History</string>
+    <string name="history_sum">Sum</string>
+    <string name="history_cancel">Cancel Sale</string>
+    <string name="history_confirm">Confirm Cancellation</string>
+
+    <string name="customer_title">Account Status</string>
+    <string name="customer_id">ID</string>
+    <string name="customer_name">Name</string>
+    <string name="customer_cash">Cash</string>
+    <string name="customer_vouchers">Vouchers</string>
+    <string name="customer_comment">Comment</string>
+    <string name="customer_swap">Swap</string>
+    <string name="customer_oldtag">Old Tag</string>
+    <string name="customer_newtag">New Tag</string>
+    <string name="customer_scanoldtag">Scan Old Tag</string>
 </resources>

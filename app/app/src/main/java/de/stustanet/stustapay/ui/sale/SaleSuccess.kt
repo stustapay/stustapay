@@ -44,6 +44,14 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
     val haptic = LocalHapticFeedback.current
 
+    val returnableCount = saleCompletedV.line_items.sumOf { i ->
+        if (i.product.is_returnable) {
+            i.quantity
+        } else {
+            0
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(saleConfig.tillName) })
@@ -96,6 +104,22 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                             name = stringResource(R.string.remaining_vouchers),
                             quantity = saleCompletedV.new_voucher_balance,
                         )
+                    }
+
+                    if (returnableCount != 0) {
+                        Divider(modifier = Modifier.padding(bottom = 10.dp))
+
+                        if (returnableCount > 0) {
+                            ProductConfirmItem(
+                                name = "Pfand Ausgabe",
+                                quantity = returnableCount,
+                            )
+                        } else {
+                            ProductConfirmItem(
+                                name = "Pfand Rückgabe",
+                                quantity = -returnableCount,
+                            )
+                        }
                     }
                 }
             }

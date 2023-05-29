@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import sys
-from contextlib import AsyncExitStack
 from uuid import UUID
 
 import asyncpg
@@ -51,29 +50,29 @@ class Generator(SubCommand):
         self.logger.info("Starting Bon Generator")
         self.pool = await create_db_pool(self.config.database)
 
-        async with AsyncExitStack() as stack:
-            self.db_conn = await stack.enter_async_context(self.pool.acquire())
-            self.bon_config = await fetch_base_config(conn=self.db_conn)
+        async with self.pool.acquire() as conn:
+            self.bon_config = await fetch_base_config(conn=conn)
 
-            # initial processing of pending bons
-            await self.cleanup_pending_bons()
+        # initial processing of pending bons
+        await self.cleanup_pending_bons()
 
-            self.db_hook = DBHook(self.db_conn, "bon", self.handle_hook)
-            await self.db_hook.run()
+        self.db_hook = DBHook(self.pool, "bon", self.handle_hook)
+        await self.db_hook.run()
 
     async def cleanup_pending_bons(self):
         self.logger.info("Generating not generated bons")
-        missing_bons = await self.db_conn.fetch(
-            "select bon.id, o.uuid "
-            "from bon join ordr o on bon.id = o.id "
-            "where not generated and error is null and bon.id % $1 = $2",
-            self.args.n_workers,
-            self.args.worker_id,
-        )
-        for row in missing_bons:
-            async with self.db_conn.transaction():
-                await self.process_bon(order_id=row["id"], order_uuid=row["uuid"])
-        self.logger.info("Finished generating left-over bons")
+        async with self.pool.acquire() as conn:
+            missing_bons = await conn.fetch(
+                "select bon.id, o.uuid "
+                "from bon join ordr o on bon.id = o.id "
+                "where not generated and error is null and bon.id % $1 = $2",
+                self.args.n_workers,
+                self.args.worker_id,
+            )
+            for row in missing_bons:
+                async with conn.transaction():
+                    await self.process_bon(conn=conn, order_id=row["id"], order_uuid=row["uuid"])
+            self.logger.info("Finished generating left-over bons")
 
     async def handle_hook(self, payload):
         self.logger.debug(f"Received hook with payload {payload}")
@@ -83,10 +82,11 @@ class Generator(SubCommand):
             if not self._should_process_order(order_id=bon_id):
                 return
 
-            async with self.db_conn.transaction():
-                order_uuid = await self.db_conn.fetchval("select uuid from ordr where id = $1", bon_id)
-                assert order_uuid is not None
-                await self.process_bon(order_id=bon_id, order_uuid=order_uuid)
+            async with self.pool.acquire() as conn:
+                async with conn.transaction():
+                    order_uuid = await conn.fetchval("select uuid from ordr where id = $1", bon_id)
+                    assert order_uuid is not None
+                    await self.process_bon(conn=conn, order_id=bon_id, order_uuid=order_uuid)
         except json.JSONDecodeError as e:
             self.logger.error(f"Error while trying to decode database payload for bon notification: {e}")
         except PostgresError as e:
@@ -99,7 +99,7 @@ class Generator(SubCommand):
                 f"Unexpected error while processing bon: {traceback.format_exception(exc_type, exc_value, exc_traceback)}"
             )
 
-    async def process_bon(self, order_id: int, order_uuid: UUID):
+    async def process_bon(self, conn: asyncpg.Connection, order_id: int, order_uuid: UUID):
         """
         Queries the database for the bon data and generates it.
         Then saves the result back to the database
@@ -109,18 +109,16 @@ class Generator(SubCommand):
 
         # Generate the PDF and store the result back in the database
         self.logger.debug(f"Generating Bon for order {order_id}...")
-        success, msg = await generate_bon(
-            conn=self.db_conn, config=self.bon_config, order_id=order_id, out_file=out_file
-        )
+        success, msg = await generate_bon(conn=conn, config=self.bon_config, order_id=order_id, out_file=out_file)
         self.logger.debug(f"Bon {order_id} generated with result {success}, {msg}")
         if success:
-            await self.db_conn.execute(
+            await conn.execute(
                 "update bon set generated = true, output_file = $2 , generated_at = now() where id = $1",
                 order_id,
                 file_name,
             )
         else:
             self.logger.warning(f"Error while generating bon: {msg}")
-            await self.db_conn.execute(
+            await conn.execute(
                 "update bon set generated = $2, error = $3, generated_at = now() where id = $1", order_id, success, msg
             )

@@ -51,8 +51,8 @@ async def list_cash_register_stockings(
 @router.get("/cash-registers", summary="list all cash registers", response_model=list[CashRegister])
 async def list_cash_registers(
     token: CurrentAuthToken,
-    hide_assigned: bool,
     till_service: ContextTillService,
+    hide_assigned: bool = True,
 ):
     return await till_service.register.list_cash_registers_terminal(token=token, hide_assigned_registers=hide_assigned)
 

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useMediaQuery, PaletteMode, createTheme, ThemeProvider, CssBaseline } from "@mui/material";
+import { createTheme, CssBaseline, PaletteMode, ThemeProvider, useMediaQuery } from "@mui/material";
 import { Router } from "./Router";
 import { toast, ToastContainer } from "react-toastify";
 import { useAppSelector } from "@store";

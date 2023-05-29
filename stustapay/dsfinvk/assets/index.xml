@@ -493,6 +493,24 @@
           <AlphaNumeric />
           <MaxLength>1000</MaxLength>
         </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_ZERTIFIKAT_III</Name>
+          <Description>Ggf. Rest des base64-codierten Zertifikats der TSE (in base64-Codierung)</Description>
+          <AlphaNumeric />
+          <MaxLength>1000</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_ZERTIFIKAT_IV</Name>
+          <Description>Ggf. Rest des base64-codierten Zertifikats der TSE (in base64-Codierung)</Description>
+          <AlphaNumeric />
+          <MaxLength>1000</MaxLength>
+        </VariableColumn>
+        <VariableColumn>
+          <Name>TSE_ZERTIFIKAT_V</Name>
+          <Description>Ggf. Rest des base64-codierten Zertifikats der TSE (in base64-Codierung)</Description>
+          <AlphaNumeric />
+          <MaxLength>1000</MaxLength>
+        </VariableColumn>
       </VariableLength>
     </Table>
     <Table>

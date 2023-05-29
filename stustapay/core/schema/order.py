@@ -7,6 +7,7 @@ from pydantic import root_validator, validator
 
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.ticket import Ticket
+from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.util import BaseModel
 
 
@@ -24,6 +25,7 @@ class PaymentMethod(enum.Enum):
     cash = "cash"
     sumup = "sumup"
     tag = "tag"
+    sumup_online = "sumup_online"
 
 
 def is_non_tag_payment_method(payment_method: PaymentMethod):
@@ -244,14 +246,14 @@ class Order(BaseModel):
     order_type: OrderType
 
     # foreign keys
-    cashier_id: int
-    till_id: int
+    cashier_id: Optional[int]
+    till_id: Optional[int]
     customer_account_id: Optional[int]
     customer_tag_uid: Optional[int]
 
     @property
     def customer_tag_uid_hex(self):
-        return hex(self.customer_tag_uid) if self.customer_tag_uid is not None else None
+        return format_user_tag_uid(self.customer_tag_uid)
 
     line_items: list[LineItem]
 
