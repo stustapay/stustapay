@@ -163,6 +163,11 @@ class CustomerServiceTest(TerminalTestCase):
                 customer["email"],
             )
 
+            # update allowed country code config
+            await self.db_conn.execute(
+                "update config set value = '[\"DE\"]' where key = 'customer_portal.sepa.allowed_country_codes'",
+            )
+
     async def test_get_number_of_customers(self):
         result = await get_number_of_customers(self.db_conn)
         self.assertEqual(result, len(self.customers_to_transfer))
@@ -258,6 +263,20 @@ class CustomerServiceTest(TerminalTestCase):
 
         # test invalid iban customer
         invalid_iban = "DE89370400440532013001"
+        tmp_bank_data = copy.deepcopy(customers_bank_data)
+        tmp_bank_data[0].iban = invalid_iban
+
+        with self.assertRaises(ValueError):
+            await sepa_export(
+                tmp_bank_data,
+                os.path.join(self.tmp_dir, test_file_name),
+                sepa_config,
+                currency_ident,
+                datetime.date.today(),
+            )
+
+        # test invalid iban country code, virgin islands are not allowed ;)
+        invalid_iban = "VG67BGXY9228788158369211"
         tmp_bank_data = copy.deepcopy(customers_bank_data)
         tmp_bank_data[0].iban = invalid_iban
 

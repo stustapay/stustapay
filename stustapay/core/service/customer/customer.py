@@ -29,6 +29,7 @@ class PublicCustomerApiConfig(PublicConfig):
     data_privacy_url: str
     contact_email: str
     about_page_url: str
+    allowed_country_codes: list[str]
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -233,7 +234,10 @@ class CustomerService(DBService):
             iban = IBAN(customer_bank.iban, validate_bban=True)
         except ValueError as exc:
             raise InvalidArgument("Provided IBAN is not valid") from exc
-        # TODO: check for countries which are in sepa but do not accept euro
+
+        allowed_country_codes = (await self.config_service.get_sepa_config(conn=conn)).allowed_country_codes
+        if iban.country_code not in allowed_country_codes:
+            raise InvalidArgument("Provided IBAN contains country code which is not supported")
 
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(
@@ -247,6 +251,7 @@ class CustomerService(DBService):
 
     async def get_public_customer_api_config(self) -> PublicCustomerApiConfig:
         public_config = await self.config_service.get_public_config()
+        allowed_country_codes = (await self.config_service.get_sepa_config()).allowed_country_codes
 
         return PublicCustomerApiConfig(
             test_mode=self.cfg.core.test_mode,
@@ -257,4 +262,5 @@ class CustomerService(DBService):
             data_privacy_url=self.cfg.customer_portal.data_privacy_url,
             contact_email=public_config.contact_email,
             about_page_url=self.cfg.customer_portal.about_page_url,
+            allowed_country_codes=allowed_country_codes,
         )
