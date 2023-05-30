@@ -14,7 +14,7 @@ from stustapay.core.schema.terminal import (
     UserTagSecret,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile, UserInfo
-from stustapay.core.schema.user import Privilege, UserTag, UserRole, CurrentUser
+from stustapay.core.schema.user import Privilege, UserTag, UserRole, CurrentUser, format_user_tag_uid
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_terminal, requires_user, with_db_transaction
@@ -278,7 +278,7 @@ class TillService(DBService):
             user_tag_uid,
         )
         if row is None:
-            raise NotFound(element_typ="user_tag", element_id=str(user_tag_uid))
+            raise InvalidArgument(f"There is no user registered for tag {format_user_tag_uid(user_tag_uid)}")
         return UserInfo.parse_obj(row)
 
     @with_db_transaction
@@ -314,10 +314,11 @@ class TillService(DBService):
         )
         assert row is not None
         user_tag_secret = UserTagSecret.parse_obj(row)
-        # TODO: only send sumup secrets if ec is needed (profile.allow_top_up, allow_ticket_sale)
-        secrets = TerminalSecrets(
-            sumup_affiliate_key=self.cfg.core.sumup_affiliate_key, user_tag_secret=user_tag_secret
-        )
+        sumup_key = ""
+        if profile.allow_ticket_sale or profile.allow_top_up:
+            sumup_key = self.cfg.core.sumup_affiliate_key
+
+        secrets = TerminalSecrets(sumup_affiliate_key=sumup_key, user_tag_secret=user_tag_secret)
 
         available_roles = await list_user_roles(conn=conn)
 
@@ -343,5 +344,5 @@ class TillService(DBService):
             "select * from account_with_history a where a.user_tag_uid = $1", customer_tag_uid
         )
         if customer is None:
-            raise InvalidArgument(f"Customer with tag uid {customer_tag_uid:x} does not exist")
+            raise InvalidArgument(f"Customer with tag uid {format_user_tag_uid(customer_tag_uid)} does not exist")
         return Account.parse_obj(customer)

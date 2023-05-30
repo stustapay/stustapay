@@ -44,7 +44,7 @@ from stustapay.core.schema.product import (
     TOP_UP_PRODUCT_ID,
 )
 from stustapay.core.schema.terminal import Terminal
-from stustapay.core.schema.user import Privilege, User, CurrentUser
+from stustapay.core.schema.user import Privilege, User, CurrentUser, format_user_tag_uid
 from stustapay.core.service.account import get_account_by_id
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
@@ -154,7 +154,7 @@ class CustomerNotFound(ServiceException):
         self.uid = uid
 
     def __str__(self):
-        return f"Customer not found: {self.uid:X}"
+        return f"Customer not found: {format_user_tag_uid(self.uid)}"
 
 
 class BookedProduct(BaseModel):

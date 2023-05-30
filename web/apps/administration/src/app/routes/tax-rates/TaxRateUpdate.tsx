@@ -9,7 +9,7 @@ import { Loading } from "@stustapay/components";
 export const TaxRateUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { taxRateName } = useParams();
-  const { taxRate, isLoading } = useGetTaxRateByNameQuery(taxRateName as string, {
+  const { taxRate, isLoading, error } = useGetTaxRateByNameQuery(taxRateName as string, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       taxRate: data ? selectTaxRateById(data, taxRateName as string) : undefined,
@@ -17,12 +17,12 @@ export const TaxRateUpdate: React.FC = () => {
   });
   const [updateTaxRate] = useUpdateTaxRateMutation();
 
-  if (isLoading) {
-    return <Loading />;
+  if (error) {
+    return <Navigate to="/tax-rates" />;
   }
 
-  if (!taxRate) {
-    return <Navigate to="/tax-rates" />;
+  if (isLoading || !taxRate) {
+    return <Loading />;
   }
 
   return (
