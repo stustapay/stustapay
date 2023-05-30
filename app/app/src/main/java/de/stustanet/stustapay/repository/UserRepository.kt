@@ -63,8 +63,14 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun create(login: String, userTag: UserTag, roles: List<Role>): UserCreateState {
-        return userRemoteDataSource.userCreate(NewUser(login, userTag.uid, roles.map { r -> r.name }))
+    suspend fun create(login: String, displayName: String, userTag: UserTag, roles: List<Role>, description: String): UserCreateState {
+        return userRemoteDataSource.userCreate(NewUser(
+            login = login,
+            display_name = displayName,
+            user_tag_uid = userTag.uid,
+            role_names = roles.map { r -> r.name },
+            description = description
+        ))
     }
 
     suspend fun update(userTag: UserTag, roles: List<Role>): UserUpdateState {

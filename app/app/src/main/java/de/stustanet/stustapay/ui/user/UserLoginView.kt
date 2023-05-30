@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,7 +42,7 @@ sealed interface RoleSelectionState {
 fun UserLoginView(
     viewModel: UserViewModel,
     goToUserCreateView: () -> Unit,
-    goToUserUpdateView: () -> Unit,
+    goToUserDisplayView: () -> Unit,
 ) {
 
     val scope = rememberCoroutineScope()
@@ -225,7 +226,7 @@ fun UserLoginView(
                     .padding(8.dp),
                 onClick = { goToUserCreateView() }
             ) {
-                Text(stringResource(R.string.user_create_title), fontSize = 24.sp)
+                Text(stringResource(R.string.user_create_title), fontSize = 24.sp, textAlign = TextAlign.Center)
             }
         }
 
@@ -234,9 +235,9 @@ fun UserLoginView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                onClick = { goToUserUpdateView() }
+                onClick = { goToUserDisplayView() }
             ) {
-                Text(stringResource(R.string.user_update_title), fontSize = 24.sp)
+                Text(stringResource(R.string.user_display_title), fontSize = 24.sp, textAlign = TextAlign.Center)
             }
         }
     }

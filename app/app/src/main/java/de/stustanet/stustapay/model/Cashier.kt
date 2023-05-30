@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.model
 
+import androidx.compose.ui.Modifier
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -52,7 +53,11 @@ data class UserInfoPayload(
 data class UserInfo(
     val user_tag_uid: ULong,
     val cash_drawer_balance: Double? = 0.0,
-    val transport_account_balance: Double? = 0.0
+    val transport_account_balance: Double? = 0.0,
+    val login: String,
+    val display_name: String,
+    val role_names: List<String>,
+    val description: String?
 )
 
 @Serializable
