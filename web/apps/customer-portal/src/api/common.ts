@@ -25,6 +25,7 @@ export const PublicCustomerApiConfigSchema = z.object({
   data_privacy_url: z.string(),
   contact_email: z.string(),
   about_page_url: z.string(),
+  allowed_country_codes: z.array(z.string()),
 });
 
 export type PublicCustomerApiConfig = z.infer<typeof PublicCustomerApiConfigSchema>;
