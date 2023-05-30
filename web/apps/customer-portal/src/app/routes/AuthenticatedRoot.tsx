@@ -27,6 +27,10 @@ const navbarLinks = [
     link: "/payout-info",
   },
   {
+    label: i18n.t("nav.topup"),
+    link: "/topup",
+  },
+  {
     label: i18n.t("nav.faq"),
     link: "/faq",
   },
