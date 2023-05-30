@@ -59,7 +59,7 @@ export const userApi = createApi({
       query: (userRole) => ({ url: "/user_roles", method: "POST", body: userRole }),
       invalidatesTags: ["userRole"],
     }),
-    updateUserRole: builder.mutation<UserRole, { id: number; privileges: Privilege[] }>({
+    updateUserRole: builder.mutation<UserRole, { id: number; is_privileged: boolean; privileges: Privilege[] }>({
       query: ({ id, ...role }) => ({ url: `/user_roles/${id}`, method: "POST", body: role }),
       invalidatesTags: (result, error, { id }) => [{ type: "userRole", id }],
     }),

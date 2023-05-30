@@ -19,12 +19,16 @@ import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { TestModeDisclaimer } from "@stustapay/components";
 import { config } from "@/api";
 import i18n from "@/i18n";
-import { Layout } from "@/components";
+import { LanguageSelect, Layout } from "@/components";
 
 const navbarLinks = [
   {
     label: i18n.t("nav.payout"),
     link: "/payout-info",
+  },
+  {
+    label: i18n.t("nav.topup"),
+    link: "/topup",
   },
   {
     label: i18n.t("nav.faq"),
@@ -129,6 +133,7 @@ export const AuthenticatedRoot: React.FC = () => {
               </Box>
 
               <Box sx={{ flexGrow: 0 }}>
+                <LanguageSelect sx={{ color: "inherit" }} variant="outlined" />
                 <Button component={RouterLink} color="inherit" to="/logout">
                   {t("logout")}
                 </Button>

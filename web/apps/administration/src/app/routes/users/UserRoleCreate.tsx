@@ -1,4 +1,4 @@
-import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
+import { Paper, TextField, Button, LinearProgress, Typography, FormControlLabel, Checkbox } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
 import { NewUserRole, NewUserRoleSchema } from "@stustapay/models";
@@ -11,6 +11,7 @@ import { PrivilegeSelect } from "./PrivilegeSelect";
 
 const initialValues: NewUserRole = {
   name: "",
+  is_privileged: false,
   privileges: [],
 };
 
@@ -56,6 +57,15 @@ export const UserRoleCreate: React.FC = () => {
               onBlur={handleBlur}
               onChange={handleChange}
               value={values.name}
+            />
+            <FormControlLabel
+              label={t("userRole.isPrivileged")}
+              control={
+                <Checkbox
+                  checked={values.is_privileged}
+                  onChange={(evt) => setFieldValue("is_privileged", evt.target.checked)}
+                />
+              }
             />
 
             <PrivilegeSelect

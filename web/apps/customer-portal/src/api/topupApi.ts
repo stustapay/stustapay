@@ -10,7 +10,6 @@ export type CreateCheckoutResponse = z.infer<typeof CreateCheckoutResponseSchema
 
 export interface UpdateCheckoutResponse {
   status: "PENDING" | "FAILED" | "PAID";
-  checkout_id: string;
 }
 
 export const topupApi = createApi({

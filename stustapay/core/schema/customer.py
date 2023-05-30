@@ -35,5 +35,5 @@ class CustomerCheckout(BaseModel):
     id: str
     status: SumupCheckoutStatus
     date: datetime.datetime
-    valid_until: datetime.datetime
-    customer_account_id: str
+    valid_until: Optional[datetime.datetime]
+    customer_account_id: int

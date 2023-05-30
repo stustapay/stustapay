@@ -332,6 +332,7 @@ export const translations = {
     name: "Name",
     create: "Create new user role",
     update: "Update user role",
+    isPrivileged: "Is privileged",
     createError: "Error while creating user role: {{what}}",
     updateError: "Error while updating user role: {{what}}",
     privileges: "Privileges",

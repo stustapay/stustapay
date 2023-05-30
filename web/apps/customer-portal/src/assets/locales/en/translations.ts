@@ -6,6 +6,7 @@ export const translations = {
   userTagPin: "Wristband Tag Pin",
   nav: {
     payout: "Pay Out",
+    topup: "Top Up",
     agb: "AGB",
     faq: "FAQ",
   },
@@ -62,6 +63,7 @@ export const translations = {
     errorAmountMustBeIntegral: "Cent amounts are not allowed",
     sumupTopupDisabled: "Online Topup is disabled",
     tryAgain: "Try again",
+    next: "Next",
     success: {
       title: "Top Up succeeded",
       message: "Please continue to the <1>overview page</1>.",
