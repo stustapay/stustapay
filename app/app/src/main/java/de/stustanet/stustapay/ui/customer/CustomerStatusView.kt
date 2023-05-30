@@ -64,7 +64,7 @@ fun CustomerStatusView(
                             ) {
                                 if (uiState.customer is CustomerStatusRequestState.Done) {
                                     val customer =
-                                        (uiState.customer as CustomerStatusRequestState.Done).customer
+                                        (uiState.customer as CustomerStatusRequestState.Done).account
 
                                     Row(
                                         modifier = Modifier

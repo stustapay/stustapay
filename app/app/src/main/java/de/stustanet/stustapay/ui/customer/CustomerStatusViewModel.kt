@@ -4,9 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.Access
-import de.stustanet.stustapay.model.Customer
+import de.stustanet.stustapay.model.Account
 import de.stustanet.stustapay.model.UserState
-import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.CustomerRepository
 import de.stustanet.stustapay.repository.UserRepository
@@ -26,7 +25,7 @@ data class CustomerStatusUiState(
 sealed interface CustomerStatusRequestState {
     object Idle : CustomerStatusRequestState
     object Fetching : CustomerStatusRequestState
-    data class Done(val customer: Customer) : CustomerStatusRequestState
+    data class Done(val account: Account) : CustomerStatusRequestState
     data class Failed(val msg: String) : CustomerStatusRequestState
 }
 

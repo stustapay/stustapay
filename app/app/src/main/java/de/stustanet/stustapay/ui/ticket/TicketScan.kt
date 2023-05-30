@@ -12,11 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.chipscan.NfcScanCard
 import de.stustanet.stustapay.ui.common.StatusText
 import de.stustanet.stustapay.ui.common.pay.ProductSelectionBottomBar
@@ -81,15 +83,15 @@ fun TicketScan(
                         val scanText = when (tagScanStatus) {
                             is TagScanStatus.Scan -> {
                                 // TICKET
-                                "\uD83C\uDFAB Scan Ticket"
+                                stringResource(R.string.scan_ticket)
                             }
 
                             is TagScanStatus.Duplicate -> {
-                                "Already scanned! Scan new ticket."
+                                stringResource(R.string.duplicate_ticket_scan)
                             }
 
                             is TagScanStatus.NoScan -> {
-                                "Not scanning."
+                                stringResource(R.string.ticket_scanning_off)
                             }
                         }
 

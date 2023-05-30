@@ -5,7 +5,7 @@
     <string name="payout">Auszahlung</string>
     <string name="credit_left">Übriges Guthaben</string>
     <string name="success">Erfolgreich!</string>
-    <string name="done">Done</string>
+    <string name="done">Fertig</string>
     <string name="payed_to_user_q">Geld an Kunde gegeben?</string>
     <string name="back">Zurück</string>
     <string name="received_q">Erhalten?</string>
@@ -64,7 +64,7 @@
     <string name="management_vault_take">Einpacken</string>
     <string name="management_vault_return">Auspacken</string>
 
-    <string name="nfc_scan_prompt">Scanne ein Bändchen 📡</string>
+    <string name="nfc_scan_prompt">Bändchen scannen 📡</string>
 
     <string name="user_title">Benutzer</string>
     <string name="user_login">Einloggen</string>
@@ -75,4 +75,26 @@
     <string name="user_create_title">Benutzer Erstellen</string>
     <string name="user_update_title">Benutzer Verwalten</string>
     <string name="user_select">Rolle auswählen:</string>
+    <string name="topup">Aufladung</string>
+    <string name="previous_balance">Altes Guthaben</string>
+    <string name="error">Fehler</string>
+    <string name="pay_cash">🪙\nBar</string>
+    <string name="pay_card">💳\nKarte</string>
+    <string name="arrow_back">← Zurück</string>
+    <string name="check_ok">✓ OK</string>
+    <string name="scan_ticket">🎫 Ticket scannen</string>
+    <string name="duplicate_ticket_scan">Schon gescanned. Neues Ticket scannen!</string>
+    <string name="ticket_scanning_off">Scannen inaktiv.</string>
+    <string name="tickets">Tickets</string>
+    <string name="deposit_handout">Pfand-Ausgabe</string>
+    <string name="deposit_returned">Pfand-Rückgabe</string>
+    <string name="ticket_error_preambel">Fehler beim Ticket-Kauf:</string>
+    <string name="vouchers_granted">%s Gutscheine ausgegeben</string>
+    <string name="with_n_vouchers">" mit %s Gutscheinen"</string>
+    <string name="free_ticket_activated">Kostenloses Ticket aktiviert</string>
+    <string name="grant_new_wristband">Neues Band ausgeben</string>
+    <string name="voucher_amount">Gutscheinanzahl</string>
+    <string name="vouchers">Gutscheine</string>
+    <string name="wristband">Bändchen</string>
+    <string name="grant">Verteilen</string>
 </resources>

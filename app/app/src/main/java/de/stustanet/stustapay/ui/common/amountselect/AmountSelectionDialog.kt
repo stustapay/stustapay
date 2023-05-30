@@ -14,7 +14,6 @@ import androidx.compose.material.Card
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,10 +22,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.common.DialogDisplayState
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
 
@@ -129,7 +131,7 @@ fun AmountSelectionCard(
                         Button(
                             modifier = Modifier
                                 .weight(1f, true)
-                                .padding(8.dp, 0.dp)
+                                .padding(horizontal = 4.dp, vertical = 0.dp)
                                 .fillMaxHeight(),
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -137,13 +139,17 @@ fun AmountSelectionCard(
                             }
                         ) {
                             // Leftwards arrow
-                            Text(text = "← Back", fontSize = 24.sp)
+                            Text(
+                                text = stringResource(R.string.arrow_back),
+                                fontSize = 24.sp,
+                                textAlign = TextAlign.Center,
+                            )
                         }
 
                         Button(
                             modifier = Modifier
                                 .weight(1f, true)
-                                .padding(8.dp, 0.dp)
+                                .padding(horizontal = 4.dp, vertical = 0.dp)
                                 .fillMaxHeight(),
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -151,7 +157,7 @@ fun AmountSelectionCard(
                                 state.close()
                             }
                         ) {
-                            Text(text = "✓ OK", fontSize = 24.sp)
+                            Text(text = stringResource(R.string.check_ok), fontSize = 24.sp)
                         }
                     }
                 }

@@ -14,11 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustanet.stustapay.ui.nav.navigateTo
@@ -114,7 +116,7 @@ fun CashECSelection(
                     ) {
                         // unicode "Coin"
                         Text(
-                            "\uD83E\uDE99\ncash",
+                            stringResource(R.string.pay_cash),
                             textAlign = TextAlign.Center,
                             style = LargeButtonStyle,
                         )
@@ -160,7 +162,7 @@ fun CashECSelection(
                     ) {
                         // unicode "Credit Card"
                         Text(
-                            "\uD83D\uDCB3\ncard",
+                            stringResource(R.string.pay_card),
                             textAlign = TextAlign.Center,
                             style = LargeButtonStyle,
                         )

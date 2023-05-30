@@ -111,12 +111,12 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
                         if (returnableCount > 0) {
                             ProductConfirmItem(
-                                name = "Pfand Ausgabe",
+                                name = stringResource(R.string.deposit_handout),
                                 quantity = returnableCount,
                             )
                         } else {
                             ProductConfirmItem(
-                                name = "Pfand Rückgabe",
+                                name = stringResource(R.string.deposit_returned),
                                 quantity = -returnableCount,
                             )
                         }

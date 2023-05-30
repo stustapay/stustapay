@@ -76,4 +76,26 @@
     <string name="user_create_title">Create User</string>
     <string name="user_update_title">Update User</string>
     <string name="user_select">Select a role:</string>
+    <string name="topup">Top up</string>
+    <string name="previous_balance">Previous balance</string>
+    <string name="error">Error</string>
+    <string name="pay_cash">🪙\nCash</string>
+    <string name="pay_card">💳\nCard</string>
+    <string name="arrow_back">← Back</string>
+    <string name="check_ok">✓ OK</string>
+    <string name="scan_ticket">🎫 Scan Ticket</string>
+    <string name="duplicate_ticket_scan">Already scanned! Scan new ticket.</string>
+    <string name="ticket_scanning_off">Not scanning.</string>
+    <string name="tickets">Tickets</string>
+    <string name="deposit_handout">Deposit handout</string>
+    <string name="deposit_returned">Deposit returned</string>
+    <string name="ticket_error_preambel">Error buying ticket:</string>
+    <string name="vouchers_granted">%s Vouchers granted</string>
+    <string name="with_n_vouchers">" with %s vouchers"</string>
+    <string name="free_ticket_activated">Free ticket activated</string>
+    <string name="grant_new_wristband">Grant new wristband</string>
+    <string name="voucher_amount">Voucher amount</string>
+    <string name="vouchers">Vouchers</string>
+    <string name="wristband">Wristband</string>
+    <string name="grant">Grant</string>
 </resources>

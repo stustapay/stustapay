@@ -14,10 +14,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
+import de.stustanet.stustapay.ui.common.StatusText
 
 @Composable
 fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
@@ -57,16 +60,16 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                             .clip(shape = CircleShape)
                             .padding(top = 2.dp),
                         colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-                        contentDescription = "Success!",
+                        contentDescription = stringResource(R.string.success),
                     )
 
                     TopUpConfirmItem(
-                        name = "Altes Guthaben",
+                        name = stringResource(R.string.previous_balance),
                         price = completedTopUp.old_balance,
                         fontSize = 30.sp,
                     )
                     TopUpConfirmItem(
-                        name = "Aufladung",
+                        name = stringResource(R.string.topup),
                         price = completedTopUp.amount,
                         fontSize = 30.sp,
                     )
@@ -74,7 +77,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                     Divider(modifier = Modifier.padding(vertical = 10.dp))
 
                     TopUpConfirmItem(
-                        name = "Neues Guthaben",
+                        name = stringResource(R.string.new_balance),
                         price = completedTopUp.new_balance,
                         fontSize = 40.sp,
                     )
@@ -89,11 +92,9 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                     .fillMaxWidth()
             ) {
                 Divider(modifier = Modifier.padding(top = 10.dp))
-                Text(
-                    text = status,
+                StatusText(
+                    status = status,
                     modifier = Modifier.fillMaxWidth(),
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily.Monospace,
                 )
 
                 Button(
@@ -105,7 +106,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                         .fillMaxWidth()
                         .height(70.dp)
                 ) {
-                    Text(text = "Done")
+                    Text(text = stringResource(R.string.done))
                 }
             }
         }

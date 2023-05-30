@@ -3,12 +3,14 @@ package de.stustanet.stustapay.ui.reward
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.CustomerRepository
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.UserRepository
 import de.stustanet.stustapay.ui.common.TerminalLoginState
+import de.stustanet.stustapay.util.ResourcesProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +24,8 @@ import javax.inject.Inject
 class RewardViewModel @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
     private val userRepository: UserRepository,
-    private val customerRepository: CustomerRepository
+    private val customerRepository: CustomerRepository,
+    private val resourcesProvider: ResourcesProvider,
 ) : ViewModel() {
 
     val terminalLoginState = combine(
@@ -53,7 +56,9 @@ class RewardViewModel @Inject constructor(
     private suspend fun grantVouchers(tag: UserTag, vouchers: UInt) {
         when (val resp = customerRepository.grantVouchers(tag, vouchers)) {
             is Response.OK -> {
-                _status.update { "$vouchers Vouchers granted" }
+                _status.update {
+                    resourcesProvider.getString(R.string.vouchers_granted).format(vouchers)
+                }
                 clearSelection()
             }
 
@@ -67,11 +72,11 @@ class RewardViewModel @Inject constructor(
         when (val resp = customerRepository.grantFreeTicket(tag, vouchers)) {
             is Response.OK -> {
                 val voucherAmount = if (vouchers > 0u) {
-                    " with $vouchers vouchers"
+                    resourcesProvider.getString(R.string.with_n_vouchers).format(vouchers)
                 } else {
                     ""
                 }
-                _status.update { "Free ticket activated${voucherAmount}" }
+                _status.update { resourcesProvider.getString(R.string.free_ticket_activated) + voucherAmount }
                 clearSelection()
             }
 

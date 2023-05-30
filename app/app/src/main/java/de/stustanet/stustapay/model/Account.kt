@@ -14,8 +14,7 @@ data class UserTagHistoryEntry(
 
 
 @Serializable
-data class Customer(
-    // Account
+data class Account(
     val id: ULong,
     val type: String,
     val name: String?,
@@ -25,13 +24,8 @@ data class Customer(
     val user_tag_uid: ULong?,
     val user_tag_uid_hex: String?,
     val user_tag_comment: String? = null,
-    val restriction: List<String>?,
+    val restriction: String?,
     val tag_history: List<UserTagHistoryEntry>,
-
-    // Customer
-    val iban: String?,
-    val account_name: String?,
-    val email: String?,
 )
 
 

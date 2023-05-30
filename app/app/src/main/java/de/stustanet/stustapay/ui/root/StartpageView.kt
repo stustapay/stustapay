@@ -13,7 +13,10 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -24,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.Access
+import de.stustanet.stustapay.ui.common.Spinner
 import de.stustanet.stustapay.ui.nav.NavDest
 import kotlinx.coroutines.launch
 
@@ -52,6 +56,7 @@ fun StartpageView(
             .fillMaxSize()
             .background(brush = Brush.verticalGradient(colors = gradientColors)),
     ) {
+        var loading by remember { mutableStateOf(false) }
         IconButton(
             modifier = Modifier
                 .align(alignment = Alignment.TopEnd)
@@ -59,11 +64,18 @@ fun StartpageView(
                 .size(30.dp),
             onClick = {
                 scope.launch {
+                    loading = true
                     viewModel.fetchAccessData()
+                    loading = false
                 }
             }
         ) {
-            Icon(Icons.Filled.Refresh, "Refresh")
+            if (loading) {
+                Spinner()
+            }
+            else {
+                Icon(Icons.Filled.Refresh, "Refresh")
+            }
         }
 
         Column(
