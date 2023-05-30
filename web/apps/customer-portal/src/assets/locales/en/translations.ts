@@ -16,6 +16,8 @@ export const translations = {
   contact: "Contact",
   wristbandTagExample: "Wristband Tag Example",
   wristbandTagExampleTitle: "Wristband Tag Example with PIN and ID",
+  wristbandTagExampleDescription:
+    "You can find your wristband tag ID and PIN on the back of your wristband tag. It should look like the example given below:",
   termsAndConditionsHeader:
     "Our Terms and Conditions are only available in German. You can access our privacy policy on <1>here</1>.",
   privacyPolicyHeader:

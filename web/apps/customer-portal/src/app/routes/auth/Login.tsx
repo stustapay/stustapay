@@ -116,6 +116,9 @@ export const Login: React.FC = () => {
         <Typography variant="h6" gutterBottom>
           {t("wristbandTagExample")}
         </Typography>
+        <Typography variant="body1" gutterBottom>
+          {t("wristbandTagExampleDescription")}
+        </Typography>
         <PinUidHowToImg
           title={t("wristbandTagExampleTitle")}
           style={{
