@@ -6,7 +6,7 @@ from ..core.subcommand import SubCommand
 class Simulator(SubCommand):
     @staticmethod
     def argparse_register(subparser):
-        subparser.add_argument("--host", default="::1", help="local bind address, default ::1")
+        subparser.add_argument("--host", default="localhost", help="local bind address, default localhost")
         subparser.add_argument(
             "-p", "--port", type=int, default=10001, help="port for websocket to listen, default 10001"
         )
