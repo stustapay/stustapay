@@ -9,7 +9,7 @@ import { Loading } from "@stustapay/components";
 export const TicketUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { ticketId } = useParams();
-  const { ticket, isLoading } = useGetTicketByIdQuery(Number(ticketId), {
+  const { ticket, isLoading, error } = useGetTicketByIdQuery(Number(ticketId), {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       ticket: data ? selectTicketById(data, Number(ticketId)) : undefined,
@@ -17,12 +17,12 @@ export const TicketUpdate: React.FC = () => {
   });
   const [updateTicket] = useUpdateTicketMutation();
 
-  if (isLoading) {
-    return <Loading />;
+  if (error) {
+    return <Navigate to="/tickets" />;
   }
 
-  if (!ticket) {
-    return <Navigate to="/tickets" />;
+  if (isLoading || !ticket) {
+    return <Loading />;
   }
 
   return (

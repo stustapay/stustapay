@@ -9,7 +9,7 @@ import { Loading } from "@stustapay/components";
 export const ProductUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { productId } = useParams();
-  const { product, isLoading } = useGetProductByIdQuery(Number(productId), {
+  const { product, isLoading, error } = useGetProductByIdQuery(Number(productId), {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       product: data ? selectProductById(data, Number(productId)) : undefined,
@@ -17,12 +17,12 @@ export const ProductUpdate: React.FC = () => {
   });
   const [updateProduct] = useUpdateProductMutation();
 
-  if (isLoading) {
-    return <Loading />;
+  if (error) {
+    return <Navigate to="/products" />;
   }
 
-  if (!product) {
-    return <Navigate to="/products" />;
+  if (isLoading || !product) {
+    return <Loading />;
   }
 
   return (

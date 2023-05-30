@@ -44,7 +44,7 @@ from stustapay.core.schema.product import (
     TOP_UP_PRODUCT_ID,
 )
 from stustapay.core.schema.terminal import Terminal
-from stustapay.core.schema.user import Privilege, User, CurrentUser
+from stustapay.core.schema.user import Privilege, User, CurrentUser, format_user_tag_uid
 from stustapay.core.service.account import get_account_by_id
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
@@ -154,7 +154,7 @@ class CustomerNotFound(ServiceException):
         self.uid = uid
 
     def __str__(self):
-        return f"Customer not found: {self.uid:X}"
+        return f"Customer not found: {format_user_tag_uid(self.uid)}"
 
 
 class BookedProduct(BaseModel):
@@ -813,8 +813,16 @@ class OrderService(DBService):
         if uuid_exists:
             raise InvalidArgument("This order has already been booked, duplicate order uuid")
 
-        if new_ticket_sale.payment_method == PaymentMethod.tag:
-            raise InvalidArgument("Cannot pay with tag for a ticket")
+        if new_ticket_sale.payment_method is not None:
+            if new_ticket_sale.payment_method == PaymentMethod.tag:
+                raise InvalidArgument("Cannot pay with tag for a ticket")
+
+            if new_ticket_sale.payment_method == PaymentMethod.cash:
+                cash_register_id = await conn.fetchval(
+                    "select t.active_cash_register_id from till t where id = $1", current_terminal.till.id
+                )
+                if cash_register_id is None:
+                    raise InvalidArgument("This till needs a cash register for cash payments")
 
         ticket_scan_result: TicketScanResult = await self.check_ticket_scan(  # pylint: disable=unexpected-keyword-arg
             conn=conn,
@@ -917,13 +925,16 @@ class OrderService(DBService):
         current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,
     ) -> CompletedTicketSale:
+        if new_ticket_sale.payment_method is None:
+            raise InvalidArgument("No payment method provided")
+
         assert current_user.cashier_account_id is not None
         pending_ticket_sale = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_terminal=current_terminal, current_user=current_user, new_ticket_sale=new_ticket_sale
         )
 
         # create a new customer account for the given tag ,
-        # store the initial topup amount as well as restrictionfor each newly created customer
+        # store the initial topup amount as well as restriction for each newly created customer
         customers: dict[int, tuple[float, Optional[str]]] = {}
         for scanned_ticket in pending_ticket_sale.scanned_tickets:
             restriction = await conn.fetchval(

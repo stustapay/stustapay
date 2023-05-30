@@ -9,7 +9,7 @@ import { UpdateTillButtonSchema } from "@stustapay/models";
 export const TillButtonUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { buttonId } = useParams();
-  const { button, isLoading } = useGetTillButtonByIdQuery(Number(buttonId), {
+  const { button, isLoading, error } = useGetTillButtonByIdQuery(Number(buttonId), {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       button: data ? selectTillButtonById(data, Number(buttonId)) : undefined,
@@ -17,12 +17,12 @@ export const TillButtonUpdate: React.FC = () => {
   });
   const [updateButton] = useUpdateTillButtonMutation();
 
-  if (isLoading) {
-    return <Loading />;
+  if (error) {
+    return <Navigate to="/till-buttons" />;
   }
 
-  if (!button) {
-    return <Navigate to="/till-buttons" />;
+  if (isLoading || !button) {
+    return <Loading />;
   }
 
   return (
