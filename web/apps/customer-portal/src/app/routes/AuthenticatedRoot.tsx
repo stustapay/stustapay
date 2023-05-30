@@ -19,7 +19,7 @@ import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { TestModeDisclaimer } from "@stustapay/components";
 import { config } from "@/api";
 import i18n from "@/i18n";
-import { Layout } from "@/components";
+import { LanguageSelect, Layout } from "@/components";
 
 const navbarLinks = [
   {
@@ -133,6 +133,7 @@ export const AuthenticatedRoot: React.FC = () => {
               </Box>
 
               <Box sx={{ flexGrow: 0 }}>
+                <LanguageSelect sx={{ color: "inherit" }} variant="outlined" />
                 <Button component={RouterLink} color="inherit" to="/logout">
                   {t("logout")}
                 </Button>
