@@ -70,7 +70,7 @@ class AccountService(DBService):
             "update user_tag set comment = $1 where uid = $2 returning uid", comment, user_tag_uid
         )
         if ret is None:
-            raise NotFound(element_typ="user_tag", element_id=format_user_tag_uid(user_tag_uid))
+            raise InvalidArgument(f"User tag {format_user_tag_uid(user_tag_uid)} does not exist")
 
         detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_user=current_user, user_tag_uid=user_tag_uid

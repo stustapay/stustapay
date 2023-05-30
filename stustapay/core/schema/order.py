@@ -185,7 +185,7 @@ class NewTicketSale(BaseModel):
     uuid: UUID
     customer_tag_uids: list[int]
 
-    payment_method: PaymentMethod
+    payment_method: Optional[PaymentMethod]
 
     _validate_payment_method = validator("payment_method", allow_reuse=True)(is_non_tag_payment_method)
 
@@ -193,9 +193,7 @@ class NewTicketSale(BaseModel):
 class PendingTicketSale(BaseModel):
     uuid: UUID
 
-    payment_method: PaymentMethod
-
-    _validate_payment_method = validator("payment_method", allow_reuse=True)(is_non_tag_payment_method)
+    payment_method: Optional[PaymentMethod]
 
     line_items: list[PendingLineItem]
 
@@ -216,6 +214,8 @@ class PendingTicketSale(BaseModel):
 class CompletedTicketSale(PendingTicketSale):
     id: int
     booked_at: datetime.datetime
+
+    payment_method: PaymentMethod
 
     customer_account_id: int
 

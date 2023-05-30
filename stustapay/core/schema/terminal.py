@@ -36,6 +36,8 @@ class TerminalConfig(BaseModel):
     name: str
     description: Optional[str]
     user_privileges: Optional[list[Privilege]]
+    cash_register_id: Optional[int]
+    cash_register_name: Optional[str]
     allow_top_up: bool
     allow_cash_out: bool
     allow_ticket_sale: bool

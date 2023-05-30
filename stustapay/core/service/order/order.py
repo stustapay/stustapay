@@ -813,8 +813,16 @@ class OrderService(DBService):
         if uuid_exists:
             raise InvalidArgument("This order has already been booked, duplicate order uuid")
 
-        if new_ticket_sale.payment_method == PaymentMethod.tag:
-            raise InvalidArgument("Cannot pay with tag for a ticket")
+        if new_ticket_sale.payment_method is not None:
+            if new_ticket_sale.payment_method == PaymentMethod.tag:
+                raise InvalidArgument("Cannot pay with tag for a ticket")
+
+            if new_ticket_sale.payment_method == PaymentMethod.cash:
+                cash_register_id = await conn.fetchval(
+                    "select t.active_cash_register_id from till t where id = $1", current_terminal.till.id
+                )
+                if cash_register_id is None:
+                    raise InvalidArgument("This till needs a cash register for cash payments")
 
         ticket_scan_result: TicketScanResult = await self.check_ticket_scan(  # pylint: disable=unexpected-keyword-arg
             conn=conn,
@@ -917,13 +925,16 @@ class OrderService(DBService):
         current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,
     ) -> CompletedTicketSale:
+        if new_ticket_sale.payment_method is None:
+            raise InvalidArgument("No payment method provided")
+
         assert current_user.cashier_account_id is not None
         pending_ticket_sale = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_terminal=current_terminal, current_user=current_user, new_ticket_sale=new_ticket_sale
         )
 
         # create a new customer account for the given tag ,
-        # store the initial topup amount as well as restrictionfor each newly created customer
+        # store the initial topup amount as well as restriction for each newly created customer
         customers: dict[int, tuple[float, Optional[str]]] = {}
         for scanned_ticket in pending_ticket_sale.scanned_tickets:
             restriction = await conn.fetchval(

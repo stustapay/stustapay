@@ -309,6 +309,19 @@ class TillService(DBService):
         )
         buttons = [TerminalButton.parse_obj(db_button) for db_button in db_buttons]
 
+        cash_register_id = None
+        cash_register_name = None
+        cash_reg = await conn.fetchrow(
+            "select cr.id, cr.name "
+            "from cash_register cr "
+            "join till t on cr.id = t.active_cash_register_id "
+            "where t.id = $1",
+            current_terminal.till.id,
+        )
+        if cash_reg is not None:
+            cash_register_id = cash_reg["id"]
+            cash_register_name = cash_reg["name"]
+
         row = await conn.fetchrow(
             "select encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 from user_tag_secret limit 1"
         )
@@ -326,6 +339,8 @@ class TillService(DBService):
             id=current_terminal.till.id,
             name=current_terminal.till.name,
             description=current_terminal.till.description,
+            cash_register_id=cash_register_id,
+            cash_register_name=cash_register_name,
             user_privileges=user_privileges,
             allow_top_up=profile.allow_top_up,
             allow_cash_out=profile.allow_cash_out,
