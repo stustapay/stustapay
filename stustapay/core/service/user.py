@@ -196,7 +196,7 @@ class UserService(DBService):
 
         user_id = await conn.fetchval("select id from usr where user_tag_uid = $1", user_tag_uid)
         if user_id is None:
-            raise InvalidArgument(f"User with tag {user_tag_uid} not found")
+            raise InvalidArgument(f"User with tag {user_tag_uid:X} not found")
 
         await self._update_user_roles(conn=conn, user_id=user_id, role_names=role_names, delete_before_insert=True)
 

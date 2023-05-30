@@ -193,7 +193,7 @@ class AccountService(DBService):
 
         account = await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
         if account is None:
-            raise NotFound(element_typ="user_tag", element_id=str(user_tag_uid))
+            raise NotFound(element_typ="user_tag", element_id=f"{user_tag_uid:X}")
 
         try:
             await book_transaction(

@@ -278,7 +278,7 @@ class TillService(DBService):
             user_tag_uid,
         )
         if row is None:
-            raise NotFound(element_typ="user_tag", element_id=str(user_tag_uid))
+            raise NotFound(element_typ="user_tag", element_id=f"{user_tag_uid:X}")
         return UserInfo.parse_obj(row)
 
     @with_db_transaction
