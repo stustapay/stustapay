@@ -37,7 +37,10 @@ fun CashierManagementView(
         composable(CashierManagementNavDests.Main.route) {
             NavScaffold(
                 title = { Text(stringResource(CashierManagementNavDests.Main.title)) },
-                navigateBack = leaveView
+                navigateBack = {
+                    viewModel.idleState()
+                    leaveView()
+                }
             ) {
                 Column(
                     modifier = Modifier
@@ -74,7 +77,10 @@ fun CashierManagementView(
         composable(CashierManagementNavDests.Equip.route) {
             NavScaffold(
                 title = { Text(stringResource(CashierManagementNavDests.Equip.title)) },
-                navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) }) {
+                navigateBack = {
+                    viewModel.idleState()
+                    nav.navigateTo(CashierManagementNavDests.Main.route)
+                }) {
                 Box(modifier = Modifier.padding(it)) {
                     CashierManagementEquipView(viewModel = viewModel)
                 }
@@ -83,7 +89,10 @@ fun CashierManagementView(
         composable(CashierManagementNavDests.Transport.route) {
             NavScaffold(
                 title = { Text(stringResource(CashierManagementNavDests.Transport.title)) },
-                navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) }) {
+                navigateBack = {
+                    viewModel.idleState()
+                    nav.navigateTo(CashierManagementNavDests.Main.route)
+                }) {
                 Box(modifier = Modifier.padding(it)) {
                     CashierManagementTransportView(viewModel = viewModel)
                 }
@@ -92,7 +101,10 @@ fun CashierManagementView(
         composable(CashierManagementNavDests.Vault.route) {
             NavScaffold(
                 title = { Text(stringResource(CashierManagementNavDests.Vault.title)) },
-                navigateBack = { nav.navigateTo(CashierManagementNavDests.Main.route) }) {
+                navigateBack = {
+                    viewModel.idleState()
+                    nav.navigateTo(CashierManagementNavDests.Main.route)
+                }) {
                 Box(modifier = Modifier.padding(it)) {
                     CashierManagementVaultView(viewModel = viewModel)
                 }
