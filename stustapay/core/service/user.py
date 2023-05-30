@@ -16,6 +16,7 @@ from stustapay.core.schema.user import (
     UserRole,
     NewUserRole,
     CurrentUser,
+    format_user_tag_uid,
 )
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
@@ -225,8 +226,7 @@ class UserService(DBService):
 
         existing_user = await conn.fetchrow("select * from user_with_roles where user_tag_uid = $1", user_tag_uid)
         if existing_user is not None:
-            # ignore the name provided in new_user
-            return User.parse_obj(existing_user)
+            raise InvalidArgument(f"User with tag uid {format_user_tag_uid(new_user.user_tag_uid)} already exists")
 
         user = UserWithoutId(
             login=new_user.login,
