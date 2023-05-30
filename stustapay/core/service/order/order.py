@@ -108,11 +108,11 @@ class AgeRestrictionException(ServiceException):
 
     id = "AgeRestriction"
 
-    def __init__(self, product_ids: Set[int]):
-        self.product_ids = product_ids
+    def __init__(self, product_names: Set[str]):
+        self.product_names = product_names
 
     def __str__(self):
-        return f"Too young for product: {', '.join(self.product_ids)}"
+        return f"Too young for product: {', '.join(self.product_names)}"
 
 
 class TillPermissionException(ServiceException):
@@ -265,7 +265,7 @@ class OrderService(DBService):
         # we preprocess positions in a new order to group the resulting line items
         # by product and aggregate their quantity
         line_items_by_product: dict[int, PendingLineItem] = {}
-        restricted_products = set()
+        restricted_product_names: set[str] = set()
         for booked_product in booked_products:
             product = booked_product.product
 
@@ -295,7 +295,7 @@ class OrderService(DBService):
 
                 # check age restriction
                 if customer_restrictions is not None and customer_restrictions in product.restrictions:
-                    restricted_products.add(product.id)
+                    restricted_product_names.add(product.name)
 
                 line_items_by_product[product.id] = PendingLineItem(
                     quantity=booked_product.quantity,
@@ -305,8 +305,8 @@ class OrderService(DBService):
                     product=product,
                 )
 
-        if len(restricted_products) > 0:
-            raise AgeRestrictionException(restricted_products)
+        if len(restricted_product_names) > 0:
+            raise AgeRestrictionException(restricted_product_names)
 
         line_items = list()
         for line_item in line_items_by_product.values():
