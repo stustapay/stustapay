@@ -233,6 +233,7 @@ class UserService(DBService):
             role_names=new_user.role_names,
             user_tag_uid=user_tag_uid,
             display_name=new_user.display_name,
+            description=new_user.description,
         )
         return await self._create_user(conn=conn, creating_user_id=current_user.id, new_user=user)
 

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.*
 import de.stustanet.stustapay.net.Response
+import de.stustanet.stustapay.repository.CashierRepository
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.repository.UserRepository
@@ -29,14 +30,19 @@ sealed interface UserUIState {
     ) : UserUIState
 }
 
+sealed interface UserRequestState {
+    object Idle : UserRequestState
+    object Fetching : UserRequestState
+    object Done : UserRequestState
+    data class Failed(val msg: String) : UserRequestState
+}
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val terminalConfigRepository: TerminalConfigRepository
+    private val cashierRepository: CashierRepository,
+    terminalConfigRepository: TerminalConfigRepository
 ) : ViewModel() {
-    private var _status = MutableStateFlow("idle")
-
     val userUIState: StateFlow<UserUIState> = userUiState(
         userRepo = userRepository
     )
@@ -53,19 +59,22 @@ class UserViewModel @Inject constructor(
         if (state is TerminalConfigState.Success) {
             state.config.available_roles
         } else {
-            List(0) { Role() }
+            listOf()
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(3000),
-        initialValue = List(0) { Role() },
+        initialValue = listOf(),
     )
 
-    val status = _status.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(3000),
-        initialValue = "Idle"
-    )
+    private var _status = MutableStateFlow<UserRequestState>(UserRequestState.Idle)
+    val status = _status.asStateFlow()
+
+    private var _currentUser = MutableStateFlow<UserInfo?>(null)
+    val currentUser = _currentUser.asStateFlow()
+
+    private var _currentTag = MutableStateFlow(0uL)
+    val currentTag = _currentTag.asStateFlow()
 
     fun clearErrors() {
         userStatus.update { null }
@@ -87,30 +96,48 @@ class UserViewModel @Inject constructor(
         userRepository.logout()
     }
 
-    fun resetStatus() {
-        _status.update { "idle" }
+    fun idleState() {
+        _status.update { UserRequestState.Idle }
+        _currentUser.update { null }
+        _currentTag.update { 0uL }
     }
 
-    suspend fun create(login: String, tag: ULong, roles: List<Role>) {
-        _status.update { "creating" }
-        when (val res = userRepository.create(login, UserTag(tag), roles)) {
+    suspend fun create(login: String, displayName: String, tag: ULong, roles: List<Role>, description: String) {
+        _status.update { UserRequestState.Fetching }
+        when (val res = userRepository.create(login, displayName, UserTag(tag), roles, description)) {
             is UserCreateState.Created -> {
-                _status.update { "created" }
+                _status.update { UserRequestState.Done }
             }
             is UserCreateState.Error -> {
-                _status.update { res.msg }
+                _status.update { UserRequestState.Failed(res.msg) }
             }
         }
     }
 
     suspend fun update(tag: ULong, roles: List<Role>) {
-        _status.update { "updating" }
+        _status.update { UserRequestState.Fetching }
         when (val res = userRepository.update(UserTag(tag), roles)) {
             is UserUpdateState.Created -> {
-                _status.update { "updated" }
+                _status.update { UserRequestState.Done }
             }
             is UserUpdateState.Error -> {
-                _status.update { res.msg }
+                _status.update { UserRequestState.Failed(res.msg) }
+            }
+        }
+    }
+
+    suspend fun display(tag: ULong) {
+        // TODO: Rename getCashierInfo / get_user_info
+        _status.update { UserRequestState.Fetching }
+        _currentUser.update { null }
+        when (val res = cashierRepository.getCashierInfo(tag)) {
+            is Response.OK -> {
+                _currentUser.update { res.data }
+                _currentTag.update { tag }
+                _status.update { UserRequestState.Done }
+            }
+            is Response.Error -> {
+                _status.update { UserRequestState.Failed(res.msg()) }
             }
         }
     }
@@ -169,3 +196,4 @@ private fun userUiState(
             }
         }
 }
+

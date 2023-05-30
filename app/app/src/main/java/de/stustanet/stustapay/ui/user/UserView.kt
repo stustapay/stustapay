@@ -23,6 +23,7 @@ object UserNavDest {
     val info = NavDest("info")
     val create = NavDest("create")
     val update = NavDest("update")
+    val display = NavDest("display")
 }
 
 
@@ -48,6 +49,7 @@ fun UserView(
                 state = scaffoldState,
                 navigateBack = {
                     if (navController.currentDestination?.route == UserNavDest.info.route) {
+                        viewModel.idleState()
                         leaveView()
                     } else {
                         navController.popBackStack()
@@ -58,10 +60,12 @@ fun UserView(
                     UserLoginView(
                         viewModel,
                         goToUserCreateView = {
+                            viewModel.idleState()
                             navController.navigateTo(UserNavDest.create.route)
                         },
-                        goToUserUpdateView = {
-                            navController.navigateTo(UserNavDest.update.route)
+                        goToUserDisplayView = {
+                            viewModel.idleState()
+                            navController.navigateTo(UserNavDest.display.route)
                         }
                     )
                 }
@@ -71,7 +75,7 @@ fun UserView(
             NavScaffold(
                 title = { Text(stringResource(R.string.user_create_title)) },
                 navigateBack = {
-                    viewModel.resetStatus()
+                    viewModel.idleState()
                     navController.navigateTo(UserNavDest.info.route)
                 }) {
                 Box(modifier = Modifier.padding(it)) {
@@ -83,11 +87,28 @@ fun UserView(
             NavScaffold(
                 title = { Text(stringResource(R.string.user_update_title)) },
                 navigateBack = {
-                    viewModel.resetStatus()
+                    viewModel.idleState()
                     navController.navigateTo(UserNavDest.info.route)
                 }) {
                 Box(modifier = Modifier.padding(it)) {
                     UserUpdateView(viewModel)
+                }
+            }
+        }
+        composable(UserNavDest.display.route) {
+            NavScaffold(
+                title = { Text(stringResource(R.string.user_display_title)) },
+                navigateBack = {
+                    viewModel.idleState()
+                    navController.navigateTo(UserNavDest.info.route)
+                }) {
+                Box(modifier = Modifier.padding(it)) {
+                    UserDisplayView(
+                        viewModel = viewModel,
+                        goToUserDisplayView = {
+                            navController.navigateTo(UserNavDest.update.route)
+                        }
+                    )
                 }
             }
         }

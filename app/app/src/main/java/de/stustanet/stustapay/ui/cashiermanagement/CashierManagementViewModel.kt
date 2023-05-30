@@ -6,6 +6,7 @@ import de.stustanet.stustapay.model.CashRegister
 import de.stustanet.stustapay.model.CashierStocking
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.CashierRepository
+import de.stustanet.stustapay.ui.customer.CustomerStatusRequestState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -90,6 +91,10 @@ class CashierManagementViewModel @Inject constructor(
                 cashierRepository.bookTransport(tagId, amount)
             )
         }
+    }
+
+    fun idleState() {
+        _status.update { CashierManagementStatus.None }
     }
 }
 

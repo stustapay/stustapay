@@ -39,8 +39,10 @@ data class UserTag(
 @Serializable
 data class NewUser(
     val login: String,
+    val display_name: String,
     val user_tag_uid: ULong,
-    val role_names: List<String>
+    val role_names: List<String>,
+    val description: String,
 )
 
 @Serializable
