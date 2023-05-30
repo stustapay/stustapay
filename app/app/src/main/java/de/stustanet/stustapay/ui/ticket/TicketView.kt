@@ -27,11 +27,6 @@ fun TicketView(
         }
     }
 
-    // fetch the terminal configuration
-    LaunchedEffect(Unit) {
-        viewModel.fetchConfig()
-    }
-
     BackHandler {
         leaveView()
     }

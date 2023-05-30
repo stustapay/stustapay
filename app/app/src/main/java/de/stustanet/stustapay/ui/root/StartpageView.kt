@@ -44,8 +44,15 @@ fun StartpageView(
     viewModel: StartpageViewModel = hiltViewModel()
 ) {
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
+    val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
     val scope = rememberCoroutineScope()
+
+    val navigateToHook = fun (dest: NavDest): Unit {
+        if (!configLoading) {
+            navigateTo(dest)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.fetchAccessData()
@@ -56,7 +63,6 @@ fun StartpageView(
             .fillMaxSize()
             .background(brush = Brush.verticalGradient(colors = gradientColors)),
     ) {
-        var loading by remember { mutableStateOf(false) }
         IconButton(
             modifier = Modifier
                 .align(alignment = Alignment.TopEnd)
@@ -64,13 +70,12 @@ fun StartpageView(
                 .size(30.dp),
             onClick = {
                 scope.launch {
-                    loading = true
                     viewModel.fetchAccessData()
-                    loading = false
                 }
-            }
+            },
+            enabled = !configLoading,
         ) {
-            if (loading) {
+            if (configLoading) {
                 Spinner()
             }
             else {
@@ -113,7 +118,7 @@ fun StartpageView(
                         .weight(1.0f)) {
                     for (item in startpageItems) {
                         if (loginState.checkAccess(item.canAccess)) {
-                            StartpageEntry(item = item, navigateTo = navigateTo)
+                            StartpageEntry(item = item, navigateTo = navigateToHook)
                         }
                     }
                 }
@@ -126,7 +131,7 @@ fun StartpageView(
                         navDestination = RootNavDests.user,
                         label = R.string.user_title,
                     ),
-                    navigateTo = navigateTo
+                    navigateTo = navigateToHook
                 )
 
                 if (loginState.checkAccess { u, _ -> Access.canChangeConfig(u) } || !loginState.hasConfig()) {
@@ -136,7 +141,7 @@ fun StartpageView(
                             label = R.string.root_item_settings,
                             navDestination = RootNavDests.settings,
                         ),
-                        navigateTo = navigateTo
+                        navigateTo = navigateToHook
                     )
                 }
 
@@ -147,7 +152,7 @@ fun StartpageView(
                             label = R.string.root_item_development,
                             navDestination = RootNavDests.development,
                         ),
-                        navigateTo = navigateTo
+                        navigateTo = navigateToHook
                     )
                 }
             }

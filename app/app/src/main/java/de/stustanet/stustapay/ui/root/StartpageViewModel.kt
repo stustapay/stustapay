@@ -38,6 +38,9 @@ class StartpageViewModel @Inject constructor(
     private val _user = userRepository.userState
     private val _terminal = terminalConfigRepository.terminalConfigState
 
+    private val _configLoading = MutableStateFlow(false)
+    val configLoading = _configLoading.asStateFlow()
+
     val uiState = combine(_user, _terminal) { user, terminal ->
         TerminalLoginState(user, terminal)
     }.stateIn(
@@ -55,8 +58,13 @@ class StartpageViewModel @Inject constructor(
     )
 
     suspend fun fetchAccessData() {
-        userRepository.fetchLogin()
-        terminalConfigRepository.fetchConfig()
+        try {
+            _configLoading.update { true }
+            userRepository.fetchLogin()
+            terminalConfigRepository.fetchConfig()
+        } finally {
+            _configLoading.update { false }
+        }
     }
 }
 
@@ -87,9 +95,11 @@ private fun loginProfileUiState(
                                 )
                             }
                         }
+
                         is UserState.NoLogin -> {
                             LoginProfileUIState.NotLoggedIn
                         }
+
                         is UserState.Error -> {
                             LoginProfileUIState.Error(
                                 message = state.msg,

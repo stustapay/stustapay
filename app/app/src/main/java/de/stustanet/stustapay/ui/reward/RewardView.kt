@@ -40,11 +40,6 @@ fun RewardView(
     val status by viewModel.status.collectAsStateWithLifecycle()
     val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
 
-    // fetch the terminal configuration
-    LaunchedEffect(Unit) {
-        viewModel.fetchConfig()
-    }
-
     NfcScanDialog(state = scanState, onScan = { tag ->
         scope.launch {
             viewModel.tagScanned(tag)

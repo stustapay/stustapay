@@ -75,16 +75,6 @@ class TopUpViewModel @Inject constructor(
         initialValue = TerminalLoginState(),
     )
 
-    val tabList: StateFlow<List<CashInOutTab>> =
-        terminalLoginState.mapState(listOf(), viewModelScope) { loginState ->
-            CashInOutTab.values().filter { it.access(loginState) }
-        }
-
-    suspend fun fetchConfig() {
-        terminalConfigRepository.fetchConfig()
-        userRepository.fetchLogin()
-    }
-
     fun setAmount(amount: UInt) {
         _topUpState.update {
             it.copy(currentAmount = amount)

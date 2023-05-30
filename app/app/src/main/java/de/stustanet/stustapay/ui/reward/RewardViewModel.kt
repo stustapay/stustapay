@@ -48,11 +48,6 @@ class RewardViewModel @Inject constructor(
     private val _status = MutableStateFlow("")
     val status = _status.asStateFlow()
 
-    suspend fun fetchConfig() {
-        terminalConfigRepository.fetchConfig()
-        userRepository.fetchLogin()
-    }
-
     private suspend fun grantVouchers(tag: UserTag, vouchers: UInt) {
         when (val resp = customerRepository.grantVouchers(tag, vouchers)) {
             is Response.OK -> {

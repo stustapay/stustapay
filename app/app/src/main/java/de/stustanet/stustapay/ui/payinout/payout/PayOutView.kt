@@ -24,10 +24,6 @@ fun PayOutView(
     val showPayOutConfirm by viewModel.showPayOutConfirm.collectAsStateWithLifecycle()
     val completedPayOut by viewModel.completedPayOut.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.fetchConfig()
-    }
-
     val scope = rememberCoroutineScope()
 
     val confirmState = rememberDialogDisplayState()

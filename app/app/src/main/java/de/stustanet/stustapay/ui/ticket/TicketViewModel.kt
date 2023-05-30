@@ -69,10 +69,6 @@ class TicketViewModel @Inject constructor(
         terminalConfigRepository.terminalConfigState
     )
 
-    suspend fun fetchConfig() {
-        terminalConfigRepository.fetchConfig()
-    }
-
     fun navTo(page: TicketPage) {
         _navState.update { page }
     }
