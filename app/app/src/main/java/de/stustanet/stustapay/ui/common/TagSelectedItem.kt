@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.Composable
@@ -15,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.theme.errorButtonColors
 
@@ -37,11 +34,7 @@ fun TagSelectedItem(
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            "Tag ID: $tag",
-            style = MaterialTheme.typography.h5,
-            modifier = Modifier.weight(1.0f)
-        )
+        TagItem(tag, modifier = Modifier.weight(1.0f))
         Button(
             onClick = onClear,
             colors = errorButtonColors(),

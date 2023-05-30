@@ -67,7 +67,7 @@ class RewardViewModel @Inject constructor(
         when (val resp = customerRepository.grantFreeTicket(tag, vouchers)) {
             is Response.OK -> {
                 val voucherAmount = if (vouchers > 0u) {
-                    resourcesProvider.getString(R.string.with_n_vouchers).format(vouchers)
+                    " " + resourcesProvider.getString(R.string.with_n_vouchers).format(vouchers)
                 } else {
                     ""
                 }

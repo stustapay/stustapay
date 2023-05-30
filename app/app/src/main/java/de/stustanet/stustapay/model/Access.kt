@@ -10,6 +10,10 @@ object Access {
         return user.privileges.contains(Privilege.user_management)
     }
 
+    fun canReadUserComment(user: CurrentUser): Boolean {
+        return user.privileges.contains(Privilege.account_management)
+    }
+
     fun canSell(user: CurrentUser, terminal: TerminalConfig): Boolean {
         return user.privileges.contains(Privilege.can_book_orders) && (((terminal.buttons?.size) ?: 0) > 0)
     }

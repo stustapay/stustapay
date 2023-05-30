@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.customer
+package de.stustanet.stustapay.ui.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,7 +31,7 @@ sealed interface CustomerStatusRequestState {
 
 
 @HiltViewModel
-class CustomerStatusViewModel @Inject constructor(
+class AccountViewModel @Inject constructor(
     private val customerRepository: CustomerRepository,
     userRepository: UserRepository
 ) : ViewModel() {
@@ -48,7 +48,24 @@ class CustomerStatusViewModel @Inject constructor(
             is UserState.LoggedIn -> {
                 Access.canSwap(it.user)
             }
-            else -> {
+            is UserState.NoLogin -> {
+                false
+            }
+            is UserState.Error -> {
+                false
+            }
+        }
+    }
+
+    val commentVisible = userRepository.userState.mapState(false, viewModelScope) {
+        when (it) {
+            is UserState.LoggedIn -> {
+                Access.canReadUserComment(it.user)
+            }
+            is UserState.NoLogin -> {
+                false
+            }
+            is UserState.Error -> {
                 false
             }
         }

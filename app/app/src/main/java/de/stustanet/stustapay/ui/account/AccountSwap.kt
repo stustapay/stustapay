@@ -1,4 +1,4 @@
-package de.stustanet.stustapay.ui.customer
+package de.stustanet.stustapay.ui.account
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -16,7 +16,7 @@ import de.stustanet.stustapay.ui.common.TagTextField
 import kotlinx.coroutines.launch
 
 @Composable
-fun CustomerStatusSwapView(goBack: () -> Unit, viewModel: CustomerStatusViewModel) {
+fun AccountSwap(goBack: () -> Unit, viewModel: AccountViewModel) {
     val scanState = rememberNfcScanDialogState()
     val newTagId by viewModel.newTagId.collectAsStateWithLifecycle()
     val oldTagId by viewModel.oldTagId.collectAsStateWithLifecycle()
