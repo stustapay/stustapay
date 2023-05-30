@@ -1,4 +1,4 @@
-import { Paper, Button, LinearProgress, Typography, Alert } from "@mui/material";
+import { Paper, Button, LinearProgress, Typography, Alert, Checkbox, FormControlLabel } from "@mui/material";
 import * as React from "react";
 import { Formik, Form, FormikHelpers } from "formik";
 import { z } from "zod";
@@ -13,6 +13,7 @@ import { PrivilegeSelect } from "./PrivilegeSelect";
 
 const UpdateSchema = z.object({
   id: z.number(),
+  is_privileged: z.boolean(),
   privileges: z.array(PrivilegeSchema),
 });
 type FormValues = z.infer<typeof UpdateSchema>;
@@ -61,6 +62,16 @@ export const UserRoleUpdate: React.FC = () => {
         >
           {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, setFieldValue, errors, touched }) => (
             <Form onSubmit={handleSubmit}>
+              <FormControlLabel
+                label={t("userRole.isPrivileged")}
+                control={
+                  <Checkbox
+                    checked={values.is_privileged}
+                    onChange={(evt) => setFieldValue("is_privileged", evt.target.checked)}
+                  />
+                }
+              />
+
               <PrivilegeSelect
                 label={t("userRole.privileges")}
                 margin="normal"

@@ -50,6 +50,11 @@ export const UserRoleList: React.FC = () => {
       flex: 1,
     },
     {
+      field: "is_privileged",
+      headerName: t("userRole.isPrivileged") as string,
+      type: "boolean",
+    },
+    {
       field: "privileges",
       headerName: t("userPrivileges") as string,
       flex: 1,
