@@ -30,13 +30,11 @@ class CashierStatusViewModel @Inject constructor(
     suspend fun fetchLocal() {
         _state.update { CashierStatusRequestState.Fetching }
         val user = userRepository.userState.value
-        if (user is UserState.LoggedIn) {
-            if (user.user.user_tag_uid != null) {
-                fetchTag(user.user.user_tag_uid!!)
-                return
-            }
+        if (user is UserState.LoggedIn && user.user.user_tag_uid != null) {
+            fetchTag(user.user.user_tag_uid!!)
+        } else {
+            _state.update { CashierStatusRequestState.Failed("Not logged in") }
         }
-        _state.update { CashierStatusRequestState.Failed }
     }
 
     suspend fun fetchTag(id: ULong) {
@@ -46,7 +44,7 @@ class CashierStatusViewModel @Inject constructor(
                 _state.update { CashierStatusRequestState.Done(res.data) }
             }
             is Response.Error -> {
-                _state.update { CashierStatusRequestState.Failed }
+                _state.update { CashierStatusRequestState.Failed(res.msg()) }
             }
         }
     }
@@ -61,6 +59,7 @@ sealed interface CashierStatusRequestState {
     data class Done(
         val userInfo: UserInfo
     ) : CashierStatusRequestState
-
-    object Failed : CashierStatusRequestState
+    data class Failed(
+        val msg: String
+    ) : CashierStatusRequestState
 }
