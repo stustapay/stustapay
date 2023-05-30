@@ -19,13 +19,12 @@ class Config(PublicConfig):
 
 @router.get("/public-config", response_model=Config)
 async def get_public_config(context: Annotated[Context, Depends(get_context)], config_service: ContextConfigService):
-    terminal_endpoint = context.config.terminalserver.base_url.replace("http://", "")
     config: PublicConfig = await config_service.get_public_config()
     return Config(
         test_mode=context.config.core.test_mode,
         test_mode_message=context.config.core.test_mode_message,
         sumup_topup_enabled=await config_service.is_sumup_topup_enabled(),
-        terminal_api_endpoint=terminal_endpoint,
+        terminal_api_endpoint=context.config.terminalserver.base_url,
         currency_symbol=config.currency_symbol,
         currency_identifier=config.currency_identifier,
         contact_email=config.contact_email,
