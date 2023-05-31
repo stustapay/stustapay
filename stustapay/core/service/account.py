@@ -222,7 +222,7 @@ class AccountService(DBService):
             new_free_ticket_grant.user_tag_uid,
         )
         if user_tag is None:
-            raise NotFound(element_typ="user_tag", element_id=str(new_free_ticket_grant.user_tag_uid))
+            raise NotFound(element_typ="user_tag", element_id=new_free_ticket_grant.user_tag_uid, hex_formatting=True)
 
         if user_tag["account_id"] is not None:
             raise InvalidArgument("Tag is already registered")
