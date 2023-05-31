@@ -151,7 +151,8 @@ fun AccountSwap(goBack: () -> Unit, viewModel: AccountViewModel) {
                 ) {
                     Button(
                         modifier = Modifier
-                            .weight(1.0f),
+                            .weight(1.0f)
+                            .height(70.dp),
                         onClick = {
                             goBack()
                         }
@@ -162,6 +163,7 @@ fun AccountSwap(goBack: () -> Unit, viewModel: AccountViewModel) {
                     Button(
                         modifier = Modifier
                             .weight(1.0f)
+                            .height(70.dp)
                             .padding(start = 10.dp),
                         onClick = {
                             scope.launch {

@@ -15,6 +15,7 @@ fun AccountScan(onScan: (UserTag) -> Unit) {
         NfcScanCard(
             modifier = Modifier.size(300.dp, 300.dp),
             onScan = onScan,
+            keepScanning = true
         )
     }
 }

@@ -91,8 +91,8 @@ fun UserCreateView(viewModel: UserViewModel) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(stringResource(R.string.user_id), fontSize = 24.sp)
-                            Text(tagIDtoString(currentTag!!), fontSize = 36.sp)
+                            Text(stringResource(R.string.user_id), fontSize = 20.sp)
+                            Text(tagIDtoString(currentTag!!), fontSize = 30.sp)
                         }
 
                         Divider()
@@ -107,7 +107,7 @@ fun UserCreateView(viewModel: UserViewModel) {
                         ) {
                             Text(
                                 stringResource(R.string.user_username),
-                                fontSize = 24.sp,
+                                fontSize = 20.sp,
                                 modifier = Modifier.padding(end = 20.dp)
                             )
                             TextField(
@@ -131,7 +131,7 @@ fun UserCreateView(viewModel: UserViewModel) {
                         ) {
                             Text(
                                 stringResource(R.string.user_displayname),
-                                fontSize = 24.sp,
+                                fontSize = 20.sp,
                                 modifier = Modifier.padding(end = 20.dp)
                             )
                             TextField(
@@ -157,7 +157,7 @@ fun UserCreateView(viewModel: UserViewModel) {
 
                             Text(
                                 stringResource(R.string.user_roles),
-                                fontSize = 24.sp,
+                                fontSize = 20.sp,
                                 modifier = Modifier.padding(end = 20.dp)
                             )
                             ExposedDropdownMenuBox(
@@ -218,7 +218,7 @@ fun UserCreateView(viewModel: UserViewModel) {
                         ) {
                             Text(
                                 stringResource(R.string.user_description),
-                                fontSize = 24.sp,
+                                fontSize = 20.sp,
                                 modifier = Modifier.padding(end = 20.dp)
                             )
                             TextField(

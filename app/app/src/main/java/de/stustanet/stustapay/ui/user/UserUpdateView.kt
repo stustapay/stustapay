@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,8 +62,8 @@ fun UserUpdateView(viewModel: UserViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(stringResource(R.string.user_id), fontSize = 24.sp)
-                        Text(tagIDtoString(currentTag), fontSize = 36.sp)
+                        Text(stringResource(R.string.user_id), fontSize = 20.sp)
+                        Text(tagIDtoString(currentTag), fontSize = 30.sp, textAlign = TextAlign.Right)
                     }
 
                     Divider()
@@ -74,8 +75,8 @@ fun UserUpdateView(viewModel: UserViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(stringResource(R.string.user_username), fontSize = 24.sp)
-                        Text(currentUserV.login, fontSize = 36.sp)
+                        Text(stringResource(R.string.user_username), fontSize = 20.sp)
+                        Text(currentUserV.login, fontSize = 30.sp, textAlign = TextAlign.Right)
                     }
 
                     Divider()
@@ -86,8 +87,8 @@ fun UserUpdateView(viewModel: UserViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(stringResource(R.string.user_displayname), fontSize = 24.sp)
-                        Text(currentUserV.display_name, fontSize = 36.sp)
+                        Text(stringResource(R.string.user_displayname), fontSize = 20.sp)
+                        Text(currentUserV.display_name, fontSize = 30.sp, textAlign = TextAlign.Right)
                     }
 
                     Divider()

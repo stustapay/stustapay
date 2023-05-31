@@ -89,8 +89,12 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(stringResource(R.string.user_id), fontSize = 24.sp)
-                            Text(tagIDtoString(currentTag), fontSize = 36.sp)
+                            Text(stringResource(R.string.user_id), fontSize = 20.sp)
+                            Text(
+                                tagIDtoString(currentTag),
+                                fontSize = 30.sp,
+                                textAlign = TextAlign.Right
+                            )
                         }
 
                         Divider()
@@ -101,8 +105,8 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(stringResource(R.string.user_username), fontSize = 24.sp)
-                            Text(user.login, fontSize = 36.sp)
+                            Text(stringResource(R.string.user_username), fontSize = 20.sp)
+                            Text(user.login, fontSize = 30.sp, textAlign = TextAlign.Right)
                         }
 
                         Divider()
@@ -113,8 +117,8 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(stringResource(R.string.user_displayname), fontSize = 24.sp)
-                            Text(user.display_name, fontSize = 36.sp)
+                            Text(stringResource(R.string.user_displayname), fontSize = 20.sp)
+                            Text(user.display_name, fontSize = 30.sp, textAlign = TextAlign.Right)
                         }
 
                         Divider()
@@ -125,10 +129,10 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(stringResource(R.string.user_roles), fontSize = 24.sp)
+                            Text(stringResource(R.string.user_roles), fontSize = 20.sp)
                             Text(
                                 user.role_names.reduce { acc, r -> "$acc, $r" },
-                                fontSize = 36.sp,
+                                fontSize = 30.sp,
                                 textAlign = TextAlign.Right
                             )
                         }
@@ -144,7 +148,7 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                         ) {
                             Text(
                                 stringResource(R.string.user_description),
-                                fontSize = 24.sp
+                                fontSize = 20.sp
                             )
                         }
 
@@ -154,7 +158,7 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(user.description ?: "", fontSize = 36.sp)
+                            Text(user.description ?: "", fontSize = 30.sp)
                         }
                     }
                 }
