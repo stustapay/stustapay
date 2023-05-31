@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.model
 
+import de.stustanet.stustapay.ui.common.tagIDtoString
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -32,7 +33,7 @@ data class UserTag(
     val uid: ULong,
 ) {
     override fun toString(): String {
-        return uid.toString(16).uppercase()
+        return tagIDtoString(uid)
     }
 }
 
