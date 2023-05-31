@@ -130,7 +130,7 @@ class TopUpViewModel @Inject constructor(
      */
     private fun getECPayment(newTopUp: NewTopUp): ECPayment {
         return ECPayment(
-            id = newTopUp.uuid ?: UUID.randomUUID().toString(),
+            id = newTopUp.uuid,
             amount = BigDecimal(newTopUp.amount),
             tag = UserTag(newTopUp.customer_tag_uid),
         )

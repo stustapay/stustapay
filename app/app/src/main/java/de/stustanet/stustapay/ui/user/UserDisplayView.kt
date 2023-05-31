@@ -30,7 +30,9 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
     if (currentUser == null) {
         Scaffold(
             content = { padding ->
-                Box(modifier = Modifier.padding(20.dp)) {
+                Box(modifier = Modifier
+                    .padding(padding)
+                    .padding(20.dp)) {
                     NfcScanCard(
                         keepScanning = true,
                         onScan = { tag ->
@@ -51,12 +53,15 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                             is UserRequestState.Idle -> {
                                 stringResource(R.string.common_status_idle)
                             }
+
                             is UserRequestState.Fetching -> {
                                 stringResource(R.string.common_status_fetching)
                             }
+
                             is UserRequestState.Done -> {
                                 stringResource(R.string.common_status_done)
                             }
+
                             is UserRequestState.Failed -> {
                                 (status as UserRequestState.Failed).msg
                             }
@@ -164,12 +169,15 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                             is UserRequestState.Idle -> {
                                 stringResource(R.string.common_status_idle)
                             }
+
                             is UserRequestState.Fetching -> {
                                 stringResource(R.string.common_status_fetching)
                             }
+
                             is UserRequestState.Done -> {
                                 stringResource(R.string.common_status_done)
                             }
+
                             is UserRequestState.Failed -> {
                                 (status as UserRequestState.Failed).msg
                             }

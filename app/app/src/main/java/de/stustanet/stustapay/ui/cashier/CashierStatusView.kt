@@ -1,6 +1,14 @@
 package de.stustanet.stustapay.ui.cashier
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
 import androidx.compose.material.Scaffold
@@ -20,7 +28,6 @@ import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
 import de.stustanet.stustapay.ui.common.tagIDtoString
-import de.stustanet.stustapay.ui.customer.CustomerStatusRequestState
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
 
@@ -63,6 +70,7 @@ fun CashierStatusView(
                                         fontSize = 36.sp
                                     )
                                 }
+
                                 is CashierStatusRequestState.Done -> {
                                     Row(
                                         modifier = Modifier
@@ -118,6 +126,7 @@ fun CashierStatusView(
                                         }
                                     }
                                 }
+
                                 is CashierStatusRequestState.Failed -> {
                                     Text(
                                         stringResource(R.string.common_status_failed),
@@ -138,9 +147,11 @@ fun CashierStatusView(
                                 is CashierStatusRequestState.Failed -> {
                                     state.msg
                                 }
+
                                 is CashierStatusRequestState.Fetching -> {
                                     stringResource(R.string.common_status_fetching)
                                 }
+
                                 is CashierStatusRequestState.Done -> {
                                     stringResource(R.string.common_status_done)
                                 }
