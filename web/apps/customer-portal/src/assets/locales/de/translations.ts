@@ -47,6 +47,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
   payout: {
     info: "Trage deine Bankdaten hier ein um dein Restguthaben auf dein Bankkonto zu überweisen.",
     ibanNotValid: "ungültige IBAN",
+    countryCodeNotSupported: "IBAN Ländercode wird nicht unterstützt",
     mustAcceptPrivacyPolicy: "Sie müssen die Datenschutserklärung akzeptieren",
     privacyPolicyCheck: "Ich habe die <1>Datenschutzerklärung</1> des StuStaCulum gelesen und akzeptiere sie.",
     errorFetchingData: "Fehler beim laden der Daten.",
