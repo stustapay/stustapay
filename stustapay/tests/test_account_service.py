@@ -47,7 +47,9 @@ class AccountServiceTest(TerminalTestCase):
     async def test_free_ticket_grant_without_vouchers(self):
         voucher_role = await self.user_service.create_user_role(
             token=self.admin_token,
-            new_role=NewUserRole(name="test-role", privileges=[Privilege.supervised_terminal_login]),
+            new_role=NewUserRole(
+                name="test-role", is_privileged=False, privileges=[Privilege.supervised_terminal_login]
+            ),
         )
         await self.user_service.update_user_roles(
             token=self.admin_token,
@@ -80,6 +82,7 @@ class AccountServiceTest(TerminalTestCase):
         await self.user_service.update_user_role_privileges(
             token=self.admin_token,
             role_id=voucher_role.id,
+            is_privileged=False,
             privileges=[Privilege.grant_free_tickets],
         )
 
@@ -94,6 +97,7 @@ class AccountServiceTest(TerminalTestCase):
         await self.user_service.update_user_role_privileges(
             token=self.admin_token,
             role_id=voucher_role.id,
+            is_privileged=False,
             privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets, Privilege.grant_vouchers],
         )
 

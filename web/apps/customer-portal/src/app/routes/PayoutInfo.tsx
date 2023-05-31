@@ -1,4 +1,4 @@
-import { useGetCustomerQuery, useSetCustomerInfoMutation } from "@/api";
+import { config, useGetCustomerQuery, useSetCustomerInfoMutation } from "@/api";
 import { Loading } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -20,12 +20,22 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import iban from "iban";
 import i18n from "@/i18n";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Link as RouterLink } from "react-router-dom";
 
 const FormSchema = z.object({
-  iban: z.string().refine((val) => iban.isValid(val), {
-    message: i18n.t("payout.ibanNotValid"),
+  iban: z.string().superRefine((val, ctx) => {
+    if (!iban.isValid(val)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "IBAN is not valid.",
+      });
+    }
+    if (!config.publicApiConfig.allowed_country_codes.includes(val.substring(0, 2))) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Provided country code is not supported.",
+      });
+    }
   }),
   account_name: z.string(),
   email: z.string().email(),

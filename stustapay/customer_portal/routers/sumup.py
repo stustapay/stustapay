@@ -30,7 +30,6 @@ class CheckCheckoutPayload(BaseModel):
 
 class CheckCheckoutResponse(BaseModel):
     status: SumupCheckoutStatus
-    checkout_id: str
 
 
 @router.post("/create-checkout", summary="initiate customer checkout", response_model=CreateCheckoutResponse)
@@ -50,6 +49,6 @@ async def check_checkout(
     customer_service: ContextCustomerService,
     payload: CheckCheckoutPayload,
 ):
-    checkout = await customer_service.sumup.check_checkout(token=token, checkout_id=payload.checkout_id)
-    return CheckCheckoutResponse(status=checkout.status, checkout_id=checkout.id)
+    checkout_status = await customer_service.sumup.check_checkout(token=token, checkout_id=payload.checkout_id)
+    return CheckCheckoutResponse(status=checkout_status)
     # return CheckCheckoutResponse(status=SumupCheckoutStatus.FAILED, checkout_id=str(uuid.uuid4()))

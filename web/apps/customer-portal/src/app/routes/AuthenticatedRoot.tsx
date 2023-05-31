@@ -18,23 +18,13 @@ import { useTranslation } from "react-i18next";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { TestModeDisclaimer } from "@stustapay/components";
 import { config } from "@/api";
-import i18n from "@/i18n";
-import { Layout } from "@/components";
-
-const navbarLinks = [
-  {
-    label: i18n.t("nav.payout"),
-    link: "/payout-info",
-  },
-  {
-    label: i18n.t("nav.faq"),
-    link: "/faq",
-  },
-];
+import { LanguageSelect, Layout } from "@/components";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const publicConfig = usePublicConfig();
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
@@ -51,6 +41,32 @@ export const AuthenticatedRoot: React.FC = () => {
     const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
     return <Navigate to={`/login${next}`} />;
   }
+
+  const navbarLinks = publicConfig.sumup_topup_enabled
+    ? [
+        {
+          label: t("nav.payout"),
+          link: "/payout-info",
+        },
+        {
+          label: t("nav.topup"),
+          link: "/topup",
+        },
+        {
+          label: t("nav.faq"),
+          link: "/faq",
+        },
+      ]
+    : [
+        {
+          label: t("nav.payout"),
+          link: "/payout-info",
+        },
+        {
+          label: t("nav.faq"),
+          link: "/faq",
+        },
+      ];
 
   return (
     <Layout>
@@ -129,6 +145,7 @@ export const AuthenticatedRoot: React.FC = () => {
               </Box>
 
               <Box sx={{ flexGrow: 0 }}>
+                <LanguageSelect sx={{ color: "inherit" }} variant="outlined" />
                 <Button component={RouterLink} color="inherit" to="/logout">
                   {t("logout")}
                 </Button>

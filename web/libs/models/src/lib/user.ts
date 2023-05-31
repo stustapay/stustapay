@@ -28,6 +28,7 @@ export type Privilege = z.infer<typeof PrivilegeSchema>;
 
 export const NewUserRoleSchema = z.object({
   name: z.string(),
+  is_privileged: z.boolean(),
   privileges: z.array(PrivilegeSchema),
 });
 

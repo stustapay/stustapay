@@ -20,6 +20,7 @@ import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
 import de.stustanet.stustapay.ui.common.tagIDtoString
+import de.stustanet.stustapay.ui.customer.CustomerStatusRequestState
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
 
@@ -128,18 +129,35 @@ fun CashierStatusView(
                     }
                 },
                 bottomBar = {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Divider()
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Column {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Divider()
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+                            val text = when (val state = uiState.state) {
+                                is CashierStatusRequestState.Failed -> {
+                                    state.msg
+                                }
+                                is CashierStatusRequestState.Fetching -> {
+                                    stringResource(R.string.common_status_fetching)
+                                }
+                                is CashierStatusRequestState.Done -> {
+                                    stringResource(R.string.common_status_done)
+                                }
+                            }
+                            Text(text, fontSize = 24.sp)
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                    Button(
-                        onClick = {
-                            scanState.open()
-                        }, modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp)
-                    ) {
-                        Text(stringResource(R.string.common_action_scan), fontSize = 24.sp)
+                        Button(
+                            onClick = {
+                                scanState.open()
+                            }, modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp)
+                        ) {
+                            Text(stringResource(R.string.common_action_scan), fontSize = 24.sp)
+                        }
                     }
                 }
             )

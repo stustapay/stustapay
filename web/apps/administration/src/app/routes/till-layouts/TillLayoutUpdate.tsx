@@ -9,7 +9,7 @@ import { Loading } from "@stustapay/components";
 export const TillLayoutUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { layoutId } = useParams();
-  const { layout, isLoading } = useGetTillLayoutByIdQuery(Number(layoutId), {
+  const { layout, isLoading, error } = useGetTillLayoutByIdQuery(Number(layoutId), {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       layout: data ? selectTillLayoutById(data, Number(layoutId)) : undefined,
@@ -17,12 +17,12 @@ export const TillLayoutUpdate: React.FC = () => {
   });
   const [updateLayout] = useUpdateTillLayoutMutation();
 
-  if (isLoading) {
-    return <Loading />;
+  if (error) {
+    return <Navigate to="/till-layouts" />;
   }
 
-  if (!layout) {
-    return <Navigate to="/till-layouts" />;
+  if (isLoading || !layout) {
+    return <Loading />;
   }
 
   return (

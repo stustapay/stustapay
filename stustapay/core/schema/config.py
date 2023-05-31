@@ -22,3 +22,4 @@ class SEPAConfig(BaseModel):
     sender_iban: str
     # verwendungsungszweck
     description: str
+    allowed_country_codes: list[str]

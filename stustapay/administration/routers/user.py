@@ -114,6 +114,7 @@ async def create_user_role(
 
 
 class UpdateUserRolePrivilegesPayload(BaseModel):
+    is_privileged: bool
     privileges: list[Privilege]
 
 
@@ -125,7 +126,7 @@ async def update_user_role(
     user_service: ContextUserService,
 ):
     role = await user_service.update_user_role_privileges(
-        token=token, role_id=user_role_id, privileges=updated_role.privileges
+        token=token, role_id=user_role_id, is_privileged=updated_role.is_privileged, privileges=updated_role.privileges
     )
     if role is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

@@ -9,7 +9,7 @@ from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     INFOZELT_ROLE_NAME,
 )
-from stustapay.core.service.common.error import AccessDenied
+from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.tests.common import TerminalTestCase
 
 
@@ -51,11 +51,12 @@ class UserServiceTest(TerminalTestCase):
         self.assertIsNotNone(cashier.cashier_account_id)
         self.assertIsNone(cashier.transport_account_id)
         self.assertEqual(cashier.user_tag_uid, self.cashier_uid)
-        # Test creation if user already exists
-        await self.user_service.create_user_terminal(
-            token=self.terminal_token,
-            new_user=NewUser(login="test-cashier", user_tag_uid=self.cashier_uid, role_names=[CASHIER_ROLE_NAME]),
-        )
+        # Test creation if user already exists, then this should return an error
+        with self.assertRaises(InvalidArgument):
+            await self.user_service.create_user_terminal(
+                token=self.terminal_token,
+                new_user=NewUser(login="test-cashier", user_tag_uid=self.cashier_uid, role_names=[CASHIER_ROLE_NAME]),
+            )
 
         cashier = await self.user_service.update_user_roles_terminal(
             token=self.terminal_token,

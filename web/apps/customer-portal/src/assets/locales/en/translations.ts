@@ -6,6 +6,7 @@ export const translations = {
   userTagPin: "Wristband Tag Pin",
   nav: {
     payout: "Pay Out",
+    topup: "Top Up",
     agb: "AGB",
     faq: "FAQ",
   },
@@ -16,6 +17,8 @@ export const translations = {
   contact: "Contact",
   wristbandTagExample: "Wristband Tag Example",
   wristbandTagExampleTitle: "Wristband Tag Example with PIN and ID",
+  wristbandTagExampleDescription:
+    "You can find your wristband tag ID and PIN on the back of your wristband tag. It should look like the example given below:",
   termsAndConditionsHeader:
     "Our Terms and Conditions are only available in German. You can access our privacy policy on <1>here</1>.",
   privacyPolicyHeader:
@@ -60,6 +63,7 @@ export const translations = {
     errorAmountMustBeIntegral: "Cent amounts are not allowed",
     sumupTopupDisabled: "Online Topup is disabled",
     tryAgain: "Try again",
+    next: "Next",
     success: {
       title: "Top Up succeeded",
       message: "Please continue to the <1>overview page</1>.",

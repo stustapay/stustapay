@@ -15,7 +15,7 @@ from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction, requires_customer
-from stustapay.core.service.common.error import ServiceException, InvalidArgument, NotFound, Unauthorized
+from stustapay.core.service.common.error import ServiceException, InvalidArgument, NotFound, AccessDenied
 from stustapay.core.service.config import ConfigService, get_currency_identifier
 from stustapay.core.service.order.booking import NewLineItem, BookingIdentifier, book_order
 from stustapay.core.service.order.order import fetch_max_account_balance
@@ -33,6 +33,9 @@ class SumUpError(ServiceException):
 class PendingCheckoutAlreadyExists(ServiceException):
     id = "PendingCheckoutAlreadyExists"
 
+    def __init__(self, msg: str):
+        self.msg = msg
+
 
 class CreateCheckout(BaseModel):
     amount: float
@@ -43,9 +46,10 @@ class SumupCreateCheckout(BaseModel):
     amount: float
     currency: str
     merchant_code: str
+    # pay_to_email: str
     description: str
     return_url: str
-    customer_id: str
+    # customer_id: str
     # redirect_url: Optional[str] = None
 
 
@@ -80,7 +84,6 @@ class SumupTransaction(BaseModel):
 
 class SumupCheckout(SumupCreateCheckout):
     id: str
-    pay_to_email: str
     status: SumupCheckoutStatus
     valid_until: Optional[datetime] = None
     date: datetime
@@ -124,7 +127,7 @@ class SumupService(DBService):
     SUMUP_CHECKOUT_URL = f"{SUMUP_API_URL}/checkouts"
     SUMUP_AUTH_URL = f"{SUMUP_BASE_URL}/token"
     SUMUP_AUTH_REFRESH_THRESHOLD = timedelta(seconds=180)
-    SUMUP_CHECKOUT_PULL_INTERVAL = timedelta(seconds=20)
+    SUMUP_CHECKOUT_PULL_INTERVAL = timedelta(seconds=5)
 
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, config_service: ConfigService):
         super().__init__(db_pool, config)
@@ -143,6 +146,7 @@ class SumupService(DBService):
 
         return {
             "Accept": "application/json",
+            "Content-Type": "application/json",
             "Authorization": f"Bearer {self.sumup_auth.access_token}",
         }
 
@@ -183,7 +187,8 @@ class SumupService(DBService):
     async def _create_sumup_checkout(self, *, checkout: SumupCreateCheckout) -> SumupCheckout:
         async with aiohttp.ClientSession(headers=await self._get_sumup_auth_headers()) as session:
             try:
-                async with session.post(self.SUMUP_CHECKOUT_URL, data=checkout.json(), timeout=2) as response:
+                payload = checkout.json()
+                async with session.post(self.SUMUP_CHECKOUT_URL, data=payload, timeout=2) as response:
                     if not response.ok:
                         self.logger.error(
                             f"Sumup API returned status code {response.status} with body {await response.text()}"
@@ -225,8 +230,16 @@ class SumupService(DBService):
 
     async def _process_topup(self, conn: asyncpg.Connection, checkout: SumupCheckout):
         # TODO: this topup processing is very incomplete
-        customer_account_id = int(checkout.customer_id)
+        # customer_account_id = int(checkout.customer_id)
         top_up_product = await fetch_top_up_product(conn=conn)
+        customer_account_id = await conn.fetchval(
+            "select customer_account_id from customer_sumup_checkout where checkout_reference = $1",
+            checkout.checkout_reference,
+        )
+        if customer_account_id is None:
+            raise InvalidArgument(
+                f"Inconsistency detected: checkout not found. Reference: {checkout.checkout_reference}"
+            )
 
         line_items = [
             NewLineItem(
@@ -310,7 +323,7 @@ class SumupService(DBService):
         # update both valid_until and status in db
         await conn.fetchrow(
             "update customer_sumup_checkout set status = $1, valid_until = $2 where id = $3",
-            sumup_checkout.status,
+            sumup_checkout.status.name,
             sumup_checkout.valid_until,
             stored_checkout.id,
         )
@@ -326,7 +339,7 @@ class SumupService(DBService):
 
         # check that current customer is the one referenced in this checkout
         if stored_checkout.customer_account_id != current_customer.id:
-            raise Unauthorized("Found checkout does not belong to current customer")
+            raise AccessDenied("Found checkout does not belong to current customer")
         return await self._update_checkout_status(conn=conn, checkout_id=checkout_id)
 
     @with_db_transaction
@@ -339,9 +352,9 @@ class SumupService(DBService):
         if await conn.fetchval(
             "select exists(select * from customer_sumup_checkout where customer_account_id = $1 and status = $2)",
             current_customer.id,
-            SumupCheckoutStatus.PENDING,
+            SumupCheckoutStatus.PENDING.name,
         ):
-            raise PendingCheckoutAlreadyExists()
+            raise PendingCheckoutAlreadyExists("an online topup is already in progress for this customer")
 
         currency_identifier = await get_currency_identifier(conn=conn)
         amount_rounded = round(amount, 2)
@@ -369,10 +382,11 @@ class SumupService(DBService):
             checkout_reference=checkout_reference,
             amount=amount_rounded,
             currency=currency_identifier,
+            # pay_to_email=self.cfg.customer_portal.sumup_config.pay_to_email,
             merchant_code=self.cfg.customer_portal.sumup_config.merchant_code,
-            description=f"StuStaPay Online TopUp, Tag UUID: {current_customer.user_tag_uid_hex}, amount: {amount_rounded}",
+            description=f"StuStaPay Online TopUp, Tag UUID: {current_customer.user_tag_uid_hex}",
             return_url=self.cfg.customer_portal.sumup_config.return_url,
-            customer_id=str(current_customer.id),
+            # customer_id=str(current_customer.id),
             # redirect_url=self.cfg.customer_portal.sumup_config.redirect_url,
         )
         checkout_response = await self._create_sumup_checkout(checkout=create_checkout)
@@ -390,10 +404,10 @@ class SumupService(DBService):
             checkout_response.description,
             checkout_response.return_url,
             checkout_response.id,
-            checkout_response.status,
+            checkout_response.status.name,
             checkout_response.date,
             None,
-            int(checkout_response.customer_id),
+            current_customer.id,
         )
 
         return checkout_response

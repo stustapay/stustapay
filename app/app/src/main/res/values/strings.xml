@@ -71,8 +71,12 @@
     <string name="user_logout">Logout</string>
     <string name="user_id">ID</string>
     <string name="user_username">Username</string>
+    <string name="user_displayname">Name</string>
     <string name="user_roles">Roles</string>
+    <string name="user_privileged">User is privileged and can not be edited</string>
+    <string name="user_description">Description</string>
     <string name="user_create_title">Create User</string>
+    <string name="user_display_title">Display / Update User</string>
     <string name="user_update_title">Update User</string>
     <string name="user_select">Select a role:</string>
     <string name="topup">Top up</string>

@@ -16,6 +16,7 @@ from stustapay.core.schema.user import (
     UserRole,
     NewUserRole,
     CurrentUser,
+    format_user_tag_uid,
 )
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
@@ -62,7 +63,11 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user([Privilege.user_management])
     async def create_user_role(self, *, conn: asyncpg.Connection, new_role: NewUserRole) -> UserRole:
-        role_id = await conn.fetchval("insert into user_role (name) values ($1) returning id", new_role.name)
+        role_id = await conn.fetchval(
+            "insert into user_role (name, is_privileged) values ($1, $2) returning id",
+            new_role.name,
+            new_role.is_privileged,
+        )
         for privilege in new_role.privileges:
             await conn.execute(
                 "insert into user_role_to_privilege (role_id, privilege) values ($1, $2)", role_id, privilege.name
@@ -76,11 +81,13 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user([Privilege.user_management])
     async def update_user_role_privileges(
-        self, *, conn: asyncpg.Connection, role_id: int, privileges: list[Privilege]
+        self, *, conn: asyncpg.Connection, role_id: int, is_privileged: bool, privileges: list[Privilege]
     ) -> UserRole:
         role = await self._get_user_role(conn=conn, role_id=role_id)
         if role is None:
             raise NotFound(element_typ="user_role", element_id=str(role))
+
+        await conn.execute("update user_role set is_privileged = $2 where id = $1", role_id, is_privileged)
 
         await conn.execute("delete from user_role_to_privilege where role_id = $1", role_id)
         for privilege in privileges:
@@ -219,14 +226,14 @@ class UserService(DBService):
 
         existing_user = await conn.fetchrow("select * from user_with_roles where user_tag_uid = $1", user_tag_uid)
         if existing_user is not None:
-            # ignore the name provided in new_user
-            return User.parse_obj(existing_user)
+            raise InvalidArgument(f"User with tag uid {format_user_tag_uid(new_user.user_tag_uid)} already exists")
 
         user = UserWithoutId(
             login=new_user.login,
             role_names=new_user.role_names,
             user_tag_uid=user_tag_uid,
             display_name=new_user.display_name,
+            description=new_user.description,
         )
         return await self._create_user(conn=conn, creating_user_id=current_user.id, new_user=user)
 

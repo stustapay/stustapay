@@ -47,13 +47,15 @@ class ConfigService(DBService):
             "select "
             "   (select value from config where key = 'customer_portal.sepa.sender_name') as sender_name,"
             "   (select value from config where key = 'customer_portal.sepa.sender_iban') as sender_iban,"
-            "   (select value from config where key = 'customer_portal.sepa.description') as description"
+            "   (select value from config where key = 'customer_portal.sepa.description') as description,"
+            "   (select value::json from config where key = 'customer_portal.sepa.allowed_country_codes') as allowed_country_codes"
         )
 
         return SEPAConfig(
             sender_name=row["sender_name"],
             sender_iban=row["sender_iban"],
             description=row["description"],
+            allowed_country_codes=row["allowed_country_codes"],
         )
 
     @with_db_transaction

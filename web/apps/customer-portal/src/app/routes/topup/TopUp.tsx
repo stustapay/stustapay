@@ -4,7 +4,7 @@ import { Loading, NumericInput } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { Navigate, Link as RouterLink } from "react-router-dom";
-import { Alert, AlertTitle, Box, Button, Grid, InputAdornment, Stack, Link } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, Grid, InputAdornment, Stack, Link, LinearProgress } from "@mui/material";
 import { Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
@@ -154,8 +154,8 @@ export const TopUp: React.FC = () => {
       console.log("updating sumup card with config", config);
       sumupCard.current.update(config);
     } else {
-      // sumupCard.current = SumUpCard.mount(config);
-      sumupCard.current = SumUpCardMock.mount(config);
+      sumupCard.current = SumUpCard.mount(config);
+      // sumupCard.current = SumUpCardMock.mount(config);
     }
   }, [config, state, i18n, updateCheckout, dispatch]);
 
@@ -217,8 +217,9 @@ export const TopUp: React.FC = () => {
                     error={touched.amount && Boolean(errors.amount)}
                     helperText={(touched.amount && errors.amount) as string}
                   />
+                  {isSubmitting && <LinearProgress />}
                   <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-                    {isSubmitting ? "Submitting" : "Submit"}
+                    {t("next")}
                   </Button>
                 </Stack>
               </form>

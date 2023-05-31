@@ -6,7 +6,7 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, ACCOUNT_MONEY_VOUCHER_CREATE, UserTagDetail
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.user import Privilege, User, CurrentUser
+from stustapay.core.schema.user import Privilege, User, CurrentUser, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction, requires_user, requires_terminal
@@ -70,7 +70,7 @@ class AccountService(DBService):
             "update user_tag set comment = $1 where uid = $2 returning uid", comment, user_tag_uid
         )
         if ret is None:
-            raise NotFound(element_typ="user_tag", element_id=user_tag_uid)
+            raise InvalidArgument(f"User tag {format_user_tag_uid(user_tag_uid)} does not exist")
 
         detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_user=current_user, user_tag_uid=user_tag_uid
@@ -193,7 +193,7 @@ class AccountService(DBService):
 
         account = await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
         if account is None:
-            raise NotFound(element_typ="user_tag", element_id=f"{user_tag_uid:X}")
+            raise InvalidArgument(f"Tag {format_user_tag_uid(user_tag_uid)} is not registered")
 
         try:
             await book_transaction(

@@ -9,7 +9,7 @@ import { Loading } from "@stustapay/components";
 export const TillUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { tillId } = useParams();
-  const { till, isLoading } = useGetTillByIdQuery(Number(tillId), {
+  const { till, isLoading, error } = useGetTillByIdQuery(Number(tillId), {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       till: data ? selectTillById(data, Number(tillId)) : undefined,
@@ -17,12 +17,12 @@ export const TillUpdate: React.FC = () => {
   });
   const [updateTill] = useUpdateTillMutation();
 
-  if (isLoading) {
-    return <Loading />;
+  if (error) {
+    return <Navigate to="/tills" />;
   }
 
-  if (!till) {
-    return <Navigate to="/tills" />;
+  if (isLoading || !till) {
+    return <Loading />;
   }
 
   return (
