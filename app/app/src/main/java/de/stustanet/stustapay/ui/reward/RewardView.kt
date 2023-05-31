@@ -10,10 +10,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.Access
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
@@ -37,11 +39,6 @@ fun RewardView(
     val newTicket by viewModel.newTicket.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
-
-    // fetch the terminal configuration
-    LaunchedEffect(Unit) {
-        viewModel.fetchConfig()
-    }
 
     NfcScanDialog(state = scanState, onScan = { tag ->
         scope.launch {
@@ -70,13 +67,13 @@ fun RewardView(
                             onEnter = { viewModel.vouchersChanged(it) },
                             onClear = { viewModel.vouchersCleared() }
                         ) {
-                            Text("Gutscheinanzahl", fontSize = 30.sp)
+                            Text(stringResource(R.string.voucher_amount), fontSize = 30.sp)
                         }
 
                         if (config.checkAccess { u, _ -> Access.canGiveVouchers(u) }) {
                             ProductSelectionItem(
                                 itemPrice = vouchers.toString(),
-                                leftButtonText = "Gutscheine",
+                                leftButtonText = stringResource(R.string.vouchers),
                                 leftButtonPress = { selectVoucherAmount.open() },
                                 rightButtonPress = { viewModel.vouchersCleared() },
                             )
@@ -89,7 +86,7 @@ fun RewardView(
                                 } else {
                                     ""
                                 },
-                                leftButtonText = "Bändchen",
+                                leftButtonText = stringResource(R.string.wristband),
                                 leftButtonPress = { viewModel.selectNewTicket() },
                                 rightButtonPress = { viewModel.clearNewTicket() },
                             )
@@ -114,9 +111,9 @@ fun RewardView(
 
                         Text(
                             if (newTicket) {
-                                "Neues Band ausgeben"
+                                stringResource(R.string.grant_new_wristband)
                             } else {
-                                "Verteilen"
+                                stringResource(R.string.grant)
                             }, fontSize = 24.sp
                         )
                     }

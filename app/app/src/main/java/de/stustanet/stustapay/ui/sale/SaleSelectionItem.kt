@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import de.stustanet.stustapay.ui.common.pay.ProductSelectionItem
+import de.stustanet.stustapay.ui.theme.ProductButtonBigStyle
+import de.stustanet.stustapay.ui.theme.ProductButtonStyle
 
 sealed interface SaleSelectionItemType {
     data class FixedPrice(
@@ -119,7 +121,7 @@ fun SaleSelectionItem(
     }
 
     val rightButtonText: String
-    var rightButtonFontSize = 40.sp
+    var rightButtonStyle = ProductButtonBigStyle
     when (type) {
         is SaleSelectionItemType.FixedPrice,
         is SaleSelectionItemType.Vouchers -> {
@@ -128,24 +130,23 @@ fun SaleSelectionItem(
 
         is SaleSelectionItemType.Returnable -> {
             rightButtonText = type.incrementText
-            rightButtonFontSize = 24.sp
+            rightButtonStyle = ProductButtonStyle
         }
 
         is SaleSelectionItemType.FreePrice -> {
             // unicode: erase to the left
             rightButtonText = "⌫"
-            rightButtonFontSize = 30.sp
         }
     }
 
     ProductSelectionItem(
-        itemPrice = itemPrice.replace('.', ','),
+        itemPrice = itemPrice,
         itemAmount = itemAmount,
         itemAmountDelimiter = itemAmountDelimiter,
         sameSizeButtons = sameSizeButtons,
         leftButtonText = caption,
         rightButtonText = rightButtonText,
-        rightButtonFontSize = rightButtonFontSize,
+        rightButtonStyle = rightButtonStyle,
         leftButtonPress = {
             when (type) {
                 is SaleSelectionItemType.FixedPrice -> {

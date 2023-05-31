@@ -3,11 +3,13 @@ package de.stustanet.stustapay.ui.chipscan
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.NfcScanFailure
 import de.stustanet.stustapay.model.NfcScanResult
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.repository.NfcRepository
 import de.stustanet.stustapay.repository.ReadMode
+import de.stustanet.stustapay.util.ResourcesProvider
 import de.stustanet.stustapay.util.mapState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,7 +42,8 @@ data class NfcScanState(
 
 @HiltViewModel
 class NfcScanDialogViewModel @Inject constructor(
-    private val nfcRepository: NfcRepository
+    private val nfcRepository: NfcRepository,
+    private val resourcesProvider: ResourcesProvider,
 ) : ViewModel() {
     private val _scanState = MutableStateFlow<NfcScanUiState>(NfcScanUiState.None)
 
@@ -57,38 +60,38 @@ class NfcScanDialogViewModel @Inject constructor(
             when (scanResult) {
                 is NfcScanUiState.None -> {
                     NfcScanState(
-                        status = "No scan active.",
+                        status = resourcesProvider.getString(R.string.nfc_no_scan_active),
                     )
                 }
 
                 is NfcScanUiState.Scan -> {
                     NfcScanState(
-                        status = "Waiting for tag...",
+                        status = resourcesProvider.getString(R.string.nfc_waiting_for_tag),
                     )
                 }
 
                 is NfcScanUiState.Success -> {
                     _scanResult.update { UserTag(uid = scanResult.uid) }
                     NfcScanState(
-                        status = "Scan success!",
+                        status = resourcesProvider.getString(R.string.nfc_scan_success),
                     )
                 }
 
                 is NfcScanUiState.Error -> {
                     NfcScanState(
-                        status = "Error reading tag: ${scanResult.msg}",
+                        status = resourcesProvider.getString(R.string.nfc_error_reading_tag_s).format(scanResult.msg),
                     )
                 }
 
                 is NfcScanUiState.Rescan -> {
                     NfcScanState(
-                        status = "Try again! ${scanResult.msg}",
+                        status = resourcesProvider.getString(R.string.nfc_try_again_s).format(scanResult.msg),
                     )
                 }
 
                 is NfcScanUiState.Tampered -> {
                     NfcScanState(
-                        status = "Signature mismatch!",
+                        status = resourcesProvider.getString(R.string.nfc_signature_mismatch),
                     )
                 }
             }

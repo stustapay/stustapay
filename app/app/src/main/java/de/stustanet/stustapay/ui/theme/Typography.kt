@@ -67,7 +67,7 @@ val MoneyAmountStyle = TextStyle(
     fontSize = 60.sp,
 )
 
-val ProductConfirmItemSmallStyle = TextStyle(
+val ProductConfirmItemStyle = TextStyle(
     fontWeight = FontWeight.Normal,
     fontSize = 20.sp,
     letterSpacing = 0.sp,
@@ -76,5 +76,34 @@ val ProductConfirmItemSmallStyle = TextStyle(
 val ProductConfirmItemBigStyle = TextStyle(
     fontWeight = FontWeight.Normal,
     fontSize = 28.sp,
+    letterSpacing = 0.sp,
+)
+
+val ProductButtonStyle = TextStyle(
+    fontWeight = FontWeight.Medium,
+    fontSize = 22.sp,
+    letterSpacing = 0.sp,
+)
+
+// e.g. for the standalone '-' button
+val ProductButtonBigStyle = TextStyle(
+    fontWeight = FontWeight.Medium,
+    fontSize = 28.sp,
+    letterSpacing = 0.sp,
+)
+
+val AccountOverviewKeyStyle = TextStyle(
+    fontWeight = FontWeight.Normal,
+    fontSize = 20.sp,
+    letterSpacing = 0.sp,
+)
+val AccountOverviewValueStyle = TextStyle(
+    fontWeight = FontWeight.Normal,
+    fontSize = 24.sp,
+    letterSpacing = 0.sp,
+)
+val AccountOverviewValueBigStyle = TextStyle(
+    fontWeight = FontWeight.Medium,
+    fontSize = 30.sp,
     letterSpacing = 0.sp,
 )

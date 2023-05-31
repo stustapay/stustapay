@@ -24,11 +24,6 @@ fun TopUpView(
         }
     }
 
-    // fetch the terminal configuration
-    LaunchedEffect(Unit) {
-        viewModel.fetchConfig()
-    }
-
     NavHost(
         navController = nav,
         startDestination = TopUpPage.Selection.route

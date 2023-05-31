@@ -64,11 +64,6 @@ class PayInOutViewModel @Inject constructor(
             CashInOutTab.values().filter { it.access(loginState) }
         }
 
-    suspend fun fetchConfig() {
-        terminalConfigRepository.fetchConfig()
-        userRepository.fetchLogin()
-    }
-
     fun cashInOutTabSelected(idx: Int) {
         _activeCashInOutTab.update { idx }
     }

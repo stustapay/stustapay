@@ -34,7 +34,9 @@ fun UserCreateView(viewModel: UserViewModel) {
     if (currentTag == null) {
         Scaffold(
             content = { padding ->
-                Box(modifier = Modifier.padding(20.dp)) {
+                Box(modifier = Modifier
+                    .padding(padding)
+                    .padding(20.dp)) {
                     NfcScanCard(
                         keepScanning = true,
                         onScan = { tag ->
@@ -55,12 +57,15 @@ fun UserCreateView(viewModel: UserViewModel) {
                             is UserRequestState.Idle -> {
                                 stringResource(R.string.common_status_idle)
                             }
+
                             is UserRequestState.Fetching -> {
                                 stringResource(R.string.common_status_fetching)
                             }
+
                             is UserRequestState.Done -> {
                                 stringResource(R.string.common_status_done)
                             }
+
                             is UserRequestState.Failed -> {
                                 (status as UserRequestState.Failed).msg
                             }
@@ -183,7 +188,6 @@ fun UserCreateView(viewModel: UserViewModel) {
                                                     roles + r.id
                                                 }
                                                 expanded = false
-                                                println(roles)
                                             }) {
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
@@ -238,12 +242,15 @@ fun UserCreateView(viewModel: UserViewModel) {
                             is UserRequestState.Idle -> {
                                 stringResource(R.string.common_status_idle)
                             }
+
                             is UserRequestState.Fetching -> {
                                 stringResource(R.string.common_status_fetching)
                             }
+
                             is UserRequestState.Done -> {
                                 stringResource(R.string.common_status_done)
                             }
+
                             is UserRequestState.Failed -> {
                                 (status as UserRequestState.Failed).msg
                             }

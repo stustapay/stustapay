@@ -45,12 +45,11 @@
     <string name="history_confirm">Confirm Cancellation</string>
 
     <string name="customer_title">Account Status</string>
-    <string name="customer_id">ID</string>
     <string name="customer_name">Name</string>
     <string name="customer_cash">Cash</string>
     <string name="customer_vouchers">Vouchers</string>
     <string name="customer_comment">Comment</string>
-    <string name="customer_swap">Swap</string>
+    <string name="customer_swap">Swap Tag</string>
     <string name="customer_oldtag">Old Tag</string>
     <string name="customer_newtag">New Tag</string>
     <string name="customer_scanoldtag">Scan Old Tag</string>
@@ -65,7 +64,7 @@
     <string name="management_vault_take">Take\nVault -> Bag</string>
     <string name="management_vault_return">Return\nBag -> Vault</string>
 
-    <string name="nfc_scan_prompt">Scan a Chip 📡</string>
+    <string name="nfc_scan_prompt">📡 Scan a Chip</string>
 
     <string name="user_title">User</string>
     <string name="user_login">Login</string>
@@ -80,4 +79,36 @@
     <string name="user_display_title">Display / Update User</string>
     <string name="user_update_title">Update User</string>
     <string name="user_select">Select a role:</string>
+    <string name="topup">Top up</string>
+    <string name="previous_balance">Previous balance</string>
+    <string name="error">Error</string>
+    <string name="pay_cash">🪙\nCash</string>
+    <string name="pay_card">💳\nCard</string>
+    <string name="arrow_back">← Back</string>
+    <string name="check_ok">✓ OK</string>
+    <string name="scan_ticket">🎫 Scan Ticket</string>
+    <string name="duplicate_ticket_scan">Already scanned! Scan new ticket.</string>
+    <string name="ticket_scanning_off">Not scanning.</string>
+    <string name="tickets">Tickets</string>
+    <string name="deposit_handout">Deposit handout</string>
+    <string name="deposit_returned">Deposit returned</string>
+    <string name="ticket_error_preambel">Error buying ticket:</string>
+    <string name="vouchers_granted">%s Vouchers granted</string>
+    <string name="with_n_vouchers">with %s vouchers</string>
+    <string name="free_ticket_activated">Free ticket activated</string>
+    <string name="grant_new_wristband">Grant new wristband</string>
+    <string name="voucher_amount">Voucher amount</string>
+    <string name="vouchers">Vouchers</string>
+    <string name="wristband">Wristband</string>
+    <string name="grant">Grant</string>
+    <string name="nfc_no_scan_active">No scan active.</string>
+    <string name="nfc_waiting_for_tag">Waiting for tag...</string>
+    <string name="nfc_scan_success">Scan success!</string>
+    <string name="nfc_error_reading_tag_s">Error reading tag: %s</string>
+    <string name="nfc_try_again_s">Try again! %s</string>
+    <string name="nfc_signature_mismatch">Signature mismatch!</string>
+    <string name="customer_restriction">Restriction</string>
+    <string name="under_18_years">Under 18</string>
+    <string name="under_16_years">Under 16</string>
+    <string name="failed_fetching">Failed getting information</string>
 </resources>

@@ -63,10 +63,6 @@ class SaleViewModel @Inject constructor(
         terminalConfigRepository.terminalConfigState
     )
 
-    suspend fun fetchConfig() {
-        terminalConfigRepository.fetchConfig()
-    }
-
     fun incrementVouchers() {
         _saleStatus.update { sale ->
             val newSale = sale.copy()

@@ -44,8 +44,8 @@ class HttpClient(
         }
 
         install(HttpTimeout) {
-            connectTimeoutMillis = 2000
-            requestTimeoutMillis = 6000
+            connectTimeoutMillis = 5000
+            requestTimeoutMillis = 10000
             socketTimeoutMillis = 10000
         }
 

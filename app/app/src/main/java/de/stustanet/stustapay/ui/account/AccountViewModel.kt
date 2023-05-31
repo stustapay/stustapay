@@ -1,12 +1,11 @@
-package de.stustanet.stustapay.ui.customer
+package de.stustanet.stustapay.ui.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustanet.stustapay.model.Access
-import de.stustanet.stustapay.model.Customer
+import de.stustanet.stustapay.model.Account
 import de.stustanet.stustapay.model.UserState
-import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.CustomerRepository
 import de.stustanet.stustapay.repository.UserRepository
@@ -26,13 +25,13 @@ data class CustomerStatusUiState(
 sealed interface CustomerStatusRequestState {
     object Idle : CustomerStatusRequestState
     object Fetching : CustomerStatusRequestState
-    data class Done(val customer: Customer) : CustomerStatusRequestState
+    data class Done(val account: Account) : CustomerStatusRequestState
     data class Failed(val msg: String) : CustomerStatusRequestState
 }
 
 
 @HiltViewModel
-class CustomerStatusViewModel @Inject constructor(
+class AccountViewModel @Inject constructor(
     private val customerRepository: CustomerRepository,
     userRepository: UserRepository
 ) : ViewModel() {
@@ -49,7 +48,24 @@ class CustomerStatusViewModel @Inject constructor(
             is UserState.LoggedIn -> {
                 Access.canSwap(it.user)
             }
-            else -> {
+            is UserState.NoLogin -> {
+                false
+            }
+            is UserState.Error -> {
+                false
+            }
+        }
+    }
+
+    val commentVisible = userRepository.userState.mapState(false, viewModelScope) {
+        when (it) {
+            is UserState.LoggedIn -> {
+                Access.canReadUserComment(it.user)
+            }
+            is UserState.NoLogin -> {
+                false
+            }
+            is UserState.Error -> {
                 false
             }
         }

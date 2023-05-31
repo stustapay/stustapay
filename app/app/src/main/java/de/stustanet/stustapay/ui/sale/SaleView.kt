@@ -38,11 +38,6 @@ fun SaleView(
         }
     }
 
-    // fetch the terminal configuration
-    LaunchedEffect(Unit) {
-        viewModel.fetchConfig()
-    }
-
     LaunchedEffect(enableScan) {
         if (enableScan) {
             scanState.open()

@@ -22,7 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import de.stustanet.stustapay.R
 
 @Composable
 fun ErrorScreen(
@@ -55,7 +57,7 @@ fun ErrorScreen(
                         modifier = Modifier
                             .size(size = 60.dp)
                             .padding(top = 2.dp),
-                        contentDescription = "Error!",
+                        contentDescription = stringResource(R.string.error),
                         colorFilter = ColorFilter.tint(MaterialTheme.colors.error),
                     )
 
@@ -74,7 +76,7 @@ fun ErrorScreen(
                     .height(70.dp)
                     .padding(10.dp)
             ) {
-                Text(text = "Back")
+                Text(text = stringResource(R.string.back))
             }
         }
     )

@@ -1,5 +1,7 @@
 package de.stustanet.stustapay.ui.sale
 
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -7,12 +9,14 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -28,6 +32,8 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
     val saleCompleted by viewModel.saleCompleted.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+
+    val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
 
     // so we have a regular variable..
     val saleCompletedV = saleCompleted
@@ -52,6 +58,10 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
         }
     }
 
+    LaunchedEffect(Unit) {
+        vibrator.vibrate(VibrationEffect.createOneShot(600, 200))
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(saleConfig.tillName) })
@@ -59,8 +69,7 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
         content = { padding ->
             Box(
                 modifier = Modifier
-                    .padding(bottom = padding.calculateBottomPadding())
-                    .padding(horizontal = 10.dp)
+                    .padding(padding)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
@@ -111,12 +120,12 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
                         if (returnableCount > 0) {
                             ProductConfirmItem(
-                                name = "Pfand Ausgabe",
+                                name = stringResource(R.string.deposit_handout),
                                 quantity = returnableCount,
                             )
                         } else {
                             ProductConfirmItem(
-                                name = "Pfand Rückgabe",
+                                name = stringResource(R.string.deposit_returned),
                                 quantity = -returnableCount,
                             )
                         }

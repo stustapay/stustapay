@@ -1,5 +1,7 @@
 package de.stustanet.stustapay.ui.payinout.topup
 
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -7,23 +9,29 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
+import de.stustanet.stustapay.ui.common.StatusText
 
 @Composable
 fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
     val topUpCompleted by viewModel.topUpCompleted.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
+    val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
 
     // so we have a regular variable..
     val completedTopUp = topUpCompleted
@@ -36,6 +44,10 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
             fontSize = 20.sp
         )
         return
+    }
+
+    LaunchedEffect(Unit) {
+        vibrator.vibrate(VibrationEffect.createOneShot(600, 200))
     }
 
     Scaffold(
@@ -57,26 +69,24 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                             .clip(shape = CircleShape)
                             .padding(top = 2.dp),
                         colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-                        contentDescription = "Success!",
+                        contentDescription = stringResource(R.string.success),
                     )
 
                     TopUpConfirmItem(
-                        name = "Altes Guthaben",
+                        name = stringResource(R.string.previous_balance),
                         price = completedTopUp.old_balance,
-                        fontSize = 30.sp,
                     )
                     TopUpConfirmItem(
-                        name = "Aufladung",
+                        name = stringResource(R.string.topup),
                         price = completedTopUp.amount,
-                        fontSize = 30.sp,
                     )
 
                     Divider(modifier = Modifier.padding(vertical = 10.dp))
 
                     TopUpConfirmItem(
-                        name = "Neues Guthaben",
+                        name = stringResource(R.string.new_balance),
                         price = completedTopUp.new_balance,
-                        fontSize = 40.sp,
+                        bigStyle = true,
                     )
                 }
             }
@@ -89,11 +99,9 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                     .fillMaxWidth()
             ) {
                 Divider(modifier = Modifier.padding(top = 10.dp))
-                Text(
-                    text = status,
+                StatusText(
+                    status = status,
                     modifier = Modifier.fillMaxWidth(),
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily.Monospace,
                 )
 
                 Button(
@@ -105,7 +113,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                         .fillMaxWidth()
                         .height(70.dp)
                 ) {
-                    Text(text = "Done")
+                    Text(text = stringResource(R.string.done))
                 }
             }
         }

@@ -26,125 +26,124 @@ fun UserUpdateView(viewModel: UserViewModel) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val currentTag by viewModel.currentTag.collectAsStateWithLifecycle()
 
-    LaunchedEffect(currentUser, availableRoles) {
-        if (currentUser != null) {
-            roles = currentUser!!.role_names.mapNotNull { role ->
-                val role = availableRoles.find { available -> available.name == role }
-                if (role != null && !role.is_privileged) {
-                    role.id
-                } else {
-                    null
-                }
+    val currentUserV = currentUser
+    if (currentUserV == null) {
+        Text("current user is null")
+        return
+    }
+
+    LaunchedEffect(currentUserV, availableRoles) {
+        roles = currentUserV.role_names.mapNotNull { it ->
+            val role = availableRoles.find { available -> available.name == it }
+            if (role != null && !role.is_privileged) {
+                role.id
+            } else {
+                null
             }
         }
     }
 
-    val isPrivileged = currentUser!!.role_names.mapNotNull { role ->
+    val isPrivileged = currentUserV.role_names.mapNotNull { role ->
         availableRoles.find { available -> available.name == role }?.is_privileged
     }.contains(true)
 
-    if (currentUser != null) {
-        val user = currentUser!!
-
-        Scaffold(
-            content = { padding ->
-                Box(modifier = Modifier.padding(padding)) {
-                    Column(
+    Scaffold(
+        content = { padding ->
+            Box(modifier = Modifier.padding(padding)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(10.dp)
+                ) {
+                    Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(10.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.user_id), fontSize = 24.sp)
-                            Text(tagIDtoString(currentTag), fontSize = 36.sp)
-                        }
+                        Text(stringResource(R.string.user_id), fontSize = 24.sp)
+                        Text(tagIDtoString(currentTag), fontSize = 36.sp)
+                    }
 
-                        Divider()
+                    Divider()
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.user_username), fontSize = 24.sp)
-                            Text(user.login, fontSize = 36.sp)
-                        }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(stringResource(R.string.user_username), fontSize = 24.sp)
+                        Text(currentUserV.login, fontSize = 36.sp)
+                    }
 
-                        Divider()
+                    Divider()
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.user_displayname), fontSize = 24.sp)
-                            Text(user.display_name, fontSize = 36.sp)
-                        }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(stringResource(R.string.user_displayname), fontSize = 24.sp)
+                        Text(currentUserV.display_name, fontSize = 36.sp)
+                    }
 
-                        Divider()
-                        Spacer(modifier = Modifier.height(10.dp))
+                    Divider()
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            var expanded by remember { mutableStateOf(false) }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        var expanded by remember { mutableStateOf(false) }
 
-                            Text(
-                                stringResource(R.string.user_roles),
-                                fontSize = 24.sp,
-                                modifier = Modifier.padding(end = 20.dp)
+                        Text(
+                            stringResource(R.string.user_roles),
+                            fontSize = 24.sp,
+                            modifier = Modifier.padding(end = 20.dp)
+                        )
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = it }) {
+                            TextField(
+                                readOnly = true,
+                                value = roles.map { id ->
+                                    availableRoles.find { r -> r.id == id }?.name ?: ""
+                                }.reduceOrNull() { acc, r -> "$acc, $r" }.orEmpty(),
+                                onValueChange = {},
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(
+                                        expanded = expanded
+                                    )
+                                },
+                                colors = ExposedDropdownMenuDefaults.textFieldColors()
                             )
-                            ExposedDropdownMenuBox(
+                            ExposedDropdownMenu(
                                 expanded = expanded,
-                                onExpandedChange = { expanded = it }) {
-                                TextField(
-                                    readOnly = true,
-                                    value = roles.map { id ->
-                                        availableRoles.find { r -> r.id == id }?.name ?: ""
-                                    }.reduceOrNull() { acc, r -> "$acc, $r" }.orEmpty(),
-                                    onValueChange = {},
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = expanded
-                                        )
-                                    },
-                                    colors = ExposedDropdownMenuDefaults.textFieldColors()
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = expanded,
-                                    onDismissRequest = { expanded = false }) {
-                                    for (r in availableRoles) {
-                                        if (!r.is_privileged) {
-                                            DropdownMenuItem(onClick = {
-                                                roles = if (roles.contains(r.id)) {
-                                                    roles - r.id
-                                                } else {
-                                                    roles + r.id
-                                                }
-                                                expanded = false
-                                                println(roles)
-                                            }) {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.SpaceBetween
-                                                ) {
-                                                    Text(r.name)
-                                                    if (roles.contains(r.id)) {
-                                                        Icon(Icons.Filled.Check, null)
-                                                    }
+                                onDismissRequest = { expanded = false }) {
+                                for (r in availableRoles) {
+                                    if (!r.is_privileged) {
+                                        DropdownMenuItem(onClick = {
+                                            roles = if (roles.contains(r.id)) {
+                                                roles - r.id
+                                            } else {
+                                                roles + r.id
+                                            }
+                                            expanded = false
+                                        }) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Text(r.name)
+                                                if (roles.contains(r.id)) {
+                                                    Icon(Icons.Filled.Check, null)
                                                 }
                                             }
                                         }
@@ -154,57 +153,60 @@ fun UserUpdateView(viewModel: UserViewModel) {
                         }
                     }
                 }
-            },
-            bottomBar = {
-                Column {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Divider()
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
-                        Column {
-                            val text = when (status) {
-                                is UserRequestState.Idle -> {
-                                    stringResource(R.string.common_status_idle)
-                                }
-                                is UserRequestState.Fetching -> {
-                                    stringResource(R.string.common_status_fetching)
-                                }
-                                is UserRequestState.Done -> {
-                                    stringResource(R.string.common_status_done)
-                                }
-                                is UserRequestState.Failed -> {
-                                    (status as UserRequestState.Failed).msg
-                                }
+            }
+        },
+        bottomBar = {
+            Column {
+                Spacer(modifier = Modifier.height(10.dp))
+                Divider()
+                Spacer(modifier = Modifier.height(10.dp))
+                Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+                    Column {
+                        val text = when (status) {
+                            is UserRequestState.Idle -> {
+                                stringResource(R.string.common_status_idle)
                             }
-                            Text(text, fontSize = 24.sp)
-                            Spacer(modifier = Modifier.height(10.dp))
-                            if (isPrivileged) {
-                                Text(
-                                    stringResource(R.string.user_privileged),
-                                    fontSize = 24.sp,
-                                    color = Color.Red
-                                )
+
+                            is UserRequestState.Fetching -> {
+                                stringResource(R.string.common_status_fetching)
+                            }
+
+                            is UserRequestState.Done -> {
+                                stringResource(R.string.common_status_done)
+                            }
+
+                            is UserRequestState.Failed -> {
+                                (status as UserRequestState.Failed).msg
                             }
                         }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Button(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp),
-                        enabled = !isPrivileged,
-                        onClick = {
-                            scope.launch {
-                                viewModel.update(
-                                    currentTag,
-                                    roles.mapNotNull { roleId -> availableRoles.find { r -> r.id == roleId } }
-                                )
-                            }
-                        }) {
-                        Text(text = stringResource(R.string.common_action_update), fontSize = 24.sp)
+                        Text(text, fontSize = 24.sp)
+                        Spacer(modifier = Modifier.height(10.dp))
+                        if (isPrivileged) {
+                            Text(
+                                stringResource(R.string.user_privileged),
+                                fontSize = 24.sp,
+                                color = Color.Red
+                            )
+                        }
                     }
                 }
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Button(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                    enabled = !isPrivileged,
+                    onClick = {
+                        scope.launch {
+                            viewModel.update(
+                                currentTag,
+                                roles.mapNotNull { roleId -> availableRoles.find { r -> r.id == roleId } }
+                            )
+                        }
+                    }) {
+                    Text(text = stringResource(R.string.common_action_update), fontSize = 24.sp)
+                }
             }
-        )
-    }
+        }
+    )
 }

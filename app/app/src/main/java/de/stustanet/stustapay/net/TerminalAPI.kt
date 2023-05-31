@@ -157,18 +157,18 @@ interface TerminalAPI {
     /**
      * Registers a new free ticket.
      */
-    suspend fun grantFreeTicket(newTicket: NewFreeTicketGrant): Response<Customer>
+    suspend fun grantFreeTicket(newTicket: NewFreeTicketGrant): Response<Account>
 
     /**
      * Grant drink vouchers to a customer tag
      */
-    suspend fun grantVouchers(grant: GrantVouchers): Response<Customer>
+    suspend fun grantVouchers(grant: GrantVouchers): Response<Account>
 
     // customer
     /**
      * Get the account status for a customer tag.
      */
-    suspend fun getCustomer(id: ULong): Response<Customer>
+    suspend fun getCustomer(id: ULong): Response<Account>
 
     /**
      * Move customer account to a new tag.

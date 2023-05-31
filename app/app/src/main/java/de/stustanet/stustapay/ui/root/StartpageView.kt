@@ -13,7 +13,10 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -24,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.Access
+import de.stustanet.stustapay.ui.common.Spinner
 import de.stustanet.stustapay.ui.nav.NavDest
 import kotlinx.coroutines.launch
 
@@ -40,8 +44,15 @@ fun StartpageView(
     viewModel: StartpageViewModel = hiltViewModel()
 ) {
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
+    val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
     val scope = rememberCoroutineScope()
+
+    val navigateToHook = fun (dest: NavDest): Unit {
+        if (!configLoading) {
+            navigateTo(dest)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.fetchAccessData()
@@ -61,9 +72,15 @@ fun StartpageView(
                 scope.launch {
                     viewModel.fetchAccessData()
                 }
-            }
+            },
+            enabled = !configLoading,
         ) {
-            Icon(Icons.Filled.Refresh, "Refresh")
+            if (configLoading) {
+                Spinner()
+            }
+            else {
+                Icon(Icons.Filled.Refresh, "Refresh")
+            }
         }
 
         Column(
@@ -101,7 +118,7 @@ fun StartpageView(
                         .weight(1.0f)) {
                     for (item in startpageItems) {
                         if (loginState.checkAccess(item.canAccess)) {
-                            StartpageEntry(item = item, navigateTo = navigateTo)
+                            StartpageEntry(item = item, navigateTo = navigateToHook)
                         }
                     }
                 }
@@ -114,7 +131,7 @@ fun StartpageView(
                         navDestination = RootNavDests.user,
                         label = R.string.user_title,
                     ),
-                    navigateTo = navigateTo
+                    navigateTo = navigateToHook
                 )
 
                 if (loginState.checkAccess { u, _ -> Access.canChangeConfig(u) } || !loginState.hasConfig()) {
@@ -124,7 +141,7 @@ fun StartpageView(
                             label = R.string.root_item_settings,
                             navDestination = RootNavDests.settings,
                         ),
-                        navigateTo = navigateTo
+                        navigateTo = navigateToHook
                     )
                 }
 
@@ -135,7 +152,7 @@ fun StartpageView(
                             label = R.string.root_item_development,
                             navDestination = RootNavDests.development,
                         ),
-                        navigateTo = navigateTo
+                        navigateTo = navigateToHook
                     )
                 }
             }

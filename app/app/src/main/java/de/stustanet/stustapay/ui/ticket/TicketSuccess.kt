@@ -24,10 +24,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.common.StatusText
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustanet.stustapay.ui.nav.NavScaffold
@@ -80,7 +81,7 @@ fun TicketSuccess(
                         .fillMaxWidth()
                         .height(70.dp)
                 ) {
-                    Text(text = "Done")
+                    Text(text = stringResource(R.string.done))
                 }
             }
         }
@@ -103,17 +104,20 @@ fun TicketSuccess(
                         .clip(shape = CircleShape)
                         .padding(top = 2.dp),
                     colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-                    contentDescription = "Success!",
+                    contentDescription = stringResource(R.string.success),
                 )
 
 
                 ProductConfirmItem(
-                    name = "Preis",
+                    name = stringResource(R.string.price),
                     price = saleCompletedV.total_price,
                     bigStyle = true,
                 )
 
-                ProductConfirmItem(name = "Tickets", quantity = saleCompletedV.scanned_tickets.size)
+                ProductConfirmItem(
+                    name = stringResource(R.string.tickets),
+                    quantity = saleCompletedV.scanned_tickets.size
+                )
             }
         }
     }

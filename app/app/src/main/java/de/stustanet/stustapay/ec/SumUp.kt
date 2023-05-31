@@ -226,9 +226,6 @@ class SumUp @Inject constructor(
     private suspend fun fetchConfig(): SumUpConfigState {
         val sumUpConfig: SumUpConfig
 
-        // TODO: cache the result :)
-        terminalConfigRepository.fetchConfig()
-
         when (val terminalConfig = terminalConfigRepository.terminalConfigState.value) {
             is TerminalConfigState.Success -> {
                 val cfg = terminalConfig.config
@@ -247,7 +244,7 @@ class SumUp @Inject constructor(
                 )
             }
             else -> {
-                return SumUpConfigState.Error("failed to fetch terminal ec config")
+                return SumUpConfigState.Error("no terminal configuration for ec")
             }
         }
 

@@ -52,11 +52,6 @@ class PayOutViewModel @Inject constructor(
         initialValue = TerminalLoginState(),
     )
 
-    suspend fun fetchConfig() {
-        terminalConfigRepository.fetchConfig()
-        userRepository.fetchLogin()
-    }
-
     suspend fun tagScanned(tag: UserTag) {
         _payOutState.update {
             PayOutState(tag = tag)

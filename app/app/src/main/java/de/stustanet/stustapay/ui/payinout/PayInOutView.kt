@@ -31,11 +31,6 @@ fun CashInOutView(
     leaveView: () -> Unit = {},
     viewModel: PayInOutViewModel = hiltViewModel()
 ) {
-    // fetch the terminal configuration
-    LaunchedEffect(Unit) {
-        viewModel.fetchConfig()
-    }
-
     BackHandler {
         leaveView()
     }
