@@ -49,6 +49,7 @@ export const translations = {
   payout: {
     info: "Enter your account information to receive your leftover cash to your bank account.",
     ibanNotValid: "IBAN is not valid",
+    countryCodeNotSupported: "Provided IBAN country code is not supported",
     mustAcceptPrivacyPolicy: "You must accept the privacy policy",
     privacyPolicyCheck: "I have read and agree to StuStaCulum's <1>privacy policy</1>.",
     errorFetchingData: "Error fetching data.",

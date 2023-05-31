@@ -27,13 +27,13 @@ const FormSchema = z.object({
     if (!iban.isValid(val)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "IBAN is not valid.",
+        message: i18n.t("payout.ibanNotValid"),
       });
     }
     if (!config.publicApiConfig.allowed_country_codes.includes(val.substring(0, 2))) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Provided country code is not supported.",
+        message: i18n.t("payout.countryCodeNotSupported"),
       });
     }
   }),
