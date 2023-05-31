@@ -14,19 +14,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustanet.stustapay.ui.theme.ProductButtonBigStyle
+import de.stustanet.stustapay.ui.theme.ProductButtonStyle
 import de.stustanet.stustapay.ui.theme.errorButtonColors
 
 
@@ -66,9 +67,9 @@ fun ProductSelectionItem(
     itemAmount: String? = null,
     itemAmountDelimiter: String = "×",
     leftButtonText: String,
-    leftButtonFontSize: TextUnit = 24.sp,
+    leftButtonStyle: TextStyle = ProductButtonStyle,
     rightButtonText: String = "‒",
-    rightButtonFontSize: TextUnit = 40.sp,
+    rightButtonStyle: TextStyle = ProductButtonBigStyle,
     leftButtonPress: () -> Unit = {},
     rightButtonPress: () -> Unit = {},
     sameSizeButtons: Boolean = false,
@@ -82,7 +83,7 @@ fun ProductSelectionItem(
     ) {
         Row(
             modifier = Modifier
-                .weight(0.3f)
+                .weight(0.35f)
                 .padding(end = 4.dp),
             horizontalArrangement = Arrangement.End,
         ) {
@@ -91,15 +92,15 @@ fun ProductSelectionItem(
             Text(
                 text = itemPrice ?: "",
                 textAlign = TextAlign.Right,
-                modifier = Modifier.weight(0.6f),
-                fontSize = 24.sp,
+                modifier = Modifier.weight(0.65f),
+                fontSize = 22.sp,
             )
 
             Text(
                 text = if (itemAmount != null) "${itemAmountDelimiter}${itemAmount}" else "",
                 textAlign = TextAlign.Right,
-                modifier = Modifier.weight(0.4f),
-                fontSize = 24.sp,
+                modifier = Modifier.weight(0.35f),
+                fontSize = 22.sp,
             )
         }
 
@@ -132,7 +133,7 @@ fun ProductSelectionItem(
                 ) {
                     Text(
                         text = leftButtonText,
-                        fontSize = leftButtonFontSize,
+                        style = leftButtonStyle,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -153,7 +154,7 @@ fun ProductSelectionItem(
                 ) {
                     Text(
                         text = rightButtonText,
-                        fontSize = rightButtonFontSize,
+                        style = rightButtonStyle,
                         textAlign = TextAlign.Center,
                     )
                 }

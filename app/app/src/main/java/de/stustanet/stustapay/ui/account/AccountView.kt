@@ -63,7 +63,7 @@ fun AccountView(
 
             composable(CustomerStatusNavDests.swap.route) {
                 AccountSwap(
-                    goBack = { nav.navigateTo(CustomerStatusNavDests.scan.route) },
+                    goBack = { nav.navigateTo(CustomerStatusNavDests.status.route) },
                     viewModel = viewModel,
                 )
             }

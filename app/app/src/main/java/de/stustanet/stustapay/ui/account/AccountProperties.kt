@@ -20,6 +20,9 @@ import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.Account
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.common.TagItem
+import de.stustanet.stustapay.ui.theme.AccountOverviewKeyStyle
+import de.stustanet.stustapay.ui.theme.AccountOverviewValueBigStyle
+import de.stustanet.stustapay.ui.theme.AccountOverviewValueStyle
 import de.stustanet.stustapay.ui.theme.MoneyAmountStyle
 
 
@@ -30,11 +33,11 @@ fun SummaryEntry(
     below: Boolean = false,
     small: Boolean = false,
 ) {
-    val keySize = 20.sp
-    val contentSize = if (small) {
-        20.sp
+    val keySize = AccountOverviewKeyStyle
+    val contentStyle = if (small) {
+        AccountOverviewValueStyle
     } else {
-        30.sp
+        AccountOverviewValueBigStyle
     }
 
     if (below) {
@@ -44,12 +47,13 @@ fun SummaryEntry(
             horizontalAlignment = Alignment.Start,
         ) {
             Text(
-                key,
-                fontSize = keySize,
+                text = key,
+                style = keySize,
             )
             Text(
-                value,
-                fontSize = contentSize,
+                text = value,
+                style = contentStyle,
+                modifier = Modifier.padding(start = 5.dp),
             )
         }
     } else {
@@ -57,15 +61,17 @@ fun SummaryEntry(
             modifier = Modifier
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.Start,
         ) {
             Text(
-                key,
-                fontSize = keySize,
+                text = key,
+                style = keySize,
+                modifier = Modifier.weight(0.4f),
             )
             Text(
-                value,
-                fontSize = contentSize,
+                text = value,
+                style = contentStyle,
+                modifier = Modifier.weight(0.6f),
             )
         }
     }
@@ -101,13 +107,12 @@ fun AccountProperties(
                     style = MoneyAmountStyle,
                 )
 
-                if (account.vouchers > -1) {
-                    Spacer(modifier = Modifier.height(5.dp))
-                    Text(
-                        "${account.vouchers} ${stringResource(R.string.customer_vouchers)}",
-                        fontSize = 36.sp
-                    )
-                }
+                // only show if they have vouchers?
+                Spacer(modifier = Modifier.height(5.dp))
+                Text(
+                    "${account.vouchers} ${stringResource(R.string.customer_vouchers)}",
+                    fontSize = 36.sp
+                )
             }
         }
 

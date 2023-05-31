@@ -153,7 +153,6 @@ fun AccountSwap(goBack: () -> Unit, viewModel: AccountViewModel) {
                         modifier = Modifier
                             .weight(1.0f),
                         onClick = {
-                            viewModel.idleState()
                             goBack()
                         }
                     ) {

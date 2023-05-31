@@ -1,6 +1,7 @@
 package de.stustanet.stustapay.ui.payinout.topup
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,16 +15,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustanet.stustapay.ui.theme.ProductConfirmItemBigStyle
+import de.stustanet.stustapay.ui.theme.ProductConfirmItemStyle
 
 
 @Preview
 @Composable
 fun PreviewTopUpConfirmItem() {
-    TopUpConfirmItem(
-        name = "Neues Guthaben",
-        price = 13.37,
-        fontSize = 40.sp
-    )
+    Column {
+        TopUpConfirmItem(
+            name = "Altes Guthaben",
+            price = 13.37,
+            bigStyle = false,
+        )
+        TopUpConfirmItem(
+            name = "Neues Guthaben",
+            price = 13.37,
+            bigStyle = true,
+        )
+    }
 }
 
 /**
@@ -34,8 +44,14 @@ fun TopUpConfirmItem(
     modifier: Modifier = Modifier,
     name: String,
     price: Double? = null,
-    fontSize: TextUnit = 24.sp,
+    bigStyle: Boolean = false,
 ) {
+    val style = if (bigStyle) {
+        ProductConfirmItemBigStyle
+    } else {
+        ProductConfirmItemStyle
+    }
+
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
@@ -52,13 +68,13 @@ fun TopUpConfirmItem(
         ) {
             Text(
                 text = if (price != null) {
-                    "%.02f".format(price).replace('.', ',')
+                    "%.02f€".format(price)
                 } else {
                     ""
                 },
                 textAlign = TextAlign.Right,
                 modifier = Modifier.weight(0.6f),
-                fontSize = fontSize
+                style = style
             )
         }
 
@@ -67,7 +83,7 @@ fun TopUpConfirmItem(
         ) {
             Text(
                 text = name,
-                fontSize = fontSize,
+                style = style,
                 modifier = Modifier
                     .padding(5.dp)
             )

@@ -41,65 +41,60 @@ fun PayOutSelection(
     val canPayOut = payout.maxAmount >= 0.01
 
     Scaffold(
+        content = { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .padding(top = 5.dp)
+                    .padding(horizontal = 10.dp)
+            ) {
+                TagSelectedItem(
+                    tag = payout.tag,
+                    onClear = onClear,
+                )
+
+                Text(
+                    stringResource(R.string.credit_amount).format(payout.maxAmount),
+                    style = MaterialTheme.typography.h5,
+                )
+
+                if (canPayOut) {
+                    AmountSelection(
+                        amount = amount,
+                        onAmountUpdate = onAmountUpdate,
+                        onClear = onAmountClear,
+                        config = amountConfig
+                    )
+                } else {
+                    Text(
+                        stringResource(R.string.no_balance_for_payout),
+                        style = MaterialTheme.typography.h4,
+                    )
+                }
+            }
+        },
         bottomBar = {
-            Column(modifier = Modifier.padding(20.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 10.dp)) {
                 Divider(modifier = Modifier.fillMaxWidth())
                 StatusText(status)
 
-                Row(
+                Button(
                     modifier = Modifier
-                        .padding(top = 10.dp)
                         .fillMaxWidth()
+                        .padding(vertical = 5.dp),
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onPayout()
+                    },
+                    enabled = ready && canPayOut,
                 ) {
-                    Button(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 10.dp),
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onPayout()
-                        },
-                        enabled = ready && canPayOut,
-                    ) {
-                        Text(
-                            // unicode "Coin"
-                            "\uD83E\uDE99 Auszahlen...", fontSize = 28.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                    Text(
+                        // unicode "Coin"
+                        "\uD83E\uDE99 Auszahlen...", fontSize = 28.sp,
+                        textAlign = TextAlign.Center,
+                    )
                 }
             }
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(top = 5.dp)
-                .padding(horizontal = 10.dp)
-        ) {
-            TagSelectedItem(
-                tag = payout.tag,
-                onClear = onClear,
-            )
-
-            Text(
-                stringResource(R.string.credit_amount).format(payout.maxAmount),
-                style = MaterialTheme.typography.h5,
-            )
-
-            if (canPayOut) {
-                AmountSelection(
-                    amount = amount,
-                    onAmountUpdate = onAmountUpdate,
-                    onClear = onAmountClear,
-                    config = amountConfig
-                )
-            } else {
-                Text(
-                    stringResource(R.string.no_balance_for_payout),
-                    style = MaterialTheme.typography.h4,
-                )
-            }
-        }
-    }
+    )
 }

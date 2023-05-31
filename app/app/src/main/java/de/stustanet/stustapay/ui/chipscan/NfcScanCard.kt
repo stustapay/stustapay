@@ -41,7 +41,11 @@ fun NfcScanCard(
     showStatus: Boolean = true,  // display scan status below the content.
     content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
-        Text(stringResource(R.string.nfc_scan_prompt), textAlign = TextAlign.Center, fontSize = 40.sp)
+        Text(
+            stringResource(R.string.nfc_scan_prompt),
+            textAlign = TextAlign.Center,
+            fontSize = 40.sp
+        )
     },
 ) {
 
@@ -98,7 +102,8 @@ fun NfcScanCard(
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 content(scanState.status)
 
@@ -106,7 +111,6 @@ fun NfcScanCard(
                     Text(
                         // "scan=$scan, res=$scanResult, scanning=$scanning, status: ${scanState.status}",
                         scanState.status,
-                        textAlign = TextAlign.Left,
                         fontSize = 20.sp,
                     )
                 }

@@ -1,5 +1,7 @@
 package de.stustanet.stustapay.ui.payinout.topup
 
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -7,12 +9,14 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -27,6 +31,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
     val topUpCompleted by viewModel.topUpCompleted.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
+    val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
 
     // so we have a regular variable..
     val completedTopUp = topUpCompleted
@@ -39,6 +44,10 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
             fontSize = 20.sp
         )
         return
+    }
+
+    LaunchedEffect(Unit) {
+        vibrator.vibrate(VibrationEffect.createOneShot(600, 200))
     }
 
     Scaffold(
@@ -66,12 +75,10 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                     TopUpConfirmItem(
                         name = stringResource(R.string.previous_balance),
                         price = completedTopUp.old_balance,
-                        fontSize = 30.sp,
                     )
                     TopUpConfirmItem(
                         name = stringResource(R.string.topup),
                         price = completedTopUp.amount,
-                        fontSize = 30.sp,
                     )
 
                     Divider(modifier = Modifier.padding(vertical = 10.dp))
@@ -79,7 +86,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                     TopUpConfirmItem(
                         name = stringResource(R.string.new_balance),
                         price = completedTopUp.new_balance,
-                        fontSize = 40.sp,
+                        bigStyle = true,
                     )
                 }
             }

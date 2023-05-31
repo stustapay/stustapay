@@ -14,7 +14,7 @@
     <string name="new_balance">Neues Guthaben</string>
     <string name="price">Preis</string>
     <string name="voucher">Gutschein</string>
-    <string name="edit">↢ Bearbeiten</string>
+    <string name="edit">↢ Zurück</string>
     <string name="no_balance_for_payout">Kein Guthaben zum Auszahlen</string>
 
     <string name="common_status_fetching">Anfrage wird ausgeführt</string>
