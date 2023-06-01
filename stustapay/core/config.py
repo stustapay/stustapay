@@ -29,6 +29,7 @@ class DatabaseConfig(BaseModel):
     port: Optional[int] = 5432
     dbname: str
     require_ssl: bool = False
+    sslrootcert: Optional[str] = None
 
 
 class CoreConfig(BaseModel):
