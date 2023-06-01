@@ -8,6 +8,7 @@ class Kassenbeleg_V1:
         "ust": 0,
         "eust": 1,
         "none": 4,
+        "transparent": 4,
     }
     ZAHLUNGSARTEN = {"Bar", "Unbar"}
 
