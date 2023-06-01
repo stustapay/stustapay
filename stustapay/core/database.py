@@ -9,10 +9,11 @@ import json
 import logging
 import os
 import re
+import ssl
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union, Literal
 
 import asyncpg
 import asyncpg.exceptions
@@ -224,6 +225,16 @@ async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:
 
     while pool is None:
         try:
+            sslctx: Optional[Union[ssl.SSLContext, Literal["verify-full", "prefer"]]]
+            if cfg.sslrootcert and cfg.require_ssl:
+                sslctx = ssl.create_default_context(
+                    ssl.Purpose.SERVER_AUTH,
+                    cafile=cfg.sslrootcert,
+                )
+                sslctx.check_hostname = True
+            else:
+                sslctx = "verify-full" if cfg.require_ssl else "prefer"
+
             pool = await asyncpg.create_pool(
                 user=cfg.user,
                 password=cfg.password,
@@ -231,7 +242,7 @@ async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:
                 host=cfg.host,
                 max_size=n_connections,
                 min_size=n_connections,
-                ssl="verify-full" if cfg.require_ssl else "prefer",
+                ssl=sslctx,
                 # the introspection query of asyncpg (defined as introspection.INTRO_LOOKUP_TYPES)
                 # can take 1s with the jit.
                 # the introspection is triggered to create converters for unknown types,
