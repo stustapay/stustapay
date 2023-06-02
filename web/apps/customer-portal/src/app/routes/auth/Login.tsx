@@ -75,6 +75,7 @@ export const Login: React.FC = () => {
                 fullWidth
                 autoFocus
                 type="text"
+                autoComplete="current-password"
                 name="userTagPin"
                 label={t("userTagPin")}
                 onBlur={handleBlur}
@@ -87,6 +88,7 @@ export const Login: React.FC = () => {
                 required
                 fullWidth
                 type="text"
+                autoComplete="username"
                 label={t("userTagUid")}
                 name="userTagUid"
                 onBlur={handleBlur}

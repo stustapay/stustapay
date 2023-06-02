@@ -17,7 +17,7 @@ from .kassenbeleg_v1 import Kassenbeleg_V1
 
 LOGGER = logging.getLogger(__name__)
 
-PAYMENT_METHOD_TO_ZAHLUNGSART = {"cash": "Bar", "sumup": "Unbar", "tag": "Unbar"}
+PAYMENT_METHOD_TO_ZAHLUNGSART = {"cash": "Bar", "sumup": "Unbar", "tag": "Unbar", "sumup_online": "Unbar"}
 
 
 class TSEWrapper:

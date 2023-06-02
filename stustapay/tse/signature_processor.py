@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import functools
 import logging
@@ -10,6 +11,7 @@ from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.subcommand import SubCommand
 from .config import Config
 from .wrapper import TSEWrapper
+from ..core.healthcheck import run_healthcheck
 
 LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +70,7 @@ class SignatureProcessor(SubCommand):
             # pylint: disable=attribute-defined-outside-init
             db_hook = DBHook(self.db_pool, "tse_signature", self.handle_hook, initial_run=True)
             await db_hook.run()
+            await asyncio.gather(db_hook.run(), run_healthcheck(db_pool=self.db_pool, service_name="tses"))
 
         await self.db_pool.close()
 

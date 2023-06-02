@@ -10,6 +10,7 @@ from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.user import AuthService
 from stustapay.core.subcommand import SubCommand
 from .routers import auth, base, sumup
+from ..core.healthcheck import run_healthcheck
 
 
 class Api(SubCommand):
@@ -41,7 +42,7 @@ class Api(SubCommand):
             db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service
         )
 
-        await customer_service.sumup.login_to_sumup()
+        await customer_service.sumup.check_sumup_auth()
 
         context = Context(
             config=self.cfg,
@@ -49,11 +50,13 @@ class Api(SubCommand):
             config_service=ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             customer_service=customer_service,
         )
+
         try:
             await asyncio.gather(
                 self.server.run(self.cfg, context),
                 # scheduled task to check status of sumup payments
                 customer_service.sumup.run_sumup_checkout_processing(),
+                run_healthcheck(db_pool=db_pool, service_name="customer_portal"),
             )
         finally:
             await db_pool.close()

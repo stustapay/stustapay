@@ -11,17 +11,15 @@ import { z } from "zod";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { useCreateCheckoutMutation, useUpdateCheckoutMutation } from "@/api/topupApi";
 import i18n from "@/i18n";
-import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
-import { SumUpCardMock } from "./SumupCardMock";
 import type { SumUpCard, SumUpResponseType } from "./SumUpCard";
 import { CheckCircle as CheckCircleIcon } from "@mui/icons-material";
 import { Cancel as CancelIcon } from "@mui/icons-material";
 
-const FormSchema = z.object({
+const TopUpSchema = z.object({
   amount: z.number().int(i18n.t("topup.errorAmountMustBeIntegral")).positive(i18n.t("topup.errorAmountGreaterZero")),
 });
 
-type FormVal = z.infer<typeof FormSchema>;
+type FormVal = z.infer<typeof TopUpSchema>;
 
 const initialValues: FormVal = { amount: 0 };
 
@@ -78,7 +76,6 @@ const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 export const TopUp: React.FC = () => {
   const { t, i18n } = useTranslation(undefined, { keyPrefix: "topup" });
-  const formatCurrency = useCurrencyFormatter();
 
   const config = usePublicConfig();
 
@@ -183,7 +180,6 @@ export const TopUp: React.FC = () => {
         setSubmitting(false);
       })
       .catch((error) => {
-        toast.error(t("errorWhileCreatingCheckout"));
         console.error(error);
         setSubmitting(false);
       });
@@ -194,11 +190,11 @@ export const TopUp: React.FC = () => {
       return (
         <Container>
           <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
-            {t("info")}
+            {t("description")}
           </Alert>
           <Formik
             initialValues={initialValues}
-            validationSchema={toFormikValidationSchema(FormSchema)}
+            validationSchema={toFormikValidationSchema(TopUpSchema)}
             onSubmit={onSubmit}
           >
             {({ handleSubmit, values, setFieldValue, touched, errors, isSubmitting }) => (
@@ -230,7 +226,6 @@ export const TopUp: React.FC = () => {
     case "sumup":
       return (
         <Container>
-          <div>You are topping up {formatCurrency(state.topupAmount)}</div>
           <div id="sumup-card"></div>
         </Container>
       );

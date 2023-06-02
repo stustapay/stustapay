@@ -18,8 +18,8 @@ class ProductSoldStats(Product):
 
 
 class VoucherStats(BaseModel):
-    vouchers_issued: int
-    vouchers_spent: int
+    vouchers_issued: int = 0
+    vouchers_spent: int = 0
 
 
 class ProductStats(BaseModel):

@@ -4,6 +4,7 @@ from typing import Optional
 
 from stustapay.core.schema.order import OrderType
 from stustapay.core.schema.product import Product, ProductRestriction
+from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.util import BaseModel
 
 # Global Account IDs for virtual accounts
@@ -91,7 +92,7 @@ class Account(BaseModel):
 
     @property
     def user_tag_uid_hex(self):
-        return hex(self.user_tag_uid) if self.user_tag_uid is not None else None
+        return format_user_tag_uid(self.user_tag_uid)
 
     user_tag_comment: Optional[str] = None
     restriction: Optional[ProductRestriction]

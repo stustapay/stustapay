@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 REVISION_VERSION_RE = re.compile(r"^-- revision: (?P<version>\w+)$")
 REVISION_REQUIRES_RE = re.compile(r"^-- requires: (?P<version>\w+)$")
 REVISION_TABLE = "schema_revision"
-CURRENT_REVISION = "3af7cc18"
+CURRENT_REVISION = "90c7d52c"
 
 
 class DatabaseManage(subcommand.SubCommand):
@@ -235,6 +235,8 @@ async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:
     """
     pool = None
 
+    retry_counter = 0
+    next_log_at_retry = 0
     while pool is None:
         try:
             sslctx: Optional[Union[ssl.SSLContext, Literal["verify-full", "prefer"]]]
@@ -263,9 +265,15 @@ async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:
                 server_settings={"jit": "off"},
                 init=init_connection,
             )
-        except OSError as e:
-            sleep_amount = 2
-            logger.warning(f"Failed to create database pool: {e}, waiting {sleep_amount} seconds and trying again...")
+        except Exception as e:  # pylint: disable=broad-except
+            sleep_amount = 10
+            if next_log_at_retry == retry_counter:
+                logger.warning(
+                    f"Failed to create database pool: {e}, waiting {sleep_amount} seconds and trying again..."
+                )
+
+            retry_counter += 1
+            next_log_at_retry = min(retry_counter * 2, 2**9)
             await asyncio.sleep(sleep_amount)
 
     return pool

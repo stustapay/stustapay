@@ -1,4 +1,5 @@
 # pylint: disable=attribute-defined-outside-init
+import asyncio
 import json
 import logging
 import os
@@ -11,6 +12,7 @@ from asyncpg.exceptions import PostgresError
 from stustapay.bon.bon import fetch_base_config, generate_bon, BonConfig
 from stustapay.bon.config import Config
 from stustapay.core.database import create_db_pool
+from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.subcommand import SubCommand
 
@@ -57,7 +59,10 @@ class Generator(SubCommand):
         await self.cleanup_pending_bons()
 
         self.db_hook = DBHook(self.pool, "bon", self.handle_hook, hook_timeout=30)
-        await self.db_hook.run()
+
+        await asyncio.gather(
+            self.db_hook.run(), run_healthcheck(db_pool=self.pool, service_name=f"bon{self.args.worker_id}")
+        )
 
     async def cleanup_pending_bons(self):
         self.logger.info("Generating not generated bons")

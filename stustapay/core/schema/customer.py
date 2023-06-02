@@ -31,9 +31,10 @@ class CustomerCheckout(BaseModel):
     currency: str
     merchant_code: str
     description: str
-    return_url: str
     id: str
     status: SumupCheckoutStatus
     date: datetime.datetime
     valid_until: Optional[datetime.datetime]
+    last_checked: Optional[datetime.datetime]
+    check_interval: int
     customer_account_id: int

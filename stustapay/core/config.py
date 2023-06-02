@@ -42,11 +42,9 @@ class CoreConfig(BaseModel):
 
 class SumupConfig(BaseModel):
     enabled: bool = False
-    client_id: str = ""
-    client_secret: str = ""
+    api_key: str = ""
     merchant_code: str = ""
-    return_url: str = ""
-    redirect_url: str = ""
+    max_check_interval: int = 300
 
 
 class CustomerPortalApiConfig(HTTPServerConfig):
