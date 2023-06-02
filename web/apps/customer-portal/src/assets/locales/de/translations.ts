@@ -58,7 +58,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     errorWhileUpdatingBankData: "Fehler beim aktualisieren der Bankdaten.",
   },
   topup: {
-    info: "Du kannst dein Festival-Guthaben hier mit Kreditkarte aufladen.",
+    onlineTopUp: "Online-Aufladung",
+    description: "Du kannst dein Festival-Guthaben hier mit Kreditkarte aufladen.",
     amount: "Betrag",
     errorWhileCreatingCheckout: "Fehler beim erstellen der SumUp-Zahlung.",
     errorAmountGreaterZero: "Betrag muss größer als 0 sein.",

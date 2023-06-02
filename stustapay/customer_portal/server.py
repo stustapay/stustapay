@@ -42,7 +42,7 @@ class Api(SubCommand):
             db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service
         )
 
-        await customer_service.sumup.login_to_sumup()
+        await customer_service.sumup.check_sumup_auth()
 
         context = Context(
             config=self.cfg,

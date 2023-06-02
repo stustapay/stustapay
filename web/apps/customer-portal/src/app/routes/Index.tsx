@@ -1,6 +1,6 @@
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useGetCustomerQuery } from "@/api/customerApi";
-import { Link, Alert, Grid, Paper, Stack, Typography } from "@mui/material";
+import { Link, Alert, Grid, Paper, Stack, Typography, AlertTitle } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { toast } from "react-toastify";
@@ -8,9 +8,12 @@ import { useTranslation, Trans } from "react-i18next";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { OrderList } from "./OrderList";
 import { formatUserTagUid } from "@stustapay/models";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 
 export const Index: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const config = usePublicConfig();
 
   const formatCurrency = useCurrencyFormatter();
 
@@ -22,7 +25,6 @@ export const Index: React.FC = () => {
 
   if (customerError || !customer) {
     toast.error(t("errorLoadingCustomer"));
-    // navigate(-1); // this will cause infinite redirect loops if the backend is not running
     return null;
   }
 
@@ -31,10 +33,17 @@ export const Index: React.FC = () => {
 
   return (
     <Grid container justifyItems="center" justifyContent="center" spacing={2} sx={{ paddingX: 0.5 }}>
+      {config.sumup_topup_enabled && (
+        <Grid item xs={12} sm={8}>
+          <Alert severity="info" onClick={() => navigate("/topup")} sx={{ cursor: "pointer" }}>
+            <AlertTitle>{t("topup.onlineTopUp")}</AlertTitle>
+            {t("topup.description")}
+          </Alert>
+        </Grid>
+      )}
       <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
         <Grid container justifyContent="center">
           <Paper
-            // variant="outlined"
             sx={{
               paddingX: 8,
               paddingY: 3,

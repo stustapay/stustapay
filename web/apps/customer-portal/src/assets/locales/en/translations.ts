@@ -60,13 +60,14 @@ export const translations = {
     errorWhileUpdatingBankData: "Error occurred while updating bank data.",
   },
   topup: {
-    info: "You can topup your festival account balance with credit card",
     amount: "Amount",
     errorWhileCreatingCheckout: "Error while trying to create sumup checkout",
     errorAmountGreaterZero: "Amount must be greater than 0",
     errorAmountMustBeIntegral: "Cent amounts are not allowed",
     sumupTopupDisabled: "Online Topup is disabled",
     tryAgain: "Try again",
+    onlineTopUp: "Online Top-Up",
+    description: "You can top up your account with a credit card here.",
     next: "Next",
     success: {
       title: "Top Up succeeded",
