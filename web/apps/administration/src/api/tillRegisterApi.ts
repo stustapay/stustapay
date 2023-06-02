@@ -38,6 +38,14 @@ export const tillRegisterApi = createApi({
       query: (id) => ({ url: `/till-registers/${id}`, method: "DELETE" }),
       invalidatesTags: ["till-register"],
     }),
+    transferRegister: builder.mutation<void, { source_cashier_id: number; target_cashier_id: number }>({
+      query: (payload) => ({
+        url: `/till-registers/transfer-register`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["till-register"],
+    }),
   }),
 });
 
@@ -54,4 +62,5 @@ export const {
   useGetTillRegistersQuery,
   useUpdateTillRegisterMutation,
   useDeleteTillRegisterMutation,
+  useTransferRegisterMutation,
 } = tillRegisterApi;

@@ -44,7 +44,12 @@ import {
   TillRegisterStockingList,
   TillRegisterStockingUpdate,
 } from "./routes/till-register-stocking";
-import { TillRegisterCreate, TillRegisterList, TillRegisterUpdate } from "./routes/till-registers";
+import {
+  TillRegisterCreate,
+  TillRegisterList,
+  TillRegisterTransfer,
+  TillRegisterUpdate,
+} from "./routes/till-registers";
 import { FestivalOverview, MoneyOverview } from "./routes/overview";
 import { Profile } from "./routes/auth";
 
@@ -240,6 +245,10 @@ const router = createBrowserRouter([
           {
             path: ":registerId/edit",
             element: <TillRegisterUpdate />,
+          },
+          {
+            path: ":registerId/transfer",
+            element: <TillRegisterTransfer />,
           },
         ],
       },

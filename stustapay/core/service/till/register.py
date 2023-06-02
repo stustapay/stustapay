@@ -247,7 +247,7 @@ class TillRegisterService(DBService):
         current_user: CurrentUser,
         cashier_tag_uid: int,
         amount: float,
-    ) -> bool:
+    ):
         row = await conn.fetchrow(
             "select usr.cash_register_id, a.* "
             "from usr "
@@ -291,13 +291,11 @@ class TillRegisterService(DBService):
             amount=amount,
         )
 
-        return True
-
     @with_retryable_db_transaction()
     @requires_terminal([Privilege.cashier_management])
     async def modify_transport_account_balance(
         self, *, conn: asyncpg.Connection, current_user: CurrentUser, orga_tag_uid: int, amount: float
-    ) -> bool:
+    ):
         transport_account = await get_transport_account_by_tag_uid(conn=conn, orga_tag_uid=orga_tag_uid)
         if transport_account is None:
             raise InvalidArgument("Transport account could not be found")
@@ -315,4 +313,79 @@ class TillRegisterService(DBService):
             amount=amount,
             conducting_user_id=current_user.id,
         )
-        return True
+
+    @staticmethod
+    async def _transfer_cash_register(
+        conn: asyncpg.Connection, source_cashier_id: int, target_cashier_id: int
+    ) -> CashRegister:
+        source_cashier = await conn.fetchrow(
+            "select t.id as till_id, usr.id as cashier_id, usr.cash_register_id, usr.cashier_account_id, a.balance "
+            "from usr "
+            "left join till t on t.active_user_id = usr.id "
+            "left join account a on usr.cashier_account_id = a.id "
+            "where usr.id = $1",
+            source_cashier_id,
+        )
+        if source_cashier is None:
+            raise InvalidArgument("The cashier from whom to transfer the cash register does not exist")
+
+        if source_cashier["till_id"] is not None:
+            raise InvalidArgument(
+                "The cashier from whom to transfer the cash register is still logged in at a terminal"
+            )
+        if source_cashier["cash_register_id"] is None:
+            raise InvalidArgument("The cashier from whom to transfer the cash register does not have a cash register")
+        if source_cashier["cashier_account_id"] is None:
+            raise InvalidArgument("The cashier from whom to transfer the cash register is not cashier")
+
+        target_cashier = await conn.fetchrow(
+            "select t.id as till_id, usr.cash_register_id, usr.cashier_account_id "
+            "from usr left join till t on t.active_user_id = usr.id where usr.id = $1",
+            target_cashier_id,
+        )
+        if target_cashier is None:
+            raise InvalidArgument("The cashier to whom to transfer the cash register does not exist")
+        if target_cashier["till_id"] is not None:
+            raise InvalidArgument("The cashier to whom to transfer the cash register is still logged in at a terminal")
+        if target_cashier["cash_register_id"] is not None:
+            raise InvalidArgument("The cashier to whom to transfer the cash register already has a cash register")
+        if target_cashier["cashier_account_id"] is None:
+            raise InvalidArgument("The cashier to whom to transfer the cash register is not cashier")
+
+        await book_transaction(
+            conn=conn,
+            source_account_id=source_cashier["cashier_id"],
+            target_account_id=target_cashier["cashier_account_id"],
+            amount=source_cashier["balance"],
+            conducting_user_id=source_cashier["cashier_id"],
+        )
+
+        await conn.execute("update usr set cash_register_id = null where id = $1", source_cashier_id)
+        await conn.execute(
+            "update usr set cash_register_id = $2 where id = $1",
+            target_cashier_id,
+            source_cashier["cash_register_id"],
+        )
+        reg = await get_cash_register(conn=conn, register_id=source_cashier["cash_register_id"])
+        assert reg is not None
+        return reg
+
+    @with_retryable_db_transaction()
+    @requires_user([Privilege.cashier_management])
+    async def transfer_cash_register_admin(
+        self, *, conn: asyncpg.Connection, source_cashier_id: int, target_cashier_id: int
+    ) -> CashRegister:
+        return await self._transfer_cash_register(
+            conn=conn, source_cashier_id=source_cashier_id, target_cashier_id=target_cashier_id
+        )
+
+    @with_retryable_db_transaction()
+    @requires_terminal()
+    async def transfer_cash_register_terminal(
+        self, *, conn: asyncpg.Connection, source_cashier_tag_uid: int, target_cashier_tag_uid: int
+    ):
+        source_cashier_id = await conn.fetchval("select id from usr where user_tag_uid = $1", source_cashier_tag_uid)
+        target_cashier_id = await conn.fetchval("select id from usr where user_tag_uid = $1", target_cashier_tag_uid)
+        return await self._transfer_cash_register(
+            conn=conn, source_cashier_id=source_cashier_id, target_cashier_id=target_cashier_id
+        )

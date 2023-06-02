@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.till import NewCashRegister, CashRegister
+from stustapay.core.util import BaseModel
 
 router = APIRouter(
     prefix="/till-registers",
@@ -23,6 +24,22 @@ async def create_register(
     till_service: ContextTillService,
 ):
     return await till_service.register.create_cash_register(token=token, new_register=register)
+
+
+class TransferRegisterPayload(BaseModel):
+    source_cashier_id: int
+    target_cashier_id: int
+
+
+@router.post("/transfer-register")
+async def transfer_register(
+    token: CurrentAuthToken,
+    payload: TransferRegisterPayload,
+    till_service: ContextTillService,
+):
+    return await till_service.register.transfer_cash_register_admin(
+        token=token, source_cashier_id=payload.source_cashier_id, target_cashier_id=payload.target_cashier_id
+    )
 
 
 @router.post("/{register_id}")

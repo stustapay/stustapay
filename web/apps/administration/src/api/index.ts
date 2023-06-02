@@ -12,3 +12,4 @@ export * from "./tillRegisterApi";
 export * from "./tillRegisterStockingApi";
 export * from "./statsApi";
 export * from "./ticketApi";
+export * from "./tillRegisterApi";

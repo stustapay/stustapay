@@ -399,3 +399,46 @@ class TillManagementTest(TerminalTestCase):
                 button_id=button.id,
                 button=NewTillButton(name="foo", product_ids=[product1.id, product2.id]),
             )
+
+    async def test_transfer_cash_register(self):
+        cashier2_uid = 12323132
+        row = await self.db_pool.fetchrow(
+            "select usr.cash_register_id, a.balance from usr join account a on usr.cashier_account_id = a.id where usr.id = $1",
+            self.cashier.id,
+        )
+        self.assertEqual(self.stocking.total, row["balance"])
+        self.assertEqual(self.register.id, row["cash_register_id"])
+
+        await self.db_pool.execute("insert into user_tag (uid) values ($1)", cashier2_uid)
+        cashier2 = await self.user_service.create_user_no_auth(
+            new_user=UserWithoutId(
+                login="cashier2", display_name="cashier2", role_names=["cashier"], user_tag_uid=cashier2_uid
+            )
+        )
+
+        with self.assertRaises(InvalidArgument):
+            # cashier is still logged in
+            await self.till_service.register.transfer_cash_register_terminal(
+                token=self.terminal_token,
+                source_cashier_tag_uid=self.cashier_tag_uid,
+                target_cashier_tag_uid=cashier2_uid,
+            )
+
+        await self.till_service.logout_user(token=self.terminal_token)
+        await self.till_service.register.transfer_cash_register_terminal(
+            token=self.terminal_token, source_cashier_tag_uid=self.cashier_tag_uid, target_cashier_tag_uid=cashier2_uid
+        )
+
+        row = await self.db_pool.fetchrow(
+            "select usr.cash_register_id, a.balance from usr join account a on usr.cashier_account_id = a.id where usr.id = $1",
+            cashier2.id,
+        )
+        self.assertEqual(self.stocking.total, row["balance"])
+        self.assertEqual(self.register.id, row["cash_register_id"])
+
+        row = await self.db_pool.fetchrow(
+            "select usr.cash_register_id, a.balance from usr join account a on usr.cashier_account_id = a.id where usr.id = $1",
+            self.cashier.id,
+        )
+        self.assertEqual(0, row["balance"])
+        self.assertIsNone(row["cash_register_id"])

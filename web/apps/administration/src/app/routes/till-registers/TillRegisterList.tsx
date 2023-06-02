@@ -1,7 +1,12 @@
 import * as React from "react";
 
 import { Paper, Typography, ListItem, ListItemText, Stack } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  SwapHoriz as SwapHorizIcon,
+} from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
@@ -107,6 +112,13 @@ export const TillRegisterList: React.FC = () => {
       headerName: t("actions") as string,
       width: 150,
       getActions: (params) => [
+        <GridActionsCellItem
+          icon={<SwapHorizIcon />}
+          color="primary"
+          label={t("register.transfer")}
+          disabled={params.row.current_cashier_id == null}
+          onClick={() => navigate(`/till-registers/${params.row.id}/transfer`)}
+        />,
         <GridActionsCellItem
           icon={<EditIcon />}
           color="primary"

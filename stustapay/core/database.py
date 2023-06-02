@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 REVISION_VERSION_RE = re.compile(r"^-- revision: (?P<version>\w+)$")
 REVISION_REQUIRES_RE = re.compile(r"^-- requires: (?P<version>\w+)$")
 REVISION_TABLE = "schema_revision"
-CURRENT_REVISION = "e2c0985c"
+CURRENT_REVISION = "3af7cc18"
 
 
 class DatabaseManage(subcommand.SubCommand):
