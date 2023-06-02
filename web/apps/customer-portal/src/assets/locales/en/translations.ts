@@ -47,6 +47,9 @@ export const translations = {
     },
   },
   payout: {
+    iban: "IBAN",
+    bankAccountHolder: "Account Holder",
+    email: "E-Mail",
     info: "Enter your account information to receive your leftover cash to your bank account.",
     ibanNotValid: "IBAN is not valid",
     countryCodeNotSupported: "Provided IBAN country code is not supported",
