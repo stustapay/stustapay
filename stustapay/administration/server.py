@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from stustapay.core import database
@@ -32,6 +33,7 @@ from .routers import (
     stats,
     ticket,
 )
+from ..core.healthcheck import run_healthcheck
 
 
 class Api(SubCommand):
@@ -88,12 +90,9 @@ class Api(SubCommand):
             order_service=order_service,
             ticket_service=TicketService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
-        # tasks = [asyncio.create_task(self.server.run(self.cfg, context)), asyncio.create_task(order_service.run())]
         try:
-            await self.server.run(self.cfg, context)
-            # await asyncio.gather(*tasks)
-        # except:  # pylint: disable=bare-except
-        #     for task in tasks:
-        #         task.cancel()
+            await asyncio.gather(
+                self.server.run(self.cfg, context), run_healthcheck(db_pool=db_pool, service_name="administration")
+            )
         finally:
             await db_pool.close()

@@ -1,18 +1,19 @@
 """
 handles connections with ordering terminals.
 """
-
+import asyncio
 import logging
 
 from stustapay.core import database
 from stustapay.core.config import Config
+from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
+from stustapay.core.service.account import AccountService
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
-from stustapay.core.service.account import AccountService
 from stustapay.core.subcommand import SubCommand
 from stustapay.terminalserver.router import auth, base, order, user, customer, cashier
 
@@ -63,6 +64,8 @@ class Api(SubCommand):
             account_service=AccountService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
         try:
-            await self.server.run(self.cfg, context)
+            await asyncio.gather(
+                self.server.run(self.cfg, context), run_healthcheck(db_pool=db_pool, service_name="terminalserver")
+            )
         finally:
             await db_pool.close()
