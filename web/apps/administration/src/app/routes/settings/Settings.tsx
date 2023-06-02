@@ -1,5 +1,5 @@
 import { useGetConfigEntriesQuery, useSetConfigEntryMutation, selectConfigEntryAll } from "@api";
-import { EditableListItem } from "@components";
+import { EditableListItem, ThemeSelect } from "@components";
 import { Loading } from "@stustapay/components";
 import { List, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
 import { Box } from "@mui/system";
@@ -57,6 +57,12 @@ export const Settings: React.FC = () => {
         <List>
           <ListItem>
             <ListItemText primary={t("settings.language")} secondary={"en"} />
+          </ListItem>
+          <ListItem>
+            <ListItemText
+              primary={t("settings.theme.title")}
+              secondary={<ThemeSelect variant="standard" fullWidth />}
+            />
           </ListItem>
         </List>
       </Paper>

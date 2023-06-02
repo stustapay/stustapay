@@ -1,9 +1,11 @@
 import { Container, Link } from "@mui/material";
 import { Box } from "@mui/system";
-import { Trans } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
 export const PrivacyPolicy = () => {
+  useTranslation();
+
   return (
     <Container component="main" maxWidth="md">
       <Box sx={{ flexDirection: "column", alignItems: "center", width: "100%", textAlign: "justify" }}>

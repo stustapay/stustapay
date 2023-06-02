@@ -5,6 +5,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { ArrayElement, formatDate } from "@stustapay/utils";
 import { DataGridTitle } from "@stustapay/components";
+import { Link } from "@mui/material";
 
 type History = Account["tag_history"];
 type HistoryEntry = ArrayElement<History>;
@@ -22,9 +23,9 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
       headerName: t("account.user_tag_uid") as string,
       align: "right",
       renderCell: (params) => (
-        <RouterLink to={`/user-tags/${params.row.user_tag_uid_hex}`}>
+        <Link component={RouterLink} to={`/user-tags/${params.row.user_tag_uid_hex}`}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}
-        </RouterLink>
+        </Link>
       ),
       width: 100,
     },
@@ -32,7 +33,9 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
       field: "account_id",
       headerName: t("account.history.account") as string,
       renderCell: (params) => (
-        <RouterLink to={`/customer-accounts/${params.row.account_id}`}>{params.row.account_id}</RouterLink>
+        <Link component={RouterLink} to={`/customer-accounts/${params.row.account_id}`}>
+          {params.row.account_id}
+        </Link>
       ),
       width: 100,
     },

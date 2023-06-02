@@ -10,3 +10,4 @@ export * from "./ExpandableLinkMenu";
 export * from "./RestrictionSelect";
 export * from "./ProductSelect";
 export * from "./UserSelect";
+export * from "./ThemeSelect";

@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { PasswordChange } from "./PasswordChange";
 import { selectCurrentUser, useAppSelector } from "@store";
+import { ThemeSelect } from "@components";
 
 export const Profile: React.FC = () => {
   const { t } = useTranslation();
@@ -32,6 +33,12 @@ export const Profile: React.FC = () => {
           </ListItem>
           <ListItem>
             <ListItemText primary={t("user.roles")} secondary={currentUser.role_names?.join(", ")} />
+          </ListItem>
+          <ListItem>
+            <ListItemText
+              primary={t("settings.theme.title")}
+              secondary={<ThemeSelect variant="standard" fullWidth />}
+            />
           </ListItem>
         </List>
       </Paper>

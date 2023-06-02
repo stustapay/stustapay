@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, Stack } from "@mui/material";
+import { Paper, ListItem, ListItemText, Stack, Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { selectTicketAll, useDeleteTicketMutation, useGetTicketsQuery } from "@api";
@@ -46,7 +46,11 @@ export const TicketList: React.FC = () => {
       field: "name",
       headerName: t("ticket.name") as string,
       flex: 1,
-      renderCell: (params) => <RouterLink to={`/tickets/${params.row.id}`}>{params.row.name}</RouterLink>,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={`/tickets/${params.row.id}`}>
+          {params.row.name}
+        </Link>
+      ),
     },
     {
       field: "description",
@@ -57,7 +61,9 @@ export const TicketList: React.FC = () => {
       field: "product_id",
       headerName: t("ticket.product") as string,
       renderCell: (params) => (
-        <RouterLink to={`/products/${params.row.product_id}`}>{params.row.product_name}</RouterLink>
+        <Link component={RouterLink} to={`/products/${params.row.product_id}`}>
+          {params.row.product_name}
+        </Link>
       ),
       minWidth: 150,
     },

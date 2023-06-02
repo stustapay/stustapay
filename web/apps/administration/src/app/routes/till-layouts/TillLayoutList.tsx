@@ -1,7 +1,7 @@
 import * as React from "react";
 import { selectTillLayoutAll, useDeleteTillLayoutMutation, useGetTillLayoutsQuery } from "@api";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { Paper, Typography, ListItem, ListItemText, Stack } from "@mui/material";
+import { Paper, Typography, ListItem, ListItemText, Stack, Link } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
@@ -44,7 +44,11 @@ export const TillLayoutList: React.FC = () => {
       field: "name",
       headerName: t("layout.name") as string,
       flex: 1,
-      renderCell: (params) => <RouterLink to={`/till-layouts/${params.row.id}`}>{params.row.name}</RouterLink>,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={`/till-layouts/${params.row.id}`}>
+          {params.row.name}
+        </Link>
+      ),
     },
     {
       field: "description",

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useCurrencyFormatter } from "@hooks";
+import { Link } from "@mui/material";
 
 export interface AccountTableProps {
   accounts: Account[];
@@ -19,9 +20,17 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       headerName: t("account.name") as string,
       renderCell: (params) => {
         if (params.row.type === "private") {
-          return <RouterLink to={`/customer-accounts/${params.row.id}`}>customer</RouterLink>;
+          return (
+            <Link component={RouterLink} to={`/customer-accounts/${params.row.id}`}>
+              customer
+            </Link>
+          );
         } else {
-          return <RouterLink to={`/system-accounts/${params.row.id}`}>{params.row.name}</RouterLink>;
+          return (
+            <Link component={RouterLink} to={`/system-accounts/${params.row.id}`}>
+              {params.row.name}
+            </Link>
+          );
         }
       },
       minWidth: 250,
@@ -36,9 +45,9 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       headerName: t("account.user_tag_uid") as string,
       align: "right",
       renderCell: (params) => (
-        <RouterLink to={`/user-tags/${params.row.user_tag_uid_hex}`}>
+        <Link component={RouterLink} to={`/user-tags/${params.row.user_tag_uid_hex}`}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}
-        </RouterLink>
+        </Link>
       ),
       width: 100,
     },
