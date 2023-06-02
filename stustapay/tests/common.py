@@ -246,7 +246,7 @@ class TerminalTestCase(BaseTestCase):
         self.terminal_token = (
             await self.till_service.register_terminal(registration_uuid=self.till.registration_uuid)
         ).token
-        register = await self.till_service.register.create_cash_register(
+        self.register = await self.till_service.register.create_cash_register(
             token=self.admin_token, new_register=NewCashRegister(name="Lade")
         )
         await self._login_supervised_user(user_tag_uid=self.admin_tag_uid, user_role_id=ADMIN_ROLE_ID)
@@ -258,7 +258,7 @@ class TerminalTestCase(BaseTestCase):
             token=self.terminal_token,
             cashier_tag_uid=self.cashier_tag_uid,
             stocking_id=self.stocking.id,
-            cash_register_id=register.id,
+            cash_register_id=self.register.id,
         )
         # log in the cashier user
         await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=CASHIER_ROLE_ID)

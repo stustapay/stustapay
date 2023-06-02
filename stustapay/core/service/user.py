@@ -133,10 +133,21 @@ class UserService(DBService):
         if password:
             hashed_password = self._hash_password(password)
 
+        customer_account_id = None
+        if new_user.user_tag_uid is not None:
+            customer_account_id = await conn.fetchval(
+                "select id from account a where a.user_tag_uid = $1", new_user.user_tag_uid
+            )
+
+        if customer_account_id is None:
+            customer_account_id = await conn.fetchval(
+                "insert into account (user_tag_uid, type) values ($1, 'private') returning id", new_user.user_tag_uid
+            )
+
         user_id = await conn.fetchval(
             "insert into usr (login, description, password, display_name, user_tag_uid, transport_account_id, "
-            "   cashier_account_id, created_by) "
-            "values ($1, $2, $3, $4, $5, $6, $7, $8) returning id",
+            "   cashier_account_id, created_by, customer_account_id) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id",
             new_user.login,
             new_user.description,
             hashed_password,
@@ -145,6 +156,7 @@ class UserService(DBService):
             new_user.transport_account_id,
             new_user.cashier_account_id,
             creating_user_id,
+            customer_account_id,
         )
 
         await self._update_user_roles(conn=conn, user_id=user_id, role_names=new_user.role_names)

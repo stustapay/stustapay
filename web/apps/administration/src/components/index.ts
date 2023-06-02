@@ -9,3 +9,4 @@ export * from "./OrderTable";
 export * from "./ExpandableLinkMenu";
 export * from "./RestrictionSelect";
 export * from "./ProductSelect";
+export * from "./UserSelect";

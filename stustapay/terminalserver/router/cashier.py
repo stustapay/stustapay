@@ -2,6 +2,7 @@ from fastapi import APIRouter, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
+from stustapay.core.schema.till import CashRegister
 from stustapay.core.util import BaseModel
 
 router = APIRouter(
@@ -46,4 +47,22 @@ async def change_transport_account_balance(
 ):
     return await till_service.register.modify_transport_account_balance(
         token=token, orga_tag_uid=payload.orga_tag_uid, amount=payload.amount
+    )
+
+
+class TransferCashRegisterPayload(BaseModel):
+    source_cashier_tag_uid: int
+    target_cashier_tag_uid: int
+
+
+@router.post(
+    "/transfer-cash-register", summary="transfer a cash register between two cashiers", response_model=CashRegister
+)
+async def transfer_cash_register(
+    token: CurrentAuthToken, till_service: ContextTillService, payload: TransferCashRegisterPayload
+):
+    return await till_service.register.transfer_cash_register_terminal(
+        token=token,
+        source_cashier_tag_uid=payload.source_cashier_tag_uid,
+        target_cashier_tag_uid=payload.target_cashier_tag_uid,
     )

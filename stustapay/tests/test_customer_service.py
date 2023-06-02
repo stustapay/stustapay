@@ -44,7 +44,6 @@ class CustomerServiceTest(TerminalTestCase):
 
         self.uid = 1234
         self.pin = "pin"
-        self.account_id = 10
         self.balance = 120
 
         self.bon_path = "test_bon.pdf"
@@ -59,17 +58,8 @@ class CustomerServiceTest(TerminalTestCase):
             self.pin,
         )
 
-        # usr needed by ordr
-        await self.db_conn.execute(
-            "insert into usr (login, display_name, user_tag_uid) values ($1, $2, $3)",
-            "test login",
-            "test display name",
-            self.uid,
-        )
-
-        await self.db_conn.execute(
-            "insert into account (id, user_tag_uid, balance, type) overriding system value values ($1, $2, $3, $4)",
-            self.account_id,
+        self.account_id = await self.db_conn.fetchval(
+            "insert into account (user_tag_uid, balance, type) values ($1, $2, $3) returning id",
             self.uid,
             self.balance,
             "private",

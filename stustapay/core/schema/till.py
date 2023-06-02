@@ -70,6 +70,7 @@ class NewCashRegister(BaseModel):
 class CashRegister(NewCashRegister):
     id: int
     current_cashier_id: Optional[int]
+    current_cashier_tag_uid: Optional[int]
     current_till_id: Optional[int]
     current_balance: float
 

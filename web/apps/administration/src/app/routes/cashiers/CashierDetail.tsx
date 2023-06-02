@@ -12,6 +12,8 @@ import {
   selectUserById,
   useGetUsersQuery,
   selectCashierShiftAll,
+  useGetTillRegistersQuery,
+  selectTillRegisterById,
 } from "@api";
 import { Loading } from "@stustapay/components";
 import { ButtonLink, IconButtonLink, ListItemLink } from "@components";
@@ -45,14 +47,24 @@ export const CashierDetail: React.FC = () => {
   });
   const { data: tills, isLoading: isTillsLoading, error: tillError } = useGetTillsQuery();
   const { data: users, isLoading: isUsersLoading, error: userError } = useGetUsersQuery();
+  const { data: registers, isLoading: isRegistersLoading, error: registerError } = useGetTillRegistersQuery();
 
-  if (error || tillError || shiftsError || userError) {
+  if (error || tillError || shiftsError || userError || registerError) {
     navigate(-1);
     toast.error("Error while loading cashier");
     return null;
   }
 
-  if (!cashier || !cashierShifts || isLoading || isTillsLoading || isShiftsLoading || isUsersLoading) {
+  if (
+    !cashier ||
+    !cashierShifts ||
+    !registers ||
+    isLoading ||
+    isTillsLoading ||
+    isShiftsLoading ||
+    isUsersLoading ||
+    isRegistersLoading
+  ) {
     return <Loading />;
   }
 
@@ -74,6 +86,19 @@ export const CashierDetail: React.FC = () => {
     }
 
     return getUserName(user);
+  };
+
+  const renderRegister = (id?: number | null) => {
+    if (id == null) {
+      return "";
+    }
+
+    const register = selectTillRegisterById(registers, id);
+    if (!register) {
+      return "";
+    }
+
+    return register.name;
   };
 
   const columns: GridColDef<CashierShift>[] = [
@@ -162,7 +187,7 @@ export const CashierDetail: React.FC = () => {
           </ListItemLink>
           {cashier.till_ids.length !== 0 ? (
             cashier.till_ids.map((till_id) => (
-              <ListItemLink to={`/tills/${getTill(till_id)?.id}`}>
+              <ListItemLink key={till_id} to={`/tills/${getTill(till_id)?.id}`}>
                 <ListItemText primary={t("cashier.till")} secondary={getTill(till_id)?.name} />
               </ListItemLink>
             ))
@@ -182,6 +207,11 @@ export const CashierDetail: React.FC = () => {
               </ListItemSecondaryAction>
             )}
           </ListItem>
+          {cashier.cash_register_id != null && (
+            <ListItem>
+              <ListItemText primary={t("cashier.cashRegister")} secondary={renderRegister(cashier.cash_register_id)} />
+            </ListItem>
+          )}
         </List>
       </Paper>
       <Paper></Paper>

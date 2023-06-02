@@ -90,6 +90,7 @@ export const translations = {
     showWithoutTill: "Show without till",
     showZeroBalance: "Show with zero balance",
     notLoggedInAtTill: "Cashier is not logged at a terminal",
+    cashRegister: "Assigned cash register",
     closeOuts: "Close outs",
   },
   shift: {
@@ -292,6 +293,10 @@ export const translations = {
     currentTill: "Till",
     update: "Update cash register",
     name: "Name",
+    transfer: "Transfer to another cashier",
+    transferTargetCashier: "Cashier to transfer the register to",
+    cannotTransferNotAssigned:
+      "This cash register is not assigned to a cashier, we therefore cannot transfer it to another. Please use the stock up cashier functionality for that.",
     euro200: "Amount of 200€ bills",
     euro100: "Amount of 100€ bills",
     euro50: "Amount of 50€ bills",
