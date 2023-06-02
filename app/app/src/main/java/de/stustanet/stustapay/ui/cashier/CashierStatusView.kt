@@ -1,14 +1,6 @@
 package de.stustanet.stustapay.ui.cashier
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
 import androidx.compose.material.Scaffold
@@ -85,21 +77,19 @@ fun CashierStatusView(
                                         )
                                     }
 
-                                    Divider()
+                                    if (state.userInfo.cash_drawer_balance != null) {
+                                        Divider()
 
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            stringResource(R.string.cashier_drawer),
-                                            fontSize = 24.sp
-                                        )
-                                        if (state.userInfo.cash_drawer_balance == null) {
-                                            Text("N/A", fontSize = 36.sp)
-                                        } else {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                stringResource(R.string.cashier_drawer),
+                                                fontSize = 24.sp
+                                            )
                                             Text(
                                                 "${state.userInfo.cash_drawer_balance}€",
                                                 fontSize = 36.sp
@@ -107,18 +97,20 @@ fun CashierStatusView(
                                         }
                                     }
 
-                                    Divider()
 
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(stringResource(R.string.cashier_bag), fontSize = 24.sp)
-                                        if (state.userInfo.transport_account_balance == null) {
-                                            Text("N/A", fontSize = 36.sp)
-                                        } else {
+                                    if (state.userInfo.transport_account_balance != null) {
+                                        Divider()
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                stringResource(R.string.cashier_bag),
+                                                fontSize = 24.sp
+                                            )
                                             Text(
                                                 "${state.userInfo.transport_account_balance}€",
                                                 fontSize = 36.sp
