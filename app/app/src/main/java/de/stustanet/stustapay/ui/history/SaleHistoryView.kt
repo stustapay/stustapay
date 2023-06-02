@@ -5,13 +5,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -27,6 +25,7 @@ import de.stustanet.stustapay.model.OrderType
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import de.stustanet.stustapay.ui.theme.errorButtonColors
+import de.stustanet.stustapay.ui.user.UserRequestState
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -44,40 +43,74 @@ fun SaleHistoryView(
     var detailOrder by remember { mutableStateOf<Order?>(null) }
     var cancelOrder by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
+    val status by viewModel.status.collectAsStateWithLifecycle()
 
     LaunchedEffect(null) {
         viewModel.fetchHistory()
     }
 
     NavScaffold(title = { Text(stringResource(R.string.history_title)) }, navigateBack = leaveView) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp)
-                .verticalScroll(state = scrollState)
-        ) {
-            for (sale in sales) {
-                Row(
+        Scaffold(
+            content = { padding ->
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 10.dp)
-                        .clickable {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            detailOrder = sale
-                        },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .padding(padding)
+                        .fillMaxSize()
+                        .padding(10.dp)
+                        .verticalScroll(state = scrollState)
                 ) {
-                    Text(
-                        ZonedDateTime.parse(sale.booked_at)
-                            .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                            .format(DateTimeFormatter.ofPattern("E HH:mm:ss")),
-                        fontSize = 24.sp
-                    )
-                    Text("${sale.total_price}€", fontSize = 24.sp)
+                    for (sale in sales) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp)
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    viewModel.idleStatus()
+                                    detailOrder = sale
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                ZonedDateTime.parse(sale.booked_at)
+                                    .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                                    .format(DateTimeFormatter.ofPattern("E HH:mm:ss")),
+                                fontSize = 24.sp
+                            )
+                            Text("${sale.total_price}€", fontSize = 24.sp)
+                        }
+                    }
+                }
+            },
+            bottomBar = {
+                Column {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Divider()
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+                        Column {
+                            val text = when (status) {
+                                is SaleHistoryStatus.Idle -> {
+                                    stringResource(R.string.common_status_idle)
+                                }
+                                is SaleHistoryStatus.Fetching -> {
+                                    stringResource(R.string.common_status_fetching)
+                                }
+                                is SaleHistoryStatus.Done -> {
+                                    stringResource(R.string.common_status_done)
+                                }
+                                is SaleHistoryStatus.Failed -> {
+                                    (status as SaleHistoryStatus.Failed).msg
+                                }
+                            }
+                            Text(text, fontSize = 24.sp)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
             }
-        }
+        )
     }
 
     if (detailOrder != null) {
