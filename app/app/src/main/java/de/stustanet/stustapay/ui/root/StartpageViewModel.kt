@@ -3,11 +3,8 @@ package de.stustanet.stustapay.ui.root
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustanet.stustapay.model.CurrentUser
-import de.stustanet.stustapay.model.TerminalConfig
 import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.repository.TerminalConfigRepository
-import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.repository.UserRepository
 import de.stustanet.stustapay.ui.common.TerminalLoginState
 import de.stustanet.stustapay.util.Result

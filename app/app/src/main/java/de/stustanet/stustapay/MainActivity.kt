@@ -3,8 +3,6 @@ package de.stustanet.stustapay
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.nfc.NfcAdapter
-import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -20,7 +18,6 @@ import de.stustanet.stustapay.ui.Main
 import de.stustanet.stustapay.util.ActivityCallback
 import de.stustanet.stustapay.util.SysUiController
 import javax.inject.Inject
-
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), SysUiController {

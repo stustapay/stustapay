@@ -223,7 +223,7 @@ class TillRegisterService(DBService):
             "select true from till join usr u on till.active_user_id = u.id where u.id = $1", user_id
         )
         if is_logged_in:
-            raise InvalidArgument("Cannot stop up cash register if cashier is logged in at till")
+            raise InvalidArgument("Cashier is still logged in at a till")
 
         await conn.fetchval("update usr set cash_register_id = $1 where id = $2", cash_register_id, user_id)
 

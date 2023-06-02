@@ -4,7 +4,6 @@ import android.app.Activity
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.TagLostException
-import androidx.compose.ui.platform.LocalHapticFeedback
 import de.stustanet.stustapay.model.NfcScanFailure
 import de.stustanet.stustapay.model.NfcScanRequest
 import de.stustanet.stustapay.model.NfcScanResult
@@ -15,6 +14,7 @@ import java.io.IOException
 import java.nio.charset.Charset
 import javax.inject.Inject
 import javax.inject.Singleton
+
 
 @Singleton
 class NfcHandler @Inject constructor(
@@ -93,7 +93,13 @@ class NfcHandler @Inject constructor(
             )
         } catch (e: Exception) {
             e.printStackTrace()
-            dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Other(e.localizedMessage ?: "unknown exception")))
+            dataSource.setScanResult(
+                NfcScanResult.Fail(
+                    NfcScanFailure.Other(
+                        e.localizedMessage ?: "unknown exception"
+                    )
+                )
+            )
         }
     }
 
