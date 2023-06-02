@@ -104,7 +104,7 @@ class AccountService(DBService):
     @requires_user([Privilege.account_management])
     async def find_accounts(self, *, conn: asyncpg.Connection, search_term: str) -> list[Account]:
         value_as_int = None
-        if re.match("[a-f0-9]+", search_term):
+        if re.match("^[a-f0-9]+$", search_term):
             value_as_int = int(search_term, base=16)
 
         # the following query won't be able to find full uint64 tag uids as we need cast the numeric(20) to bigint in

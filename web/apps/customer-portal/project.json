@@ -16,7 +16,7 @@
         "main": "apps/customer-portal/src/main.tsx",
         "polyfills": "apps/customer-portal/src/polyfills.ts",
         "tsConfig": "apps/customer-portal/tsconfig.app.json",
-        "assets": ["apps/customer-portal/src/favicon.ico", "apps/customer-portal/src/assets"],
+        "assets": ["apps/customer-portal/src/logo.svg", "apps/customer-portal/src/assets"],
         "styles": ["apps/customer-portal/src/styles.css"],
         "scripts": [],
         "webpackConfig": "@nrwl/react/plugins/webpack"

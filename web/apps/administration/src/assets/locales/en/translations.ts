@@ -204,6 +204,12 @@ export const translations = {
     "bon.closing_texts": "Bon closing texts",
     ust_id: "UST ID",
     settingsUpdateError: "Error updating setting: {{what}}",
+    theme: {
+      title: "Theme",
+      browser: "Browser",
+      dark: "Dark",
+      light: "Light",
+    },
   },
   taxRateName: "Name",
   taxRateRate: "Rate",

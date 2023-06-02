@@ -104,7 +104,7 @@ export const PayoutInfo: React.FC = () => {
                 <TextField
                   id="iban"
                   name="iban"
-                  label="IBAN"
+                  label={t("iban")}
                   variant="outlined"
                   required
                   fullWidth
@@ -117,7 +117,7 @@ export const PayoutInfo: React.FC = () => {
                 <TextField
                   id="account_name"
                   name="account_name"
-                  label="Account Name"
+                  label={t("bankAccountHolder")}
                   variant="outlined"
                   required
                   fullWidth
@@ -130,7 +130,7 @@ export const PayoutInfo: React.FC = () => {
                 <TextField
                   id="email"
                   name="email"
-                  label="Email"
+                  label={t("email")}
                   variant="outlined"
                   required
                   fullWidth

@@ -14,17 +14,19 @@ export const UnauthenticatedRoot: React.FC = () => {
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
         <AppBar position="fixed">
-          <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              <RouterLink to="/" style={{ textDecoration: "none", color: "inherit" }}>
-                {t("StuStaPay")}
-              </RouterLink>
-            </Typography>
-            <LanguageSelect sx={{ color: "inherit" }} variant="outlined" />
-            <Button component={RouterLink} color="inherit" to="/login">
-              {t("login")}
-            </Button>
-          </Toolbar>
+          <Container maxWidth="xl">
+            <Toolbar disableGutters>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                <RouterLink to="/" style={{ textDecoration: "none", color: "inherit" }}>
+                  {t("StuStaPay")}
+                </RouterLink>
+              </Typography>
+              <LanguageSelect sx={{ color: "inherit" }} variant="outlined" />
+              <Button component={RouterLink} color="inherit" to="/login">
+                {t("login")}
+              </Button>
+            </Toolbar>
+          </Container>
         </AppBar>
 
         <Box

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, Button, Typography, ListItem, ListItemText, Stack } from "@mui/material";
+import { Paper, Button, Typography, ListItem, ListItemText, Link, Stack } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { selectUserAll, useDeleteUserMutation, useGetUsersQuery } from "@api";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -48,7 +48,11 @@ export const UserList: React.FC = () => {
       field: "login",
       headerName: t("userLogin") as string,
       flex: 1,
-      renderCell: (params) => <RouterLink to={`/users/${params.row.id}`}>{params.row.login}</RouterLink>,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={`/users/${params.row.id}`}>
+          {params.row.login}
+        </Link>
+      ),
     },
     {
       field: "display_name",

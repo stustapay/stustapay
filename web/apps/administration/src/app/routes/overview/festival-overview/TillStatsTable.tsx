@@ -1,4 +1,4 @@
-import { MenuItem, Paper, Select, Stack, Typography, FormControl, InputLabel, Box } from "@mui/material";
+import { MenuItem, Paper, Select, Stack, Typography, FormControl, InputLabel, Box, Link } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { selectTillAll, useGetProductStatsQuery, useGetTillsQuery, ProductSoldStats } from "@api";
@@ -28,7 +28,11 @@ export const TillStatsTable: React.FC<TillStatsTableProps> = ({ toTimestamp, fro
     {
       field: "name",
       headerName: t("product.name") as string,
-      renderCell: (params) => <RouterLink to={`/products/${params.row.id}`}>{params.row.name}</RouterLink>,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={`/products/${params.row.id}`}>
+          {params.row.name}
+        </Link>
+      ),
       minWidth: 200,
     },
     {

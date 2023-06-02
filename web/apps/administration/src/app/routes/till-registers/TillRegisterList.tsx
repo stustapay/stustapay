@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Paper, Typography, ListItem, ListItemText, Stack } from "@mui/material";
+import { Paper, Typography, ListItem, ListItemText, Stack, Link } from "@mui/material";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -66,7 +66,11 @@ export const TillRegisterList: React.FC = () => {
       return "";
     }
 
-    return <RouterLink to={`/tills/${till.id}`}>{till.name}</RouterLink>;
+    return (
+      <Link component={RouterLink} to={`/tills/${till.id}`}>
+        {till.name}
+      </Link>
+    );
   };
 
   const renderCashier = (id: number | null) => {
@@ -78,7 +82,11 @@ export const TillRegisterList: React.FC = () => {
       return "";
     }
 
-    return <RouterLink to={`/cashiers/${cashier.id}`}>{getUserName(cashier)}</RouterLink>;
+    return (
+      <Link component={RouterLink} to={`/cashiers/${cashier.id}`}>
+        {getUserName(cashier)}
+      </Link>
+    );
   };
 
   const columns: GridColDef<TillRegister>[] = [

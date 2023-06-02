@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
@@ -19,7 +20,11 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
     {
       field: "id",
       headerName: t("order.id") as string,
-      renderCell: (params) => <RouterLink to={`/orders/${params.row.id}`}>{params.row.id}</RouterLink>,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={`/orders/${params.row.id}`}>
+          {params.row.id}
+        </Link>
+      ),
       width: 100,
     },
     {

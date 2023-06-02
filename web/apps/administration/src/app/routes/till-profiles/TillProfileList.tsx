@@ -6,7 +6,7 @@ import {
   useGetTillProfilesQuery,
   selectTillProfileAll,
 } from "@api";
-import { Paper, Typography, ListItem, ListItemText, Stack } from "@mui/material";
+import { Paper, Typography, ListItem, ListItemText, Stack, Link } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -43,7 +43,11 @@ export const TillProfileList: React.FC = () => {
       return "";
     }
 
-    return <RouterLink to={`/till-layouts/${layout.id}`}>{layout.name}</RouterLink>;
+    return (
+      <Link component={RouterLink} to={`/till-layouts/${layout.id}`}>
+        {layout.name}
+      </Link>
+    );
   };
 
   const openConfirmDeleteDialog = (tillId: number) => {
@@ -64,7 +68,11 @@ export const TillProfileList: React.FC = () => {
       field: "name",
       headerName: t("profile.name") as string,
       flex: 1,
-      renderCell: (params) => <RouterLink to={`/till-profiles/${params.row.id}`}>{params.row.name}</RouterLink>,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={`/till-profiles/${params.row.id}`}>
+          {params.row.name}
+        </Link>
+      ),
     },
     {
       field: "description",

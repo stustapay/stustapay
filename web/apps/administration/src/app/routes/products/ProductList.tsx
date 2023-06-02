@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, Tooltip, Stack } from "@mui/material";
+import { Paper, ListItem, ListItemText, Tooltip, Link, Stack } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import {
   Edit as EditIcon,
@@ -84,7 +84,11 @@ export const ProductList: React.FC = () => {
       field: "name",
       headerName: t("product.name") as string,
       flex: 1,
-      renderCell: (params) => <RouterLink to={`/products/${params.row.id}`}>{params.row.name}</RouterLink>,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={`/products/${params.row.id}`}>
+          {params.row.name}
+        </Link>
+      ),
     },
     {
       field: "is_locked",

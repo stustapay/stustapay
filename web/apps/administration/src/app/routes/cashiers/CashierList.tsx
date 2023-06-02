@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useCurrencyFormatter } from "@hooks";
-import { Paper, ListItem, FormControlLabel, Checkbox, ListItemText, Stack } from "@mui/material";
+import { Paper, Link, ListItem, FormControlLabel, Checkbox, ListItemText, Stack } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { selectCashierAll, selectTillById, useGetCashiersQuery, useGetTillsQuery } from "@api";
@@ -57,9 +57,9 @@ export const CashierList: React.FC = () => {
     }
 
     return (
-      <RouterLink key={id} to={`/tills/${till.id}`}>
+      <Link component={RouterLink} key={id} to={`/tills/${till.id}`}>
         {till.name}
-      </RouterLink>
+      </Link>
     );
   };
 
@@ -67,7 +67,11 @@ export const CashierList: React.FC = () => {
     {
       field: "login",
       headerName: t("cashier.login") as string,
-      renderCell: (params) => <RouterLink to={`/cashiers/${params.row.id}`}>{params.row.login}</RouterLink>,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={`/cashiers/${params.row.id}`}>
+          {params.row.login}
+        </Link>
+      ),
       flex: 1,
     },
     {
@@ -93,9 +97,9 @@ export const CashierList: React.FC = () => {
       headerName: t("cashier.tagId") as string,
       type: "number",
       renderCell: (params) => (
-        <RouterLink to={`/user-tags/${params.row.user_tag_uid_hex}`}>
+        <Link component={RouterLink} to={`/user-tags/${params.row.user_tag_uid_hex}`}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}
-        </RouterLink>
+        </Link>
       ),
       width: 150,
     },

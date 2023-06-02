@@ -214,7 +214,6 @@ export const CashierDetail: React.FC = () => {
           )}
         </List>
       </Paper>
-      <Paper></Paper>
       <Paper sx={{ p: 1 }}>
         <Typography variant="body1" sx={{ p: 1 }}>
           {t("cashier.shifts")}

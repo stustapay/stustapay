@@ -45,6 +45,9 @@ export const translations: NestedPartialAsStrings<Translations> = {
     },
   },
   payout: {
+    iban: "IBAN",
+    bankAccountHolder: "Kontoinhaber",
+    email: "E-Mail",
     info: "Trage deine Bankdaten hier ein um dein Restguthaben auf dein Bankkonto zu überweisen.",
     ibanNotValid: "ungültige IBAN",
     countryCodeNotSupported: "IBAN Ländercode wird nicht unterstützt",
