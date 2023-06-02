@@ -56,7 +56,7 @@ class Generator(SubCommand):
         # initial processing of pending bons
         await self.cleanup_pending_bons()
 
-        self.db_hook = DBHook(self.pool, "bon", self.handle_hook)
+        self.db_hook = DBHook(self.pool, "bon", self.handle_hook, hook_timeout=30)
         await self.db_hook.run()
 
     async def cleanup_pending_bons(self):

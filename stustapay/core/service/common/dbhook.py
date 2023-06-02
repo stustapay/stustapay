@@ -16,14 +16,13 @@ class DBHook:
     Implements a database hook to subscribe to one specific pg_notify notification channel.
     """
 
-    HOOK_TIMELIMIT = 5
-
     def __init__(
         self,
         pool: asyncpg.Pool,
         channel: str,
         event_handler: Callable[[Optional[str]], Awaitable[Optional[StopIteration]]],
         initial_run: bool = False,
+        hook_timeout: int = 5,
     ):
         """
         connection: open database connection
@@ -36,6 +35,7 @@ class DBHook:
         self.event_handler = event_handler
         assert inspect.iscoroutinefunction(event_handler)
         self.initial_run = initial_run
+        self.timelimit = hook_timeout
 
         self.events: asyncio.Queue[Union[str, Type[StopIteration]]] = asyncio.Queue(maxsize=2048)
         self.logger = logging.getLogger(__name__)
@@ -78,12 +78,15 @@ class DBHook:
                         if event is StopIteration:
                             return
 
-                        ret = await asyncio.wait_for(self.event_handler(event), self.HOOK_TIMELIMIT)
+                        ret = await asyncio.wait_for(self.event_handler(event), self.timelimit)
                         if ret == StopIteration:
                             return
+            except asyncio.exceptions.TimeoutError:
+                self.logger.error("Timout occurred during DBHook.run")
+            except Exception:
+                import traceback
 
-            except Exception as e:
-                self.logger.error(f"Error occurred during DBHook.run: {e}")
+                self.logger.error(f"Error occurred during DBHook.run: {traceback.format_exc()}")
                 await asyncio.sleep(1)
 
     def notification_callback(self, connection: asyncpg.Connection, pid: int, channel: str, payload: str):
