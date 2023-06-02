@@ -9,8 +9,8 @@ import json
 import logging
 import os
 import re
-import ssl
 import shutil
+import ssl
 import tempfile
 from pathlib import Path
 from typing import Optional, Union, Literal
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 REVISION_VERSION_RE = re.compile(r"^-- revision: (?P<version>\w+)$")
 REVISION_REQUIRES_RE = re.compile(r"^-- requires: (?P<version>\w+)$")
 REVISION_TABLE = "schema_revision"
-CURRENT_REVISION = "c7733331"
+CURRENT_REVISION = "e2c0985c"
 
 
 class DatabaseManage(subcommand.SubCommand):
@@ -43,8 +43,12 @@ class DatabaseManage(subcommand.SubCommand):
     def argparse_register(subparser: argparse.ArgumentParser):
         subparsers = subparser.add_subparsers(dest="action")
         subparsers.add_parser("attach")
-        subparsers.add_parser("migrate")
+        migrate_parser = subparsers.add_parser("migrate")
+        migrate_parser.add_argument("--until-revision", type=str, help="Only apply revisions until this version")
+
         subparsers.add_parser("rebuild")
+        subparsers.add_parser("reset")
+        subparsers.add_parser("list_revisions")
 
         add_data_parser = subparsers.add_parser("add_data", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         add_data_parser.add_argument(
@@ -108,12 +112,20 @@ class DatabaseManage(subcommand.SubCommand):
 
         db_pool = await create_db_pool(self.config.database)
         if self.action == "migrate":
-            await apply_revisions(db_pool=db_pool)
+            await apply_revisions(db_pool=db_pool, until_revision=self.args.until_revision)
         if self.action == "rebuild":
             await reset_schema(db_pool=db_pool)
             await apply_revisions(db_pool=db_pool)
+        if self.action == "reset":
+            await reset_schema(db_pool=db_pool)
         if self.action == "add_data":
             await add_data(db_pool=db_pool, sql_file=self.args.sql_file)
+        if self.action == "list_revisions":
+            revisions = SchemaRevision.revisions_from_dir(REVISION_PATH)
+            for revision in revisions:
+                print(
+                    f"Revision: {revision.version}, requires revision: {revision.requires}, filename: {revision.file_name}"
+                )
 
         await db_pool.close()
 
@@ -274,7 +286,9 @@ async def reset_schema(db_pool: asyncpg.Pool):
             await conn.execute("create schema public")
 
 
-async def apply_revisions(db_pool: asyncpg.Pool, revision_path: Optional[Path] = None):
+async def apply_revisions(
+    db_pool: asyncpg.Pool, revision_path: Optional[Path] = None, until_revision: Optional[str] = None
+):
     revisions = SchemaRevision.revisions_from_dir(revision_path or REVISION_PATH)
 
     async with db_pool.acquire() as conn:
@@ -290,6 +304,9 @@ async def apply_revisions(db_pool: asyncpg.Pool, revision_path: Optional[Path] =
 
                 if revision.version == curr_revision:
                     found = True
+
+                if until_revision is not None and revision.version == until_revision:
+                    return
 
             if not found:
                 raise ValueError(f"Unknown revision {curr_revision} present in database")
