@@ -270,10 +270,13 @@ class TillService(DBService):
             "select "
             "   u.*, "
             "   cash_a.balance as cash_drawer_balance, "
-            "   transp_a.balance as transport_account_balance "
+            "   transp_a.balance as transport_account_balance, "
+            "   cr.id as cash_register_id, "
+            "   cr.name as cash_register_name "
             "from user_with_roles u "
             "left join account cash_a on cash_a.id = u.cashier_account_id "
             "left join account transp_a on transp_a.id = u.transport_account_id "
+            "left join cash_register cr on u.cash_register_id = cr.id "
             "where u.user_tag_uid = $1",
             user_tag_uid,
         )
