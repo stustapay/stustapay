@@ -8,7 +8,9 @@ import de.stustanet.stustapay.model.UserState
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.CashierRepository
 import de.stustanet.stustapay.repository.UserRepository
-import kotlinx.coroutines.flow.*
+import de.stustanet.stustapay.util.mapState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
@@ -19,13 +21,9 @@ class CashierStatusViewModel @Inject constructor(
     private val _state =
         MutableStateFlow<CashierStatusRequestState>(CashierStatusRequestState.Fetching)
 
-    val uiState = _state.map { state ->
+    val uiState = _state.mapState(CashierStatusUiState(), viewModelScope) { state ->
         CashierStatusUiState(state)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(3000),
-        initialValue = CashierStatusUiState()
-    )
+    }
 
     suspend fun fetchLocal() {
         _state.update { CashierStatusRequestState.Fetching }
@@ -59,6 +57,7 @@ sealed interface CashierStatusRequestState {
     data class Done(
         val userInfo: UserInfo
     ) : CashierStatusRequestState
+
     data class Failed(
         val msg: String
     ) : CashierStatusRequestState

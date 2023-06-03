@@ -52,8 +52,10 @@ data class UserInfoPayload(
 @Serializable
 data class UserInfo(
     val user_tag_uid: ULong,
-    val cash_drawer_balance: Double? = 0.0,
-    val transport_account_balance: Double? = 0.0,
+    val cash_drawer_balance: Double?,
+    val transport_account_balance: Double?,
+    val cash_register_id: Int?,
+    val cash_register_name: String?,
     val login: String,
     val display_name: String,
     val role_names: List<String>,

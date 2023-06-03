@@ -37,7 +37,8 @@
     <string name="root_item_makeeverythingok">Make Everything OK</string>
 
     <string name="cashier_title">Cashier Status</string>
-    <string name="cashier_drawer">Cash Drawer</string>
+    <string name="cashier_drawer">Drawer Name</string>
+    <string name="cashier_drawer_cash">Cash in Drawer</string>
     <string name="cashier_bag">Bag</string>
 
     <string name="history_title">Order History</string>
