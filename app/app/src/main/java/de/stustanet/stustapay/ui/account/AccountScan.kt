@@ -1,6 +1,7 @@
 package de.stustanet.stustapay.ui.account
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -13,7 +14,6 @@ import de.stustanet.stustapay.ui.chipscan.NfcScanCard
 fun AccountScan(onScan: (UserTag) -> Unit) {
     Box(modifier = Modifier.padding(20.dp)) {
         NfcScanCard(
-            modifier = Modifier.size(300.dp, 300.dp),
             onScan = onScan,
             keepScanning = true
         )
