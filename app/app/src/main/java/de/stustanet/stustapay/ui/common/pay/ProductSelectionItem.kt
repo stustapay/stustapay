@@ -1,6 +1,7 @@
 package de.stustanet.stustapay.ui.common.pay
 
 
+import android.widget.Button
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -68,8 +70,10 @@ fun ProductSelectionItem(
     itemAmountDelimiter: String = "×",
     leftButtonText: String,
     leftButtonStyle: TextStyle = ProductButtonStyle,
+    leftButtonColors: ButtonColors = ButtonDefaults.buttonColors(),
     rightButtonText: String = "‒",
     rightButtonStyle: TextStyle = ProductButtonBigStyle,
+    rightButtonColors: ButtonColors = errorButtonColors(),
     leftButtonPress: () -> Unit = {},
     rightButtonPress: () -> Unit = {},
     sameSizeButtons: Boolean = false,
@@ -129,7 +133,8 @@ fun ProductSelectionItem(
                                 0.7f
                             }
                         )
-                        .fillMaxHeight()
+                        .fillMaxHeight(),
+                    colors = leftButtonColors
                 ) {
                     Text(
                         text = leftButtonText,
@@ -146,11 +151,7 @@ fun ProductSelectionItem(
                         rightButtonPress()
                     },
                     modifier = Modifier.fillMaxSize(),
-                    colors = if (sameSizeButtons) {
-                        ButtonDefaults.buttonColors()
-                    } else {
-                        errorButtonColors()
-                    }
+                    colors = rightButtonColors
                 ) {
                     Text(
                         text = rightButtonText,
