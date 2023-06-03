@@ -83,6 +83,8 @@ class DBHook:
                             return
             except asyncio.exceptions.TimeoutError:
                 self.logger.error("Timout occurred during DBHook.run")
+            except (KeyboardInterrupt, SystemExit):
+                return
             except Exception:
                 import traceback
 

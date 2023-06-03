@@ -157,7 +157,6 @@ class SumupService(DBService):
                             f"Sumup API returned status code {response.status} with body {await response.text()}, disabling online top up"
                         )
                         return
-
             except Exception:  # pylint: disable=bare-except
                 self.logger.error(f"Sumup API error {traceback.print_exc()}")
                 return
