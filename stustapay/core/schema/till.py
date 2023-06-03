@@ -101,5 +101,7 @@ class CashRegisterStocking(NewCashRegisterStocking):
 
 class UserInfo(UserWithoutId):
     user_tag_uid: int
+    cash_register_id: Optional[int] = None
+    cash_register_name: Optional[str] = None
     cash_drawer_balance: Optional[float] = None
     transport_account_balance: Optional[float] = None
