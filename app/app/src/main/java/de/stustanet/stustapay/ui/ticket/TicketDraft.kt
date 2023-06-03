@@ -42,7 +42,7 @@ data class TicketDraft(
     }
 
 
-    fun getNewTicketSale(paymentMethod: PaymentMethod): NewTicketSale {
+    fun getNewTicketSale(paymentMethod: PaymentMethod?): NewTicketSale {
         return NewTicketSale(
             uuid = checkedSale?.uuid ?: UUID.randomUUID().toString(),
             customer_tag_uids = scans.map { it.tag.uid },

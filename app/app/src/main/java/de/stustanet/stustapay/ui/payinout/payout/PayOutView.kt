@@ -1,15 +1,17 @@
 package de.stustanet.stustapay.ui.payinout.payout
 
-import android.util.Log
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.ui.common.StatusText
 import de.stustanet.stustapay.ui.common.amountselect.AmountConfig
+import de.stustanet.stustapay.ui.common.pay.NoCashRegisterWarning
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
 import kotlinx.coroutines.launch
 
@@ -33,6 +35,11 @@ fun PayOutView(
         } else {
             confirmState.close()
         }
+    }
+
+    if (!config.canHandleCash()) {
+        NoCashRegisterWarning(modifier = Modifier.padding(20.dp), bigStyle = true)
+        return
     }
 
     PayOutConfirmDialog(

@@ -13,6 +13,7 @@ import de.stustanet.stustapay.model.PendingLineItem
 import de.stustanet.stustapay.model.Product
 import de.stustanet.stustapay.ui.theme.ProductConfirmItemBigStyle
 import de.stustanet.stustapay.ui.theme.ProductConfirmItemStyle
+import de.stustanet.stustapay.util.formatCurrencyValue
 
 @Preview
 @Composable
@@ -89,22 +90,21 @@ fun ProductConfirmItem(
             .padding(vertical = 2.dp)
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 10.dp)
-                .weight(0.45f),
-            horizontalArrangement = Arrangement.End,
+            modifier = Modifier.weight(0.5f),
         ) {
             Text(
-                text = if (price != null) {
-                    "%.02f€".format(price).replace('.', ',')
-                } else {
-                    ""
-                },
-                textAlign = TextAlign.Right,
-                modifier = Modifier.weight(0.6f),
+                text = name,
                 style = style,
+                modifier = Modifier.padding(5.dp)
             )
+        }
 
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .weight(0.5f),
+            horizontalArrangement = Arrangement.End,
+        ) {
             Text(
                 text = if (quantity != null) {
                     "%s%3d".format(
@@ -121,16 +121,14 @@ fun ProductConfirmItem(
                 modifier = Modifier.weight(0.4f),
                 style = style,
             )
-        }
 
-        Row(
-            modifier = Modifier.weight(0.55f),
-        ) {
             Text(
-                text = name,
+                text = formatCurrencyValue(price),
+                textAlign = TextAlign.Right,
+                modifier = Modifier.weight(0.6f),
                 style = style,
-                modifier = Modifier.padding(5.dp)
             )
         }
+
     }
 }

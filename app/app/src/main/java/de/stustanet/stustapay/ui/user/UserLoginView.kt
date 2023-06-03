@@ -194,7 +194,7 @@ fun UserLoginView(
                     scanState.open()
                 },
             ) {
-                Text(if (userUIStateV !is UserUIState.LoggedIn) {
+                Text(if (userUIStateV is UserUIState.LoggedIn) {
                     stringResource(R.string.user_login)
                 } else {
                     stringResource(R.string.user_login_other)
@@ -214,7 +214,11 @@ fun UserLoginView(
                 },
                 colors = errorButtonColors(),
             ) {
-                Text(stringResource(R.string.user_logout), fontSize = 24.sp)
+                Text(
+                    stringResource(R.string.user_logout),
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
 

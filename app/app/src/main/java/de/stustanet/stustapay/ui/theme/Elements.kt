@@ -20,3 +20,11 @@ fun confirmButtonColors(): ButtonColors {
         backgroundColor = MaterialTheme.colors.error,
     )
 }
+
+@Composable
+fun okButtonColors(): ButtonColors {
+    return ButtonDefaults.buttonColors(
+        contentColor = MaterialTheme.colors.onError,
+        backgroundColor = Ok
+    )
+}

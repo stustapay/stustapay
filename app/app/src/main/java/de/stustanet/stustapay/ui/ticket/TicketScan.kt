@@ -13,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.chipscan.NfcScanCard
 import de.stustanet.stustapay.ui.common.StatusText
+import de.stustanet.stustapay.ui.common.pay.NoCashRegisterWarning
 import de.stustanet.stustapay.ui.common.pay.ProductSelectionBottomBar
 import de.stustanet.stustapay.ui.nav.TopAppBar
 import de.stustanet.stustapay.ui.nav.TopAppBarIcon
@@ -33,7 +33,7 @@ fun TicketScan(
     viewModel: TicketViewModel
 ) {
 
-    val ticketConfig by viewModel.ticketConfig.collectAsStateWithLifecycle()
+    val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
     val ticketStatus by viewModel.ticketDraft.collectAsStateWithLifecycle()
     val tagScanStatus by viewModel.tagScanStatus.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
@@ -43,7 +43,7 @@ fun TicketScan(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(ticketConfig.tillName) },
+                title = { Text(config.title().title) },
                 icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
                     leaveView()
                 },
@@ -57,6 +57,9 @@ fun TicketScan(
                     .padding(bottom = paddingValues.calculateBottomPadding()),
             ) {
                 item {
+                    if (!config.canHandleCash()) {
+                        NoCashRegisterWarning()
+                    }
                     NfcScanCard(
                         modifier = Modifier
                             .padding(horizontal = 20.dp, vertical = 20.dp)
@@ -118,7 +121,7 @@ fun TicketScan(
                 status = {
                     StatusText(status)
                 },
-                ready = ticketConfig.ready,
+                ready = config.isTerminalReady(),
                 onAbort = {
                     scope.launch {
                         viewModel.clearDraft()
