@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.UserRolesState
@@ -55,6 +56,13 @@ fun UserLoginView(
     val userRolesV = userRoles
 
     val scanState = rememberNfcScanDialogState()
+    var showCashRegisterTransfer = rememberNfcScanDialogState()
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            viewModel.fetchLogin()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -62,13 +70,7 @@ fun UserLoginView(
             .padding(16.dp)
     ) {
 
-        LaunchedEffect(true) {
-            scope.launch {
-                viewModel.fetchLogin()
-            }
-        }
-
-        var target by remember { mutableStateOf(ScanTarget.Login) }
+        var scanTarget by remember { mutableStateOf(ScanTarget.Login) }
 
         var roleSelection by remember { mutableStateOf<RoleSelectionState>(RoleSelectionState.Closed) }
         val roleSelectionV = roleSelection
@@ -76,7 +78,7 @@ fun UserLoginView(
         NfcScanDialog(
             state = scanState,
             onScan = { tag ->
-                when (target) {
+                when (scanTarget) {
                     ScanTarget.Login -> {
                         scope.launch {
                             roleSelection = RoleSelectionState.Select(tag)
@@ -85,7 +87,19 @@ fun UserLoginView(
                     }
                 }
             },
-        )
+        ) {
+            when (scanTarget) {
+                ScanTarget.Login -> {
+                    Text(
+                        stringResource(R.string.nfc_scan_login),
+                        textAlign = TextAlign.Center,
+                        fontSize = 40.sp
+                    )
+                }
+            }
+        }
+
+        UserCashRegisterTransferDialog(showCashRegisterTransfer)
 
         when (userRolesV) {
             is UserRolesState.OK -> {
@@ -115,6 +129,7 @@ fun UserLoginView(
                     }
                 }
             }
+
             is UserRolesState.Unknown -> {}
             is UserRolesState.Error -> {
                 ListItem(
@@ -134,14 +149,16 @@ fun UserLoginView(
         var subtext: String? = null
         when (userUIStateV) {
             is UserUIState.NotLoggedIn -> {
-                user = "Not logged in"
+                user = stringResource(R.string.not_logged_in)
             }
+
             is UserUIState.LoggedIn -> {
                 user = userUIStateV.username
                 subtext = userUIStateV.activeRole
             }
+
             is UserUIState.Error -> {
-                user = "Error"
+                user = stringResource(R.string.error)
                 subtext = userUIStateV.message
             }
         }
@@ -167,23 +184,15 @@ fun UserLoginView(
                     .padding(8.dp),
                 onClick = {
                     viewModel.clearErrors()
+                    scanTarget = ScanTarget.Login
                     scanState.open()
-                    target = ScanTarget.Login
                 },
             ) {
-                if (userUIStateV is UserUIState.LoggedIn) {
-                    Text(
-                        stringResource(R.string.user_login_other),
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
+                Text(if (userUIStateV is UserUIState.LoggedIn) {
+                    stringResource(R.string.user_login)
                 } else {
-                    Text(
-                        stringResource(R.string.user_login),
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                    stringResource(R.string.user_login_other)
+                }, fontSize = 24.sp)
             }
         }
 
@@ -204,6 +213,21 @@ fun UserLoginView(
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center
                 )
+            }
+        }
+
+        if (userUIStateV !is UserUIState.LoggedIn) {
+            Divider()
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                onClick = {
+                    viewModel.clearErrors()
+                    showCashRegisterTransfer.open()
+                },
+            ) {
+                Text(stringResource(R.string.hand_over_cash_register), fontSize = 24.sp)
             }
         }
 

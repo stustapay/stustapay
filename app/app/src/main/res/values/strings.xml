@@ -81,7 +81,7 @@
     <string name="user_display_title">Display / Update User</string>
     <string name="user_update_title">Update User</string>
     <string name="user_select">Select a role:</string>
-    <string name="user_login_other">Login Other User / Change Role</string>
+    <string name="user_login_other">Change User or Role</string>
 
     <string name="topup">Top up</string>
     <string name="previous_balance">Previous balance</string>
@@ -115,6 +115,18 @@
     <string name="under_18_years">Under 18</string>
     <string name="under_16_years">Under 16</string>
     <string name="failed_fetching">Failed getting information</string>
+    <string name="hand_over_cash_register">Hand over cash register</string>
+    <string name="nfc_scan_login">📡 Scan Chip for Login</string>
+    <string name="not_logged_in">Not logged in</string>
+    <string name="scan_transfer_cashregister_current">📡 Scan current cash register owner</string>
+    <string name="scan_transfer_cashregister_new">📡 Scan new cash register owner</string>
+    <string name="cash_register_transfer_success">Cash register transferred successfully!</string>
+    <string name="cash_register_transfer_error">Error when transferring cash register:</string>
+    <string name="transfer_cash_register">Transfer Cash Register</string>
+    <string name="cash_register_transferring">performing transfer...</string>
+    <string name="cash_register_notassigned">cash register is no longer assigned to a cashier.</string>
+    <string name="cash_register_unexpected_assign">cash register is now assigned to %s, while we expected it to be assigned to %s</string>
+    <string name="cash_register_same_source_target">Source and target tag are the same.</string>
     <string name="no_cash_register">No cash register</string>
     <string name="tag_uid">Chip ID</string>
 </resources>

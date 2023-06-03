@@ -1,6 +1,5 @@
 package de.stustanet.stustapay.model
 
-import androidx.compose.ui.Modifier
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -70,6 +69,14 @@ data class CashRegister(
     // CashRegister
     val id: ULong,
     val current_cashier_id: Int?,
+    val current_cashier_tag_uid: ULong?,
     val current_till_id: Int?,
     val current_balance: Double,
+)
+
+
+@Serializable
+data class TransferCashRegisterPayload(
+    val source_cashier_tag_uid: ULong,
+    val target_cashier_tag_uid: ULong,
 )

@@ -9,11 +9,11 @@ import de.stustanet.stustapay.repository.CashierRepository
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.repository.UserRepository
-import de.stustanet.stustapay.ui.cashiermanagement.CashierManagementStatus
 import de.stustanet.stustapay.util.Result
 import de.stustanet.stustapay.util.asResult
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+
 
 sealed interface UserUIState {
     data class LoggedIn(
@@ -30,12 +30,14 @@ sealed interface UserUIState {
     ) : UserUIState
 }
 
+
 sealed interface UserRequestState {
     object Idle : UserRequestState
     object Fetching : UserRequestState
     object Done : UserRequestState
     data class Failed(val msg: String) : UserRequestState
 }
+
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
@@ -67,13 +69,13 @@ class UserViewModel @Inject constructor(
         initialValue = listOf(),
     )
 
-    private var _status = MutableStateFlow<UserRequestState>(UserRequestState.Idle)
+    private val _status = MutableStateFlow<UserRequestState>(UserRequestState.Idle)
     val status = _status.asStateFlow()
 
-    private var _currentUser = MutableStateFlow<UserInfo?>(null)
+    private val _currentUser = MutableStateFlow<UserInfo?>(null)
     val currentUser = _currentUser.asStateFlow()
 
-    private var _currentTag = MutableStateFlow(0uL)
+    private val _currentTag = MutableStateFlow(0uL)
     val currentTag = _currentTag.asStateFlow()
 
     fun clearErrors() {
@@ -102,12 +104,20 @@ class UserViewModel @Inject constructor(
         _currentTag.update { 0uL }
     }
 
-    suspend fun create(login: String, displayName: String, tag: ULong, roles: List<Role>, description: String) {
+    suspend fun create(
+        login: String,
+        displayName: String,
+        tag: ULong,
+        roles: List<Role>,
+        description: String
+    ) {
         _status.update { UserRequestState.Fetching }
-        when (val res = userRepository.create(login, displayName, UserTag(tag), roles, description)) {
+        when (val res =
+            userRepository.create(login, displayName, UserTag(tag), roles, description)) {
             is UserCreateState.Created -> {
                 _status.update { UserRequestState.Done }
             }
+
             is UserCreateState.Error -> {
                 _status.update { UserRequestState.Failed(res.msg) }
             }
@@ -120,6 +130,7 @@ class UserViewModel @Inject constructor(
             is UserUpdateState.Created -> {
                 _status.update { UserRequestState.Done }
             }
+
             is UserUpdateState.Error -> {
                 _status.update { UserRequestState.Failed(res.msg) }
             }
@@ -127,15 +138,15 @@ class UserViewModel @Inject constructor(
     }
 
     suspend fun display(tag: ULong) {
-        // TODO: Rename getCashierInfo / get_user_info
         _status.update { UserRequestState.Fetching }
         _currentUser.update { null }
-        when (val res = cashierRepository.getCashierInfo(tag)) {
+        when (val res = cashierRepository.getUserInfo(tag)) {
             is Response.OK -> {
                 _currentUser.update { res.data }
                 _currentTag.update { tag }
                 _status.update { UserRequestState.Done }
             }
+
             is Response.Error -> {
                 _status.update { UserRequestState.Failed(res.msg()) }
             }

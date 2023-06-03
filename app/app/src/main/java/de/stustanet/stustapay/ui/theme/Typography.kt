@@ -4,6 +4,7 @@ import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 
 // Set of Material typography styles to start with
@@ -112,13 +113,22 @@ val AccountOverviewKeyStyle = TextStyle(
     fontSize = 20.sp,
     letterSpacing = 0.sp,
 )
+
 val AccountOverviewValueStyle = TextStyle(
     fontWeight = FontWeight.Normal,
     fontSize = 24.sp,
     letterSpacing = 0.sp,
 )
+
 val AccountOverviewValueBigStyle = TextStyle(
     fontWeight = FontWeight.Medium,
     fontSize = 30.sp,
     letterSpacing = 0.sp,
+)
+
+val NfcScanStyle = TextStyle(
+    fontWeight = FontWeight.Medium,
+    fontSize = 40.sp,
+    letterSpacing = 0.sp,
+    textAlign = TextAlign.Center,
 )

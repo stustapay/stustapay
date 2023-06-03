@@ -37,7 +37,7 @@ class CashierStatusViewModel @Inject constructor(
 
     suspend fun fetchTag(id: ULong) {
         _state.update { CashierStatusRequestState.Fetching }
-        when (val res = cashierRepository.getCashierInfo(id)) {
+        when (val res = cashierRepository.getUserInfo(id)) {
             is Response.OK -> {
                 _state.update { CashierStatusRequestState.Done(res.data) }
             }

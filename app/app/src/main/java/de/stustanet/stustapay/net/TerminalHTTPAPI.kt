@@ -170,7 +170,11 @@ class TerminalHTTPAPI @Inject constructor(
         return client.post("change-transport-register-balance") { change }
     }
 
-    override suspend fun getCashierInfo(tag: UserInfoPayload): Response<UserInfo> {
+    override suspend fun getUserInfo(tag: UserInfoPayload): Response<UserInfo> {
         return client.post("user-info") { tag }
+    }
+
+    override suspend fun transferCashRegister(transfer: TransferCashRegisterPayload): Response<CashRegister> {
+        return client.post("transfer-cash-register") { transfer }
     }
 }

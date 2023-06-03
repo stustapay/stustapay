@@ -24,6 +24,7 @@ import de.stustanet.stustapay.ui.common.pay.NoCashRegisterWarning
 import de.stustanet.stustapay.ui.common.pay.ProductSelectionBottomBar
 import de.stustanet.stustapay.ui.nav.TopAppBar
 import de.stustanet.stustapay.ui.nav.TopAppBarIcon
+import de.stustanet.stustapay.ui.theme.NfcScanStyle
 import kotlinx.coroutines.launch
 
 @Composable
@@ -100,8 +101,7 @@ fun TicketScan(
 
                         Text(
                             text = scanText,
-                            textAlign = TextAlign.Center,
-                            fontSize = 40.sp
+                            style = NfcScanStyle,
                         )
                     }
                 }

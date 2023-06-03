@@ -57,15 +57,16 @@ values
     -- internal
     (100, null, 'internal', 'Cash Desk 0', 'Cash money in register 0', 500.00, 0),
     (101, null, 'internal', 'Rucksack 0', 'Finanzer-rucksack', 200.00, 0),
+    (102, null, 'private', 'Admin', 'Admin private account', 0.00, 0),
 
     -- guests (which would need token IDs)
     (200, 1234, 'private', 'Guest 0', 'Token Balance of Guest 0', 120.00, 0),
-    (201, 13876489173, 'private', 'Guest 1', 'Token Balance of Guest 1', 130.20, 0),
     (201, 1247532345004944, 'private', 'test-tag2', 'test token 2', 30.00, 5),
     (202, null, 'internal', 'test-tag2-internal', 'tag2 internal account', 0.0, 0),
     (203, 1343851281585040, 'private', 'test-tag3', 'test token 3', 15.00, 2),
     (204, 1183326878897040, 'private', 'test-tag4', 'test token 4', 20.00, 2),
-    (205, null, 'internal', 'test-tag4-internal', 'tag4 internal account', 0.0, 0)
+    (205, null, 'internal', 'test-tag4-internal', 'tag4 internal account', 0.0, 0),
+    (206, 1280032362533776, 'private', 'test-tag5', 'test token 5', 0.00, 0)
     on conflict do nothing;
 select setval('account_id_seq', 300);
 
@@ -87,18 +88,18 @@ values
     on conflict do nothing;
 
 insert into usr (
-    id, login, password, description, transport_account_id, cashier_account_id, cash_register_id, user_tag_uid
+    id, login, password, description, customer_account_id, transport_account_id, cashier_account_id, cash_register_id, user_tag_uid
 ) overriding system value
 values
-    (0, 'test-cashier', null, 'Some Description', null, 100, null, 1234),
+    (0, 'test-cashier', null, 'Some Description', 200, null, 100, null, 1234),
     -- password is admin
-    (1, 'admin' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null, null),
-    -- tag2 is admin but not customer
-    (2, 'tag2', null, null, null, 202, 0, 1247532345004944),
-    -- tag4 is customer and cashier
-    (4, 'tag4', null, null, null, 205, null, 1183326878897040),
+    (1, 'admin', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, 102, null, null, null, null),
+    -- tag2 is admin
+    (2, 'tag2', null, null, 201, null, 202, 0, 1247532345004944),
+    -- tag4 is customer
+    (4, 'tag4', null, null, 204, null, 205, null, 1183326878897040),
     -- password is admin
-    (5, 'finanzorga' , '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, null, null, null, null)
+    (5, 'finanzorga', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', null, 206, null, null, null, null)
     on conflict do nothing;
 select setval('usr_id_seq', 100);
 

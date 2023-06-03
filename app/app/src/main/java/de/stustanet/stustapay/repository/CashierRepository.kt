@@ -3,7 +3,7 @@ package de.stustanet.stustapay.repository
 import de.stustanet.stustapay.model.CashRegister
 import de.stustanet.stustapay.model.CashierStocking
 import de.stustanet.stustapay.model.UserInfo
-import de.stustanet.stustapay.model.UserInfoPayload
+import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.netsource.CashierRemoteDataSource
 import javax.inject.Inject
@@ -27,8 +27,12 @@ class CashierRepository @Inject constructor(
         return cashierRemoteDataSource.bookVault(orgaTagId, amount)
     }
 
-    suspend fun getCashierInfo(tagId: ULong): Response<UserInfo> {
-        return cashierRemoteDataSource.getCashierInfo(tagId)
+    suspend fun getUserInfo(tagId: ULong): Response<UserInfo> {
+        return cashierRemoteDataSource.getUserInfo(tagId)
+    }
+
+    suspend fun transferCashRegister(sourceTag: UserTag, targetTag: UserTag): Response<CashRegister> {
+        return cashierRemoteDataSource.transferCashRegister(sourceTag, targetTag)
     }
 
     suspend fun getRegisters(): Response<List<CashRegister>> {

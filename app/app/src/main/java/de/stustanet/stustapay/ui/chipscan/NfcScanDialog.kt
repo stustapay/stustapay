@@ -15,6 +15,7 @@ import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.common.DialogDisplayState
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
+import de.stustanet.stustapay.ui.theme.NfcScanStyle
 
 @Composable
 fun rememberNfcScanDialogState(): DialogDisplayState {
@@ -33,7 +34,7 @@ fun NfcScanDialog(
     onScan: (UserTag) -> Unit = {},
     content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
-        Text(stringResource(R.string.nfc_scan_prompt), textAlign = TextAlign.Center, fontSize = 40.sp)
+        Text(stringResource(R.string.nfc_scan_prompt), style = NfcScanStyle)
     },
 ) {
     if (state.isOpen()) {
