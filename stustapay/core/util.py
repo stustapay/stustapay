@@ -3,10 +3,8 @@ import logging
 import os
 import signal
 import sys
-from typing import Optional, Awaitable, Callable
-
 import traceback
-
+from typing import Optional, Awaitable, Callable
 
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -167,3 +165,23 @@ async def run_task_protected(task: Awaitable, name: str, on_exit: Optional[Calla
 
 def create_task_protected(task: Awaitable, name: str, on_exit: Optional[Callable] = None):
     return asyncio.create_task(run_task_protected(task, name, on_exit), name=name)
+
+
+HANDLED_SIGNALS = (
+    signal.SIGINT,  # Unix signal 2. Sent by Ctrl+C.
+    signal.SIGTERM,  # Unix signal 15. Sent by `kill <pid>`.
+)
+
+
+def setup_signal_handlers(loop: asyncio.AbstractEventLoop, callback):
+    for sig in HANDLED_SIGNALS:
+        loop.add_signal_handler(sig, callback)
+        signal.signal(sig, callback)
+
+
+def cancel_all_running_tasks():
+    tasks = asyncio.all_tasks()
+    # current = asyncio.current_task()
+    # tasks.remove(current)
+    for task in tasks:
+        task.cancel()

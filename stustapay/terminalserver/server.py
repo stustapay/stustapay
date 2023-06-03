@@ -64,8 +64,7 @@ class Api(SubCommand):
             account_service=AccountService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
         try:
-            await asyncio.gather(
-                self.server.run(self.cfg, context), run_healthcheck(db_pool=db_pool, service_name="terminalserver")
-            )
+            self.server.add_task(asyncio.create_task(run_healthcheck(db_pool=db_pool, service_name="terminalserver")))
+            await self.server.run(self.cfg, context)
         finally:
             await db_pool.close()

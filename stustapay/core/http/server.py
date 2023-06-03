@@ -1,13 +1,13 @@
 """
 http server base class
 """
-
+import asyncio
 import logging
+from urllib.parse import urlparse
 
 import asyncpg
 import uvicorn
-from urllib.parse import urlparse
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
 from stustapay import __version__
@@ -61,6 +61,8 @@ class Server:
         if config.host == "localhost" or config.host.startswith("127."):
             forward_allowed_ips = "*"
 
+        self.tasks: list[asyncio.Task] = []
+
         self.uvicorn_config = uvicorn.Config(
             self.api,
             host=config.host,
@@ -69,8 +71,11 @@ class Server:
             forwarded_allow_ips=forward_allowed_ips,
         )
 
-    def add_router(self, router):
+    def add_router(self, router: APIRouter):
         self.api.include_router(router)
+
+    def add_task(self, task: asyncio.Task):
+        self.tasks.append(task)
 
     async def db_connect(self, cfg: DatabaseConfig):
         return await create_db_pool(cfg)
@@ -85,6 +90,8 @@ class Server:
             ContextMiddleware,
             context=context,
         )
-
         webserver = uvicorn.Server(self.uvicorn_config)
         await webserver.serve()
+
+        for task in self.tasks:
+            task.cancel()

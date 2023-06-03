@@ -61,7 +61,9 @@ class Generator(SubCommand):
         self.db_hook = DBHook(self.pool, "bon", self.handle_hook, hook_timeout=30)
 
         await asyncio.gather(
-            self.db_hook.run(), run_healthcheck(db_pool=self.pool, service_name=f"bon{self.args.worker_id}")
+            self.db_hook.run(),
+            run_healthcheck(db_pool=self.pool, service_name=f"bon{self.args.worker_id}"),
+            return_exceptions=True,
         )
 
     async def cleanup_pending_bons(self):

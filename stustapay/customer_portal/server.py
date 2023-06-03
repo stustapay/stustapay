@@ -52,11 +52,8 @@ class Api(SubCommand):
         )
 
         try:
-            await asyncio.gather(
-                self.server.run(self.cfg, context),
-                # scheduled task to check status of sumup payments
-                customer_service.sumup.run_sumup_checkout_processing(),
-                run_healthcheck(db_pool=db_pool, service_name="customer_portal"),
-            )
+            self.server.add_task(asyncio.create_task(run_healthcheck(db_pool=db_pool, service_name="customer_portal")))
+            self.server.add_task(asyncio.create_task(customer_service.sumup.run_sumup_checkout_processing()))
+            await self.server.run(self.cfg, context)
         finally:
             await db_pool.close()
