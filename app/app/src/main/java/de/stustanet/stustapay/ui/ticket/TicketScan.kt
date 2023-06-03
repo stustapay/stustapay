@@ -57,7 +57,7 @@ fun TicketScan(
             ) {
                 item {
                     if (!config.canHandleCash()) {
-                        NoCashRegisterWarning()
+                        NoCashRegisterWarning(modifier = Modifier.padding(top = 8.dp))
                     }
                     NfcScanCard(
                         modifier = Modifier

@@ -72,13 +72,11 @@ fun CashierStatusView(
                                         text = {
                                             Text(
                                                 stringResource(R.string.tag_uid),
-                                                style = MaterialTheme.typography.h4
                                             )
                                         },
                                         secondaryText = {
                                             Text(
                                                 tagIDtoString(state.userInfo.user_tag_uid),
-                                                style = MaterialTheme.typography.h4
                                             )
                                         }
                                     )
@@ -86,54 +84,51 @@ fun CashierStatusView(
                                     if (state.userInfo.cash_register_name != null ||
                                         state.userInfo.cash_drawer_balance != 0.0
                                     ) {
-                                        Spacer(modifier = Modifier.height(20.dp))
+                                        Divider()
+                                        Spacer(modifier = Modifier.height(10.dp))
 
                                         ListItem(
                                             text = {
                                                 Text(
                                                     stringResource(R.string.cashier_drawer),
-                                                    style = MaterialTheme.typography.h4
                                                 )
                                             },
                                             secondaryText = {
                                                 Text(
                                                     state.userInfo.cash_register_name ?: "",
-                                                    style = MaterialTheme.typography.h4
                                                 )
                                             }
                                         )
 
-                                        Spacer(modifier = Modifier.height(20.dp))
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Divider()
 
                                         ListItem(
                                             text = {
                                                 Text(
                                                     stringResource(R.string.cashier_drawer_cash),
-                                                    style = MaterialTheme.typography.h4
                                                 )
                                             },
                                             secondaryText = {
                                                 Text(
                                                     formatCurrencyValue(state.userInfo.cash_drawer_balance),
-                                                    style = MaterialTheme.typography.h4
                                                 )
                                             }
                                         )
                                     }
 
                                     if (state.userInfo.transport_account_balance != null) {
-                                        Spacer(modifier = Modifier.height(20.dp))
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Divider()
                                         ListItem(
                                             text = {
                                                 Text(
                                                     stringResource(R.string.cashier_bag),
-                                                    style = MaterialTheme.typography.h4
                                                 )
                                             },
                                             secondaryText = {
                                                 Text(
                                                     formatCurrencyValue(state.userInfo.transport_account_balance),
-                                                    style = MaterialTheme.typography.h4
                                                 )
                                             }
                                         )

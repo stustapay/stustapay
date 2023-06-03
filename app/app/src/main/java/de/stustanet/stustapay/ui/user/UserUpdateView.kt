@@ -67,13 +67,6 @@ fun UserUpdateView(viewModel: UserViewModel) {
                         text = { Text(stringResource(R.string.user_displayname)) },
                         secondaryText = { Text(currentUserV.display_name) }
                     )
-                    ListItem(
-                        text = { Text(stringResource(R.string.user_description)) },
-                        secondaryText = { Text(currentUserV.description ?: "") }
-                    )
-
-                    Divider()
-                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier
@@ -130,6 +123,11 @@ fun UserUpdateView(viewModel: UserViewModel) {
                             }
                         }
                     }
+
+                    ListItem(
+                        text = { Text(stringResource(R.string.user_description)) },
+                        secondaryText = { Text(currentUserV.description ?: "") }
+                    )
                 }
             }
         },
