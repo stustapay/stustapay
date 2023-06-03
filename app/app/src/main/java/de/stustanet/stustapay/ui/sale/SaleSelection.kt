@@ -26,6 +26,7 @@ fun SaleSelection(
     leaveView: () -> Unit = {},
 ) {
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+    val saleStatus by viewModel.saleStatus.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
@@ -61,6 +62,30 @@ fun SaleSelection(
             }
         },
         bottomBar = {
+            var totalPrice = 0.0
+            for (button in saleConfig.buttons) {
+                if (saleStatus.buttonSelection[button.value.id] != null) {
+                    when (val buttonStatus = saleStatus.buttonSelection[button.value.id]!!) {
+                        is SaleItemAmount.FreePrice -> {
+                            totalPrice += buttonStatus.price.toDouble() / 100.0
+                        }
+                        is SaleItemAmount.FixedPrice -> {
+                            totalPrice += when (val price = button.value.price) {
+                                is SaleItemPrice.FreePrice -> {
+                                    buttonStatus.amount * (price.defaultPrice ?: 0.0)
+                                }
+                                is SaleItemPrice.FixedPrice -> {
+                                    buttonStatus.amount * price.price
+                                }
+                                is SaleItemPrice.Returnable -> {
+                                    buttonStatus.amount * (price.price ?: 0.0)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             ProductSelectionBottomBar(
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
@@ -84,6 +109,7 @@ fun SaleSelection(
                         viewModel.checkSale()
                     }
                 },
+                price = totalPrice
             )
         }
     )
