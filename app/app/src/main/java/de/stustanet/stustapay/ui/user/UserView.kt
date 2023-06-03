@@ -105,7 +105,7 @@ fun UserView(
                 Box(modifier = Modifier.padding(it)) {
                     UserDisplayView(
                         viewModel = viewModel,
-                        goToUserDisplayView = {
+                        goToUserUpdateView = {
                             navController.navigateTo(UserNavDest.update.route)
                         }
                     )

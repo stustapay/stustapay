@@ -115,4 +115,5 @@
     <string name="under_16_years">Unter 16</string>
     <string name="failed_fetching">Fehler beim Abruf</string>
     <string name="no_cash_register">Keine Kassenschublade</string>
+    <string name="tag_uid">Chip ID</string>
 </resources>

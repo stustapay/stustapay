@@ -20,9 +20,15 @@ class SaleHistoryViewModel @Inject constructor(
 
     private val _status = MutableStateFlow<SaleHistoryStatus>(SaleHistoryStatus.Idle)
     val status = _status.asStateFlow()
+    private val _cancelStatus = MutableStateFlow<SaleHistoryStatus>(SaleHistoryStatus.Idle)
+    val cancelStatus = _cancelStatus.asStateFlow()
 
     fun idleStatus() {
         _status.update { SaleHistoryStatus.Idle }
+    }
+
+    fun idleCancelStatus() {
+        _cancelStatus.update { SaleHistoryStatus.Idle }
     }
 
     suspend fun fetchHistory() {
@@ -35,6 +41,7 @@ class SaleHistoryViewModel @Inject constructor(
                 }
                 _status.update { SaleHistoryStatus.Done }
             }
+
             is Response.Error -> {
                 _status.update { SaleHistoryStatus.Failed(sales.msg()) }
             }
@@ -42,13 +49,14 @@ class SaleHistoryViewModel @Inject constructor(
     }
 
     suspend fun cancelSale(id: Int) {
-        _status.update { SaleHistoryStatus.Fetching }
+        _cancelStatus.update { SaleHistoryStatus.Fetching }
         when (val resp = saleRepository.cancelSale(id)) {
             is Response.OK -> {
-                _status.update { SaleHistoryStatus.Done }
+                _cancelStatus.update { SaleHistoryStatus.Done }
             }
+
             is Response.Error -> {
-                _status.update { SaleHistoryStatus.Failed(resp.msg()) }
+                _cancelStatus.update { SaleHistoryStatus.Failed(resp.msg()) }
             }
         }
         fetchHistory()

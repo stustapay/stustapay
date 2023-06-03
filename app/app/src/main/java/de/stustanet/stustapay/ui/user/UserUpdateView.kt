@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,43 +55,18 @@ fun UserUpdateView(viewModel: UserViewModel) {
                         .fillMaxSize()
                         .padding(10.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(stringResource(R.string.user_id), fontSize = 20.sp)
-                        Text(tagIDtoString(currentTag), fontSize = 30.sp, textAlign = TextAlign.Right)
-                    }
-
-                    Divider()
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(stringResource(R.string.user_username), fontSize = 20.sp)
-                        Text(currentUserV.login, fontSize = 30.sp, textAlign = TextAlign.Right)
-                    }
-
-                    Divider()
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(stringResource(R.string.user_displayname), fontSize = 20.sp)
-                        Text(currentUserV.display_name, fontSize = 30.sp, textAlign = TextAlign.Right)
-                    }
-
-                    Divider()
-                    Spacer(modifier = Modifier.height(10.dp))
+                    ListItem(
+                        text = { Text(stringResource(R.string.tag_uid)) },
+                        secondaryText = { Text(tagIDtoString(currentTag)) }
+                    )
+                    ListItem(
+                        text = { Text(stringResource(R.string.user_username)) },
+                        secondaryText = { Text(currentUserV.login) }
+                    )
+                    ListItem(
+                        text = { Text(stringResource(R.string.user_displayname)) },
+                        secondaryText = { Text(currentUserV.display_name) }
+                    )
 
                     Row(
                         modifier = Modifier
@@ -103,26 +77,22 @@ fun UserUpdateView(viewModel: UserViewModel) {
                     ) {
                         var expanded by remember { mutableStateOf(false) }
 
-                        Text(
-                            stringResource(R.string.user_roles),
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(end = 20.dp)
-                        )
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = it }) {
-                            TextField(
+                            OutlinedTextField(
+                                label = { Text(stringResource(R.string.user_roles)) },
                                 readOnly = true,
                                 value = roles.map { id ->
                                     availableRoles.find { r -> r.id == id }?.name ?: ""
-                                }.reduceOrNull() { acc, r -> "$acc, $r" }.orEmpty(),
+                                }.reduceOrNull { acc, r -> "$acc, $r" }.orEmpty(),
                                 onValueChange = {},
                                 trailingIcon = {
                                     ExposedDropdownMenuDefaults.TrailingIcon(
                                         expanded = expanded
                                     )
                                 },
-                                colors = ExposedDropdownMenuDefaults.textFieldColors()
+                                modifier = Modifier.fillMaxWidth()
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
@@ -153,6 +123,11 @@ fun UserUpdateView(viewModel: UserViewModel) {
                             }
                         }
                     }
+
+                    ListItem(
+                        text = { Text(stringResource(R.string.user_description)) },
+                        secondaryText = { Text(currentUserV.description ?: "") }
+                    )
                 }
             }
         },

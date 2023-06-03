@@ -148,18 +148,12 @@ fun UserLoginView(
 
         ListItem(
             text = { Text(user) },
-            secondaryText = if (subtext != null) {
-                {
-                    Text(subtext)
-                }
-            } else {
-                null
-            },
+            secondaryText = { Text(subtext ?: "") },
             icon = {
                 Icon(
                     Icons.Filled.Person,
                     contentDescription = null,
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(42.dp)
                 )
             }
         )

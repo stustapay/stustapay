@@ -1,17 +1,23 @@
 package de.stustanet.stustapay.ui.user
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ListItem
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -20,19 +26,23 @@ import de.stustanet.stustapay.ui.chipscan.NfcScanCard
 import de.stustanet.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
+fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
     val scope = rememberCoroutineScope()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val currentTag by viewModel.currentTag.collectAsStateWithLifecycle()
+    val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
 
     if (currentUser == null) {
         Scaffold(
             content = { padding ->
-                Box(modifier = Modifier
-                    .padding(padding)
-                    .padding(20.dp)) {
+                Box(
+                    modifier = Modifier
+                        .padding(padding)
+                        .padding(20.dp)
+                ) {
                     NfcScanCard(
                         keepScanning = true,
                         onScan = { tag ->
@@ -75,6 +85,10 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
     } else {
         val user = currentUser!!
 
+        val isPrivileged = user.role_names.mapNotNull { role ->
+            availableRoles.find { available -> available.name == role }?.is_privileged
+        }.contains(true)
+
         Scaffold(
             content = { padding ->
                 Box(modifier = Modifier.padding(padding)) {
@@ -83,83 +97,26 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                             .fillMaxSize()
                             .padding(10.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.user_id), fontSize = 20.sp)
-                            Text(
-                                tagIDtoString(currentTag),
-                                fontSize = 30.sp,
-                                textAlign = TextAlign.Right
-                            )
-                        }
-
-                        Divider()
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.user_username), fontSize = 20.sp)
-                            Text(user.login, fontSize = 30.sp, textAlign = TextAlign.Right)
-                        }
-
-                        Divider()
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.user_displayname), fontSize = 20.sp)
-                            Text(user.display_name, fontSize = 30.sp, textAlign = TextAlign.Right)
-                        }
-
-                        Divider()
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.user_roles), fontSize = 20.sp)
-                            Text(
-                                user.role_names.reduce { acc, r -> "$acc, $r" },
-                                fontSize = 30.sp,
-                                textAlign = TextAlign.Right
-                            )
-                        }
-
-                        Divider()
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                stringResource(R.string.user_description),
-                                fontSize = 20.sp
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(user.description ?: "", fontSize = 30.sp)
-                        }
+                        ListItem(
+                            text = { Text(stringResource(R.string.tag_uid)) },
+                            secondaryText = { Text(tagIDtoString(currentTag)) }
+                        )
+                        ListItem(
+                            text = { Text(stringResource(R.string.user_username)) },
+                            secondaryText = { Text(user.login) }
+                        )
+                        ListItem(
+                            text = { Text(stringResource(R.string.user_displayname)) },
+                            secondaryText = { Text(user.display_name) }
+                        )
+                        ListItem(
+                            text = { Text(stringResource(R.string.user_roles)) },
+                            secondaryText = { Text(user.role_names.reduce { acc, r -> "$acc, $r" }) }
+                        )
+                        ListItem(
+                            text = { Text(stringResource(R.string.user_description)) },
+                            secondaryText = { Text(user.description ?: "") }
+                        )
                     }
                 }
             },
@@ -190,12 +147,14 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                     }
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Button(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp),
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        enabled = !isPrivileged,
                         onClick = {
                             scope.launch {
-                                goToUserDisplayView()
+                                goToUserUpdateView()
                             }
                         }) {
                         Text(text = stringResource(R.string.user_update_title), fontSize = 24.sp)

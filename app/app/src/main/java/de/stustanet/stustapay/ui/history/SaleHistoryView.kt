@@ -1,15 +1,35 @@
 package de.stustanet.stustapay.ui.history
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -25,13 +45,11 @@ import de.stustanet.stustapay.model.OrderType
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import de.stustanet.stustapay.ui.theme.errorButtonColors
-import de.stustanet.stustapay.ui.user.UserRequestState
 import de.stustanet.stustapay.util.formatCurrencyValue
 import kotlinx.coroutines.launch
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.TimeZone
 
 @Composable
 fun SaleHistoryView(
@@ -45,12 +63,16 @@ fun SaleHistoryView(
     var cancelOrder by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
     val status by viewModel.status.collectAsStateWithLifecycle()
+    val cancelStatus by viewModel.cancelStatus.collectAsStateWithLifecycle()
 
     LaunchedEffect(null) {
         viewModel.fetchHistory()
     }
 
-    NavScaffold(title = { Text(stringResource(R.string.history_title)) }, navigateBack = leaveView) {
+    NavScaffold(
+        title = { Text(stringResource(R.string.history_title)) },
+        navigateBack = leaveView
+    ) {
         Scaffold(
             content = { padding ->
                 Column(
@@ -95,12 +117,15 @@ fun SaleHistoryView(
                                 is SaleHistoryStatus.Idle -> {
                                     stringResource(R.string.common_status_idle)
                                 }
+
                                 is SaleHistoryStatus.Fetching -> {
                                     stringResource(R.string.common_status_fetching)
                                 }
+
                                 is SaleHistoryStatus.Done -> {
                                     stringResource(R.string.common_status_done)
                                 }
+
                                 is SaleHistoryStatus.Failed -> {
                                     (status as SaleHistoryStatus.Failed).msg
                                 }
@@ -177,6 +202,35 @@ fun SaleHistoryView(
         }
     }
 
+    when (val castedStatus = cancelStatus) {
+        is SaleHistoryStatus.Done -> {
+            AlertDialog(
+                title = { Text("Successfully canceled order") },
+                onDismissRequest = { scope.launch { viewModel.idleCancelStatus() } },
+                confirmButton = {
+                    Button(onClick = { scope.launch { viewModel.idleCancelStatus() } }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
+        is SaleHistoryStatus.Failed -> {
+            AlertDialog(
+                title = { Text("Could not cancel order") },
+                text = { Text(castedStatus.msg)},
+                onDismissRequest = { scope.launch { viewModel.idleCancelStatus() } },
+                confirmButton = {
+                    Button(onClick = { scope.launch { viewModel.idleCancelStatus() } }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
+        else -> {
+            // no dialog
+        }
+    }
+
     if (cancelOrder && detailOrder != null) {
         val sale = detailOrder!!
         Dialog(onDismissRequest = {
@@ -189,7 +243,11 @@ fun SaleHistoryView(
                 elevation = 8.dp,
             ) {
                 Column {
-                    Text(stringResource(R.string.history_confirm), textAlign = TextAlign.Center, fontSize = 48.sp)
+                    Text(
+                        stringResource(R.string.history_confirm),
+                        textAlign = TextAlign.Center,
+                        fontSize = 48.sp
+                    )
 
                     Button(modifier = Modifier
                         .fillMaxWidth()

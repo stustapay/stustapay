@@ -3,13 +3,15 @@ package de.stustanet.stustapay.ui.cashier
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ListItem
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -21,8 +23,10 @@ import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.common.rememberDialogDisplayState
 import de.stustanet.stustapay.ui.common.tagIDtoString
 import de.stustanet.stustapay.ui.nav.NavScaffold
+import de.stustanet.stustapay.util.formatCurrencyValue
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun CashierStatusView(
     viewModel: CashierStatusViewModel = hiltViewModel(),
@@ -64,76 +68,70 @@ fun CashierStatusView(
                                 }
 
                                 is CashierStatusRequestState.Done -> {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ListItem(
+                                        text = {
+                                            Text(
+                                                stringResource(R.string.tag_uid),
+                                            )
+                                        },
+                                        secondaryText = {
+                                            Text(
+                                                tagIDtoString(state.userInfo.user_tag_uid),
+                                            )
+                                        }
+                                    )
+
+                                    if (state.userInfo.cash_register_name != null ||
+                                        state.userInfo.cash_drawer_balance != 0.0
                                     ) {
-                                        Text("ID", fontSize = 24.sp)
-                                        Text(
-                                            tagIDtoString(state.userInfo.user_tag_uid),
-                                            fontSize = 36.sp
+                                        Divider()
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        ListItem(
+                                            text = {
+                                                Text(
+                                                    stringResource(R.string.cashier_drawer),
+                                                )
+                                            },
+                                            secondaryText = {
+                                                Text(
+                                                    state.userInfo.cash_register_name ?: "",
+                                                )
+                                            }
+                                        )
+
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Divider()
+
+                                        ListItem(
+                                            text = {
+                                                Text(
+                                                    stringResource(R.string.cashier_drawer_cash),
+                                                )
+                                            },
+                                            secondaryText = {
+                                                Text(
+                                                    formatCurrencyValue(state.userInfo.cash_drawer_balance),
+                                                )
+                                            }
                                         )
                                     }
 
-                                    if (state.userInfo.cash_register_name != null ||
-                                        state.userInfo.cash_drawer_balance != 0.0) {
-                                        Divider()
-
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(
-                                                stringResource(R.string.cashier_drawer),
-                                                fontSize = 20.sp
-                                            )
-                                            Text(
-                                                "${state.userInfo.cash_register_name}",
-                                                fontSize = 30.sp
-                                            )
-                                        }
-
-                                        Divider()
-
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(
-                                                stringResource(R.string.cashier_drawer_cash),
-                                                fontSize = 24.sp
-                                            )
-                                            Text(
-                                                "${state.userInfo.cash_drawer_balance}€",
-                                                fontSize = 36.sp
-                                            )
-                                        }
-                                    }
-
                                     if (state.userInfo.transport_account_balance != null) {
+                                        Spacer(modifier = Modifier.height(10.dp))
                                         Divider()
-
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(
-                                                stringResource(R.string.cashier_bag),
-                                                fontSize = 24.sp
-                                            )
-                                            Text(
-                                                "${state.userInfo.transport_account_balance}€",
-                                                fontSize = 36.sp
-                                            )
-                                        }
+                                        ListItem(
+                                            text = {
+                                                Text(
+                                                    stringResource(R.string.cashier_bag),
+                                                )
+                                            },
+                                            secondaryText = {
+                                                Text(
+                                                    formatCurrencyValue(state.userInfo.transport_account_balance),
+                                                )
+                                            }
+                                        )
                                     }
                                 }
 
