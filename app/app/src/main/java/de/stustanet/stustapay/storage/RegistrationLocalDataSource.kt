@@ -1,23 +1,25 @@
 package de.stustanet.stustapay.storage
 
+import androidx.datastore.core.DataStore
 import de.stustanet.stustapay.model.RegistrationState
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class RegistrationLocalDataSource @Inject constructor() {
-    var _registrationState =
-        MutableStateFlow<RegistrationState>(RegistrationState.NotRegistered("deregistered"))
-    val registrationState = _registrationState.asStateFlow()
+class RegistrationLocalDataSource @Inject constructor(
+    private val regStateStore: DataStore<RegistrationState>
+) {
+    val registrationState: Flow<RegistrationState> = regStateStore.data
 
-    fun setState(registrationState: RegistrationState.Registered) {
-        _registrationState.update { registrationState }
+    suspend fun setState(registrationState: RegistrationState.Registered) {
+        regStateStore.updateData { registrationState }
     }
 
-    fun delete() {
-        _registrationState.update { RegistrationState.NotRegistered("deregistered") }
+    suspend fun delete() {
+        regStateStore.updateData {
+            // TODO: can't we just clear the datastore??
+            RegistrationState.NotRegistered("deregistered")
+        }
     }
 }
