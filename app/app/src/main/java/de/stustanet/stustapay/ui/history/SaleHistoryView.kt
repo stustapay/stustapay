@@ -26,6 +26,7 @@ import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustanet.stustapay.ui.nav.NavScaffold
 import de.stustanet.stustapay.ui.theme.errorButtonColors
 import de.stustanet.stustapay.ui.user.UserRequestState
+import de.stustanet.stustapay.util.formatCurrencyValue
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -78,7 +79,7 @@ fun SaleHistoryView(
                                     .format(DateTimeFormatter.ofPattern("E HH:mm:ss")),
                                 fontSize = 24.sp
                             )
-                            Text("${sale.total_price}€", fontSize = 24.sp)
+                            Text(formatCurrencyValue(sale.total_price), fontSize = 24.sp)
                         }
                     }
                 }
