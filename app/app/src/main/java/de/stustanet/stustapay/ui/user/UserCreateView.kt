@@ -13,9 +13,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ui.chipscan.NfcScanCard
-import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
-import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
-import de.stustanet.stustapay.ui.common.TagTextField
 import de.stustanet.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
 
@@ -34,9 +31,11 @@ fun UserCreateView(viewModel: UserViewModel) {
     if (currentTag == null) {
         Scaffold(
             content = { padding ->
-                Box(modifier = Modifier
-                    .padding(padding)
-                    .padding(20.dp)) {
+                Box(
+                    modifier = Modifier
+                        .padding(padding)
+                        .padding(20.dp)
+                ) {
                     NfcScanCard(
                         keepScanning = true,
                         onScan = { tag ->
@@ -85,66 +84,34 @@ fun UserCreateView(viewModel: UserViewModel) {
                             .fillMaxSize()
                             .padding(10.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(stringResource(R.string.user_id), fontSize = 20.sp)
-                            Text(tagIDtoString(currentTag!!), fontSize = 30.sp)
-                        }
+                        ListItem(
+                            text = { Text(stringResource(R.string.tag_uid)) },
+                            secondaryText = { Text(tagIDtoString(currentTag!!)) }
+                        )
 
                         Divider()
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                stringResource(R.string.user_username),
-                                fontSize = 20.sp,
-                                modifier = Modifier.padding(end = 20.dp)
-                            )
-                            TextField(
-                                value = login,
-                                placeholder = { Text(stringResource(R.string.user_username)) },
-                                onValueChange = { login = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                        }
+                        OutlinedTextField(
+                            label = { Text(stringResource(R.string.user_username)) },
+                            value = login,
+                            onValueChange = { login = it },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
 
-                        Divider()
-                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedTextField(
+                            label = { Text(stringResource(R.string.user_displayname)) },
+                            value = displayName,
+                            onValueChange = { displayName = it },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                stringResource(R.string.user_displayname),
-                                fontSize = 20.sp,
-                                modifier = Modifier.padding(end = 20.dp)
-                            )
-                            TextField(
-                                value = displayName,
-                                placeholder = { Text(stringResource(R.string.user_displayname)) },
-                                onValueChange = { displayName = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                        }
-
-                        Divider()
-                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedTextField(
+                            label = { Text(stringResource(R.string.user_description)) },
+                            value = description,
+                            onValueChange = { description = it },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
 
                         Row(
                             modifier = Modifier
@@ -155,26 +122,22 @@ fun UserCreateView(viewModel: UserViewModel) {
                         ) {
                             var expanded by remember { mutableStateOf(false) }
 
-                            Text(
-                                stringResource(R.string.user_roles),
-                                fontSize = 20.sp,
-                                modifier = Modifier.padding(end = 20.dp)
-                            )
                             ExposedDropdownMenuBox(
                                 expanded = expanded,
                                 onExpandedChange = { expanded = it }) {
-                                TextField(
+                                OutlinedTextField(
+                                    label = { Text(stringResource(R.string.user_roles)) },
                                     readOnly = true,
                                     value = roles.map { id ->
                                         availableRoles.find { r -> r.id == id }?.name ?: ""
-                                    }.reduceOrNull() { acc, r -> "$acc, $r" }.orEmpty(),
+                                    }.reduceOrNull { acc, r -> "$acc, $r" }.orEmpty(),
                                     onValueChange = {},
                                     trailingIcon = {
                                         ExposedDropdownMenuDefaults.TrailingIcon(
                                             expanded = expanded
                                         )
                                     },
-                                    colors = ExposedDropdownMenuDefaults.textFieldColors()
+                                    modifier = Modifier.fillMaxWidth(),
                                 )
                                 ExposedDropdownMenu(
                                     expanded = expanded,
@@ -204,30 +167,6 @@ fun UserCreateView(viewModel: UserViewModel) {
                                     }
                                 }
                             }
-                        }
-
-                        Divider()
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                stringResource(R.string.user_description),
-                                fontSize = 20.sp,
-                                modifier = Modifier.padding(end = 20.dp)
-                            )
-                            TextField(
-                                value = description,
-                                placeholder = { Text(stringResource(R.string.user_description)) },
-                                onValueChange = { description = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
                         }
                     }
                 }
