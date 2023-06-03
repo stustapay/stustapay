@@ -11,12 +11,15 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -86,10 +89,12 @@ fun CashECSelection(
     onPayRequested: CashECCallback,
     ready: Boolean,
     checkAmount: () -> Boolean,
+    viewModel: CashECSelectionViewModel = hiltViewModel(),
     status: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
 
     Scaffold(
         content = content,
@@ -112,7 +117,7 @@ fun CashECSelection(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             goToCash()
                         },
-                        enabled = ready,
+                        enabled = ready && config.canHandleCash(),
                     ) {
                         // unicode "Coin"
                         Text(

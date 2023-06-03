@@ -21,6 +21,10 @@ class TerminalLoginState(
         }
     }
 
+    fun isTerminalReady(): Boolean {
+        return terminal is TerminalConfigState.Success
+    }
+
     fun checkAccess(access: (CurrentUser, TerminalConfig) -> Boolean): Boolean {
         return if (user is UserState.LoggedIn && terminal is TerminalConfigState.Success) {
             access(user.user, terminal.config)

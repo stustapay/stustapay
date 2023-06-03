@@ -15,11 +15,11 @@ fun TicketError(
     viewModel: TicketViewModel
 ) {
     val status by viewModel.status.collectAsStateWithLifecycle()
-    val ticketConfig by viewModel.ticketConfig.collectAsStateWithLifecycle()
+    val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
 
     ErrorScreen(
         onDismiss = onDismiss,
-        topBarTitle = ticketConfig.tillName,
+        topBarTitle = config.title().title,
     ) {
         Text(text = stringResource(R.string.ticket_error_preambel), fontSize = 30.sp)
         Text(status, fontSize = 24.sp)
