@@ -24,13 +24,20 @@ fun PreviewStatusText() {
 fun StatusText(
     status: String,
     modifier: Modifier = Modifier,
+    scrollable: Boolean = true,
 ) {
     val scrollState = rememberScrollState()
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 30.dp, max = 65.dp)
+
+    val mod = if (scrollable) {
+        modifier
             .verticalScroll(scrollState)
+            .heightIn(min = 30.dp, max = 65.dp)
+    } else {
+        modifier
+    }
+    Box(
+        modifier = mod
+            .fillMaxWidth()
     ) {
         Text(
             text = status,

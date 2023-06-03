@@ -112,4 +112,17 @@
     <string name="under_18_years">Unter 18</string>
     <string name="under_16_years">Unter 16</string>
     <string name="failed_fetching">Fehler beim Abruf</string>
+    <string name="hand_over_cash_register">Barkasse übergeben</string>
+    <string name="nfc_scan_login">📡 Zum einloggen Chip scannen</string>
+    <string name="not_logged_in">Nicht eingeloggt</string>
+    <string name="scan_transfer_cashregister_current">📡 Aktuellen Kassenbesitzer scannen</string>
+    <string name="scan_transfer_cashregister_new">📡 Neuen Kassenbesitzer scannen</string>
+    <string name="cash_register_transfer_success">Kassenlade erfolgreich übertragen!</string>
+    <string name="cash_register_transfer_error">Fehler beim Barkassentransfer:</string>
+    <string name="transfer_cash_register">Barkasse übergeben</string>
+    <string name="cash_register_transferring">Übergabe wird durchgeführt...</string>
+    <string name="cash_register_notassigned">Barkasse ist keinem Kassierer mehr zugeordnet.</string>
+    <string name="cash_register_unexpected_assign">Barkasse ist nun %s zugewiesen, sollte aber %s sein.</string>
+    <string name="cash_register_same_source_target">Alter und neuer Chip sind gleich.</string>
+    <string name="user_login_other">Neuen Nutzer einloggen</string>
 </resources>

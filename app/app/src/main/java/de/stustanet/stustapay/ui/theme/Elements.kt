@@ -12,3 +12,11 @@ fun errorButtonColors(): ButtonColors {
         backgroundColor = MaterialTheme.colors.error,
     )
 }
+
+@Composable
+fun confirmButtonColors(): ButtonColors {
+    return ButtonDefaults.buttonColors(
+        contentColor = MaterialTheme.colors.onError,
+        backgroundColor = MaterialTheme.colors.error,
+    )
+}

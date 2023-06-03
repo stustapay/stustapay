@@ -189,5 +189,10 @@ interface TerminalAPI {
     /**
      * Get information about cashier / orga accounts.
      */
-    suspend fun getCashierInfo(tag: UserInfoPayload): Response<UserInfo>
+    suspend fun getUserInfo(tag: UserInfoPayload): Response<UserInfo>
+
+    /**
+     * Pass a cash register to another cashier.
+     */
+    suspend fun transferCashRegister(transfer: TransferCashRegisterPayload): Response<CashRegister>
 }

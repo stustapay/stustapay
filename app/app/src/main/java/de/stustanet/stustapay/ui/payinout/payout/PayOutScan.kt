@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.sp
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanCard
 import de.stustanet.stustapay.ui.common.StatusText
+import de.stustanet.stustapay.ui.theme.NfcScanStyle
 
 
 @Composable
@@ -46,8 +47,7 @@ fun PayOutScan(
                     Text(
                         text = "Scan a Chip",
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        fontSize = 40.sp
+                        style = NfcScanStyle,
                     )
                     Text(
                         // money with wings
