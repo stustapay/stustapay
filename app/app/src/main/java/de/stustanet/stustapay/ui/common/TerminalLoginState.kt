@@ -15,7 +15,7 @@ class TerminalLoginState(
 
     fun title(): TillName {
         return if (terminal is TerminalConfigState.Success) {
-            TillName(terminal.config.name, terminal.config.description)
+            TillName(terminal.config.name, terminal.config.profile_name)
         } else {
             TillName("StuStaPay")
         }
@@ -31,5 +31,12 @@ class TerminalLoginState(
 
     fun hasConfig(): Boolean {
         return terminal is TerminalConfigState.Success
+    }
+
+    fun canHandleCash(): Boolean {
+        if (terminal !is TerminalConfigState.Success) {
+            return false;
+        }
+        return terminal.config.cash_register_id != null;
     }
 }
