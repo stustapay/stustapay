@@ -77,7 +77,8 @@ fun CashierStatusView(
                                         )
                                     }
 
-                                    if (state.userInfo.cash_drawer_balance != null) {
+                                    if (state.userInfo.cash_register_name != null ||
+                                        state.userInfo.cash_drawer_balance != 0.0) {
                                         Divider()
 
                                         Row(
@@ -88,6 +89,24 @@ fun CashierStatusView(
                                         ) {
                                             Text(
                                                 stringResource(R.string.cashier_drawer),
+                                                fontSize = 20.sp
+                                            )
+                                            Text(
+                                                "${state.userInfo.cash_register_name}",
+                                                fontSize = 30.sp
+                                            )
+                                        }
+
+                                        Divider()
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                stringResource(R.string.cashier_drawer_cash),
                                                 fontSize = 24.sp
                                             )
                                             Text(
@@ -96,7 +115,6 @@ fun CashierStatusView(
                                             )
                                         }
                                     }
-
 
                                     if (state.userInfo.transport_account_balance != null) {
                                         Divider()

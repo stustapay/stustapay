@@ -54,6 +54,6 @@ val startpageItems = listOf(
         icon = Icons.Filled.Info,
         label = R.string.cashier_title,
         navDestination = RootNavDests.cashierStatus,
-        canAccess = { _, _ -> true }
+        canAccess = { u, t -> Access.canManageCashiers(u) or t.allow_cash_out or t.allow_top_up or t.allow_ticket_sale }
     )
 )
