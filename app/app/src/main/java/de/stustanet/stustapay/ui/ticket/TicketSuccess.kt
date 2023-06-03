@@ -41,7 +41,7 @@ fun TicketSuccess(
 ) {
     val saleCompleted by viewModel.saleCompleted.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
-    val config by viewModel.ticketConfig.collectAsStateWithLifecycle()
+    val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
 
     // so we have a regular variable..
     val saleCompletedV = saleCompleted
@@ -59,7 +59,7 @@ fun TicketSuccess(
     val haptic = LocalHapticFeedback.current
 
     NavScaffold(
-        title = { Text(config.tillName) },
+        title = { Text(config.title().title) },
         bottomBar = {
             Column(
                 modifier = Modifier

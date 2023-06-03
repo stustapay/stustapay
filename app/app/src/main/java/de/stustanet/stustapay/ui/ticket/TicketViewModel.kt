@@ -13,11 +13,10 @@ import de.stustanet.stustapay.net.Response
 import de.stustanet.stustapay.repository.ECPaymentRepository
 import de.stustanet.stustapay.repository.ECPaymentResult
 import de.stustanet.stustapay.repository.TerminalConfigRepository
-import de.stustanet.stustapay.repository.TerminalConfigState
 import de.stustanet.stustapay.repository.TicketRepository
+import de.stustanet.stustapay.ui.common.TerminalLoginState
 import de.stustanet.stustapay.util.mapState
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.math.BigDecimal
@@ -65,9 +64,12 @@ class TicketViewModel @Inject constructor(
     val saleCompleted = _saleCompleted.asStateFlow()
 
     // configuration infos from backend
-    val ticketConfig: StateFlow<TicketConfig> = mapTicketConfig(
-        terminalConfigRepository.terminalConfigState
-    )
+    val terminalLoginState = terminalConfigRepository.terminalConfigState.mapState(
+        initialValue = TerminalLoginState(),
+        scope = viewModelScope
+    ) { terminal ->
+        TerminalLoginState(terminal = terminal)
+    }
 
     fun navTo(page: TicketPage) {
         _navState.update { page }
@@ -187,7 +189,7 @@ class TicketViewModel @Inject constructor(
         // check if the sale is nice and well
         val response = ticketRepository.checkTicketSale(
             // HACK: we always say Cash, because the payment method is only known after the confirmation step
-            selection.getNewTicketSale(PaymentMethod.Cash)
+            selection.getNewTicketSale(null)
         )
 
         when (response) {
@@ -278,33 +280,5 @@ class TicketViewModel @Inject constructor(
                 _status.update { response.msg() }
             }
         }
-    }
-
-    private fun mapTicketConfig(
-        terminalConfigFlow: StateFlow<TerminalConfigState>,
-    ): StateFlow<TicketConfig> {
-
-        return terminalConfigFlow
-            .mapState(TicketConfig(), viewModelScope) { terminalConfig ->
-                when (terminalConfig) {
-                    is TerminalConfigState.Success -> {
-                        _status.update { "ready" }
-                        TicketConfig(
-                            ready = true,
-                            tillName = terminalConfig.config.name,
-                        )
-                    }
-
-                    is TerminalConfigState.Error -> {
-                        _status.update { terminalConfig.message }
-                        TicketConfig()
-                    }
-
-                    is TerminalConfigState.NoConfig -> {
-                        _status.update { "Loading config..." }
-                        TicketConfig()
-                    }
-                }
-            }
     }
 }

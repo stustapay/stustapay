@@ -1,6 +1,7 @@
 package de.stustanet.stustapay.ui.payinout.topup
 
 import android.app.Activity
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -15,6 +16,7 @@ import de.stustanet.stustapay.ui.common.amountselect.AmountConfig
 import de.stustanet.stustapay.ui.common.amountselect.AmountSelection
 import de.stustanet.stustapay.ui.common.pay.CashECCallback
 import de.stustanet.stustapay.ui.common.pay.CashECPay
+import de.stustanet.stustapay.ui.common.pay.NoCashRegisterWarning
 import kotlinx.coroutines.launch
 
 
@@ -50,18 +52,23 @@ fun TopUpSelection(
         ready = topUpConfig.hasConfig(),
         getAmount = { topUpState.currentAmount },
     ) { paddingValues ->
-        AmountSelection(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 10.dp)
-                .padding(bottom = paddingValues.calculateBottomPadding()),
-            initialAmount = { topUpState.currentAmount },
-            onAmountUpdate = { viewModel.setAmount(it) },
-            onClear = { viewModel.clearDraft() },
-            config = AmountConfig.Money(
-                limit = 150u,
-                cents = false,
+        Column {
+            if (!topUpConfig.canHandleCash()) {
+                NoCashRegisterWarning(modifier = Modifier.padding(4.dp))
+            }
+            AmountSelection(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 10.dp)
+                    .padding(bottom = paddingValues.calculateBottomPadding()),
+                initialAmount = { topUpState.currentAmount },
+                onAmountUpdate = { viewModel.setAmount(it) },
+                onClear = { viewModel.clearDraft() },
+                config = AmountConfig.Money(
+                    limit = 150u,
+                    cents = false,
+                )
             )
-        )
+        }
     }
 }

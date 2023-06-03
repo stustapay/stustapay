@@ -46,30 +46,31 @@ fun SaleConfirm(
         topBar = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 TopAppBar(title = { Text(saleConfig.tillName) })
-
-                ProductConfirmItem(
-                    name = stringResource(R.string.price),
-                    price = checkedSale.total_price,
-                    bigStyle = true,
-                )
-                Divider(thickness = 2.dp)
-                ProductConfirmItem(
-                    name = stringResource(R.string.credit_left),
-                    price = checkedSale.new_balance,
-                )
-                if (checkedSale.new_voucher_balance > 0) {
+                Column(modifier = Modifier.padding(horizontal = 10.dp)) {
                     ProductConfirmItem(
-                        name = stringResource(R.string.remaining_vouchers),
-                        quantity = checkedSale.new_voucher_balance,
+                        name = stringResource(R.string.price),
+                        price = checkedSale.total_price,
+                        bigStyle = true,
                     )
+                    Divider(thickness = 2.dp)
+                    ProductConfirmItem(
+                        name = stringResource(R.string.credit_left),
+                        price = checkedSale.new_balance,
+                    )
+                    if (checkedSale.new_voucher_balance > 0) {
+                        ProductConfirmItem(
+                            name = stringResource(R.string.remaining_vouchers),
+                            quantity = checkedSale.new_voucher_balance,
+                        )
+                    }
+                    Divider(thickness = 2.dp)
                 }
-                Divider(thickness = 2.dp)
             }
         },
         content = { paddingValues ->
             LazyColumn(
                 modifier = Modifier
-                    .padding(bottom = paddingValues.calculateBottomPadding())
+                    .padding(paddingValues)
                     .padding(horizontal = 10.dp)
                     .fillMaxSize()
             ) {

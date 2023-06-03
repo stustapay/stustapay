@@ -278,7 +278,7 @@ data class TicketScanResult(
 data class NewTicketSale(
     val uuid: String,
     val customer_tag_uids: List<ULong>,
-    val payment_method: PaymentMethod,
+    val payment_method: PaymentMethod?,
 )
 
 
@@ -289,7 +289,7 @@ data class NewTicketSale(
 @Serializable
 data class PendingTicketSale(
     val uuid: String,
-    val payment_method: PaymentMethod,
+    val payment_method: PaymentMethod?,
     val line_items: List<PendingLineItem>,
     val scanned_tickets: List<TicketScanResultEntry>,
     val total_price: Double,
