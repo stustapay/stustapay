@@ -90,7 +90,7 @@ fun ProductConfirmItem(
             .padding(vertical = 2.dp)
     ) {
         Row(
-            modifier = Modifier.weight(0.55f),
+            modifier = Modifier.weight(0.5f),
         ) {
             Text(
                 text = name,
@@ -102,7 +102,7 @@ fun ProductConfirmItem(
         Row(
             modifier = Modifier
                 .padding(horizontal = 5.dp)
-                .weight(0.45f),
+                .weight(0.5f),
             horizontalArrangement = Arrangement.End,
         ) {
             Text(
