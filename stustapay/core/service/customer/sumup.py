@@ -149,7 +149,7 @@ class SumupService(DBService):
         sumup_url = (
             f"{self.SUMUP_API_URL}/merchants/{self.cfg.customer_portal.sumup_config.merchant_code}/payment-methods"
         )
-        async with aiohttp.ClientSession(headers=await self._get_sumup_auth_headers()) as session:
+        async with aiohttp.ClientSession(trust_env=True, headers=await self._get_sumup_auth_headers()) as session:
             try:
                 async with session.get(sumup_url, timeout=2) as response:
                     if not response.ok:
@@ -166,7 +166,7 @@ class SumupService(DBService):
         self.sumup_reachable = True
 
     async def _create_sumup_checkout(self, *, checkout: SumupCreateCheckout) -> SumupCheckout:
-        async with aiohttp.ClientSession(headers=await self._get_sumup_auth_headers()) as session:
+        async with aiohttp.ClientSession(trust_env=True, headers=await self._get_sumup_auth_headers()) as session:
             try:
                 payload = checkout.json()
                 async with session.post(self.SUMUP_CHECKOUT_URL, data=payload, timeout=2) as response:
@@ -185,7 +185,7 @@ class SumupService(DBService):
         return SumupCheckout.parse_obj(response_json)
 
     async def _get_checkout(self, *, checkout_id: str) -> SumupCheckout:
-        async with aiohttp.ClientSession(headers=await self._get_sumup_auth_headers()) as session:
+        async with aiohttp.ClientSession(trust_env=True, headers=await self._get_sumup_auth_headers()) as session:
             try:
                 async with session.get(f"{self.SUMUP_CHECKOUT_URL}/{checkout_id}", timeout=2) as response:
                     if not response.ok:
