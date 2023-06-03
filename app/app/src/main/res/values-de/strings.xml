@@ -76,10 +76,12 @@
     <string name="user_roles">Rollen</string>
     <string name="user_privileged">Benutzer hat Sonderrechte und kann nicht bearbeitet werden</string>
     <string name="user_description">Beschreibung</string>
-    <string name="user_create_title">Benutzer Erstellen</string>
-    <string name="user_display_title">Benutzer Anzeigen und Verwalten</string>
-    <string name="user_update_title">Benutzer Verwalten</string>
+    <string name="user_create_title">Benutzer erstellen</string>
+    <string name="user_display_title">Benutzer anzeigen und verwalten</string>
+    <string name="user_update_title">Benutzer verwalten</string>
     <string name="user_select">Rolle auswählen:</string>
+    <string name="user_login_other">Anderen Benutzer einloggen / Rolle wechseln</string>
+
     <string name="topup">Aufladung</string>
     <string name="previous_balance">Altes Guthaben</string>
     <string name="error">Fehler</string>

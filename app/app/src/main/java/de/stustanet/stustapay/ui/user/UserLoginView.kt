@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,8 +31,8 @@ private enum class ScanTarget {
  * how the user can select the login state.
  */
 sealed interface RoleSelectionState {
-    object Closed: RoleSelectionState
-    data class Select(var tag: UserTag): RoleSelectionState
+    object Closed : RoleSelectionState
+    data class Select(var tag: UserTag) : RoleSelectionState
 }
 
 
@@ -99,8 +98,7 @@ fun UserLoginView(
                                 viewModel.login(roleSelectionV.tag, userRolesV.roles[0].id)
                             }
                         }
-                    }
-                    else {
+                    } else {
                         RoleSelectionDialog(
                             roles = userRolesV,
                             onDismiss = {
@@ -179,7 +177,19 @@ fun UserLoginView(
                     target = ScanTarget.Login
                 },
             ) {
-                Text(stringResource(R.string.user_login), fontSize = 24.sp)
+                if (userUIStateV is UserUIState.LoggedIn) {
+                    Text(
+                        stringResource(R.string.user_login_other),
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    Text(
+                        stringResource(R.string.user_login),
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
 
@@ -195,7 +205,11 @@ fun UserLoginView(
                 },
                 colors = errorButtonColors(),
             ) {
-                Text(stringResource(R.string.user_logout), fontSize = 24.sp)
+                Text(
+                    stringResource(R.string.user_logout),
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
 
@@ -226,7 +240,11 @@ fun UserLoginView(
                     .padding(8.dp),
                 onClick = { goToUserCreateView() }
             ) {
-                Text(stringResource(R.string.user_create_title), fontSize = 24.sp, textAlign = TextAlign.Center)
+                Text(
+                    stringResource(R.string.user_create_title),
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
 
@@ -237,7 +255,11 @@ fun UserLoginView(
                     .padding(8.dp),
                 onClick = { goToUserDisplayView() }
             ) {
-                Text(stringResource(R.string.user_display_title), fontSize = 24.sp, textAlign = TextAlign.Center)
+                Text(
+                    stringResource(R.string.user_display_title),
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
