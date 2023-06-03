@@ -64,7 +64,7 @@ val NumberKeyboardStyle = TextStyle(
 
 val MoneyAmountStyle = TextStyle(
     fontWeight = FontWeight.Bold,
-    fontSize = 60.sp,
+    fontSize = 70.sp,
 )
 
 val ProductConfirmItemStyle = TextStyle(
