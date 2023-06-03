@@ -345,6 +345,7 @@ class TillService(DBService):
             cash_register_id=cash_register_id,
             cash_register_name=cash_register_name,
             user_privileges=user_privileges,
+            profile_name=profile.name,
             allow_top_up=profile.allow_top_up,
             allow_cash_out=profile.allow_cash_out,
             allow_ticket_sale=allow_ticket_sale,

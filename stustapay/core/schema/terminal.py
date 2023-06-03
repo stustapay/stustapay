@@ -35,6 +35,7 @@ class TerminalConfig(BaseModel):
     id: int
     name: str
     description: Optional[str]
+    profile_name: str
     user_privileges: Optional[list[Privilege]]
     cash_register_id: Optional[int]
     cash_register_name: Optional[str]

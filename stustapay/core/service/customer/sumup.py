@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import traceback
 import uuid
 from datetime import datetime, timedelta, timezone
 from functools import wraps
@@ -111,8 +112,8 @@ def requires_sumup_enabled(func):
             )
         conn = kwargs["conn"]
         is_sumup_enabled = await self.config_service.is_sumup_topup_enabled(conn=conn)
-        if not is_sumup_enabled:
-            raise InvalidArgument("Online Top Up is currently dissabled")
+        if not is_sumup_enabled or not self.sumup_reachable:
+            raise InvalidArgument("Online Top Up is currently disabled")
 
         return await func(self, **kwargs)
 
@@ -134,6 +135,8 @@ class SumupService(DBService):
         self.config_service = config_service
         self.logger = logging.getLogger("customer")
 
+        self.sumup_reachable = True
+
     async def _get_sumup_auth_headers(self) -> dict:
         return {
             "Accept": "application/json",
@@ -146,26 +149,24 @@ class SumupService(DBService):
         sumup_url = (
             f"{self.SUMUP_API_URL}/merchants/{self.cfg.customer_portal.sumup_config.merchant_code}/payment-methods"
         )
-        async with aiohttp.ClientSession(headers=await self._get_sumup_auth_headers()) as session:
+        async with aiohttp.ClientSession(trust_env=True, headers=await self._get_sumup_auth_headers()) as session:
             try:
                 async with session.get(sumup_url, timeout=2) as response:
                     if not response.ok:
                         self.logger.error(
-                            f"Sumup API returned status code {response.status} with body {await response.text()}"
+                            f"Sumup API returned status code {response.status} with body {await response.text()}, disabling online top up"
                         )
-                        if response.status == 403 or response.status == 401:
-                            raise SumUpError("Invalid SumUp api key")
+                        return
 
-                        raise SumUpError(f"Sumup API returned an error {response.status}")
-
-            except asyncio.TimeoutError as e:
-                self.logger.error("Sumup API timeout")
-                raise SumUpError("Sumup API timeout") from e
+            except Exception:  # pylint: disable=bare-except
+                self.logger.error(f"Sumup API error {traceback.print_exc()}")
+                return
 
         self.logger.info("Successfully validated the sumup api key")
+        self.sumup_reachable = True
 
     async def _create_sumup_checkout(self, *, checkout: SumupCreateCheckout) -> SumupCheckout:
-        async with aiohttp.ClientSession(headers=await self._get_sumup_auth_headers()) as session:
+        async with aiohttp.ClientSession(trust_env=True, headers=await self._get_sumup_auth_headers()) as session:
             try:
                 payload = checkout.json()
                 async with session.post(self.SUMUP_CHECKOUT_URL, data=payload, timeout=2) as response:
@@ -184,7 +185,7 @@ class SumupService(DBService):
         return SumupCheckout.parse_obj(response_json)
 
     async def _get_checkout(self, *, checkout_id: str) -> SumupCheckout:
-        async with aiohttp.ClientSession(headers=await self._get_sumup_auth_headers()) as session:
+        async with aiohttp.ClientSession(trust_env=True, headers=await self._get_sumup_auth_headers()) as session:
             try:
                 async with session.get(f"{self.SUMUP_CHECKOUT_URL}/{checkout_id}", timeout=2) as response:
                     if not response.ok:
@@ -208,8 +209,8 @@ class SumupService(DBService):
             raise NotFound(element_typ="checkout", element_id=checkout_id)
         return CustomerCheckout.parse_obj(row)
 
-    async def _process_topup(self, conn: asyncpg.Connection, checkout: SumupCheckout):
-        # TODO: this topup processing is very incomplete
+    @staticmethod
+    async def _process_topup(conn: asyncpg.Connection, checkout: SumupCheckout):
         top_up_product = await fetch_top_up_product(conn=conn)
         customer_account_id = await conn.fetchval(
             "select customer_account_id from customer_sumup_checkout where checkout_reference = $1",
@@ -257,7 +258,7 @@ class SumupService(DBService):
 
     async def run_sumup_checkout_processing(self):
         sumup_enabled = await self.config_service.is_sumup_topup_enabled()
-        if not sumup_enabled:
+        if not sumup_enabled or not self.sumup_reachable:
             return
 
         while True:
@@ -315,7 +316,8 @@ class SumupService(DBService):
 
         # update both valid_until and status in db
         await conn.fetchrow(
-            "update customer_sumup_checkout set status = $1, valid_until = $2, last_checked = now(), check_interval = $4 "
+            "update customer_sumup_checkout set status = $1, valid_until = $2, last_checked = now(), "
+            "   check_interval = $4 "
             "where id = $3",
             sumup_checkout.status.name,
             sumup_checkout.valid_until,
