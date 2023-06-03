@@ -274,5 +274,7 @@ class CashierService(DBService):
 
         await conn.execute("update usr set cash_register_id = null where id = $1", cashier.id)
         await conn.execute("update till set z_nr = z_nr + 1 where id = $1", VIRTUAL_TILL_ID)
+        # correct the actual balance to rule out any floating point errors / representation errors
+        await conn.execute("update account set balance = 0 where id = $1", cashier.cashier_account_id)
 
         return CloseOutResult(cashier_id=cashier.id, imbalance=imbalance)
