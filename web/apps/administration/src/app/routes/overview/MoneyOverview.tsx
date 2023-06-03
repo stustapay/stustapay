@@ -75,6 +75,9 @@ export const MoneyOverview: React.FC = () => {
       <Grid item sm={4} md={2}>
         <BalanceCard account={selectAccountById(data, SystemAccounts.DEPOSIT)} />
       </Grid>
+      <Grid item sm={4} md={2}>
+        <BalanceCard account={selectAccountById(data, SystemAccounts.SUMUP_CUSTOMER_TOPUP)} />
+      </Grid>
     </Grid>
   );
 };

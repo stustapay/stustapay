@@ -10,6 +10,7 @@ export const SystemAccounts = {
   MONEY_VOUCHER_CREATE: 6,
   CASH_EXIT: 7,
   CASH_SALE_SOURCE: 8,
+  SUMUP_CUSTOMER_TOPUP: 9,
 } as const;
 
 export const UserTagDetailSchema = z.object({
