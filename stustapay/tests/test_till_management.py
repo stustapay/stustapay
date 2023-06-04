@@ -442,3 +442,22 @@ class TillManagementTest(TerminalTestCase):
         )
         self.assertEqual(0, row["balance"])
         self.assertIsNone(row["cash_register_id"])
+
+        # we can transfer it back
+        await self.till_service.register.transfer_cash_register_terminal(
+            token=self.terminal_token, source_cashier_tag_uid=cashier2_uid, target_cashier_tag_uid=self.cashier_tag_uid
+        )
+
+        row = await self.db_pool.fetchrow(
+            "select usr.cash_register_id, a.balance from usr join account a on usr.cashier_account_id = a.id where usr.id = $1",
+            cashier2.id,
+        )
+        self.assertEqual(0, row["balance"])
+        self.assertIsNone(row["cash_register_id"])
+
+        row = await self.db_pool.fetchrow(
+            "select usr.cash_register_id, a.balance from usr join account a on usr.cashier_account_id = a.id where usr.id = $1",
+            self.cashier.id,
+        )
+        self.assertEqual(self.stocking.total, row["balance"])
+        self.assertEqual(self.register.id, row["cash_register_id"])
