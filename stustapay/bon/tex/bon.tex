@@ -85,7 +85,7 @@
     \end{center}
     \vspace{2em}
     
-    \textbf{Rechnung Nr. \VAR["{:010}".format(order.id)]} \hspace{\fill}  \VAR[order.booked_at.date()]
+    \textbf{Rechnung Nr. \VAR["{:010}".format(order.id)]} \hspace{\fill}  \VAR[order.booked_at.date()|latex]
 
     % Addresse und Steuer ID
     \begin{flushright}
@@ -102,7 +102,7 @@
         ~                    & \textbf{Produkt}        & \textbf{Einzelpreis}   & \textbf{Gesamt}              &                       \\
         \hline
         \BLOCK[ for item in order.line_items ]
-        \VAR[item.quantity]x & \VAR[item.product.name] & \VAR[item.product_price|money] & \VAR[item.total_price|money] & [\VAR[item.tax_name]] \\
+        \VAR[item.quantity|latex]x & \VAR[item.product.name|latex] & \VAR[item.product_price|money] & \VAR[item.total_price|money] & [\VAR[item.tax_name|latex]] \\
         \BLOCK[endfor]
     \end{tabularx}
 
@@ -118,7 +118,7 @@
         \textbf{MwSt.\%}                                         & \textbf{Brutto}                & \textbf{Netto}                   & \textbf{MwSt.}                 \\
         \hline
         \BLOCK[for tax_rate in tax_rate_aggregations ]
-        \VAR[tax_rate.tax_name]=\VAR[tax_rate.tax_rate|percent] & \VAR[tax_rate.total_price|money] & \VAR[tax_rate.total_no_tax|money] & \VAR[tax_rate.total_tax|money] \\
+        \VAR[tax_rate.tax_name|latex]=\VAR[tax_rate.tax_rate|percent] & \VAR[tax_rate.total_price|money] & \VAR[tax_rate.total_no_tax|money] & \VAR[tax_rate.total_tax|money] \\
         \BLOCK[endfor]
         \hline
         ~                                                        & \VAR[order.total_price|money]    & \VAR[order.total_no_tax|money]    & \VAR[order.total_tax|money]    \\
@@ -129,11 +129,11 @@
     \begin{center}
     \footnotesize
     \begin{tabular*}{10cm}{ p{5cm} p{6cm} }
-        Zahlmethode:        & \VAR[order.payment_method.name]    \\
+        Zahlmethode:        & \VAR[order.payment_method.name|latex]    \\
 % We use the TSE start and stop time instead of our order booking time
 %         Vorgangszeitpunkt:  & \VAR[order.booked_at.astimezone()]  \\
-        Kassierer:          & \VAR[order.cashier_id]  \\
-        Seriennummer Kasse: & \VAR[order.till_id]     \\
+        Kassierer:          & \VAR[order.cashier_id|latex]  \\
+        Seriennummer Kasse: & \VAR[order.till_id|latex]     \\
         \BLOCK[if order.signature_status == "done"]
         Transaktionsnummer: & \VAR[order.tse_transaction|latex] \\
         Signaturzähler:     & \VAR[order.tse_signaturenr|latex] \\
