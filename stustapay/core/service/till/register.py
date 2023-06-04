@@ -318,6 +318,9 @@ class TillRegisterService(DBService):
     async def _transfer_cash_register(
         conn: asyncpg.Connection, source_cashier_id: int, target_cashier_id: int
     ) -> CashRegister:
+        if source_cashier_id == target_cashier_id:
+            raise InvalidArgument("Cashiers must differ")
+
         source_cashier = await conn.fetchrow(
             "select t.id as till_id, usr.id as cashier_id, usr.cash_register_id, usr.cashier_account_id, a.balance "
             "from usr "
@@ -354,7 +357,7 @@ class TillRegisterService(DBService):
 
         await book_transaction(
             conn=conn,
-            source_account_id=source_cashier["cashier_id"],
+            source_account_id=source_cashier["cashier_account_id"],
             target_account_id=target_cashier["cashier_account_id"],
             amount=source_cashier["balance"],
             conducting_user_id=source_cashier["cashier_id"],
