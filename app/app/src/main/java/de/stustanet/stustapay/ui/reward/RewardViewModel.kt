@@ -19,11 +19,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
+sealed interface RewardStatus {
+    object Idle : RewardStatus
+    data class Error(val msg: String) : RewardStatus
+    data class Success(val msg: String) : RewardStatus
+}
 
 @HiltViewModel
 class RewardViewModel @Inject constructor(
-    private val terminalConfigRepository: TerminalConfigRepository,
-    private val userRepository: UserRepository,
+    terminalConfigRepository: TerminalConfigRepository,
+    userRepository: UserRepository,
     private val customerRepository: CustomerRepository,
     private val resourcesProvider: ResourcesProvider,
 ) : ViewModel() {
@@ -45,20 +50,22 @@ class RewardViewModel @Inject constructor(
     private val _newTicket = MutableStateFlow(false)
     val newTicket = _newTicket.asStateFlow()
 
-    private val _status = MutableStateFlow("")
+    private val _status = MutableStateFlow<RewardStatus>(RewardStatus.Idle)
     val status = _status.asStateFlow()
 
     private suspend fun grantVouchers(tag: UserTag, vouchers: UInt) {
         when (val resp = customerRepository.grantVouchers(tag, vouchers)) {
             is Response.OK -> {
                 _status.update {
-                    resourcesProvider.getString(R.string.vouchers_granted).format(vouchers)
+                    RewardStatus.Success(
+                        resourcesProvider.getString(R.string.vouchers_granted).format(vouchers)
+                    )
                 }
                 clearSelection()
             }
 
             is Response.Error -> {
-                _status.update { resp.msg() }
+                _status.update { RewardStatus.Error(resp.msg()) }
             }
         }
     }
@@ -71,12 +78,12 @@ class RewardViewModel @Inject constructor(
                 } else {
                     ""
                 }
-                _status.update { resourcesProvider.getString(R.string.free_ticket_activated) + voucherAmount }
+                _status.update { RewardStatus.Success(resourcesProvider.getString(R.string.free_ticket_activated) + voucherAmount) }
                 clearSelection()
             }
 
             is Response.Error -> {
-                _status.update { resp.msg() }
+                _status.update { RewardStatus.Error(resp.msg()) }
             }
         }
     }
@@ -97,6 +104,7 @@ class RewardViewModel @Inject constructor(
     fun vouchersChanged(amount: UInt) {
         // limited in amount selection already
         _vouchers.update { amount }
+        _status.update { RewardStatus.Idle }
     }
 
     fun vouchersCleared() {
@@ -105,6 +113,7 @@ class RewardViewModel @Inject constructor(
 
     fun selectNewTicket() {
         _newTicket.update { true }
+        _status.update { RewardStatus.Idle }
     }
 
     fun clearNewTicket() {

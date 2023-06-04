@@ -1,23 +1,29 @@
 package de.stustanet.stustapay.ui.sale
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.Button
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustanet.stustapay.R
+import de.stustanet.stustapay.ui.common.FailureIcon
 
 @Composable
 fun SaleError(
@@ -43,16 +49,9 @@ fun SaleError(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Image(
-                        imageVector = Icons.Filled.Warning,
-                        modifier = Modifier
-                            .size(size = 60.dp)
-                            .padding(top = 2.dp),
-                        contentDescription = "Error!",
-                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onError),
-                    )
+                    FailureIcon(modifier = Modifier.size(60.dp))
 
-                    Text(text = "Error in sale check:", fontSize = 30.sp)
+                    Text(text = stringResource(R.string.sale_check_error), fontSize = 30.sp)
 
                     Text(status, fontSize = 24.sp)
                 }

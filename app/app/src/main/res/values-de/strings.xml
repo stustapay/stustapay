@@ -127,5 +127,6 @@
     <string name="cash_register_unexpected_assign">Barkasse ist nun %s zugewiesen, sollte aber %s sein.</string>
     <string name="cash_register_same_source_target">Alter und neuer Chip sind gleich.</string>
     <string name="no_cash_register">Keine Kassenschublade</string>
+    <string name="sale_check_error">Fehler bei Bestellprüfung:</string>
     <string name="tag_uid">Chip ID</string>
 </resources>

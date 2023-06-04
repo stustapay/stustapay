@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustanet.stustapay.R
+import de.stustanet.stustapay.ui.common.SuccessIcon
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
 
 
@@ -77,15 +78,7 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Image(
-                        imageVector = Icons.Filled.CheckCircle,
-                        modifier = Modifier
-                            .size(size = 120.dp)
-                            .clip(shape = CircleShape)
-                            .padding(top = 2.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-                        contentDescription = stringResource(R.string.success),
-                    )
+                    SuccessIcon(modifier = Modifier.size(120.dp))
 
                     ProductConfirmItem(
                         name = stringResource(R.string.price),
