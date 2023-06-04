@@ -129,4 +129,11 @@
     <string name="no_cash_register">Keine Kassenschublade</string>
     <string name="sale_check_error">Fehler bei Bestellprüfung:</string>
     <string name="tag_uid">Chip ID</string>
+    <string name="ticket_order_booked">Bestellung gebucht!</string>
+    <string name="ticket_order_validated">Ticketbestellung gültig!</string>
+    <string name="order_checking">Bestellung wird geprüft...</string>
+    <string name="ticket_order_cleared">Bestellung zurückgesetzt</string>
+    <string name="ticket_order_cleared_success">Bereit für neue Bestellung.</string>
+    <string name="ticket_unknown">Ticket unbekannt.</string>
+    <string name="ticket_valid">Ticket gültig.</string>
 </resources>
