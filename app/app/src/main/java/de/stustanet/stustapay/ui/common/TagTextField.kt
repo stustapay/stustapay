@@ -34,7 +34,7 @@ fun TagTextField(
 }
 
 fun tagIDtoString(id: ULong): String {
-    val hexChar = "0123456789abcdef"
+    val hexChar = "0123456789ABCDEF"
     var ret = ""
 
     for (i in 0 until 7) {
@@ -46,9 +46,10 @@ fun tagIDtoString(id: ULong): String {
     return ret
 }
 
-fun tagIDfromString(s: String): ULong? {
+fun tagIDfromString(id: String): ULong? {
     val hexChar = "0123456789abcdef"
     var ret: ULong = 0u
+    val s = id.lowercase()
 
     if (s.length != 14) {
         return null
