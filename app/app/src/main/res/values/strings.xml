@@ -130,4 +130,11 @@
     <string name="no_cash_register">No cash register</string>
     <string name="sale_check_error">Error in sale check:</string>
     <string name="tag_uid">Chip ID</string>
+    <string name="ticket_order_booked">Order booked!</string>
+    <string name="ticket_order_validated">Ticket order validated!</string>
+    <string name="order_checking">Checking order...</string>
+    <string name="ticket_order_cleared">Order cleared</string>
+    <string name="ticket_order_cleared_success">Ready for new order.</string>
+    <string name="ticket_unknown">Ticket unknown.</string>
+    <string name="ticket_valid">Ticket is valid.</string>
 </resources>

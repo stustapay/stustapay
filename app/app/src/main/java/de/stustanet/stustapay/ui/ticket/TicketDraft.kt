@@ -28,6 +28,13 @@ data class TicketDraft(
     var statusSerial: ULong = 0u,
 
     /**
+     * sumup payment identifier suffix
+     * because for the same checked order we can have multiple sumup attempts.
+     * and each of them needs a unique identifier.
+     */
+    var ecRetry: ULong = 0u,
+
+    /**
      * association of scanned tags with their sold tickets.
      * we keep the order so we can assign the order to the first one.
      */
@@ -41,6 +48,10 @@ data class TicketDraft(
         return scans.any { it.tag == tag }
     }
 
+    /** ec transaction has failed, so we need a new transaction id. */
+    fun ecFailure() {
+        ecRetry += 1u
+    }
 
     fun getNewTicketSale(paymentMethod: PaymentMethod?): NewTicketSale {
         return NewTicketSale(

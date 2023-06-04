@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustanet.stustapay.R
 import de.stustanet.stustapay.ec.ECPayment
 import de.stustanet.stustapay.model.CompletedTicketSale
 import de.stustanet.stustapay.model.NewTicketScan
@@ -15,6 +16,7 @@ import de.stustanet.stustapay.repository.ECPaymentResult
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TicketRepository
 import de.stustanet.stustapay.ui.common.TerminalLoginState
+import de.stustanet.stustapay.util.ResourcesProvider
 import de.stustanet.stustapay.util.mapState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,6 +44,7 @@ class TicketViewModel @Inject constructor(
     private val ticketRepository: TicketRepository,
     private val terminalConfigRepository: TerminalConfigRepository,
     private val ecPaymentRepository: ECPaymentRepository,
+    private val resourcesProvider: ResourcesProvider,
 ) : ViewModel() {
 
     // navigation in views
@@ -117,7 +120,7 @@ class TicketViewModel @Inject constructor(
                 _ticketDraft.update { status ->
                     val scanned = response.data.scanned_tickets
                     if (scanned.isEmpty()) {
-                        _status.update { "ticket unknown" }
+                        _status.update { resourcesProvider.getString(R.string.ticket_unknown) }
                         return
                     }
 
@@ -139,7 +142,7 @@ class TicketViewModel @Inject constructor(
                     }
                     newStatus
                 }
-                _status.update { "Ticket order validated!" }
+                _status.update { resourcesProvider.getString(R.string.ticket_valid) }
             }
 
             is Response.Error.Service -> {
@@ -174,9 +177,9 @@ class TicketViewModel @Inject constructor(
         _saleCompleted.update { null }
 
         if (success) {
-            _status.update { "Order cleared - ready." }
+            _status.update { resourcesProvider.getString(R.string.ticket_order_cleared_success) }
         } else {
-            _status.update { "Order cleared" }
+            _status.update { resourcesProvider.getString(R.string.ticket_order_cleared) }
         }
     }
 
@@ -184,11 +187,10 @@ class TicketViewModel @Inject constructor(
     suspend fun checkSale() {
         val selection = _ticketDraft.value
 
-        _status.update { "Checking order..." }
+        _status.update { resourcesProvider.getString(R.string.order_checking) }
 
         // check if the sale is nice and well
         val response = ticketRepository.checkTicketSale(
-            // HACK: we always say Cash, because the payment method is only known after the confirmation step
             selection.getNewTicketSale(null)
         )
 
@@ -199,7 +201,7 @@ class TicketViewModel @Inject constructor(
                     newSale.updateWithPendingTicketSale(response.data)
                     newSale
                 }
-                _status.update { "Ticket order validated!" }
+                _status.update { resourcesProvider.getString(R.string.ticket_order_validated) }
                 _navState.update { TicketPage.Confirm }
             }
 
@@ -237,13 +239,18 @@ class TicketViewModel @Inject constructor(
 
         // otherwise, perform ec payment
         val payment = ECPayment(
-            id = checkedSale.uuid,
+            id = "${checkedSale.uuid}_${_ticketDraft.value.ecRetry}",
             amount = BigDecimal(checkedSale.total_price),
             tag = _ticketDraft.value.scans[0].tag,
         )
 
         when (val ecResult = ecPaymentRepository.pay(context = context, ecPayment = payment)) {
             is ECPaymentResult.Failure -> {
+                _ticketDraft.update { status ->
+                    val newSale = status.copy()
+                    newSale.ecFailure()
+                    newSale
+                }
                 _status.update { ecResult.msg }
             }
 
@@ -265,7 +272,7 @@ class TicketViewModel @Inject constructor(
             is Response.OK -> {
                 // delete the sale draft
                 clearDraft()
-                _status.update { "Order booked!" }
+                _status.update { resourcesProvider.getString(R.string.ticket_order_booked) }
                 // now we have a completed sale
                 _saleCompleted.update { response.data }
                 _navState.update { TicketPage.Done }
