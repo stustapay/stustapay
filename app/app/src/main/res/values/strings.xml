@@ -128,5 +128,6 @@
     <string name="cash_register_unexpected_assign">cash register is now assigned to %s, while we expected it to be assigned to %s</string>
     <string name="cash_register_same_source_target">Source and target tag are the same.</string>
     <string name="no_cash_register">No cash register</string>
+    <string name="sale_check_error">Error in sale check:</string>
     <string name="tag_uid">Chip ID</string>
 </resources>

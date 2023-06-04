@@ -1,15 +1,25 @@
 package de.stustanet.stustapay.ui.reward
 
-import androidx.compose.foundation.layout.*
+import android.os.VibrationEffect
+import android.os.Vibrator
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -19,6 +29,9 @@ import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.Access
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import de.stustanet.stustapay.ui.common.FailureIcon
+import de.stustanet.stustapay.ui.common.StatusText
+import de.stustanet.stustapay.ui.common.SuccessIcon
 import de.stustanet.stustapay.ui.common.amountselect.AmountConfig
 import de.stustanet.stustapay.ui.common.amountselect.AmountSelectionDialog
 import de.stustanet.stustapay.ui.common.pay.ProductSelectionItem
@@ -39,6 +52,8 @@ fun RewardView(
     val newTicket by viewModel.newTicket.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
+
+    val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
 
     NfcScanDialog(state = scanState, onScan = { tag ->
         scope.launch {
@@ -95,10 +110,40 @@ fun RewardView(
                 }
             },
             bottomBar = {
-                Column {
-                    Divider(modifier = Modifier.padding(vertical = 10.dp))
-                    Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
-                        Text(status, fontSize = 24.sp)
+                Column(modifier = Modifier.padding(horizontal = 10.dp)) {
+                    Divider()
+                    when (val statusV = status) {
+                        is RewardStatus.Idle -> {}
+                        is RewardStatus.Error -> {
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                FailureIcon(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                )
+                                StatusText(statusV.msg)
+                            }
+                        }
+
+                        is RewardStatus.Success -> {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                LaunchedEffect(Unit) {
+                                    vibrator.vibrate(VibrationEffect.createOneShot(600, 200))
+                                }
+                                SuccessIcon(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .padding(bottom = 5.dp)
+                                )
+                                Text(statusV.msg, style = MaterialTheme.typography.h5)
+                            }
+                        }
                     }
                     Button(
                         modifier = Modifier
@@ -106,7 +151,8 @@ fun RewardView(
                             .padding(10.dp),
                         onClick = {
                             scanState.open()
-                        }
+                        },
+                        enabled = (vouchers > 0u || newTicket)
                     ) {
 
                         Text(
