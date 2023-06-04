@@ -65,9 +65,6 @@ class UserCashRegisterTransferViewModel @Inject constructor(
     }
 
     suspend fun tagScanned(tag: UserTag) {
-        _status.update {
-            "status: ${_transferCashRegisterState.value}"
-        }
         when (val state = _transferCashRegisterState.value) {
             is TransferCashRegisterState.ScanSource -> {
                 _transferCashRegisterState.update {
