@@ -2,7 +2,7 @@
 
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.till import NewTillProfile
-from stustapay.core.schema.user import Privilege, NewUserRole, ADMIN_ROLE_NAME
+from stustapay.core.schema.user import Privilege, NewUserRole, ADMIN_ROLE_NAME, UserWithoutId
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied
 from .common import TerminalTestCase
@@ -17,29 +17,38 @@ class AccountServiceTest(TerminalTestCase):
         )
 
     async def test_switch_user_tag(self):
-        for user_tag_uid in range(1, 20):
-            await self.db_conn.execute("insert into user_tag (uid) values ($1)", user_tag_uid)
-        account_id = await self.db_conn.fetchval(
-            "insert into account(user_tag_uid, type, name) values (1, 'private', 'account-1') returning id"
+        user_tag_uid = 1887
+        new_user_tag_uid = 1999
+        await self.db_conn.execute("insert into user_tag (uid) values ($1)", user_tag_uid)
+        await self.db_conn.execute("insert into user_tag (uid) values ($1)", new_user_tag_uid)
+        user = await self.user_service.create_user_no_auth(
+            new_user=UserWithoutId(
+                login="test-user", display_name="test-user", user_tag_uid=user_tag_uid, role_names=[]
+            )
         )
+        account_id = await self.db_conn.fetchval("select id from account where user_tag_uid = $1", user_tag_uid)
 
         acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
         self.assertIsNotNone(acc)
-        self.assertEqual(1, acc.user_tag_uid)
+        self.assertEqual(user_tag_uid, acc.user_tag_uid)
         await self.account_service.switch_account_tag_uid_admin(
-            token=self.admin_token, account_id=account_id, new_user_tag_uid=2, comment="foobar"
+            token=self.admin_token, account_id=account_id, new_user_tag_uid=new_user_tag_uid, comment="foobar"
         )
         acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
         self.assertIsNotNone(acc)
-        self.assertEqual(2, acc.user_tag_uid)
+        self.assertEqual(new_user_tag_uid, acc.user_tag_uid)
         self.assertEqual(1, len(acc.tag_history))
         self.assertEqual("foobar", acc.tag_history[0].comment)
+        user = await self.user_service.get_user(token=self.admin_token, user_id=user.id)
+        self.assertEqual(new_user_tag_uid, user.user_tag_uid)
 
-        user_tag_2 = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=2)
+        user_tag_2 = await self.account_service.get_user_tag_detail(
+            token=self.admin_token, user_tag_uid=new_user_tag_uid
+        )
         self.assertIsNotNone(user_tag_2)
         self.assertEqual(0, len(user_tag_2.account_history))
 
-        user_tag_1 = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
+        user_tag_1 = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=user_tag_uid)
         self.assertIsNotNone(user_tag_1)
         self.assertEqual(1, len(user_tag_1.account_history))
         self.assertEqual(acc.id, user_tag_1.account_history[0].account_id)
