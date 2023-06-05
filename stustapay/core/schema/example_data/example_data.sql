@@ -320,17 +320,17 @@ values
 
 
 insert into till (
-    id, name, description, active_profile_id, active_user_id, active_user_role_id, registration_uuid, session_uuid, tse_id, active_shift
+    id, name, description, active_profile_id, active_user_id, active_user_role_id, active_cash_register_id, registration_uuid, session_uuid, tse_id, active_shift
 ) overriding system value
 values
     -- 1 is virtual till!
-    (10, 'stustapay-dev', 'Allmachtskasse', 2, 2, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, null, null),
-    (11, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 4, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, null, null),
-    (12, 'ssc-pot-1', 'Pot Bierkasse', 3, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, null, null),
-    (13, 'ssc-brotladen-1', 'Brotladen', 5, null, null, '6450c106-207c-4f17-b451-249c98ae6f19'::uuid, null, null, null),
-    (14, 'ssc-eintritt-1', 'Eintritt ohne Initialguthaben', 7, null, null, 'dc48a5b1-09d3-424f-820d-0452613c172c'::uuid, null, null, null),
-    (15, 'ssc-eintritt-2', 'Eintritt mit Initialguthaben', 6, null, null, 'f98f56ee-0023-47a9-8059-ff645b66b686'::uuid, null, null, null),
-    (16, 'ssc-eintritt-3', 'Eintritt ohne Guthaben und Aufladen', 8, null, null, 'ea847685-d400-414d-a0c0-9cd431791f15'::uuid, null, null, null)
+    (10, 'stustapay-dev', 'Allmachtskasse', 2, 2, 0, 0, '4c8e406f-a579-45f5-a626-dc8675b65b2e'::uuid, null, null, null),
+    (11, 'ssc-festzelt-topup-1', 'Aufladung im Festzelt', 4, null, null, null, '479fc0b0-c2ca-4af9-a2f2-3ee5482d647b'::uuid, null, null, null),
+    (12, 'ssc-pot-1', 'Pot Bierkasse', 3, null, null, null, '5ed89dbd-5af4-4c0c-b521-62e366f72ba9'::uuid, null, null, null),
+    (13, 'ssc-brotladen-1', 'Brotladen', 5, null, null, null, '6450c106-207c-4f17-b451-249c98ae6f19'::uuid, null, null, null),
+    (14, 'ssc-eintritt-1', 'Eintritt ohne Initialguthaben', 7, null, null, null, 'dc48a5b1-09d3-424f-820d-0452613c172c'::uuid, null, null, null),
+    (15, 'ssc-eintritt-2', 'Eintritt mit Initialguthaben', 6, null, null, null, 'f98f56ee-0023-47a9-8059-ff645b66b686'::uuid, null, null, null),
+    (16, 'ssc-eintritt-3', 'Eintritt ohne Guthaben und Aufladen', 8, null, null, null, 'ea847685-d400-414d-a0c0-9cd431791f15'::uuid, null, null, null)
     on conflict do nothing;
 select setval('till_id_seq', 100);
 
