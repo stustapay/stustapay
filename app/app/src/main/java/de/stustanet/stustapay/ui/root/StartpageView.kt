@@ -127,14 +127,16 @@ fun StartpageView(
 
                 Divider()
 
-                StartpageEntry(
-                    item = StartpageItem(
-                        icon = Icons.Filled.Person,
-                        navDestination = RootNavDests.user,
-                        label = R.string.user_title,
-                    ),
-                    navigateTo = navigateToHook
-                )
+                if (loginState.hasConfig()) {
+                    StartpageEntry(
+                        item = StartpageItem(
+                            icon = Icons.Filled.Person,
+                            navDestination = RootNavDests.user,
+                            label = R.string.user_title,
+                        ),
+                        navigateTo = navigateToHook
+                    )
+                }
 
                 if (loginState.checkAccess { u, _ -> Access.canChangeConfig(u) } || !loginState.hasConfig()) {
                     StartpageEntry(
