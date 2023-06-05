@@ -206,7 +206,7 @@ export const TillDetail: React.FC = () => {
       </Paper>
       {till.registration_uuid != null && (
         <Paper>
-          <Box sx={{ height: "auto", margin: "0 auto", maxWidth: "20em", width: "100%", mt: 2 }}>
+          <Box sx={{ padding: 2, backgroundColor: "white", height: "auto", margin: "0 auto", maxWidth: "20em", width: "100%", mt: 2 }}>
             <QRCode
               size={256}
               style={{ height: "auto", maxWidth: "100%", width: "100%" }}
