@@ -47,7 +47,7 @@ export const NewUserSchema = z.object({
   display_name: z.string().optional(),
   description: z.string().optional(),
   role_names: z.array(z.string()),
-  password: z.string().nullable(),
+  password: z.string().optional().nullable(),
   // user_tag_uid: z.bigint().optional().nullable(),
   user_tag_uid_hex: z.string().optional().nullable(),
   transport_account_id: z.number().optional().nullable(),

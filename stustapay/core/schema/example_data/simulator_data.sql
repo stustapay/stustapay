@@ -28,18 +28,30 @@ values
 on conflict do nothing;
 
 
+insert into account (
+    id, type, user_tag_uid
+) overriding system value
+values
+    (200, 'private', 1),
+    (201, 'private', 2),
+    (202, 'private', 3),
+    (203, 'private', 4),
+    (204, 'private', 5),
+    (205, 'private', 6)
+on conflict do nothing;
+select setval('account_id_seq', 300);
 
 insert into usr (
-    id, login, password, description, transport_account_id, cashier_account_id, user_tag_uid
+    id, login, password, description, transport_account_id, cashier_account_id, user_tag_uid, customer_account_id
 ) overriding system value
 values
     -- password is admin
-    (0, 'admin', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Admin user', null, null, 1),
-    (1, 'finanzorga1', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 2),
-    (2, 'finanzorga2', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 3),
-    (3, 'finanzorga3', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 4),
-    (4, 'finanzorga4', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 5),
-    (5, 'finanzorga5', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 6)
+    (0, 'admin', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Admin user', null, null, 1, 200),
+    (1, 'finanzorga1', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 2, 201),
+    (2, 'finanzorga2', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 3, 202),
+    (3, 'finanzorga3', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 4, 203),
+    (4, 'finanzorga4', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 5, 204),
+    (5, 'finanzorga5', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 6, 205)
 on conflict do nothing;
 select setval('usr_id_seq', 100);
 

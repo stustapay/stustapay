@@ -145,6 +145,11 @@ class SumupService(DBService):
         }
 
     async def check_sumup_auth(self):
+        sumup_enabled = self.config_service.is_sumup_topup_enabled()
+        if not sumup_enabled:
+            self.logger.info("Sumup is disabled via the config")
+            return
+
         self.logger.info("Checking if the configured sumup api key is valid")
         sumup_url = (
             f"{self.SUMUP_API_URL}/merchants/{self.cfg.customer_portal.sumup_config.merchant_code}/payment-methods"
