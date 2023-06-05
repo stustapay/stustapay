@@ -127,14 +127,16 @@ fun StartpageView(
 
                 Divider()
 
-                StartpageEntry(
-                    item = StartpageItem(
-                        icon = Icons.Filled.Person,
-                        navDestination = RootNavDests.user,
-                        label = R.string.user_title,
-                    ),
-                    navigateTo = navigateToHook
-                )
+                if (loginState.hasConfig()) {
+                    StartpageEntry(
+                        item = StartpageItem(
+                            icon = Icons.Filled.Person,
+                            navDestination = RootNavDests.user,
+                            label = R.string.user_title,
+                        ),
+                        navigateTo = navigateToHook
+                    )
+                }
 
                 if (loginState.checkAccess { u, _ -> Access.canChangeConfig(u) } || !loginState.hasConfig()) {
                     StartpageEntry(
@@ -158,25 +160,24 @@ fun StartpageView(
                     )
                 }
 
-                if (!loginState.hasConfig()) {
-                    StartpageEntry(
-                        item = StartpageItem(
-                            icon = Icons.Filled.Star,
-                            label = R.string.root_item_makeeverythingok,
-                            navDestination = RootNavDests.startpage,
-                        ),
-                        navigateTo = {
-                            val packageManager: PackageManager = activity.packageManager
-                            val intent: Intent =
-                                packageManager.getLaunchIntentForPackage(activity.packageName)!!
-                            val componentName: ComponentName = intent.component!!
-                            val restartIntent: Intent =
-                                Intent.makeRestartActivityTask(componentName)
-                            activity.startActivity(restartIntent)
-                            Runtime.getRuntime().exit(0)
-                        }
-                    )
-                }
+
+                StartpageEntry(
+                    item = StartpageItem(
+                        icon = Icons.Filled.Refresh,
+                        label = R.string.root_item_restart_app,
+                        navDestination = RootNavDests.startpage,
+                    ),
+                    navigateTo = {
+                        val packageManager: PackageManager = activity.packageManager
+                        val intent: Intent =
+                            packageManager.getLaunchIntentForPackage(activity.packageName)!!
+                        val componentName: ComponentName = intent.component!!
+                        val restartIntent: Intent =
+                            Intent.makeRestartActivityTask(componentName)
+                        activity.startActivity(restartIntent)
+                        Runtime.getRuntime().exit(0)
+                    }
+                )
             }
         }
     }

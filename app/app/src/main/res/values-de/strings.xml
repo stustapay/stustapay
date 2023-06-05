@@ -33,7 +33,7 @@
     <string name="root_item_rewards">Gutscheine</string>
     <string name="root_item_settings">Einstellungen</string>
     <string name="root_item_development">Entwicklung</string>
-    <string name="root_item_makeeverythingok">Make Everything OK</string>
+    <string name="root_item_restart_app">App neu starten</string>
 
     <string name="cashier_title">Kassiererstatus</string>
     <string name="cashier_drawer">Kassenname</string>
