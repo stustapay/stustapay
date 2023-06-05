@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.cashier
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
@@ -35,6 +36,10 @@ fun CashierStatusView(
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scanState = rememberDialogDisplayState()
+
+    BackHandler {
+        leaveView()
+    }
 
     LaunchedEffect(null) {
         viewModel.fetchLocal()
