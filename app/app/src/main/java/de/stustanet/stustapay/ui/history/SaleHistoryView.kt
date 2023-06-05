@@ -1,5 +1,6 @@
 package de.stustanet.stustapay.ui.history
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,6 +65,10 @@ fun SaleHistoryView(
     val haptic = LocalHapticFeedback.current
     val status by viewModel.status.collectAsStateWithLifecycle()
     val cancelStatus by viewModel.cancelStatus.collectAsStateWithLifecycle()
+
+    BackHandler {
+        leaveView()
+    }
 
     LaunchedEffect(null) {
         viewModel.fetchHistory()
