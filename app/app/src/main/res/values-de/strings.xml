@@ -27,7 +27,7 @@
     <string name="common_action_create">Erstellen</string>
     <string name="common_action_update">Änderungen übernehmen</string>
 
-    <string name="root_item_ticket">Bändchen</string>
+    <string name="root_item_ticket">Eintritt</string>
     <string name="root_item_sale">Verkauf</string>
     <string name="root_item_topup">Einzahlen / Auszahlen</string>
     <string name="root_item_rewards">Gutscheine</string>
