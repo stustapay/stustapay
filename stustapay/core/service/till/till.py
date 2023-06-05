@@ -263,7 +263,11 @@ class TillService(DBService):
     async def get_user_info(
         self, *, conn: asyncpg.Connection, current_user: CurrentUser, user_tag_uid: int
     ) -> UserInfo:
-        if Privilege.cashier_management not in current_user.privileges and user_tag_uid != current_user.user_tag_uid:
+        if (
+            Privilege.cashier_management not in current_user.privileges
+            and Privilege.user_management not in current_user.privileges
+            and user_tag_uid != current_user.user_tag_uid
+        ):
             raise AccessDenied("cannot retrieve user info for someone other than yourself")
 
         row = await conn.fetchrow(
