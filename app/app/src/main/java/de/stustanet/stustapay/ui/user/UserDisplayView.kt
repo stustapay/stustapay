@@ -111,7 +111,7 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
                         )
                         ListItem(
                             text = { Text(stringResource(R.string.user_roles)) },
-                            secondaryText = { Text(user.role_names.reduce { acc, r -> "$acc, $r" }) }
+                            secondaryText = { Text(user.role_names.reduceOrNull { acc, r -> "$acc, $r" } ?: "") }
                         )
                         ListItem(
                             text = { Text(stringResource(R.string.user_description)) },
