@@ -47,7 +47,9 @@ fun CashierManagementTransportView(viewModel: CashierManagementViewModel) {
         content = {
             Box(modifier = Modifier.padding(it)) {
                 AmountSelection(
-                    config = AmountConfig.Money(),
+                    config = AmountConfig.Money(
+                        limit = 9999999u,
+                    ),
                     onAmountUpdate = { newAmount -> amount = newAmount },
                     onClear = { amount = 0u },
                 )
