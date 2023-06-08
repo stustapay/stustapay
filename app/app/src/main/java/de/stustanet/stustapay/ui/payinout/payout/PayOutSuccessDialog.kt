@@ -1,6 +1,8 @@
 package de.stustanet.stustapay.ui.payinout.payout
 
 
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,16 +25,20 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.CompletedPayOut
 import de.stustanet.stustapay.ui.common.pay.ProductConfirmItem
@@ -49,7 +55,7 @@ fun PreviewCashOutSuccessDialog() {
             completedPayOut = CompletedPayOut(
                 uuid = "",
                 customer_tag_uid = 0u,
-                amount = 13.37,
+                amount = -13.37,
                 customer_account_id = 0,
                 old_balance = 42.0,
                 new_balance = 30.5,
@@ -61,6 +67,7 @@ fun PreviewCashOutSuccessDialog() {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun PayOutSuccessDialog(
     onDismiss: () -> Unit = {},
@@ -70,8 +77,10 @@ fun PayOutSuccessDialog(
         onDismissRequest = {
             onDismiss()
         },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         CashOutSuccessCard(
+            modifier = Modifier.padding(horizontal = 10.dp),
             onDismiss = onDismiss,
             completedPayOut = completedPayOut,
         )
@@ -81,18 +90,24 @@ fun PayOutSuccessDialog(
 
 @Composable
 fun CashOutSuccessCard(
+    modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
     completedPayOut: CompletedPayOut,
 ) {
     val haptic = LocalHapticFeedback.current
 
+    val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
+
     Card(
         shape = RoundedCornerShape(10.dp),
-        modifier = Modifier
+        modifier = modifier
             .padding(0.dp, 50.dp)
             .fillMaxWidth(),
         elevation = 8.dp,
     ) {
+        LaunchedEffect(Unit) {
+            vibrator.vibrate(VibrationEffect.createOneShot(600, 200))
+        }
 
         Scaffold(
             topBar = {

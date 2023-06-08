@@ -23,12 +23,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustanet.stustapay.R
 import de.stustanet.stustapay.model.UserTag
 import de.stustanet.stustapay.ui.chipscan.NfcScanDialog
 import de.stustanet.stustapay.ui.chipscan.rememberNfcScanDialogState
+import de.stustanet.stustapay.ui.theme.MoneyAmountStyle
 import kotlinx.coroutines.launch
 
 /**
@@ -75,11 +77,12 @@ fun CashConfirmView(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "%.2f€".format(getAmount().toDouble() / 100),
-                        style = MaterialTheme.typography.h3,
+                        style = MoneyAmountStyle,
                     )
                     Text(
                         text = question,
-                        style = MaterialTheme.typography.h3,
+                        style = MaterialTheme.typography.h4,
+                        textAlign = TextAlign.Center,
                     )
                 }
             }

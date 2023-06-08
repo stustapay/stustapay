@@ -15,33 +15,23 @@ import de.stustanet.stustapay.ui.nav.navigateTo
 fun TopUpView(
     viewModel: TopUpViewModel = hiltViewModel()
 ) {
-    val nav = rememberNavController()
     val navTarget by viewModel.navState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(navTarget) {
-        if (nav.currentDestination?.route != navTarget.route) {
-            nav.navigate(navTarget.route)
-        }
-    }
-
-    NavHost(
-        navController = nav,
-        startDestination = TopUpPage.Selection.route
-    ) {
-        composable(TopUpPage.Selection.route) {
+    when (navTarget) {
+        TopUpPage.Selection -> {
             TopUpSelection(
                 viewModel = viewModel,
             )
         }
-        composable(TopUpPage.Done.route) {
+        TopUpPage.Done -> {
             TopUpSuccess(
-                onDismiss = { nav.navigateTo(TopUpPage.Selection.route) },
+                onDismiss = { viewModel.navigateTo(TopUpPage.Selection) },
                 viewModel = viewModel,
             )
         }
-        composable(TopUpPage.Failure.route) {
+        TopUpPage.Failure -> {
             TopUpError(
-                onDismiss = { nav.navigateTo(TopUpPage.Selection.route) },
+                onDismiss = { viewModel.navigateTo(TopUpPage.Selection) },
                 viewModel = viewModel,
             )
         }
