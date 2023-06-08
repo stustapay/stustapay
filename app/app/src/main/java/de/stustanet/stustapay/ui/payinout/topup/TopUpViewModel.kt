@@ -16,6 +16,7 @@ import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TopUpRepository
 import de.stustanet.stustapay.repository.UserRepository
 import de.stustanet.stustapay.ui.common.TerminalLoginState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -151,6 +152,14 @@ class TopUpViewModel @Inject constructor(
         }
 
         val payment = getECPayment(newTopUp)
+
+        _status.update { "Remove the chip. Starting SumUp..." }
+
+        // workaround so the sumup activity is not in foreground too quickly.
+        // when it's active, nfc intents are no longer captured by us, apparently,
+        // and then the system nfc handler spawns the default handler (e.g. stustapay) again.
+        // https://stackoverflow.com/questions/60868912
+        delay(1000)
 
         when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
             is ECPaymentResult.Failure -> {
