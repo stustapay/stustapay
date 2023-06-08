@@ -15,12 +15,9 @@ import de.stustanet.stustapay.repository.ECPaymentResult
 import de.stustanet.stustapay.repository.TerminalConfigRepository
 import de.stustanet.stustapay.repository.TopUpRepository
 import de.stustanet.stustapay.repository.UserRepository
-import de.stustanet.stustapay.ui.payinout.CashInOutTab
 import de.stustanet.stustapay.ui.common.TerminalLoginState
-import de.stustanet.stustapay.util.mapState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -203,8 +200,8 @@ class TopUpViewModel @Inject constructor(
             is Response.OK -> {
                 clearDraft()
                 _topUpCompleted.update { response.data }
-                _status.update { "Cash TopUp successful" }
                 _navState.update { TopUpPage.Done }
+                _status.update { "Cash TopUp successful!" }
             }
 
             is Response.Error -> {
@@ -212,5 +209,9 @@ class TopUpViewModel @Inject constructor(
                 _navState.update { TopUpPage.Failure }
             }
         }
+    }
+
+    fun navigateTo(target: TopUpPage) {
+        _navState.update { target }
     }
 }
