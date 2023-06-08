@@ -112,7 +112,7 @@ class CashierService(DBService):
 
         if shift_end is None:
             rows = await conn.fetch(
-                "select li.product_id, count(*) as quantity "
+                "select li.product_id, sum(li.quantity) as quantity "
                 "from line_item li join ordr o on li.order_id = o.id "
                 "where o.cashier_id = $1 and o.booked_at >= $2 "
                 "group by li.product_id",
@@ -121,7 +121,7 @@ class CashierService(DBService):
             )
         else:
             rows = await conn.fetch(
-                "select li.product_id, count(*) as quantity "
+                "select li.product_id, sum(li.quantity) as quantity "
                 "from line_item li join ordr o on li.order_id = o.id "
                 "where o.cashier_id = $1 and o.booked_at >= $2 and o.booked_at <= $3 "
                 "group by li.product_id",
