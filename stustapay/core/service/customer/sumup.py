@@ -276,7 +276,7 @@ class SumupService(DBService):
 
                     # for each pending checkout, check the status with sumup
                     for pending_checkout in pending_checkouts:
-                        if pending_checkout.date < datetime.now(tz=timezone.utc) + self.SUMUP_INITIAL_CHECK_TIMEOUT or (
+                        if datetime.now(tz=timezone.utc) < pending_checkout.date + self.SUMUP_INITIAL_CHECK_TIMEOUT or (
                             pending_checkout.last_checked is not None
                             and datetime.now(tz=timezone.utc)
                             < pending_checkout.last_checked + timedelta(seconds=pending_checkout.check_interval)
