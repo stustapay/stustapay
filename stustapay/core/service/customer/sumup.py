@@ -145,7 +145,7 @@ class SumupService(DBService):
         }
 
     async def check_sumup_auth(self):
-        sumup_enabled = self.config_service.is_sumup_topup_enabled()
+        sumup_enabled = await self.config_service.is_sumup_topup_enabled()
         if not sumup_enabled:
             self.logger.info("Sumup is disabled via the config")
             return
@@ -263,8 +263,10 @@ class SumupService(DBService):
     async def run_sumup_checkout_processing(self):
         sumup_enabled = await self.config_service.is_sumup_topup_enabled()
         if not sumup_enabled or not self.sumup_reachable:
+            self.logger.info("Sumup online topup not enabled, disabling sumup check state")
             return
 
+        self.logger.info("Staring periodic job to check pending sumup transactions")
         while True:
             await asyncio.sleep(self.SUMUP_CHECKOUT_POLL_INTERVAL.seconds)
             try:
@@ -274,12 +276,14 @@ class SumupService(DBService):
 
                     # for each pending checkout, check the status with sumup
                     for pending_checkout in pending_checkouts:
-                        if (
-                            pending_checkout.date < datetime.now(tz=timezone.utc) + self.SUMUP_INITIAL_CHECK_TIMEOUT
-                            or pending_checkout.last_checked is not None
+                        if pending_checkout.date < datetime.now(tz=timezone.utc) + self.SUMUP_INITIAL_CHECK_TIMEOUT or (
+                            pending_checkout.last_checked is not None
                             and datetime.now(tz=timezone.utc)
                             < pending_checkout.last_checked + timedelta(seconds=pending_checkout.check_interval)
                         ):
+                            self.logger.debug(
+                                f"skipping pending checkout {pending_checkout.checkout_reference} due to backoff"
+                            )
                             continue
 
                         self.logger.debug(f"checking pending checkout {pending_checkout.checkout_reference}")
