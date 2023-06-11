@@ -35,7 +35,7 @@ export const customerApi = createApi({
 
     setCustomerAllDonate: builder.mutation<void, void>({
       query: (customer) => ({
-        url: "/customer_all_tip",
+        url: "/customer_all_donation",
         method: "POST",
         body: {},
       }),
