@@ -24,10 +24,28 @@ export const customerApi = createApi({
       query: (customer) => ({
         url: "/customer_info",
         method: "POST",
-        body: { iban: customer.iban, account_name: customer.account_name, email: customer.email },
+        body: {
+          iban: customer.iban,
+          account_name: customer.account_name,
+          email: customer.email,
+          donation: customer.donation,
+        },
+      }),
+    }),
+
+    setCustomerAllDonate: builder.mutation<void, void>({
+      query: (customer) => ({
+        url: "/customer_all_tip",
+        method: "POST",
+        body: {},
       }),
     }),
   }),
 });
 
-export const { useGetCustomerQuery, useGetOrdersWithBonQuery, useSetCustomerInfoMutation } = customerApi;
+export const {
+  useGetCustomerQuery,
+  useGetOrdersWithBonQuery,
+  useSetCustomerInfoMutation,
+  useSetCustomerAllDonateMutation,
+} = customerApi;

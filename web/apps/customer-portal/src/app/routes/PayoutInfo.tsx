@@ -1,5 +1,5 @@
-import { config, useGetCustomerQuery, useSetCustomerInfoMutation } from "@/api";
-import { Loading } from "@stustapay/components";
+import { useGetCustomerQuery, useSetCustomerAllDonateMutation, useSetCustomerInfoMutation } from "@/api";
+import { Loading, NumericInput } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -11,48 +11,31 @@ import {
   FormControlLabel,
   FormHelperText,
   Grid,
+  InputAdornment,
   Link,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
 import { Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import iban from "iban";
-import i18n from "@/i18n";
 import { Link as RouterLink } from "react-router-dom";
-
-const FormSchema = z.object({
-  iban: z.string().superRefine((val, ctx) => {
-    if (!iban.isValid(val)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: i18n.t("payout.ibanNotValid"),
-      });
-    }
-    if (!config.publicApiConfig.allowed_country_codes.includes(val.substring(0, 2))) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: i18n.t("payout.countryCodeNotSupported"),
-      });
-    }
-  }),
-  account_name: z.string(),
-  email: z.string().email(),
-  privacy_policy: z.boolean().refine((val) => val, {
-    message: i18n.t("payout.mustAcceptPrivacyPolicy"),
-  }),
-});
-
-type FormVal = z.infer<typeof FormSchema>;
+import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 
 export const PayoutInfo: React.FC = () => {
   const { t } = useTranslation(undefined, { keyPrefix: "payout" });
   const navigate = useNavigate();
+  const config = usePublicConfig();
 
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
 
   const [setCustomerInfo] = useSetCustomerInfoMutation();
+  const [setCustomerAllDonate] = useSetCustomerAllDonateMutation();
+
+  const formatCurrency = useCurrencyFormatter();
 
   if (isCustomerLoading || (!customer && !customerError)) {
     return <Loading />;
@@ -63,11 +46,49 @@ export const PayoutInfo: React.FC = () => {
     return <Navigate to="/" />;
   }
 
+  const FormSchema = z.object({
+    iban: z.string().superRefine((val, ctx) => {
+      if (!iban.isValid(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t("ibanNotValid"),
+        });
+      }
+      if (!config.allowed_country_codes.includes(val.substring(0, 2))) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t("countryCodeNotSupported"),
+        });
+      }
+    }),
+    account_name: z.string(),
+    email: z.string().email(),
+    privacy_policy: z.boolean().refine((val) => val, {
+      message: t("mustAcceptPrivacyPolicy"),
+    }),
+    donation: z.number().superRefine((val, ctx) => {
+      if (val < 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t("donationMustBePositive"),
+        });
+      }
+      if (val > customer.balance) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t("donationExceedsBalance"),
+        });
+      }
+    }),
+  });
+  type FormVal = z.infer<typeof FormSchema>;
+
   const initialValues: FormVal = {
     iban: customer.iban ?? "",
     account_name: customer.account_name ?? "",
     email: customer.email ?? "",
     privacy_policy: false,
+    donation: customer.donation ?? 0.0,
   };
 
   const onSubmit = (values: FormVal, { setSubmitting }: FormikHelpers<FormVal>) => {
@@ -86,6 +107,18 @@ export const PayoutInfo: React.FC = () => {
         setSubmitting(false);
       });
   };
+  const onAllTipClick = () => {
+    setCustomerAllDonate()
+      .unwrap()
+      .then(() => {
+        toast.success(t("updatedBankData"));
+        navigate("/");
+      })
+      .catch((error) => {
+        toast.error(t("errorWhileUpdatingBankData"));
+        console.error(error);
+      });
+  };
 
   return (
     <Grid container justifyItems="center" justifyContent="center" sx={{ paddingX: 0.5 }}>
@@ -93,6 +126,12 @@ export const PayoutInfo: React.FC = () => {
         <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
           {t("info")}
         </Alert>
+        <h3>{t("donationTitle")}</h3>
+        <Button variant="contained" color="primary" sx={{ width: "100%" }} onClick={onAllTipClick}>
+          {t("donateRemainingBalanceOf") + formatCurrency(customer.balance)}
+        </Button>
+
+        <h3>{t("payoutTitle")}</h3>
         <Formik
           initialValues={initialValues}
           validationSchema={toFormikValidationSchema(FormSchema)}
@@ -165,6 +204,20 @@ export const PayoutInfo: React.FC = () => {
                     <FormHelperText sx={{ ml: 0 }}>{formik.errors.privacy_policy}</FormHelperText>
                   )}
                 </FormControl>
+                <Typography>{t("donationDescription")}</Typography>
+                <NumericInput
+                  name="donation"
+                  label={t("donationAmount") + `(max ${formatCurrency(customer.balance)})`}
+                  variant="outlined"
+                  fullWidth
+                  value={formik.values.donation}
+                  onChange={(val) => formik.setFieldValue("donation", val)}
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end">{config.currency_symbol}</InputAdornment>,
+                  }}
+                  error={formik.touched.donation && Boolean(formik.errors.donation)}
+                  helperText={(formik.touched.donation && formik.errors.donation) as string}
+                />
                 <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
                   {formik.isSubmitting ? "Submitting" : "Submit"}
                 </Button>

@@ -120,14 +120,29 @@ class CustomerServiceTest(TerminalTestCase):
                 "iban": "DE89370400440532013000",
                 "account_name": "Rolf",
                 "email": "rolf@lol.de",
+                "donation": 1.0 * i,
             }
             for i in range(10)
+        ]
+
+        # same amount of donation as balance
+        self.customers += [
+            {
+                "uid": 12345 * (10 + 1),
+                "pin": "pin10",
+                "balance": 10,
+                "iban": "DE89370400440532013000",
+                "account_name": "Rolf",
+                "email": "rolf@lol.de",
+                "donation": 10,
+            }
         ]
 
         await self._add_customers(self.customers)
 
         # first customer with uid 12345 should not be included as he has a balance of 0
-        self.customers_to_transfer = self.customers[1:]
+        # last customer has same amount of donation as balance, thus should also not be included
+        self.customers_to_transfer = self.customers[1:-1]
 
     async def _add_customers(self, data: list[dict]) -> None:
         for idx, customer in enumerate(data):
@@ -146,11 +161,12 @@ class CustomerServiceTest(TerminalTestCase):
             )
 
             await self.db_conn.execute(
-                "insert into customer_info (customer_account_id, iban, account_name, email) values ($1, $2, $3, $4)",
+                "insert into customer_info (customer_account_id, iban, account_name, email, donation) values ($1, $2, $3, $4, $5)",
                 idx + 100,
                 customer["iban"],
                 customer["account_name"],
                 customer["email"],
+                customer["donation"],
             )
 
             # update allowed country code config
@@ -170,7 +186,7 @@ class CustomerServiceTest(TerminalTestCase):
                 self.assertEqual(result_customer.account_name, customer["account_name"])
                 self.assertEqual(result_customer.email, customer["email"])
                 self.assertEqual(result_customer.user_tag_uid, customer["uid"])
-                self.assertEqual(result_customer.balance, customer["balance"])
+                self.assertEqual(result_customer.balance, customer["balance"] - customer["donation"])  # type: ignore
 
         result = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
         check_data(result, len(self.customers_to_transfer))
@@ -384,11 +400,7 @@ class CustomerServiceTest(TerminalTestCase):
         account_name = "Der Tester"
         email = "test@testermensch.de"
 
-        customer_bank = CustomerBank(
-            iban=valid_IBAN,
-            account_name=account_name,
-            email=email,
-        )
+        customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email=email, donation=0)
 
         await self.customer_service.update_customer_info(
             token=auth.token,
@@ -405,11 +417,7 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(result.email, email)
 
         # test invalid IBAN
-        customer_bank = CustomerBank(
-            iban=invalid_IBAN,
-            account_name=account_name,
-            email=email,
-        )
+        customer_bank = CustomerBank(iban=invalid_IBAN, account_name=account_name, email=email, donation=0)
         with self.assertRaises(InvalidArgument):
             await self.customer_service.update_customer_info(
                 token=auth.token,

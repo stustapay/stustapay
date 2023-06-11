@@ -50,7 +50,7 @@ export const translations = {
     iban: "IBAN",
     bankAccountHolder: "Account Holder",
     email: "E-Mail",
-    info: "Enter your account information to receive your leftover cash to your bank account.",
+    info: "Enter your account information to receive your leftover cash to your bank account. You can also donate part of your remaining balance or your whole remaining balance to us in order to support our future work. Kulturleben in der Studentenstadt e. V. is a student-run non-profit organization which annually holds the StuStaCulum festival.",
     ibanNotValid: "IBAN is not valid",
     countryCodeNotSupported: "Provided IBAN country code is not supported",
     mustAcceptPrivacyPolicy: "You must accept the privacy policy",
@@ -58,6 +58,14 @@ export const translations = {
     errorFetchingData: "Error fetching data.",
     updatedBankData: "Successfully updated bank data.",
     errorWhileUpdatingBankData: "Error occurred while updating bank data.",
+    donationMustBePositive: "Donation must be positive",
+    donationExceedsBalance: "Donation cannot exceed your balance",
+    donationTitle: "Donation",
+    payoutTitle: "Payout",
+    donationAmount: "Donate amount",
+    donationDescription:
+      "If you appreciated our hard work to make this festival come true, we also welcome donations in order to support our future work",
+    donateRemainingBalanceOf: "Donate remaining balance of ",
   },
   topup: {
     amount: "Amount",

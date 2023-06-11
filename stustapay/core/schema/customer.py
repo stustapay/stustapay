@@ -12,6 +12,7 @@ class Customer(Account):
     iban: Optional[str]
     account_name: Optional[str]
     email: Optional[str]
+    donation: Optional[float]
 
 
 class OrderWithBon(Order):

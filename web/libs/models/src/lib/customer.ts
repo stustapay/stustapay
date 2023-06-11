@@ -6,6 +6,7 @@ export const CustomerInfoSchema = z.object({
   iban: z.string().nullable(),
   account_name: z.string().nullable(),
   email: z.string().nullable(),
+  donation: z.number().nullable(),
 });
 
 export type CustomerInfo = z.infer<typeof CustomerInfoSchema>;

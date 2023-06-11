@@ -48,7 +48,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     iban: "IBAN",
     bankAccountHolder: "Kontoinhaber",
     email: "E-Mail",
-    info: "Trage deine Bankdaten hier ein um dein Restguthaben auf dein Bankkonto zu überweisen.",
+    info: "Trage deine Bankdaten hier ein, um dein Restguthaben auf dein Bankkonto zu überweisen. Du kannst auch einen Teil oder Dein gesamten verbleibenden Betrag als Trinkgeld an uns geben, um unsere zukünftige Arbeit damit zu unterstützen. Kulturleben in der Studentenstadt e.V. is ein von Studierenden betriebener gemeinnütziger Verein, welcher jährlich das StuStaCulum Festival organisiert.",
     ibanNotValid: "ungültige IBAN",
     countryCodeNotSupported: "IBAN Ländercode wird nicht unterstützt",
     mustAcceptPrivacyPolicy: "Sie müssen die Datenschutserklärung akzeptieren",
@@ -56,6 +56,14 @@ export const translations: NestedPartialAsStrings<Translations> = {
     errorFetchingData: "Fehler beim laden der Daten.",
     updatedBankData: "Bankdaten erfolgreich aktualisiert.",
     errorWhileUpdatingBankData: "Fehler beim aktualisieren der Bankdaten.",
+    donationMustBePositive: "Das Spende muss positiv sein",
+    donationExceedsBalance: "Die Spende darf nicht den Kontostand überschreiten",
+    donationTitle: "Spende",
+    payoutTitle: "Auszahlung",
+    donationAmount: "Spendebetrag ",
+    donationDescription:
+      "Hat dir das Festival gefallen? Wir würden uns über eine Spende freuen, um unsere ehrenamtliche Arbeit zu unterstützen und zukünftige StuStaCula noch besser zu machen.",
+    donateRemainingBalanceOf: "Spende verbleibende Summe von ",
   },
   topup: {
     onlineTopUp: "Online-Aufladung",

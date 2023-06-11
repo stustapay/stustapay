@@ -49,20 +49,26 @@ class CustomerBank(BaseModel):
     iban: str
     account_name: str
     email: str
+    donation: float
 
 
 async def get_number_of_customers(conn: asyncpg.Connection) -> int:
     # number of customers with iban not null and balance > 0
-    return await conn.fetchval("select count(*) from customer c where c.iban is not null and round(c.balance, 2) > 0")
+    return await conn.fetchval(
+        "select count(*) from customer c "
+        "where c.iban is not null "
+        "and round(c.balance, 2) > 0 "
+        "and round(c.balance - c.donation, 2) > 0"
+    )
 
 
 async def get_customer_bank_data(
     conn: asyncpg.Connection, max_export_items_per_batch: int, ith_batch: int = 0
 ) -> List[CustomerBankData]:
     rows = await conn.fetch(
-        "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance "
+        "select c.iban, c.account_name, c.email, c.user_tag_uid, (c.balance - c.donation) as balance "
         "from customer c "
-        "where c.iban is not null and round(c.balance, 2) > 0 "
+        "where c.iban is not null and round(c.balance, 2) > 0 and round(c.balance - c.donation, 2) > 0 "
         "limit $1 offset $2",
         max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,
@@ -239,14 +245,31 @@ class CustomerService(DBService):
         if iban.country_code not in allowed_country_codes:
             raise InvalidArgument("Provided IBAN contains country code which is not supported")
 
+        if customer_bank.donation < 0:
+            raise InvalidArgument("Donation cannot be negative")
+        if customer_bank.donation > current_customer.balance:
+            raise InvalidArgument("Donation cannot be higher then your balance")
+
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(
-            "insert into customer_info (customer_account_id, iban, account_name, email) values ($1, $2, $3, $4) "
-            "on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4",
+            "insert into customer_info (customer_account_id, iban, account_name, email, donation) values ($1, $2, $3, $4, $5) "
+            "on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4, donation = $5",
             current_customer.id,
             iban.compact,
             customer_bank.account_name,
             customer_bank.email,
+            round(customer_bank.donation, 2),
+        )
+
+    @with_db_transaction
+    @requires_customer
+    async def update_customer_donation(self, *, conn: asyncpg.Connection, current_customer: Customer) -> None:
+        # if customer_info does not exist create it, otherwise update it
+        await conn.execute(
+            "insert into customer_info (customer_account_id, donation) values ($1, $2) "
+            "on conflict (customer_account_id) do update set donation = $2",
+            current_customer.id,
+            round(current_customer.balance, 2),
         )
 
     async def get_public_customer_api_config(self) -> PublicCustomerApiConfig:
