@@ -46,10 +46,10 @@ class CustomerBankData(BaseModel):
 
 
 class CustomerBank(BaseModel):
-    iban: Optional[str]
-    account_name: Optional[str]
-    email: Optional[str]
-    tip: Optional[float]
+    iban: str
+    account_name: str
+    email: str
+    tip: float
 
 
 async def get_number_of_customers(conn: asyncpg.Connection) -> int:
@@ -58,7 +58,7 @@ async def get_number_of_customers(conn: asyncpg.Connection) -> int:
         "select count(*) from customer c "
         "where c.iban is not null "
         "and round(c.balance, 2) > 0 "
-        "and round(c.balance, 2) > round(c.tip, 2)"
+        "and round(c.balance - c.tip, 2) > 0"
     )
 
 
@@ -66,11 +66,10 @@ async def get_customer_bank_data(
     conn: asyncpg.Connection, max_export_items_per_batch: int, ith_batch: int = 0
 ) -> List[CustomerBankData]:
     rows = await conn.fetch(
-        "select c.iban, c.account_name, c.email, c.user_tag_uid, (round(c.balance, 2) - round(c.tip, 2)) as balance "
+        "select c.iban, c.account_name, c.email, c.user_tag_uid, (c.balance - c.tip) as balance "
         "from customer c "
-        "where c.iban is not null and round(c.balance, 2) > 0 and round(c.balance, 2) > round(c.tip, 2) "
+        "where c.iban is not null and round(c.balance, 2) > 0 and round(c.balance - c.tip, 2) > 0 "
         "limit $1 offset $2",
-        # TODO: take min of tip and balance
         max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,
     )
