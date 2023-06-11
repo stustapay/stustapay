@@ -50,7 +50,7 @@ export const translations = {
     iban: "IBAN",
     bankAccountHolder: "Account Holder",
     email: "E-Mail",
-    info: "Enter your account information to receive your leftover cash to your bank account.",
+    info: "Enter your account information to receive your leftover cash to your bank account. You can also tip part of or your whole remaining balance to us in order to support our future work.",
     ibanNotValid: "IBAN is not valid",
     countryCodeNotSupported: "Provided IBAN country code is not supported",
     mustAcceptPrivacyPolicy: "You must accept the privacy policy",

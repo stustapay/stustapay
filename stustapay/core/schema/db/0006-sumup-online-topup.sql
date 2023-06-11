@@ -8,4 +8,4 @@ alter table ordr drop constraint till_required_for_non_online_orders;
 alter table ordr alter column till_id set not null;
 alter table ordr add constraint till_required_for_non_online_orders
     check ((payment_method = 'sumup_online' and cashier_id is null)
-               or (payment_method != 'sumup_online' and cashier_id is not null))
+               or (payment_method != 'sumup_online' and cashier_id is not null));

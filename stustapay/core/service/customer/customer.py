@@ -46,24 +46,31 @@ class CustomerBankData(BaseModel):
 
 
 class CustomerBank(BaseModel):
-    iban: str
-    account_name: str
-    email: str
+    iban: Optional[str]
+    account_name: Optional[str]
+    email: Optional[str]
+    tip: Optional[float]
 
 
 async def get_number_of_customers(conn: asyncpg.Connection) -> int:
     # number of customers with iban not null and balance > 0
-    return await conn.fetchval("select count(*) from customer c where c.iban is not null and round(c.balance, 2) > 0")
+    return await conn.fetchval(
+        "select count(*) from customer c "
+        "where c.iban is not null "
+        "and round(c.balance, 2) > 0 "
+        "and round(c.balance, 2) > round(c.tip, 2)"
+    )
 
 
 async def get_customer_bank_data(
     conn: asyncpg.Connection, max_export_items_per_batch: int, ith_batch: int = 0
 ) -> List[CustomerBankData]:
     rows = await conn.fetch(
-        "select c.iban, c.account_name, c.email, c.user_tag_uid, c.balance "
+        "select c.iban, c.account_name, c.email, c.user_tag_uid, (round(c.balance, 2) - round(c.tip, 2)) as balance "
         "from customer c "
-        "where c.iban is not null and round(c.balance, 2) > 0 "
+        "where c.iban is not null and round(c.balance, 2) > 0 and round(c.balance, 2) > round(c.tip, 2) "
         "limit $1 offset $2",
+        # TODO: take min of tip and balance
         max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,
     )
@@ -224,6 +231,26 @@ class CustomerService(DBService):
                 )
         return orders_with_bon
 
+    async def _update_customer_info(
+        self,
+        conn: asyncpg.Connection,
+        customer_account_id: int,
+        iban: Optional[str],
+        account_name: Optional[str],
+        email: Optional[str],
+        tip: Optional[float],
+    ):
+        # if customer_info does not exist create it, otherwise update it
+        await conn.execute(
+            "insert into customer_info (customer_account_id, iban, account_name, email, tip) values ($1, $2, $3, $4, $5) "
+            "on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4, tip = $5",
+            customer_account_id,
+            iban,
+            account_name,
+            email,
+            tip,
+        )
+
     @with_db_transaction
     @requires_customer
     async def update_customer_info(
@@ -239,14 +266,31 @@ class CustomerService(DBService):
         if iban.country_code not in allowed_country_codes:
             raise InvalidArgument("Provided IBAN contains country code which is not supported")
 
-        # if customer_info does not exist create it, otherwise update it
-        await conn.execute(
-            "insert into customer_info (customer_account_id, iban, account_name, email) values ($1, $2, $3, $4) "
-            "on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4",
-            current_customer.id,
-            iban.compact,
-            customer_bank.account_name,
-            customer_bank.email,
+        if customer_bank.tip < 0:
+            raise InvalidArgument("Tip cannot be negative")
+        if customer_bank.tip > current_customer.balance:
+            raise InvalidArgument("Tip cannot be higher then your balance")
+
+        await self._update_customer_info(
+            conn=conn,
+            customer_account_id=current_customer.id,
+            iban=iban.compact,
+            account_name=customer_bank.account_name,
+            email=customer_bank.email,
+            tip=round(customer_bank.tip, 2),
+        )
+
+    @with_db_transaction
+    @requires_customer
+    async def update_customer_tip(self, *, conn: asyncpg.Connection, current_customer: Customer) -> None:
+        # as the user wants to tip the full balance we can delete the bank details
+        await self._update_customer_info(
+            conn=conn,
+            customer_account_id=current_customer.id,
+            iban=None,
+            account_name=None,
+            email=None,
+            tip=round(current_customer.balance, 2),
         )
 
     async def get_public_customer_api_config(self) -> PublicCustomerApiConfig:
