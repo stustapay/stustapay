@@ -24,6 +24,7 @@ import iban from "iban";
 import i18n from "@/i18n";
 import { Link as RouterLink } from "react-router-dom";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 
 export const PayoutInfo: React.FC = () => {
   const { t } = useTranslation(undefined, { keyPrefix: "payout" });
@@ -34,6 +35,8 @@ export const PayoutInfo: React.FC = () => {
 
   const [setCustomerInfo] = useSetCustomerInfoMutation();
   const [setCustomerAllTip] = useSetCustomerAllTipMutation();
+
+  const formatCurrency = useCurrencyFormatter();
 
   if (isCustomerLoading || (!customer && !customerError)) {
     return <Loading />;
@@ -126,8 +129,7 @@ export const PayoutInfo: React.FC = () => {
         </Alert>
         <h3>{t("tipTitle")}</h3>
         <Button variant="contained" color="primary" sx={{ width: "100%" }} onClick={onAllTipClick}>
-          Tip remaining balance of {customer.balance}
-          {config.currency_symbol}
+          {t("tipRemainingBbalanceOf") + formatCurrency(customer.balance)}
         </Button>
 
         <h3>{t("payoutTitle")}</h3>
@@ -206,7 +208,7 @@ export const PayoutInfo: React.FC = () => {
                 <Typography>{t("tipDescription")}</Typography>
                 <NumericInput
                   name="tip"
-                  label={t("amountTip") + `(max ${customer.balance}${config.currency_symbol})`}
+                  label={t("amountTip") + `(max ${formatCurrency(customer.balance)})`}
                   variant="outlined"
                   fullWidth
                   value={formik.values.tip}

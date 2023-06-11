@@ -60,9 +60,10 @@ export const translations: NestedPartialAsStrings<Translations> = {
     tipExceedsBalance: "Das Trinkgeld darf nicht den Kontostand überschreiten",
     tipTitle: "Trinkgeld",
     payoutTitle: "Auszahlung",
-    amountTip: "Trinkgeldbetrag",
+    amountTip: "Trinkgeldbetrag ",
     tipDescription:
-      "Hat dir das Festival gefallen? Wir würden uns über ein Trinkgeld freuen, um unsere ehrenamtliche Arbeit zu unterstützen und zukünftige StuStaCuli noch besser zu machen.",
+      "Hat dir das Festival gefallen? Wir würden uns über ein Trinkgeld freuen, um unsere ehrenamtliche Arbeit zu unterstützen und zukünftige StuStaCula noch besser zu machen.",
+    tipRemainingBbalanceOf: "Spende verbleibende Summe von ",
   },
   topup: {
     onlineTopUp: "Online-Aufladung",

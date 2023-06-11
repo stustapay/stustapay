@@ -65,6 +65,7 @@ export const translations = {
     amountTip: "Tip amount",
     tipDescription:
       "If you appreciated our hard work to make this festival come true, we also welcome tips in order to support our future work",
+    tipRemainingBbalanceOf: "Tip remaining balance of ",
   },
   topup: {
     amount: "Amount",
