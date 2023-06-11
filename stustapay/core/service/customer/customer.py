@@ -46,10 +46,10 @@ class CustomerBankData(BaseModel):
 
 
 class CustomerBank(BaseModel):
-    iban: Optional[str]
-    account_name: Optional[str]
-    email: Optional[str]
-    donation: Optional[float]
+    iban: str
+    account_name: str
+    email: str
+    donation: float = 0.0
 
 
 async def get_number_of_customers(conn: asyncpg.Connection) -> int:
