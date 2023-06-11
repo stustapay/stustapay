@@ -21,7 +21,6 @@ import { Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import iban from "iban";
-import i18n from "@/i18n";
 import { Link as RouterLink } from "react-router-dom";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
@@ -71,13 +70,13 @@ export const PayoutInfo: React.FC = () => {
       if (val < 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: t("tipMustBePositive"),
+          message: t("donationMustBePositive"),
         });
       }
       if (val > customer.balance) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: t("tipExceedsBalance"),
+          message: t("donationExceedsBalance"),
         });
       }
     }),
@@ -127,9 +126,9 @@ export const PayoutInfo: React.FC = () => {
         <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
           {t("info")}
         </Alert>
-        <h3>{t("tipTitle")}</h3>
+        <h3>{t("donationTitle")}</h3>
         <Button variant="contained" color="primary" sx={{ width: "100%" }} onClick={onAllTipClick}>
-          {t("tipRemainingBbalanceOf") + formatCurrency(customer.balance)}
+          {t("donateRemainingBalanceOf") + formatCurrency(customer.balance)}
         </Button>
 
         <h3>{t("payoutTitle")}</h3>
@@ -205,10 +204,10 @@ export const PayoutInfo: React.FC = () => {
                     <FormHelperText sx={{ ml: 0 }}>{formik.errors.privacy_policy}</FormHelperText>
                   )}
                 </FormControl>
-                <Typography>{t("tipDescription")}</Typography>
+                <Typography>{t("donationDescription")}</Typography>
                 <NumericInput
                   name="tip"
-                  label={t("amountTip") + `(max ${formatCurrency(customer.balance)})`}
+                  label={t("donationAmount") + `(max ${formatCurrency(customer.balance)})`}
                   variant="outlined"
                   fullWidth
                   value={formik.values.tip}
