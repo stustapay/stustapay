@@ -58,6 +58,13 @@ export const translations = {
     errorFetchingData: "Error fetching data.",
     updatedBankData: "Successfully updated bank data.",
     errorWhileUpdatingBankData: "Error occurred while updating bank data.",
+    tipMustBePositive: "Tip must be positive",
+    tipExceedsBalance: "Tip cannot exceed your balance",
+    tipTitle: "Tip",
+    payoutTitle: "Payout",
+    amountTip: "Tip amount",
+    tipDescription:
+      "If you appreciated our hard work to make this festival come true, we also welcome tips in order to support our future work",
   },
   topup: {
     amount: "Amount",

@@ -48,7 +48,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     iban: "IBAN",
     bankAccountHolder: "Kontoinhaber",
     email: "E-Mail",
-    info: "Trage deine Bankdaten hier ein um dein Restguthaben auf dein Bankkonto zu überweisen.",
+    info: "Trage deine Bankdaten hier ein, um dein Restguthaben auf dein Bankkonto zu überweisen. Du kannst auch einen Teil oder Dein gesamten verbleibenden Betrag als Trinkgeld an uns geben, um unsere zukünftige Arbeit damit zu unterstützen.",
     ibanNotValid: "ungültige IBAN",
     countryCodeNotSupported: "IBAN Ländercode wird nicht unterstützt",
     mustAcceptPrivacyPolicy: "Sie müssen die Datenschutserklärung akzeptieren",
@@ -56,6 +56,13 @@ export const translations: NestedPartialAsStrings<Translations> = {
     errorFetchingData: "Fehler beim laden der Daten.",
     updatedBankData: "Bankdaten erfolgreich aktualisiert.",
     errorWhileUpdatingBankData: "Fehler beim aktualisieren der Bankdaten.",
+    tipMustBePositive: "Das Trinkgeld muss positiv sein",
+    tipExceedsBalance: "Das Trinkgeld darf nicht den Kontostand überschreiten",
+    tipTitle: "Trinkgeld",
+    payoutTitle: "Auszahlung",
+    amountTip: "Trinkgeldbetrag",
+    tipDescription:
+      "Hat dir das Festival gefallen? Wir würden uns über ein Trinkgeld freuen, um unsere ehrenamtliche Arbeit zu unterstützen und zukünftige StuStaCuli noch besser zu machen.",
   },
   topup: {
     onlineTopUp: "Online-Aufladung",

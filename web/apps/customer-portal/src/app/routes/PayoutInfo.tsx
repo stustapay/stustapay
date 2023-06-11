@@ -49,32 +49,32 @@ export const PayoutInfo: React.FC = () => {
       if (!iban.isValid(val)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: i18n.t("payout.ibanNotValid"),
+          message: t("ibanNotValid"),
         });
       }
       if (!config.allowed_country_codes.includes(val.substring(0, 2))) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: i18n.t("payout.countryCodeNotSupported"),
+          message: t("countryCodeNotSupported"),
         });
       }
     }),
     account_name: z.string(),
     email: z.string().email(),
     privacy_policy: z.boolean().refine((val) => val, {
-      message: i18n.t("payout.mustAcceptPrivacyPolicy"),
+      message: t("mustAcceptPrivacyPolicy"),
     }),
     tip: z.number().superRefine((val, ctx) => {
       if (val < 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Tip must be positive",
+          message: t("tipMustBePositive"),
         });
       }
       if (val > customer.balance) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Tip cannot exceed your balance",
+          message: t("tipExceedsBalance"),
         });
       }
     }),
@@ -124,13 +124,13 @@ export const PayoutInfo: React.FC = () => {
         <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
           {t("info")}
         </Alert>
-        <h3>Tip</h3>
+        <h3>{t("tipTitle")}</h3>
         <Button variant="contained" color="primary" sx={{ width: "100%" }} onClick={onAllTipClick}>
           Tip remaining balance of {customer.balance}
           {config.currency_symbol}
         </Button>
 
-        <h3>Payout</h3>
+        <h3>{t("payoutTitle")}</h3>
         <Formik
           initialValues={initialValues}
           validationSchema={toFormikValidationSchema(FormSchema)}
@@ -203,13 +203,10 @@ export const PayoutInfo: React.FC = () => {
                     <FormHelperText sx={{ ml: 0 }}>{formik.errors.privacy_policy}</FormHelperText>
                   )}
                 </FormControl>
-                <Typography>
-                  If you appreciated our hard work to make this festival come true, we also appreciate tips in order to
-                  support our future work :)
-                </Typography>
+                <Typography>{t("tipDescription")}</Typography>
                 <NumericInput
                   name="tip"
-                  label={`Amount of tip (max ${customer.balance}${config.currency_symbol})`}
+                  label={t("amountTip") + `(max ${customer.balance}${config.currency_symbol})`}
                   variant="outlined"
                   fullWidth
                   value={formik.values.tip}

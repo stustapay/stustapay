@@ -186,7 +186,7 @@ class CustomerServiceTest(TerminalTestCase):
                 self.assertEqual(result_customer.account_name, customer["account_name"])
                 self.assertEqual(result_customer.email, customer["email"])
                 self.assertEqual(result_customer.user_tag_uid, customer["uid"])
-                self.assertEqual(result_customer.balance, customer["balance"] - customer["tip"])
+                self.assertEqual(result_customer.balance, customer["balance"] - customer["tip"]) # type: ignore
 
         result = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
         check_data(result, len(self.customers_to_transfer))
