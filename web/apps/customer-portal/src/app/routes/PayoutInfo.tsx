@@ -1,4 +1,4 @@
-import { useGetCustomerQuery, useSetCustomerAllTipMutation, useSetCustomerInfoMutation } from "@/api";
+import { useGetCustomerQuery, useSetCustomerAllDonateMutation, useSetCustomerInfoMutation } from "@/api";
 import { Loading, NumericInput } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -33,7 +33,7 @@ export const PayoutInfo: React.FC = () => {
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
 
   const [setCustomerInfo] = useSetCustomerInfoMutation();
-  const [setCustomerAllTip] = useSetCustomerAllTipMutation();
+  const [setCustomerAllDonate] = useSetCustomerAllDonateMutation();
 
   const formatCurrency = useCurrencyFormatter();
 
@@ -66,7 +66,7 @@ export const PayoutInfo: React.FC = () => {
     privacy_policy: z.boolean().refine((val) => val, {
       message: t("mustAcceptPrivacyPolicy"),
     }),
-    tip: z.number().superRefine((val, ctx) => {
+    donation: z.number().superRefine((val, ctx) => {
       if (val < 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -88,7 +88,7 @@ export const PayoutInfo: React.FC = () => {
     account_name: customer.account_name ?? "",
     email: customer.email ?? "",
     privacy_policy: false,
-    tip: customer.tip ?? 0.0,
+    donation: customer.donation ?? 0.0,
   };
 
   const onSubmit = (values: FormVal, { setSubmitting }: FormikHelpers<FormVal>) => {
@@ -108,7 +108,7 @@ export const PayoutInfo: React.FC = () => {
       });
   };
   const onAllTipClick = () => {
-    setCustomerAllTip()
+    setCustomerAllDonate()
       .unwrap()
       .then(() => {
         toast.success(t("updatedBankData"));
@@ -206,17 +206,17 @@ export const PayoutInfo: React.FC = () => {
                 </FormControl>
                 <Typography>{t("donationDescription")}</Typography>
                 <NumericInput
-                  name="tip"
+                  name="donation"
                   label={t("donationAmount") + `(max ${formatCurrency(customer.balance)})`}
                   variant="outlined"
                   fullWidth
-                  value={formik.values.tip}
-                  onChange={(val) => formik.setFieldValue("tip", val)}
+                  value={formik.values.donation}
+                  onChange={(val) => formik.setFieldValue("donation", val)}
                   InputProps={{
                     endAdornment: <InputAdornment position="end">{config.currency_symbol}</InputAdornment>,
                   }}
-                  error={formik.touched.tip && Boolean(formik.errors.tip)}
-                  helperText={(formik.touched.tip && formik.errors.tip) as string}
+                  error={formik.touched.donation && Boolean(formik.errors.donation)}
+                  helperText={(formik.touched.donation && formik.errors.donation) as string}
                 />
                 <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
                   {formik.isSubmitting ? "Submitting" : "Submit"}

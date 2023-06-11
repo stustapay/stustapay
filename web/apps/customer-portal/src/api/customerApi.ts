@@ -28,13 +28,12 @@ export const customerApi = createApi({
           iban: customer.iban,
           account_name: customer.account_name,
           email: customer.email,
-          tip: customer.tip,
-          // wants_to_tip: customer.wants_to_tip
+          donation: customer.donation,
         },
       }),
     }),
 
-    setCustomerAllTip: builder.mutation<void, void>({
+    setCustomerAllDonate: builder.mutation<void, void>({
       query: (customer) => ({
         url: "/customer_all_tip",
         method: "POST",
@@ -48,5 +47,5 @@ export const {
   useGetCustomerQuery,
   useGetOrdersWithBonQuery,
   useSetCustomerInfoMutation,
-  useSetCustomerAllTipMutation,
+  useSetCustomerAllDonateMutation,
 } = customerApi;
