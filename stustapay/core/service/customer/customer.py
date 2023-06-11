@@ -49,7 +49,7 @@ class CustomerBank(BaseModel):
     iban: str
     account_name: str
     email: str
-    donation: float
+    donation: float = 0.0
 
 
 async def get_number_of_customers(conn: asyncpg.Connection) -> int:
