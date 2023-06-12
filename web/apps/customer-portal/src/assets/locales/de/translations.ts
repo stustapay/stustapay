@@ -48,7 +48,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     iban: "IBAN",
     bankAccountHolder: "Kontoinhaber",
     email: "E-Mail",
-    info: "Trage deine Bankdaten hier ein, um dein Restguthaben auf dein Bankkonto zu überweisen. Du kannst auch einen Teil oder Dein gesamten verbleibenden Betrag als Trinkgeld an uns geben, um unsere zukünftige Arbeit damit zu unterstützen. Kulturleben in der Studentenstadt e.V. is ein von Studierenden betriebener gemeinnütziger Verein, welcher jährlich das StuStaCulum Festival organisiert.",
+    info: "Trage deine Bankdaten hier ein, um dein Restguthaben auf dein Bankkonto zu überweisen. Du kannst auch einen Teil oder Dein gesamtes verbleibendes Guthaben an uns spenden, um unser ehrenamtliches Engagement zu unterstützen. Kulturleben in der Studentenstadt e.V. is ein von Studierenden betriebener gemeinnütziger Verein, welcher jährlich das StuStaCulum-Festival organisiert.",
     ibanNotValid: "ungültige IBAN",
     countryCodeNotSupported: "IBAN Ländercode wird nicht unterstützt",
     mustAcceptPrivacyPolicy: "Sie müssen die Datenschutserklärung akzeptieren",
