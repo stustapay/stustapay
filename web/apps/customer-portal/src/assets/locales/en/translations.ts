@@ -50,7 +50,7 @@ export const translations = {
     iban: "IBAN",
     bankAccountHolder: "Account Holder",
     email: "E-Mail",
-    info: "Enter your account information to receive your leftover cash to your bank account. You can also donate part of your remaining balance or your whole remaining balance to us in order to support our future work. Kulturleben in der Studentenstadt e. V. is a student-run non-profit organization which annually holds the StuStaCulum festival.",
+    info: "Enter your account information to receive your leftover cash to your bank account. You can also donate parts or your whole remaining balance to support our volunteer work. Kulturleben in der Studentenstadt e. V. is a student-run non-profit organization which annually holds the StuStaCulum festival.",
     ibanNotValid: "IBAN is not valid",
     countryCodeNotSupported: "Provided IBAN country code is not supported",
     mustAcceptPrivacyPolicy: "You must accept the privacy policy",
