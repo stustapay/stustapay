@@ -219,7 +219,7 @@ export const PayoutInfo: React.FC = () => {
                   helperText={(formik.touched.donation && formik.errors.donation) as string}
                 />
                 <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
-                  {formik.isSubmitting ? "Submitting" : "Submit"}
+                  {formik.isSubmitting ? "Submitting" : t("submitPayoutData")}
                 </Button>
               </Stack>
             </form>
