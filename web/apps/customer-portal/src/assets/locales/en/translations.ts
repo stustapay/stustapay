@@ -66,7 +66,7 @@ export const translations = {
     donationDescription:
       "If you appreciated our hard work to make this festival come true, we also welcome donations in order to support our future work",
     donateRemainingBalanceOf: "Donate remaining balance of ",
-    submitPayoutData: "Register bank data for payout",
+    submitPayoutData: "Save bank data",
   },
   topup: {
     amount: "Amount",

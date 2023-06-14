@@ -54,7 +54,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     mustAcceptPrivacyPolicy: "Sie müssen die Datenschutserklärung akzeptieren",
     privacyPolicyCheck: "Ich habe die <1>Datenschutzerklärung</1> des StuStaCulum gelesen und akzeptiere sie.",
     errorFetchingData: "Fehler beim laden der Daten.",
-    updatedBankData: "Bankdaten erfolgreich aktualisiert. Die nächste Auszahlung erfolgt am 19. Juli.",
+    updatedBankData: "Bankdaten erfolgreich aktualisiert. Die nächste Auszahlung erfolgt am 19. Juni.",
     errorWhileUpdatingBankData: "Fehler beim aktualisieren der Bankdaten.",
     donationMustBePositive: "Das Spende muss positiv sein",
     donationExceedsBalance: "Die Spende darf nicht den Kontostand überschreiten",
@@ -64,7 +64,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     donationDescription:
       "Hat dir das Festival gefallen? Wir würden uns über eine Spende freuen, um unsere ehrenamtliche Arbeit zu unterstützen und zukünftige StuStaCula noch besser zu machen.",
     donateRemainingBalanceOf: "Spende verbleibende Summe von ",
-    submitPayoutData: "Bankdaten registrieren für Auszahlung",
+    submitPayoutData: "Bankdaten speichern",
   },
   topup: {
     onlineTopUp: "Online-Aufladung",
