@@ -4,7 +4,7 @@ import csv
 import datetime
 import logging
 import re
-from typing import Optional, List
+from typing import Optional
 
 import asyncpg
 from pydantic import BaseModel
@@ -52,24 +52,48 @@ class CustomerBank(BaseModel):
     donation: float = 0.0
 
 
-async def get_number_of_customers(conn: asyncpg.Connection) -> int:
-    # number of customers with iban not null and balance > 0
+async def get_number_of_payouts(conn: asyncpg.Connection, payout_run_id: int) -> int:
     return await conn.fetchval(
-        "select count(*) from customer c "
-        "where c.iban is not null "
-        "and round(c.balance, 2) > 0 "
-        "and round(c.balance - c.donation, 2) > 0"
+        "select count(*) from payout where payout_run_id = $1",
+        payout_run_id
     )
 
+# async def next_payout_run_number(conn: asyncpg.Connection) -> int:
+#     # number of next payout run
+#     payout_run_id = await conn.fetchval(
+#         "select id from payout_run order by id desc limit 1"
+#     )
+#     if payout_run_id is None:
+#         return 1
+#     return payout_run_id + 1
+
+# TODO: function that creates payout_run entry in database with timestamp and user
+async def create_payout_run(conn: asyncpg.Connection, created_by: str) -> tuple[int, int]:
+    payout_run_id = await conn.fetchval(
+        "insert into payout_run (created_at, created_by) values (now(), $1) returning id",
+        created_by
+    )
+    # set payout_run_id for all pending payouts
+    await conn.execute(
+        "update customer_info c set payout_run_id = $1 where c.customer_account_id in "
+            "(select p.customer_account_id from payout p where p.payout_run_id is null)",
+        payout_run_id
+    )
+    number_of_payouts = await conn.fetchval(
+        "select count(*) from payout where payout_run_id = $1",
+        payout_run_id
+    )
+    return payout_run_id, number_of_payouts
 
 async def get_customer_bank_data(
-    conn: asyncpg.Connection, max_export_items_per_batch: int, ith_batch: int = 0
-) -> List[CustomerBankData]:
+    conn: asyncpg.Connection, payout_run_id: int, max_export_items_per_batch: int, ith_batch: int = 0
+) -> list[CustomerBankData]:
     rows = await conn.fetch(
-        "select c.iban, c.account_name, c.email, c.user_tag_uid, (c.balance - c.donation) as balance "
-        "from customer c "
-        "where c.iban is not null and round(c.balance, 2) > 0 and round(c.balance - c.donation, 2) > 0 "
-        "limit $1 offset $2",
+        "select * "
+        "from payout "
+        "where payout_run_id = $1 "
+        "limit $2 offset $3",
+        payout_run_id,
         max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,
     )
@@ -81,9 +105,8 @@ async def csv_export(
     output_path: str,
     sepa_config: SEPAConfig,
     currency_ident: str,
-    execution_date: Optional[datetime.date],
+    execution_date: datetime.date,
 ) -> None:
-    """If execution_date is None, the execution date will be set to today + 2 days."""
     with open(output_path, "w") as f:
         execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
         writer = csv.writer(f)
@@ -107,15 +130,12 @@ async def sepa_export(
     output_path: str,
     sepa_config: SEPAConfig,
     currency_ident: str,
-    execution_date: Optional[datetime.date],
+    execution_date: datetime.date,
 ) -> None:
-    """If execution_date is None, the execution date will be set to today + 2 days."""
     if len(customers_bank_data) == 0:
         # avoid error in sepa library
         logging.warning("No customers with bank data found. Nothing to export.")
         return
-
-    execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
 
     iban = IBAN(sepa_config.sender_iban)
     config = {
@@ -215,14 +235,14 @@ class CustomerService(DBService):
     @requires_customer
     async def get_orders_with_bon(
         self, *, conn: asyncpg.Connection, current_customer: Customer
-    ) -> Optional[List[OrderWithBon]]:
+    ) -> Optional[list[OrderWithBon]]:
         rows = await conn.fetch(
             "select * from order_value_with_bon where customer_account_id = $1 order by booked_at DESC",
             current_customer.id,
         )
         if rows is None:
             return None
-        orders_with_bon: List[OrderWithBon] = [OrderWithBon.parse_obj(row) for row in rows]
+        orders_with_bon: list[OrderWithBon] = [OrderWithBon.parse_obj(row) for row in rows]
         for order_with_bon in orders_with_bon:
             if order_with_bon.bon_output_file is not None:
                 order_with_bon.bon_output_file = self.cfg.customer_portal.base_bon_url.format(
