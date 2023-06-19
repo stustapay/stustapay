@@ -3,10 +3,12 @@ import { AccountSchema } from "./account";
 import { OrderSchema } from "./order";
 
 export const CustomerInfoSchema = z.object({
-  iban: z.string(),
-  account_name: z.string(),
-  email: z.string(),
-  donation: z.number(),
+  iban: z.string().nullable(),
+  account_name: z.string().nullable(),
+  email: z.string().nullable(),
+  donation: z.number().nullable(),
+  error: z.string().nullable(),
+  payout_run_id: z.number().nullable(),
 });
 
 export type CustomerInfo = z.infer<typeof CustomerInfoSchema>;
