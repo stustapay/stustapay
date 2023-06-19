@@ -1,6 +1,7 @@
 import datetime
 import logging
 import math
+import os
 from typing import Optional
 
 import asyncpg
@@ -67,6 +68,13 @@ class CustomerExportCli(SubCommand):
             type=int,
             help="Payout run id. If not given, a new payout run is created. If given, the payout run is recreated.",
         )
+        subparser.add_argument(
+            "-o",
+            "--output-path",
+            default="",
+            type=str,
+            help="Output path for the generated files. If not given, the current working directory is used.",
+        )
 
     async def _export_customer_bank_data(
         self,
@@ -76,6 +84,7 @@ class CustomerExportCli(SubCommand):
         max_export_items_per_batch: Optional[int] = None,
         dry_run: bool = False,
         payout_run_id: Optional[int] = None,
+        output_path: str = "",
     ):
         execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
 
@@ -106,21 +115,23 @@ class CustomerExportCli(SubCommand):
                         max_export_items_per_batch=max_export_items_per_batch,
                         ith_batch=i,
                     )
-                    output_path = self.SEPA_PATH.format(payout_run_id, i + 1)
+                    file_path = os.path.join(output_path, self.SEPA_PATH.format(payout_run_id, i + 1))
                     await sepa_export(
                         customers_bank_data=customers_bank_data,
-                        output_path=output_path,
+                        output_path=file_path,
                         sepa_config=sepa_config,
                         currency_ident=currency_ident,
                         execution_date=execution_date,
                     )
 
                 # csv export
-                output_path = self.CSV_PATH.format(payout_run_id)
-                customers_bank_data = await get_customer_bank_data(conn=conn, payout_run_id=payout_run_id)
+                file_path = os.path.join(output_path, self.CSV_PATH.format(payout_run_id))
+                customers_bank_data = await get_customer_bank_data(
+                    conn=conn, payout_run_id=payout_run_id, max_export_items_per_batch=number_of_payouts
+                )
                 await csv_export(
                     customers_bank_data=customers_bank_data,
-                    output_path=output_path,
+                    output_path=file_path,
                     sepa_config=sepa_config,
                     currency_ident=currency_ident,
                     execution_date=execution_date,
@@ -151,6 +162,7 @@ class CustomerExportCli(SubCommand):
                 max_export_items_per_batch=self.args.max_transactions_batch,
                 dry_run=self.args.dry_run,
                 payout_run_id=self.args.payout_run_id,
+                output_path=self.args.output_path,
             )
         finally:
             await db_pool.close()

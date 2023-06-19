@@ -37,12 +37,14 @@ class CustomerLoginSuccess(BaseModel):
     token: str
 
 
-class CustomerBankData(BaseModel):
+class Payout(BaseModel):
+    customer_account_id: int
     iban: str
     account_name: str
     email: str
     user_tag_uid: int
     balance: float
+    payout_run_id: Optional[int]
 
 
 class CustomerBank(BaseModel):
@@ -72,18 +74,18 @@ async def create_payout_run(conn: asyncpg.Connection, created_by: str) -> tuple[
 
 async def get_customer_bank_data(
     conn: asyncpg.Connection, payout_run_id: int, max_export_items_per_batch: int, ith_batch: int = 0
-) -> list[CustomerBankData]:
+) -> list[Payout]:
     rows = await conn.fetch(
-        "select * " "from payout " "where payout_run_id = $1 " "limit $2 offset $3",
+        "select * from payout where payout_run_id = $1 limit $2 offset $3",
         payout_run_id,
         max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,
     )
-    return [CustomerBankData.parse_obj(row) for row in rows]
+    return [Payout.parse_obj(row) for row in rows]
 
 
 async def csv_export(
-    customers_bank_data: list[CustomerBankData],
+    customers_bank_data: list[Payout],
     output_path: str,
     sepa_config: SEPAConfig,
     currency_ident: str,
@@ -108,7 +110,7 @@ async def csv_export(
 
 
 async def sepa_export(
-    customers_bank_data: list[CustomerBankData],
+    customers_bank_data: list[Payout],
     output_path: str,
     sepa_config: SEPAConfig,
     currency_ident: str,
