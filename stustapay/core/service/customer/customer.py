@@ -53,46 +53,28 @@ class CustomerBank(BaseModel):
 
 
 async def get_number_of_payouts(conn: asyncpg.Connection, payout_run_id: int) -> int:
-    return await conn.fetchval(
-        "select count(*) from payout where payout_run_id = $1",
-        payout_run_id
-    )
+    return await conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id)
 
-# async def next_payout_run_number(conn: asyncpg.Connection) -> int:
-#     # number of next payout run
-#     payout_run_id = await conn.fetchval(
-#         "select id from payout_run order by id desc limit 1"
-#     )
-#     if payout_run_id is None:
-#         return 1
-#     return payout_run_id + 1
 
-# TODO: function that creates payout_run entry in database with timestamp and user
 async def create_payout_run(conn: asyncpg.Connection, created_by: str) -> tuple[int, int]:
     payout_run_id = await conn.fetchval(
-        "insert into payout_run (created_at, created_by) values (now(), $1) returning id",
-        created_by
+        "insert into payout_run (created_at, created_by) values (now(), $1) returning id", created_by
     )
     # set payout_run_id for all pending payouts
     await conn.execute(
         "update customer_info c set payout_run_id = $1 where c.customer_account_id in "
-            "(select p.customer_account_id from payout p where p.payout_run_id is null)",
-        payout_run_id
+        "(select p.customer_account_id from payout p where p.payout_run_id is null)",
+        payout_run_id,
     )
-    number_of_payouts = await conn.fetchval(
-        "select count(*) from payout where payout_run_id = $1",
-        payout_run_id
-    )
+    number_of_payouts = await conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id)
     return payout_run_id, number_of_payouts
+
 
 async def get_customer_bank_data(
     conn: asyncpg.Connection, payout_run_id: int, max_export_items_per_batch: int, ith_batch: int = 0
 ) -> list[CustomerBankData]:
     rows = await conn.fetch(
-        "select * "
-        "from payout "
-        "where payout_run_id = $1 "
-        "limit $2 offset $3",
+        "select * " "from payout " "where payout_run_id = $1 " "limit $2 offset $3",
         payout_run_id,
         max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,

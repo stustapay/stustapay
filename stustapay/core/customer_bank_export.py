@@ -26,6 +26,7 @@ class CustomerExportCli(SubCommand):
         python -m stustapay.core -v customer-bank-export sepa -f sepa_transfer.xml
         python -m stustapay.core -v customer-bank-export csv -f customer_bank_data.csv
     """
+
     SEPA_PATH = "sepa__run_{}__num_{}.xml"
     CSV_PATH = "bank_export__run_{}.csv"
 
@@ -80,14 +81,10 @@ class CustomerExportCli(SubCommand):
 
         async with db_pool.acquire() as conn:
             async with conn.transaction():
-                # payout_run_number = await database.get_payout_run_number(conn=conn)
-                # next_payout_run_number = await next_payout_run_number(conn=conn)
-                # number_of_customers = await get_number_of_customers(conn=conn)
-
                 if payout_run_id is None:
-                    payout_run_id, number_of_payouts = await create_payout_run(conn, created_by)                
+                    payout_run_id, number_of_payouts = await create_payout_run(conn, created_by)
                 else:
-                    number_of_payouts = await get_number_of_payouts(conn=conn, payout_run_id=payout_run_id) 
+                    number_of_payouts = await get_number_of_payouts(conn=conn, payout_run_id=payout_run_id)
 
                 if number_of_payouts == 0:
                     logging.warning("No customers with bank data found. Nothing to export.")
@@ -104,7 +101,10 @@ class CustomerExportCli(SubCommand):
                 # sepa export
                 for i in range(math.ceil(number_of_payouts / max_export_items_per_batch)):
                     customers_bank_data = await get_customer_bank_data(
-                        conn=conn, payout_run_id=payout_run_id, max_export_items_per_batch=max_export_items_per_batch, ith_batch=i
+                        conn=conn,
+                        payout_run_id=payout_run_id,
+                        max_export_items_per_batch=max_export_items_per_batch,
+                        ith_batch=i,
                     )
                     output_path = self.SEPA_PATH.format(payout_run_id, i + 1)
                     await sepa_export(
@@ -140,9 +140,9 @@ class CustomerExportCli(SubCommand):
         try:
             await database.check_revision_version(db_pool)
             execution_date = (
-                    datetime.datetime.strptime(self.args.execution_date, "%Y-%m-%d").date()
-                    if self.args.execution_date
-                    else None
+                datetime.datetime.strptime(self.args.execution_date, "%Y-%m-%d").date()
+                if self.args.execution_date
+                else None
             )
             await self._export_customer_bank_data(
                 db_pool=db_pool,
