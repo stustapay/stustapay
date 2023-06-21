@@ -9,6 +9,7 @@ export const CustomerInfoSchema = z.object({
   donation: z.number().nullable(),
   error: z.string().nullable(),
   payout_run_id: z.number().nullable(),
+  payout_export: z.boolean().nullable(),
 });
 
 export type CustomerInfo = z.infer<typeof CustomerInfoSchema>;

@@ -54,7 +54,9 @@ class CustomerBank(BaseModel):
     donation: float = 0.0
 
 
-async def get_number_of_payouts(conn: asyncpg.Connection, payout_run_id: int) -> int:
+async def get_number_of_payouts(conn: asyncpg.Connection, payout_run_id: Optional[int]) -> int:
+    if payout_run_id is None:
+        return await conn.fetchval("select count(*) from payout where payout_run_id is null")
     return await conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id)
 
 
@@ -76,7 +78,7 @@ async def get_customer_bank_data(
     conn: asyncpg.Connection, payout_run_id: int, max_export_items_per_batch: int, ith_batch: int = 0
 ) -> list[Payout]:
     rows = await conn.fetch(
-        "select * from payout where payout_run_id = $1 limit $2 offset $3",
+        "select * from payout where payout_run_id = $1 order by user_tag_uid asc limit $2 offset $3",
         payout_run_id,
         max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,

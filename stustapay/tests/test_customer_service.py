@@ -123,6 +123,7 @@ class CustomerServiceTest(TerminalTestCase):
                 "account_name": "Rolf",
                 "email": "rolf@lol.de",
                 "donation": 1.0 * i,
+                "payout_export": True,
             }
             for i in range(10)
         ]
@@ -179,7 +180,7 @@ class CustomerServiceTest(TerminalTestCase):
             )
 
     async def test_get_number_of_payouts(self):
-        result = await get_number_of_payouts(self.db_conn)
+        result = await get_number_of_payouts(self.db_conn, None)
         self.assertEqual(result, len(self.customers_to_transfer))
 
     # TODO: test create payouts
@@ -234,20 +235,28 @@ class CustomerServiceTest(TerminalTestCase):
 
         self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
 
+        export_sum = 0
+
         # read the csv back in
         with open(os.path.join(self.tmp_dir, test_file_name)) as csvfile:
             reader = csv.DictReader(csvfile)
             self.assertEqual(len(list(reader)), len(self.customers_to_transfer))
+        with open(os.path.join(self.tmp_dir, test_file_name)) as csvfile:
+            reader = csv.DictReader(csvfile)
             for row, customer in zip(reader, self.customers_to_transfer):
                 self.assertEqual(row["beneficiary_name"], customer["account_name"])
                 self.assertEqual(row["iban"], customer["iban"])
-                self.assertEqual(float(row["amount"]), round(customer["balance"], 2))
+                self.assertEqual(float(row["amount"]), round(customer["balance"] - customer["donation"], 2))
                 self.assertEqual(row["currency"], currency_ident)
                 self.assertEqual(
                     row["reference"],
-                    sepa_config.description.format(user_tag_uid=customer["uid"]),
+                    sepa_config.description.format(user_tag_uid=hex(customer["uid"])),
                 )
                 self.assertEqual(row["execution_date"], execution_date.isoformat())
+                export_sum += float(row["amount"])
+
+        sql_sum = float(await self.db_conn.fetchval("select sum(round(balance, 2)) from payout"))
+        self.assertEqual(sql_sum, export_sum)
 
     async def test_sepa_export(self):
         test_file_name = "test_sepa.xml"
@@ -465,41 +474,46 @@ class CustomerServiceTest(TerminalTestCase):
     async def test_export_customer_bank_data(self):
         cli = CustomerExportCli(None, config=self.test_config)
         output_path = os.path.join(self.tmp_dir, "test_export")
+        os.makedirs(output_path, exist_ok=True)
 
         await cli._export_customer_bank_data(
             db_pool=self.db_pool, created_by="test", dry_run=True, output_path=output_path
         )
-        self.assertTrue(os.path.exists(cli.CSV_PATH.format(1)))
-        self.assertTrue(os.path.exists(cli.SEPA_PATH.format(1, 1)))
-
-        os.remove(cli.CSV_PATH.format(1))
-        os.remove(cli.SEPA_PATH.format(1, 1))
+        self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(1))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(1, 1))))
 
         # check if dry run successful and no database entry created
         self.assertEqual(await get_number_of_payouts(self.db_conn, 1), 0)
+
+        output_path = os.path.join(self.tmp_dir, "test_export2")
+        os.makedirs(output_path, exist_ok=True)
 
         # test several batches
         await cli._export_customer_bank_data(
             db_pool=self.db_pool, created_by="Test", dry_run=True, max_export_items_per_batch=1, output_path=output_path
         )
         for i in range(len(self.customers_to_transfer)):
-            self.assertTrue(os.path.exists(cli.SEPA_PATH.format(1, i + 1)))
-            os.remove(cli.SEPA_PATH.format(1, i + 1))
-        self.assertTrue(os.path.exists(cli.CSV_PATH.format(1)))
-        os.remove(cli.CSV_PATH.format(1))
+            self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(2, i + 1))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(2))))
 
         # test non dry run
+        output_path = os.path.join(self.tmp_dir, "test_export3")
+        os.makedirs(output_path, exist_ok=True)
         await cli._export_customer_bank_data(
             db_pool=self.db_pool, created_by="Test", dry_run=False, output_path=output_path
         )
+        self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(3, 1))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(3))))
         # check that all customers in self.customers_to_transfer have payout_run_id set to 1 and rest null
         rows = await self.db_conn.fetch("select * from customer")
         customers = [Customer.parse_obj(row) for row in rows]
         uid_to_transfer = [customer["uid"] for customer in self.customers_to_transfer]
         for customer in customers:
-            if customer.uid in uid_to_transfer:
-                self.assertEqual(customer.payout_run_id, 1)
+            if customer.user_tag_uid in uid_to_transfer:
+                self.assertEqual(customer.payout_run_id, 3)
             else:
+                if customer.payout_run_id is not None:
+                    self.assertNotEqual(customer.payout_run_id, 3)
                 self.assertIsNone(customer.payout_run_id)
 
 

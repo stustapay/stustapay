@@ -15,6 +15,7 @@ class Customer(Account):
     donation: Optional[float]
     error: Optional[str]
     payout_run_id: Optional[int]
+    payout_export: Optional[bool]
 
 
 class OrderWithBon(Order):

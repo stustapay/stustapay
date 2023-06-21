@@ -4,8 +4,8 @@
 
 create table if not exists payout_run (
     id bigint primary key generated always as identity (start with 1),
-    created_by text not null unique
-    created_at timestamptz not null,
+    created_by text not null unique,
+    created_at timestamptz not null
 );
 
 alter table customer_info add column payout_run_id bigint references payout_run(id) on delete cascade;
@@ -13,17 +13,11 @@ alter table customer_info add column error text;
 alter table customer_info add column payout_export boolean default false not null;
 
 
--- explicit customer view
+-- view needs to be recreated as it is not updated otherwise
 create or replace view customer as
     select
         a.*,
-        c.customer_account_id,
-        c.iban,
-        c.account_name,
-        c.email,
-        c.donation,
-        c.error,
-        c.payout_run_id
+        c.*
     from account_with_history a
     left join customer_info c on (a.id = c.customer_account_id);
 
