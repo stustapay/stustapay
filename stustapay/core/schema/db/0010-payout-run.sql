@@ -4,13 +4,13 @@
 
 create table if not exists payout_run (
     id bigint primary key generated always as identity (start with 1),
-    created_by text not null unique,
+    created_by text not null,
     created_at timestamptz not null
 );
 
 alter table customer_info add column payout_run_id bigint references payout_run(id) on delete cascade;
-alter table customer_info add column error text;
-alter table customer_info add column payout_export boolean default false not null;
+alter table customer_info add column payout_error text;
+alter table customer_info add column payout_export boolean default true not null;
 
 
 -- view needs to be recreated as it is not updated otherwise
@@ -36,6 +36,5 @@ create or replace view payout as
         c.iban is not null and
         round(c.balance, 2) > 0 and
         round(c.balance - c.donation, 2) > 0 and
-        -- c.payout_run_id is null and
         c.payout_export and
-        c.error is null;
+        c.payout_error is null;

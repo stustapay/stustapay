@@ -183,8 +183,6 @@ class CustomerServiceTest(TerminalTestCase):
         result = await get_number_of_payouts(self.db_conn, None)
         self.assertEqual(result, len(self.customers_to_transfer))
 
-    # TODO: test create payouts
-
     async def test_get_customer_bank_data(self):
         def check_data(result: list[Payout], leng: int, ith: int = 0) -> None:
             self.assertEqual(len(result), leng)

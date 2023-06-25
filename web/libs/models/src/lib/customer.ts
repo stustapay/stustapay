@@ -7,7 +7,7 @@ export const CustomerInfoSchema = z.object({
   account_name: z.string().nullable(),
   email: z.string().nullable(),
   donation: z.number().nullable(),
-  error: z.string().nullable(),
+  payout_error: z.string().nullable(),
   payout_run_id: z.number().nullable(),
   payout_export: z.boolean().nullable(),
 });
