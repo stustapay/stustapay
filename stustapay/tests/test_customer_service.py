@@ -617,6 +617,18 @@ class CustomerServiceTest(TerminalTestCase):
             else:
                 self.assertIsNone(customer.payout_run_id)
 
+        # test customer "Rolf1" can no longer be updated since they now have a payout run assigned
+        auth = await self.customer_service.login_customer(uid=(12345 * (1 + 1)), pin="pin1")
+        self.assertIsNotNone(auth)
+        customer_bank = CustomerBank(
+            iban="DE89370400440532013000", account_name="Rolf1 updated", email="lol@rolf.de", donation=2.0
+        )
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_info(
+                token=auth.token,
+                customer_bank=customer_bank,
+            )
+
     async def test_payout_runs(self):
         output_path = os.path.join(self.tmp_dir, "test_payout_runs")
         os.makedirs(output_path, exist_ok=True)

@@ -250,6 +250,16 @@ class CustomerService(DBService):
     async def update_customer_info(
         self, *, conn: asyncpg.Connection, current_customer: Customer, customer_bank: CustomerBank
     ) -> None:
+        # if a payout is assigned, disallow updates.
+        payout_id = await conn.fetchval(
+            "select payout_run_id from customer_info where customer_account_id = $1",
+            current_customer.id,
+        )
+        if payout_id != None:
+            raise InvalidArgument(
+                "Your account is already scheduled for the next payout, so updates are no longer possible."
+            )
+
         # check iban
         try:
             iban = IBAN(customer_bank.iban, validate_bban=True)
