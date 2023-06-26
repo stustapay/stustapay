@@ -8,23 +8,27 @@ import unittest
 from dateutil.parser import parse
 
 from stustapay.core.config import CustomerPortalApiConfig
-from stustapay.core.customer_bank_export import CustomerExportCli
+from stustapay.core.customer_bank_export import export_customer_payouts, CSV_PATH, SEPA_PATH
+from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.common.error import InvalidArgument, Unauthorized, AccessDenied
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import (
     CustomerBank,
-    CustomerBankData,
+    Payout,
     CustomerService,
+    create_payout_run,
     csv_export,
     get_customer_bank_data,
-    get_number_of_customers,
+    get_number_of_payouts,
     sepa_export,
 )
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.tests.common import TEST_CONFIG, TerminalTestCase
+import xml.etree.ElementTree as ET
 
 
 class CustomerServiceTest(TerminalTestCase):
@@ -118,9 +122,10 @@ class CustomerServiceTest(TerminalTestCase):
                 "pin": f"pin{i}",
                 "balance": 10.321 * i + 0.0012,
                 "iban": "DE89370400440532013000",
-                "account_name": "Rolf",
+                "account_name": f"Rolf{i}",
                 "email": "rolf@lol.de",
                 "donation": 1.0 * i,
+                "payout_export": True,
             }
             for i in range(10)
         ]
@@ -132,9 +137,10 @@ class CustomerServiceTest(TerminalTestCase):
                 "pin": "pin10",
                 "balance": 10,
                 "iban": "DE89370400440532013000",
-                "account_name": "Rolf",
+                "account_name": "Rolf Vollspender",
                 "email": "rolf@lol.de",
                 "donation": 10,
+                "payout_export": True,
             }
         ]
 
@@ -143,6 +149,9 @@ class CustomerServiceTest(TerminalTestCase):
         # first customer with uid 12345 should not be included as he has a balance of 0
         # last customer has same amount of donation as balance, thus should also not be included
         self.customers_to_transfer = self.customers[1:-1]
+
+        self.currency_ident = (await self.config_service.get_public_config(conn=self.db_conn)).currency_identifier
+        self.sepa_config = await self.config_service.get_sepa_config(conn=self.db_conn)
 
     async def _add_customers(self, data: list[dict]) -> None:
         for idx, customer in enumerate(data):
@@ -161,12 +170,13 @@ class CustomerServiceTest(TerminalTestCase):
             )
 
             await self.db_conn.execute(
-                "insert into customer_info (customer_account_id, iban, account_name, email, donation) values ($1, $2, $3, $4, $5)",
+                "insert into customer_info (customer_account_id, iban, account_name, email, donation, payout_export) values ($1, $2, $3, $4, $5, $6)",
                 idx + 100,
                 customer["iban"],
                 customer["account_name"],
                 customer["email"],
                 customer["donation"],
+                customer["payout_export"],
             )
 
             # update allowed country code config
@@ -174,12 +184,54 @@ class CustomerServiceTest(TerminalTestCase):
                 "update config set value = '[\"DE\"]' where key = 'customer_portal.sepa.allowed_country_codes'",
             )
 
-    async def test_get_number_of_customers(self):
-        result = await get_number_of_customers(self.db_conn)
+    def _check_sepa_xml(self, path, customers):
+        tree = ET.parse(path)
+        p = "{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}"
+
+        group_sum = float(tree.find(f"{p}CstmrCdtTrfInitn/{p}GrpHdr/{p}CtrlSum").text)
+
+        total_sum = float(tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CtrlSum").text)
+
+        self.assertEqual(group_sum, total_sum)
+
+        l = tree.findall(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf")
+        self.assertEqual(len(l), len(customers))
+
+        total_sum = 0
+        for i, customer in enumerate(customers):
+            # check amount
+            self.assertEqual(
+                float(tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}Amt/{p}InstdAmt").text),
+                round(customer["balance"] - customer["donation"], 2),
+            )
+            total_sum += round(customer["balance"] - customer["donation"], 2)
+
+            # check iban
+            self.assertEqual(
+                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}CdtrAcct/{p}Id/{p}IBAN").text,
+                customer["iban"],
+            )
+
+            # check name
+            self.assertEqual(
+                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}Cdtr/{p}Nm").text,
+                customer["account_name"],
+            )
+
+            # check description
+            self.assertEqual(
+                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}RmtInf/{p}Ustrd").text,
+                self.sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer["uid"])),
+            )
+
+        self.assertEqual(total_sum, group_sum)
+
+    async def test_get_number_of_payouts(self):
+        result = await get_number_of_payouts(self.db_conn, None)
         self.assertEqual(result, len(self.customers_to_transfer))
 
     async def test_get_customer_bank_data(self):
-        def check_data(result: list[CustomerBankData], leng: int, ith: int = 0) -> None:
+        def check_data(result: list[Payout], leng: int, ith: int = 0) -> None:
             self.assertEqual(len(result), leng)
             for result_customer, customer in zip(result, self.customers_to_transfer[ith * leng : (ith + 1) * leng]):
                 self.assertEqual(result_customer.iban, customer["iban"])
@@ -188,53 +240,80 @@ class CustomerServiceTest(TerminalTestCase):
                 self.assertEqual(result_customer.user_tag_uid, customer["uid"])
                 self.assertEqual(result_customer.balance, customer["balance"] - customer["donation"])  # type: ignore
 
-        result = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
+        # check not existing payout run
+        result = await get_customer_bank_data(self.db_conn, 1, len(self.customers_to_transfer))
+        self.assertEqual(len(result), 0)
+
+        # create payout run
+        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test")
+        self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
+
+        self.assertEqual(
+            number_of_payouts,
+            await self.db_conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id),
+        )
+
+        result = await get_customer_bank_data(self.db_conn, payout_run_id, len(self.customers_to_transfer))
         check_data(result, len(self.customers_to_transfer))
 
         async def test_batches(leng: int):
             for i in range(len(self.customers_to_transfer) // leng):
-                result = await get_customer_bank_data(self.db_conn, leng, i)
+                result = await get_customer_bank_data(self.db_conn, payout_run_id, leng, i)
                 check_data(result, leng, i)
 
         await test_batches(5)
         await test_batches(3)
+        await test_batches(2)
         await test_batches(1)
 
     async def test_csv_export(self):
         test_file_name = "test.csv"
         execution_date = datetime.date.today()
-        customers_bank_data = await get_customer_bank_data(self.db_conn, len(self.customers_to_transfer))
+        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test")
+        self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
 
-        currency_ident = (await self.config_service.get_public_config(conn=self.db_conn)).currency_identifier
-        sepa_config = await self.config_service.get_sepa_config(conn=self.db_conn)
+        customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id, len(self.customers_to_transfer))
+
         await csv_export(
             customers_bank_data,
             os.path.join(self.tmp_dir, test_file_name),
-            sepa_config,
-            currency_ident,
+            self.sepa_config,
+            self.currency_ident,
             execution_date,
         )
 
         self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
 
+        export_sum = 0
+
         # read the csv back in
         with open(os.path.join(self.tmp_dir, test_file_name)) as csvfile:
             reader = csv.DictReader(csvfile)
             self.assertEqual(len(list(reader)), len(self.customers_to_transfer))
+        with open(os.path.join(self.tmp_dir, test_file_name)) as csvfile:
+            reader = csv.DictReader(csvfile)
             for row, customer in zip(reader, self.customers_to_transfer):
                 self.assertEqual(row["beneficiary_name"], customer["account_name"])
                 self.assertEqual(row["iban"], customer["iban"])
-                self.assertEqual(float(row["amount"]), round(customer["balance"], 2))
-                self.assertEqual(row["currency"], currency_ident)
+                self.assertEqual(float(row["amount"]), round(customer["balance"] - customer["donation"], 2))
+                self.assertEqual(row["currency"], self.currency_ident)
                 self.assertEqual(
                     row["reference"],
-                    sepa_config.description.format(user_tag_uid=customer["uid"]),
+                    self.sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer["uid"])),
                 )
                 self.assertEqual(row["execution_date"], execution_date.isoformat())
+                self.assertEqual(row["email"], customer["email"])
+                self.assertEqual(int(row["uid"]), customer["uid"])
+                export_sum += float(row["amount"])
+
+        sql_sum = float(await self.db_conn.fetchval("select sum(round(balance, 2)) from payout"))
+        self.assertEqual(sql_sum, export_sum)
 
     async def test_sepa_export(self):
         test_file_name = "test_sepa.xml"
-        customers_bank_data = await get_customer_bank_data(self.db_conn, max_export_items_per_batch=1)
+        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test")
+        self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
+        customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id, max_export_items_per_batch=1)
 
         currency_ident = (await self.config_service.get_public_config(conn=self.db_conn)).currency_identifier
         sepa_config = await self.config_service.get_sepa_config(conn=self.db_conn)
@@ -254,7 +333,7 @@ class CustomerServiceTest(TerminalTestCase):
 
         test_file_name = "test_sepa_multiple.xml"
         customers_bank_data = await get_customer_bank_data(
-            self.db_conn, max_export_items_per_batch=len(self.customers_to_transfer)
+            self.db_conn, payout_run_id, max_export_items_per_batch=len(self.customers_to_transfer)
         )
         await sepa_export(
             customers_bank_data,
@@ -264,8 +343,9 @@ class CustomerServiceTest(TerminalTestCase):
             datetime.date.today(),
         )
         self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
+        self._check_sepa_xml(os.path.join(self.tmp_dir, test_file_name), self.customers_to_transfer)
 
-        customers_bank_data = await get_customer_bank_data(self.db_conn, max_export_items_per_batch=1)
+        customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id, max_export_items_per_batch=1)
 
         # test invalid iban customer
         invalid_iban = "DE89370400440532013001"
@@ -396,6 +476,7 @@ class CustomerServiceTest(TerminalTestCase):
 
         valid_IBAN = "DE89370400440532013000"
         invalid_IBAN = "DE89370400440532013001"
+        invalid_country_code = "VG67BGXY9228788158369211"
 
         account_name = "Der Tester"
         email = "test@testermensch.de"
@@ -424,7 +505,37 @@ class CustomerServiceTest(TerminalTestCase):
                 customer_bank=customer_bank,
             )
 
-        # TODO: test not allowed country codes
+        # test not allowed country codes
+        customer_bank = CustomerBank(iban=invalid_country_code, account_name=account_name, email=email, donation=0)
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_info(
+                token=auth.token,
+                customer_bank=customer_bank,
+            )
+
+        # test invalid email
+        customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email="test@test", donation=0)
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_info(
+                token=auth.token,
+                customer_bank=customer_bank,
+            )
+
+        # test negative donation
+        customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email=email, donation=-1)
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_info(
+                token=auth.token,
+                customer_bank=customer_bank,
+            )
+
+        # test more donation than balance
+        customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email=email, donation=self.balance + 1)
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_info(
+                token=auth.token,
+                customer_bank=customer_bank,
+            )
 
         # test if update_customer_info with wrong token raises Unauthorized error
         with self.assertRaises(Unauthorized):
@@ -437,34 +548,143 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(result.currency_symbol, self.currency_symbol)
         self.assertEqual(result.contact_email, self.contact_email)
 
-        # TODO: change when config is refactored
         # test config keys from yaml config
         cpc = CustomerPortalApiConfig.parse_obj(TEST_CONFIG["customer_portal"])
         self.assertEqual(result.data_privacy_url, cpc.data_privacy_url)
         self.assertEqual(result.about_page_url, cpc.about_page_url)
 
     async def test_export_customer_bank_data(self):
-        cli = CustomerExportCli(None, config=self.test_config)
         output_path = os.path.join(self.tmp_dir, "test_export")
+        os.makedirs(output_path, exist_ok=True)
 
-        await cli._export_customer_bank_data(db_pool=self.db_pool, output_path=output_path)
-        self.assertTrue(os.path.exists(output_path + "_1.xml"))
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="test",
+            dry_run=True,
+            output_path=output_path,
+        )
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(1))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(1, 1))))
 
-        await cli._export_customer_bank_data(db_pool=self.db_pool, output_path=output_path, data_format="csv")
-        self.assertTrue(os.path.exists(output_path + "_1.csv"))
+        self._check_sepa_xml(os.path.join(output_path, SEPA_PATH.format(1, 1)), self.customers_to_transfer)
+
+        # check if dry run successful and no database entry created
+        self.assertEqual(await get_number_of_payouts(self.db_conn, 1), 0)
+
+        output_path = os.path.join(self.tmp_dir, "test_export2")
+        os.makedirs(output_path, exist_ok=True)
 
         # test several batches
-        await cli._export_customer_bank_data(
-            db_pool=self.db_pool, output_path=output_path, max_export_items_per_batch=1
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="Test",
+            dry_run=True,
+            max_export_items_per_batch=1,
+            output_path=output_path,
         )
         for i in range(len(self.customers_to_transfer)):
-            self.assertTrue(os.path.exists(output_path + f"_{i + 1}.xml"))
+            self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(2, i + 1))))
+            self._check_sepa_xml(
+                os.path.join(output_path, SEPA_PATH.format(2, i + 1)), self.customers_to_transfer[i : i + 1]
+            )
 
-        await cli._export_customer_bank_data(
-            db_pool=self.db_pool, output_path=output_path, data_format="csv", max_export_items_per_batch=1
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(2))))
+
+        # test non dry run
+        output_path = os.path.join(self.tmp_dir, "test_export3")
+        os.makedirs(output_path, exist_ok=True)
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="Test",
+            dry_run=False,
+            output_path=output_path,
         )
-        for i in range(len(self.customers_to_transfer)):
-            self.assertTrue(os.path.exists(output_path + f"_{i + 1}.csv"))
+        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(3, 1))))
+        self._check_sepa_xml(os.path.join(output_path, SEPA_PATH.format(3, 1)), self.customers_to_transfer)
+
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(3))))
+
+        # check that all customers in self.customers_to_transfer have payout_run_id set to 1 and rest null
+        rows = await self.db_conn.fetch("select * from customer")
+        customers = [Customer.parse_obj(row) for row in rows]
+        uid_to_transfer = [customer["uid"] for customer in self.customers_to_transfer]
+        for customer in customers:
+            if customer.user_tag_uid in uid_to_transfer:
+                self.assertEqual(customer.payout_run_id, 3)
+            else:
+                self.assertIsNone(customer.payout_run_id)
+
+        # test customer "Rolf1" can no longer be updated since they now have a payout run assigned
+        auth = await self.customer_service.login_customer(uid=(12345 * (1 + 1)), pin="pin1")
+        self.assertIsNotNone(auth)
+        customer_bank = CustomerBank(
+            iban="DE89370400440532013000", account_name="Rolf1 updated", email="lol@rolf.de", donation=2.0
+        )
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_info(
+                token=auth.token,
+                customer_bank=customer_bank,
+            )
+
+    async def test_payout_runs(self):
+        output_path = os.path.join(self.tmp_dir, "test_payout_runs")
+        os.makedirs(output_path, exist_ok=True)
+
+        uid_not_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[:2]]
+
+        await self.db_conn.execute(
+            "update customer_info c set payout_export = false from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2)",
+            *uid_not_to_transfer,
+        )
+
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="test",
+            dry_run=False,
+            output_path=output_path,
+        )
+
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(1))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(1, 1))))
+        self._check_sepa_xml(os.path.join(output_path, SEPA_PATH.format(1, 1)), self.customers_to_transfer[2:])
+
+        rows = await self.db_conn.fetch("select * from customer")
+        customers = [Customer.parse_obj(row) for row in rows]
+        uid_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[2:]]
+        for customer in customers:
+            if customer.user_tag_uid in uid_to_transfer:
+                self.assertEqual(customer.payout_run_id, 1)
+            else:
+                self.assertIsNone(customer.payout_run_id)
+
+        # now set them to payout_export = true and run again
+        await self.db_conn.execute(
+            "update customer_info c set payout_export = true from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2)",
+            *uid_not_to_transfer,
+        )
+
+        # but set customer 1 to an error
+        await self.db_conn.execute(
+            "update customer_info c set payout_error = 'some error' from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid = $1",
+            self.customers_to_transfer[0]["uid"],
+        )
+
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="test",
+            dry_run=False,
+            output_path=output_path,
+        )
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(2))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(2, 1))))
+        self._check_sepa_xml(os.path.join(output_path, SEPA_PATH.format(2, 1)), self.customers_to_transfer[1:2])
+
+        self.assertEqual(await self.db_conn.fetchval("select count(*) from customer where payout_run_id = 2"), 1)
 
 
 if __name__ == "__main__":

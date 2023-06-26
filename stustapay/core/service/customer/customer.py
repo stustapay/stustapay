@@ -4,7 +4,7 @@ import csv
 import datetime
 import logging
 import re
-from typing import Optional, List
+from typing import Optional
 
 import asyncpg
 from pydantic import BaseModel
@@ -14,6 +14,7 @@ from sepaxml import SepaTransfer
 from stustapay.core.config import Config
 from stustapay.core.schema.config import PublicConfig, SEPAConfig
 from stustapay.core.schema.customer import Customer, OrderWithBon
+from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -37,12 +38,14 @@ class CustomerLoginSuccess(BaseModel):
     token: str
 
 
-class CustomerBankData(BaseModel):
+class Payout(BaseModel):
+    customer_account_id: int
     iban: str
     account_name: str
     email: str
     user_tag_uid: int
     balance: float
+    payout_run_id: Optional[int]
 
 
 class CustomerBank(BaseModel):
@@ -52,42 +55,55 @@ class CustomerBank(BaseModel):
     donation: float = 0.0
 
 
-async def get_number_of_customers(conn: asyncpg.Connection) -> int:
-    # number of customers with iban not null and balance > 0
-    return await conn.fetchval(
-        "select count(*) from customer c "
-        "where c.iban is not null "
-        "and round(c.balance, 2) > 0 "
-        "and round(c.balance - c.donation, 2) > 0"
+async def get_number_of_payouts(conn: asyncpg.Connection, payout_run_id: Optional[int]) -> int:
+    if payout_run_id is None:
+        return await conn.fetchval("select count(*) from payout where payout_run_id is null")
+    return await conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id)
+
+
+async def create_payout_run(conn: asyncpg.Connection, created_by: str) -> tuple[int, int]:
+    payout_run_id = await conn.fetchval(
+        "insert into payout_run (created_at, created_by) values (now(), $1) returning id", created_by
     )
+
+    # set the new payout_run_id for all customers that have no payout assigned yet.
+    # the customer record is created when people save their bank data to request a payout.
+    number_of_payouts = await conn.fetchval(
+        "with scheduled_payouts as ("
+        "    update customer_info c "
+        "        set payout_run_id = $1 "
+        "    where c.customer_account_id in "
+        "    (select p.customer_account_id from payout p where p.payout_run_id is null)"
+        "    returning 1"
+        ") select count(*) from scheduled_payouts",
+        payout_run_id,
+    )
+    return payout_run_id, number_of_payouts
 
 
 async def get_customer_bank_data(
-    conn: asyncpg.Connection, max_export_items_per_batch: int, ith_batch: int = 0
-) -> List[CustomerBankData]:
+    conn: asyncpg.Connection, payout_run_id: int, max_export_items_per_batch: int, ith_batch: int = 0
+) -> list[Payout]:
     rows = await conn.fetch(
-        "select c.iban, c.account_name, c.email, c.user_tag_uid, (c.balance - c.donation) as balance "
-        "from customer c "
-        "where c.iban is not null and round(c.balance, 2) > 0 and round(c.balance - c.donation, 2) > 0 "
-        "limit $1 offset $2",
+        "select * from payout where payout_run_id = $1 order by user_tag_uid asc limit $2 offset $3",
+        payout_run_id,
         max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,
     )
-    return [CustomerBankData.parse_obj(row) for row in rows]
+    return [Payout.parse_obj(row) for row in rows]
 
 
 async def csv_export(
-    customers_bank_data: list[CustomerBankData],
+    customers_bank_data: list[Payout],
     output_path: str,
     sepa_config: SEPAConfig,
     currency_ident: str,
-    execution_date: Optional[datetime.date],
+    execution_date: datetime.date,
 ) -> None:
-    """If execution_date is None, the execution date will be set to today + 2 days."""
     with open(output_path, "w") as f:
         execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
         writer = csv.writer(f)
-        fields = ["beneficiary_name", "iban", "amount", "currency", "reference", "execution_date"]
+        fields = ["beneficiary_name", "iban", "amount", "currency", "reference", "execution_date", "uid", "email"]
         writer.writerow(fields)
         for customer in customers_bank_data:
             writer.writerow(
@@ -96,26 +112,25 @@ async def csv_export(
                     customer.iban,
                     round(customer.balance, 2),
                     currency_ident,
-                    sepa_config.description.format(user_tag_uid=hex(customer.user_tag_uid)),
+                    sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer.user_tag_uid)),
                     execution_date.isoformat(),
+                    customer.user_tag_uid,
+                    customer.email,
                 ]
             )
 
 
 async def sepa_export(
-    customers_bank_data: list[CustomerBankData],
+    customers_bank_data: list[Payout],
     output_path: str,
     sepa_config: SEPAConfig,
     currency_ident: str,
-    execution_date: Optional[datetime.date],
+    execution_date: datetime.date,
 ) -> None:
-    """If execution_date is None, the execution date will be set to today + 2 days."""
     if len(customers_bank_data) == 0:
         # avoid error in sepa library
         logging.warning("No customers with bank data found. Nothing to export.")
         return
-
-    execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
 
     iban = IBAN(sepa_config.sender_iban)
     config = {
@@ -138,7 +153,7 @@ async def sepa_export(
             "BIC": str(IBAN(customer.iban).bic),
             "amount": round(customer.balance * 100),  # in cents
             "execution_date": execution_date,
-            "description": sepa_config.description.format(user_tag_uid=hex(customer.user_tag_uid)),
+            "description": sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer.user_tag_uid)),
         }
 
         if not re.match(r"^[a-zA-Z0-9 \-.,:()/?'+]*$", payment["description"]):  # type: ignore
@@ -215,14 +230,14 @@ class CustomerService(DBService):
     @requires_customer
     async def get_orders_with_bon(
         self, *, conn: asyncpg.Connection, current_customer: Customer
-    ) -> Optional[List[OrderWithBon]]:
+    ) -> Optional[list[OrderWithBon]]:
         rows = await conn.fetch(
             "select * from order_value_with_bon where customer_account_id = $1 order by booked_at DESC",
             current_customer.id,
         )
         if rows is None:
             return None
-        orders_with_bon: List[OrderWithBon] = [OrderWithBon.parse_obj(row) for row in rows]
+        orders_with_bon: list[OrderWithBon] = [OrderWithBon.parse_obj(row) for row in rows]
         for order_with_bon in orders_with_bon:
             if order_with_bon.bon_output_file is not None:
                 order_with_bon.bon_output_file = self.cfg.customer_portal.base_bon_url.format(
@@ -235,20 +250,36 @@ class CustomerService(DBService):
     async def update_customer_info(
         self, *, conn: asyncpg.Connection, current_customer: Customer, customer_bank: CustomerBank
     ) -> None:
+        # if a payout is assigned, disallow updates.
+        payout_id = await conn.fetchval(
+            "select payout_run_id from customer_info where customer_account_id = $1",
+            current_customer.id,
+        )
+        if payout_id != None:
+            raise InvalidArgument(
+                "Your account is already scheduled for the next payout, so updates are no longer possible."
+            )
+
         # check iban
         try:
             iban = IBAN(customer_bank.iban, validate_bban=True)
         except ValueError as exc:
             raise InvalidArgument("Provided IBAN is not valid") from exc
 
+        # check country code
         allowed_country_codes = (await self.config_service.get_sepa_config(conn=conn)).allowed_country_codes
         if iban.country_code not in allowed_country_codes:
             raise InvalidArgument("Provided IBAN contains country code which is not supported")
 
+        # check donation
         if customer_bank.donation < 0:
             raise InvalidArgument("Donation cannot be negative")
         if customer_bank.donation > current_customer.balance:
             raise InvalidArgument("Donation cannot be higher then your balance")
+
+        # check email
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", customer_bank.email):
+            raise InvalidArgument("Provided email is not valid")
 
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(

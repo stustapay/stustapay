@@ -1,6 +1,15 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { customerApiBaseQuery } from "./common";
 import { Customer, CustomerInfo, OrderWithBon } from "@stustapay/models";
+import { z } from "zod";
+
+export const CustomerBankSchema = z.object({
+  iban: z.string(),
+  account_name: z.string(),
+  email: z.string(),
+  donation: z.number(),
+});
+export type CustomerBank = z.infer<typeof CustomerBankSchema>;
 
 export const customerApi = createApi({
   reducerPath: "customerApi",
@@ -20,7 +29,7 @@ export const customerApi = createApi({
       providesTags: (result) => ["order"],
     }),
 
-    setCustomerInfo: builder.mutation<void, CustomerInfo>({
+    setCustomerInfo: builder.mutation<void, CustomerBank>({
       query: (customer) => ({
         url: "/customer_info",
         method: "POST",

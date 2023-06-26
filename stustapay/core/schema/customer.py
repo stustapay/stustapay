@@ -13,6 +13,9 @@ class Customer(Account):
     account_name: Optional[str]
     email: Optional[str]
     donation: Optional[float]
+    payout_error: Optional[str]
+    payout_run_id: Optional[int]
+    payout_export: Optional[bool]
 
 
 class OrderWithBon(Order):

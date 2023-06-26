@@ -10,7 +10,5 @@ create or replace view customer as
     select
         a.*,
         customer_info.*
-    from
-        account_with_history a
-        left join customer_info
-            on (a.id = customer_info.customer_account_id);
+    from account_with_history a
+    left join customer_info on (a.id = customer_info.customer_account_id);
