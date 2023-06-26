@@ -24,7 +24,7 @@ def main():
     parser.add_subcommand("database", database.DatabaseManage)
     parser.add_subcommand("admin", admin.AdminCli)
     parser.add_subcommand("populate", populate.PopulateCli)
-    parser.add_subcommand("customer-bank-export", customer_bank_export.CustomerExportCli)
+    parser.add_subcommand("customer-bank-export", customer_bank_export.CustomerBankExport)
     ### / module registration
 
     loop = asyncio.new_event_loop()

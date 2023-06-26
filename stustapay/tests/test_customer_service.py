@@ -8,7 +8,7 @@ import unittest
 from dateutil.parser import parse
 
 from stustapay.core.config import CustomerPortalApiConfig
-from stustapay.core.customer_bank_export import CustomerExportCli
+from stustapay.core.customer_bank_export import CustomerBankExport
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
@@ -548,7 +548,7 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(result.about_page_url, cpc.about_page_url)
 
     async def test_export_customer_bank_data(self):
-        cli = CustomerExportCli(None, config=self.test_config)
+        cli = CustomerBankExport(None, config=self.test_config)
         output_path = os.path.join(self.tmp_dir, "test_export")
         os.makedirs(output_path, exist_ok=True)
 
@@ -600,7 +600,7 @@ class CustomerServiceTest(TerminalTestCase):
                 self.assertIsNone(customer.payout_run_id)
 
     async def test_payout_runs(self):
-        cli = CustomerExportCli(None, config=self.test_config)
+        cli = CustomerBankExport(None, config=self.test_config)
         output_path = os.path.join(self.tmp_dir, "test_payout_runs")
         os.makedirs(output_path, exist_ok=True)
 

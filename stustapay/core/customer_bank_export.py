@@ -20,9 +20,11 @@ from .config import Config
 from .service.auth import AuthService
 
 
-class CustomerExportCli(SubCommand):
+class CustomerBankExport(SubCommand):
     """
-    Customer SEPA Export utility cli
+    Customer SEPA Export utility CLI.
+
+    Use this to generate payouts for leftover customer balance.
     """
 
     SEPA_PATH = "sepa__run_{}__num_{}.xml"
