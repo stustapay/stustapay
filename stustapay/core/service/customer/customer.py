@@ -65,13 +65,19 @@ async def create_payout_run(conn: asyncpg.Connection, created_by: str) -> tuple[
     payout_run_id = await conn.fetchval(
         "insert into payout_run (created_at, created_by) values (now(), $1) returning id", created_by
     )
-    # set payout_run_id for all pending payouts
-    await conn.execute(
-        "update customer_info c set payout_run_id = $1 where c.customer_account_id in "
-        "(select p.customer_account_id from payout p where p.payout_run_id is null)",
+
+    # set the new payout_run_id for all customers that have no payout assigned yet.
+    # the customer record is created when people save their bank data to request a payout.
+    number_of_payouts = await conn.fetchval(
+        "with scheduled_payouts as ("
+        "    update customer_info c "
+        "        set payout_run_id = $1 "
+        "    where c.customer_account_id in "
+        "    (select p.customer_account_id from payout p where p.payout_run_id is null)"
+        "    returning 1"
+        ") select count(*) from scheduled_payouts",
         payout_run_id,
     )
-    number_of_payouts = await conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id)
     return payout_run_id, number_of_payouts
 
 

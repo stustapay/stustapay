@@ -248,6 +248,11 @@ class CustomerServiceTest(TerminalTestCase):
         payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test")
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
 
+        self.assertEqual(
+            number_of_payouts,
+            await self.db_conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id),
+        )
+
         result = await get_customer_bank_data(self.db_conn, payout_run_id, len(self.customers_to_transfer))
         check_data(result, len(self.customers_to_transfer))
 
