@@ -23,9 +23,6 @@ from .service.auth import AuthService
 class CustomerExportCli(SubCommand):
     """
     Customer SEPA Export utility cli
-    Examples:
-        python -m stustapay.core -v customer-bank-export sepa -f sepa_transfer.xml
-        python -m stustapay.core -v customer-bank-export csv -f customer_bank_data.csv
     """
 
     SEPA_PATH = "sepa__run_{}__num_{}.xml"
