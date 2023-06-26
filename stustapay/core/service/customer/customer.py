@@ -247,14 +247,20 @@ class CustomerService(DBService):
         except ValueError as exc:
             raise InvalidArgument("Provided IBAN is not valid") from exc
 
+        # check country code
         allowed_country_codes = (await self.config_service.get_sepa_config(conn=conn)).allowed_country_codes
         if iban.country_code not in allowed_country_codes:
             raise InvalidArgument("Provided IBAN contains country code which is not supported")
 
+        # check donation
         if customer_bank.donation < 0:
             raise InvalidArgument("Donation cannot be negative")
         if customer_bank.donation > current_customer.balance:
             raise InvalidArgument("Donation cannot be higher then your balance")
+
+        # check email
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", customer_bank.email):
+            raise InvalidArgument("Provided email is not valid")
 
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(

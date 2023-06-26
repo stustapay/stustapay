@@ -467,6 +467,7 @@ class CustomerServiceTest(TerminalTestCase):
 
         valid_IBAN = "DE89370400440532013000"
         invalid_IBAN = "DE89370400440532013001"
+        invalid_country_code = "VG67BGXY9228788158369211"
 
         account_name = "Der Tester"
         email = "test@testermensch.de"
@@ -495,7 +496,37 @@ class CustomerServiceTest(TerminalTestCase):
                 customer_bank=customer_bank,
             )
 
-        # TODO: test not allowed country codes
+        # test not allowed country codes
+        customer_bank = CustomerBank(iban=invalid_country_code, account_name=account_name, email=email, donation=0)
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_info(
+                token=auth.token,
+                customer_bank=customer_bank,
+            )
+
+        # test invalid email
+        customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email="test@test", donation=0)
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_info(
+                token=auth.token,
+                customer_bank=customer_bank,
+            )
+
+        # test negative donation
+        customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email=email, donation=-1)
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_info(
+                token=auth.token,
+                customer_bank=customer_bank,
+            )
+
+        # test more donation than balance
+        customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email=email, donation=self.balance + 1)
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_info(
+                token=auth.token,
+                customer_bank=customer_bank,
+            )
 
         # test if update_customer_info with wrong token raises Unauthorized error
         with self.assertRaises(Unauthorized):
@@ -508,7 +539,6 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(result.currency_symbol, self.currency_symbol)
         self.assertEqual(result.contact_email, self.contact_email)
 
-        # TODO: change when config is refactored
         # test config keys from yaml config
         cpc = CustomerPortalApiConfig.parse_obj(TEST_CONFIG["customer_portal"])
         self.assertEqual(result.data_privacy_url, cpc.data_privacy_url)
