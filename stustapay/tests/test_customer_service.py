@@ -27,6 +27,7 @@ from stustapay.core.service.customer.customer import (
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.tests.common import TEST_CONFIG, TerminalTestCase
+import xml.etree.ElementTree as ET
 
 
 class CustomerServiceTest(TerminalTestCase):
@@ -120,7 +121,7 @@ class CustomerServiceTest(TerminalTestCase):
                 "pin": f"pin{i}",
                 "balance": 10.321 * i + 0.0012,
                 "iban": "DE89370400440532013000",
-                "account_name": "Rolf",
+                "account_name": f"Rolf{i}",
                 "email": "rolf@lol.de",
                 "donation": 1.0 * i,
                 "payout_export": True,
@@ -147,6 +148,9 @@ class CustomerServiceTest(TerminalTestCase):
         # first customer with uid 12345 should not be included as he has a balance of 0
         # last customer has same amount of donation as balance, thus should also not be included
         self.customers_to_transfer = self.customers[1:-1]
+
+        self.currency_ident = (await self.config_service.get_public_config(conn=self.db_conn)).currency_identifier
+        self.sepa_config = await self.config_service.get_sepa_config(conn=self.db_conn)
 
     async def _add_customers(self, data: list[dict]) -> None:
         for idx, customer in enumerate(data):
@@ -178,6 +182,48 @@ class CustomerServiceTest(TerminalTestCase):
             await self.db_conn.execute(
                 "update config set value = '[\"DE\"]' where key = 'customer_portal.sepa.allowed_country_codes'",
             )
+
+    def _check_sepa_xml(self, path, customers):
+        tree = ET.parse(path)
+        p = "{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}"
+
+        group_sum = float(tree.find(f"{p}CstmrCdtTrfInitn/{p}GrpHdr/{p}CtrlSum").text)
+
+        total_sum = float(tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CtrlSum").text)
+
+        self.assertEqual(group_sum, total_sum)
+
+        l = tree.findall(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf")
+        self.assertEqual(len(l), len(customers))
+
+        total_sum = 0
+        for i, customer in enumerate(customers):
+            # check amount
+            self.assertEqual(
+                float(tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}Amt/{p}InstdAmt").text),
+                round(customer["balance"] - customer["donation"], 2),
+            )
+            total_sum += round(customer["balance"] - customer["donation"], 2)
+
+            # check iban
+            self.assertEqual(
+                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}CdtrAcct/{p}Id/{p}IBAN").text,
+                customer["iban"],
+            )
+
+            # check name
+            self.assertEqual(
+                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}Cdtr/{p}Nm").text,
+                customer["account_name"],
+            )
+
+            # check description
+            self.assertEqual(
+                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}RmtInf/{p}Ustrd").text,
+                self.sepa_config.description.format(user_tag_uid=hex(customer["uid"])),
+            )
+
+        self.assertEqual(total_sum, group_sum)
 
     async def test_get_number_of_payouts(self):
         result = await get_number_of_payouts(self.db_conn, None)
@@ -221,13 +267,11 @@ class CustomerServiceTest(TerminalTestCase):
 
         customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id, len(self.customers_to_transfer))
 
-        currency_ident = (await self.config_service.get_public_config(conn=self.db_conn)).currency_identifier
-        sepa_config = await self.config_service.get_sepa_config(conn=self.db_conn)
         await csv_export(
             customers_bank_data,
             os.path.join(self.tmp_dir, test_file_name),
-            sepa_config,
-            currency_ident,
+            self.sepa_config,
+            self.currency_ident,
             execution_date,
         )
 
@@ -245,10 +289,10 @@ class CustomerServiceTest(TerminalTestCase):
                 self.assertEqual(row["beneficiary_name"], customer["account_name"])
                 self.assertEqual(row["iban"], customer["iban"])
                 self.assertEqual(float(row["amount"]), round(customer["balance"] - customer["donation"], 2))
-                self.assertEqual(row["currency"], currency_ident)
+                self.assertEqual(row["currency"], self.currency_ident)
                 self.assertEqual(
                     row["reference"],
-                    sepa_config.description.format(user_tag_uid=hex(customer["uid"])),
+                    self.sepa_config.description.format(user_tag_uid=hex(customer["uid"])),
                 )
                 self.assertEqual(row["execution_date"], execution_date.isoformat())
                 export_sum += float(row["amount"])
@@ -290,6 +334,7 @@ class CustomerServiceTest(TerminalTestCase):
             datetime.date.today(),
         )
         self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
+        self._check_sepa_xml(os.path.join(self.tmp_dir, test_file_name), self.customers_to_transfer)
 
         customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id, max_export_items_per_batch=1)
 
@@ -480,6 +525,8 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(1))))
         self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(1, 1))))
 
+        self._check_sepa_xml(os.path.join(output_path, cli.SEPA_PATH.format(1, 1)), self.customers_to_transfer)
+
         # check if dry run successful and no database entry created
         self.assertEqual(await get_number_of_payouts(self.db_conn, 1), 0)
 
@@ -492,6 +539,10 @@ class CustomerServiceTest(TerminalTestCase):
         )
         for i in range(len(self.customers_to_transfer)):
             self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(2, i + 1))))
+            self._check_sepa_xml(
+                os.path.join(output_path, cli.SEPA_PATH.format(2, i + 1)), self.customers_to_transfer[i : i + 1]
+            )
+
         self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(2))))
 
         # test non dry run
@@ -501,7 +552,10 @@ class CustomerServiceTest(TerminalTestCase):
             db_pool=self.db_pool, created_by="Test", dry_run=False, output_path=output_path
         )
         self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(3, 1))))
+        self._check_sepa_xml(os.path.join(output_path, cli.SEPA_PATH.format(3, 1)), self.customers_to_transfer)
+
         self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(3))))
+
         # check that all customers in self.customers_to_transfer have payout_run_id set to 1 and rest null
         rows = await self.db_conn.fetch("select * from customer")
         customers = [Customer.parse_obj(row) for row in rows]
@@ -510,9 +564,57 @@ class CustomerServiceTest(TerminalTestCase):
             if customer.user_tag_uid in uid_to_transfer:
                 self.assertEqual(customer.payout_run_id, 3)
             else:
-                if customer.payout_run_id is not None:
-                    self.assertNotEqual(customer.payout_run_id, 3)
                 self.assertIsNone(customer.payout_run_id)
+
+    async def test_payout_runs(self):
+        cli = CustomerExportCli(None, config=self.test_config)
+        output_path = os.path.join(self.tmp_dir, "test_payout_runs")
+        os.makedirs(output_path, exist_ok=True)
+
+        uid_not_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[:2]]
+
+        await self.db_conn.execute(
+            "update customer_info c set payout_export = false from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2)",
+            *uid_not_to_transfer,
+        )
+
+        await cli._export_customer_bank_data(
+            db_pool=self.db_pool, created_by="test", dry_run=False, output_path=output_path
+        )
+
+        self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(1))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(1, 1))))
+        self._check_sepa_xml(os.path.join(output_path, cli.SEPA_PATH.format(1, 1)), self.customers_to_transfer[2:])
+
+        rows = await self.db_conn.fetch("select * from customer")
+        customers = [Customer.parse_obj(row) for row in rows]
+        uid_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[2:]]
+        for customer in customers:
+            if customer.user_tag_uid in uid_to_transfer:
+                self.assertEqual(customer.payout_run_id, 1)
+            else:
+                self.assertIsNone(customer.payout_run_id)
+
+        # now set them to payout_export = true and run again
+        await self.db_conn.execute(
+            "update customer_info c set payout_export = true from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2)",
+            *uid_not_to_transfer,
+        )
+
+        # but set customer 1 to an error
+        await self.db_conn.execute(
+            "update customer_info c set payout_error = 'some error' from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid = $1",
+            self.customers_to_transfer[0]["uid"],
+        )
+
+        await cli._export_customer_bank_data(
+            db_pool=self.db_pool, created_by="test", dry_run=False, output_path=output_path
+        )
+        self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(2))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(2, 1))))
+        self._check_sepa_xml(os.path.join(output_path, cli.SEPA_PATH.format(2, 1)), self.customers_to_transfer[1:2])
+
+        self.assertEqual(await self.db_conn.fetchval("select count(*) from customer where payout_run_id = 2"), 1)
 
 
 if __name__ == "__main__":
