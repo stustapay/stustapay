@@ -96,7 +96,7 @@ async def csv_export(
     with open(output_path, "w") as f:
         execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
         writer = csv.writer(f)
-        fields = ["beneficiary_name", "iban", "amount", "currency", "reference", "execution_date"]
+        fields = ["beneficiary_name", "iban", "amount", "currency", "reference", "execution_date", "uid", "email"]
         writer.writerow(fields)
         for customer in customers_bank_data:
             writer.writerow(
@@ -107,6 +107,8 @@ async def csv_export(
                     currency_ident,
                     sepa_config.description.format(user_tag_uid=hex(customer.user_tag_uid)),
                     execution_date.isoformat(),
+                    customer.user_tag_uid,
+                    customer.email,
                 ]
             )
 

@@ -295,6 +295,8 @@ class CustomerServiceTest(TerminalTestCase):
                     self.sepa_config.description.format(user_tag_uid=hex(customer["uid"])),
                 )
                 self.assertEqual(row["execution_date"], execution_date.isoformat())
+                self.assertEqual(row["email"], customer["email"])
+                self.assertEqual(int(row["uid"]), customer["uid"])
                 export_sum += float(row["amount"])
 
         sql_sum = float(await self.db_conn.fetchval("select sum(round(balance, 2)) from payout"))
