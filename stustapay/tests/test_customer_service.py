@@ -12,6 +12,7 @@ from stustapay.core.customer_bank_export import CustomerExportCli
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.common.error import InvalidArgument, Unauthorized, AccessDenied
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import (
@@ -220,7 +221,7 @@ class CustomerServiceTest(TerminalTestCase):
             # check description
             self.assertEqual(
                 tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}RmtInf/{p}Ustrd").text,
-                self.sepa_config.description.format(user_tag_uid=hex(customer["uid"])),
+                self.sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer["uid"])),
             )
 
         self.assertEqual(total_sum, group_sum)
@@ -292,7 +293,7 @@ class CustomerServiceTest(TerminalTestCase):
                 self.assertEqual(row["currency"], self.currency_ident)
                 self.assertEqual(
                     row["reference"],
-                    self.sepa_config.description.format(user_tag_uid=hex(customer["uid"])),
+                    self.sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer["uid"])),
                 )
                 self.assertEqual(row["execution_date"], execution_date.isoformat())
                 self.assertEqual(row["email"], customer["email"])

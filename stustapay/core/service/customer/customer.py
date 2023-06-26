@@ -14,6 +14,7 @@ from sepaxml import SepaTransfer
 from stustapay.core.config import Config
 from stustapay.core.schema.config import PublicConfig, SEPAConfig
 from stustapay.core.schema.customer import Customer, OrderWithBon
+from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -105,7 +106,7 @@ async def csv_export(
                     customer.iban,
                     round(customer.balance, 2),
                     currency_ident,
-                    sepa_config.description.format(user_tag_uid=hex(customer.user_tag_uid)),
+                    sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer.user_tag_uid)),
                     execution_date.isoformat(),
                     customer.user_tag_uid,
                     customer.email,
@@ -146,7 +147,7 @@ async def sepa_export(
             "BIC": str(IBAN(customer.iban).bic),
             "amount": round(customer.balance * 100),  # in cents
             "execution_date": execution_date,
-            "description": sepa_config.description.format(user_tag_uid=hex(customer.user_tag_uid)),
+            "description": sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer.user_tag_uid)),
         }
 
         if not re.match(r"^[a-zA-Z0-9 \-.,:()/?'+]*$", payment["description"]):  # type: ignore
