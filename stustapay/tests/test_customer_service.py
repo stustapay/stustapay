@@ -8,7 +8,7 @@ import unittest
 from dateutil.parser import parse
 
 from stustapay.core.config import CustomerPortalApiConfig
-from stustapay.core.customer_bank_export import CustomerBankExport
+from stustapay.core.customer_bank_export import export_customer_payouts, CSV_PATH, SEPA_PATH
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
@@ -137,7 +137,7 @@ class CustomerServiceTest(TerminalTestCase):
                 "pin": "pin10",
                 "balance": 10,
                 "iban": "DE89370400440532013000",
-                "account_name": "Rolf",
+                "account_name": "Rolf Vollspender",
                 "email": "rolf@lol.de",
                 "donation": 10,
                 "payout_export": True,
@@ -258,6 +258,7 @@ class CustomerServiceTest(TerminalTestCase):
 
         await test_batches(5)
         await test_batches(3)
+        await test_batches(2)
         await test_batches(1)
 
     async def test_csv_export(self):
@@ -548,17 +549,20 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(result.about_page_url, cpc.about_page_url)
 
     async def test_export_customer_bank_data(self):
-        cli = CustomerBankExport(None, config=self.test_config)
         output_path = os.path.join(self.tmp_dir, "test_export")
         os.makedirs(output_path, exist_ok=True)
 
-        await cli._export_customer_bank_data(
-            db_pool=self.db_pool, created_by="test", dry_run=True, output_path=output_path
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="test",
+            dry_run=True,
+            output_path=output_path,
         )
-        self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(1))))
-        self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(1, 1))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(1))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(1, 1))))
 
-        self._check_sepa_xml(os.path.join(output_path, cli.SEPA_PATH.format(1, 1)), self.customers_to_transfer)
+        self._check_sepa_xml(os.path.join(output_path, SEPA_PATH.format(1, 1)), self.customers_to_transfer)
 
         # check if dry run successful and no database entry created
         self.assertEqual(await get_number_of_payouts(self.db_conn, 1), 0)
@@ -567,27 +571,36 @@ class CustomerServiceTest(TerminalTestCase):
         os.makedirs(output_path, exist_ok=True)
 
         # test several batches
-        await cli._export_customer_bank_data(
-            db_pool=self.db_pool, created_by="Test", dry_run=True, max_export_items_per_batch=1, output_path=output_path
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="Test",
+            dry_run=True,
+            max_export_items_per_batch=1,
+            output_path=output_path,
         )
         for i in range(len(self.customers_to_transfer)):
-            self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(2, i + 1))))
+            self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(2, i + 1))))
             self._check_sepa_xml(
-                os.path.join(output_path, cli.SEPA_PATH.format(2, i + 1)), self.customers_to_transfer[i : i + 1]
+                os.path.join(output_path, SEPA_PATH.format(2, i + 1)), self.customers_to_transfer[i : i + 1]
             )
 
-        self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(2))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(2))))
 
         # test non dry run
         output_path = os.path.join(self.tmp_dir, "test_export3")
         os.makedirs(output_path, exist_ok=True)
-        await cli._export_customer_bank_data(
-            db_pool=self.db_pool, created_by="Test", dry_run=False, output_path=output_path
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="Test",
+            dry_run=False,
+            output_path=output_path,
         )
-        self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(3, 1))))
-        self._check_sepa_xml(os.path.join(output_path, cli.SEPA_PATH.format(3, 1)), self.customers_to_transfer)
+        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(3, 1))))
+        self._check_sepa_xml(os.path.join(output_path, SEPA_PATH.format(3, 1)), self.customers_to_transfer)
 
-        self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(3))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(3))))
 
         # check that all customers in self.customers_to_transfer have payout_run_id set to 1 and rest null
         rows = await self.db_conn.fetch("select * from customer")
@@ -600,7 +613,6 @@ class CustomerServiceTest(TerminalTestCase):
                 self.assertIsNone(customer.payout_run_id)
 
     async def test_payout_runs(self):
-        cli = CustomerBankExport(None, config=self.test_config)
         output_path = os.path.join(self.tmp_dir, "test_payout_runs")
         os.makedirs(output_path, exist_ok=True)
 
@@ -611,13 +623,17 @@ class CustomerServiceTest(TerminalTestCase):
             *uid_not_to_transfer,
         )
 
-        await cli._export_customer_bank_data(
-            db_pool=self.db_pool, created_by="test", dry_run=False, output_path=output_path
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="test",
+            dry_run=False,
+            output_path=output_path,
         )
 
-        self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(1))))
-        self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(1, 1))))
-        self._check_sepa_xml(os.path.join(output_path, cli.SEPA_PATH.format(1, 1)), self.customers_to_transfer[2:])
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(1))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(1, 1))))
+        self._check_sepa_xml(os.path.join(output_path, SEPA_PATH.format(1, 1)), self.customers_to_transfer[2:])
 
         rows = await self.db_conn.fetch("select * from customer")
         customers = [Customer.parse_obj(row) for row in rows]
@@ -640,12 +656,16 @@ class CustomerServiceTest(TerminalTestCase):
             self.customers_to_transfer[0]["uid"],
         )
 
-        await cli._export_customer_bank_data(
-            db_pool=self.db_pool, created_by="test", dry_run=False, output_path=output_path
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="test",
+            dry_run=False,
+            output_path=output_path,
         )
-        self.assertTrue(os.path.exists(os.path.join(output_path, cli.CSV_PATH.format(2))))
-        self.assertTrue(os.path.exists(os.path.join(output_path, cli.SEPA_PATH.format(2, 1))))
-        self._check_sepa_xml(os.path.join(output_path, cli.SEPA_PATH.format(2, 1)), self.customers_to_transfer[1:2])
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(2))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(2, 1))))
+        self._check_sepa_xml(os.path.join(output_path, SEPA_PATH.format(2, 1)), self.customers_to_transfer[1:2])
 
         self.assertEqual(await self.db_conn.fetchval("select count(*) from customer where payout_run_id = 2"), 1)
 
