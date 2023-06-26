@@ -245,7 +245,7 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(len(result), 0)
 
         # create payout run
-        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test")
+        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test", datetime.date.today(), 50000.0)
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
 
         self.assertEqual(
@@ -269,7 +269,7 @@ class CustomerServiceTest(TerminalTestCase):
     async def test_csv_export(self):
         test_file_name = "test.csv"
         execution_date = datetime.date.today()
-        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test")
+        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test", execution_date, 50000.0)
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
 
         customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id, len(self.customers_to_transfer))
@@ -311,7 +311,8 @@ class CustomerServiceTest(TerminalTestCase):
 
     async def test_sepa_export(self):
         test_file_name = "test_sepa.xml"
-        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test")
+        execution_date = datetime.date.today()
+        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test", execution_date, 50000.0)
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
         customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id, max_export_items_per_batch=1)
 
@@ -327,7 +328,7 @@ class CustomerServiceTest(TerminalTestCase):
             os.path.join(self.tmp_dir, test_file_name),
             test_sepa_config,
             currency_ident,
-            datetime.date.today(),
+            execution_date=execution_date,
         )
         self.assertTrue(os.path.exists(os.path.join(self.tmp_dir, test_file_name)))
 
@@ -628,6 +629,26 @@ class CustomerServiceTest(TerminalTestCase):
                 token=auth.token,
                 customer_bank=customer_bank,
             )
+
+    async def test_max_payout_sum(self):
+        output_path = os.path.join(self.tmp_dir, "test_max_payout_sum")
+        os.makedirs(output_path, exist_ok=True)
+
+        num = 2
+        s = sum(customer["balance"] - customer["donation"] for customer in self.customers_to_transfer[:num])
+
+        await export_customer_payouts(
+            config=self.test_config,
+            db_pool=self.db_pool,
+            created_by="test",
+            dry_run=False,
+            output_path=output_path,
+            max_payout_sum=s,
+        )
+
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(1))))
+        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(1, 1))))
+        self._check_sepa_xml(os.path.join(output_path, SEPA_PATH.format(1, 1)), self.customers_to_transfer[0:num])
 
     async def test_payout_runs(self):
         output_path = os.path.join(self.tmp_dir, "test_payout_runs")

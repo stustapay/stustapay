@@ -78,6 +78,13 @@ class CustomerBankExport(SubCommand):
             type=str,
             help="Output path for the generated files. If not given, the current working directory is used.",
         )
+        subparser.add_argument(
+            "-s",
+            "--max-payout-sum",
+            default=50_000.0,
+            type=float,
+            help="Maximum sum of money being payed out for this payout run. Relevant is the bank only accepts a certain max. number that one can spend per day. If not given, the default is 50.000€.",
+        )
 
     async def run(self):
         db_pool = await database.create_db_pool(self.config.database)
@@ -97,6 +104,7 @@ class CustomerBankExport(SubCommand):
                 dry_run=self.args.dry_run,
                 payout_run_id=self.args.payout_run_id,
                 output_path=self.args.output_path,
+                max_payout_sum=self.args.max_payout_sum,
             )
         finally:
             await db_pool.close()
@@ -111,13 +119,16 @@ async def export_customer_payouts(
     dry_run: bool = False,
     payout_run_id: Optional[int] = None,
     output_path: str = "",
+    max_payout_sum: float = 50000.0,
 ):
     execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
 
     async with db_pool.acquire() as conn:
         async with conn.transaction():
             if payout_run_id is None:
-                payout_run_id, number_of_payouts = await create_payout_run(conn, created_by)
+                payout_run_id, number_of_payouts = await create_payout_run(
+                    conn, created_by, execution_date, max_payout_sum
+                )
             else:
                 number_of_payouts = await get_number_of_payouts(conn=conn, payout_run_id=payout_run_id)
 
