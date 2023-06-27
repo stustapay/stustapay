@@ -61,9 +61,13 @@ async def get_number_of_payouts(conn: asyncpg.Connection, payout_run_id: Optiona
     return await conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id)
 
 
-async def create_payout_run(conn: asyncpg.Connection, created_by: str) -> tuple[int, int]:
+async def create_payout_run(
+    conn: asyncpg.Connection, created_by: str, execution_date: datetime.date, max_payout_sum: float
+) -> tuple[int, int]:
     payout_run_id = await conn.fetchval(
-        "insert into payout_run (created_at, created_by) values (now(), $1) returning id", created_by
+        "insert into payout_run (created_at, created_by, execution_date) values (now(), $1, $2) returning id",
+        created_by,
+        execution_date,
     )
 
     # set the new payout_run_id for all customers that have no payout assigned yet.
@@ -72,11 +76,14 @@ async def create_payout_run(conn: asyncpg.Connection, created_by: str) -> tuple[
         "with scheduled_payouts as ("
         "    update customer_info c "
         "        set payout_run_id = $1 "
-        "    where c.customer_account_id in "
-        "    (select p.customer_account_id from payout p where p.payout_run_id is null)"
-        "    returning 1"
+        "    where c.customer_account_id in ( "
+        "        select customer_account_id from ( "
+        "            select customer_account_id, SUM(balance) OVER (rows between unbounded preceding and current row) as running_total from payout p where p.payout_run_id is null "
+        "        ) as agr where running_total <= $2"
+        "    ) returning 1"
         ") select count(*) from scheduled_payouts",
         payout_run_id,
+        max_payout_sum,
     )
     return payout_run_id, number_of_payouts
 
