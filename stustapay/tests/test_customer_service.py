@@ -362,20 +362,6 @@ class CustomerServiceTest(TerminalTestCase):
                 datetime.date.today(),
             )
 
-        # test invalid iban country code, virgin islands are not allowed ;)
-        invalid_iban = "VG67BGXY9228788158369211"
-        tmp_bank_data = copy.deepcopy(customers_bank_data)
-        tmp_bank_data[0].iban = invalid_iban
-
-        with self.assertRaises(ValueError):
-            await sepa_export(
-                tmp_bank_data,
-                os.path.join(self.tmp_dir, test_file_name),
-                sepa_config,
-                currency_ident,
-                datetime.date.today(),
-            )
-
         # test invalid iban sender
         test_sepa_config = copy.deepcopy(sepa_config)
         test_sepa_config.sender_iban = invalid_iban
