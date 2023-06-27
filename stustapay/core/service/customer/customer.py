@@ -78,7 +78,7 @@ async def create_payout_run(
         "        set payout_run_id = $1 "
         "    where c.customer_account_id in ( "
         "        select customer_account_id from ( "
-        "            select customer_account_id, SUM(balance) OVER (rows between unbounded preceding and current row) as running_total from payout p where p.payout_run_id is null "
+        "            select customer_account_id, SUM(balance) OVER (order by customer_account_id rows between unbounded preceding and current row) as running_total from payout p where p.payout_run_id is null "
         "        ) as agr where running_total <= $2"
         "    ) returning 1"
         ") select count(*) from scheduled_payouts",
@@ -110,11 +110,22 @@ async def csv_export(
     with open(output_path, "w") as f:
         execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
         writer = csv.writer(f)
-        fields = ["beneficiary_name", "iban", "amount", "currency", "reference", "execution_date", "uid", "email"]
+        fields = [
+            "customer_account_id",
+            "beneficiary_name",
+            "iban",
+            "amount",
+            "currency",
+            "reference",
+            "execution_date",
+            "uid",
+            "email",
+        ]
         writer.writerow(fields)
         for customer in customers_bank_data:
             writer.writerow(
                 [
+                    customer.customer_account_id,
                     customer.account_name,
                     customer.iban,
                     round(customer.balance, 2),
