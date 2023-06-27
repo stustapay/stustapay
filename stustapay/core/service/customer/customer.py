@@ -154,10 +154,13 @@ async def sepa_export(
     config = {
         "name": sepa_config.sender_name,
         "IBAN": iban.compact,
+        "BIC": str(iban.bic),
         "batch": len(customers_bank_data) > 1,
         "currency": currency_ident,  # ISO 4217
     }
     sepa = SepaTransfer(config, clean=True)
+    if config["BIC"] == "None":
+        raise ValueError("BIC couldn't calculated correctly from given IBAN")
     if execution_date < datetime.date.today():
         raise ValueError("Execution date cannot be in the past")
 
@@ -165,6 +168,7 @@ async def sepa_export(
         payment = {
             "name": customer.account_name,
             "IBAN": IBAN(customer.iban).compact,
+            "BIC": str(IBAN(customer.iban).bic),
             "amount": round(customer.balance * 100),  # in cents
             "execution_date": execution_date,
             "description": sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer.user_tag_uid)),
@@ -176,6 +180,8 @@ async def sepa_export(
             )
         if payment["amount"] <= 0:  # type: ignore
             raise ValueError(f"Amount must be greater than 0: {payment['amount']}, id: {customer.customer_account_id}")
+        if payment["BIC"] == "None":
+            raise ValueError(f"BIC for {customer.customer_account_id} couldn't calculated correctly from given IBAN")
 
         sepa.add_payment(payment)
 
