@@ -58,6 +58,9 @@ class Generator:
         self.GV_SUMME: Dict = dict()  # aufsummierte Geschäftsvorfalltypen
         self.systemconfig: Dict = dict()
         self._conn: asyncpg.Connection = None
+        self.PLZ = ""
+        self.Street = ""
+        self.City = ""
 
     async def run(self, db_pool: asyncpg.Pool):
         async with contextlib.AsyncExitStack() as es:
@@ -70,6 +73,29 @@ class Generator:
             for row in rows:
                 self.systemconfig[row["key"]] = row["value"]
             LOGGER.debug(self.systemconfig)
+
+            # extract address information
+            if "steuer.plz" in self.systemconfig:  # new improved format
+                self.PLZ = self.systemconfig["steuer.plz"]
+                if "steuer.street" in self.systemconfig:
+                    self.Street = self.systemconfig["steuer.street"]
+                if "steuer.city" in self.systemconfig:
+                    self.City = self.systemconfig["steuer.city"]
+            elif "bon.addr" in self.systemconfig:  # old format extracted from bon address
+                if "\n" in self.systemconfig["bon.addr"]:
+                    self.Street = self.systemconfig["bon.addr"].split("\n")[0]
+                    self.PLZ = self.systemconfig["bon.addr"].split("\n")[1].split(" ")[0]
+                    self.City = self.systemconfig["bon.addr"].split("\n")[1].split(" ")[1]
+                else:
+                    self.Street = (
+                        self.systemconfig["bon.addr"].split(" ")[0] + " " + self.systemconfig["bon.addr"].split(" ")[1]
+                    )
+                    self.PLZ = self.systemconfig["bon.addr"].split(" ")[2]
+                    self.City = self.systemconfig["bon.addr"].split(" ")[3]
+            else:
+                LOGGER.error("No address of business for taxation configured in database")
+                print(self.systemconfig)
+                exit(1)
 
             # iteriere über alle Kassen Z_KASSE_ID (= KASSE_SERIENNR bei uns)
             # alle Kassen mit einer order (und damit auch mit einer TSE und die deshalb ans Finanzamt gemeldet wurden)
@@ -134,6 +160,7 @@ class Generator:
                 ordr.cashier_id,
                 ordr.customer_account_id,
                 ordr.order_type,
+                ordr.item_count,
                 tse_signature.signature_status,
                 tse_signature.result_message,
                 order_value.total_price,
@@ -203,21 +230,24 @@ class Generator:
 
             # einmal über alle Umsatzsteuersätze je Order iterieren
             # leider müssen wir da wieder eine db abfrage machen....
-            for line in await self._conn.fetch(
-                "select tax_name, total_price, total_tax, total_no_tax from order_tax_rates where id=$1", row["id"]
-            ):
-                c = Bonkopf_USt()
-                c.Z_KASSE_ID = Z_KASSE_ID
-                c.Z_ERSTELLUNG = Z_ERSTELLUNG
-                c.Z_NR = Z_NR
+            if row["item_count"] != 0:
+                for line in await self._conn.fetch(
+                    "select tax_name, total_price, total_tax, total_no_tax from order_tax_rates where id=$1", row["id"]
+                ):
+                    c = Bonkopf_USt()
+                    c.Z_KASSE_ID = Z_KASSE_ID
+                    c.Z_ERSTELLUNG = Z_ERSTELLUNG
+                    c.Z_NR = Z_NR
 
-                c.BON_ID = row["id"]
-                c.UST_SCHLUESSEL = TAXNAME_TO_SCHLUESSELNUMMER[line["tax_name"]]
-                c.BON_BRUTTO = Decimal(line["total_price"])
-                c.BON_NETTO = Decimal(line["total_no_tax"])
-                c.BON_UST = Decimal(line["total_tax"])
+                    c.BON_ID = row["id"]
+                    c.UST_SCHLUESSEL = TAXNAME_TO_SCHLUESSELNUMMER[line["tax_name"]]
+                    c.BON_BRUTTO = Decimal(line["total_price"])
+                    c.BON_NETTO = Decimal(line["total_no_tax"])
+                    c.BON_UST = Decimal(line["total_tax"])
 
-                self.c.add(c)
+                    self.c.add(c)
+            else:
+                LOGGER.warning(f"Order {row['id']} has no line_items...")
 
             d = Bonkopf_Zahlarten()  # eigentlich nur eine Zahlart pro Order, AUßER es wird ein Gutschein eingesetzt
             d.Z_KASSE_ID = Z_KASSE_ID
@@ -337,9 +367,9 @@ class Generator:
         a.Z_NR = Z_NR
         a.TAXONOMIE_VERSION = "2.3"  # aktuelle version der DSFinV-K
         a.NAME = self.systemconfig["bon.issuer"]
-        a.STRASSE = self.systemconfig["bon.addr"].split("\n")[0]
-        a.PLZ = self.systemconfig["bon.addr"].split("\n")[1].split(" ")[0]
-        a.ORT = self.systemconfig["bon.addr"].split("\n")[1].split(" ")[1]
+        a.STRASSE = self.Street
+        a.PLZ = self.PLZ
+        a.ORT = self.City
         a.LAND = "DEU"  # sorry, not in db -> hardcoded
         a.STNR = ""
         a.USTID = self.systemconfig["ust_id"]
@@ -376,9 +406,9 @@ class Generator:
         a.Z_NR = Z_NR
 
         a.LOC_NAME = self.systemconfig["bon.issuer"]
-        a.LOC_STRASSE = self.systemconfig["bon.addr"].split("\n")[0]
-        a.LOC_PLZ = self.systemconfig["bon.addr"].split("\n")[1].split(" ")[0]
-        a.LOC_ORT = self.systemconfig["bon.addr"].split("\n")[1].split(" ")[1]
+        a.LOC_STRASSE = self.Street
+        a.LOC_PLZ = self.PLZ
+        a.LOC_ORT = self.City
         a.LOC_LAND = "DEU"  # sorry, not in db -> hardcoded
         a.USTID = self.systemconfig["ust_id"]
 
