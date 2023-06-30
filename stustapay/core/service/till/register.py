@@ -248,8 +248,9 @@ class TillRegisterService(DBService):
         cashier_tag_uid: int,
         amount: float,
     ):
+        del current_terminal  # no longer needed, was bug
         row = await conn.fetchrow(
-            "select usr.cash_register_id, a.* "
+            "select usr.cash_register_id, t.id as till_id, a.* "
             "from usr "
             "join till t on usr.id = t.active_user_id "
             "join account_with_history a on usr.cashier_account_id = a.id "
@@ -282,10 +283,11 @@ class TillRegisterService(DBService):
             BookingIdentifier(source_account_id=transport_account.id, target_account_id=cashier_account.id): amount
         }
 
+        # till_id is the till of the cashier, not the finanzorga!
         await book_money_transfer(
             conn=conn,
             originating_user_id=current_user.id,
-            till_id=current_terminal.till.id,
+            till_id=row["till_id"],
             bookings=bookings,
             cash_register_id=cash_register_id,
             amount=amount,
