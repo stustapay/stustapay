@@ -77,6 +77,9 @@ class Server:
     def add_task(self, task: asyncio.Task):
         self.tasks.append(task)
 
+    def get_openapi_spec(self) -> dict:
+        return self.api.openapi()
+
     async def db_connect(self, cfg: DatabaseConfig):
         return await create_db_pool(cfg)
 
