@@ -1,4 +1,4 @@
-# StuStaPay App
+# App
 
 Each point of sales has a device with an Android App to take orders and scan NFC tags.
 

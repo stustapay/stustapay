@@ -6,7 +6,7 @@ Electronic Payment System for Festivals, developed for [StuStaCulum](https://stu
 Use NFC wristbands to quickly pay at events!
 
 
-<img style="float: right; width: 25%;" src="doc/assets/logo.png" alt="StuStaPay logo"/>
+<img style="float: right; width: 25%;" src="assets/logo.png" alt="StuStaPay logo"/>
 
 
 ## Idea
@@ -16,14 +16,7 @@ Use NFC wristbands to quickly pay at events!
 - They can buy products at points of sales, where their credits are deduced
 - Designed to comply with German fiscal laws (digital signatures with TSE)
 
-
-## Documentation
-- [Installation guide](doc/install.md)
-- [Core](doc/core.md)
-- [App](doc/app.md)
-- [Management Website](doc/administration.md)
-- [User Self-Service Portal](doc/userportal.md)
-
+## [Documentation](https://stustapay.github.io/docs)
 
 ## Components
 
