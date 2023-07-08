@@ -136,6 +136,13 @@ export const translations = {
     totalPrice: "Total Price",
     totalTax: "Total Tax",
     totalNoTax: "Total Without Tax",
+    cancel: "Cancel",
+    confirmCancelOrderTitle: "Cancel Order",
+    confirmCancelOrderDescription: "Are you sure you want to cancel this order?",
+    cancelSuccessful: "Successfully cancelled order",
+    cancelError: "Error cancelling order: {{what}}",
+    editOrderInfo:
+      "Editing an order can only be done as long as it has not been cancelled. After editing, the original order will be cancelled and a new one will be created.",
   },
   item: {
     product: "Product",

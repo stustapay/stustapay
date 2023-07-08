@@ -24,7 +24,7 @@ export const OrderTypeSchema = z.union([
 export type OrderType = z.infer<typeof OrderTypeSchema>;
 
 export const OrderSchema = z.object({
-  id: z.number(),
+  id: z.number().int(),
   uuid: z.string().uuid(),
   item_count: z.number(),
   booked_at: z.string().datetime({ offset: true }),
@@ -43,3 +43,18 @@ export const OrderSchema = z.object({
 });
 
 export type Order = z.infer<typeof OrderSchema>;
+
+export const SaleEditSchema = z.object({
+  order_id: z.number().int(),
+  uuid: z.string().uuid(),
+  products: z.array(
+    z.object({
+      product_id: z.number().int(),
+      quantity: z.number().int().nullable(),
+      price: z.number().nullable(),
+    })
+  ),
+  used_vouchers: z.number().int().positive().nullable(),
+});
+
+export type SaleEdit = z.infer<typeof SaleEditSchema>;

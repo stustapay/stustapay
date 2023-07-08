@@ -13,6 +13,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import ACCOUNT_SUMUP_CUSTOMER_TOPUP
 from stustapay.core.schema.customer import Customer, CustomerCheckout, SumupCheckoutStatus
 from stustapay.core.schema.order import OrderType, PaymentMethod
+from stustapay.core.schema.till import VIRTUAL_TILL_ID
 from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -22,7 +23,6 @@ from stustapay.core.service.config import ConfigService, get_currency_identifier
 from stustapay.core.service.order.booking import NewLineItem, BookingIdentifier, book_order
 from stustapay.core.service.order.order import fetch_max_account_balance
 from stustapay.core.service.product import fetch_top_up_product
-from stustapay.core.service.till.register import VIRTUAL_TILL_ID
 from stustapay.core.util import BaseModel
 
 

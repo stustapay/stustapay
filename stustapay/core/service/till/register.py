@@ -23,8 +23,6 @@ from stustapay.core.service.common.error import NotFound, InvalidArgument
 from stustapay.core.service.order.booking import BookingIdentifier, book_money_transfer
 from stustapay.core.service.transaction import book_transaction
 
-VIRTUAL_TILL_ID = 1
-
 
 async def get_cash_register(conn: asyncpg.Connection, register_id: int) -> Optional[CashRegister]:
     row = await conn.fetchrow("select * from cash_register_with_cashier where id = $1", register_id)

@@ -4,7 +4,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status, HTTPExcep
 
 from stustapay.core.http.auth_user import CurrentAuthToken, CurrentAuthTokenFromCookie
 from stustapay.core.http.context import ContextOrderService
-from stustapay.core.schema.order import Order
+from stustapay.core.schema.order import Order, CompletedSaleProducts, EditSaleProducts
 
 router = APIRouter(
     prefix="/orders",
@@ -32,6 +32,18 @@ async def get_order(token: CurrentAuthToken, order_id: int, order_service: Conte
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     return order
+
+
+@router.delete("/{order_id}")
+async def cancel_order(token: CurrentAuthToken, order_id: int, order_service: ContextOrderService):
+    await order_service.cancel_sale_admin(token=token, order_id=order_id)
+
+
+@router.post("/{order_id}/edit", response_model=CompletedSaleProducts)
+async def edit_order(
+    token: CurrentAuthToken, order_id: int, order_service: ContextOrderService, edit_sale: EditSaleProducts
+):
+    return await order_service.edit_sale_products(token=token, order_id=order_id, edit_sale=edit_sale)
 
 
 @router.websocket("/ws")

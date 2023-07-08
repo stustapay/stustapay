@@ -7,11 +7,10 @@ import { TicketCreate, TicketDetail, TicketList, TicketUpdate } from "./routes/t
 import { TaxRateCreate, TaxRateList, TaxRateUpdate } from "./routes/tax-rates";
 import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
 import { Settings } from "./routes/settings/Settings";
-import { Login } from "./routes/auth/Login";
+import { Login, Logout, Profile } from "./routes/auth";
 import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
 import { TillCreate } from "./routes/tills/TillCreate";
 import { TillUpdate } from "./routes/tills/TillUpdate";
-import { Logout } from "./routes/auth/Logout";
 import { TillDetail } from "./routes/tills/TillDetail";
 import { TillLayoutCreate, TillLayoutDetail, TillLayoutList, TillLayoutUpdate } from "./routes/till-layouts";
 import { TillProfileCreate, TillProfileList, TillProfileUpdate } from "./routes/till-profiles";
@@ -35,8 +34,7 @@ import {
   SystemAccountList,
   UserTagDetail,
 } from "./routes/accounts";
-import { OrderList } from "./routes/orders/OrderList";
-import { OrderDetail } from "./routes/orders/OrderDetail";
+import { OrderDetail, SaleEdit, OrderList } from "./routes/orders";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
 import { PrivilegeGuard } from "./routes/PrivilegeGuard";
 import {
@@ -51,7 +49,6 @@ import {
   TillRegisterUpdate,
 } from "./routes/till-registers";
 import { FestivalOverview, MoneyOverview } from "./routes/overview";
-import { Profile } from "./routes/auth";
 
 const router = createBrowserRouter([
   {
@@ -347,6 +344,10 @@ const router = createBrowserRouter([
           {
             path: "",
             element: <OrderList />,
+          },
+          {
+            path: ":orderId/edit",
+            element: <SaleEdit />,
           },
           {
             path: ":orderId",

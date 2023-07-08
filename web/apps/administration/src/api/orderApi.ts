@@ -2,7 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { adminApiBaseQuery } from "./common";
 import { createEntityAdapter, EntityState } from "@reduxjs/toolkit";
 import { convertEntityAdaptorSelectors } from "./utils";
-import { Order } from "@stustapay/models";
+import { Order, SaleEdit } from "@stustapay/models";
 
 const orderAdapter = createEntityAdapter<Order>({ sortComparer: (a, b) => b.id - a.id });
 
@@ -31,6 +31,14 @@ export const orderApi = createApi({
       transformResponse: (response: Order[]) => {
         return orderAdapter.addMany(orderAdapter.getInitialState(), response);
       },
+    }),
+    cancelSale: builder.mutation<void, { sale_id: number }>({
+      query: ({ sale_id }) => ({ url: `/orders/${sale_id}`, method: "DELETE" }),
+      invalidatesTags: ["order"],
+    }),
+    editSale: builder.mutation<{ id: number }, SaleEdit>({
+      query: ({ order_id, ...sale }) => ({ url: `/orders/${order_id}/edit`, method: "POST", body: sale }),
+      invalidatesTags: ["order"],
     }),
     getOrders: builder.query<EntityState<Order>, void>({
       query: () => "/orders",
@@ -84,4 +92,11 @@ export const orderApi = createApi({
 export const { selectOrderAll, selectOrderById, selectOrderEntities, selectOrderIds, selectOrderTotal } =
   convertEntityAdaptorSelectors("Order", orderAdapter.getSelectors());
 
-export const { useGetOrdersQuery, useGetOrderByIdQuery, useGetOrderByTillQuery, useGetOrderByCustomerQuery } = orderApi;
+export const {
+  useGetOrdersQuery,
+  useGetOrderByIdQuery,
+  useGetOrderByTillQuery,
+  useGetOrderByCustomerQuery,
+  useCancelSaleMutation,
+  useEditSaleMutation,
+} = orderApi;
