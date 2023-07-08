@@ -36,11 +36,11 @@ def getVersionName = { ->
 }
 
 android {
-    namespace 'de.stustanet.stustapay'
+    namespace 'de.stustapay.stustapay'
     compileSdk 33
 
     defaultConfig {
-        applicationId "de.stustanet.stustapay"
+        applicationId "de.stustapay.stustapay"
         minSdk 28
         targetSdk 33
         versionCode getVersionCode()
