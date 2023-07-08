@@ -46,7 +46,9 @@ dev = [
 ]
 
 [project.urls]
-Source = "https://github.com/stustanet/stustapay"
+Website = "https://stustapay.de"
+Docs = "https://stustapay.de/docs"
+Source = "https://github.com/stustapay/stustapay"
 
 [tool.setuptools.packages.find]
 #where = [""]
