@@ -44,14 +44,14 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            "https://github.com/stustanet/stustapay/tree/master/website/",
+            "https://github.com/stustapay/stustapay/tree/master/website/",
         },
         blog: {
           showReadingTime: true,
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            "https://github.com/stustanet/stustapay/tree/master/website/",
+            "https://github.com/stustapay/stustapay/tree/master/website/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
@@ -102,7 +102,7 @@ const config = {
           },
           {to: "/blog", label: "Blog", position: "left"},
           {
-            href: "https://github.com/stustanet/stustapay",
+            href: "https://github.com/stustapay/stustapay",
             label: "GitHub",
             position: "right",
           },
@@ -129,7 +129,7 @@ const config = {
               },
               {
                 label: "GitHub",
-                href: "https://github.com/stustanet/stustapay",
+                href: "https://github.com/stustapay/stustapay",
               },
             ],
           },

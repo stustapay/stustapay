@@ -37,7 +37,7 @@ export const Footer = () => {
       <Link sx={{ ml: 4 }} component={RouterLink} to="/agb">
         {t("nav.agb")}
       </Link>
-      <Link sx={{ ml: 4 }} href="https://github.com/stustanet/stustapay" target="_blank">
+      <Link sx={{ ml: 4 }} href="https://github.com/stustapay/stustapay" target="_blank">
         Github
       </Link>
     </Box>
