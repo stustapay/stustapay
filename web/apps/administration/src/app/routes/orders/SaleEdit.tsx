@@ -1,22 +1,17 @@
 import * as React from "react";
-import { IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
+import { Alert, List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { selectOrderById, useCancelSaleMutation, useGetOrderByIdQuery } from "@api";
+import { selectOrderById, useGetOrderByIdQuery } from "@api";
 import { Loading } from "@stustapay/components";
-import { LineItemTable } from "@components/LineItemTable";
-import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink } from "@components";
+import { ListItemLink } from "@components";
 import { formatUserTagUid } from "@stustapay/models";
-import { Cancel as CancelIcon, Edit as EditIcon } from "@mui/icons-material";
-import { toast } from "react-toastify";
+import { LineItemEdit } from "./LineItemEdit";
 
-export const OrderDetail: React.FC = () => {
+export const SaleEdit: React.FC = () => {
   const { t } = useTranslation();
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const [showCancelOrderConfirm, setShowCancelOrderConfirm] = React.useState(false);
-
-  const [cancelSale] = useCancelSaleMutation();
 
   const {
     order,
@@ -38,46 +33,16 @@ export const OrderDetail: React.FC = () => {
     return null;
   }
 
-  const openConfirmCancelOrderDialog = () => setShowCancelOrderConfirm(true);
-
-  const handleCancelOrderConfirmClose: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm") {
-      cancelSale({ sale_id: order.id })
-        .unwrap()
-        .then(() => toast.success(t("order.cancelSuccessful")))
-        .catch((err) => undefined); // to avoid uncaught promise errors
-    }
-
-    setShowCancelOrderConfirm(false);
-  };
-
   return (
     <Stack spacing={2}>
       <Paper>
-        <ListItem
-          secondaryAction={
-            order.order_type === "sale" && (
-              <>
-                <Tooltip title={t("edit")}>
-                  <span>
-                    <IconButtonLink to={`/orders/${orderId}/edit`} color="primary">
-                      <EditIcon />
-                    </IconButtonLink>
-                  </span>
-                </Tooltip>
-                <Tooltip title={t("order.cancel")}>
-                  <span>
-                    <IconButton onClick={openConfirmCancelOrderDialog} color="error">
-                      <CancelIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              </>
-            )
-          }
-        >
+        <ListItem>
           <ListItemText primary={t("order.name", { id: orderId })} />
         </ListItem>
+      </Paper>
+      <Alert severity="warning">{t("order.editOrderInfo")}</Alert>
+      <Paper>
+        <LineItemEdit order={order} />
       </Paper>
       <Paper>
         <List>
@@ -108,13 +73,6 @@ export const OrderDetail: React.FC = () => {
           )}
         </List>
       </Paper>
-      <LineItemTable lineItems={order.line_items} />
-      <ConfirmDialog
-        title={t("order.confirmCancelOrderTitle")}
-        show={showCancelOrderConfirm}
-        body={t("order.confirmCancelOrderDescription")}
-        onClose={handleCancelOrderConfirmClose}
-      />
     </Stack>
   );
 };

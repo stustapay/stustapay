@@ -8,13 +8,13 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import ACCOUNT_IMBALANCE, ACCOUNT_CASH_VAULT
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
 from stustapay.core.schema.order import PaymentMethod, OrderType
+from stustapay.core.schema.till import VIRTUAL_TILL_ID
 from stustapay.core.schema.user import Privilege, User, CurrentUser
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction, requires_user
 from .common.error import ServiceException, NotFound
 from .order.booking import book_order, BookingIdentifier, NewLineItem, book_money_transfer, OrderInfo
 from .product import fetch_money_difference_product, fetch_product
-from .till.register import VIRTUAL_TILL_ID
 from .user import AuthService
 
 

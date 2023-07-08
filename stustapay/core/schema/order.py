@@ -108,11 +108,41 @@ class Button(BaseModel):
         return values
 
 
-class NewSale(BaseModel):
+class BookedProduct(BaseModel):
+    product_id: int
+
+    # for products with a fixed price, the quantity must be specified
+    # for products with variable price the used price must be set
+    quantity: Optional[int] = None
+    price: Optional[float] = None
+
+    # check for new Items if either quantity or price is set
+    @root_validator()
+    def check_quantity_or_price_set(cls, values):  # pylint: disable=no-self-argument
+        quantity, price = values.get("quantity"), values.get("price")
+        if (quantity is None) == (price is None):
+            raise ValueError("either price or quantity must be set")
+        return values
+
+
+class NewSaleBase(BaseModel):
     uuid: UUID
-    buttons: list[Button]
     customer_tag_uid: int
     used_vouchers: Optional[int] = None
+
+
+class NewSale(NewSaleBase):
+    buttons: list[Button]
+
+
+class NewSaleProducts(NewSaleBase):
+    products: list[BookedProduct]
+
+
+class EditSaleProducts(BaseModel):
+    uuid: UUID
+    used_vouchers: Optional[int] = None
+    products: list[BookedProduct]
 
 
 class PendingLineItem(BaseModel):
@@ -129,9 +159,8 @@ class PendingLineItem(BaseModel):
         return self.product_price * self.quantity  # pylint: disable=no-member
 
 
-class PendingSale(BaseModel):
+class PendingSaleBase(BaseModel):
     uuid: UUID
-    buttons: list[Button]
 
     old_balance: float
     new_balance: float
@@ -159,13 +188,29 @@ class PendingSale(BaseModel):
         return agg
 
 
-class CompletedSale(PendingSale):
+class PendingSaleProducts(PendingSaleBase):
+    products: list[BookedProduct]
+
+
+class PendingSale(PendingSaleBase):
+    buttons: list[Button]
+
+
+class CompletedSaleBase(BaseModel):
     id: int
 
     booked_at: datetime.datetime
 
     cashier_id: int
     till_id: int
+
+
+class CompletedSaleProducts(CompletedSaleBase, PendingSaleProducts):
+    pass
+
+
+class CompletedSale(CompletedSaleBase, PendingSale):
+    pass
 
 
 class NewTicketScan(BaseModel):

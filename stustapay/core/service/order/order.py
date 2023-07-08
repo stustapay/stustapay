@@ -2,6 +2,7 @@ import json
 import logging
 from collections import defaultdict
 from typing import Dict, Optional, Set
+from uuid import UUID
 
 import asyncpg
 
@@ -26,7 +27,6 @@ from stustapay.core.schema.order import (
     PendingTopUp,
     NewTopUp,
     CompletedTopUp,
-    Button,
     NewPayOut,
     PendingPayOut,
     CompletedPayOut,
@@ -37,6 +37,12 @@ from stustapay.core.schema.order import (
     NewTicketScan,
     TicketScanResult,
     TicketScanResultEntry,
+    PendingSaleBase,
+    CompletedSaleBase,
+    NewSaleProducts,
+    PendingSaleProducts,
+    CompletedSaleProducts,
+    EditSaleProducts,
 )
 from stustapay.core.schema.product import (
     Product,
@@ -44,6 +50,8 @@ from stustapay.core.schema.product import (
     TOP_UP_PRODUCT_ID,
 )
 from stustapay.core.schema.terminal import Terminal
+from stustapay.core.schema.ticket import Ticket
+from stustapay.core.schema.till import Till, VIRTUAL_TILL_ID
 from stustapay.core.schema.user import Privilege, User, CurrentUser, format_user_tag_uid
 from stustapay.core.service.account import get_account_by_id
 from stustapay.core.service.auth import AuthService
@@ -68,7 +76,7 @@ from stustapay.core.util import BaseModel
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
-from ...schema.ticket import Ticket
+from ..till.common import fetch_till
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +165,13 @@ class CustomerNotFound(ServiceException):
         return f"Customer not found: {format_user_tag_uid(self.uid)}"
 
 
+class BookedButton(BaseModel):
+    id: int
+    quantity: Optional[int] = None
+    price: Optional[float] = None
+    is_product: bool
+
+
 class BookedProduct(BaseModel):
     product: Product
     quantity: Optional[int] = None
@@ -166,6 +181,21 @@ class BookedProduct(BaseModel):
 class PendingTicket(BaseModel):
     ticket: Ticket
     customer_tag_uid: int
+
+
+class InternalNewSale(BaseModel):
+    uuid: UUID
+    buttons: list[BookedButton]
+    customer_tag_uid: int
+    used_vouchers: Optional[int] = None
+
+
+class InternalPendingSale(PendingSaleBase):
+    buttons: list[BookedButton]
+
+
+class InternalCompletedSale(CompletedSaleBase, PendingSaleBase):
+    buttons: list[BookedButton]
 
 
 async def fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
@@ -230,20 +260,25 @@ class OrderService(DBService):
         *,
         conn: asyncpg.Connection,
         till_profile_id: int,
-        buttons: list[Button],
+        buttons: list[BookedButton],
     ) -> list[BookedProduct]:
         # TODO: check if the till making this sale has these buttons as part of its layout
         booked_products = []
         for button in buttons:
-            product_rows = await conn.fetch(
-                "select p.* from till_button_product tbp "
-                "join product_with_tax_and_restrictions p on tbp.product_id = p.id "
-                "join till_layout_to_button tltp on tltp.button_id = tbp.button_id "
-                "join till_profile tp on tp.layout_id = tltp.layout_id "
-                "where tbp.button_id = $1 and tp.id = $2",
-                button.till_button_id,
-                till_profile_id,
-            )
+            if not button.is_product:
+                product_rows = await conn.fetch(
+                    "select p.* from till_button_product tbp "
+                    "join product_with_tax_and_restrictions p on tbp.product_id = p.id "
+                    "join till_layout_to_button tltp on tltp.button_id = tbp.button_id "
+                    "join till_profile tp on tp.layout_id = tltp.layout_id "
+                    "where tbp.button_id = $1 and tp.id = $2",
+                    button.id,
+                    till_profile_id,
+                )
+            else:
+                product_rows = await conn.fetch(
+                    "select p.* from product_with_tax_and_restrictions p where p.id = $1", button.id
+                )
             if len(product_rows) == 0:
                 raise InvalidArgument("this till profile is not allowed to use these buttons")
 
@@ -332,7 +367,11 @@ class OrderService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_topup(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_topup: NewTopUp
+        self,
+        *,
+        conn: asyncpg.Connection,
+        current_terminal: Terminal,
+        new_topup: NewTopUp,
     ) -> PendingTopUp:
         if new_topup.amount <= 0.0:
             raise InvalidArgument("Only topups with a positive amount are allowed")
@@ -341,7 +380,8 @@ class OrderService(DBService):
             raise InvalidArgument("Cannot pay with tag for top ups")
 
         can_top_up = await conn.fetchval(
-            "select allow_top_up from till_profile where id = $1", current_terminal.till.active_profile_id
+            "select allow_top_up from till_profile where id = $1",
+            current_terminal.till.active_profile_id,
         )
         if not can_top_up:
             raise TillPermissionException("This terminal is not allowed to top up customers")
@@ -380,12 +420,20 @@ class OrderService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_topup(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, new_topup: NewTopUp
+        self,
+        *,
+        conn: asyncpg.Connection,
+        current_terminal: Terminal,
+        current_user: CurrentUser,
+        new_topup: NewTopUp,
     ) -> CompletedTopUp:
         assert current_user.cashier_account_id is not None
 
         pending_top_up: PendingTopUp = await self.check_topup(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_terminal=current_terminal, current_user=current_user, new_topup=new_topup
+            conn=conn,
+            current_terminal=current_terminal,
+            current_user=current_user,
+            new_topup=new_topup,
         )
 
         top_up_product = await fetch_top_up_product(conn=conn)
@@ -403,16 +451,19 @@ class OrderService(DBService):
         if pending_top_up.payment_method == PaymentMethod.cash:
             bookings = {
                 BookingIdentifier(
-                    source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=pending_top_up.customer_account_id
+                    source_account_id=ACCOUNT_CASH_SALE_SOURCE,
+                    target_account_id=pending_top_up.customer_account_id,
                 ): pending_top_up.amount,
                 BookingIdentifier(
-                    source_account_id=ACCOUNT_CASH_ENTRY, target_account_id=current_user.cashier_account_id
+                    source_account_id=ACCOUNT_CASH_ENTRY,
+                    target_account_id=current_user.cashier_account_id,
                 ): pending_top_up.amount,
             }
         elif pending_top_up.payment_method == PaymentMethod.sumup:
             bookings = {
                 BookingIdentifier(
-                    source_account_id=ACCOUNT_SUMUP, target_account_id=pending_top_up.customer_account_id
+                    source_account_id=ACCOUNT_SUMUP,
+                    target_account_id=pending_top_up.customer_account_id,
                 ): pending_top_up.amount
             }
         else:
@@ -444,11 +495,9 @@ class OrderService(DBService):
             till_id=current_terminal.till.id,
         )
 
-    @with_retryable_db_transaction()
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def check_sale(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_sale: NewSale
-    ) -> PendingSale:
+    async def _check_sale(
+        self, *, conn: asyncpg.Connection, till: Till, new_sale: InternalNewSale
+    ) -> InternalPendingSale:
         """
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
@@ -460,13 +509,13 @@ class OrderService(DBService):
         customer_account = await self._fetch_customer_by_user_tag(conn=conn, customer_tag_uid=new_sale.customer_tag_uid)
 
         booked_products = await self._get_products_from_buttons(
-            conn=conn, till_profile_id=current_terminal.till.active_profile_id, buttons=new_sale.buttons
+            conn=conn, till_profile_id=till.active_profile_id, buttons=new_sale.buttons
         )
         line_items = await self._preprocess_order_positions(
             customer_restrictions=customer_account.restriction, booked_products=booked_products
         )
 
-        order = PendingSale(
+        order = InternalPendingSale(
             uuid=new_sale.uuid,
             buttons=new_sale.buttons,
             old_balance=customer_account.balance,
@@ -512,16 +561,92 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def book_sale(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, new_sale: NewSale
-    ) -> CompletedSale:
+    async def check_sale(
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_sale: NewSale
+    ) -> PendingSale:
+        """
+        prepare the given order: checks all requirements.
+        To finish the order, book_order is used.
+        """
+        internal_new_sale = InternalNewSale(
+            uuid=new_sale.uuid,
+            customer_tag_uid=new_sale.customer_tag_uid,
+            used_vouchers=new_sale.used_vouchers,
+            buttons=[
+                BookedButton(
+                    id=b.till_button_id,
+                    is_product=False,
+                    quantity=b.quantity,
+                    price=b.price,
+                )
+                for b in new_sale.buttons
+            ],
+        )
+        pending_sale = await self._check_sale(conn=conn, till=current_terminal.till, new_sale=internal_new_sale)
+        return PendingSale(
+            uuid=pending_sale.uuid,
+            old_balance=pending_sale.old_balance,
+            new_balance=pending_sale.new_balance,
+            old_voucher_balance=pending_sale.old_voucher_balance,
+            new_voucher_balance=pending_sale.new_voucher_balance,
+            customer_account_id=pending_sale.customer_account_id,
+            line_items=pending_sale.line_items,
+            buttons=new_sale.buttons,
+        )
+
+    @with_retryable_db_transaction()
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    async def check_sale_products(
+        self,
+        *,
+        conn: asyncpg.Connection,
+        current_terminal: Terminal,
+        new_sale: NewSaleProducts,
+    ) -> PendingSaleProducts:
+        """
+        prepare the given order: checks all requirements.
+        To finish the order, book_order is used.
+        """
+        internal_new_sale = InternalNewSale(
+            uuid=new_sale.uuid,
+            customer_tag_uid=new_sale.customer_tag_uid,
+            used_vouchers=new_sale.used_vouchers,
+            buttons=[
+                BookedButton(
+                    id=b.product_id,
+                    is_product=True,
+                    quantity=b.quantity,
+                    price=b.price,
+                )
+                for b in new_sale.products
+            ],
+        )
+        pending_sale = await self._check_sale(conn=conn, till=current_terminal.till, new_sale=internal_new_sale)
+        return PendingSaleProducts(
+            uuid=pending_sale.uuid,
+            old_balance=pending_sale.old_balance,
+            new_balance=pending_sale.new_balance,
+            old_voucher_balance=pending_sale.old_voucher_balance,
+            new_voucher_balance=pending_sale.new_voucher_balance,
+            customer_account_id=pending_sale.customer_account_id,
+            line_items=pending_sale.line_items,
+            products=new_sale.products,
+        )
+
+    async def _book_sale(
+        self,
+        *,
+        conn: asyncpg.Connection,
+        till: Till,
+        current_user: CurrentUser,
+        new_sale: InternalNewSale,
+    ) -> InternalCompletedSale:
         """
         apply the order after all payment has been settled.
         """
-        pending_sale = await self.check_sale(  # pylint: disable=unexpected-keyword-arg
+        pending_sale = await self._check_sale(
             conn=conn,
-            current_terminal=current_terminal,
-            current_user=current_user,
+            till=till,
             new_sale=new_sale,
         )
 
@@ -555,7 +680,7 @@ class OrderService(DBService):
             cashier_id=current_user.id,
             line_items=line_items,
             bookings=bookings,
-            till_id=current_terminal.till.id,
+            till_id=till.id,
         )
 
         if pending_sale.used_vouchers > 0:
@@ -567,7 +692,7 @@ class OrderService(DBService):
                 voucher_amount=pending_sale.used_vouchers,
             )
 
-        completed_order = CompletedSale(
+        completed_order = InternalCompletedSale(
             buttons=pending_sale.buttons,
             id=order_info.id,
             uuid=order_info.uuid,
@@ -578,7 +703,7 @@ class OrderService(DBService):
             customer_account_id=pending_sale.customer_account_id,
             line_items=pending_sale.line_items,
             booked_at=order_info.booked_at,
-            till_id=current_terminal.till.id,
+            till_id=till.id,
             cashier_id=current_user.id,
         )
 
@@ -595,8 +720,131 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def cancel_sale(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, order_id: int
+    async def book_sale(
+        self,
+        *,
+        conn: asyncpg.Connection,
+        current_terminal: Terminal,
+        current_user: CurrentUser,
+        new_sale: NewSale,
+    ) -> CompletedSale:
+        """
+        prepare the given order: checks all requirements.
+        To finish the order, book_order is used.
+        """
+        internal_new_sale = InternalNewSale(
+            uuid=new_sale.uuid,
+            customer_tag_uid=new_sale.customer_tag_uid,
+            user_vouchers=new_sale.used_vouchers,
+            buttons=[
+                BookedButton(
+                    id=b.till_button_id,
+                    is_product=False,
+                    quantity=b.quantity,
+                    price=b.price,
+                )
+                for b in new_sale.buttons
+            ],
+        )
+        completed_sale = await self._book_sale(
+            conn=conn,
+            till=current_terminal.till,
+            new_sale=internal_new_sale,
+            current_user=current_user,
+        )
+        return CompletedSale(
+            id=completed_sale.id,
+            booked_at=completed_sale.booked_at,
+            cashier_id=completed_sale.cashier_id,
+            till_id=completed_sale.till_id,
+            uuid=completed_sale.uuid,
+            old_balance=completed_sale.old_balance,
+            new_balance=completed_sale.new_balance,
+            old_voucher_balance=completed_sale.old_voucher_balance,
+            new_voucher_balance=completed_sale.new_voucher_balance,
+            customer_account_id=completed_sale.customer_account_id,
+            line_items=completed_sale.line_items,
+            buttons=new_sale.buttons,
+        )
+
+    @with_retryable_db_transaction()
+    @requires_user([Privilege.can_book_orders])
+    async def book_sale_products(
+        self,
+        *,
+        conn: asyncpg.Connection,
+        current_user: CurrentUser,
+        new_sale: NewSaleProducts,
+    ) -> CompletedSaleProducts:
+        """
+        prepare the given order: checks all requirements.
+        To finish the order, book_order is used.
+        """
+        internal_new_sale = InternalNewSale(
+            uuid=new_sale.uuid,
+            customer_tag_uid=new_sale.customer_tag_uid,
+            user_vouchers=new_sale.used_vouchers,
+            buttons=[
+                BookedButton(
+                    id=b.product_id,
+                    is_product=True,
+                    quantity=b.quantity,
+                    price=b.price,
+                )
+                for b in new_sale.products
+            ],
+        )
+        till = await fetch_till(conn=conn, till_id=VIRTUAL_TILL_ID)
+        assert till is not None
+        completed_sale = await self._book_sale(
+            conn=conn, till=till, current_user=current_user, new_sale=internal_new_sale
+        )
+        return CompletedSaleProducts(
+            id=completed_sale.id,
+            booked_at=completed_sale.booked_at,
+            cashier_id=completed_sale.cashier_id,
+            till_id=completed_sale.till_id,
+            uuid=completed_sale.uuid,
+            old_balance=completed_sale.old_balance,
+            new_balance=completed_sale.new_balance,
+            old_voucher_balance=completed_sale.old_voucher_balance,
+            new_voucher_balance=completed_sale.new_voucher_balance,
+            customer_account_id=completed_sale.customer_account_id,
+            line_items=completed_sale.line_items,
+            products=new_sale.products,
+        )
+
+    @with_retryable_db_transaction()
+    @requires_user([Privilege.can_book_orders])
+    async def edit_sale_products(
+        self,
+        *,
+        conn: asyncpg.Connection,
+        current_user: CurrentUser,
+        order_id: int,
+        edit_sale: EditSaleProducts,
+    ) -> CompletedSaleProducts:
+        order = await fetch_order(conn=conn, order_id=order_id)
+        if order is None:
+            raise InvalidArgument("Order does not exist")
+        await self._cancel_sale(conn=conn, current_user=current_user, order_id=order_id, till_id=VIRTUAL_TILL_ID)
+
+        new_sale = NewSaleProducts(
+            products=edit_sale.products,
+            uuid=edit_sale.uuid,
+            used_vouchers=edit_sale.used_vouchers,
+            customer_tag_uid=order.customer_tag_uid,
+        )
+
+        return await self.book_sale_products(conn=conn, current_user=current_user, new_sale=new_sale)
+
+    @staticmethod
+    async def _cancel_sale(
+        *,
+        conn: asyncpg.Connection,
+        current_user: CurrentUser,
+        till_id: int,
+        order_id: int,
     ):
         is_order_cancelled = await conn.fetchval("select true from ordr where cancels_order = $1", order_id)
         if is_order_cancelled:
@@ -626,7 +874,7 @@ class OrderService(DBService):
             conn=conn,
             order_type=OrderType.cancel_sale,
             cashier_id=current_user.id,
-            till_id=current_terminal.till.id,
+            till_id=till_id,
             customer_account_id=order.customer_account_id,
             cancels_order=order.id,
             payment_method=order.payment_method,
@@ -651,6 +899,20 @@ class OrderService(DBService):
                 transaction["amount"],
                 transaction["vouchers"],
             )
+
+    @with_retryable_db_transaction()
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    async def cancel_sale(
+        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, order_id: int
+    ):
+        await self._cancel_sale(
+            conn=conn, till_id=current_terminal.till.id, current_user=current_user, order_id=order_id
+        )
+
+    @with_retryable_db_transaction()
+    @requires_user([Privilege.can_book_orders])
+    async def cancel_sale_admin(self, *, conn: asyncpg.Connection, current_user: CurrentUser, order_id: int):
+        await self._cancel_sale(conn=conn, till_id=VIRTUAL_TILL_ID, current_user=current_user, order_id=order_id)
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
