@@ -5,6 +5,7 @@ from fastapi import APIRouter
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextOrderService
+from stustapay.core.service.common.decorators import OptionalUserContext
 from stustapay.core.service.order.stats import ProductStats
 
 router = APIRouter(
@@ -22,5 +23,5 @@ async def get_product_stats(
     from_timestamp: Optional[datetime] = None,
 ):
     return await order_service.stats.get_product_stats(
-        token=token, to_timestamp=to_timestamp, from_timestamp=from_timestamp
+        OptionalUserContext(token=token), to_timestamp=to_timestamp, from_timestamp=from_timestamp
     )

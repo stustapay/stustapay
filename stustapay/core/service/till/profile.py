@@ -9,7 +9,7 @@ from stustapay.core.schema.till import (
 )
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user
+from stustapay.core.service.common.decorators import with_db_transaction, requires_user, UserContext
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.user import AuthService
 
@@ -41,8 +41,8 @@ class TillProfileService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def create_profile(self, *, conn: asyncpg.Connection, profile: NewTillProfile) -> TillProfile:
-        profile_id = await conn.fetchval(
+    async def create_profile(self, ctx: UserContext, *, profile: NewTillProfile) -> TillProfile:
+        profile_id = await ctx.conn.fetchval(
             "insert into till_profile (name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id) "
             "values ($1, $2, $3, $4, $5, $6) "
             "returning id",
@@ -55,17 +55,17 @@ class TillProfileService(DBService):
         )
 
         await self._update_allowed_profile_roles(
-            conn=conn, profile_id=profile_id, role_names=profile.allowed_role_names
+            conn=ctx.conn, profile_id=profile_id, role_names=profile.allowed_role_names
         )
 
-        resulting_profile = await self._get_profile(conn=conn, profile_id=profile_id)
+        resulting_profile = await self._get_profile(conn=ctx.conn, profile_id=profile_id)
         assert resulting_profile is not None
         return resulting_profile
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def list_profiles(self, *, conn: asyncpg.Connection) -> list[TillProfile]:
-        cursor = conn.cursor("select * from till_profile_with_allowed_roles")
+    async def list_profiles(self, ctx: UserContext) -> list[TillProfile]:
+        cursor = ctx.conn.cursor("select * from till_profile_with_allowed_roles")
         result = []
         async for row in cursor:
             result.append(TillProfile.parse_obj(row))
@@ -73,15 +73,15 @@ class TillProfileService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def get_profile(self, *, conn: asyncpg.Connection, profile_id: int) -> Optional[TillProfile]:
-        return await self._get_profile(conn=conn, profile_id=profile_id)
+    async def get_profile(self, ctx: UserContext, *, profile_id: int) -> Optional[TillProfile]:
+        return await self._get_profile(conn=ctx.conn, profile_id=profile_id)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def update_profile(
-        self, *, conn: asyncpg.Connection, profile_id: int, profile: NewTillProfile
+        self, ctx: UserContext, *, profile_id: int, profile: NewTillProfile
     ) -> Optional[TillProfile]:
-        p_id = await conn.fetchval(
+        p_id = await ctx.conn.fetchval(
             "update till_profile set name = $2, description = $3, allow_top_up = $4, allow_cash_out = $5, "
             "   allow_ticket_sale = $6, layout_id = $7 "
             "where id = $1 returning id ",
@@ -96,19 +96,19 @@ class TillProfileService(DBService):
         if p_id is None:
             return None
 
-        await conn.execute("delete from allowed_user_roles_for_till_profile where profile_id = $1", profile_id)
+        await ctx.conn.execute("delete from allowed_user_roles_for_till_profile where profile_id = $1", profile_id)
         await self._update_allowed_profile_roles(
-            conn=conn, profile_id=profile_id, role_names=profile.allowed_role_names
+            conn=ctx.conn, profile_id=profile_id, role_names=profile.allowed_role_names
         )
 
-        resulting_profile = await self._get_profile(conn=conn, profile_id=profile_id)
+        resulting_profile = await self._get_profile(conn=ctx.conn, profile_id=profile_id)
         assert resulting_profile is not None
         return resulting_profile
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def delete_profile(self, *, conn: asyncpg.Connection, till_profile_id: int) -> bool:
-        result = await conn.execute(
+    async def delete_profile(self, ctx: UserContext, *, till_profile_id: int) -> bool:
+        result = await ctx.conn.execute(
             "delete from till_profile where id = $1",
             till_profile_id,
         )

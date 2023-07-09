@@ -3,6 +3,7 @@ from fastapi import APIRouter, status, HTTPException
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTaxRateService
 from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName
+from stustapay.core.service.common.decorators import OptionalUserContext
 
 router = APIRouter(
     prefix="/tax-rates",
@@ -13,7 +14,7 @@ router = APIRouter(
 
 @router.get("", response_model=list[TaxRate])
 async def list_tax_rates(token: CurrentAuthToken, tax_service: ContextTaxRateService):
-    return await tax_service.list_tax_rates(token=token)
+    return await tax_service.list_tax_rates(OptionalUserContext(token=token))
 
 
 @router.post("", response_model=TaxRate)
@@ -22,7 +23,7 @@ async def create_tax_rate(
     token: CurrentAuthToken,
     tax_service: ContextTaxRateService,
 ):
-    return await tax_service.create_tax_rate(token=token, tax_rate=tax_rate)
+    return await tax_service.create_tax_rate(OptionalUserContext(token=token), tax_rate=tax_rate)
 
 
 @router.get("/{tax_rate_name}", response_model=TaxRate)
@@ -31,7 +32,7 @@ async def get_tax_rate(
     token: CurrentAuthToken,
     tax_service: ContextTaxRateService,
 ):
-    tax_rate = await tax_service.get_tax_rate(token=token, tax_rate_name=tax_rate_name)
+    tax_rate = await tax_service.get_tax_rate(OptionalUserContext(token=token), tax_rate_name=tax_rate_name)
     if tax_rate is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -45,7 +46,9 @@ async def update_tax_rate(
     token: CurrentAuthToken,
     tax_service: ContextTaxRateService,
 ):
-    tax_rate = await tax_service.update_tax_rate(token=token, tax_rate_name=tax_rate_name, tax_rate=tax_rate)
+    tax_rate = await tax_service.update_tax_rate(
+        OptionalUserContext(token=token), tax_rate_name=tax_rate_name, tax_rate=tax_rate
+    )
     if tax_rate is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -58,6 +61,6 @@ async def delete_tax_rate(
     token: CurrentAuthToken,
     tax_service: ContextTaxRateService,
 ):
-    deleted = await tax_service.delete_tax_rate(token=token, tax_rate_name=tax_rate_name)
+    deleted = await tax_service.delete_tax_rate(OptionalUserContext(token=token), tax_rate_name=tax_rate_name)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

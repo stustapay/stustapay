@@ -1,7 +1,6 @@
 import uuid
 from typing import Optional
 
-import asyncpg
 from jose import JWTError, jwt
 from pydantic import BaseModel, ValidationError
 
@@ -10,7 +9,7 @@ from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction
+from stustapay.core.service.common.decorators import with_db_transaction, DbContext
 
 
 class UserTokenMetadata(BaseModel):
@@ -65,12 +64,12 @@ class AuthService(DBService):
         return encoded_jwt
 
     @with_db_transaction
-    async def get_user_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[CurrentUser]:
+    async def get_user_from_token(self, ctx: DbContext, *, token: str) -> Optional[CurrentUser]:
         token_payload = self.decode_user_jwt_payload(token)
         if token_payload is None:
             return None
 
-        row = await conn.fetchrow(
+        row = await ctx.conn.fetchrow(
             "select u.*, null as active_role_id "
             "from user_with_privileges u join usr_session s on u.id = s.usr "
             "where u.id = $1 and s.id = $2",
@@ -83,12 +82,12 @@ class AuthService(DBService):
         return CurrentUser.parse_obj(row)
 
     @with_db_transaction
-    async def get_customer_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[Customer]:
+    async def get_customer_from_token(self, ctx: DbContext, *, token: str) -> Optional[Customer]:
         token_payload = self.decode_customer_jwt_payload(token)
         if token_payload is None:
             return None
 
-        row = await conn.fetchrow(
+        row = await ctx.conn.fetchrow(
             "select c.*, s.id as session_id "
             "from customer c join customer_session s on c.id = s.customer "
             "where c.id = $1 and s.id = $2",
@@ -116,12 +115,12 @@ class AuthService(DBService):
         return encoded_jwt
 
     @with_db_transaction
-    async def get_terminal_from_token(self, *, conn: asyncpg.Connection, token: str) -> Optional[Terminal]:
+    async def get_terminal_from_token(self, ctx: DbContext, *, token: str) -> Optional[Terminal]:
         token_payload = self.decode_terminal_jwt_payload(token)
         if token_payload is None:
             return None
 
-        row = await conn.fetchrow(
+        row = await ctx.conn.fetchrow(
             "select * from till where id = $1 and session_uuid = $2",
             token_payload.till_id,
             token_payload.session_uuid,

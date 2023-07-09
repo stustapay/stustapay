@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextAccountService
 from stustapay.core.schema.account import Account, UserTagDetail
+from stustapay.core.service.common.decorators import OptionalUserContext
 
 router = APIRouter(
     prefix="",
@@ -16,7 +17,7 @@ router = APIRouter(
 
 @router.get("/system-accounts", response_model=list[Account])
 async def list_system_accounts(token: CurrentAuthToken, account_service: ContextAccountService):
-    return await account_service.list_system_accounts(token=token)
+    return await account_service.list_system_accounts(OptionalUserContext(token=token))
 
 
 class FindAccountPayload(BaseModel):
@@ -25,17 +26,17 @@ class FindAccountPayload(BaseModel):
 
 @router.post("/accounts/find-accounts", response_model=list[Account])
 async def find_accounts(token: CurrentAuthToken, account_service: ContextAccountService, payload: FindAccountPayload):
-    return await account_service.find_accounts(token=token, search_term=payload.search_term)
+    return await account_service.find_accounts(OptionalUserContext(token=token), search_term=payload.search_term)
 
 
 @router.get("/accounts/{account_id}", response_model=Account)
 async def get_account(token: CurrentAuthToken, account_service: ContextAccountService, account_id: int):
-    return await account_service.get_account(token=token, account_id=account_id)
+    return await account_service.get_account(OptionalUserContext(token=token), account_id=account_id)
 
 
 @router.post("/accounts/{account_id}/disable")
 async def disable_account(token: CurrentAuthToken, account_service: ContextAccountService, account_id: int):
-    await account_service.disable_account(token=token, account_id=account_id)
+    await account_service.disable_account(OptionalUserContext(token=token), account_id=account_id)
 
 
 class UpdateBalancePayload(BaseModel):
@@ -46,7 +47,9 @@ class UpdateBalancePayload(BaseModel):
 async def update_balance(
     token: CurrentAuthToken, account_service: ContextAccountService, account_id: int, payload: UpdateBalancePayload
 ):
-    await account_service.update_account_balance(token=token, account_id=account_id, new_balance=payload.new_balance)
+    await account_service.update_account_balance(
+        OptionalUserContext(token=token), account_id=account_id, new_balance=payload.new_balance
+    )
 
 
 class UpdateVoucherAmountPayload(BaseModel):
@@ -61,7 +64,7 @@ async def update_voucher_amount(
     payload: UpdateVoucherAmountPayload,
 ):
     await account_service.update_account_vouchers(
-        token=token, account_id=account_id, new_voucher_amount=payload.new_voucher_amount
+        OptionalUserContext(token=token), account_id=account_id, new_voucher_amount=payload.new_voucher_amount
     )
 
 
@@ -78,7 +81,10 @@ async def update_tag_uid(
     payload: UpdateTagUidPayload,
 ):
     await account_service.switch_account_tag_uid_admin(
-        token=token, account_id=account_id, new_user_tag_uid=int(payload.new_tag_uid_hex, 16), comment=payload.comment
+        OptionalUserContext(token=token),
+        account_id=account_id,
+        new_user_tag_uid=int(payload.new_tag_uid_hex, 16),
+        comment=payload.comment,
     )
 
 
@@ -93,7 +99,9 @@ async def update_account_comment(
     account_id: int,
     payload: UpdateAccountCommentPayload,
 ):
-    return await account_service.update_account_comment(token=token, account_id=account_id, comment=payload.comment)
+    return await account_service.update_account_comment(
+        OptionalUserContext(token=token), account_id=account_id, comment=payload.comment
+    )
 
 
 @router.get("/user-tags/{user_tag_uid_hex}", response_model=UserTagDetail)
@@ -102,7 +110,9 @@ async def get_user_tag_detail(
     account_service: ContextAccountService,
     user_tag_uid_hex: str,
 ):
-    resp = await account_service.get_user_tag_detail(token=token, user_tag_uid=int(user_tag_uid_hex, 16))
+    resp = await account_service.get_user_tag_detail(
+        OptionalUserContext(token=token), user_tag_uid=int(user_tag_uid_hex, 16)
+    )
     if resp is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return resp
@@ -120,5 +130,5 @@ async def update_user_tag_comment(
     payload: UpdateCommentPayload,
 ):
     return await account_service.update_user_tag_comment(
-        token=token, user_tag_uid=int(user_tag_uid_hex, 16), comment=payload.comment
+        OptionalUserContext(token=token), user_tag_uid=int(user_tag_uid_hex, 16), comment=payload.comment
     )

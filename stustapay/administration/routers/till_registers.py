@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.till import NewCashRegister, CashRegister
+from stustapay.core.service.common.decorators import OptionalUserContext
 from stustapay.core.util import BaseModel
 
 router = APIRouter(
@@ -14,7 +15,7 @@ router = APIRouter(
 
 @router.get("", response_model=list[CashRegister])
 async def list_register_stockings(token: CurrentAuthToken, till_service: ContextTillService):
-    return await till_service.register.list_cash_registers_admin(token=token)
+    return await till_service.register.list_cash_registers_admin(OptionalUserContext(token=token))
 
 
 @router.post("", response_model=CashRegister)
@@ -23,7 +24,7 @@ async def create_register(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    return await till_service.register.create_cash_register(token=token, new_register=register)
+    return await till_service.register.create_cash_register(OptionalUserContext(token=token), new_register=register)
 
 
 class TransferRegisterPayload(BaseModel):
@@ -38,7 +39,9 @@ async def transfer_register(
     till_service: ContextTillService,
 ):
     return await till_service.register.transfer_cash_register_admin(
-        token=token, source_cashier_id=payload.source_cashier_id, target_cashier_id=payload.target_cashier_id
+        OptionalUserContext(token=token),
+        source_cashier_id=payload.source_cashier_id,
+        target_cashier_id=payload.target_cashier_id,
     )
 
 
@@ -49,7 +52,9 @@ async def update_register(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    return await till_service.register.update_cash_register(token=token, register_id=register_id, register=register)
+    return await till_service.register.update_cash_register(
+        OptionalUserContext(token=token), register_id=register_id, register=register
+    )
 
 
 @router.delete("/{register_id}")
@@ -58,4 +63,4 @@ async def delete_register(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    return await till_service.register.delete_cash_register(token=token, register_id=register_id)
+    return await till_service.register.delete_cash_register(OptionalUserContext(token=token), register_id=register_id)

@@ -17,7 +17,7 @@ from stustapay.core.database import create_db_pool, rebuild_with
 from stustapay.core.schema.till import NewTill, NewCashRegisterStocking, NewCashRegister
 from stustapay.core.schema.user import UserWithoutId, CASHIER_ROLE_NAME
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.decorators import with_db_transaction
+from stustapay.core.service.common.decorators import with_db_transaction, OptionalUserContext
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
@@ -158,30 +158,30 @@ class FestivalSetup(SubCommand):
 
     async def _create_tills(self, admin_token: str, till_service: TillService, n_tills: int):
         self.logger.info(f"Creating {n_tills} tills")
+        ctx = OptionalUserContext(token=admin_token)
         for i in range(self.args.n_topup_tills):
             await till_service.create_till(
-                token=admin_token,
+                ctx,
                 till=NewTill(name=f"Aufladekasse {i}", active_profile_id=PROFILE_ID_TOPUP),
             )
         for i in range(self.args.n_entry_tills):
             await till_service.create_till(
-                token=admin_token,
+                ctx,
                 till=NewTill(name=f"Eintrittskasse {i}", active_profile_id=PROFILE_ID_TICKET),
             )
         for i in range(self.args.n_beer_tills):
             await till_service.create_till(
+                ctx,
                 token=admin_token,
                 till=NewTill(name=f"Bierkasse {i}", active_profile_id=PROFILE_ID_BEER),
             )
         for i in range(self.args.n_cocktail_tills):
             await till_service.create_till(
-                token=admin_token,
+                ctx,
                 till=NewTill(name=f"Cocktailkasse {i}", active_profile_id=PROFILE_ID_COCKTAIL),
             )
         for i in range(n_tills):
-            await till_service.register.create_cash_register(
-                token=admin_token, new_register=NewCashRegister(name=f"Blechkasse {i}")
-            )
+            await till_service.register.create_cash_register(ctx, new_register=NewCashRegister(name=f"Blechkasse {i}"))
 
         await till_service.register.create_cash_register_stockings(
             token=admin_token, stocking=NewCashRegisterStocking(name="Stocking", euro20=2, euro10=1)
@@ -216,11 +216,11 @@ class FestivalSetup(SubCommand):
         )
         n_cashiers = max(int(n_tills * 1.5), self.args.n_cashiers or 0)
 
-        await self._create_tags()  # pylint: disable=no-value-for-parameter
+        await self._create_tags()
         auth_service = AuthService(db_pool=self.db_pool, config=self.config)
         till_service = TillService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
         user_service = UserService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
-        admin_login = await user_service.login_user(username="admin", password="admin")  # pylint: disable=missing-kwoa
+        admin_login = await user_service.login_user(username="admin", password="admin")
         assert admin_login is not None
         admin_token = admin_login.token
         await self._create_tills(admin_token=admin_token, till_service=till_service, n_tills=n_tills)

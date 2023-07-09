@@ -3,6 +3,7 @@ from fastapi import APIRouter, status, HTTPException
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.till import TillButton, NewTillButton
+from stustapay.core.service.common.decorators import OptionalUserContext
 
 router = APIRouter(
     prefix="/till-buttons",
@@ -13,7 +14,7 @@ router = APIRouter(
 
 @router.get("", response_model=list[TillButton])
 async def list_till_buttons(token: CurrentAuthToken, till_service: ContextTillService):
-    return await till_service.layout.list_buttons(token=token)
+    return await till_service.layout.list_buttons(OptionalUserContext(token=token))
 
 
 @router.post("", response_model=NewTillButton)
@@ -22,7 +23,7 @@ async def create_till_button(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    return await till_service.layout.create_button(token=token, button=button)
+    return await till_service.layout.create_button(OptionalUserContext(token=token), button=button)
 
 
 @router.get("/{button_id}", response_model=TillButton)
@@ -31,7 +32,7 @@ async def get_till_button(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    till = await till_service.layout.get_button(token=token, button_id=button_id)
+    till = await till_service.layout.get_button(OptionalUserContext(token=token), button_id=button_id)
     if till is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -45,7 +46,7 @@ async def update_till_button(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    till = await till_service.layout.update_button(token=token, button_id=button_id, button=button)
+    till = await till_service.layout.update_button(OptionalUserContext(token=token), button_id=button_id, button=button)
     if till is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -58,6 +59,6 @@ async def delete_till_button(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    deleted = await till_service.layout.delete_button(token=token, button_id=button_id)
+    deleted = await till_service.layout.delete_button(OptionalUserContext(token=token), button_id=button_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

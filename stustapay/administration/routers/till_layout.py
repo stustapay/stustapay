@@ -3,6 +3,7 @@ from fastapi import APIRouter, status, HTTPException
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.till import TillLayout, NewTillLayout
+from stustapay.core.service.common.decorators import OptionalUserContext
 
 router = APIRouter(
     prefix="/till-layouts",
@@ -13,7 +14,7 @@ router = APIRouter(
 
 @router.get("", response_model=list[TillLayout])
 async def list_till_layouts(token: CurrentAuthToken, till_service: ContextTillService):
-    return await till_service.layout.list_layouts(token=token)
+    return await till_service.layout.list_layouts(OptionalUserContext(token=token))
 
 
 @router.post("", response_model=NewTillLayout)
@@ -22,7 +23,7 @@ async def create_till_layout(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    return await till_service.layout.create_layout(token=token, layout=layout)
+    return await till_service.layout.create_layout(OptionalUserContext(token=token), layout=layout)
 
 
 @router.get("/{layout_id}", response_model=TillLayout)
@@ -31,7 +32,7 @@ async def get_till_layout(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    till = await till_service.layout.get_layout(token=token, layout_id=layout_id)
+    till = await till_service.layout.get_layout(OptionalUserContext(token=token), layout_id=layout_id)
     if till is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -45,7 +46,7 @@ async def update_till_layout(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    till = await till_service.layout.update_layout(token=token, layout_id=layout_id, layout=layout)
+    till = await till_service.layout.update_layout(OptionalUserContext(token=token), layout_id=layout_id, layout=layout)
     if till is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -58,6 +59,6 @@ async def delete_till_layout(
     token: CurrentAuthToken,
     till_service: ContextTillService,
 ):
-    deleted = await till_service.layout.delete_layout(token=token, layout_id=layout_id)
+    deleted = await till_service.layout.delete_layout(OptionalUserContext(token=token), layout_id=layout_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

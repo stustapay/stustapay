@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextConfigService, Context, get_context
 from stustapay.core.schema.config import ConfigEntry, PublicConfig
+from stustapay.core.service.common.decorators import OptionalUserContext
 
 router = APIRouter(
     prefix="",
@@ -33,7 +34,7 @@ async def get_public_config(context: Annotated[Context, Depends(get_context)], c
 
 @router.get("/config", response_model=list[ConfigEntry])
 async def list_config_entries(token: CurrentAuthToken, config_service: ContextConfigService):
-    return await config_service.list_config_entries(token=token)
+    return await config_service.list_config_entries(OptionalUserContext(token=token))
 
 
 @router.post("/config", response_model=ConfigEntry)
@@ -42,4 +43,4 @@ async def set_config_entry(
     token: CurrentAuthToken,
     config_service: ContextConfigService,
 ):
-    return await config_service.set_config_entry(token=token, entry=config_entry)
+    return await config_service.set_config_entry(OptionalUserContext(token=token), entry=config_entry)

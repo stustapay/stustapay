@@ -27,7 +27,7 @@ async def login(
     user_service: ContextUserService,
 ):
     response = await user_service.login_user(username=payload.username, password=payload.password)
-    return {"user": response.user, "access_token": response.token, "grant_type": "bearer"}
+    return {"user": response.current_user, "access_token": response.token, "grant_type": "bearer"}
 
 
 class ChangePasswordPayload(BaseModel):
