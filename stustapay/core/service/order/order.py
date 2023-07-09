@@ -69,11 +69,10 @@ from stustapay.core.service.product import (
 )
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.util import BaseModel
-
-from ..till.common import fetch_till
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
+from ..till.common import fetch_till
 
 logger = logging.getLogger(__name__)
 
@@ -732,7 +731,7 @@ class OrderService(DBService):
         internal_new_sale = InternalNewSale(
             uuid=new_sale.uuid,
             customer_tag_uid=new_sale.customer_tag_uid,
-            user_vouchers=new_sale.used_vouchers,
+            used_vouchers=new_sale.used_vouchers,
             buttons=[
                 BookedButton(
                     id=b.till_button_id,
@@ -780,7 +779,7 @@ class OrderService(DBService):
         internal_new_sale = InternalNewSale(
             uuid=new_sale.uuid,
             customer_tag_uid=new_sale.customer_tag_uid,
-            user_vouchers=new_sale.used_vouchers,
+            used_vouchers=new_sale.used_vouchers,
             buttons=[
                 BookedButton(
                     id=b.product_id,
@@ -825,6 +824,8 @@ class OrderService(DBService):
         if order is None:
             raise InvalidArgument("Order does not exist")
         await self._cancel_sale(conn=conn, current_user=current_user, order_id=order_id, till_id=VIRTUAL_TILL_ID)
+
+        assert order.customer_tag_uid is not None
 
         new_sale = NewSaleProducts(
             products=edit_sale.products,

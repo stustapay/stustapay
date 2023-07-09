@@ -21,4 +21,4 @@ pylint:
 
 .PHONY: mypy
 mypy:
-	mypy stustapay
+	mypy .
