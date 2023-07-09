@@ -5,12 +5,11 @@ import os
 import tempfile
 from unittest import IsolatedAsyncioTestCase as TestCase
 
-import asyncpg
 from asyncpg.pool import Pool
 
 from stustapay.core import database
 from stustapay.core.config import Config, DatabaseConfig
-from stustapay.core.database import create_db_pool
+from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import (
@@ -94,7 +93,7 @@ class BaseTestCase(TestCase):
     async def asyncSetUp(self) -> None:
         await testing_lock.acquire()
         self.db_pool = await get_test_db()
-        self.db_conn: asyncpg.Connection = await self.db_pool.acquire()
+        self.db_conn: Connection = await self.db_pool.acquire()
 
         await self.db_conn.execute(
             "insert into user_tag_secret (id, key0, key1) overriding system value values "
@@ -102,7 +101,7 @@ class BaseTestCase(TestCase):
             "on conflict do nothing"
         )
 
-        self.test_config = Config.parse_obj(TEST_CONFIG)
+        self.test_config = Config.model_validate(TEST_CONFIG)
 
         self.auth_service = AuthService(db_pool=self.db_pool, config=self.test_config)
         self.user_service = UserService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)

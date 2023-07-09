@@ -164,13 +164,13 @@ class Simulator(SubCommand):
                 if resp.status != 200:
                     self.logger.warning(f"Error registering terminal {resp.status = } payload = {await resp.text()}")
                     raise RuntimeError("foobar")
-                success = TerminalRegistrationSuccess.parse_obj(await resp.json())
+                success = TerminalRegistrationSuccess.model_validate(await resp.json())
             async with client.get("/config", headers={"Authorization": f"Bearer {success.token}"}) as resp:
                 if resp.status != 200:
                     self.logger.error(
                         f"Error fetching terminal config, { resp.status = }, payload = {await resp.json()}"
                     )
-                config = TerminalConfig.parse_obj(await resp.json())
+                config = TerminalConfig.model_validate(await resp.json())
             return Terminal(token=success.token, till=success.till, config=config)
 
     async def voucher_granting(self):

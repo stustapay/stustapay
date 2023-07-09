@@ -8,7 +8,7 @@ import re
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Tuple
+from typing import Optional, Tuple
 
 import jinja2
 from pylatexenc.latexencode import (
@@ -16,6 +16,9 @@ from pylatexenc.latexencode import (
     UnicodeToLatexConversionRule,
     UnicodeToLatexEncoder,
 )
+
+from stustapay.core.schema.order import Order
+from stustapay.core.util import BaseModel
 
 # https://pylatexenc.readthedocs.io/en/latest/latexencode/
 LatexEncoder = UnicodeToLatexEncoder(
@@ -68,7 +71,54 @@ def setup_jinja_env():
     return env
 
 
-async def render_template(tex_tpl_name: str, context: dict) -> str:
+class BonConfig(BaseModel):
+    title: str
+    issuer: str
+    address: str
+    ust_id: str
+    closing_texts: list[str]
+
+
+class TaxRateAggregation(BaseModel):
+    tax_name: str
+    tax_rate: float
+    total_price: float
+    total_tax: float
+    total_no_tax: float
+
+
+class OrderWithTse(Order):
+    signature_status: str  # new | pending | done | failure
+    transaction_process_type: Optional[str] = None
+    transaction_process_data: Optional[str] = None
+    tse_transaction: Optional[str] = None
+    tse_signaturenr: Optional[str] = None
+    tse_start: Optional[str] = None
+    tse_end: Optional[str] = None
+    tse_hashalgo: Optional[str] = None
+    tse_time_format: Optional[str] = None
+    tse_signature: Optional[str] = None
+    tse_public_key: Optional[str] = None
+
+    @property
+    def tse_qr_code_text(self) -> str:
+        return (
+            f"V0;{self.till_id};{self.transaction_process_type};{self.transaction_process_data};"
+            f"{self.tse_transaction};{self.tse_signaturenr};{self.tse_start};{self.tse_end};{self.tse_hashalgo};"
+            f"{self.tse_time_format};{self.tse_signature};{self.tse_public_key}"
+        )
+
+
+class BonTemplateContext(BaseModel):
+    order: OrderWithTse
+
+    tax_rate_aggregations: list[TaxRateAggregation]
+
+    closing_text: str
+    config: BonConfig
+
+
+async def render_template(tex_tpl_name: str, context: BonTemplateContext) -> str:
     env = setup_jinja_env()
     tpl = env.get_template(tex_tpl_name)
     return tpl.render(context)

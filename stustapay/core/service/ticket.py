@@ -3,6 +3,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
+from stustapay.core.database import Connection
 from stustapay.core.schema.ticket import NewTicket, Ticket
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
@@ -10,11 +11,8 @@ from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_user, with_db_transaction
 
 
-async def fetch_ticket(*, conn: asyncpg.Connection, ticket_id: int) -> Optional[Ticket]:
-    result = await conn.fetchrow("select * from ticket_with_product where id = $1", ticket_id)
-    if result is None:
-        return None
-    return Ticket.parse_obj(result)
+async def fetch_ticket(*, conn: Connection, ticket_id: int) -> Optional[Ticket]:
+    return await conn.fetch_maybe_one(Ticket, "select * from ticket_with_product where id = $1", ticket_id)
 
 
 class TicketService(DBService):
@@ -24,7 +22,7 @@ class TicketService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
-    async def create_ticket(self, *, conn: asyncpg.Connection, ticket: NewTicket) -> Ticket:
+    async def create_ticket(self, *, conn: Connection, ticket: NewTicket) -> Ticket:
         ticket_id = await conn.fetchval(
             "insert into ticket "
             "(name, description, product_id, initial_top_up_amount, restriction) "
@@ -45,21 +43,17 @@ class TicketService(DBService):
 
     @with_db_transaction
     @requires_user()
-    async def list_tickets(self, *, conn: asyncpg.Connection) -> list[Ticket]:
-        cursor = conn.cursor("select * from ticket_with_product")
-        result = []
-        async for row in cursor:
-            result.append(Ticket.parse_obj(row))
-        return result
+    async def list_tickets(self, *, conn: Connection) -> list[Ticket]:
+        return await conn.fetch_many(Ticket, "select * from ticket_with_product")
 
     @with_db_transaction
     @requires_user()
-    async def get_ticket(self, *, conn: asyncpg.Connection, ticket_id: int) -> Optional[Ticket]:
+    async def get_ticket(self, *, conn: Connection, ticket_id: int) -> Optional[Ticket]:
         return await fetch_ticket(conn=conn, ticket_id=ticket_id)
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
-    async def update_ticket(self, *, conn: asyncpg.Connection, ticket_id: int, ticket: NewTicket) -> Optional[Ticket]:
+    async def update_ticket(self, *, conn: Connection, ticket_id: int, ticket: NewTicket) -> Optional[Ticket]:
         row = await conn.fetchrow(
             "update ticket set name = $2, description = $3, product_id = $4, initial_top_up_amount = $5, "
             "   restriction = $6 "
@@ -79,7 +73,7 @@ class TicketService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
-    async def delete_ticket(self, *, conn: asyncpg.Connection, ticket_id: int) -> bool:
+    async def delete_ticket(self, *, conn: Connection, ticket_id: int) -> bool:
         result = await conn.execute(
             "delete from ticket where id = $1",
             ticket_id,

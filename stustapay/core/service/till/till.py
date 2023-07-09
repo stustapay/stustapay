@@ -3,6 +3,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
+from stustapay.core.database import Connection
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.terminal import (
     Terminal,
@@ -51,26 +52,22 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def create_till(self, *, conn: asyncpg.Connection, till: NewTill) -> Till:
+    async def create_till(self, *, conn: Connection, till: NewTill) -> Till:
         return await create_till(conn=conn, till=till)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def list_tills(self, *, conn: asyncpg.Connection) -> list[Till]:
-        cursor = conn.cursor("select * from till_with_cash_register")
-        result = []
-        async for row in cursor:
-            result.append(Till.parse_obj(row))
-        return result
+    async def list_tills(self, *, conn: Connection) -> list[Till]:
+        return await conn.fetch_many(Till, "select * from till_with_cash_register")
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def get_till(self, *, conn: asyncpg.Connection, till_id: int) -> Optional[Till]:
+    async def get_till(self, *, conn: Connection, till_id: int) -> Optional[Till]:
         return await fetch_till(conn=conn, till_id=till_id)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def update_till(self, *, conn: asyncpg.Connection, till_id: int, till: NewTill) -> Optional[Till]:
+    async def update_till(self, *, conn: Connection, till_id: int, till: NewTill) -> Optional[Till]:
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5 "
             "where id = $1 returning id",
@@ -87,7 +84,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def delete_till(self, *, conn: asyncpg.Connection, till_id: int) -> bool:
+    async def delete_till(self, *, conn: Connection, till_id: int) -> bool:
         result = await conn.execute(
             "delete from till where id = $1",
             till_id,
@@ -95,14 +92,11 @@ class TillService(DBService):
         return result != "DELETE 0"
 
     @with_db_transaction
-    async def register_terminal(
-        self, *, conn: asyncpg.Connection, registration_uuid: str
-    ) -> TerminalRegistrationSuccess:
-        row = await conn.fetchrow("select * from till where registration_uuid = $1", registration_uuid)
-        if row is None:
+    async def register_terminal(self, *, conn: Connection, registration_uuid: str) -> TerminalRegistrationSuccess:
+        till = await conn.fetch_maybe_one(Till, "select * from till where registration_uuid = $1", registration_uuid)
+        if till is None:
             raise AccessDenied("Invalid registration uuid")
 
-        till = Till.parse_obj(row)
         session_uuid = await conn.fetchval(
             "update till set session_uuid = gen_random_uuid(), registration_uuid = null where id = $1 "
             "returning session_uuid",
@@ -115,7 +109,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def logout_terminal_id(self, *, conn: asyncpg.Connection, till_id: int) -> bool:
+    async def logout_terminal_id(self, *, conn: Connection, till_id: int) -> bool:
         id_ = await conn.fetchval(
             "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
             till_id,
@@ -126,7 +120,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def logout_terminal(self, *, conn: asyncpg.Connection, current_terminal: Terminal):
+    async def logout_terminal(self, *, conn: Connection, current_terminal: Terminal):
         await conn.fetchval(
             "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1",
             current_terminal.till.id,
@@ -134,7 +128,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def force_logout_user(self, *, conn: asyncpg.Connection, till_id: int):
+    async def force_logout_user(self, *, conn: Connection, till_id: int):
         result = await conn.fetchval(
             "update till set active_user_id = null, active_user_role_id = null where id = $1 returning id",
             till_id,
@@ -147,7 +141,7 @@ class TillService(DBService):
     async def check_user_login(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_terminal: Terminal,
         current_user: CurrentUser,
         user_tag: UserTag,
@@ -157,7 +151,8 @@ class TillService(DBService):
         """
 
         # we fetch all roles that contain either the terminal login or supervised terminal login privilege
-        rows = await conn.fetch(
+        available_roles = await conn.fetch_many(
+            UserRole,
             "select urwp.* "
             "from user_role_with_privileges urwp "
             "join user_to_role urt on urwp.id = urt.role_id "
@@ -171,12 +166,11 @@ class TillService(DBService):
             Privilege.supervised_terminal_login.name,
             current_terminal.till.active_profile_id,
         )
-        if rows is None or len(rows) == 0:
+        if len(available_roles) == 0:
             raise AccessDenied(
                 "User is not known or does not have any assigned roles or the user does not "
                 "have permission to login at a terminal"
             )
-        available_roles = [UserRole.parse_obj(x) for x in rows]
 
         new_user_is_supervisor = await conn.fetchval(
             "select true from user_with_privileges where user_tag_uid = $1 and $2 = any(privileges)",
@@ -194,7 +188,7 @@ class TillService(DBService):
     async def login_user(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         token: str,
         current_terminal: Terminal,
         user_tag: UserTag,
@@ -246,7 +240,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def logout_user(self, *, conn: asyncpg.Connection, current_terminal: Terminal):
+    async def logout_user(self, *, conn: Connection, current_terminal: Terminal):
         """
         Logout the currently logged-in user. This is always possible
         """
@@ -258,9 +252,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def get_user_info(
-        self, *, conn: asyncpg.Connection, current_user: CurrentUser, user_tag_uid: int
-    ) -> UserInfo:
+    async def get_user_info(self, *, conn: Connection, current_user: CurrentUser, user_tag_uid: int) -> UserInfo:
         if (
             Privilege.cashier_management not in current_user.privileges
             and Privilege.user_management not in current_user.privileges
@@ -268,7 +260,8 @@ class TillService(DBService):
         ):
             raise AccessDenied("cannot retrieve user info for someone other than yourself")
 
-        row = await conn.fetchrow(
+        info = await conn.fetch_maybe_one(
+            UserInfo,
             "select "
             "   u.*, "
             "   cash_a.balance as cash_drawer_balance, "
@@ -282,20 +275,18 @@ class TillService(DBService):
             "where u.user_tag_uid = $1",
             user_tag_uid,
         )
-        if row is None:
+        if info is None:
             raise InvalidArgument(f"There is no user registered for tag {format_user_tag_uid(user_tag_uid)}")
-        return UserInfo.parse_obj(row)
+        return info
 
     @with_db_transaction
     @requires_terminal()
-    async def get_terminal_config(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal
-    ) -> Optional[TerminalConfig]:
-        db_profile = await conn.fetchrow(
+    async def get_terminal_config(self, *, conn: Connection, current_terminal: Terminal) -> Optional[TerminalConfig]:
+        profile = await conn.fetch_one(
+            TillProfile,
             "select * from till_profile_with_allowed_roles tp where id = $1",
             current_terminal.till.active_profile_id,
         )
-        profile: TillProfile = TillProfile.parse_obj(db_profile)
         layout_has_tickets = await conn.fetchval(
             "select exists (select from till_layout_to_ticket tltt where layout_id = $1)",
             profile.layout_id,
@@ -306,7 +297,8 @@ class TillService(DBService):
             "select privileges from user_with_privileges where id = $1",
             current_terminal.till.active_user_id,
         )
-        db_buttons = await conn.fetch(
+        buttons = await conn.fetch_many(
+            TerminalButton,
             "select tlwb.* "
             "from till_button_with_products tlwb "
             "join till_layout_to_button tltb on tltb.button_id = tlwb.id "
@@ -314,7 +306,6 @@ class TillService(DBService):
             "order by tltb.sequence_number asc",
             profile.layout_id,
         )
-        buttons = [TerminalButton.parse_obj(db_button) for db_button in db_buttons]
 
         cash_register_id = None
         cash_register_name = None
@@ -329,11 +320,10 @@ class TillService(DBService):
             cash_register_id = cash_reg["id"]
             cash_register_name = cash_reg["name"]
 
-        row = await conn.fetchrow(
-            "select encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 from user_tag_secret limit 1"
+        user_tag_secret = await conn.fetch_one(
+            UserTagSecret,
+            "select encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 from user_tag_secret limit 1",
         )
-        assert row is not None
-        user_tag_secret = UserTagSecret.parse_obj(row)
         sumup_key = ""
         if profile.allow_ticket_sale or profile.allow_top_up:
             sumup_key = self.cfg.core.sumup_affiliate_key
@@ -362,11 +352,12 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def get_customer(self, *, conn: asyncpg.Connection, customer_tag_uid: int) -> Account:
-        customer = await conn.fetchrow(
+    async def get_customer(self, *, conn: Connection, customer_tag_uid: int) -> Account:
+        customer = await conn.fetch_maybe_one(
+            Account,
             "select * from account_with_history a where a.user_tag_uid = $1",
             customer_tag_uid,
         )
         if customer is None:
             raise InvalidArgument(f"Customer with tag uid {format_user_tag_uid(customer_tag_uid)} does not exist")
-        return Account.parse_obj(customer)
+        return customer

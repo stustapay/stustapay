@@ -3,8 +3,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID, uuid4
 
-import asyncpg
-
+from stustapay.core.database import Connection
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.product import fetch_money_transfer_product
@@ -18,7 +17,7 @@ class BookingIdentifier:
     target_account_id: int
 
 
-async def book_prepared_bookings(*, conn: asyncpg.Connection, order_id: int, bookings: dict[BookingIdentifier, float]):
+async def book_prepared_bookings(*, conn: Connection, order_id: int, bookings: dict[BookingIdentifier, float]):
     """
     insert the selected bookings into the database.
     bookings are (source, target, tax) -> amount
@@ -50,7 +49,7 @@ class OrderInfo:
 
 async def book_money_transfer(
     *,
-    conn: asyncpg.Connection,
+    conn: Connection,
     originating_user_id: int,
     cash_register_id: int,
     bookings: dict[BookingIdentifier, float],
@@ -82,7 +81,7 @@ async def book_money_transfer(
 
 async def book_order(
     *,
-    conn: asyncpg.Connection,
+    conn: Connection,
     order_type: OrderType,
     payment_method: PaymentMethod,
     cashier_id: Optional[int],

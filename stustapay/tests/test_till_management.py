@@ -346,10 +346,12 @@ class TillManagementTest(TerminalTestCase):
 
     async def test_button_references_max_one_variable_price_product(self):
         product1 = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="p1", is_locked=True, fixed_price=False, tax_name="ust")
+            token=self.admin_token,
+            product=NewProduct(name="p1", is_locked=True, fixed_price=False, tax_name="ust", price=None),
         )
         product2 = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="p2", is_locked=True, fixed_price=False, tax_name="ust")
+            token=self.admin_token,
+            product=NewProduct(name="p2", is_locked=True, fixed_price=False, tax_name="ust", price=None),
         )
         button = await self.till_service.layout.create_button(
             token=self.admin_token, button=NewTillButton(name="foo", product_ids=[product1.id])
@@ -391,7 +393,7 @@ class TillManagementTest(TerminalTestCase):
         )
         product2 = await self.product_service.create_product(
             token=self.admin_token,
-            product=NewProduct(name="p2", is_locked=True, price=3, price_in_vouchers=2.4, tax_name="ust"),
+            product=NewProduct(name="p2", is_locked=True, price=3, price_in_vouchers=2, tax_name="ust"),
         )
         button = await self.till_service.layout.create_button(
             token=self.admin_token, button=NewTillButton(name="foo", product_ids=[product1.id])

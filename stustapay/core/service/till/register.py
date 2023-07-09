@@ -3,8 +3,8 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
+from stustapay.core.database import Connection
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, Account
-from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.till import (
     CashRegister,
     CashRegisterStocking,
@@ -29,14 +29,13 @@ from stustapay.core.service.order.booking import BookingIdentifier, book_money_t
 from stustapay.core.service.transaction import book_transaction
 
 
-async def get_cash_register(conn: asyncpg.Connection, register_id: int) -> Optional[CashRegister]:
-    row = await conn.fetchrow("select * from cash_register_with_cashier where id = $1", register_id)
-    if row is None:
-        return None
-    return CashRegister.parse_obj(row)
+async def get_cash_register(conn: Connection, register_id: int) -> Optional[CashRegister]:
+    return await conn.fetch_maybe_one(
+        CashRegister, "select * from cash_register_with_cashier where id = $1", register_id
+    )
 
 
-async def create_cash_register(*, conn: asyncpg.Connection, new_register: NewCashRegister) -> CashRegister:
+async def create_cash_register(*, conn: Connection, new_register: NewCashRegister) -> CashRegister:
     register_id = await conn.fetchval("insert into cash_register (name) values ($1) returning id", new_register.name)
     register = await get_cash_register(conn=conn, register_id=register_id)
     assert register is not None
@@ -49,33 +48,29 @@ class TillRegisterService(DBService):
         self.auth_service = auth_service
 
     @staticmethod
-    async def _list_cash_register_stockings(*, conn: asyncpg.Connection) -> list[CashRegisterStocking]:
-        rows = await conn.fetch("select * from cash_register_stocking")
-        return [CashRegisterStocking.parse_obj(row) for row in rows]
+    async def _list_cash_register_stockings(*, conn: Connection) -> list[CashRegisterStocking]:
+        return await conn.fetch_many(CashRegisterStocking, "select * from cash_register_stocking")
 
     @staticmethod
-    async def _get_cash_register_stocking(
-        *, conn: asyncpg.Connection, stocking_id: int
-    ) -> Optional[CashRegisterStocking]:
-        row = await conn.fetchrow("select * from cash_register_stocking where id = $1", stocking_id)
-        if row is None:
-            return None
-        return CashRegisterStocking.parse_obj(row)
+    async def _get_cash_register_stocking(*, conn: Connection, stocking_id: int) -> Optional[CashRegisterStocking]:
+        return await conn.fetch_maybe_one(
+            CashRegisterStocking, "select * from cash_register_stocking where id = $1", stocking_id
+        )
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def list_cash_register_stockings_admin(self, *, conn: asyncpg.Connection) -> list[CashRegisterStocking]:
+    async def list_cash_register_stockings_admin(self, *, conn: Connection) -> list[CashRegisterStocking]:
         return await self._list_cash_register_stockings(conn=conn)
 
     @with_db_transaction
     @requires_terminal()
-    async def list_cash_register_stockings_terminal(self, *, conn: asyncpg.Connection) -> list[CashRegisterStocking]:
+    async def list_cash_register_stockings_terminal(self, *, conn: Connection) -> list[CashRegisterStocking]:
         return await self._list_cash_register_stockings(conn=conn)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def create_cash_register_stockings(
-        self, *, conn: asyncpg.Connection, stocking: NewCashRegisterStocking
+        self, *, conn: Connection, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
         stocking_id = await conn.fetchval(
             "insert into cash_register_stocking "
@@ -107,7 +102,7 @@ class TillRegisterService(DBService):
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def update_cash_register_stockings(
-        self, *, conn: asyncpg.Connection, stocking_id: int, stocking: NewCashRegisterStocking
+        self, *, conn: Connection, stocking_id: int, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
         stocking_id = await conn.fetchval(
             "update cash_register_stocking set "
@@ -140,7 +135,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def delete_cash_register_stockings(self, *, conn: asyncpg.Connection, stocking_id: int):
+    async def delete_cash_register_stockings(self, *, conn: Connection, stocking_id: int):
         result = await conn.execute(
             "delete from cash_register_stocking where id = $1",
             stocking_id,
@@ -148,36 +143,35 @@ class TillRegisterService(DBService):
         return result != "DELETE 0"
 
     @staticmethod
-    async def _list_cash_registers(*, conn: asyncpg.Connection, hide_assigned_registers: bool) -> list[CashRegister]:
+    async def _list_cash_registers(*, conn: Connection, hide_assigned_registers: bool) -> list[CashRegister]:
         if hide_assigned_registers:
-            rows = await conn.fetch("select * from cash_register_with_cashier where current_cashier_id is null")
+            return await conn.fetch_many(
+                CashRegister, "select * from cash_register_with_cashier where current_cashier_id is null"
+            )
         else:
-            rows = await conn.fetch("select * from cash_register_with_cashier")
-        return [CashRegister.parse_obj(row) for row in rows]
+            return await conn.fetch_many(CashRegister, "select * from cash_register_with_cashier")
 
     @with_db_transaction
     @requires_terminal([Privilege.till_management])
     async def list_cash_registers_terminal(
-        self, *, conn: asyncpg.Connection, hide_assigned_registers=False
+        self, *, conn: Connection, hide_assigned_registers=False
     ) -> list[CashRegister]:
         return await self._list_cash_registers(conn=conn, hide_assigned_registers=hide_assigned_registers)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def list_cash_registers_admin(
-        self, *, conn: asyncpg.Connection, hide_assigned_registers=False
-    ) -> list[CashRegister]:
+    async def list_cash_registers_admin(self, *, conn: Connection, hide_assigned_registers=False) -> list[CashRegister]:
         return await self._list_cash_registers(conn=conn, hide_assigned_registers=hide_assigned_registers)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def create_cash_register(self, *, conn: asyncpg.Connection, new_register: NewCashRegister) -> CashRegister:
+    async def create_cash_register(self, *, conn: Connection, new_register: NewCashRegister) -> CashRegister:
         return await create_cash_register(conn=conn, new_register=new_register)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     async def update_cash_register(
-        self, *, conn: asyncpg.Connection, register_id: int, register: NewCashRegister
+        self, *, conn: Connection, register_id: int, register: NewCashRegister
     ) -> CashRegister:
         row = await conn.fetchrow(
             "update cash_register set name = $2 where id = $1 returning id, name", register_id, register.name
@@ -190,7 +184,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def delete_cash_register(self, *, conn: asyncpg.Connection, register_id: int):
+    async def delete_cash_register(self, *, conn: Connection, register_id: int):
         result = await conn.execute(
             "delete from cash_register where id = $1",
             register_id,
@@ -202,7 +196,7 @@ class TillRegisterService(DBService):
     async def stock_up_cash_register(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_user: CurrentUser,
         stocking_id: int,
         cashier_tag_uid: int,
@@ -245,13 +239,11 @@ class TillRegisterService(DBService):
     async def modify_cashier_account_balance(
         self,
         *,
-        conn: asyncpg.Connection,
-        current_terminal: Terminal,
+        conn: Connection,
         current_user: CurrentUser,
         cashier_tag_uid: int,
         amount: float,
     ):
-        del current_terminal  # no longer needed, was bug
         row = await conn.fetchrow(
             "select usr.cash_register_id, t.id as till_id, a.* "
             "from usr "
@@ -263,7 +255,7 @@ class TillRegisterService(DBService):
         if row is None:
             raise InvalidArgument("Cashier does not exists or is not logged in at a terminal")
 
-        cashier_account = Account.parse_obj(row)
+        cashier_account = Account.model_validate(dict(row))
         cash_register_id = row["cash_register_id"]
         if cash_register_id is None:
             raise InvalidArgument("Cashier does not have a cash register")
@@ -299,7 +291,7 @@ class TillRegisterService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal([Privilege.cashier_management])
     async def modify_transport_account_balance(
-        self, *, conn: asyncpg.Connection, current_user: CurrentUser, orga_tag_uid: int, amount: float
+        self, *, conn: Connection, current_user: CurrentUser, orga_tag_uid: int, amount: float
     ):
         transport_account = await get_transport_account_by_tag_uid(conn=conn, orga_tag_uid=orga_tag_uid)
         if transport_account is None:
@@ -320,9 +312,7 @@ class TillRegisterService(DBService):
         )
 
     @staticmethod
-    async def _transfer_cash_register(
-        conn: asyncpg.Connection, source_cashier_id: int, target_cashier_id: int
-    ) -> CashRegister:
+    async def _transfer_cash_register(conn: Connection, source_cashier_id: int, target_cashier_id: int) -> CashRegister:
         if source_cashier_id == target_cashier_id:
             raise InvalidArgument("Cashiers must differ")
 
@@ -381,7 +371,7 @@ class TillRegisterService(DBService):
     @with_retryable_db_transaction()
     @requires_user([Privilege.cashier_management])
     async def transfer_cash_register_admin(
-        self, *, conn: asyncpg.Connection, source_cashier_id: int, target_cashier_id: int
+        self, *, conn: Connection, source_cashier_id: int, target_cashier_id: int
     ) -> CashRegister:
         return await self._transfer_cash_register(
             conn=conn, source_cashier_id=source_cashier_id, target_cashier_id=target_cashier_id
@@ -390,7 +380,7 @@ class TillRegisterService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal()
     async def transfer_cash_register_terminal(
-        self, *, conn: asyncpg.Connection, source_cashier_tag_uid: int, target_cashier_tag_uid: int
+        self, *, conn: Connection, source_cashier_tag_uid: int, target_cashier_tag_uid: int
     ):
         source_cashier_id = await conn.fetchval("select id from usr where user_tag_uid = $1", source_cashier_tag_uid)
         target_cashier_id = await conn.fetchval("select id from usr where user_tag_uid = $1", target_cashier_tag_uid)

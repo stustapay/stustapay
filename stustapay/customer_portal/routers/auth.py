@@ -19,7 +19,7 @@ router = APIRouter(
 class LoginResponse(BaseModel):
     customer: Customer
     access_token: str
-    grant_type = "bearer"
+    grant_type: str = "bearer"
 
 
 @router.post("/login", summary="customer login with wristband hardware tag and pin", response_model=LoginResponse)

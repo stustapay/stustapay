@@ -3,6 +3,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
+from stustapay.core.database import Connection
 from stustapay.core.schema.product import (
     DISCOUNT_PRODUCT_ID,
     MONEY_DIFFERENCE_PRODUCT_ID,
@@ -19,37 +20,36 @@ from stustapay.core.service.common.decorators import requires_user, with_db_tran
 from stustapay.core.service.common.error import ServiceException
 
 
-async def fetch_product(*, conn: asyncpg.Connection, product_id: int) -> Optional[Product]:
-    result = await conn.fetchrow("select * from product_with_tax_and_restrictions where id = $1", product_id)
-    if result is None:
-        return None
-    return Product.parse_obj(result)
+async def fetch_product(*, conn: Connection, product_id: int) -> Optional[Product]:
+    return await conn.fetch_maybe_one(
+        Product, "select * from product_with_tax_and_restrictions where id = $1", product_id
+    )
 
 
-async def fetch_constant_product(*, conn: asyncpg.Connection, product_id: int) -> Product:
+async def fetch_constant_product(*, conn: Connection, product_id: int) -> Product:
     product = await fetch_product(conn=conn, product_id=product_id)
     if product is None:
         raise RuntimeError("no product found in database")
     return product
 
 
-async def fetch_discount_product(*, conn: asyncpg.Connection) -> Product:
+async def fetch_discount_product(*, conn: Connection) -> Product:
     return await fetch_constant_product(conn=conn, product_id=DISCOUNT_PRODUCT_ID)
 
 
-async def fetch_top_up_product(*, conn: asyncpg.Connection) -> Product:
+async def fetch_top_up_product(*, conn: Connection) -> Product:
     return await fetch_constant_product(conn=conn, product_id=TOP_UP_PRODUCT_ID)
 
 
-async def fetch_pay_out_product(*, conn: asyncpg.Connection) -> Product:
+async def fetch_pay_out_product(*, conn: Connection) -> Product:
     return await fetch_constant_product(conn=conn, product_id=PAY_OUT_PRODUCT_ID)
 
 
-async def fetch_money_transfer_product(*, conn: asyncpg.Connection) -> Product:
+async def fetch_money_transfer_product(*, conn: Connection) -> Product:
     return await fetch_constant_product(conn=conn, product_id=MONEY_TRANSFER_PRODUCT_ID)
 
 
-async def fetch_money_difference_product(*, conn: asyncpg.Connection) -> Product:
+async def fetch_money_difference_product(*, conn: Connection) -> Product:
     return await fetch_constant_product(conn=conn, product_id=MONEY_DIFFERENCE_PRODUCT_ID)
 
 
@@ -65,7 +65,7 @@ class ProductService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
-    async def create_product(self, *, conn: asyncpg.Connection, product: NewProduct) -> Product:
+    async def create_product(self, *, conn: Connection, product: NewProduct) -> Product:
         product_id = await conn.fetchval(
             "insert into product "
             "(name, price, tax_name, target_account_id, fixed_price, price_in_vouchers, is_locked, is_returnable) "
@@ -94,23 +94,17 @@ class ProductService(DBService):
 
     @with_db_transaction
     @requires_user()
-    async def list_products(self, *, conn: asyncpg.Connection) -> list[Product]:
-        cursor = conn.cursor("select * from product_with_tax_and_restrictions")
-        result = []
-        async for row in cursor:
-            result.append(Product.parse_obj(row))
-        return result
+    async def list_products(self, *, conn: Connection) -> list[Product]:
+        return await conn.fetch_many(Product, "select * from product_with_tax_and_restrictions")
 
     @with_db_transaction
     @requires_user()
-    async def get_product(self, *, conn: asyncpg.Connection, product_id: int) -> Optional[Product]:
+    async def get_product(self, *, conn: Connection, product_id: int) -> Optional[Product]:
         return await fetch_product(conn=conn, product_id=product_id)
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
-    async def update_product(
-        self, *, conn: asyncpg.Connection, product_id: int, product: NewProduct
-    ) -> Optional[Product]:
+    async def update_product(self, *, conn: Connection, product_id: int, product: NewProduct) -> Optional[Product]:
         current_product = await fetch_product(conn=conn, product_id=product_id)
         if current_product is None:
             return None
@@ -158,7 +152,7 @@ class ProductService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
-    async def delete_product(self, *, conn: asyncpg.Connection, product_id: int) -> bool:
+    async def delete_product(self, *, conn: Connection, product_id: int) -> bool:
         result = await conn.execute(
             "delete from product where id = $1",
             product_id,

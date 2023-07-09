@@ -3,17 +3,17 @@ import datetime
 import uuid
 
 from stustapay.bon.bon import BonConfig, BonTemplateContext, TaxRateAggregation
-from stustapay.core.schema.order import LineItem, Order, OrderType, PaymentMethod
+from stustapay.bon.pdflatex import OrderWithTse, render_template
+from stustapay.core.schema.order import LineItem, OrderType, PaymentMethod
 from stustapay.core.schema.product import Product
 
-from ..bon.pdflatex import render_template
 from .common import BaseTestCase
 
 
 class BonGeneratorTest(BaseTestCase):
     async def test_pdflatex_bon(self):
         context = BonTemplateContext(
-            order=Order(
+            order=OrderWithTse(
                 id=1,
                 uuid=uuid.uuid4(),
                 total_price=16.00,
@@ -24,7 +24,10 @@ class BonGeneratorTest(BaseTestCase):
                 order_type=OrderType.sale,
                 cashier_id=0,
                 till_id=0,
+                cancels_order=None,
+                customer_tag_uid=None,
                 customer_account_id=0,
+                signature_status="done",
                 line_items=[
                     LineItem(
                         product_id=0,
@@ -108,5 +111,5 @@ class BonGeneratorTest(BaseTestCase):
             closing_text="foobar",
         )
 
-        rendered = await render_template("bon.tex", context=context.dict())
+        rendered = await render_template("bon.tex", context=context)
         self.assertIsNotNone(rendered)
