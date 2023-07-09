@@ -3,8 +3,8 @@ import { useGetCustomerQuery } from "@/api/customerApi";
 import { Loading, NumericInput } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { Navigate, Link as RouterLink } from "react-router-dom";
-import { Alert, AlertTitle, Box, Button, Grid, InputAdornment, Stack, Link, LinearProgress } from "@mui/material";
+import { Link as RouterLink, Navigate } from "react-router-dom";
+import { Alert, AlertTitle, Box, Button, Grid, InputAdornment, LinearProgress, Link, Stack } from "@mui/material";
 import { Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
@@ -12,8 +12,7 @@ import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { useCreateCheckoutMutation, useUpdateCheckoutMutation } from "@/api/topupApi";
 import i18n from "@/i18n";
 import type { SumUpCard, SumUpResponseType } from "./SumUpCard";
-import { CheckCircle as CheckCircleIcon } from "@mui/icons-material";
-import { Cancel as CancelIcon } from "@mui/icons-material";
+import { Cancel as CancelIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
 
 const TopUpSchema = z.object({
   amount: z.number().int(i18n.t("topup.errorAmountMustBeIntegral")).positive(i18n.t("topup.errorAmountGreaterZero")),
@@ -75,7 +74,7 @@ const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 export const TopUp: React.FC = () => {
-  const { t, i18n } = useTranslation(undefined, { keyPrefix: "topup" });
+  const { t, i18n } = useTranslation();
 
   const config = usePublicConfig();
 
@@ -157,7 +156,7 @@ export const TopUp: React.FC = () => {
   }, [config, state, i18n, updateCheckout, dispatch]);
 
   if (!config.sumup_topup_enabled) {
-    toast.error(t("sumupTopupDisabled"));
+    toast.error(t("topup.sumupTopupDisabled"));
     return <Navigate to="/" />;
   }
 
@@ -190,7 +189,7 @@ export const TopUp: React.FC = () => {
       return (
         <Container>
           <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
-            {t("description")}
+            {t("topup.description")}
           </Alert>
           <Formik
             initialValues={initialValues}
@@ -202,7 +201,7 @@ export const TopUp: React.FC = () => {
                 <Stack spacing={2}>
                   <NumericInput
                     name="amount"
-                    label={t("amount")}
+                    label={t("topup.amount")}
                     variant="outlined"
                     fullWidth
                     value={values.amount}
@@ -215,7 +214,7 @@ export const TopUp: React.FC = () => {
                   />
                   {isSubmitting && <LinearProgress />}
                   <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-                    {t("next")}
+                    {t("topup.next")}
                   </Button>
                 </Stack>
               </form>
@@ -233,7 +232,7 @@ export const TopUp: React.FC = () => {
       return (
         <Container>
           <Alert severity="success">
-            <AlertTitle>{t("success.title")}</AlertTitle>
+            <AlertTitle>{t("topup.success.title")}</AlertTitle>
             <Trans i18nKey={"topup.success.message"}>
               continue to to the
               <Link component={RouterLink} to="/">
@@ -256,7 +255,7 @@ export const TopUp: React.FC = () => {
     case "error":
       return (
         <Container>
-          <Alert severity="error" action={<Button onClick={reset}>{t("tryAgain")}</Button>}>
+          <Alert severity="error" action={<Button onClick={reset}>{t("topup.tryAgain")}</Button>}>
             <AlertTitle>{t("error.title")}</AlertTitle>
             {t("error.message")}
             {/* <Trans i18nKey={"topup.error.message"}>An error occurred: {{ message: state.message }}, please</Trans> */}

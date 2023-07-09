@@ -4,14 +4,7 @@ import translationsEn from "./assets/locales/en/translations";
 import translationsDe from "./assets/locales/de/translations";
 import LanguageDetector from "i18next-browser-languagedetector";
 
-declare module "i18next" {
-  interface CustomTypeOptions {
-    defaultNs: "translations";
-    resources: {
-      translations: typeof translationsEn;
-    };
-  }
-}
+export const defaultNS = "translations";
 
 const resources = {
   en: { translations: translationsEn },
@@ -25,7 +18,7 @@ i18n
     lng: "en-US",
     fallbackLng: "en",
     debug: true,
-    defaultNS: "translations",
+    defaultNS: defaultNS,
     resources: resources,
     interpolation: { escapeValue: false },
   });
