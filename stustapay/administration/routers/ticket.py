@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTicketService
-from stustapay.core.schema.ticket import Ticket, NewTicket
+from stustapay.core.schema.ticket import NewTicket, Ticket
 
 router = APIRouter(
     prefix="/tickets",

@@ -10,17 +10,34 @@ import aiohttp
 import asyncpg
 
 from stustapay.core.config import Config
+from stustapay.core.database import Connection
 from stustapay.core.schema.account import ACCOUNT_SUMUP_CUSTOMER_TOPUP
-from stustapay.core.schema.customer import Customer, CustomerCheckout, SumupCheckoutStatus
+from stustapay.core.schema.customer import (
+    Customer,
+    CustomerCheckout,
+    SumupCheckoutStatus,
+)
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.till import VIRTUAL_TILL_ID
 from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_customer
-from stustapay.core.service.common.error import ServiceException, InvalidArgument, NotFound, AccessDenied
+from stustapay.core.service.common.decorators import (
+    requires_customer,
+    with_db_transaction,
+)
+from stustapay.core.service.common.error import (
+    AccessDenied,
+    InvalidArgument,
+    NotFound,
+    ServiceException,
+)
 from stustapay.core.service.config import ConfigService, get_currency_identifier
-from stustapay.core.service.order.booking import NewLineItem, BookingIdentifier, book_order
+from stustapay.core.service.order.booking import (
+    BookingIdentifier,
+    NewLineItem,
+    book_order,
+)
 from stustapay.core.service.order.order import fetch_max_account_balance
 from stustapay.core.service.product import fetch_top_up_product
 from stustapay.core.util import BaseModel
@@ -186,7 +203,7 @@ class SumupService(DBService):
                 self.logger.error("Sumup API timeout")
                 raise SumUpError("Sumup API timeout") from e
 
-        return SumupCheckout.parse_obj(response_json)
+        return SumupCheckout.model_validate(response_json)
 
     async def _get_checkout(self, *, checkout_id: str) -> SumupCheckout:
         async with aiohttp.ClientSession(trust_env=True, headers=await self._get_sumup_auth_headers()) as session:
@@ -204,17 +221,19 @@ class SumupService(DBService):
                 self.logger.error("Sumup API timeout")
                 raise SumUpError("Sumup API timeout") from e
 
-        return SumupCheckout.parse_obj(response_json)
+        return SumupCheckout.model_validate(response_json)
 
     @staticmethod
-    async def _get_db_checkout(*, conn: asyncpg.Connection, checkout_id: str) -> CustomerCheckout:
-        row = await conn.fetchrow("select * from customer_sumup_checkout where id = $1", checkout_id)
-        if row is None:
+    async def _get_db_checkout(*, conn: Connection, checkout_id: str) -> CustomerCheckout:
+        checkout = await conn.fetch_maybe_one(
+            CustomerCheckout, "select * from customer_sumup_checkout where id = $1", checkout_id
+        )
+        if checkout is None:
             raise NotFound(element_typ="checkout", element_id=checkout_id)
-        return CustomerCheckout.parse_obj(row)
+        return checkout
 
     @staticmethod
-    async def _process_topup(conn: asyncpg.Connection, checkout: SumupCheckout):
+    async def _process_topup(conn: Connection, checkout: SumupCheckout):
         top_up_product = await fetch_top_up_product(conn=conn)
         customer_account_id = await conn.fetchval(
             "select customer_account_id from customer_sumup_checkout where checkout_reference = $1",
@@ -254,11 +273,12 @@ class SumupService(DBService):
         )
 
     @staticmethod
-    async def _get_pending_checkouts(*, conn: asyncpg.Connection) -> list[CustomerCheckout]:
-        rows = await conn.fetch(
-            "select * from customer_sumup_checkout where status = $1", SumupCheckoutStatus.PENDING.value
+    async def _get_pending_checkouts(*, conn: Connection) -> list[CustomerCheckout]:
+        return await conn.fetch_many(
+            CustomerCheckout,
+            "select * from customer_sumup_checkout where status = $1",
+            SumupCheckoutStatus.PENDING.value,
         )
-        return [CustomerCheckout.parse_obj(row) for row in rows]
 
     async def run_sumup_checkout_processing(self):
         sumup_enabled = await self.config_service.is_sumup_topup_enabled()
@@ -294,7 +314,7 @@ class SumupService(DBService):
             except Exception as e:
                 self.logger.error(f"process pending checkouts threw an error: {e}")
 
-    async def _update_checkout_status(self, conn: asyncpg.Connection, checkout_id: str) -> SumupCheckoutStatus:
+    async def _update_checkout_status(self, conn: Connection, checkout_id: str) -> SumupCheckoutStatus:
         stored_checkout = await self._get_db_checkout(conn=conn, checkout_id=checkout_id)
         sumup_checkout = await self._get_checkout(checkout_id=stored_checkout.id)
 
@@ -339,7 +359,7 @@ class SumupService(DBService):
     @requires_customer
     @requires_sumup_enabled
     async def check_checkout(
-        self, *, conn: asyncpg.Connection, current_customer: Customer, checkout_id: str
+        self, *, conn: Connection, current_customer: Customer, checkout_id: str
     ) -> SumupCheckoutStatus:
         stored_checkout = await self._get_db_checkout(conn=conn, checkout_id=checkout_id)
 
@@ -351,9 +371,7 @@ class SumupService(DBService):
     @with_db_transaction
     @requires_customer
     @requires_sumup_enabled
-    async def create_checkout(
-        self, *, conn: asyncpg.Connection, current_customer: Customer, amount: float
-    ) -> SumupCheckout:
+    async def create_checkout(self, *, conn: Connection, current_customer: Customer, amount: float) -> SumupCheckout:
         # check if pending checkout already exists
         # if await conn.fetchval(
         #     "select exists(select * from customer_sumup_checkout where customer_account_id = $1 and status = $2)",

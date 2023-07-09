@@ -1,6 +1,6 @@
 from typing import Annotated, Optional
 
-from fastapi import Depends, Cookie
+from fastapi import Cookie, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")

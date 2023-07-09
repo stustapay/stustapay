@@ -4,7 +4,13 @@ test:
 
 .PHONY: check-format
 check-format:
+	isort --check-only .
 	black --check .
+
+.PHONY: format
+format:
+	isort .
+	black .
 
 .PHONY: lint
 lint: pylint mypy
@@ -15,4 +21,4 @@ pylint:
 
 .PHONY: mypy
 mypy:
-	mypy stustapay
+	mypy .

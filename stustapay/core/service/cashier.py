@@ -5,15 +5,23 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import ACCOUNT_IMBALANCE, ACCOUNT_CASH_VAULT
+from stustapay.core.database import Connection
+from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, ACCOUNT_IMBALANCE
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
-from stustapay.core.schema.order import PaymentMethod, OrderType
+from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.till import VIRTUAL_TILL_ID
-from stustapay.core.schema.user import Privilege, User, CurrentUser
+from stustapay.core.schema.user import CurrentUser, Privilege, User
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user
-from .common.error import ServiceException, NotFound
-from .order.booking import book_order, BookingIdentifier, NewLineItem, book_money_transfer, OrderInfo
+from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+
+from .common.error import NotFound, ServiceException
+from .order.booking import (
+    BookingIdentifier,
+    NewLineItem,
+    OrderInfo,
+    book_money_transfer,
+    book_order,
+)
 from .product import fetch_money_difference_product, fetch_product
 from .user import AuthService
 
@@ -41,46 +49,32 @@ class CashierService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
-    async def list_cashiers(self, *, conn: asyncpg.Connection) -> list[Cashier]:
-        cursor = conn.cursor("select * from cashier")
-        result = []
-        async for row in cursor:
-            result.append(Cashier.parse_obj(row))
-        return result
+    async def list_cashiers(self, *, conn: Connection) -> list[Cashier]:
+        return await conn.fetch_many(Cashier, "select * from cashier")
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
-    async def get_cashier(self, *, conn: asyncpg.Connection, cashier_id: int) -> Optional[Cashier]:
-        row = await conn.fetchrow("select * from cashier where id = $1", cashier_id)
-        if not row:
-            return None
-        return Cashier.parse_obj(row)
+    async def get_cashier(self, *, conn: Connection, cashier_id: int) -> Optional[Cashier]:
+        return await conn.fetch_maybe_one(Cashier, "select * from cashier where id = $1", cashier_id)
 
     @staticmethod
-    async def _get_cashier_shift(conn: asyncpg.Connection, cashier_id: int, shift_id: int) -> Optional[CashierShift]:
-        row = await conn.fetchrow("select * from cashier_shift where cashier_id = $1 and id = $2", cashier_id, shift_id)
-        if row is None:
-            return None
-        return CashierShift.parse_obj(row)
+    async def _get_cashier_shift(conn: Connection, cashier_id: int, shift_id: int) -> Optional[CashierShift]:
+        return await conn.fetch_maybe_one(
+            CashierShift, "select * from cashier_shift where cashier_id = $1 and id = $2", cashier_id, shift_id
+        )
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
-    async def get_cashier_shifts(
-        self, *, conn: asyncpg.Connection, current_user: User, cashier_id: int
-    ) -> list[CashierShift]:
+    async def get_cashier_shifts(self, *, conn: Connection, current_user: User, cashier_id: int) -> list[CashierShift]:
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_user=current_user, cashier_id=cashier_id
         )
         if not cashier:
             raise NotFound(element_typ="cashier", element_id=cashier_id)
-        cursor = conn.cursor("select * from cashier_shift where cashier_id = $1", cashier_id)
-        result = []
-        async for row in cursor:
-            result.append(CashierShift.parse_obj(row))
-        return result
+        return await conn.fetch_many(CashierShift, "select * from cashier_shift where cashier_id = $1", cashier_id)
 
     @staticmethod
-    async def _get_current_cashier_shift_start(*, conn: asyncpg.Connection, cashier_id: int) -> Optional[datetime]:
+    async def _get_current_cashier_shift_start(*, conn: Connection, cashier_id: int) -> Optional[datetime]:
         return await conn.fetchval(
             "select ordr.booked_at from ordr "
             "where ordr.cashier_id = $1 and ordr.booked_at > coalesce(("
@@ -96,7 +90,7 @@ class CashierService(DBService):
     async def get_cashier_shift_stats(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         cashier_id: int,
         shift_id: Optional[int] = None,
     ) -> Optional[CashierShiftStats]:
@@ -140,7 +134,7 @@ class CashierService(DBService):
     @staticmethod
     async def _book_imbalance_order(
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_user: CurrentUser,
         cashier_account_id: int,
         cash_register_id: int,
@@ -174,7 +168,7 @@ class CashierService(DBService):
 
     @staticmethod
     async def _book_money_transfer_close_out_start(
-        *, conn: asyncpg.Connection, current_user: CurrentUser, cash_register_id: int, amount: float
+        *, conn: Connection, current_user: CurrentUser, cash_register_id: int, amount: float
     ) -> OrderInfo:
         return await book_money_transfer(
             conn=conn,
@@ -188,7 +182,7 @@ class CashierService(DBService):
     @staticmethod
     async def _book_money_transfer_cash_vault_order(
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_user: CurrentUser,
         cashier_account_id: int,
         cash_register_id: int,
@@ -209,7 +203,7 @@ class CashierService(DBService):
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
     async def close_out_cashier(
-        self, *, conn: asyncpg.Connection, current_user: CurrentUser, cashier_id: int, close_out: CloseOut
+        self, *, conn: Connection, current_user: CurrentUser, cashier_id: int, close_out: CloseOut
     ) -> CloseOutResult:
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_user=current_user, cashier_id=cashier_id

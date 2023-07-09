@@ -4,7 +4,7 @@
 import csv
 from collections import defaultdict
 from io import StringIO
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from .table import Model
 

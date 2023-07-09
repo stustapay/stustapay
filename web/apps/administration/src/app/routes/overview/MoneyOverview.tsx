@@ -1,4 +1,4 @@
-import { useGetSystemAccountsQuery, selectAccountById } from "@api";
+import { selectAccountById, useGetSystemAccountsQuery } from "@api";
 import { Card, CardActions, CardContent, Grid, Typography } from "@mui/material";
 import * as React from "react";
 import { Loading } from "@stustapay/components";
@@ -12,7 +12,7 @@ interface BalanceCardProps {
 }
 
 const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
-  const { t } = useTranslation(undefined, { keyPrefix: "overview" });
+  const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
 
   if (!account) {
@@ -41,7 +41,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
       </CardContent>
       <CardActions>
         <ButtonLink size="small" to={`/system-accounts/${account.id}`}>
-          {t("showDetails")}
+          {t("overview.showDetails")}
         </ButtonLink>
       </CardActions>
     </Card>

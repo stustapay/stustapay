@@ -12,6 +12,7 @@ from schwifty import IBAN
 from sepaxml import SepaTransfer
 
 from stustapay.core.config import Config
+from stustapay.core.database import Connection
 from stustapay.core.schema.config import PublicConfig, SEPAConfig
 from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.schema.user import format_user_tag_uid
@@ -21,7 +22,7 @@ from stustapay.core.service.common.decorators import (
     requires_customer,
     with_db_transaction,
 )
-from stustapay.core.service.common.error import InvalidArgument, AccessDenied
+from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.sumup import SumupService
 
@@ -55,14 +56,14 @@ class CustomerBank(BaseModel):
     donation: float = 0.0
 
 
-async def get_number_of_payouts(conn: asyncpg.Connection, payout_run_id: Optional[int]) -> int:
+async def get_number_of_payouts(conn: Connection, payout_run_id: Optional[int]) -> int:
     if payout_run_id is None:
         return await conn.fetchval("select count(*) from payout where payout_run_id is null")
     return await conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id)
 
 
 async def create_payout_run(
-    conn: asyncpg.Connection, created_by: str, execution_date: datetime.date, max_payout_sum: float
+    conn: Connection, created_by: str, execution_date: datetime.date, max_payout_sum: float
 ) -> tuple[int, int]:
     payout_run_id = await conn.fetchval(
         "insert into payout_run (created_at, created_by, execution_date) values (now(), $1, $2) returning id",
@@ -89,15 +90,15 @@ async def create_payout_run(
 
 
 async def get_customer_bank_data(
-    conn: asyncpg.Connection, payout_run_id: int, max_export_items_per_batch: int, ith_batch: int = 0
+    conn: Connection, payout_run_id: int, max_export_items_per_batch: int, ith_batch: int = 0
 ) -> list[Payout]:
-    rows = await conn.fetch(
+    return await conn.fetch_many(
+        Payout,
         "select * from payout where payout_run_id = $1 order by customer_account_id asc limit $2 offset $3",
         payout_run_id,
         max_export_items_per_batch,
         ith_batch * max_export_items_per_batch,
     )
-    return [Payout.parse_obj(row) for row in rows]
 
 
 async def csv_export(
@@ -201,17 +202,16 @@ class CustomerService(DBService):
         )
 
     @with_db_transaction
-    async def login_customer(self, *, conn: asyncpg.Connection, uid: int, pin: str) -> CustomerLoginSuccess:
+    async def login_customer(self, *, conn: Connection, uid: int, pin: str) -> CustomerLoginSuccess:
         # Customer has hardware tag and pin
-        row = await conn.fetchrow(
+        customer = await conn.fetch_maybe_one(
+            Customer,
             "select c.* from user_tag u join customer c on u.uid = c.user_tag_uid where u.uid = $1 and u.pin = $2",
             uid,
             pin,
         )
-        if row is None:
+        if customer is None:
             raise AccessDenied("Invalid user tag uid or pin")
-
-        customer = Customer.parse_obj(row)
 
         session_id = await conn.fetchval(
             "insert into customer_session (customer) values ($1) returning id", customer.id
@@ -226,7 +226,7 @@ class CustomerService(DBService):
 
     @with_db_transaction
     @requires_customer
-    async def logout_customer(self, *, conn: asyncpg.Connection, current_customer: Customer, token: str) -> bool:
+    async def logout_customer(self, *, conn: Connection, current_customer: Customer, token: str) -> bool:
         token_payload = self.auth_service.decode_customer_jwt_payload(token)
         assert token_payload is not None
         assert current_customer.id == token_payload.customer_id
@@ -245,16 +245,12 @@ class CustomerService(DBService):
 
     @with_db_transaction
     @requires_customer
-    async def get_orders_with_bon(
-        self, *, conn: asyncpg.Connection, current_customer: Customer
-    ) -> Optional[list[OrderWithBon]]:
-        rows = await conn.fetch(
+    async def get_orders_with_bon(self, *, conn: Connection, current_customer: Customer) -> list[OrderWithBon]:
+        orders_with_bon = await conn.fetch_many(
+            OrderWithBon,
             "select * from order_value_with_bon where customer_account_id = $1 order by booked_at DESC",
             current_customer.id,
         )
-        if rows is None:
-            return None
-        orders_with_bon: list[OrderWithBon] = [OrderWithBon.parse_obj(row) for row in rows]
         for order_with_bon in orders_with_bon:
             if order_with_bon.bon_output_file is not None:
                 order_with_bon.bon_output_file = self.cfg.customer_portal.base_bon_url.format(
@@ -265,7 +261,7 @@ class CustomerService(DBService):
     @with_db_transaction
     @requires_customer
     async def update_customer_info(
-        self, *, conn: asyncpg.Connection, current_customer: Customer, customer_bank: CustomerBank
+        self, *, conn: Connection, current_customer: Customer, customer_bank: CustomerBank
     ) -> None:
         # if a payout is assigned, disallow updates.
         payout_id = await conn.fetchval(
@@ -311,7 +307,7 @@ class CustomerService(DBService):
 
     @with_db_transaction
     @requires_customer
-    async def update_customer_donation(self, *, conn: asyncpg.Connection, current_customer: Customer) -> None:
+    async def update_customer_donation(self, *, conn: Connection, current_customer: Customer) -> None:
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(
             "insert into customer_info (customer_account_id, donation) values ($1, $2) "

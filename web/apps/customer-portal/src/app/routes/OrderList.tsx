@@ -1,17 +1,17 @@
 import { useGetOrdersWithBonQuery } from "@/api/customerApi";
 import {
   Accordion,
-  AccordionSummary,
-  Typography,
   AccordionDetails,
-  Link,
+  AccordionSummary,
   Alert,
+  Link,
   Table,
+  TableBody,
+  TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  TableCell,
-  TableBody,
+  Typography,
 } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
@@ -21,7 +21,7 @@ import { Order } from "@stustapay/models";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 
 export const OrderList: React.FC = () => {
-  const { t } = useTranslation(undefined, { keyPrefix: "order" });
+  const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
   const { data: orders, error: orderError, isLoading: isOrdersLoading } = useGetOrdersWithBonQuery();
 
@@ -30,7 +30,7 @@ export const OrderList: React.FC = () => {
   }
 
   if (!orders) {
-    return <Alert severity="error">{t("loadingError")}</Alert>;
+    return <Alert severity="error">{t("order.loadingError")}</Alert>;
   }
 
   const orderTotal = (order: Order) => {
@@ -49,7 +49,7 @@ export const OrderList: React.FC = () => {
             aria-controls={`panel${order.id}a-content`}
             id={`panel${order.id}a-header`}
           >
-            <Typography>{t(`orderType.${order.order_type}` as const)}</Typography>
+            <Typography>{t(`order.orderType.${order.order_type}` as const)}</Typography>
             <Typography
               style={{
                 textAlign: "right",
@@ -65,11 +65,11 @@ export const OrderList: React.FC = () => {
             <div style={{ width: "100%" }}>
               <div style={{ marginBottom: "0.5em" }}>
                 <Typography variant="subtitle2">
-                  {t("bookedAt", { date: new Date(order.booked_at).toLocaleString() })}
+                  {t("order.bookedAt", { date: new Date(order.booked_at).toLocaleString() })}
                 </Typography>
                 {order.bon_generated && order.bon_output_file && (
                   <Link href={order.bon_output_file} target="_blank" rel="noopener">
-                    {t("viewReceipt")}
+                    {t("order.viewReceipt")}
                   </Link>
                 )}
               </div>
@@ -78,10 +78,10 @@ export const OrderList: React.FC = () => {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell align="left">{t("productName")}</TableCell>
-                        <TableCell align="right">{t("productPrice")}</TableCell>
-                        <TableCell align="right">{t("quantity")}</TableCell>
-                        <TableCell align="right">{t("total")}</TableCell>
+                        <TableCell align="left">{t("order.productName")}</TableCell>
+                        <TableCell align="right">{t("order.productPrice")}</TableCell>
+                        <TableCell align="right">{t("order.quantity")}</TableCell>
+                        <TableCell align="right">{t("order.total")}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>

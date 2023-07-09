@@ -13,13 +13,13 @@ import shutil
 import ssl
 import tempfile
 from pathlib import Path
-from typing import Optional, Union, Literal
+from typing import Literal, Optional, Type, TypeVar, Union
 
 import asyncpg
 import asyncpg.exceptions
+from pydantic import BaseModel
 
-from . import subcommand
-from . import util
+from . import subcommand, util
 from .config import Config, DatabaseConfig
 from .schema import DATA_PATH, DEFAULT_EXAMPLE_DATA_FILE, REVISION_PATH
 
@@ -225,7 +225,31 @@ class SchemaRevision:
         return sorted_revisions
 
 
-async def init_connection(conn: asyncpg.Connection):
+T = TypeVar("T", bound=BaseModel)
+
+
+class Connection(asyncpg.Connection):
+    async def fetch_one(self, model: Type[T], query: str, *args) -> T:
+        result: Optional[asyncpg.Record] = await self.fetchrow(query, *args)
+        if result is None:
+            raise asyncpg.DataError("not found")
+
+        return model.model_validate(dict(result))
+
+    async def fetch_maybe_one(self, model: Type[T], query: str, *args) -> Optional[T]:
+        result: Optional[asyncpg.Record] = await self.fetchrow(query, *args)
+        if result is None:
+            return None
+
+        return model.model_validate(dict(result))
+
+    async def fetch_many(self, model: Type[T], query: str, *args) -> list[T]:
+        # TODO: also allow async cursor
+        results: list[asyncpg.Record] = await self.fetch(query, *args)
+        return [model.model_validate(dict(r)) for r in results]
+
+
+async def init_connection(conn: Connection):
     await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
 
 
@@ -255,6 +279,7 @@ async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:
                 database=cfg.dbname,
                 host=cfg.host,
                 max_size=n_connections,
+                connection_class=Connection,
                 min_size=n_connections,
                 ssl=sslctx,
                 # the introspection query of asyncpg (defined as introspection.INTRO_LOOKUP_TYPES)

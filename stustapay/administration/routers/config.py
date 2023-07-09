@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from stustapay.core.http.auth_user import CurrentAuthToken
-from stustapay.core.http.context import ContextConfigService, Context, get_context
+from stustapay.core.http.context import Context, ContextConfigService, get_context
 from stustapay.core.schema.config import ConfigEntry, PublicConfig
 
 router = APIRouter(

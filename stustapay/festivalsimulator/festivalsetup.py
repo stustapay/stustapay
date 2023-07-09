@@ -7,15 +7,13 @@ import threading
 from contextlib import contextmanager
 from pathlib import Path
 
-import asyncpg
-
 from stustapay.administration.server import Api as AdminApi
 from stustapay.bon.config import read_config as read_bon_config
 from stustapay.bon.generator import Generator
 from stustapay.core.config import Config
-from stustapay.core.database import create_db_pool, rebuild_with
-from stustapay.core.schema.till import NewTill, NewCashRegisterStocking, NewCashRegister
-from stustapay.core.schema.user import UserWithoutId, CASHIER_ROLE_NAME
+from stustapay.core.database import Connection, create_db_pool, rebuild_with
+from stustapay.core.schema.till import NewCashRegister, NewCashRegisterStocking, NewTill
+from stustapay.core.schema.user import CASHIER_ROLE_NAME, UserWithoutId
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import with_db_transaction
 from stustapay.core.service.till import TillService
@@ -151,7 +149,7 @@ class FestivalSetup(SubCommand):
             self.logger.error(f"Unknown action: {self.args.action}")
 
     @with_db_transaction
-    async def _create_tags(self, conn: asyncpg.Connection):
+    async def _create_tags(self, conn: Connection):
         self.logger.info(f"Creating {self.args.n_tags} tags")
         for i in range(self.args.n_tags):
             await conn.execute("insert into user_tag (uid, pin) values ($1, $2)", i + CUSTOMER_TAG_START, "pin")

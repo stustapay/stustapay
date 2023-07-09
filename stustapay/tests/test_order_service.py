@@ -2,53 +2,63 @@
 import uuid
 
 from stustapay.core.schema.account import (
-    ACCOUNT_SALE_EXIT,
     ACCOUNT_CASH_ENTRY,
-    ACCOUNT_SUMUP,
     ACCOUNT_CASH_EXIT,
     ACCOUNT_CASH_SALE_SOURCE,
     ACCOUNT_DEPOSIT,
+    ACCOUNT_SALE_EXIT,
+    ACCOUNT_SUMUP,
 )
 from stustapay.core.schema.order import (
-    NewSale,
     Button,
-    NewTopUp,
-    PaymentMethod,
-    NewPayOut,
-    Order,
-    NewTicketSale,
     CompletedTicketSale,
-    PendingSale,
+    NewPayOut,
+    NewSale,
+    NewTicketSale,
     NewTicketScan,
+    NewTopUp,
+    Order,
+    PaymentMethod,
+    PendingSale,
 )
-from stustapay.core.schema.product import NewProduct, ProductRestriction
-from stustapay.core.schema.product import TICKET_PRODUCT_ID, TICKET_U18_PRODUCT_ID, TICKET_U16_PRODUCT_ID
+from stustapay.core.schema.product import (
+    TICKET_PRODUCT_ID,
+    TICKET_U16_PRODUCT_ID,
+    TICKET_U18_PRODUCT_ID,
+    NewProduct,
+    ProductRestriction,
+)
 from stustapay.core.schema.ticket import NewTicket
 from stustapay.core.schema.till import (
-    NewTill,
-    NewTillLayout,
-    NewTillProfile,
-    NewTillButton,
     NewCashRegister,
     NewCashRegisterStocking,
+    NewTill,
+    NewTillButton,
+    NewTillLayout,
+    NewTillProfile,
 )
 from stustapay.core.schema.user import (
-    ADMIN_ROLE_NAME,
-    FINANZORGA_ROLE_NAME,
-    CASHIER_ROLE_NAME,
     ADMIN_ROLE_ID,
+    ADMIN_ROLE_NAME,
     CASHIER_ROLE_ID,
+    CASHIER_ROLE_NAME,
+    FINANZORGA_ROLE_NAME,
     UserTag,
 )
 from stustapay.core.service.account import AccountService
-from stustapay.core.service.order import OrderService, NotEnoughVouchersException
-from stustapay.core.service.order.order import NotEnoughFundsException, fetch_max_account_balance
-from stustapay.core.service.order.order import TillPermissionException, InvalidSaleException
+from stustapay.core.service.order import NotEnoughVouchersException, OrderService
+from stustapay.core.service.order.order import (
+    InvalidSaleException,
+    NotEnoughFundsException,
+    TillPermissionException,
+    fetch_max_account_balance,
+)
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
-from .common import TerminalTestCase
+
 from ..core.service.common.error import InvalidArgument
+from .common import TerminalTestCase
 
 START_BALANCE = 100
 

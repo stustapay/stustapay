@@ -17,13 +17,13 @@ from stustapay.core.database import create_db_pool
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.till import Till
-from stustapay.core.schema.user import CASHIER_ROLE_ID, ADMIN_ROLE_ID
+from stustapay.core.schema.user import ADMIN_ROLE_ID, CASHIER_ROLE_ID
 from stustapay.core.subcommand import SubCommand
 from stustapay.festivalsimulator.festivalsetup import (
-    PROFILE_ID_TICKET,
-    PROFILE_ID_TOPUP,
     PROFILE_ID_BEER,
     PROFILE_ID_COCKTAIL,
+    PROFILE_ID_TICKET,
+    PROFILE_ID_TOPUP,
 )
 
 
@@ -164,13 +164,13 @@ class Simulator(SubCommand):
                 if resp.status != 200:
                     self.logger.warning(f"Error registering terminal {resp.status = } payload = {await resp.text()}")
                     raise RuntimeError("foobar")
-                success = TerminalRegistrationSuccess.parse_obj(await resp.json())
+                success = TerminalRegistrationSuccess.model_validate(await resp.json())
             async with client.get("/config", headers={"Authorization": f"Bearer {success.token}"}) as resp:
                 if resp.status != 200:
                     self.logger.error(
                         f"Error fetching terminal config, { resp.status = }, payload = {await resp.json()}"
                     )
-                config = TerminalConfig.parse_obj(await resp.json())
+                config = TerminalConfig.model_validate(await resp.json())
             return Terminal(token=success.token, till=success.till, config=config)
 
     async def voucher_granting(self):

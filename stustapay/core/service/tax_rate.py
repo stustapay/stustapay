@@ -3,11 +3,12 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
+from stustapay.core.database import Connection
 from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user
+from stustapay.core.service.common.decorators import requires_user, with_db_transaction
 
 
 class TaxRateService(DBService):
@@ -17,53 +18,41 @@ class TaxRateService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.tax_rate_management])
-    async def create_tax_rate(self, *, conn: asyncpg.Connection, tax_rate: TaxRate) -> TaxRate:
-        row = await conn.fetchrow(
+    async def create_tax_rate(self, *, conn: Connection, tax_rate: TaxRate) -> TaxRate:
+        return await conn.fetch_one(
+            TaxRate,
             "insert into tax (name, rate, description) values ($1, $2, $3) returning name, rate, description",
             tax_rate.name,
             tax_rate.rate,
             tax_rate.description,
         )
 
-        return TaxRate.parse_obj(row)
+    @with_db_transaction
+    @requires_user()
+    async def list_tax_rates(self, *, conn: Connection) -> list[TaxRate]:
+        return await conn.fetch_many(TaxRate, "select * from tax")
 
     @with_db_transaction
     @requires_user()
-    async def list_tax_rates(self, *, conn: asyncpg.Connection) -> list[TaxRate]:
-        cursor = conn.cursor("select * from tax")
-        result = []
-        async for row in cursor:
-            result.append(TaxRate.parse_obj(row))
-        return result
-
-    @with_db_transaction
-    @requires_user()
-    async def get_tax_rate(self, *, conn: asyncpg.Connection, tax_rate_name: str) -> Optional[TaxRate]:
-        row = await conn.fetchrow("select * from tax where name = $1", tax_rate_name)
-        if row is None:
-            return None
-
-        return TaxRate.parse_obj(row)
+    async def get_tax_rate(self, *, conn: Connection, tax_rate_name: str) -> Optional[TaxRate]:
+        return await conn.fetch_maybe_one(TaxRate, "select * from tax where name = $1", tax_rate_name)
 
     @with_db_transaction
     @requires_user([Privilege.tax_rate_management])
     async def update_tax_rate(
-        self, *, conn: asyncpg.Connection, tax_rate_name: str, tax_rate: TaxRateWithoutName
+        self, *, conn: Connection, tax_rate_name: str, tax_rate: TaxRateWithoutName
     ) -> Optional[TaxRate]:
-        row = await conn.fetchrow(
+        return await conn.fetch_maybe_one(
+            TaxRate,
             "update tax set rate = $2, description = $3 where name = $1 returning name, rate, description",
             tax_rate_name,
             tax_rate.rate,
             tax_rate.description,
         )
-        if row is None:
-            return None
-
-        return TaxRate.parse_obj(row)
 
     @with_db_transaction
     @requires_user([Privilege.tax_rate_management])
-    async def delete_tax_rate(self, *, conn: asyncpg.Connection, tax_rate_name: str) -> bool:
+    async def delete_tax_rate(self, *, conn: Connection, tax_rate_name: str) -> bool:
         result = await conn.execute(
             "delete from tax where name = $1",
             tax_rate_name,

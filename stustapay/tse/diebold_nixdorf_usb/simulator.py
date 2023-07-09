@@ -10,14 +10,21 @@ import json
 import logging
 import re
 import time
-from datetime import datetime, timezone, timedelta
-from hashlib import sha384, sha256
+from datetime import datetime, timedelta, timezone
+from hashlib import sha256, sha384
 from inspect import stack
 from random import randbytes, randrange
 
 import ecdsa
 import uvicorn
-from asn1crypto.core import Integer, ObjectIdentifier, Sequence, OctetString, PrintableString, Any
+from asn1crypto.core import (
+    Any,
+    Integer,
+    ObjectIdentifier,
+    OctetString,
+    PrintableString,
+    Sequence,
+)
 from fastapi import FastAPI, WebSocket
 
 from stustapay.tse.diebold_nixdorf_usb.errorcodes import dnerror

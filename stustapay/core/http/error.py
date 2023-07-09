@@ -1,7 +1,12 @@
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
-from stustapay.core.service.common.error import NotFound, ServiceException, AccessDenied, Unauthorized
+from stustapay.core.service.common.error import (
+    AccessDenied,
+    NotFound,
+    ServiceException,
+    Unauthorized,
+)
 
 
 def not_found_exception_handler(request: Request, exc: NotFound):

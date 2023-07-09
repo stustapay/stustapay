@@ -1,10 +1,10 @@
 from typing import Optional
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken, CurrentAuthTokenFromCookie
 from stustapay.core.http.context import ContextOrderService
-from stustapay.core.schema.order import Order, CompletedSaleProducts, EditSaleProducts
+from stustapay.core.schema.order import CompletedSaleProducts, EditSaleProducts, Order
 
 router = APIRouter(
     prefix="/orders",

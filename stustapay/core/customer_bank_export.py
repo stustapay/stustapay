@@ -15,6 +15,7 @@ from stustapay.core.service.customer.customer import (
     sepa_export,
 )
 from stustapay.core.subcommand import SubCommand
+
 from . import database
 from .config import Config
 from .service.auth import AuthService

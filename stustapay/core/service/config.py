@@ -1,6 +1,7 @@
 import asyncpg
 
 from stustapay.core.config import Config
+from stustapay.core.database import Connection
 from stustapay.core.schema.config import ConfigEntry, PublicConfig, SEPAConfig
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
@@ -9,7 +10,7 @@ from stustapay.core.service.common.decorators import requires_user, with_db_tran
 from stustapay.core.service.common.error import NotFound
 
 
-async def get_currency_identifier(*, conn: asyncpg.Connection) -> str:
+async def get_currency_identifier(*, conn: Connection) -> str:
     return await conn.fetchval("select value from config where key = 'currency.identifier' limit 1")
 
 
@@ -19,12 +20,12 @@ class ConfigService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    async def is_sumup_topup_enabled(self, *, conn: asyncpg.Connection) -> bool:
+    async def is_sumup_topup_enabled(self, *, conn: Connection) -> bool:
         db_config_entry = await conn.fetchval("select value from config where key = 'sumup_topup.enabled'")
         return self.cfg.customer_portal.sumup_config.enabled and db_config_entry == "true"
 
     @with_db_transaction
-    async def get_public_config(self, *, conn: asyncpg.Connection) -> PublicConfig:
+    async def get_public_config(self, *, conn: Connection) -> PublicConfig:
         row = await conn.fetchrow(
             "select "
             "   (select value from config where key = 'currency.symbol') as currency_symbol,"
@@ -42,7 +43,7 @@ class ConfigService(DBService):
         )
 
     @with_db_transaction
-    async def get_sepa_config(self, *, conn: asyncpg.Connection) -> SEPAConfig:
+    async def get_sepa_config(self, *, conn: Connection) -> SEPAConfig:
         row = await conn.fetchrow(
             "select "
             "   (select value from config where key = 'customer_portal.sepa.sender_name') as sender_name,"
@@ -60,20 +61,15 @@ class ConfigService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.config_management])
-    async def list_config_entries(self, *, conn: asyncpg.Connection) -> list[ConfigEntry]:
-        cursor = conn.cursor("select * from config")
-        result = []
-        async for row in cursor:
-            result.append(ConfigEntry.parse_obj(row))
-        return result
+    async def list_config_entries(self, *, conn: Connection) -> list[ConfigEntry]:
+        return await conn.fetch_many(ConfigEntry, "select * from config")
 
     @with_db_transaction
     @requires_user([Privilege.config_management])
-    async def set_config_entry(self, *, conn: asyncpg.Connection, entry: ConfigEntry) -> ConfigEntry:
-        row = await conn.fetchrow(
-            "update config set value = $2 where key = $1 returning key, value", entry.key, entry.value
+    async def set_config_entry(self, *, conn: Connection, entry: ConfigEntry) -> ConfigEntry:
+        fetched_entry = await conn.fetch_maybe_one(
+            ConfigEntry, "update config set value = $2 where key = $1 returning key, value", entry.key, entry.value
         )
-        if row is None:
+        if fetched_entry is None:
             raise NotFound("config", entry.key)
-
-        return ConfigEntry.parse_obj(row)
+        return fetched_entry

@@ -1,13 +1,13 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 from stustapay.core.schema.user import (
-    UserWithoutId,
-    UserTag,
-    FINANZORGA_ROLE_NAME,
-    UserRole,
-    CurrentUser,
     CASHIER_ROLE_ID,
-    INFOZELT_ROLE_ID,
     CASHIER_ROLE_NAME,
+    FINANZORGA_ROLE_NAME,
+    INFOZELT_ROLE_ID,
+    CurrentUser,
+    UserRole,
+    UserTag,
+    UserWithoutId,
 )
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.tests.common import TerminalTestCase

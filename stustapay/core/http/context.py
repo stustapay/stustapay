@@ -3,13 +3,14 @@ context injection for the http-api with FastAPI.
 """
 
 from dataclasses import dataclass
-from typing import Union, AsyncGenerator, Optional, Annotated
+from typing import Annotated, AsyncGenerator, Optional, Union
 
 import asyncpg
-from fastapi import Request, Depends, WebSocket
-from starlette.types import ASGIApp, Scope, Receive, Send
+from fastapi import Depends, Request, WebSocket
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from stustapay.core.config import Config
+from stustapay.core.database import Connection
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
@@ -65,7 +66,7 @@ class ContextMiddleware:
 
     async def get_db_conn(
         db_pool: asyncpg.Pool = Depends(get_db_pool),
-    ) -> asyncpg.Connection:
+    ) -> Connection:
     async with db_pool.acquire() as conn:
         yield conn
 
@@ -173,6 +174,6 @@ ContextTicketService = Annotated[TicketService, Depends(get_ticket_service)]
 
 async def get_db_conn(
     db_pool: asyncpg.Pool = Depends(get_db_pool),
-) -> AsyncGenerator[Union[asyncpg.Connection, asyncpg.pool.PoolConnectionProxy], None]:
+) -> AsyncGenerator[Union[Connection, asyncpg.pool.PoolConnectionProxy], None]:
     async with db_pool.acquire() as conn:
         yield conn

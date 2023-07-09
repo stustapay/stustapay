@@ -5,7 +5,7 @@ from typing import Optional
 import asyncpg.exceptions
 
 from stustapay.core.schema.terminal import Terminal
-from stustapay.core.schema.user import Privilege, CurrentUser
+from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.common.error import AccessDenied, Unauthorized
 
 
@@ -198,7 +198,8 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
             if terminal is None:
                 raise Unauthorized("invalid terminal token")
 
-            current_user_row = await kwargs["conn"].fetchrow(
+            logged_in_user = await kwargs["conn"].fetch_maybe_one(
+                CurrentUser,
                 "select "
                 "   usr.*, "
                 "   urwp.privileges as privileges, "
@@ -211,8 +212,6 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
                 terminal.till.active_user_id,
                 terminal.till.active_user_role_id,
             )
-
-            logged_in_user = CurrentUser.parse_obj(current_user_row) if current_user_row is not None else None
 
             if user_privileges is not None:
                 if terminal.till.active_user_id is None or logged_in_user is None:

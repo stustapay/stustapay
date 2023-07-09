@@ -106,8 +106,8 @@ class CurrentUser(BaseModel):
     id: int
     login: str
     display_name: str
-    active_role_id: Optional[int]
-    active_role_name: Optional[str]
+    active_role_id: Optional[int] = None
+    active_role_name: Optional[str] = None
     privileges: list[Privilege]
     description: Optional[str] = None
     user_tag_uid: Optional[int] = None

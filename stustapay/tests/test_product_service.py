@@ -2,6 +2,7 @@
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.product import ProductService
+
 from .common import BaseTestCase
 
 

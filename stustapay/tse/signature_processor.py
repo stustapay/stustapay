@@ -6,12 +6,13 @@ from typing import Optional
 
 import asyncpg
 
-from stustapay.core.database import create_db_pool
+from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.subcommand import SubCommand
+
+from ..core.healthcheck import run_healthcheck
 from .config import Config
 from .wrapper import TSEWrapper
-from ..core.healthcheck import run_healthcheck
 
 LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +85,7 @@ class SignatureProcessor(SubCommand):
 
         # check if it is from a till without an assigned TSE
         async with contextlib.AsyncExitStack() as aes:
-            psql: asyncpg.Connection = await aes.enter_async_context(self.db_pool.acquire())
+            psql: Connection = await aes.enter_async_context(self.db_pool.acquire())
 
             feral_till_id_rows = await psql.fetch(
                 """

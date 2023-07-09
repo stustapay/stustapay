@@ -18,7 +18,7 @@ router = APIRouter(
 class LoginResponse(BaseModel):
     user: CurrentUser
     access_token: str
-    grant_type = "bearer"
+    grant_type: str = "bearer"
 
 
 @router.post("/login", summary="login with username and password", response_model=LoginResponse)

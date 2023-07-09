@@ -6,12 +6,11 @@ import os
 import sys
 from uuid import UUID
 
-import asyncpg
 from asyncpg.exceptions import PostgresError
 
-from stustapay.bon.bon import fetch_base_config, generate_bon, BonConfig
+from stustapay.bon.bon import BonConfig, fetch_base_config, generate_bon
 from stustapay.bon.config import Config
-from stustapay.core.database import create_db_pool
+from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.subcommand import SubCommand
@@ -29,7 +28,7 @@ class Generator(SubCommand):
         self.logger = logging.getLogger(__name__)
 
         # set, once run is called
-        self.db_conn: asyncpg.Connection
+        self.db_conn: Connection
         self.db_hook: DBHook
         self.bon_config: BonConfig
 
@@ -106,7 +105,7 @@ class Generator(SubCommand):
                 f"Unexpected error while processing bon: {traceback.format_exception(exc_type, exc_value, exc_traceback)}"
             )
 
-    async def process_bon(self, conn: asyncpg.Connection, order_id: int, order_uuid: UUID):
+    async def process_bon(self, conn: Connection, order_id: int, order_uuid: UUID):
         """
         Queries the database for the bon data and generates it.
         Then saves the result back to the database

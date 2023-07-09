@@ -1,8 +1,8 @@
 import asyncio
 
-from .config import read_config
 from stustapay.core.args import Parser
 
+from .config import read_config
 from .signature_processor import SignatureProcessor
 from .simulator import Simulator
 from .tse_switchover import TseSwitchover

@@ -9,8 +9,9 @@ from datetime import datetime
 
 import asyncpg
 
-from stustapay.core.database import create_db_pool
+from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.subcommand import SubCommand
+
 from .config import Config
 
 LOGGER = logging.getLogger(__name__)
@@ -157,7 +158,7 @@ class TseSwitchover(SubCommand):
         self.db_pool = pool
 
         async with contextlib.AsyncExitStack() as aes:
-            psql: asyncpg.Connection = await aes.enter_async_context(pool.acquire())
+            psql: Connection = await aes.enter_async_context(pool.acquire())
 
             if self.nc:
                 await wrapper(window_main, self.db_pool)

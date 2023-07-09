@@ -9,50 +9,46 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.account import (
     ACCOUNT_CASH_ENTRY,
+    ACCOUNT_CASH_EXIT,
+    ACCOUNT_CASH_SALE_SOURCE,
+    ACCOUNT_SALE_EXIT,
     ACCOUNT_SUMUP,
     Account,
     get_source_account,
     get_target_account,
-    ACCOUNT_SALE_EXIT,
-    ACCOUNT_CASH_EXIT,
-    ACCOUNT_CASH_SALE_SOURCE,
 )
 from stustapay.core.schema.order import (
+    CompletedPayOut,
     CompletedSale,
+    CompletedSaleBase,
+    CompletedSaleProducts,
+    CompletedTicketSale,
+    CompletedTopUp,
+    EditSaleProducts,
+    NewPayOut,
     NewSale,
+    NewSaleProducts,
+    NewTicketSale,
+    NewTicketScan,
+    NewTopUp,
     Order,
     OrderType,
-    PendingSale,
-    PendingLineItem,
-    PendingTopUp,
-    NewTopUp,
-    CompletedTopUp,
-    NewPayOut,
-    PendingPayOut,
-    CompletedPayOut,
-    NewTicketSale,
-    PendingTicketSale,
-    CompletedTicketSale,
     PaymentMethod,
-    NewTicketScan,
+    PendingLineItem,
+    PendingPayOut,
+    PendingSale,
+    PendingSaleBase,
+    PendingSaleProducts,
+    PendingTicketSale,
+    PendingTopUp,
     TicketScanResult,
     TicketScanResultEntry,
-    PendingSaleBase,
-    CompletedSaleBase,
-    NewSaleProducts,
-    PendingSaleProducts,
-    CompletedSaleProducts,
-    EditSaleProducts,
 )
-from stustapay.core.schema.product import (
-    Product,
-    ProductRestriction,
-    TOP_UP_PRODUCT_ID,
-)
+from stustapay.core.schema.product import TOP_UP_PRODUCT_ID, Product, ProductRestriction
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.ticket import Ticket
-from stustapay.core.schema.till import Till, VIRTUAL_TILL_ID
-from stustapay.core.schema.user import Privilege, User, CurrentUser, format_user_tag_uid
+from stustapay.core.schema.till import VIRTUAL_TILL_ID, Till
+from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
 from stustapay.core.service.account import get_account_by_id
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
@@ -67,16 +63,18 @@ from stustapay.core.service.common.error import InvalidArgument, ServiceExceptio
 from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.service.product import (
     fetch_discount_product,
-    fetch_top_up_product,
     fetch_pay_out_product,
     fetch_product,
+    fetch_top_up_product,
 )
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.util import BaseModel
+
+from ...database import Connection
+from ..till.common import fetch_till
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
-from ..till.common import fetch_till
 
 logger = logging.getLogger(__name__)
 
@@ -198,18 +196,14 @@ class InternalCompletedSale(CompletedSaleBase, PendingSaleBase):
     buttons: list[BookedButton]
 
 
-async def fetch_order(*, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
+async def fetch_order(*, conn: Connection, order_id: int) -> Optional[Order]:
     """
     get all info about an order.
     """
-    row = await conn.fetchrow("select * from order_value where id = $1", order_id)
-    if row is None:
-        return None
-
-    return Order.parse_obj(row)
+    return await conn.fetch_maybe_one(Order, "select * from order_value where id = $1", order_id)
 
 
-async def fetch_max_account_balance(*, conn: asyncpg.Connection) -> float:
+async def fetch_max_account_balance(*, conn: Connection) -> float:
     return await conn.fetchval("select value::double precision from config where key = 'max_account_balance'")
 
 
@@ -245,7 +239,7 @@ class OrderService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
-    async def register_for_order_updates(self, conn: asyncpg.Connection) -> Subscription:
+    async def register_for_order_updates(self, conn: Connection) -> Subscription:
         del conn  # unused
 
         def on_unsubscribe(subscription):
@@ -258,7 +252,7 @@ class OrderService(DBService):
     @staticmethod
     async def _get_products_from_buttons(
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         till_profile_id: int,
         buttons: list[BookedButton],
     ) -> list[BookedProduct]:
@@ -266,7 +260,8 @@ class OrderService(DBService):
         booked_products = []
         for button in buttons:
             if not button.is_product:
-                product_rows = await conn.fetch(
+                products = await conn.fetch_many(
+                    Product,
                     "select p.* from till_button_product tbp "
                     "join product_with_tax_and_restrictions p on tbp.product_id = p.id "
                     "join till_layout_to_button tltp on tltp.button_id = tbp.button_id "
@@ -276,14 +271,13 @@ class OrderService(DBService):
                     till_profile_id,
                 )
             else:
-                product_rows = await conn.fetch(
-                    "select p.* from product_with_tax_and_restrictions p where p.id = $1", button.id
+                products = await conn.fetch_many(
+                    Product, "select p.* from product_with_tax_and_restrictions p where p.id = $1", button.id
                 )
-            if len(product_rows) == 0:
+            if len(products) == 0:
                 raise InvalidArgument("this till profile is not allowed to use these buttons")
 
-            for row in product_rows:
-                product = Product.parse_obj(row)
+            for product in products:
                 if (button.price is None) != product.fixed_price:
                     raise InvalidArgument("cannot book a fixed price product with a variable price")
                 if button.quantity is not None and button.quantity < 0 and not product.is_returnable:
@@ -353,8 +347,9 @@ class OrderService(DBService):
         return line_items
 
     @staticmethod
-    async def _fetch_customer_by_user_tag(*, conn: asyncpg.Connection, customer_tag_uid: int) -> Account:
-        customer = await conn.fetchrow(
+    async def _fetch_customer_by_user_tag(*, conn: Connection, customer_tag_uid: int) -> Account:
+        customer = await conn.fetch_maybe_one(
+            Account,
             "select a.*, t.restriction "
             "from user_tag t join account_with_history a on t.uid = a.user_tag_uid "
             "where t.uid = $1 and a.type = 'private'",
@@ -362,14 +357,14 @@ class OrderService(DBService):
         )
         if customer is None:
             raise CustomerNotFound(uid=customer_tag_uid)
-        return Account.parse_obj(customer)
+        return customer
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_topup(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_terminal: Terminal,
         new_topup: NewTopUp,
     ) -> PendingTopUp:
@@ -422,7 +417,7 @@ class OrderService(DBService):
     async def book_topup(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_terminal: Terminal,
         current_user: CurrentUser,
         new_topup: NewTopUp,
@@ -495,9 +490,7 @@ class OrderService(DBService):
             till_id=current_terminal.till.id,
         )
 
-    async def _check_sale(
-        self, *, conn: asyncpg.Connection, till: Till, new_sale: InternalNewSale
-    ) -> InternalPendingSale:
+    async def _check_sale(self, *, conn: Connection, till: Till, new_sale: InternalNewSale) -> InternalPendingSale:
         """
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
@@ -561,9 +554,7 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def check_sale(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_sale: NewSale
-    ) -> PendingSale:
+    async def check_sale(self, *, conn: Connection, current_terminal: Terminal, new_sale: NewSale) -> PendingSale:
         """
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
@@ -599,7 +590,7 @@ class OrderService(DBService):
     async def check_sale_products(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_terminal: Terminal,
         new_sale: NewSaleProducts,
     ) -> PendingSaleProducts:
@@ -636,7 +627,7 @@ class OrderService(DBService):
     async def _book_sale(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         till: Till,
         current_user: CurrentUser,
         new_sale: InternalNewSale,
@@ -723,7 +714,7 @@ class OrderService(DBService):
     async def book_sale(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_terminal: Terminal,
         current_user: CurrentUser,
         new_sale: NewSale,
@@ -735,7 +726,7 @@ class OrderService(DBService):
         internal_new_sale = InternalNewSale(
             uuid=new_sale.uuid,
             customer_tag_uid=new_sale.customer_tag_uid,
-            user_vouchers=new_sale.used_vouchers,
+            used_vouchers=new_sale.used_vouchers,
             buttons=[
                 BookedButton(
                     id=b.till_button_id,
@@ -772,7 +763,7 @@ class OrderService(DBService):
     async def book_sale_products(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_user: CurrentUser,
         new_sale: NewSaleProducts,
     ) -> CompletedSaleProducts:
@@ -783,7 +774,7 @@ class OrderService(DBService):
         internal_new_sale = InternalNewSale(
             uuid=new_sale.uuid,
             customer_tag_uid=new_sale.customer_tag_uid,
-            user_vouchers=new_sale.used_vouchers,
+            used_vouchers=new_sale.used_vouchers,
             buttons=[
                 BookedButton(
                     id=b.product_id,
@@ -819,7 +810,7 @@ class OrderService(DBService):
     async def edit_sale_products(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_user: CurrentUser,
         order_id: int,
         edit_sale: EditSaleProducts,
@@ -828,6 +819,8 @@ class OrderService(DBService):
         if order is None:
             raise InvalidArgument("Order does not exist")
         await self._cancel_sale(conn=conn, current_user=current_user, order_id=order_id, till_id=VIRTUAL_TILL_ID)
+
+        assert order.customer_tag_uid is not None
 
         new_sale = NewSaleProducts(
             products=edit_sale.products,
@@ -841,7 +834,7 @@ class OrderService(DBService):
     @staticmethod
     async def _cancel_sale(
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_user: CurrentUser,
         till_id: int,
         order_id: int,
@@ -903,7 +896,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def cancel_sale(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, order_id: int
+        self, *, conn: Connection, current_terminal: Terminal, current_user: CurrentUser, order_id: int
     ):
         await self._cancel_sale(
             conn=conn, till_id=current_terminal.till.id, current_user=current_user, order_id=order_id
@@ -911,13 +904,13 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction()
     @requires_user([Privilege.can_book_orders])
-    async def cancel_sale_admin(self, *, conn: asyncpg.Connection, current_user: CurrentUser, order_id: int):
+    async def cancel_sale_admin(self, *, conn: Connection, current_user: CurrentUser, order_id: int):
         await self._cancel_sale(conn=conn, till_id=VIRTUAL_TILL_ID, current_user=current_user, order_id=order_id)
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_pay_out(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_pay_out: NewPayOut
+        self, *, conn: Connection, current_terminal: Terminal, new_pay_out: NewPayOut
     ) -> PendingPayOut:
         if new_pay_out.amount is not None and new_pay_out.amount > 0.0:
             raise InvalidArgument("Only payouts with a negative amount are allowed")
@@ -956,7 +949,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_pay_out(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, current_user: CurrentUser, new_pay_out: NewPayOut
+        self, *, conn: Connection, current_terminal: Terminal, current_user: CurrentUser, new_pay_out: NewPayOut
     ) -> CompletedPayOut:
         assert current_user.cashier_account_id is not None
         pending_pay_out: PendingPayOut = await self.check_pay_out(  # pylint: disable=unexpected-keyword-arg
@@ -1012,7 +1005,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_ticket_scan(
-        self, *, conn: asyncpg.Connection, current_terminal: Terminal, new_ticket_scan: NewTicketScan
+        self, *, conn: Connection, current_terminal: Terminal, new_ticket_scan: NewTicketScan
     ) -> TicketScanResult:
         can_sell_tickets = await conn.fetchval(
             "select allow_ticket_sale from till_profile where id = $1", current_terminal.till.active_profile_id
@@ -1044,7 +1037,8 @@ class OrderService(DBService):
 
         scanned_tickets = []
         for customer_tag_uid in new_ticket_scan.customer_tag_uids:
-            ticket_row = await conn.fetchrow(
+            ticket = await conn.fetch_maybe_one(
+                Ticket,
                 "select twp.* "
                 "from ticket_with_product twp "
                 "join till_layout_to_ticket tltt on tltt.ticket_id = twp.id "
@@ -1054,9 +1048,8 @@ class OrderService(DBService):
                 layout_id,
                 customer_tag_uid,
             )
-            if ticket_row is None:
+            if ticket is None:
                 raise InvalidArgument("This terminal is not allowed to sell this ticket")
-            ticket = Ticket.parse_obj(ticket_row)
             scanned_tickets.append(TicketScanResultEntry(customer_tag_uid=customer_tag_uid, ticket=ticket))
 
         return TicketScanResult(scanned_tickets=scanned_tickets)
@@ -1066,7 +1059,7 @@ class OrderService(DBService):
     async def check_ticket_sale(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_terminal: Terminal,
         current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,
@@ -1182,7 +1175,7 @@ class OrderService(DBService):
     async def book_ticket_sale(
         self,
         *,
-        conn: asyncpg.Connection,
+        conn: Connection,
         current_terminal: Terminal,
         current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,
@@ -1281,7 +1274,7 @@ class OrderService(DBService):
 
     @with_db_transaction
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def show_order(self, *, conn: asyncpg.Connection, current_user: User, order_id: int) -> Optional[Order]:
+    async def show_order(self, *, conn: Connection, current_user: User, order_id: int) -> Optional[Order]:
         order = await fetch_order(conn=conn, order_id=order_id)
         if order is not None and order.cashier_id == current_user.id:
             return order
@@ -1289,35 +1282,25 @@ class OrderService(DBService):
 
     @with_db_transaction
     @requires_terminal([Privilege.can_book_orders])
-    async def list_orders_terminal(self, *, conn: asyncpg.Connection, current_user: User) -> list[Order]:
-        cursor = conn.cursor("select * from order_value where cashier_id = $1", current_user.id)
-        result = []
-        async for row in cursor:
-            result.append(Order.parse_obj(row))
-        return result
+    async def list_orders_terminal(self, *, conn: Connection, current_user: User) -> list[Order]:
+        return await conn.fetch_many(Order, "select * from order_value where cashier_id = $1", current_user.id)
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
-    async def list_orders(self, *, conn: asyncpg.Connection, customer_account_id: Optional[int] = None) -> list[Order]:
+    async def list_orders(self, *, conn: Connection, customer_account_id: Optional[int] = None) -> list[Order]:
         if customer_account_id is not None:
-            cursor = conn.cursor("select * from order_value where customer_account_id = $1", customer_account_id)
+            return await conn.fetch_many(
+                Order, "select * from order_value where customer_account_id = $1", customer_account_id
+            )
         else:
-            cursor = conn.cursor("select * from order_value")
-        result = []
-        async for row in cursor:
-            result.append(Order.parse_obj(row))
-        return result
+            return await conn.fetch_many(Order, "select * from order_value")
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
-    async def list_orders_by_till(self, *, conn: asyncpg.Connection, till_id: int) -> list[Order]:
-        cursor = conn.cursor("select * from order_value where till_id = $1", till_id)
-        result = []
-        async for row in cursor:
-            result.append(Order.parse_obj(row))
-        return result
+    async def list_orders_by_till(self, *, conn: Connection, till_id: int) -> list[Order]:
+        return await conn.fetch_many(Order, "select * from order_value where till_id = $1", till_id)
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
-    async def get_order(self, *, conn: asyncpg.Connection, order_id: int) -> Optional[Order]:
+    async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)

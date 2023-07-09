@@ -5,7 +5,7 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/webpack:webpack",
+      "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
@@ -19,7 +19,7 @@
         "assets": ["apps/administration/src/favicon.svg", "apps/administration/src/assets"],
         "styles": ["apps/administration/src/styles.css"],
         "scripts": [],
-        "webpackConfig": "@nrwl/react/plugins/webpack"
+        "webpackConfig": "@nx/react/plugins/webpack"
       },
       "configurations": {
         "development": {
@@ -45,7 +45,7 @@
       }
     },
     "serve": {
-      "executor": "@nrwl/webpack:dev-server",
+      "executor": "@nx/webpack:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "administration:build",
@@ -62,14 +62,14 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["apps/administration/**/*.{ts,tsx,js,jsx}"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/administration/jest.config.ts",

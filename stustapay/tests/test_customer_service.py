@@ -4,21 +4,29 @@ import csv
 import datetime
 import os
 import unittest
+import xml.etree.ElementTree as ET
 
 from dateutil.parser import parse
 
-from stustapay.core.config import CustomerPortalApiConfig
-from stustapay.core.customer_bank_export import export_customer_payouts, CSV_PATH, SEPA_PATH
+from stustapay.core.customer_bank_export import (
+    CSV_PATH,
+    SEPA_PATH,
+    export_customer_payouts,
+)
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.user import format_user_tag_uid
-from stustapay.core.service.common.error import InvalidArgument, Unauthorized, AccessDenied
+from stustapay.core.service.common.error import (
+    AccessDenied,
+    InvalidArgument,
+    Unauthorized,
+)
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import (
     CustomerBank,
-    Payout,
     CustomerService,
+    Payout,
     create_payout_run,
     csv_export,
     get_customer_bank_data,
@@ -27,8 +35,7 @@ from stustapay.core.service.customer.customer import (
 )
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
-from stustapay.tests.common import TEST_CONFIG, TerminalTestCase
-import xml.etree.ElementTree as ET
+from stustapay.tests.common import TerminalTestCase
 
 
 class CustomerServiceTest(TerminalTestCase):
@@ -201,26 +208,26 @@ class CustomerServiceTest(TerminalTestCase):
         for i, customer in enumerate(customers):
             # check amount
             self.assertEqual(
-                float(tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}Amt/{p}InstdAmt").text),
+                float(tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}Amt/{p}InstdAmt").text),
                 round(customer["balance"] - customer["donation"], 2),
             )
             total_sum += round(customer["balance"] - customer["donation"], 2)
 
             # check iban
             self.assertEqual(
-                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}CdtrAcct/{p}Id/{p}IBAN").text,
+                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}CdtrAcct/{p}Id/{p}IBAN").text,
                 customer["iban"],
             )
 
             # check name
             self.assertEqual(
-                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}Cdtr/{p}Nm").text,
+                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}Cdtr/{p}Nm").text,
                 customer["account_name"],
             )
 
             # check description
             self.assertEqual(
-                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i+1}]/{p}RmtInf/{p}Ustrd").text,
+                tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}RmtInf/{p}Ustrd").text,
                 self.sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer["uid"])),
             )
 
@@ -536,7 +543,7 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(result.contact_email, self.contact_email)
 
         # test config keys from yaml config
-        cpc = CustomerPortalApiConfig.parse_obj(TEST_CONFIG["customer_portal"])
+        cpc = self.test_config.customer_portal
         self.assertEqual(result.data_privacy_url, cpc.data_privacy_url)
         self.assertEqual(result.about_page_url, cpc.about_page_url)
 
@@ -595,8 +602,7 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(3))))
 
         # check that all customers in self.customers_to_transfer have payout_run_id set to 1 and rest null
-        rows = await self.db_conn.fetch("select * from customer")
-        customers = [Customer.parse_obj(row) for row in rows]
+        customers = await self.db_conn.fetch_many(Customer, "select * from customer")
         uid_to_transfer = [customer["uid"] for customer in self.customers_to_transfer]
         for customer in customers:
             if customer.user_tag_uid in uid_to_transfer:
@@ -659,8 +665,7 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(1, 1))))
         self._check_sepa_xml(os.path.join(output_path, SEPA_PATH.format(1, 1)), self.customers_to_transfer[2:])
 
-        rows = await self.db_conn.fetch("select * from customer")
-        customers = [Customer.parse_obj(row) for row in rows]
+        customers = await self.db_conn.fetch_many(Customer, "select * from customer")
         uid_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[2:]]
         for customer in customers:
             if customer.user_tag_uid in uid_to_transfer:

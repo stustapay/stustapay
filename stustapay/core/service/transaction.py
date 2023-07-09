@@ -1,11 +1,11 @@
 from typing import Optional
 
-import asyncpg
+from stustapay.core.database import Connection
 
 
 async def book_transaction(
     *,
-    conn: asyncpg.Connection,
+    conn: Connection,
     source_account_id: int,
     target_account_id: int,
     conducting_user_id: Optional[int] = None,

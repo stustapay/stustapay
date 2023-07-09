@@ -2,7 +2,7 @@ import { useGetCustomerQuery, useSetCustomerAllDonateMutation, useSetCustomerInf
 import { Loading, NumericInput } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link as RouterLink, Navigate, useNavigate } from "react-router-dom";
 import {
   Alert,
   Button,
@@ -21,12 +21,11 @@ import { Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import iban from "iban";
-import { Link as RouterLink } from "react-router-dom";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 
 export const PayoutInfo: React.FC = () => {
-  const { t } = useTranslation(undefined, { keyPrefix: "payout" });
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const config = usePublicConfig();
 
@@ -42,7 +41,7 @@ export const PayoutInfo: React.FC = () => {
   }
 
   if (customerError || !customer) {
-    toast.error(t("errorFetchingData"));
+    toast.error(t("payout.errorFetchingData"));
     return <Navigate to="/" />;
   }
 
@@ -51,32 +50,32 @@ export const PayoutInfo: React.FC = () => {
       if (!iban.isValid(val)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: t("ibanNotValid"),
+          message: t("payout.ibanNotValid"),
         });
       }
       if (!config.allowed_country_codes.includes(val.substring(0, 2))) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: t("countryCodeNotSupported"),
+          message: t("payout.countryCodeNotSupported"),
         });
       }
     }),
     account_name: z.string(),
     email: z.string().email(),
     privacy_policy: z.boolean().refine((val) => val, {
-      message: t("mustAcceptPrivacyPolicy"),
+      message: t("payout.mustAcceptPrivacyPolicy"),
     }),
     donation: z.number().superRefine((val, ctx) => {
       if (val < 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: t("donationMustBePositive"),
+          message: t("payout.donationMustBePositive"),
         });
       }
       if (val > customer.balance) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: t("donationExceedsBalance"),
+          message: t("payout.donationExceedsBalance"),
         });
       }
     }),
@@ -97,12 +96,12 @@ export const PayoutInfo: React.FC = () => {
     setCustomerInfo(values)
       .unwrap()
       .then(() => {
-        toast.success(t("updatedBankData"));
+        toast.success(t("payout.updatedBankData"));
         navigate("/");
         setSubmitting(false);
       })
       .catch((error) => {
-        toast.error(t("errorWhileUpdatingBankData"));
+        toast.error(t("payout.errorWhileUpdatingBankData"));
         console.error(error);
         setSubmitting(false);
       });
@@ -111,11 +110,11 @@ export const PayoutInfo: React.FC = () => {
     setCustomerAllDonate()
       .unwrap()
       .then(() => {
-        toast.success(t("updatedBankData"));
+        toast.success(t("payout.updatedBankData"));
         navigate("/");
       })
       .catch((error) => {
-        toast.error(t("errorWhileUpdatingBankData"));
+        toast.error(t("payout.errorWhileUpdatingBankData"));
         console.error(error);
       });
   };
@@ -124,14 +123,14 @@ export const PayoutInfo: React.FC = () => {
     <Grid container justifyItems="center" justifyContent="center" sx={{ paddingX: 0.5 }}>
       <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
         <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
-          {t("info")}
+          {t("payout.info")}
         </Alert>
-        <h3>{t("donationTitle")}</h3>
+        <h3>{t("payout.donationTitle")}</h3>
         <Button variant="contained" color="primary" sx={{ width: "100%" }} onClick={onAllTipClick}>
-          {t("donateRemainingBalanceOf") + formatCurrency(customer.balance)}
+          {t("payout.donateRemainingBalanceOf") + formatCurrency(customer.balance)}
         </Button>
 
-        <h3>{t("payoutTitle")}</h3>
+        <h3>{t("payout.payoutTitle")}</h3>
         <Formik
           initialValues={initialValues}
           validationSchema={toFormikValidationSchema(FormSchema)}
@@ -143,7 +142,7 @@ export const PayoutInfo: React.FC = () => {
                 <TextField
                   id="iban"
                   name="iban"
-                  label={t("iban")}
+                  label={t("payout.iban")}
                   variant="outlined"
                   required
                   fullWidth
@@ -156,7 +155,7 @@ export const PayoutInfo: React.FC = () => {
                 <TextField
                   id="account_name"
                   name="account_name"
-                  label={t("bankAccountHolder")}
+                  label={t("payout.bankAccountHolder")}
                   variant="outlined"
                   required
                   fullWidth
@@ -169,7 +168,7 @@ export const PayoutInfo: React.FC = () => {
                 <TextField
                   id="email"
                   name="email"
-                  label={t("email")}
+                  label={t("payout.email")}
                   variant="outlined"
                   required
                   fullWidth
@@ -204,10 +203,10 @@ export const PayoutInfo: React.FC = () => {
                     <FormHelperText sx={{ ml: 0 }}>{formik.errors.privacy_policy}</FormHelperText>
                   )}
                 </FormControl>
-                <Typography>{t("donationDescription")}</Typography>
+                <Typography>{t("payout.donationDescription")}</Typography>
                 <NumericInput
                   name="donation"
-                  label={t("donationAmount") + `(max ${formatCurrency(customer.balance)})`}
+                  label={t("payout.donationAmount") + `(max ${formatCurrency(customer.balance)})`}
                   variant="outlined"
                   fullWidth
                   value={formik.values.donation}
@@ -219,7 +218,7 @@ export const PayoutInfo: React.FC = () => {
                   helperText={(formik.touched.donation && formik.errors.donation) as string}
                 />
                 <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
-                  {formik.isSubmitting ? "Submitting" : t("submitPayoutData")}
+                  {formik.isSubmitting ? "Submitting" : t("payout.submitPayoutData")}
                 </Button>
               </Stack>
             </form>

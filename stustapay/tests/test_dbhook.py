@@ -4,6 +4,7 @@ import threading
 
 from stustapay.core.database import create_db_pool
 from stustapay.core.service.common.dbhook import DBHook
+
 from .common import BaseTestCase
 
 

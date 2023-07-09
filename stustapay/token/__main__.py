@@ -6,8 +6,8 @@ These identify users.
 
 import asyncio
 
-from stustapay.token.generator import Generator
 from stustapay.core.args import Parser
+from stustapay.token.generator import Generator
 
 
 def main():

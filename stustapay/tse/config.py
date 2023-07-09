@@ -1,14 +1,14 @@
-from typing import Iterable, Callable, Tuple
-
-# import functools
-# import logging
+from typing import Callable, Iterable, Tuple
 
 import yaml
 from pydantic import BaseModel
 
+from ..core.config import DatabaseConfig
 from .diebold_nixdorf_usb.config import DieboldNixdorfUSBTSEConfig
 from .handler import TSEHandler
-from ..core.config import DatabaseConfig
+
+# import functools
+# import logging
 
 
 class TSEList(BaseModel):

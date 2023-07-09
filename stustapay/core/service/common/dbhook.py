@@ -6,9 +6,11 @@ import asyncio
 import contextlib
 import inspect
 import logging
-from typing import Callable, Optional, Awaitable, Union, Type
+from typing import Awaitable, Callable, Optional, Type, Union
 
 import asyncpg.exceptions
+
+from stustapay.core.database import Connection
 
 
 class DBHook:
@@ -49,10 +51,10 @@ class DBHook:
             finally:
                 await self._deregister(conn=conn)
 
-    async def _register(self, conn: asyncpg.Connection):
+    async def _register(self, conn: Connection):
         await conn.add_listener(self.channel, self.notification_callback)
 
-    async def _deregister(self, conn: asyncpg.Connection):
+    async def _deregister(self, conn: Connection):
         await conn.remove_listener(self.channel, self.notification_callback)
 
     def stop(self):
@@ -91,7 +93,7 @@ class DBHook:
                 self.logger.error(f"Error occurred during DBHook.run: {traceback.format_exc()}")
                 await asyncio.sleep(1)
 
-    def notification_callback(self, connection: asyncpg.Connection, pid: int, channel: str, payload: str):
+    def notification_callback(self, connection: Connection, pid: int, channel: str, payload: str):
         """
         runs whenever we get a psql notification through pg_notify
         """

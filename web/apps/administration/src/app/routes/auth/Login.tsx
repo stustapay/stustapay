@@ -23,7 +23,7 @@ const initialValues: FormSchema = {
 };
 
 export const Login: React.FC = () => {
-  const { t } = useTranslation(undefined, { keyPrefix: "auth" });
+  const { t } = useTranslation();
   const isLoggedIn = useAppSelector(selectIsAuthenticated);
   const [query] = useSearchParams();
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ export const Login: React.FC = () => {
       .catch((err) => {
         setSubmitting(false);
         console.log(err);
-        toast.error(t("loginFailed", { reason: err.error }));
+        toast.error(t("auth.loginFailed", { reason: err.error }));
       });
   };
 
@@ -76,7 +76,7 @@ export const Login: React.FC = () => {
                 fullWidth
                 autoFocus
                 type="text"
-                label={t("username")}
+                label={t("auth.username")}
                 name="username"
                 onBlur={handleBlur}
                 onChange={handleChange}
@@ -92,7 +92,7 @@ export const Login: React.FC = () => {
                 fullWidth
                 type="password"
                 name="password"
-                label={t("password")}
+                label={t("auth.password")}
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.password}
@@ -109,7 +109,7 @@ export const Login: React.FC = () => {
                 disabled={isSubmitting}
                 sx={{ mt: 1 }}
               >
-                {t("login")}
+                {t("auth.login")}
               </Button>
             </Form>
           )}

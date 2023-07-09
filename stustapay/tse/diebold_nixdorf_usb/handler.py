@@ -1,19 +1,23 @@
 import asyncio
-import aiohttp
 import base64
 import binascii
 import contextlib
 import json
 import logging
 import typing
-from dateutil import parser
+
+import aiohttp
 import pytz
-
-from stustapay.tse.diebold_nixdorf_usb.config import DieboldNixdorfUSBTSEConfig
-
-from stustapay.tse.handler import TSEHandler, TSESignature, TSESignatureRequest, TSEMasterData
+from dateutil import parser
 
 from stustapay.core.util import create_task_protected
+from stustapay.tse.diebold_nixdorf_usb.config import DieboldNixdorfUSBTSEConfig
+from stustapay.tse.handler import (
+    TSEHandler,
+    TSEMasterData,
+    TSESignature,
+    TSESignatureRequest,
+)
 
 LOGGER = logging.getLogger(__name__)
 

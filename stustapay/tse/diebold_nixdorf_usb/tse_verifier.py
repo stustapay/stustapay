@@ -1,11 +1,19 @@
-import ecdsa
-from hashlib import sha384, sha256
-import base64
-from dateutil import parser
-from datetime import timezone
-import pprint
-from asn1crypto.core import Integer, ObjectIdentifier, Sequence, OctetString, PrintableString, Any
 import argparse
+import base64
+import pprint
+from datetime import timezone
+from hashlib import sha256, sha384
+
+import ecdsa
+from asn1crypto.core import (
+    Any,
+    Integer,
+    ObjectIdentifier,
+    OctetString,
+    PrintableString,
+    Sequence,
+)
+from dateutil import parser
 
 
 # initialize data structures

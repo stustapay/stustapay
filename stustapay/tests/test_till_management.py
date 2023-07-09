@@ -2,29 +2,34 @@
 import uuid
 
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT
-from stustapay.core.schema.order import OrderType, NewSale, Button
+from stustapay.core.schema.order import Button, NewSale, OrderType
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import (
+    NewCashRegister,
+    NewCashRegisterStocking,
     NewTill,
     NewTillButton,
     NewTillLayout,
     NewTillProfile,
-    NewCashRegisterStocking,
-    NewCashRegister,
 )
 from stustapay.core.schema.user import (
-    CASHIER_ROLE_NAME,
-    FINANZORGA_ROLE_NAME,
-    ADMIN_ROLE_NAME,
     ADMIN_ROLE_ID,
+    ADMIN_ROLE_NAME,
     CASHIER_ROLE_ID,
-    UserTag,
+    CASHIER_ROLE_NAME,
     FINANZORGA_ROLE_ID,
+    FINANZORGA_ROLE_NAME,
+    UserTag,
     UserWithoutId,
 )
-from stustapay.core.service.cashier import CashierService, CloseOut, InvalidCloseOutException
+from stustapay.core.service.cashier import (
+    CashierService,
+    CloseOut,
+    InvalidCloseOutException,
+)
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.order import OrderService
+
 from .common import TerminalTestCase
 
 
@@ -341,10 +346,12 @@ class TillManagementTest(TerminalTestCase):
 
     async def test_button_references_max_one_variable_price_product(self):
         product1 = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="p1", is_locked=True, fixed_price=False, tax_name="ust")
+            token=self.admin_token,
+            product=NewProduct(name="p1", is_locked=True, fixed_price=False, tax_name="ust", price=None),
         )
         product2 = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="p2", is_locked=True, fixed_price=False, tax_name="ust")
+            token=self.admin_token,
+            product=NewProduct(name="p2", is_locked=True, fixed_price=False, tax_name="ust", price=None),
         )
         button = await self.till_service.layout.create_button(
             token=self.admin_token, button=NewTillButton(name="foo", product_ids=[product1.id])
@@ -386,7 +393,7 @@ class TillManagementTest(TerminalTestCase):
         )
         product2 = await self.product_service.create_product(
             token=self.admin_token,
-            product=NewProduct(name="p2", is_locked=True, price=3, price_in_vouchers=2.4, tax_name="ust"),
+            product=NewProduct(name="p2", is_locked=True, price=3, price_in_vouchers=2, tax_name="ust"),
         )
         button = await self.till_service.layout.create_button(
             token=self.admin_token, button=NewTillButton(name="foo", product_ids=[product1.id])

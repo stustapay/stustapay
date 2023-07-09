@@ -3,7 +3,7 @@ import enum
 from typing import Optional
 from uuid import UUID
 
-from pydantic import root_validator, validator
+from pydantic import field_validator, model_validator
 
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.ticket import Ticket
@@ -41,7 +41,7 @@ class NewTopUp(BaseModel):
     amount: float
     customer_tag_uid: int
 
-    _validate_payment_method = validator("payment_method", allow_reuse=True)(is_non_tag_payment_method)
+    _validate_payment_method = field_validator("payment_method")(is_non_tag_payment_method)
 
 
 class PendingTopUp(NewTopUp):
@@ -100,12 +100,12 @@ class Button(BaseModel):
     price: Optional[float] = None
 
     # check for new Items if either quantity or price is set
-    @root_validator()
-    def check_quantity_or_price_set(cls, values):  # pylint: disable=no-self-argument
-        quantity, price = values.get("quantity"), values.get("price")
-        if (quantity is None) == (price is None):
+    @model_validator(mode="after")  # type: ignore
+    @classmethod
+    def check_quantity_or_price_set(cls, m: "Button"):
+        if (m.quantity is None) == (m.price is None):
             raise ValueError("either price or quantity must be set")
-        return values
+        return m
 
 
 class BookedProduct(BaseModel):
@@ -117,12 +117,12 @@ class BookedProduct(BaseModel):
     price: Optional[float] = None
 
     # check for new Items if either quantity or price is set
-    @root_validator()
-    def check_quantity_or_price_set(cls, values):  # pylint: disable=no-self-argument
-        quantity, price = values.get("quantity"), values.get("price")
-        if (quantity is None) == (price is None):
+    @model_validator(mode="after")  # type: ignore
+    @classmethod
+    def check_quantity_or_price_set(cls, m: "BookedProduct"):
+        if (m.quantity is None) == (m.price is None):
             raise ValueError("either price or quantity must be set")
-        return values
+        return m
 
 
 class NewSaleBase(BaseModel):
@@ -232,7 +232,7 @@ class NewTicketSale(BaseModel):
 
     payment_method: Optional[PaymentMethod]
 
-    _validate_payment_method = validator("payment_method", allow_reuse=True)(is_non_tag_payment_method)
+    _validate_payment_method = field_validator("payment_method")(is_non_tag_payment_method)
 
 
 class PendingTicketSale(BaseModel):
@@ -307,7 +307,7 @@ class NewFreeTicketGrant(BaseModel):
     user_tag_uid: int
     initial_voucher_amount: int = 0
 
-    @validator("initial_voucher_amount")
+    @field_validator("initial_voucher_amount")
     def initial_voucher_amount_is_positive(cls, v):  # pylint: disable=no-self-argument
         if v < 0:
             raise ValueError("initial voucher amount must be positive")

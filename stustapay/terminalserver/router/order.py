@@ -8,21 +8,21 @@ from fastapi import APIRouter
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextOrderService
 from stustapay.core.schema.order import (
-    CompletedSale,
-    NewSale,
-    Order,
-    PendingSale,
-    NewTopUp,
-    PendingTopUp,
-    CompletedTopUp,
-    PendingPayOut,
-    NewPayOut,
     CompletedPayOut,
-    PendingTicketSale,
-    NewTicketScan,
-    TicketScanResult,
-    NewTicketSale,
+    CompletedSale,
     CompletedTicketSale,
+    CompletedTopUp,
+    NewPayOut,
+    NewSale,
+    NewTicketSale,
+    NewTicketScan,
+    NewTopUp,
+    Order,
+    PendingPayOut,
+    PendingSale,
+    PendingTicketSale,
+    PendingTopUp,
+    TicketScanResult,
 )
 
 router = APIRouter(prefix="/order", tags=["order"])
