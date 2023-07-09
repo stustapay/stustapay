@@ -5,7 +5,7 @@ from typing import Optional
 
 import asyncpg
 
-from stustapay.bon.pdflatex import render_template, pdflatex
+from stustapay.bon.pdflatex import pdflatex, render_template
 from stustapay.core.schema.order import Order
 from stustapay.core.util import BaseModel
 

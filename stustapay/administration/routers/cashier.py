@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextCashierService
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
-from stustapay.core.service.cashier import CloseOutResult, CloseOut
+from stustapay.core.service.cashier import CloseOut, CloseOutResult
 
 router = APIRouter(
     prefix="/cashiers",

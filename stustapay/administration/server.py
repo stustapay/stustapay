@@ -1,5 +1,5 @@
-import asyncio
 import argparse
+import asyncio
 import json
 import logging
 
@@ -17,13 +17,16 @@ from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.subcommand import SubCommand
+
+from ..core.healthcheck import run_healthcheck
+from .routers import account, auth, cashier
+from .routers import config as config_router
 from .routers import (
-    account,
-    auth,
-    config as config_router,
     order,
     product,
+    stats,
     tax_rate,
+    ticket,
     till,
     till_button,
     till_layout,
@@ -31,11 +34,7 @@ from .routers import (
     till_register_stockings,
     till_registers,
     user,
-    cashier,
-    stats,
-    ticket,
 )
-from ..core.healthcheck import run_healthcheck
 
 
 class Api(SubCommand):

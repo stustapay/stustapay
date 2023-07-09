@@ -5,7 +5,7 @@ from typing import Optional
 import asyncpg.exceptions
 
 from stustapay.core.schema.terminal import Terminal
-from stustapay.core.schema.user import Privilege, CurrentUser
+from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.common.error import AccessDenied, Unauthorized
 
 

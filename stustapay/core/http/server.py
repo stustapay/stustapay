@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 import asyncpg
 import uvicorn
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from stustapay import __version__
@@ -15,14 +15,19 @@ from stustapay.core.config import DatabaseConfig, HTTPServerConfig
 from stustapay.core.database import create_db_pool
 from stustapay.core.http.context import Context, ContextMiddleware
 from stustapay.core.http.error import (
+    access_exception_handler,
+    bad_request_exception_handler,
     exception_handler,
     not_found_exception_handler,
     service_exception_handler,
-    access_exception_handler,
     unauthorized_exception_handler,
-    bad_request_exception_handler,
 )
-from stustapay.core.service.common.error import NotFound, ServiceException, AccessDenied, Unauthorized
+from stustapay.core.service.common.error import (
+    AccessDenied,
+    NotFound,
+    ServiceException,
+    Unauthorized,
+)
 
 
 class Server:

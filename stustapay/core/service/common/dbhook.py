@@ -6,7 +6,7 @@ import asyncio
 import contextlib
 import inspect
 import logging
-from typing import Callable, Optional, Awaitable, Union, Type
+from typing import Awaitable, Callable, Optional, Type, Union
 
 import asyncpg.exceptions
 

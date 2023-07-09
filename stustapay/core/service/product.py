@@ -4,18 +4,18 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.product import (
+    DISCOUNT_PRODUCT_ID,
+    MONEY_DIFFERENCE_PRODUCT_ID,
+    MONEY_TRANSFER_PRODUCT_ID,
+    PAY_OUT_PRODUCT_ID,
+    TOP_UP_PRODUCT_ID,
     NewProduct,
     Product,
-    DISCOUNT_PRODUCT_ID,
-    TOP_UP_PRODUCT_ID,
-    MONEY_TRANSFER_PRODUCT_ID,
-    MONEY_DIFFERENCE_PRODUCT_ID,
-    PAY_OUT_PRODUCT_ID,
 )
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user
+from stustapay.core.service.common.decorators import requires_user, with_db_transaction
 from stustapay.core.service.common.error import ServiceException
 
 

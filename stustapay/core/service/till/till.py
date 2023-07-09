@@ -6,18 +6,18 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.terminal import (
     Terminal,
+    TerminalButton,
     TerminalConfig,
     TerminalRegistrationSuccess,
     TerminalSecrets,
-    TerminalButton,
     UserTagSecret,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile, UserInfo
 from stustapay.core.schema.user import (
-    Privilege,
-    UserTag,
-    UserRole,
     CurrentUser,
+    Privilege,
+    UserRole,
+    UserTag,
     format_user_tag_uid,
 )
 from stustapay.core.service.auth import TerminalTokenMetadata
@@ -27,7 +27,7 @@ from stustapay.core.service.common.decorators import (
     requires_user,
     with_db_transaction,
 )
-from stustapay.core.service.common.error import AccessDenied, NotFound, InvalidArgument
+from stustapay.core.service.common.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.till.common import create_till, fetch_till
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService

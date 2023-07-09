@@ -9,9 +9,10 @@ import asyncpg
 from stustapay.core.database import create_db_pool
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.subcommand import SubCommand
+
+from ..core.healthcheck import run_healthcheck
 from .config import Config
 from .wrapper import TSEWrapper
-from ..core.healthcheck import run_healthcheck
 
 LOGGER = logging.getLogger(__name__)
 

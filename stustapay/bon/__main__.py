@@ -1,8 +1,8 @@
 import asyncio
 
+from stustapay.bon.config import read_config
 from stustapay.bon.generator import Generator
 from stustapay.core.args import Parser
-from stustapay.bon.config import read_config
 
 
 def main():

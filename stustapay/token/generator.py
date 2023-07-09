@@ -1,6 +1,6 @@
+import binascii
 import logging
 import random
-import binascii
 from textwrap import wrap
 
 from stustapay.core.subcommand import SubCommand

@@ -9,7 +9,7 @@ from uuid import UUID
 import asyncpg
 from asyncpg.exceptions import PostgresError
 
-from stustapay.bon.bon import fetch_base_config, generate_bon, BonConfig
+from stustapay.bon.bon import BonConfig, fetch_base_config, generate_bon
 from stustapay.bon.config import Config
 from stustapay.core.database import create_db_pool
 from stustapay.core.healthcheck import run_healthcheck

@@ -14,8 +14,8 @@ from stustapay.bon.config import read_config as read_bon_config
 from stustapay.bon.generator import Generator
 from stustapay.core.config import Config
 from stustapay.core.database import create_db_pool, rebuild_with
-from stustapay.core.schema.till import NewTill, NewCashRegisterStocking, NewCashRegister
-from stustapay.core.schema.user import UserWithoutId, CASHIER_ROLE_NAME
+from stustapay.core.schema.till import NewCashRegister, NewCashRegisterStocking, NewTill
+from stustapay.core.schema.user import CASHIER_ROLE_NAME, UserWithoutId
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import with_db_transaction
 from stustapay.core.service.till import TillService

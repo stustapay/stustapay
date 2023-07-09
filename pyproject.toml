@@ -38,6 +38,7 @@ test = [
 ]
 dev = [
     "black",
+    "isort",
     "mypy",
     "pylint",
     "types-PyYAML",
@@ -78,6 +79,9 @@ disable = [
 [tool.black]
 line-length = 120
 target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
 
 [tool.mypy]
 ignore_missing_imports = true

@@ -11,6 +11,7 @@ import asyncpg
 
 from stustapay.core.database import create_db_pool
 from stustapay.core.subcommand import SubCommand
+
 from .config import Config
 
 LOGGER = logging.getLogger(__name__)

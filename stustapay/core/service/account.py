@@ -4,13 +4,21 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import Account, ACCOUNT_MONEY_VOUCHER_CREATE, UserTagDetail
+from stustapay.core.schema.account import (
+    ACCOUNT_MONEY_VOUCHER_CREATE,
+    Account,
+    UserTagDetail,
+)
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.user import Privilege, User, CurrentUser, format_user_tag_uid
+from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user, requires_terminal
-from stustapay.core.service.common.error import NotFound, InvalidArgument
+from stustapay.core.service.common.decorators import (
+    requires_terminal,
+    requires_user,
+    with_db_transaction,
+)
+from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.transaction import book_transaction
 
 

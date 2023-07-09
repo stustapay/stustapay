@@ -13,13 +13,12 @@ import shutil
 import ssl
 import tempfile
 from pathlib import Path
-from typing import Optional, Union, Literal
+from typing import Literal, Optional, Union
 
 import asyncpg
 import asyncpg.exceptions
 
-from . import subcommand
-from . import util
+from . import subcommand, util
 from .config import Config, DatabaseConfig
 from .schema import DATA_PATH, DEFAULT_EXAMPLE_DATA_FILE, REVISION_PATH
 

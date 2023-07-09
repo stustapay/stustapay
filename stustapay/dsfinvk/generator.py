@@ -1,31 +1,31 @@
 import contextlib
 import logging
-from typing import Dict
-import asyncpg
-
-from dateutil import parser
+import time
 from decimal import Decimal
+from typing import Dict
+
+import asyncpg
+from dateutil import parser
+
+from stustapay.tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
 
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import (
-    Stamm_Abschluss,
-    Stamm_Orte,
-    Stamm_Kassen,
-    Stamm_USt,
-    Stamm_TSE,
-    Z_GV_Typ,
-    Z_Zahlart,
-    Z_Waehrungen,
     Bonkopf,
     Bonkopf_USt,
-    TSE_Transaktionen,
     Bonkopf_Zahlarten,
     Bonpos,
     Bonpos_USt,
+    Stamm_Abschluss,
+    Stamm_Kassen,
+    Stamm_Orte,
+    Stamm_TSE,
+    Stamm_USt,
+    TSE_Transaktionen,
+    Z_GV_Typ,
+    Z_Waehrungen,
+    Z_Zahlart,
 )
-
-from stustapay.tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
-import time
 
 LOGGER = logging.getLogger(__name__)
 

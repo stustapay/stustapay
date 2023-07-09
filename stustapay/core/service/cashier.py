@@ -5,15 +5,22 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import ACCOUNT_IMBALANCE, ACCOUNT_CASH_VAULT
+from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, ACCOUNT_IMBALANCE
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
-from stustapay.core.schema.order import PaymentMethod, OrderType
+from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.till import VIRTUAL_TILL_ID
-from stustapay.core.schema.user import Privilege, User, CurrentUser
+from stustapay.core.schema.user import CurrentUser, Privilege, User
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user
-from .common.error import ServiceException, NotFound
-from .order.booking import book_order, BookingIdentifier, NewLineItem, book_money_transfer, OrderInfo
+from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+
+from .common.error import NotFound, ServiceException
+from .order.booking import (
+    BookingIdentifier,
+    NewLineItem,
+    OrderInfo,
+    book_money_transfer,
+    book_order,
+)
 from .product import fetch_money_difference_product, fetch_product
 from .user import AuthService
 

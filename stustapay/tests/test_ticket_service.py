@@ -2,8 +2,9 @@
 from stustapay.core.schema.ticket import NewTicket
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.ticket import TicketService
-from .common import BaseTestCase
+
 from ..core.schema.product import TICKET_PRODUCT_ID
+from .common import BaseTestCase
 
 
 class TicketServiceTest(BaseTestCase):

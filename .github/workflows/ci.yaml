@@ -80,9 +80,9 @@ jobs:
         with:
           python-version: 3.9
       - name: Install dependencies
-        run: python -m pip install -e '.[dev,test]'
+        run: python -m pip install -e '.[dev]'
       - name: Check formatting
-        run: black --check .
+        run: make check-format
 
   web-lint:
     runs-on: ubuntu-latest

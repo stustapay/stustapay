@@ -21,7 +21,7 @@ from stustapay.core.service.common.decorators import (
     requires_customer,
     with_db_transaction,
 )
-from stustapay.core.service.common.error import InvalidArgument, AccessDenied
+from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.sumup import SumupService
 

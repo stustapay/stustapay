@@ -2,29 +2,34 @@
 import uuid
 
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT
-from stustapay.core.schema.order import OrderType, NewSale, Button
+from stustapay.core.schema.order import Button, NewSale, OrderType
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import (
+    NewCashRegister,
+    NewCashRegisterStocking,
     NewTill,
     NewTillButton,
     NewTillLayout,
     NewTillProfile,
-    NewCashRegisterStocking,
-    NewCashRegister,
 )
 from stustapay.core.schema.user import (
-    CASHIER_ROLE_NAME,
-    FINANZORGA_ROLE_NAME,
-    ADMIN_ROLE_NAME,
     ADMIN_ROLE_ID,
+    ADMIN_ROLE_NAME,
     CASHIER_ROLE_ID,
-    UserTag,
+    CASHIER_ROLE_NAME,
     FINANZORGA_ROLE_ID,
+    FINANZORGA_ROLE_NAME,
+    UserTag,
     UserWithoutId,
 )
-from stustapay.core.service.cashier import CashierService, CloseOut, InvalidCloseOutException
+from stustapay.core.service.cashier import (
+    CashierService,
+    CloseOut,
+    InvalidCloseOutException,
+)
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.order import OrderService
+
 from .common import TerminalTestCase
 
 

@@ -5,7 +5,13 @@ from pydantic import validator
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
-from stustapay.core.schema.user import User, UserWithoutId, UserRole, NewUserRole, Privilege
+from stustapay.core.schema.user import (
+    NewUserRole,
+    Privilege,
+    User,
+    UserRole,
+    UserWithoutId,
+)
 from stustapay.core.util import BaseModel
 
 router = APIRouter(

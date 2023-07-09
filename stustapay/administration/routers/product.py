@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextProductService
-from stustapay.core.schema.product import Product, NewProduct
+from stustapay.core.schema.product import NewProduct, Product
 
 router = APIRouter(
     prefix="/products",

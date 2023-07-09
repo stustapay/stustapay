@@ -1,8 +1,8 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
-from stustapay.core.schema.till import TillButton, NewTillButton
+from stustapay.core.schema.till import NewTillButton, TillButton
 
 router = APIRouter(
     prefix="/till-buttons",

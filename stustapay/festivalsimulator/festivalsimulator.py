@@ -17,13 +17,13 @@ from stustapay.core.database import create_db_pool
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.till import Till
-from stustapay.core.schema.user import CASHIER_ROLE_ID, ADMIN_ROLE_ID
+from stustapay.core.schema.user import ADMIN_ROLE_ID, CASHIER_ROLE_ID
 from stustapay.core.subcommand import SubCommand
 from stustapay.festivalsimulator.festivalsetup import (
-    PROFILE_ID_TICKET,
-    PROFILE_ID_TOPUP,
     PROFILE_ID_BEER,
     PROFILE_ID_COCKTAIL,
+    PROFILE_ID_TICKET,
+    PROFILE_ID_TOPUP,
 )
 
 

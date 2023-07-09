@@ -1,9 +1,9 @@
 import asyncio
 
-from stustapay.core.config import read_config
 from stustapay.core.args import Parser
+from stustapay.core.config import read_config
 
-from . import festivalsimulator, festivalsetup
+from . import festivalsetup, festivalsimulator
 
 
 def main():

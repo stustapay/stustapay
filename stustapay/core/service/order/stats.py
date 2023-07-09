@@ -9,7 +9,7 @@ from stustapay.core.schema.product import Product
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user
+from stustapay.core.service.common.decorators import requires_user, with_db_transaction
 from stustapay.core.util import BaseModel
 
 

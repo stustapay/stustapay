@@ -5,9 +5,8 @@ cli entrypoint for controlling the core.
 import asyncio
 
 from stustapay.core import customer_bank_export
-from . import admin
-from . import database
-from . import populate
+
+from . import admin, database, populate
 from .args import Parser
 from .config import read_config
 

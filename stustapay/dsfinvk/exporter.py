@@ -3,9 +3,10 @@ import logging
 import asyncpg
 
 from stustapay.core.database import create_db_pool
+
+from ..core.subcommand import SubCommand
 from .config import Config
 from .generator import Generator
-from ..core.subcommand import SubCommand
 
 LOGGER = logging.getLogger(__name__)
 

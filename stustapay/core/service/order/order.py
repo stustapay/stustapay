@@ -9,50 +9,46 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.account import (
     ACCOUNT_CASH_ENTRY,
+    ACCOUNT_CASH_EXIT,
+    ACCOUNT_CASH_SALE_SOURCE,
+    ACCOUNT_SALE_EXIT,
     ACCOUNT_SUMUP,
     Account,
     get_source_account,
     get_target_account,
-    ACCOUNT_SALE_EXIT,
-    ACCOUNT_CASH_EXIT,
-    ACCOUNT_CASH_SALE_SOURCE,
 )
 from stustapay.core.schema.order import (
+    CompletedPayOut,
     CompletedSale,
+    CompletedSaleBase,
+    CompletedSaleProducts,
+    CompletedTicketSale,
+    CompletedTopUp,
+    EditSaleProducts,
+    NewPayOut,
     NewSale,
+    NewSaleProducts,
+    NewTicketSale,
+    NewTicketScan,
+    NewTopUp,
     Order,
     OrderType,
-    PendingSale,
-    PendingLineItem,
-    PendingTopUp,
-    NewTopUp,
-    CompletedTopUp,
-    NewPayOut,
-    PendingPayOut,
-    CompletedPayOut,
-    NewTicketSale,
-    PendingTicketSale,
-    CompletedTicketSale,
     PaymentMethod,
-    NewTicketScan,
+    PendingLineItem,
+    PendingPayOut,
+    PendingSale,
+    PendingSaleBase,
+    PendingSaleProducts,
+    PendingTicketSale,
+    PendingTopUp,
     TicketScanResult,
     TicketScanResultEntry,
-    PendingSaleBase,
-    CompletedSaleBase,
-    NewSaleProducts,
-    PendingSaleProducts,
-    CompletedSaleProducts,
-    EditSaleProducts,
 )
-from stustapay.core.schema.product import (
-    Product,
-    ProductRestriction,
-    TOP_UP_PRODUCT_ID,
-)
+from stustapay.core.schema.product import TOP_UP_PRODUCT_ID, Product, ProductRestriction
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.ticket import Ticket
-from stustapay.core.schema.till import Till, VIRTUAL_TILL_ID
-from stustapay.core.schema.user import Privilege, User, CurrentUser, format_user_tag_uid
+from stustapay.core.schema.till import VIRTUAL_TILL_ID, Till
+from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
 from stustapay.core.service.account import get_account_by_id
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
@@ -67,16 +63,17 @@ from stustapay.core.service.common.error import InvalidArgument, ServiceExceptio
 from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.service.product import (
     fetch_discount_product,
-    fetch_top_up_product,
     fetch_pay_out_product,
     fetch_product,
+    fetch_top_up_product,
 )
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.util import BaseModel
+
+from ..till.common import fetch_till
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
-from ..till.common import fetch_till
 
 logger = logging.getLogger(__name__)
 

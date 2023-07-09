@@ -3,10 +3,21 @@ from typing import Optional
 from fastapi import APIRouter, status
 
 from stustapay.core.http.auth_till import CurrentAuthToken
-from stustapay.core.http.context import ContextTillService, ContextUserService, ContextAccountService
+from stustapay.core.http.context import (
+    ContextAccountService,
+    ContextTillService,
+    ContextUserService,
+)
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.user import NewUser, User, UserTag, CurrentUser, CheckLoginResult, LoginPayload
+from stustapay.core.schema.user import (
+    CheckLoginResult,
+    CurrentUser,
+    LoginPayload,
+    NewUser,
+    User,
+    UserTag,
+)
 from stustapay.core.util import BaseModel
 
 router = APIRouter(prefix="/user", tags=["user"])

@@ -4,7 +4,7 @@ import os
 import signal
 import sys
 import traceback
-from typing import Optional, Awaitable, Callable
+from typing import Awaitable, Callable, Optional
 
 from pydantic import BaseModel as PydanticBaseModel
 

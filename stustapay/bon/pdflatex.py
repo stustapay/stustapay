@@ -11,7 +11,11 @@ from tempfile import TemporaryDirectory
 from typing import Tuple
 
 import jinja2
-from pylatexenc.latexencode import RULE_REGEX, UnicodeToLatexConversionRule, UnicodeToLatexEncoder
+from pylatexenc.latexencode import (
+    RULE_REGEX,
+    UnicodeToLatexConversionRule,
+    UnicodeToLatexEncoder,
+)
 
 # https://pylatexenc.readthedocs.io/en/latest/latexencode/
 LatexEncoder = UnicodeToLatexEncoder(

@@ -1,7 +1,12 @@
 # based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz
 # with modifications by StuStaPay, 2023
 
-from .fields import BooleanField, LocalDateTimeField, NumericField, StringField  # , ISODateTimeField
+from .fields import (  # , ISODateTimeField
+    BooleanField,
+    LocalDateTimeField,
+    NumericField,
+    StringField,
+)
 from .table import Model
 
 TAXONOMY_VERSION = "2.3"

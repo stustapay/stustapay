@@ -4,21 +4,30 @@ import csv
 import datetime
 import os
 import unittest
+import xml.etree.ElementTree as ET
 
 from dateutil.parser import parse
 
 from stustapay.core.config import CustomerPortalApiConfig
-from stustapay.core.customer_bank_export import export_customer_payouts, CSV_PATH, SEPA_PATH
+from stustapay.core.customer_bank_export import (
+    CSV_PATH,
+    SEPA_PATH,
+    export_customer_payouts,
+)
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.user import format_user_tag_uid
-from stustapay.core.service.common.error import InvalidArgument, Unauthorized, AccessDenied
+from stustapay.core.service.common.error import (
+    AccessDenied,
+    InvalidArgument,
+    Unauthorized,
+)
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import (
     CustomerBank,
-    Payout,
     CustomerService,
+    Payout,
     create_payout_run,
     csv_export,
     get_customer_bank_data,
@@ -28,7 +37,6 @@ from stustapay.core.service.customer.customer import (
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.tests.common import TEST_CONFIG, TerminalTestCase
-import xml.etree.ElementTree as ET
 
 
 class CustomerServiceTest(TerminalTestCase):

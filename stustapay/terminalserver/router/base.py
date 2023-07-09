@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, status
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.terminal import TerminalConfig
-from stustapay.core.schema.till import CashRegisterStocking, CashRegister, UserInfo
+from stustapay.core.schema.till import CashRegister, CashRegisterStocking, UserInfo
 from stustapay.core.util import BaseModel
 
 router = APIRouter(

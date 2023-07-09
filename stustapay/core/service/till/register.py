@@ -5,8 +5,13 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, Account
 from stustapay.core.schema.terminal import Terminal
-from stustapay.core.schema.till import CashRegisterStocking, NewCashRegisterStocking, CashRegister, NewCashRegister
-from stustapay.core.schema.user import Privilege, CurrentUser
+from stustapay.core.schema.till import (
+    CashRegister,
+    CashRegisterStocking,
+    NewCashRegister,
+    NewCashRegisterStocking,
+)
+from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.account import (
     get_account_by_id,
     get_transport_account_by_tag_uid,
@@ -14,12 +19,12 @@ from stustapay.core.service.account import (
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
-    with_db_transaction,
-    requires_user,
     requires_terminal,
+    requires_user,
+    with_db_transaction,
     with_retryable_db_transaction,
 )
-from stustapay.core.service.common.error import NotFound, InvalidArgument
+from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.order.booking import BookingIdentifier, book_money_transfer
 from stustapay.core.service.transaction import book_transaction
 

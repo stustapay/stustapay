@@ -12,7 +12,7 @@ import asyncpg
 from stustapay.core.util import create_task_protected
 
 # from stustapay.core.schema.order import Order
-from .handler import TSEHandler, TSESignatureRequest, TSESignature
+from .handler import TSEHandler, TSESignature, TSESignatureRequest
 from .kassenbeleg_v1 import Kassenbeleg_V1
 
 LOGGER = logging.getLogger(__name__)

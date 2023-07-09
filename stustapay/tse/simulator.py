@@ -1,6 +1,6 @@
+from ..core.subcommand import SubCommand
 from .config import Config
 from .diebold_nixdorf_usb.simulator import WebsocketInterface
-from ..core.subcommand import SubCommand
 
 
 class Simulator(SubCommand):

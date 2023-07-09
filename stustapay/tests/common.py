@@ -14,21 +14,21 @@ from stustapay.core.database import create_db_pool
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import (
-    NewTill,
-    NewTillLayout,
-    NewTillProfile,
-    NewTillButton,
     NewCashRegister,
     NewCashRegisterStocking,
+    NewTill,
+    NewTillButton,
+    NewTillLayout,
+    NewTillProfile,
 )
 from stustapay.core.schema.user import (
-    UserWithoutId,
+    ADMIN_ROLE_ID,
     ADMIN_ROLE_NAME,
     CASHIER_ROLE_ID,
-    ADMIN_ROLE_ID,
-    UserTag,
-    FINANZORGA_ROLE_NAME,
     CASHIER_ROLE_NAME,
+    FINANZORGA_ROLE_NAME,
+    UserTag,
+    UserWithoutId,
 )
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.auth import AuthService

@@ -3,11 +3,11 @@ context injection for the http-api with FastAPI.
 """
 
 from dataclasses import dataclass
-from typing import Union, AsyncGenerator, Optional, Annotated
+from typing import Annotated, AsyncGenerator, Optional, Union
 
 import asyncpg
-from fastapi import Request, Depends, WebSocket
-from starlette.types import ASGIApp, Scope, Receive, Send
+from fastapi import Depends, Request, WebSocket
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from stustapay.core.config import Config
 from stustapay.core.service.account import AccountService

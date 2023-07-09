@@ -2,11 +2,12 @@
 import datetime
 import uuid
 
-from stustapay.bon.bon import BonTemplateContext, TaxRateAggregation, BonConfig
+from stustapay.bon.bon import BonConfig, BonTemplateContext, TaxRateAggregation
 from stustapay.core.schema.order import LineItem, Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import Product
-from .common import BaseTestCase
+
 from ..bon.pdflatex import render_template
+from .common import BaseTestCase
 
 
 class BonGeneratorTest(BaseTestCase):

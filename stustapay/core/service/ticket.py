@@ -3,14 +3,11 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.ticket import (
-    NewTicket,
-    Ticket,
-)
+from stustapay.core.schema.ticket import NewTicket, Ticket
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user
+from stustapay.core.service.common.decorators import requires_user, with_db_transaction
 
 
 async def fetch_ticket(*, conn: asyncpg.Connection, ticket_id: int) -> Optional[Ticket]:

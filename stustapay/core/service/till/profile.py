@@ -3,13 +3,10 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.till import (
-    TillProfile,
-    NewTillProfile,
-)
+from stustapay.core.schema.till import NewTillProfile, TillProfile
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user
+from stustapay.core.service.common.decorators import requires_user, with_db_transaction
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.user import AuthService
 

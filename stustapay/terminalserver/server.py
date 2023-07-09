@@ -15,7 +15,7 @@ from stustapay.core.service.order import OrderService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.subcommand import SubCommand
-from stustapay.terminalserver.router import auth, base, order, user, customer, cashier
+from stustapay.terminalserver.router import auth, base, cashier, customer, order, user
 
 
 class Api(SubCommand):

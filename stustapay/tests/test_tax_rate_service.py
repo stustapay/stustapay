@@ -2,6 +2,7 @@
 from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.tax_rate import TaxRateService
+
 from .common import BaseTestCase
 
 

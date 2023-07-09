@@ -2,9 +2,15 @@
 
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.till import NewTillProfile
-from stustapay.core.schema.user import Privilege, NewUserRole, ADMIN_ROLE_NAME, UserWithoutId
+from stustapay.core.schema.user import (
+    ADMIN_ROLE_NAME,
+    NewUserRole,
+    Privilege,
+    UserWithoutId,
+)
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied
+
 from .common import TerminalTestCase
 
 

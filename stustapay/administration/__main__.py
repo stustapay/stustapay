@@ -1,7 +1,7 @@
 import asyncio
 
-from stustapay.core.config import read_config
 from stustapay.core.args import Parser
+from stustapay.core.config import read_config
 
 from . import server
 
