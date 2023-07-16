@@ -32,6 +32,7 @@ class MainActivity : ComponentActivity(), SysUiController {
 
     val viewModel: MainActivityViewModel by viewModels()
 
+    @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -63,6 +64,7 @@ class MainActivity : ComponentActivity(), SysUiController {
         super.onNewIntent(intent)
     }
 
+    @Deprecated("Deprecated in Android")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         @Suppress("DEPRECATION")
         super.onActivityResult(requestCode, resultCode, data)
