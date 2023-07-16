@@ -14,7 +14,6 @@
         android:name="android.hardware.nfc"
         android:required="true" />
 
-    <!-- TODO: Remove 'usesCleartextTraffic' once we use HTTPS -->
     <application
         android:name=".MainApplication"
         android:usesCleartextTraffic="true"
