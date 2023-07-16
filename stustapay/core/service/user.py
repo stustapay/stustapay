@@ -225,7 +225,7 @@ class UserService(DBService):
         """
         user_tag_uid = await conn.fetchval("select uid from user_tag where uid = $1", new_user.user_tag_uid)
         if user_tag_uid is None:
-            raise NotFound(element_typ="user_tag", element_id=str(new_user.user_tag_uid))
+            raise InvalidArgument(f"Tag uid {format_user_tag_uid(new_user.user_tag_uid)} not found")
 
         existing_user = await conn.fetchrow("select * from user_with_roles where user_tag_uid = $1", user_tag_uid)
         if existing_user is not None:
