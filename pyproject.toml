@@ -28,7 +28,8 @@ dependencies = [
     "sepaxml==2.6.1",
     "asn1crypto==1.5.1",
     "ecdsa==0.18.0",
-    "dateutils==0.6.12"
+    "dateutils==0.6.12",
+    "pydantic~=2.0",
 ]
 
 [project.optional-dependencies]
