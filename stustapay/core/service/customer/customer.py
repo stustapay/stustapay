@@ -263,15 +263,7 @@ class CustomerService(DBService):
     async def update_customer_info(
         self, *, conn: Connection, current_customer: Customer, customer_bank: CustomerBank
     ) -> None:
-        # if a payout is assigned, disallow updates.
-        payout_id = await conn.fetchval(
-            "select payout_run_id from customer_info where customer_account_id = $1",
-            current_customer.id,
-        )
-        if payout_id != None:
-            raise InvalidArgument(
-                "Your account is already scheduled for the next payout, so updates are no longer possible."
-            )
+        await self.check_payout_run(conn, current_customer)
 
         # check iban
         try:
@@ -305,9 +297,22 @@ class CustomerService(DBService):
             round(customer_bank.donation, 2),
         )
 
+    async def check_payout_run(self, conn: Connection, current_customer: Customer) -> None:
+        # if a payout is assigned, disallow updates.
+        payout_id = await conn.fetchval(
+            "select payout_run_id from customer_info where customer_account_id = $1",
+            current_customer.id,
+        )
+        if payout_id != None:
+            raise InvalidArgument(
+                "Your account is already scheduled for the next payout, so updates are no longer possible."
+            )
+
     @with_db_transaction
     @requires_customer
     async def update_customer_donation(self, *, conn: Connection, current_customer: Customer) -> None:
+        await self.check_payout_run(conn, current_customer)
+
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(
             "insert into customer_info (customer_account_id, donation) values ($1, $2) "
