@@ -18,7 +18,7 @@ from pylatexenc.latexencode import (
 )
 
 from stustapay.core.schema.order import Order
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel, computed_field
 
 # https://pylatexenc.readthedocs.io/en/latest/latexencode/
 LatexEncoder = UnicodeToLatexEncoder(
@@ -100,6 +100,7 @@ class OrderWithTse(Order):
     tse_signature: Optional[str] = None
     tse_public_key: Optional[str] = None
 
+    @computed_field
     @property
     def tse_qr_code_text(self) -> str:
         return (

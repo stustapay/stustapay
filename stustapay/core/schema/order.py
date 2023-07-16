@@ -8,7 +8,7 @@ from pydantic import field_validator, model_validator
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.ticket import Ticket
 from stustapay.core.schema.user import format_user_tag_uid
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel, computed_field
 
 
 class OrderType(enum.Enum):
@@ -153,6 +153,7 @@ class PendingLineItem(BaseModel):
     tax_name: str
     tax_rate: float
 
+    @computed_field
     @property
     def total_price(self) -> float:
         # pylint false positive
@@ -172,14 +173,17 @@ class PendingSaleBase(BaseModel):
 
     line_items: list[PendingLineItem]
 
+    @computed_field
     @property
     def used_vouchers(self) -> int:
         return self.old_voucher_balance - self.new_voucher_balance
 
+    @computed_field
     @property
     def item_count(self) -> int:
         return len(self.line_items)
 
+    @computed_field
     @property
     def total_price(self) -> float:
         agg = 0.0
@@ -244,10 +248,12 @@ class PendingTicketSale(BaseModel):
 
     scanned_tickets: list[TicketScanResultEntry]
 
+    @computed_field
     @property
     def item_count(self) -> int:
         return len(self.line_items)
 
+    @computed_field
     @property
     def total_price(self) -> float:
         agg = 0.0
@@ -296,8 +302,9 @@ class Order(BaseModel):
     customer_account_id: Optional[int]
     customer_tag_uid: Optional[int]
 
+    @computed_field
     @property
-    def customer_tag_uid_hex(self):
+    def customer_tag_uid_hex(self) -> Optional[str]:
         return format_user_tag_uid(self.customer_tag_uid)
 
     line_items: list[LineItem]

@@ -12,7 +12,7 @@ from stustapay.core.schema.user import (
     UserRole,
     UserWithoutId,
 )
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 router = APIRouter(
     prefix="",

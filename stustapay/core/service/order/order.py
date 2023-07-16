@@ -68,7 +68,7 @@ from stustapay.core.service.product import (
     fetch_top_up_product,
 )
 from stustapay.core.service.transaction import book_transaction
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 from ...database import Connection
 from ..till.common import fetch_till

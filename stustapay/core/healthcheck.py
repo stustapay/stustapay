@@ -9,7 +9,7 @@ from pathlib import Path
 import asyncpg
 
 from stustapay.core.database import check_revision_version
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 
 class Healtcheck(BaseModel):

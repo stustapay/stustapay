@@ -8,7 +8,7 @@ from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.product import fetch_money_transfer_product
 from stustapay.core.service.transaction import book_transaction
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 
 @dataclass(eq=True, frozen=True)

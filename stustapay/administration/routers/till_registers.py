@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.till import CashRegister, NewCashRegister
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/till-registers",

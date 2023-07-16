@@ -3,7 +3,7 @@ from typing import Optional
 
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.user import format_user_tag_uid
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel, computed_field
 
 
 class Cashier(BaseModel):
@@ -13,8 +13,9 @@ class Cashier(BaseModel):
     description: Optional[str] = None
     user_tag_uid: Optional[int] = None
 
+    @computed_field
     @property
-    def user_tag_uid_hex(self):
+    def user_tag_uid_hex(self) -> Optional[str]:
         return format_user_tag_uid(self.user_tag_uid)
 
     transport_account_id: Optional[int] = None

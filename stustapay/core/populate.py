@@ -12,7 +12,7 @@ from stustapay.core.schema.till import NewCashRegister, NewTill
 from stustapay.core.service.till.register import create_cash_register
 from stustapay.core.service.till.till import create_till
 from stustapay.core.subcommand import SubCommand
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 
 class TagSecretSchema(BaseModel):

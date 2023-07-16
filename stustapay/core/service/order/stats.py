@@ -11,7 +11,7 @@ from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_user, with_db_transaction
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 
 class ProductSoldStats(Product):

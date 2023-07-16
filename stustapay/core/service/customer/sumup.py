@@ -40,7 +40,7 @@ from stustapay.core.service.order.booking import (
 )
 from stustapay.core.service.order.order import fetch_max_account_balance
 from stustapay.core.service.product import fetch_top_up_product
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 
 class SumUpError(ServiceException):

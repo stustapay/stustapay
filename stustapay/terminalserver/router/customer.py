@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextAccountService, ContextTillService
 from stustapay.core.schema.customer import Customer
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/customer",

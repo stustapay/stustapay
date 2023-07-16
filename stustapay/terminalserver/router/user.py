@@ -18,7 +18,7 @@ from stustapay.core.schema.user import (
     User,
     UserTag,
 )
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/user", tags=["user"])
 

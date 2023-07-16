@@ -5,7 +5,7 @@ from typing import Optional
 
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.order import Order
-from stustapay.core.util import BaseModel
+from pydantic import BaseModel
 
 
 class Customer(Account):
