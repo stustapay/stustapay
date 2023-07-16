@@ -142,20 +142,20 @@ jobs:
       - name: get java
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
           cache: gradle
       - name: build with gradle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build --stacktrace
+          arguments: assemble --stacktrace
           build-root-directory: app/
-      #- name: Upload APK
-      #  uses: actions/upload-artifact@v3
-      #  with:
-      #    name: app-debug
-      #    # release variant: ./app/app/build/outputs/apk/release/app-release-unsigned.apk
-      #    path: ./app/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-debug
+          # release variant: ./app/app/build/outputs/apk/release/app-release-unsigned.apk
+          path: ./app/app/build/outputs/apk/debug/app-debug.apk
   app-lint:
     runs-on: ubuntu-latest
     steps:
@@ -163,7 +163,7 @@ jobs:
       - name: get java
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
           cache: gradle
       - name: lint with gradle
@@ -178,7 +178,7 @@ jobs:
       - name: get java
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
           cache: gradle
       - name: test with gradle
