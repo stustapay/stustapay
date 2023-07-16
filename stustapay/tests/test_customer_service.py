@@ -622,6 +622,11 @@ class CustomerServiceTest(TerminalTestCase):
                 customer_bank=customer_bank,
             )
 
+        with self.assertRaises(InvalidArgument):
+            await self.customer_service.update_customer_donation(
+                token=auth.token,
+            )
+
     async def test_max_payout_sum(self):
         output_path = os.path.join(self.tmp_dir, "test_max_payout_sum")
         os.makedirs(output_path, exist_ok=True)
