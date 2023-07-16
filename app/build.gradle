@@ -6,6 +6,7 @@ buildscript {
         protobuf_version = '3.23.4'
         hilt_version = '2.47'
         hilt_android_version = '1.0.0'
+        lifecycle_version = '2.6.1'
     }
 }// Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
