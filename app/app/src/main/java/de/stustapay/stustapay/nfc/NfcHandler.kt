@@ -4,6 +4,7 @@ import android.app.Activity
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.TagLostException
+import android.os.Bundle
 import de.stustapay.stustapay.model.NfcScanFailure
 import de.stustapay.stustapay.model.NfcScanRequest
 import de.stustapay.stustapay.model.NfcScanResult
@@ -35,7 +36,14 @@ class NfcHandler @Inject constructor(
             activity,
             { tag -> handleTag(tag) },
             NfcAdapter.FLAG_READER_NFC_A or NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS,
-            null
+            // some devices send presence heartbeats to the nfc tag.
+            // this heartbeat may be sent in non-cmac-mode - and then a cmac-enabled
+            // chip refuses any further communication.
+            // -> adjust the check delay so we don't usually check for presence during
+            //    a nfc transaction.
+            Bundle().apply {
+                putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 500)
+            }
         )
     }
 
