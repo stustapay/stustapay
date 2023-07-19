@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 import asyncpg
+from pydantic import BaseModel
 
 from stustapay.core.config import Config
 from stustapay.core.database import Connection
@@ -11,7 +12,6 @@ from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_user, with_db_transaction
-from stustapay.core.util import BaseModel
 
 
 class ProductSoldStats(Product):

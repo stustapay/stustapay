@@ -1,9 +1,9 @@
 from fastapi import APIRouter, status
+from pydantic import BaseModel
 
 from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
 from stustapay.core.schema.customer import SumupCheckoutStatus
-from stustapay.core.util import BaseModel
 
 router = APIRouter(
     prefix="/sumup",

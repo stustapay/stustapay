@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import validator
+from pydantic import BaseModel, validator
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
@@ -12,7 +12,6 @@ from stustapay.core.schema.user import (
     UserRole,
     UserWithoutId,
 )
-from stustapay.core.util import BaseModel
 
 router = APIRouter(
     prefix="",

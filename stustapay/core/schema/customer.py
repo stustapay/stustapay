@@ -3,9 +3,10 @@ import enum
 import uuid
 from typing import Optional
 
+from pydantic import BaseModel
+
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.order import Order
-from stustapay.core.util import BaseModel
 
 
 class Customer(Account):

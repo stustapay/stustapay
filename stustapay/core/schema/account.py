@@ -2,10 +2,11 @@ import enum
 from datetime import datetime
 from typing import Optional
 
+from pydantic import BaseModel, computed_field
+
 from stustapay.core.schema.order import OrderType
 from stustapay.core.schema.product import Product, ProductRestriction
 from stustapay.core.schema.user import format_user_tag_uid
-from stustapay.core.util import BaseModel
 
 # Global Account IDs for virtual accounts
 # The virtual accounts are all fixed in the database
@@ -57,8 +58,9 @@ class UserTagAccountAssociation(BaseModel):
 class UserTagDetail(BaseModel):
     user_tag_uid: int
 
+    @computed_field  # type: ignore[misc]
     @property
-    def user_tag_uid_hex(self):
+    def user_tag_uid_hex(self) -> Optional[str]:
         return hex(self.user_tag_uid) if self.user_tag_uid is not None else None
 
     comment: Optional[str] = None
@@ -70,8 +72,9 @@ class UserTagDetail(BaseModel):
 class UserTagHistoryEntry(BaseModel):
     user_tag_uid: int
 
+    @computed_field  # type: ignore[misc]
     @property
-    def user_tag_uid_hex(self):
+    def user_tag_uid_hex(self) -> Optional[str]:
         return hex(self.user_tag_uid)
 
     account_id: int
@@ -90,8 +93,9 @@ class Account(BaseModel):
     # metadata relevant to a tag
     user_tag_uid: Optional[int]
 
+    @computed_field  # type: ignore[misc]
     @property
-    def user_tag_uid_hex(self):
+    def user_tag_uid_hex(self) -> Optional[str]:
         return format_user_tag_uid(self.user_tag_uid)
 
     user_tag_comment: Optional[str] = None

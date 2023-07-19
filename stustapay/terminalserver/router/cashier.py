@@ -1,9 +1,9 @@
 from fastapi import APIRouter, status
+from pydantic import BaseModel
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
 from stustapay.core.schema.till import CashRegister
-from stustapay.core.util import BaseModel
 
 router = APIRouter(
     prefix="",
