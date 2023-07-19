@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, status
+from pydantic import BaseModel
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import (
@@ -18,7 +19,6 @@ from stustapay.core.schema.user import (
     User,
     UserTag,
 )
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/user", tags=["user"])
 

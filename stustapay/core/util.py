@@ -6,7 +6,6 @@ import sys
 import traceback
 from typing import Awaitable, Callable, Optional
 
-
 # convenience infinity.
 INF = float("inf")
 

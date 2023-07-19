@@ -11,6 +11,7 @@ from tempfile import TemporaryDirectory
 from typing import Optional, Tuple
 
 import jinja2
+from pydantic import BaseModel, computed_field
 from pylatexenc.latexencode import (
     RULE_REGEX,
     UnicodeToLatexConversionRule,
@@ -18,7 +19,6 @@ from pylatexenc.latexencode import (
 )
 
 from stustapay.core.schema.order import Order
-from pydantic import BaseModel, computed_field
 
 # https://pylatexenc.readthedocs.io/en/latest/latexencode/
 LatexEncoder = UnicodeToLatexEncoder(
@@ -100,7 +100,7 @@ class OrderWithTse(Order):
     tse_signature: Optional[str] = None
     tse_public_key: Optional[str] = None
 
-    @computed_field
+    @computed_field  # type: ignore[misc]
     @property
     def tse_qr_code_text(self) -> str:
         return (

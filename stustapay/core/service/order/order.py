@@ -5,6 +5,7 @@ from typing import Dict, Optional, Set
 from uuid import UUID
 
 import asyncpg
+from pydantic import BaseModel
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import (
@@ -68,7 +69,6 @@ from stustapay.core.service.product import (
     fetch_top_up_product,
 )
 from stustapay.core.service.transaction import book_transaction
-from pydantic import BaseModel
 
 from ...database import Connection
 from ..till.common import fetch_till

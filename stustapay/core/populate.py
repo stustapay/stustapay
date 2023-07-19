@@ -5,6 +5,7 @@ import logging
 import os.path
 
 import asyncpg
+from pydantic import BaseModel
 
 from stustapay.core.config import Config
 from stustapay.core.database import create_db_pool
@@ -12,7 +13,6 @@ from stustapay.core.schema.till import NewCashRegister, NewTill
 from stustapay.core.service.till.register import create_cash_register
 from stustapay.core.service.till.till import create_till
 from stustapay.core.subcommand import SubCommand
-from pydantic import BaseModel
 
 
 class TagSecretSchema(BaseModel):
