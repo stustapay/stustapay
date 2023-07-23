@@ -1,9 +1,8 @@
 import * as React from "react";
-import { Dialog, DialogTitle, DialogContent, Button, DialogActions, ListItem, ListItemText } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, ListItem, ListItemText } from "@mui/material";
 import { NumericInput } from "@stustapay/components";
 import { useTranslation } from "react-i18next";
-import { Account } from "@stustapay/models";
-import { useUpdateVoucherAmountMutation } from "@api";
+import { Account, useUpdateVoucherAmountMutation } from "@api";
 import { toast } from "react-toastify";
 
 export interface EditAccountVoucherAmountModalProps {
@@ -28,7 +27,7 @@ export const EditAccountVoucherAmountModal: React.FC<EditAccountVoucherAmountMod
   }, [account]);
 
   const handleConfirm = () => {
-    updateVoucherAmount({ accountId: account.id, newVoucherAmount: voucherAmount })
+    updateVoucherAmount({ accountId: account.id, updateVoucherAmountPayload: { new_voucher_amount: voucherAmount } })
       .unwrap()
       .then(() => {
         handleClose();

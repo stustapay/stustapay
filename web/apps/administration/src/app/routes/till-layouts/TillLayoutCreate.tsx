@@ -21,7 +21,7 @@ export const TillLayoutCreate: React.FC = () => {
       submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillLayoutSchema}
-      onSubmit={createLayout}
+      onSubmit={(layout) => createLayout({ newTillLayout: layout })}
     />
   );
 };

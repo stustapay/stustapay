@@ -1,21 +1,20 @@
-import { Paper, ListItem, IconButton, ListItemText, List, Checkbox, Tooltip, Box, Button, Stack } from "@mui/material";
+import { Box, Button, Checkbox, IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink, OrderTable } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import {
-  useGetTillByIdQuery,
-  useDeleteTillMutation,
-  useLogoutTillMutation,
-  selectTillById,
-  useGetOrderByTillQuery,
   selectOrderAll,
-  selectUserById,
-  useGetUsersQuery,
-  useForceLogoutUserMutation,
-  useGetTillProfilesQuery,
   selectTillProfileById,
+  selectUserById,
+  useDeleteTillMutation,
+  useForceLogoutUserMutation,
+  useGetTillQuery,
+  useListOrdersByTillQuery,
+  useListTillProfilesQuery,
+  useListUsersQuery,
+  useLogoutTillMutation,
 } from "@api";
 import { Loading } from "@stustapay/components";
 import QRCode from "react-qr-code";
@@ -37,20 +36,18 @@ export const TillDetail: React.FC = () => {
   const [forceLogoutUser] = useForceLogoutUserMutation();
   const [deleteTill] = useDeleteTillMutation();
   const [logoutTill] = useLogoutTillMutation();
-  const { till, error: tillError } = useGetTillByIdQuery(Number(tillId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      till: data ? selectTillById(data, Number(tillId)) : undefined,
-    }),
-  });
-  const { orders, error: orderError } = useGetOrderByTillQuery(Number(tillId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      orders: data ? selectOrderAll(data) : undefined,
-    }),
-  });
-  const { data: profiles, error: profileError } = useGetTillProfilesQuery();
-  const { data: users, error: userError } = useGetUsersQuery();
+  const { data: till, error: tillError } = useGetTillQuery({ tillId: Number(tillId) });
+  const { orders, error: orderError } = useListOrdersByTillQuery(
+    { tillId: Number(tillId) },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        orders: data ? selectOrderAll(data) : undefined,
+      }),
+    }
+  );
+  const { data: profiles, error: profileError } = useListTillProfilesQuery();
+  const { data: users, error: userError } = useListUsersQuery();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (tillError || orderError || userError || profileError) {
@@ -64,7 +61,7 @@ export const TillDetail: React.FC = () => {
 
   const handleConfirmDeleteTill: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteTill(Number(tillId)).then(() => navigate("/tills"));
+      deleteTill({ tillId: Number(tillId) }).then(() => navigate("/tills"));
     }
     setShowConfirmDelete(false);
   };
@@ -75,7 +72,7 @@ export const TillDetail: React.FC = () => {
 
   const handleUnregisterTill: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      logoutTill(Number(tillId));
+      logoutTill({ tillId: Number(tillId) });
     }
     setShowUnregisterTillDlg(false);
   };
@@ -116,7 +113,7 @@ export const TillDetail: React.FC = () => {
 
   const handleConfirmForceLogout: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      forceLogoutUser(Number(tillId));
+      forceLogoutUser({ tillId: Number(tillId) });
     }
     setShowForceLogoutDlg(false);
   };
@@ -206,7 +203,17 @@ export const TillDetail: React.FC = () => {
       </Paper>
       {till.registration_uuid != null && (
         <Paper>
-          <Box sx={{ padding: 2, backgroundColor: "white", height: "auto", margin: "0 auto", maxWidth: "20em", width: "100%", mt: 2 }}>
+          <Box
+            sx={{
+              padding: 2,
+              backgroundColor: "white",
+              height: "auto",
+              margin: "0 auto",
+              maxWidth: "20em",
+              width: "100%",
+              mt: 2,
+            }}
+          >
             <QRCode
               size={256}
               style={{ height: "auto", maxWidth: "100%", width: "100%" }}

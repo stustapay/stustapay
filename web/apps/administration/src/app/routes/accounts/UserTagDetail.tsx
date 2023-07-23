@@ -1,13 +1,13 @@
 import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@api";
 import { EditableListItem, ListItemLink } from "@components";
-import { Stack, Paper, ListItem, ListItemText, List } from "@mui/material";
+import { List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DataGridTitle, Loading } from "@stustapay/components";
 import { formatUserTagUid, UserTagDetail as UserTagDetailType } from "@stustapay/models";
 import { ArrayElement, formatDate } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 type History = UserTagDetailType["account_history"];
@@ -19,7 +19,7 @@ export const UserTagDetail: React.FC = () => {
   const navigate = useNavigate();
 
   const [updateComment] = useUpdateUserTagCommentMutation();
-  const { data, error, isLoading } = useGetUserTagDetailQuery(userTagUidHex as string);
+  const { data, error, isLoading } = useGetUserTagDetailQuery({ userTagUidHex: userTagUidHex as string });
 
   if (isLoading || (!data && !error)) {
     return <Loading />;
@@ -50,7 +50,7 @@ export const UserTagDetail: React.FC = () => {
   ];
 
   const handleUpdateComment = (newComment: string) => {
-    updateComment({ userTagUidHex: userTagUidHex as string, comment: newComment });
+    updateComment({ userTagUidHex: userTagUidHex as string, updateCommentPayload: { comment: newComment } });
   };
 
   return (

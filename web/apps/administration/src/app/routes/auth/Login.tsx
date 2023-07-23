@@ -5,7 +5,7 @@ import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, TextField,
 import { z } from "zod";
 import { selectIsAuthenticated, useAppSelector } from "@store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
-import { useLoginMutation } from "@api/authApi";
+import { useLoginMutation } from "@api";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
@@ -39,7 +39,7 @@ export const Login: React.FC = () => {
 
   const handleSubmit = (values: FormSchema, { setSubmitting }: FormikHelpers<FormSchema>) => {
     setSubmitting(true);
-    login({ username: values.username, password: values.password })
+    login({ bodyLoginAuthLoginPost: { username: values.username, password: values.password } })
       .unwrap()
       .then(() => {
         setSubmitting(false);

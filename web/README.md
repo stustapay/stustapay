@@ -8,6 +8,14 @@ Use `npm` to install and update dependencies.
 
 - run `npm install`
 
+## Development
+
+Openapi code generation
+
+```shell
+npx @rtk-query/codegen-openapi openapi-config.ts
+```
+
 ## Running
 
 ### Administration

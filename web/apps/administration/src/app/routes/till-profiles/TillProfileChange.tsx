@@ -1,21 +1,21 @@
 import {
-  Paper,
-  TextField,
   Button,
-  LinearProgress,
-  Typography,
-  FormGroup,
   Checkbox,
   FormControlLabel,
+  FormGroup,
+  LinearProgress,
+  Paper,
+  TextField,
+  Typography,
 } from "@mui/material";
 import * as React from "react";
-import { Formik, Form, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTillProfile } from "@stustapay/models";
+import { NewTillProfile } from "@api";
 import { TillLayoutSelect } from "./TillLayoutSelect";
 import { RoleSelect } from "../users/RoleSelect";
 

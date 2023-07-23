@@ -1,13 +1,13 @@
-import { Paper, Button, LinearProgress, Typography, Alert, Checkbox, FormControlLabel } from "@mui/material";
+import { Alert, Button, Checkbox, FormControlLabel, LinearProgress, Paper, Typography } from "@mui/material";
 import * as React from "react";
-import { Formik, Form, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers } from "formik";
 import { z } from "zod";
 import { PrivilegeSchema } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { useGetUserRolesQuery, useUpdateUserRoleMutation, selectUserRoleById } from "@api";
+import { selectUserRoleById, useListUserRolesQuery, useUpdateUserRoleMutation } from "@api";
 import { Loading } from "@stustapay/components";
 import { PrivilegeSelect } from "./PrivilegeSelect";
 
@@ -23,7 +23,7 @@ export const UserRoleUpdate: React.FC = () => {
   const navigate = useNavigate();
   const { userId } = useParams();
   const [updateUserRole] = useUpdateUserRoleMutation();
-  const { userRole, isLoading } = useGetUserRolesQuery(undefined, {
+  const { userRole, isLoading } = useListUserRolesQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       userRole: data ? selectUserRoleById(data, Number(userId)) : undefined,
@@ -37,7 +37,7 @@ export const UserRoleUpdate: React.FC = () => {
   const handleSubmit = (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
     setSubmitting(true);
 
-    updateUserRole(values)
+    updateUserRole({ userRoleId: Number(userId), updateUserRolePrivilegesPayload: values })
       .unwrap()
       .then(() => {
         setSubmitting(false);

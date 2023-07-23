@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Button, LinearProgress, TextField } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { useChangePasswordMutation } from "@api/authApi";
+import { useChangePasswordMutation } from "@api";
 import i18n from "../../../../i18n";
 
 const validationSchema = z
@@ -34,7 +34,7 @@ export const PasswordChange: React.FC = () => {
 
   const handleSubmit = (values: FormSchema, { setSubmitting }: FormikHelpers<FormSchema>) => {
     setSubmitting(true);
-    changePassword({ oldPassword: values.oldPassword, newPassword: values.newPassword })
+    changePassword({ changePasswordPayload: { old_password: values.oldPassword, new_password: values.newPassword } })
       .unwrap()
       .then(() => {
         toast.success(t("auth.successfullyChangedPassword"));

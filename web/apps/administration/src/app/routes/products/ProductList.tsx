@@ -1,11 +1,11 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, Tooltip, Link, Stack } from "@mui/material";
+import { Link, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
   Add as AddIcon,
   ContentCopy as ContentCopyIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
   Lock as LockIcon,
 } from "@mui/icons-material";
 import {
@@ -13,14 +13,14 @@ import {
   selectTaxRateById,
   useCreateProductMutation,
   useDeleteProductMutation,
-  useGetProductsQuery,
-  useGetTaxRatesQuery,
-  useLockProductMutation,
+  useListProductsQuery,
+  useListTaxRatesQuery,
+  useUpdateProductMutation,
 } from "@api";
 import { useTranslation } from "react-i18next";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
+import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Product } from "@stustapay/models";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "src/hooks";
 
@@ -29,16 +29,16 @@ export const ProductList: React.FC = () => {
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { products, isLoading: isProductsLoading } = useGetProductsQuery(undefined, {
+  const { products, isLoading: isProductsLoading } = useListProductsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       products: data ? selectProductAll(data) : undefined,
     }),
   });
-  const { data: taxRates, isLoading: isTaxRatesLoading } = useGetTaxRatesQuery();
+  const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery();
   const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
-  const [lockProduct] = useLockProductMutation();
+  const [updateProduct] = useUpdateProductMutation();
 
   const [productToDelete, setProductToDelete] = React.useState<number | null>(null);
   if (isProductsLoading || isTaxRatesLoading) {
@@ -61,6 +61,9 @@ export const ProductList: React.FC = () => {
       </Tooltip>
     );
   };
+  const handleLockProduct = (product: Product) => {
+    updateProduct({ productId: product.id, newProduct: { ...product, is_locked: true } });
+  };
 
   const openConfirmDeleteDialog = (productId: number) => {
     setProductToDelete(productId);
@@ -68,7 +71,7 @@ export const ProductList: React.FC = () => {
 
   const handleConfirmDeleteProduct: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && productToDelete !== null) {
-      deleteProduct(productToDelete)
+      deleteProduct({ productId: productToDelete })
         .unwrap()
         .catch(() => undefined);
     }
@@ -76,7 +79,7 @@ export const ProductList: React.FC = () => {
   };
 
   const copyProduct = (product: Product) => {
-    createProduct({ ...product, name: `${product.name} - ${t("copy")}` });
+    createProduct({ newProduct: { ...product, name: `${product.name} - ${t("copy")}` } });
   };
 
   const columns: GridColDef<Product>[] = [
@@ -151,7 +154,7 @@ export const ProductList: React.FC = () => {
           color="primary"
           disabled={params.row.is_locked}
           label={t("product.lock")}
-          onClick={() => lockProduct(params.row)}
+          onClick={() => handleLockProduct(params.row)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}

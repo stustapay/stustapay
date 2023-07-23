@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Paper, Button, Typography, ListItem, ListItemText, Link, Stack } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { selectUserAll, useDeleteUserMutation, useGetUsersQuery } from "@api";
+import { Button, Link, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { selectUserAll, useDeleteUserMutation, useListUsersQuery } from "@api";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { formatUserTagUid, User } from "@stustapay/models";
 import { ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Loading } from "@stustapay/components";
@@ -13,7 +13,7 @@ export const UserList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { users, isLoading } = useGetUsersQuery(undefined, {
+  const { users, isLoading } = useListUsersQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       users: data ? selectUserAll(data) : undefined,
@@ -36,7 +36,7 @@ export const UserList: React.FC = () => {
 
   const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && userToDelete !== null) {
-      deleteUser(userToDelete)
+      deleteUser({ userId: userToDelete })
         .unwrap()
         .catch(() => undefined);
     }

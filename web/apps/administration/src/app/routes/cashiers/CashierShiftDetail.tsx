@@ -1,10 +1,9 @@
 import {
-  selectCashierById,
   selectCashierShiftById,
   selectUserById,
-  useGetCashierByIdQuery,
+  useGetCashierQuery,
   useGetCashierShiftsQuery,
-  useGetUsersQuery,
+  useListUsersQuery,
 } from "@api";
 import { useCurrencyFormatter } from "@hooks";
 import { List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
@@ -20,19 +19,17 @@ export const CashierShiftDetail: React.FC = () => {
   const { cashierId, shiftId } = useParams();
   const formatCurrency = useCurrencyFormatter();
 
-  const { cashier } = useGetCashierByIdQuery(Number(cashierId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      cashier: data ? selectCashierById(data, Number(cashierId)) : undefined,
-    }),
-  });
-  const { cashierShift } = useGetCashierShiftsQuery(Number(cashierId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      cashierShift: data ? selectCashierShiftById(data, Number(shiftId)) : undefined,
-    }),
-  });
-  const { data: users } = useGetUsersQuery();
+  const { data: cashier } = useGetCashierQuery({ cashierId: Number(cashierId) });
+  const { cashierShift } = useGetCashierShiftsQuery(
+    { cashierId: Number(cashierId) },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        cashierShift: data ? selectCashierShiftById(data, Number(shiftId)) : undefined,
+      }),
+    }
+  );
+  const { data: users } = useListUsersQuery();
 
   if (cashierShift === undefined || cashier === undefined || users === undefined) {
     return <Loading />;

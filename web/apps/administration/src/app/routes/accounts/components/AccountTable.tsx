@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Account, formatUserTagUid } from "@stustapay/models";
+import { formatUserTagUid } from "@stustapay/models";
+import { Account } from "@api";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";

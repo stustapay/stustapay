@@ -25,16 +25,16 @@ export type TillButton = z.infer<typeof TillButtonSchema>;
 
 export const NewTillLayoutSchema = z.object({
   name: z.string(),
-  description: z.string().nullable().optional(),
-  button_ids: z.array(z.number().int()).nullable(),
-  ticket_ids: z.array(z.number().int()).nullable(),
+  description: z.string(),
+  button_ids: z.array(z.number().int()).nullable().optional(),
+  ticket_ids: z.array(z.number().int()).nullable().optional(),
 });
 
 export type NewTillLayout = z.infer<typeof NewTillLayoutSchema>;
 
 export const TillLayoutSchema = NewTillLayoutSchema.merge(
   z.object({
-    id: z.number(),
+    id: z.number().int(),
   })
 );
 export type TillLayout = z.infer<typeof TillLayoutSchema>;
@@ -87,21 +87,21 @@ export type Till = z.infer<typeof TillSchema>;
 
 export const NewTillRegisterStockingSchema = z.object({
   name: z.string(),
-  euro200: z.number().int(),
-  euro100: z.number().int(),
-  euro50: z.number().int(),
-  euro20: z.number().int(),
-  euro10: z.number().int(),
-  euro5: z.number().int(),
-  euro2: z.number().int(),
-  euro1: z.number().int(),
-  cent50: z.number().int(),
-  cent20: z.number().int(),
-  cent10: z.number().int(),
-  cent5: z.number().int(),
-  cent2: z.number().int(),
-  cent1: z.number().int(),
-  variable_in_euro: z.number(),
+  euro200: z.number().int().optional(),
+  euro100: z.number().int().optional(),
+  euro50: z.number().int().optional(),
+  euro20: z.number().int().optional(),
+  euro10: z.number().int().optional(),
+  euro5: z.number().int().optional(),
+  euro2: z.number().int().optional(),
+  euro1: z.number().int().optional(),
+  cent50: z.number().int().optional(),
+  cent20: z.number().int().optional(),
+  cent10: z.number().int().optional(),
+  cent5: z.number().int().optional(),
+  cent2: z.number().int().optional(),
+  cent1: z.number().int().optional(),
+  variable_in_euro: z.number().optional(),
 });
 
 export type NewTillRegisterStocking = z.infer<typeof NewTillRegisterStockingSchema>;

@@ -44,7 +44,7 @@ export type UserRole = z.infer<typeof UserRoleSchema>;
 
 export const NewUserSchema = z.object({
   login: z.string().min(1),
-  display_name: z.string().optional(),
+  display_name: z.string(),
   description: z.string().optional(),
   role_names: z.array(z.string()),
   password: z.string().optional().nullable(),
@@ -59,7 +59,7 @@ export type NewUser = z.infer<typeof NewUserSchema>;
 export const UserSchema = z.object({
   id: z.number(),
   login: z.string().min(1),
-  display_name: z.string().optional(),
+  display_name: z.string(),
   description: z.string().optional().nullable(),
   // user_tag_uid: z.bigint().optional().nullable(),
   user_tag_uid_hex: z.string().optional().nullable(),

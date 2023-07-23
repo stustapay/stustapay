@@ -1,22 +1,24 @@
+import argparse
 import asyncio
+import json
 import logging
 
 from stustapay.core import database
 from stustapay.core.config import Config
+from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.user import AuthService
 from stustapay.core.subcommand import SubCommand
-
-from ..core.healthcheck import run_healthcheck
 from .routers import auth, base, sumup
 
 
 class Api(SubCommand):
     def __init__(self, args, config: Config, **rest):
-        del args, rest  # unused
+        del rest  # unused
+        self.args = args
 
         self.cfg = config
         self.dbpool = None
@@ -33,7 +35,18 @@ class Api(SubCommand):
         self.server.add_router(base.router)
         self.server.add_router(sumup.router)
 
+    @staticmethod
+    def argparse_register(subparser: argparse.ArgumentParser):
+        subparser.add_argument(
+            "--show-openapi",
+            action="store_true",
+        )
+
     async def run(self):
+        if self.args.show_openapi:
+            print(json.dumps(self.server.get_openapi_spec()))
+            return
+
         db_pool = await self.server.db_connect(self.cfg.database)
         await database.check_revision_version(db_pool)
 

@@ -16,7 +16,7 @@ const initialValues: NewTillProfile = {
 
 export const TillProfileCreate: React.FC = () => {
   const { t } = useTranslation();
-  const [createLayout] = useCreateTillProfileMutation();
+  const [createProfile] = useCreateTillProfileMutation();
 
   return (
     <TillProfileChange
@@ -24,7 +24,7 @@ export const TillProfileCreate: React.FC = () => {
       submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillProfileSchema}
-      onSubmit={createLayout}
+      onSubmit={(profile) => createProfile({ newTillProfile: profile })}
     />
   );
 };

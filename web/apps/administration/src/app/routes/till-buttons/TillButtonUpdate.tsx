@@ -1,6 +1,6 @@
-import { useUpdateTillButtonMutation, useGetTillButtonByIdQuery, selectTillButtonById } from "@api";
+import { useGetTillButtonQuery, useUpdateTillButtonMutation } from "@api";
 import * as React from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Loading } from "@stustapay/components";
 import { TillButtonChange } from "./TillButtonChange";
@@ -9,12 +9,7 @@ import { UpdateTillButtonSchema } from "@stustapay/models";
 export const TillButtonUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { buttonId } = useParams();
-  const { button, isLoading, error } = useGetTillButtonByIdQuery(Number(buttonId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      button: data ? selectTillButtonById(data, Number(buttonId)) : undefined,
-    }),
-  });
+  const { data: button, isLoading, error } = useGetTillButtonQuery({ buttonId: Number(buttonId) });
   const [updateButton] = useUpdateTillButtonMutation();
 
   if (error) {
@@ -31,7 +26,7 @@ export const TillButtonUpdate: React.FC = () => {
       submitLabel={t("update")}
       initialValues={button}
       validationSchema={UpdateTillButtonSchema}
-      onSubmit={updateButton}
+      onSubmit={(button) => updateButton({ buttonId: button.id, newTillButton: button })}
     />
   );
 };

@@ -1,12 +1,12 @@
-import { Paper, TextField, Button, LinearProgress, Typography, Alert } from "@mui/material";
+import { Alert, Button, LinearProgress, Paper, TextField, Typography } from "@mui/material";
 import * as React from "react";
-import { Formik, Form, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers } from "formik";
 import { User, UserSchema } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { useGetUserByIdQuery, useUpdateUserMutation, selectUserById } from "@api";
+import { useGetUserQuery, useUpdateUserMutation } from "@api";
 import { Loading } from "@stustapay/components";
 import { RoleSelect } from "./RoleSelect";
 
@@ -15,12 +15,7 @@ export const UserUpdate: React.FC = () => {
   const navigate = useNavigate();
   const { userId } = useParams();
   const [updateUser] = useUpdateUserMutation();
-  const { user, isLoading } = useGetUserByIdQuery(Number(userId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      user: data ? selectUserById(data, Number(userId)) : undefined,
-    }),
-  });
+  const { data: user, isLoading } = useGetUserQuery({ userId: Number(userId) });
 
   if (isLoading) {
     return <Loading />;
@@ -29,7 +24,7 @@ export const UserUpdate: React.FC = () => {
   const handleSubmit = (values: User, { setSubmitting }: FormikHelpers<User>) => {
     setSubmitting(true);
 
-    updateUser(values)
+    updateUser({ userId: Number(userId), updateUserPayload: values })
       .unwrap()
       .then(() => {
         setSubmitting(false);

@@ -1,19 +1,18 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, Typography, Stack } from "@mui/material";
+import { List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Stack, Typography } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import {
-  selectCashierById,
-  useGetCashierByIdQuery,
-  selectTillById,
-  useGetTillsQuery,
-  useGetCashierShiftsQuery,
-  selectUserById,
-  useGetUsersQuery,
   selectCashierShiftAll,
-  useGetTillRegistersQuery,
+  selectTillById,
   selectTillRegisterById,
+  selectUserById,
+  useGetCashierQuery,
+  useGetCashierShiftsQuery,
+  useListCashRegistersAdminQuery,
+  useListTillsQuery,
+  useListUsersQuery,
 } from "@api";
 import { Loading } from "@stustapay/components";
 import { ButtonLink, IconButtonLink, ListItemLink } from "@components";
@@ -29,25 +28,23 @@ export const CashierDetail: React.FC = () => {
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { cashier, error, isLoading } = useGetCashierByIdQuery(Number(cashierId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      cashier: data ? selectCashierById(data, Number(cashierId)) : undefined,
-    }),
-  });
+  const { data: cashier, error, isLoading } = useGetCashierQuery({ cashierId: Number(cashierId) });
   const {
     cashierShifts,
     error: shiftsError,
     isLoading: isShiftsLoading,
-  } = useGetCashierShiftsQuery(Number(cashierId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      cashierShifts: data ? selectCashierShiftAll(data) : undefined,
-    }),
-  });
-  const { data: tills, isLoading: isTillsLoading, error: tillError } = useGetTillsQuery();
-  const { data: users, isLoading: isUsersLoading, error: userError } = useGetUsersQuery();
-  const { data: registers, isLoading: isRegistersLoading, error: registerError } = useGetTillRegistersQuery();
+  } = useGetCashierShiftsQuery(
+    { cashierId: Number(cashierId) },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        cashierShifts: data ? selectCashierShiftAll(data) : undefined,
+      }),
+    }
+  );
+  const { data: tills, isLoading: isTillsLoading, error: tillError } = useListTillsQuery();
+  const { data: users, isLoading: isUsersLoading, error: userError } = useListUsersQuery();
+  const { data: registers, isLoading: isRegistersLoading, error: registerError } = useListCashRegistersAdminQuery();
 
   if (error || tillError || shiftsError || userError || registerError) {
     navigate(-1);

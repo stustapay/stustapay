@@ -1,11 +1,10 @@
 import * as React from "react";
-import { Paper, Button, Typography, ListItem, ListItemText, Stack } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { selectUserRoleAll, useDeleteUserRoleMutation, useGetUserRolesQuery } from "@api";
+import { Button, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { selectUserRoleAll, useDeleteUserRoleMutation, useListUserRolesQuery, UserRole } from "@api";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { UserRole } from "@stustapay/models";
 import { ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Loading } from "@stustapay/components";
 
@@ -13,7 +12,7 @@ export const UserRoleList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { userRoles, isLoading } = useGetUserRolesQuery(undefined, {
+  const { userRoles, isLoading } = useListUserRolesQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       userRoles: data ? selectUserRoleAll(data) : undefined,
@@ -36,7 +35,7 @@ export const UserRoleList: React.FC = () => {
 
   const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && userRoleToDelete !== null) {
-      deleteUserRole(userRoleToDelete)
+      deleteUserRole({ userRoleId: userRoleToDelete })
         .unwrap()
         .catch(() => undefined);
     }

@@ -4,7 +4,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { useCurrencyFormatter } from "@hooks";
-import { Order } from "@stustapay/models";
+import { Order } from "@api";
 import { DataGridTitle } from "@stustapay/components";
 import { formatDate } from "@stustapay/utils";
 

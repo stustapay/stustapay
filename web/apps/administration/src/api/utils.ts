@@ -1,5 +1,12 @@
 import { EntitySelectors, EntityState } from "@reduxjs/toolkit";
 
+export const generateCacheKeys = <T extends { ids: (string | number)[] }, Key extends string>(
+  keyName: Key,
+  result?: T
+) => {
+  return result ? [...result.ids.map((id) => ({ type: keyName, id })), keyName] : [keyName];
+};
+
 const capitalize = <S extends string>(val: S): Capitalize<S> => {
   return (val.charAt(0).toUpperCase() + val.slice(1)) as Capitalize<S>;
 };

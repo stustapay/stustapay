@@ -1,4 +1,4 @@
-import { useGetConfigEntriesQuery, useSetConfigEntryMutation, selectConfigEntryAll } from "@api";
+import { selectConfigEntryAll, useListConfigEntriesQuery, useSetConfigEntryMutation } from "@api";
 import { EditableListItem, ThemeSelect } from "@components";
 import { Loading } from "@stustapay/components";
 import { List, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 
 const ServerSideSettings: React.FC = () => {
   const { t } = useTranslation();
-  const { data: configEntries } = useGetConfigEntriesQuery();
+  const { data: configEntries } = useListConfigEntriesQuery();
   const [updateConfigEntry] = useSetConfigEntryMutation();
 
   if (!configEntries) {
@@ -17,7 +17,7 @@ const ServerSideSettings: React.FC = () => {
   }
 
   const changeConfigEntry = (key: string, value: string) => {
-    updateConfigEntry({ key, value })
+    updateConfigEntry({ configEntry: { key, value } })
       .unwrap()
       .catch((err) => {
         toast.error(t("settings.settingsUpdateError", { what: err.error }));

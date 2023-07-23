@@ -1,13 +1,13 @@
 import {
-  Select,
-  MenuItem,
   FormControl,
+  FormHelperText,
   InputLabel,
+  MenuItem,
+  Select,
   SelectChangeEvent,
   SelectProps,
-  FormHelperText,
 } from "@mui/material";
-import { useGetTillProfilesQuery, selectTillProfileAll } from "@api";
+import { selectTillProfileAll, useListTillProfilesQuery } from "@api";
 import * as React from "react";
 
 export interface TillProfileSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
@@ -27,7 +27,7 @@ export const TillProfileSelect: React.FC<TillProfileSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { profiles } = useGetTillProfilesQuery(undefined, {
+  const { profiles } = useListTillProfilesQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       profiles: data ? selectTillProfileAll(data) : [],

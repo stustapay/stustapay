@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, Stack } from "@mui/material";
-import { selectOrderAll, useGetOrdersQuery } from "@api";
+import { ListItem, ListItemText, Paper, Stack } from "@mui/material";
+import { selectOrderAll, useListOrdersQuery } from "@api";
 import { useTranslation } from "react-i18next";
 import { Loading } from "@stustapay/components";
 import { OrderTable } from "@components";
@@ -8,12 +8,15 @@ import { OrderTable } from "@components";
 export const OrderList: React.FC = () => {
   const { t } = useTranslation();
 
-  const { products: orders, isLoading: isOrdersLoading } = useGetOrdersQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      products: data ? selectOrderAll(data) : undefined,
-    }),
-  });
+  const { orders, isLoading: isOrdersLoading } = useListOrdersQuery(
+    {},
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        orders: data ? selectOrderAll(data) : undefined,
+      }),
+    }
+  );
 
   if (isOrdersLoading) {
     return <Loading />;

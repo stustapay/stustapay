@@ -1,7 +1,7 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, TextField, Button, LinearProgress, Stack } from "@mui/material";
+import { Button, LinearProgress, ListItem, ListItemText, Paper, Stack, TextField } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { useFindAccountsMutation } from "@api";
+import { selectAccountAll, useFindAccountsMutation } from "@api";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { Form, Formik, FormikHelpers } from "formik";
@@ -24,7 +24,7 @@ export const FindAccounts: React.FC = () => {
 
   const handleSubmit = (values: SearchForm, { setSubmitting }: FormikHelpers<SearchForm>) => {
     setSubmitting(true);
-    findAccounts(values.searchTerm)
+    findAccounts({ findAccountPayload: { search_term: values.searchTerm } })
       .unwrap()
       .then(() => {
         setSubmitting(false);
@@ -64,7 +64,7 @@ export const FindAccounts: React.FC = () => {
           )}
         </Formik>
       </Paper>
-      {searchResult.data && <AccountTable accounts={searchResult.data} />}
+      {searchResult.data && <AccountTable accounts={selectAccountAll(searchResult.data)} />}
     </Stack>
   );
 };

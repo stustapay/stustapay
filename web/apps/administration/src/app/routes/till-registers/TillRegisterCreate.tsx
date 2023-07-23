@@ -1,8 +1,8 @@
 import * as React from "react";
-import { NewTillRegisterSchema, NewTillRegister } from "@stustapay/models";
+import { NewTillRegister, NewTillRegisterSchema } from "@stustapay/models";
 import { useTranslation } from "react-i18next";
 import { TillRegisterChange } from "./TillRegisterChange";
-import { useCreateTillRegisterMutation } from "@api/tillRegisterApi";
+import { useCreateRegisterMutation } from "@api";
 
 const initialValues: NewTillRegister = {
   name: "",
@@ -10,7 +10,7 @@ const initialValues: NewTillRegister = {
 
 export const TillRegisterCreate: React.FC = () => {
   const { t } = useTranslation();
-  const [createRegister] = useCreateTillRegisterMutation();
+  const [createRegister] = useCreateRegisterMutation();
 
   return (
     <TillRegisterChange
@@ -18,7 +18,7 @@ export const TillRegisterCreate: React.FC = () => {
       submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillRegisterSchema}
-      onSubmit={createRegister}
+      onSubmit={(register) => createRegister({ newCashRegister: register })}
     />
   );
 };

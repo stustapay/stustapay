@@ -1,7 +1,7 @@
-import { MenuItem, Paper, Select, Stack, Typography, FormControl, InputLabel, Box, Link } from "@mui/material";
+import { Box, FormControl, InputLabel, Link, MenuItem, Paper, Select, Stack, Typography } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { selectTillAll, useGetProductStatsQuery, useGetTillsQuery, ProductSoldStats } from "@api";
+import { ProductSoldStats, selectTillAll, useGetProductStatsQuery, useListTillsQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Link as RouterLink } from "react-router-dom";
@@ -18,7 +18,7 @@ export const TillStatsTable: React.FC<TillStatsTableProps> = ({ toTimestamp, fro
     toTimestamp: toTimestamp,
   });
   const [selectedTill, setSelectedTill] = React.useState<number | null>(null);
-  const { data: tills } = useGetTillsQuery();
+  const { data: tills } = useListTillsQuery();
 
   if (!data || !tills) {
     return <Loading />;

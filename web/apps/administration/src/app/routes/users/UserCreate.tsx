@@ -1,6 +1,6 @@
-import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
+import { Button, LinearProgress, Paper, TextField, Typography } from "@mui/material";
 import * as React from "react";
-import { Formik, Form, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers } from "formik";
 import { NewUser, NewUserSchema } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +25,7 @@ export const UserCreate: React.FC = () => {
   const handleSubmit = (values: NewUser, { setSubmitting }: FormikHelpers<NewUser>) => {
     setSubmitting(true);
 
-    createUser(values)
+    createUser({ createUserPayload: values })
       .unwrap()
       .then(() => {
         setSubmitting(false);

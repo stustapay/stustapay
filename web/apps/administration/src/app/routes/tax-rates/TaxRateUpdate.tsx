@@ -1,7 +1,7 @@
-import { useUpdateTaxRateMutation, useGetTaxRateByNameQuery, selectTaxRateById } from "@api";
+import { useGetTaxRateQuery, useUpdateTaxRateMutation } from "@api";
 import * as React from "react";
 import { TaxRateSchema } from "@stustapay/models";
-import { useParams, Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TaxRateChange } from "./TaxRateChange";
 import { Loading } from "@stustapay/components";
@@ -9,12 +9,7 @@ import { Loading } from "@stustapay/components";
 export const TaxRateUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { taxRateName } = useParams();
-  const { taxRate, isLoading, error } = useGetTaxRateByNameQuery(taxRateName as string, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      taxRate: data ? selectTaxRateById(data, taxRateName as string) : undefined,
-    }),
-  });
+  const { data: taxRate, isLoading, error } = useGetTaxRateQuery({ taxRateName: taxRateName as string });
   const [updateTaxRate] = useUpdateTaxRateMutation();
 
   if (error) {
@@ -31,7 +26,7 @@ export const TaxRateUpdate: React.FC = () => {
       submitLabel={t("update")}
       initialValues={taxRate}
       validationSchema={TaxRateSchema}
-      onSubmit={updateTaxRate}
+      onSubmit={(taxRate) => updateTaxRate({ taxRateName: taxRate.name, taxRateWithoutName: taxRate })}
     />
   );
 };

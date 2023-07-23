@@ -21,13 +21,13 @@ class ProductRestriction(enum.Enum):
 class NewProduct(BaseModel):
     name: str
     price: Optional[float]
-    fixed_price: bool = True
+    fixed_price: bool
     price_in_vouchers: Optional[int] = None
     price_per_voucher: Optional[float] = None
     tax_name: str
-    restrictions: list[ProductRestriction] = []
-    is_locked: bool = False
-    is_returnable: bool = False
+    restrictions: list[ProductRestriction]
+    is_locked: bool
+    is_returnable: bool
 
     target_account_id: Optional[int] = None
 

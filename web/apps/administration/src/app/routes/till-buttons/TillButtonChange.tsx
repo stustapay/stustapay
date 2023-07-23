@@ -1,24 +1,23 @@
 import {
-  Paper,
-  TextField,
   Button,
+  IconButton,
   LinearProgress,
-  Typography,
   List,
   ListItem,
-  ListItemText,
   ListItemSecondaryAction,
-  IconButton,
+  ListItemText,
+  Paper,
+  TextField,
+  Typography,
 } from "@mui/material";
 import * as React from "react";
-import { Formik, Form, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTillButton, Product } from "@stustapay/models";
-import { selectProductById, useGetProductsQuery } from "@api";
+import { NewTillButton, Product, selectProductById, useListProductsQuery } from "@api";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { ProductSelect } from "@components";
 
@@ -29,7 +28,7 @@ interface ProductSelectProps {
 
 const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }) => {
   const { t } = useTranslation();
-  const { data: products } = useGetProductsQuery();
+  const { data: products } = useListProductsQuery();
 
   const getProductById = (id: number) => (products != null ? selectProductById(products, id) : undefined);
   const mapped = products ? (productIds.map((id) => getProductById(id)) as Product[]) : [];

@@ -1,18 +1,14 @@
 import * as React from "react";
 
-import { Paper, Typography, ListItem, ListItemText, Stack } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import { ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
+import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { useNavigate } from "react-router-dom";
 import { TillRegisterStocking } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
-import {
-  selectTillRegisterStockingAll,
-  useDeleteTillRegisterStockingMutation,
-  useGetTillRegisterStockingsQuery,
-} from "@api";
+import { selectTillRegisterStockingAll, useDeleteRegisterStockingMutation, useListRegisterStockingsQuery } from "@api";
 import { useCurrencyFormatter } from "@hooks";
 
 export const TillRegisterStockingList: React.FC = () => {
@@ -20,13 +16,13 @@ export const TillRegisterStockingList: React.FC = () => {
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { stockings, isLoading } = useGetTillRegisterStockingsQuery(undefined, {
+  const { stockings, isLoading } = useListRegisterStockingsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       stockings: data ? selectTillRegisterStockingAll(data) : undefined,
     }),
   });
-  const [deleteStocking] = useDeleteTillRegisterStockingMutation();
+  const [deleteStocking] = useDeleteRegisterStockingMutation();
 
   const [stockingToDelete, setStockingToDelete] = React.useState<number | null>(null);
   if (isLoading) {
@@ -39,7 +35,7 @@ export const TillRegisterStockingList: React.FC = () => {
 
   const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && stockingToDelete !== null) {
-      deleteStocking(stockingToDelete)
+      deleteStocking({ stockingId: stockingToDelete })
         .unwrap()
         .catch(() => undefined);
     }

@@ -1,14 +1,14 @@
-import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
+import { Button, LinearProgress, Paper, TextField, Typography } from "@mui/material";
 import * as React from "react";
-import { Formik, Form, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTillRegister } from "@stustapay/models";
+import { NewCashRegister } from "@api";
 
-export interface TillRegisterChangeProps<T extends NewTillRegister> {
+export interface TillRegisterChangeProps<T extends NewCashRegister> {
   headerTitle: string;
   submitLabel: string;
   initialValues: T;
@@ -17,7 +17,7 @@ export interface TillRegisterChangeProps<T extends NewTillRegister> {
   onSubmit: (t: T) => MutationActionCreatorResult<any>;
 }
 
-export function TillRegisterChange<T extends NewTillRegister>({
+export function TillRegisterChange<T extends NewCashRegister>({
   headerTitle,
   submitLabel,
   initialValues,

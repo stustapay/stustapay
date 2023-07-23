@@ -10,7 +10,7 @@ export const NewProductSchema = z.object({
   name: z.string().min(1),
   price: z.number().nullable(),
   fixed_price: z.boolean(),
-  price_in_vouchers: z.number().nullable(),
+  price_in_vouchers: z.number().optional().nullable(),
   restrictions: z.array(ProductRestrictionSchema),
   is_locked: z.boolean(),
   is_returnable: z.boolean(),

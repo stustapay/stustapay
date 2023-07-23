@@ -1,13 +1,13 @@
 import {
-  Select,
-  MenuItem,
   FormControl,
+  FormHelperText,
   InputLabel,
+  MenuItem,
+  Select,
   SelectChangeEvent,
   SelectProps,
-  FormHelperText,
 } from "@mui/material";
-import { useGetTaxRatesQuery, selectTaxRateAll } from "@api";
+import { selectTaxRateAll, useListTaxRatesQuery } from "@api";
 import * as React from "react";
 
 export interface TaxRateSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
@@ -27,7 +27,7 @@ export const TaxRateSelect: React.FC<TaxRateSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { taxRates } = useGetTaxRatesQuery(undefined, {
+  const { taxRates } = useListTaxRatesQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       taxRates: data ? selectTaxRateAll(data) : [],

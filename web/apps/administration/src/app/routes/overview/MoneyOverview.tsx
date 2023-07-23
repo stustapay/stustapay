@@ -1,8 +1,8 @@
-import { selectAccountById, useGetSystemAccountsQuery } from "@api";
+import { Account, selectAccountById, useListSystemAccountsQuery } from "@api";
 import { Card, CardActions, CardContent, Grid, Typography } from "@mui/material";
 import * as React from "react";
 import { Loading } from "@stustapay/components";
-import { Account, SystemAccounts } from "@stustapay/models";
+import { SystemAccounts } from "@stustapay/models";
 import { useCurrencyFormatter } from "@hooks";
 import { ButtonLink } from "@components";
 import { useTranslation } from "react-i18next";
@@ -49,7 +49,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
 };
 
 export const MoneyOverview: React.FC = () => {
-  const { data, isLoading: isAccountsLoading } = useGetSystemAccountsQuery();
+  const { data, isLoading: isAccountsLoading } = useListSystemAccountsQuery();
 
   if (!data || isAccountsLoading) {
     return <Loading />;

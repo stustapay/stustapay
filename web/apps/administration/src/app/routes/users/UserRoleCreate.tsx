@@ -1,6 +1,6 @@
-import { Paper, TextField, Button, LinearProgress, Typography, FormControlLabel, Checkbox } from "@mui/material";
+import { Button, Checkbox, FormControlLabel, LinearProgress, Paper, TextField, Typography } from "@mui/material";
 import * as React from "react";
-import { Formik, Form, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers } from "formik";
 import { NewUserRole, NewUserRoleSchema } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +23,7 @@ export const UserRoleCreate: React.FC = () => {
   const handleSubmit = (values: NewUserRole, { setSubmitting }: FormikHelpers<NewUserRole>) => {
     setSubmitting(true);
 
-    createUserRole(values)
+    createUserRole({ newUserRole: values })
       .unwrap()
       .then(() => {
         setSubmitting(false);

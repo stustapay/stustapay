@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextAccountService
+from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.account import Account, UserTagDetail
 
 router = APIRouter(
@@ -14,18 +15,18 @@ router = APIRouter(
 )
 
 
-@router.get("/system-accounts", response_model=list[Account])
+@router.get("/system-accounts", response_model=NormalizedList[Account, int])
 async def list_system_accounts(token: CurrentAuthToken, account_service: ContextAccountService):
-    return await account_service.list_system_accounts(token=token)
+    return normalize_list(await account_service.list_system_accounts(token=token))
 
 
 class FindAccountPayload(BaseModel):
     search_term: str
 
 
-@router.post("/accounts/find-accounts", response_model=list[Account])
+@router.post("/accounts/find-accounts", response_model=NormalizedList[Account, int])
 async def find_accounts(token: CurrentAuthToken, account_service: ContextAccountService, payload: FindAccountPayload):
-    return await account_service.find_accounts(token=token, search_term=payload.search_term)
+    return normalize_list(await account_service.find_accounts(token=token, search_term=payload.search_term))
 
 
 @router.get("/accounts/{account_id}", response_model=Account)

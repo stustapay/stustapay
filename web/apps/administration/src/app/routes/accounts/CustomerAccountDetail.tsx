@@ -1,13 +1,12 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List, ListItemSecondaryAction, IconButton, Button, Stack } from "@mui/material";
+import { Button, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import {
-  selectAccountById,
   selectOrderAll,
   useDisableAccountMutation,
-  useGetAccountByIdQuery,
-  useGetOrderByCustomerQuery,
+  useGetAccountQuery,
+  useListOrdersQuery,
   useUpdateAccountCommentMutation,
 } from "@api";
 import { Loading } from "@stustapay/components";
@@ -34,26 +33,20 @@ export const CustomerAccountDetail: React.FC = () => {
   const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
   const [tagModalOpen, setTagModalOpen] = React.useState(false);
 
-  const {
-    account,
-    error,
-    isLoading: isAccountLoading,
-  } = useGetAccountByIdQuery(Number(accountId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      account: data ? selectAccountById(data, Number(accountId)) : undefined,
-    }),
-  });
+  const { data: account, error, isLoading: isAccountLoading } = useGetAccountQuery({ accountId: Number(accountId) });
   const {
     orders,
     error: orderError,
     isLoading: isOrdersLoading,
-  } = useGetOrderByCustomerQuery(Number(accountId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      orders: data ? selectOrderAll(data) : undefined,
-    }),
-  });
+  } = useListOrdersQuery(
+    { customerAccountId: Number(accountId) },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        orders: data ? selectOrderAll(data) : undefined,
+      }),
+    }
+  );
 
   if (isAccountLoading || isOrdersLoading || (!account && !error) || (!orders && !orderError)) {
     return <Loading />;
@@ -78,7 +71,7 @@ export const CustomerAccountDetail: React.FC = () => {
   };
 
   const handleUpdateComment = (newComment: string) => {
-    updateComment({ accountId: Number(accountId), comment: newComment });
+    updateComment({ accountId: Number(accountId), updateAccountCommentPayload: { comment: newComment } });
   };
 
   return (

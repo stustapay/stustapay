@@ -1,13 +1,13 @@
 import {
-  Select,
-  MenuItem,
   FormControl,
+  FormHelperText,
   InputLabel,
+  MenuItem,
+  Select,
   SelectChangeEvent,
   SelectProps,
-  FormHelperText,
 } from "@mui/material";
-import { useGetProductsQuery, selectProductAll } from "@api";
+import { selectProductAll, useListProductsQuery } from "@api";
 import * as React from "react";
 
 export interface ProductSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
@@ -27,7 +27,7 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { products } = useGetProductsQuery(undefined, {
+  const { products } = useListProductsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       products: data ? selectProductAll(data) : [],

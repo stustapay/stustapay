@@ -2,7 +2,7 @@ import * as React from "react";
 import { IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { selectOrderById, useCancelSaleMutation, useGetOrderByIdQuery } from "@api";
+import { useCancelOrderMutation, useGetOrderQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { LineItemTable } from "@components/LineItemTable";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink } from "@components";
@@ -16,18 +16,9 @@ export const OrderDetail: React.FC = () => {
   const navigate = useNavigate();
   const [showCancelOrderConfirm, setShowCancelOrderConfirm] = React.useState(false);
 
-  const [cancelSale] = useCancelSaleMutation();
+  const [cancelSale] = useCancelOrderMutation();
 
-  const {
-    order,
-    error,
-    isLoading: isOrderLoading,
-  } = useGetOrderByIdQuery(Number(orderId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      order: data ? selectOrderById(data, Number(orderId)) : undefined,
-    }),
-  });
+  const { data: order, error, isLoading: isOrderLoading } = useGetOrderQuery({ orderId: Number(orderId) });
 
   if (isOrderLoading) {
     return <Loading />;
@@ -42,7 +33,7 @@ export const OrderDetail: React.FC = () => {
 
   const handleCancelOrderConfirmClose: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      cancelSale({ sale_id: order.id })
+      cancelSale({ orderId: order.id })
         .unwrap()
         .then(() => toast.success(t("order.cancelSuccessful")))
         .catch((err) => undefined); // to avoid uncaught promise errors

@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, List, Stack } from "@mui/material";
+import { List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { selectAccountById, useGetAccountByIdQuery } from "@api";
+import { useGetAccountQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { toast } from "react-toastify";
 import { useCurrencyFormatter } from "@hooks";
@@ -14,16 +14,7 @@ export const SystemAccountDetail: React.FC = () => {
 
   const formatCurrency = useCurrencyFormatter();
 
-  const {
-    account,
-    error,
-    isLoading: isAccountLoading,
-  } = useGetAccountByIdQuery(Number(accountId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      account: data ? selectAccountById(data, Number(accountId)) : undefined,
-    }),
-  });
+  const { data: account, error, isLoading: isAccountLoading } = useGetAccountQuery({ accountId: Number(accountId) });
 
   if (isAccountLoading || (!account && !error)) {
     return <Loading />;

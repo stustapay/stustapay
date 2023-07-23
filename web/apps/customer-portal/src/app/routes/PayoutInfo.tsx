@@ -1,4 +1,5 @@
-import { useGetCustomerQuery, useSetCustomerAllDonateMutation, useSetCustomerInfoMutation } from "@/api";
+import * as React from "react";
+import { useGetCustomerQuery, useUpdateCustomerInfoDonateAllMutation, useUpdateCustomerInfoMutation } from "@/api";
 import { Loading, NumericInput } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -31,8 +32,8 @@ export const PayoutInfo: React.FC = () => {
 
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
 
-  const [setCustomerInfo] = useSetCustomerInfoMutation();
-  const [setCustomerAllDonate] = useSetCustomerAllDonateMutation();
+  const [updateCustomerInfo] = useUpdateCustomerInfoMutation();
+  const [updateCustomerDonateAll] = useUpdateCustomerInfoDonateAllMutation();
 
   const formatCurrency = useCurrencyFormatter();
 
@@ -93,7 +94,7 @@ export const PayoutInfo: React.FC = () => {
   const onSubmit = (values: FormVal, { setSubmitting }: FormikHelpers<FormVal>) => {
     setSubmitting(true);
     // Form data to the API server
-    setCustomerInfo(values)
+    updateCustomerInfo({ customerBank: values })
       .unwrap()
       .then(() => {
         toast.success(t("payout.updatedBankData"));
@@ -107,7 +108,7 @@ export const PayoutInfo: React.FC = () => {
       });
   };
   const onAllTipClick = () => {
-    setCustomerAllDonate()
+    updateCustomerDonateAll()
       .unwrap()
       .then(() => {
         toast.success(t("payout.updatedBankData"));

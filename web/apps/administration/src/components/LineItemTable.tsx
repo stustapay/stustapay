@@ -3,9 +3,8 @@ import { Tooltip } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
-import { selectProductById, useGetProductsQuery, selectTaxRateById, useGetTaxRatesQuery } from "@api";
-import { Loading, DataGridTitle } from "@stustapay/components";
-import { LineItem } from "@stustapay/models";
+import { LineItem, selectProductById, selectTaxRateById, useListProductsQuery, useListTaxRatesQuery } from "@api";
+import { DataGridTitle, Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "src/hooks";
 
 export interface LineItemTableProps {
@@ -17,8 +16,8 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
 
   const formatCurrency = useCurrencyFormatter();
 
-  const { data: products, isLoading: isProductsLoading } = useGetProductsQuery();
-  const { data: taxRates, isLoading: isTaxRatesLoading } = useGetTaxRatesQuery();
+  const { data: products, isLoading: isProductsLoading } = useListProductsQuery();
+  const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery();
 
   if (isProductsLoading || isTaxRatesLoading) {
     return <Loading />;
