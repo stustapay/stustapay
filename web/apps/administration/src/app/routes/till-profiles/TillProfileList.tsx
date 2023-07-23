@@ -1,16 +1,16 @@
 import * as React from "react";
 import {
   selectTillLayoutById,
-  useDeleteTillProfileMutation,
-  useGetTillLayoutsQuery,
-  useGetTillProfilesQuery,
   selectTillProfileAll,
+  useDeleteTillProfileMutation,
+  useListTillLayoutsQuery,
+  useListTillProfilesQuery,
 } from "@api";
-import { Paper, Typography, ListItem, ListItemText, Stack, Link } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import { Link, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
+import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { TillProfile } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
@@ -19,14 +19,14 @@ export const TillProfileList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { profiles, isLoading: isTillsLoading } = useGetTillProfilesQuery(undefined, {
+  const { profiles, isLoading: isTillsLoading } = useListTillProfilesQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       profiles: data ? selectTillProfileAll(data) : undefined,
     }),
   });
-  const { data: layouts, isLoading: isLayoutsLoading } = useGetTillLayoutsQuery();
-  const [deleteTill] = useDeleteTillProfileMutation();
+  const { data: layouts, isLoading: isLayoutsLoading } = useListTillLayoutsQuery();
+  const [deleteTillProfile] = useDeleteTillProfileMutation();
 
   const [profileToDelete, setProfileToDelete] = React.useState<number | null>(null);
   if (isTillsLoading || isLayoutsLoading) {
@@ -56,7 +56,7 @@ export const TillProfileList: React.FC = () => {
 
   const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && profileToDelete !== null) {
-      deleteTill(profileToDelete)
+      deleteTillProfile({ profileId: profileToDelete })
         .unwrap()
         .catch(() => undefined);
     }

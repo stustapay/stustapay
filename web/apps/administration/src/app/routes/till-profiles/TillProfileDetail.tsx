@@ -1,15 +1,14 @@
-import { Paper, ListItem, Chip, IconButton, ListItemText, List, Tooltip, Checkbox, Stack } from "@mui/material";
+import { Checkbox, Chip, IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useParams, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, Navigate, useNavigate, useParams } from "react-router-dom";
 import {
-  useGetTillProfileByIdQuery,
-  useDeleteTillProfileMutation,
-  selectTillProfileById,
   selectTillLayoutById,
-  useGetTillLayoutsQuery,
+  useDeleteTillProfileMutation,
+  useGetTillProfileQuery,
+  useListTillLayoutsQuery,
 } from "@api";
 import { Loading } from "@stustapay/components";
 
@@ -18,14 +17,9 @@ export const TillProfileDetail: React.FC = () => {
   const { profileId } = useParams();
   const navigate = useNavigate();
   const [deleteProfile] = useDeleteTillProfileMutation();
-  const { profile, error } = useGetTillProfileByIdQuery(Number(profileId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      profile: data ? selectTillProfileById(data, Number(profileId)) : undefined,
-    }),
-  });
+  const { data: profile, error } = useGetTillProfileQuery({ profileId: Number(profileId) });
 
-  const { data: layouts, error: layoutError } = useGetTillLayoutsQuery();
+  const { data: layouts, error: layoutError } = useListTillLayoutsQuery();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error || layoutError) {
@@ -38,7 +32,7 @@ export const TillProfileDetail: React.FC = () => {
 
   const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteProfile(Number(profileId)).then(() => navigate("/till-profiles"));
+      deleteProfile({ profileId: Number(profileId) }).then(() => navigate("/till-profiles"));
     }
     setShowConfirmDelete(false);
   };

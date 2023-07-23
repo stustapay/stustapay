@@ -52,11 +52,11 @@ async def update_customer_info(
     summary="shortcut to declare that customer wants to donate all of the remaining balance",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def update_customer_donation(
+async def update_customer_info_donate_all(
     token: CurrentAuthToken,
     customer_service: ContextCustomerService,
 ):
-    await customer_service.update_customer_donation(token=token)
+    await customer_service.update_customer_info_donate_all(token=token)
 
 
 @router.get("/public_customer_config", summary="get customer config", response_model=PublicCustomerApiConfig)

@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
+from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.till import CashRegister, NewCashRegister
 
 router = APIRouter(
@@ -12,9 +13,9 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=list[CashRegister])
-async def list_register_stockings(token: CurrentAuthToken, till_service: ContextTillService):
-    return await till_service.register.list_cash_registers_admin(token=token)
+@router.get("", response_model=NormalizedList[CashRegister, int])
+async def list_cash_registers_admin(token: CurrentAuthToken, till_service: ContextTillService):
+    return normalize_list(await till_service.register.list_cash_registers_admin(token=token))
 
 
 @router.post("", response_model=CashRegister)

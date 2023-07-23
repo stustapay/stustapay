@@ -1,26 +1,26 @@
 import * as React from "react";
 
-import { Paper, Typography, ListItem, ListItemText, Stack, Link } from "@mui/material";
+import { Link, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
 import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
   Add as AddIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
   SwapHoriz as SwapHorizIcon,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
-import { TillRegister, getUserName } from "@stustapay/models";
+import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { getUserName, TillRegister } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 import {
   selectCashierById,
   selectTillById,
   selectTillRegisterAll,
-  useDeleteTillRegisterMutation,
-  useGetCashiersQuery,
-  useGetTillRegistersQuery,
-  useGetTillsQuery,
+  useDeleteRegisterMutation,
+  useListCashiersQuery,
+  useListCashRegistersAdminQuery,
+  useListTillsQuery,
 } from "@api";
 import { useCurrencyFormatter } from "@hooks";
 
@@ -29,17 +29,17 @@ export const TillRegisterList: React.FC = () => {
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { data: tills } = useGetTillsQuery();
-  const { data: cashiers } = useGetCashiersQuery();
-  const { stockings, isLoading } = useGetTillRegistersQuery(undefined, {
+  const { data: tills } = useListTillsQuery();
+  const { data: cashiers } = useListCashiersQuery();
+  const { stockings: registers, isLoading } = useListCashRegistersAdminQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       stockings: data ? selectTillRegisterAll(data) : undefined,
     }),
   });
-  const [deleteRegister] = useDeleteTillRegisterMutation();
+  const [deleteRegister] = useDeleteRegisterMutation();
 
-  const [stockingToDelete, setToDelete] = React.useState<number | null>(null);
+  const [registerToDelete, setToDelete] = React.useState<number | null>(null);
   if (isLoading) {
     return <Loading />;
   }
@@ -49,8 +49,8 @@ export const TillRegisterList: React.FC = () => {
   };
 
   const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && stockingToDelete !== null) {
-      deleteRegister(stockingToDelete)
+    if (reason === "confirm" && registerToDelete !== null) {
+      deleteRegister({ registerId: registerToDelete })
         .unwrap()
         .catch(() => undefined);
     }
@@ -159,7 +159,7 @@ export const TillRegisterList: React.FC = () => {
       </Paper>
       <DataGrid
         autoHeight
-        rows={stockings ?? []}
+        rows={registers ?? []}
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
@@ -167,7 +167,7 @@ export const TillRegisterList: React.FC = () => {
       <ConfirmDialog
         title={t("register.deleteRegister")}
         body={t("register.deleteRegisterDescription")}
-        show={stockingToDelete !== null}
+        show={registerToDelete !== null}
         onClose={handleConfirmDeleteProfile}
       />
     </Stack>

@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTaxRateService
+from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName
 
 router = APIRouter(
@@ -11,9 +12,9 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=list[TaxRate])
+@router.get("", response_model=NormalizedList[TaxRate, str])
 async def list_tax_rates(token: CurrentAuthToken, tax_service: ContextTaxRateService):
-    return await tax_service.list_tax_rates(token=token)
+    return normalize_list(await tax_service.list_tax_rates(token=token), primary_key="name")
 
 
 @router.post("", response_model=TaxRate)

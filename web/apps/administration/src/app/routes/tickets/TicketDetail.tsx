@@ -1,10 +1,10 @@
-import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Stack } from "@mui/material";
+import { IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useGetTicketByIdQuery, useDeleteTicketMutation, selectTicketById } from "@api";
+import { useDeleteTicketMutation, useGetTicketQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "@hooks";
 
@@ -14,12 +14,7 @@ export const TicketDetail: React.FC = () => {
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
   const [deleteTicket] = useDeleteTicketMutation();
-  const { ticket, error } = useGetTicketByIdQuery(Number(ticketId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      ticket: data ? selectTicketById(data, Number(ticketId)) : undefined,
-    }),
-  });
+  const { data: ticket, error } = useGetTicketQuery({ ticketId: Number(ticketId) });
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error) {
@@ -30,9 +25,9 @@ export const TicketDetail: React.FC = () => {
     setShowConfirmDelete(true);
   };
 
-  const handleConfirmDeleteticket: ConfirmDialogCloseHandler = (reason) => {
+  const handleConfirmDeleteTicket: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteTicket(Number(ticketId)).then(() => navigate("/tickets"));
+      deleteTicket({ ticketId: Number(ticketId) }).then(() => navigate("/tickets"));
     }
     setShowConfirmDelete(false);
   };
@@ -87,7 +82,7 @@ export const TicketDetail: React.FC = () => {
         title={t("ticket.delete")}
         body={t("ticket.deleteDescription")}
         show={showConfirmDelete}
-        onClose={handleConfirmDeleteticket}
+        onClose={handleConfirmDeleteTicket}
       />
     </Stack>
   );

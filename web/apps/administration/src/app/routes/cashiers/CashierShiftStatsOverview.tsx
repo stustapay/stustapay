@@ -1,14 +1,14 @@
-import { useGetCashierShiftStatsQuery } from "@api";
+import { CashierShiftStats, useGetCashierShiftStatsQuery } from "@api";
 import * as React from "react";
 import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { CashierShiftStats } from "@stustapay/models";
 import { useTranslation } from "react-i18next";
 
 export interface CashierShiftStatsOverview {
   cashierId: number;
   shiftId?: number;
 }
+
 type ArrElement<ArrType> = ArrType extends readonly (infer ElementType)[] ? ElementType : never;
 
 export const CashierShiftStatsOverview: React.FC<CashierShiftStatsOverview> = ({ cashierId, shiftId }) => {

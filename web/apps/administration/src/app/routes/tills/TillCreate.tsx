@@ -22,7 +22,7 @@ export const TillCreate: React.FC = () => {
       submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillSchema}
-      onSubmit={createTill}
+      onSubmit={(till) => createTill({ newTill: till })}
     />
   );
 };

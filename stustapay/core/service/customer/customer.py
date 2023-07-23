@@ -310,7 +310,7 @@ class CustomerService(DBService):
 
     @with_db_transaction
     @requires_customer
-    async def update_customer_donation(self, *, conn: Connection, current_customer: Customer) -> None:
+    async def update_customer_info_donate_all(self, *, conn: Connection, current_customer: Customer) -> None:
         await self.check_payout_run(conn, current_customer)
 
         # if customer_info does not exist create it, otherwise update it

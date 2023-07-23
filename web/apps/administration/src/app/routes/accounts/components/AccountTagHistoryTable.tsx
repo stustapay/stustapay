@@ -1,11 +1,12 @@
 import * as React from "react";
-import { Account, formatUserTagUid } from "@stustapay/models";
+import { formatUserTagUid } from "@stustapay/models";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { ArrayElement, formatDate } from "@stustapay/utils";
 import { DataGridTitle } from "@stustapay/components";
 import { Link } from "@mui/material";
+import { Account } from "@api";
 
 type History = Account["tag_history"];
 type HistoryEntry = ArrayElement<History>;

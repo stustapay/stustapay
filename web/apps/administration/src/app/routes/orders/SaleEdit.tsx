@@ -2,7 +2,7 @@ import * as React from "react";
 import { Alert, List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { selectOrderById, useGetOrderByIdQuery } from "@api";
+import { useGetOrderQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { ListItemLink } from "@components";
 import { formatUserTagUid } from "@stustapay/models";
@@ -13,16 +13,7 @@ export const SaleEdit: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
 
-  const {
-    order,
-    error,
-    isLoading: isOrderLoading,
-  } = useGetOrderByIdQuery(Number(orderId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      order: data ? selectOrderById(data, Number(orderId)) : undefined,
-    }),
-  });
+  const { data: order, error, isLoading: isOrderLoading } = useGetOrderQuery({ orderId: Number(orderId) });
 
   if (isOrderLoading) {
     return <Loading />;

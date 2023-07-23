@@ -1,7 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootState } from "./store";
-import { authApi } from "@api/authApi";
-import { CurrentUser } from "@stustapay/models";
+import { api, CurrentUser } from "@api";
 
 interface AuthState {
   user: CurrentUser | null;
@@ -23,16 +22,16 @@ export const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addMatcher(authApi.endpoints.login.matchFulfilled, (state, action) => {
+    builder.addMatcher(api.endpoints.login.matchFulfilled, (state, action) => {
       const { user, access_token } = action.payload;
       state.user = user;
       state.token = access_token;
     });
-    builder.addMatcher(authApi.endpoints.logout.matchFulfilled, (state) => {
+    builder.addMatcher(api.endpoints.logout.matchFulfilled, (state) => {
       state.user = null;
       state.token = null;
     });
-    builder.addMatcher(authApi.endpoints.logout.matchRejected, (state) => {
+    builder.addMatcher(api.endpoints.logout.matchRejected, (state) => {
       state.user = null;
       state.token = null;
     });

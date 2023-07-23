@@ -1,4 +1,4 @@
-import { selectUserAll, useGetUsersQuery } from "@api";
+import { selectUserAll, useListUsersQuery } from "@api";
 import {
   FormControl,
   FormHelperText,
@@ -30,7 +30,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
   filterRole,
   ...props
 }) => {
-  const { users } = useGetUsersQuery(undefined, {
+  const { users } = useListUsersQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       users: data ? selectUserAll(data) : [],

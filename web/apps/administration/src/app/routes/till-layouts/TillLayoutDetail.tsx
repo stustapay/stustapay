@@ -1,17 +1,16 @@
-import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Stack, Tab, Box } from "@mui/material";
+import { Box, IconButton, List, ListItem, ListItemText, Paper, Stack, Tab, Tooltip } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import {
-  useGetTillLayoutByIdQuery,
-  useDeleteTillLayoutMutation,
-  useGetTillButtonsQuery,
-  selectTillLayoutById,
-  selectTillButtonById,
-  useGetTicketsQuery,
   selectTicketById,
+  selectTillButtonById,
+  useDeleteTillLayoutMutation,
+  useGetTillLayoutQuery,
+  useListTicketsQuery,
+  useListTillButtonsQuery,
 } from "@api";
 import { Loading } from "@stustapay/components";
 import { Ticket, TillButton } from "@stustapay/models";
@@ -24,14 +23,9 @@ export const TillLayoutDetail: React.FC = () => {
   const formatCurrency = useCurrencyFormatter();
   const navigate = useNavigate();
   const [deleteLayout] = useDeleteTillLayoutMutation();
-  const { layout, error } = useGetTillLayoutByIdQuery(Number(layoutId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      layout: data ? selectTillLayoutById(data, Number(layoutId)) : undefined,
-    }),
-  });
-  const { data: buttons, error: buttonsError } = useGetTillButtonsQuery();
-  const { data: tickets, error: ticketsError } = useGetTicketsQuery();
+  const { data: layout, error } = useGetTillLayoutQuery({ layoutId: Number(layoutId) });
+  const { data: buttons, error: buttonsError } = useListTillButtonsQuery();
+  const { data: tickets, error: ticketsError } = useListTicketsQuery();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   const [selectedTab, setSelectedTab] = React.useState<"buttons" | "tickets">("buttons");
@@ -46,7 +40,7 @@ export const TillLayoutDetail: React.FC = () => {
 
   const handleConfirmDeleteLayout: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteLayout(Number(layoutId)).then(() => navigate("/till-layouts"));
+      deleteLayout({ layoutId: Number(layoutId) }).then(() => navigate("/till-layouts"));
     }
     setShowConfirmDelete(false);
   };

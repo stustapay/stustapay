@@ -1,8 +1,8 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Paper, LinearProgress, Button, Typography, Alert, AlertTitle } from "@mui/material";
-import { Formik, FormikHelpers, Form } from "formik";
-import { selectTillRegisterById, useGetTillRegistersQuery, useTransferRegisterMutation } from "@api";
+import { Alert, AlertTitle, Button, LinearProgress, Paper, Typography } from "@mui/material";
+import { Form, Formik, FormikHelpers } from "formik";
+import { selectTillRegisterById, useListCashRegistersAdminQuery, useTransferRegisterMutation } from "@api";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Loading } from "@stustapay/components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -19,7 +19,7 @@ export const TillRegisterTransfer: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { registerId } = useParams();
-  const { register, isLoading, error } = useGetTillRegistersQuery(undefined, {
+  const { register, isLoading, error } = useListCashRegistersAdminQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       register: data ? selectTillRegisterById(data, Number(registerId)) : undefined,
@@ -47,7 +47,7 @@ export const TillRegisterTransfer: React.FC = () => {
     }
     setSubmitting(true);
 
-    transferRegister({ source_cashier_id: register.current_cashier_id, ...values })
+    transferRegister({ transferRegisterPayload: { source_cashier_id: register.current_cashier_id, ...values } })
       .unwrap()
       .then(() => {
         setSubmitting(false);

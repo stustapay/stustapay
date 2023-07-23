@@ -1,10 +1,10 @@
-import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Chip, Stack } from "@mui/material";
+import { Chip, IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useGetUserByIdQuery, useDeleteUserMutation, selectUserById } from "@api";
+import { useDeleteUserMutation, useGetUserQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { formatUserTagUid } from "@stustapay/models";
 
@@ -13,12 +13,7 @@ export const UserDetail: React.FC = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [deleteUser] = useDeleteUserMutation();
-  const { user, error } = useGetUserByIdQuery(Number(userId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      user: data ? selectUserById(data, Number(userId)) : undefined,
-    }),
-  });
+  const { data: user, error } = useGetUserQuery({ userId: Number(userId) });
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error) {
@@ -31,7 +26,7 @@ export const UserDetail: React.FC = () => {
 
   const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteUser(Number(userId)).then(() => navigate("/users"));
+      deleteUser({ userId: Number(userId) }).then(() => navigate("/users"));
     }
     setShowConfirmDelete(false);
   };

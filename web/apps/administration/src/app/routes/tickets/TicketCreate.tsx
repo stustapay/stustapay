@@ -22,7 +22,7 @@ export const TicketCreate: React.FC = () => {
       submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTicketSchema}
-      onSubmit={createTicket}
+      onSubmit={(ticket) => createTicket({ newTicket: ticket })}
     />
   );
 };

@@ -1,7 +1,7 @@
-import { useUpdateTillMutation, useGetTillByIdQuery, selectTillById } from "@api";
+import { useGetTillQuery, useUpdateTillMutation } from "@api";
 import * as React from "react";
 import { UpdateTillSchema } from "@stustapay/models";
-import { useParams, Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TillChange } from "./TillChange";
 import { Loading } from "@stustapay/components";
@@ -9,12 +9,7 @@ import { Loading } from "@stustapay/components";
 export const TillUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { tillId } = useParams();
-  const { till, isLoading, error } = useGetTillByIdQuery(Number(tillId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      till: data ? selectTillById(data, Number(tillId)) : undefined,
-    }),
-  });
+  const { data: till, isLoading, error } = useGetTillQuery({ tillId: Number(tillId) });
   const [updateTill] = useUpdateTillMutation();
 
   if (error) {
@@ -31,7 +26,7 @@ export const TillUpdate: React.FC = () => {
       submitLabel={t("update")}
       initialValues={till}
       validationSchema={UpdateTillSchema}
-      onSubmit={updateTill}
+      onSubmit={(till) => updateTill({ tillId: till.id, newTill: till })}
     />
   );
 };

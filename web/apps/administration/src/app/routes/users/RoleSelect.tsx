@@ -1,16 +1,16 @@
 import {
-  Select,
-  MenuItem,
+  Box,
+  Checkbox,
+  Chip,
   FormControl,
+  FormHelperText,
   InputLabel,
+  MenuItem,
+  Select,
   SelectChangeEvent,
   SelectProps,
-  FormHelperText,
-  Box,
-  Chip,
-  Checkbox,
 } from "@mui/material";
-import { useGetUserRolesQuery, selectUserRoleAll } from "@api";
+import { selectUserRoleAll, useListUserRolesQuery } from "@api";
 import * as React from "react";
 
 export interface RoleSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
@@ -30,7 +30,7 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { roles } = useGetUserRolesQuery(undefined, {
+  const { roles } = useListUserRolesQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       roles: data ? selectUserRoleAll(data) : [],

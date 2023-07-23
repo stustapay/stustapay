@@ -1,12 +1,12 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, Stack, Link } from "@mui/material";
+import { Link, ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { selectTicketAll, useDeleteTicketMutation, useGetTicketsQuery } from "@api";
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { selectTicketAll, useDeleteTicketMutation, useListTicketsQuery } from "@api";
 import { useTranslation } from "react-i18next";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
+import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Ticket } from "@stustapay/models";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "src/hooks";
 
@@ -15,7 +15,7 @@ export const TicketList: React.FC = () => {
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { tickets, isLoading: isTicketsLoading } = useGetTicketsQuery(undefined, {
+  const { tickets, isLoading: isTicketsLoading } = useListTicketsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       tickets: data ? selectTicketAll(data) : undefined,
@@ -34,7 +34,7 @@ export const TicketList: React.FC = () => {
 
   const handleConfirmDeleteTicket: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && ticketToDelete !== null) {
-      deleteTicket(ticketToDelete)
+      deleteTicket({ ticketId: ticketToDelete })
         .unwrap()
         .catch(() => undefined);
     }

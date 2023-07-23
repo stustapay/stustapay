@@ -35,3 +35,7 @@ class NewProduct(BaseModel):
 class Product(NewProduct):
     id: int
     tax_rate: float
+    fixed_price: bool
+    restrictions: list[ProductRestriction]
+    is_locked: bool
+    is_returnable: bool

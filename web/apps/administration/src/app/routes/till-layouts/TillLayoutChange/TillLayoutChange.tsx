@@ -1,15 +1,20 @@
-import { Paper, TextField, Button, LinearProgress, Typography, Tab, Box } from "@mui/material";
+import { Box, Button, LinearProgress, Paper, Tab, TextField, Typography } from "@mui/material";
 import * as React from "react";
-import { Formik, Form, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTillLayout } from "@stustapay/models";
+import {
+  NewTillLayout,
+  selectTicketAll,
+  selectTillButtonAll,
+  useListTicketsQuery,
+  useListTillButtonsQuery,
+} from "@api";
 import { TillLayoutDesigner } from "./TillLayoutDesigner";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { selectTicketAll, selectTillButtonAll, useGetTicketsQuery, useGetTillButtonsQuery } from "@api";
 import { Loading } from "@stustapay/components";
 
 export interface TillChangeProps<T extends NewTillLayout> {
@@ -31,13 +36,13 @@ export function TillLayoutChange<T extends NewTillLayout>({
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const { buttons } = useGetTillButtonsQuery(undefined, {
+  const { buttons } = useListTillButtonsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       buttons: data ? selectTillButtonAll(data) : undefined,
     }),
   });
-  const { tickets } = useGetTicketsQuery(undefined, {
+  const { tickets } = useListTicketsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       tickets: data ? selectTicketAll(data) : undefined,
@@ -112,14 +117,14 @@ export function TillLayoutChange<T extends NewTillLayout>({
               </Box>
               <TabPanel value="buttons">
                 <TillLayoutDesigner
-                  selectedIds={values.button_ids === null ? [] : values.button_ids}
+                  selectedIds={values.button_ids == null ? [] : values.button_ids}
                   onChange={(buttonIds) => setFieldValue("button_ids", buttonIds)}
                   selectables={buttons}
                 />
               </TabPanel>
               <TabPanel value="tickets">
                 <TillLayoutDesigner
-                  selectedIds={values.ticket_ids === null ? [] : values.ticket_ids}
+                  selectedIds={values.ticket_ids == null ? [] : values.ticket_ids}
                   onChange={(ticketIds) => setFieldValue("ticket_ids", ticketIds)}
                   selectables={tickets.map((t) => ({ id: t.id, name: t.name, price: t.total_price }))}
                 />

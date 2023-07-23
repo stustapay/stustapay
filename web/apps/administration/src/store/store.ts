@@ -1,26 +1,10 @@
-import { authApi } from "@api/authApi";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/dist/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
-import {
-  productApi,
-  userApi,
-  taxRateApi,
-  tillApi,
-  tillLayoutApi,
-  tillProfileApi,
-  configApi,
-  orderApi,
-  accountApi,
-  cashierApi,
-  tillRegisterApi,
-  tillRegisterStockingApi,
-  statsApi,
-  ticketApi,
-} from "@api";
+import { api } from "@api";
 import { authSlice } from "./authSlice";
 import { uiSlice } from "./uiSlice";
-import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
+import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { errorMiddleware } from "./errorMiddleware";
 
@@ -38,41 +22,13 @@ const uiPersistConfig = {
 
 export const store = configureStore({
   reducer: combineReducers({
-    [productApi.reducerPath]: productApi.reducer,
-    [tillApi.reducerPath]: tillApi.reducer,
-    [tillLayoutApi.reducerPath]: tillLayoutApi.reducer,
-    [tillProfileApi.reducerPath]: tillProfileApi.reducer,
-    [taxRateApi.reducerPath]: taxRateApi.reducer,
-    [userApi.reducerPath]: userApi.reducer,
-    [authApi.reducerPath]: authApi.reducer,
-    [configApi.reducerPath]: configApi.reducer,
-    [orderApi.reducerPath]: orderApi.reducer,
-    [accountApi.reducerPath]: accountApi.reducer,
-    [cashierApi.reducerPath]: cashierApi.reducer,
-    [tillRegisterApi.reducerPath]: tillRegisterApi.reducer,
-    [tillRegisterStockingApi.reducerPath]: tillRegisterStockingApi.reducer,
-    [statsApi.reducerPath]: statsApi.reducer,
-    [ticketApi.reducerPath]: ticketApi.reducer,
+    [api.reducerPath]: api.reducer,
     [authSlice.name]: persistReducer(authPersistConfig, authSlice.reducer),
     [uiSlice.name]: persistReducer(uiPersistConfig, uiSlice.reducer),
   }),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: { ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER] } })
-      .concat(productApi.middleware)
-      .concat(tillApi.middleware)
-      .concat(tillLayoutApi.middleware)
-      .concat(tillProfileApi.middleware)
-      .concat(taxRateApi.middleware)
-      .concat(userApi.middleware)
-      .concat(configApi.middleware)
-      .concat(orderApi.middleware)
-      .concat(accountApi.middleware)
-      .concat(cashierApi.middleware)
-      .concat(tillRegisterApi.middleware)
-      .concat(tillRegisterStockingApi.middleware)
-      .concat(statsApi.middleware)
-      .concat(ticketApi.middleware)
-      .concat(authApi.middleware)
+      .concat(api.middleware)
       .concat(errorMiddleware),
 });
 

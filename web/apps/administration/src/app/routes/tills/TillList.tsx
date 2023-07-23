@@ -1,31 +1,31 @@
 import * as React from "react";
 import {
-  useDeleteTillMutation,
-  useGetTillsQuery,
-  useGetTillProfilesQuery,
   selectTillAll,
   selectTillProfileById,
+  Till,
+  useDeleteTillMutation,
+  useListTillProfilesQuery,
+  useListTillsQuery,
 } from "@api";
-import { Paper, Typography, ListItem, ListItemText, Stack, Link } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import { Link, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
+import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { Till } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 
 export const TillList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { tills, isLoading: isTillsLoading } = useGetTillsQuery(undefined, {
+  const { tills, isLoading: isTillsLoading } = useListTillsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       tills: data ? selectTillAll(data) : undefined,
     }),
   });
-  const { data: profiles, isLoading: isProfilesLoading } = useGetTillProfilesQuery();
+  const { data: profiles, isLoading: isProfilesLoading } = useListTillProfilesQuery();
   const [deleteTill] = useDeleteTillMutation();
 
   const [tillToDelete, setTillToDelete] = React.useState<number | null>(null);
@@ -55,7 +55,7 @@ export const TillList: React.FC = () => {
 
   const handleConfirmDeleteTill: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && tillToDelete !== null) {
-      deleteTill(tillToDelete)
+      deleteTill({ tillId: tillToDelete })
         .unwrap()
         .catch(() => undefined);
     }

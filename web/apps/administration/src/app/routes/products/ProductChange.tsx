@@ -1,16 +1,16 @@
 import {
+  Button,
+  Checkbox,
+  FormControlLabel,
+  InputAdornment,
+  LinearProgress,
   Paper,
   TextField,
-  Button,
-  LinearProgress,
   Typography,
-  FormControlLabel,
-  Checkbox,
-  InputAdornment,
 } from "@mui/material";
 import * as React from "react";
-import { Formik, Form, FormikHelpers } from "formik";
-import { NewProduct } from "@stustapay/models";
+import { Form, Formik, FormikHelpers } from "formik";
+import { NewProduct } from "@api";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";

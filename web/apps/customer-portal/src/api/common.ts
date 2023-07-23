@@ -1,6 +1,7 @@
+import type { BaseQueryApi, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { BaseQueryFn, BaseQueryApi, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { RootState, selectAuthToken } from "@/store";
+import { PublicCustomerApiConfig } from "@/api";
 import { z } from "zod";
 
 export const siteHost = window.location.host;
@@ -16,34 +17,16 @@ export const prepareAuthHeaders = (
   return headers;
 };
 
-export const PublicCustomerApiConfigSchema = z.object({
-  test_mode: z.boolean(),
-  test_mode_message: z.string(),
-  sumup_topup_enabled: z.boolean(),
-  currency_symbol: z.string(),
-  currency_identifier: z.string(),
-  data_privacy_url: z.string(),
-  contact_email: z.string(),
-  about_page_url: z.string(),
-  allowed_country_codes: z.array(z.string()),
-});
-
-export type PublicCustomerApiConfig = z.infer<typeof PublicCustomerApiConfigSchema>;
-
 export const ClientConfigSchema = z.object({
   customerApiEndpoint: z.string(),
 });
 
 export type ClientConfig = z.infer<typeof ClientConfigSchema>;
 
-export const ConfigSchema = ClientConfigSchema.merge(
-  z.object({
-    customerApiBaseUrl: z.string(),
-    publicApiConfig: PublicCustomerApiConfigSchema,
-  })
-);
-
-export type Config = z.infer<typeof ConfigSchema>;
+export interface Config {
+  customerApiBaseUrl: string;
+  publicApiConfig: PublicCustomerApiConfig;
+}
 
 export let config: Config;
 
@@ -58,7 +41,8 @@ const generateConfig = (clientConfig: ClientConfig, publicApiConfig: PublicCusto
 const fetchPublicCustomerApiConfig = async (clientConfig: ClientConfig): Promise<PublicCustomerApiConfig> => {
   const resp = await fetch(`${clientConfig.customerApiEndpoint}/public_customer_config`);
   const respJson = await resp.json();
-  return PublicCustomerApiConfigSchema.parse(respJson);
+  // TODO: validation
+  return respJson as PublicCustomerApiConfig;
 };
 
 export const fetchConfig = async (): Promise<Config> => {

@@ -1,7 +1,9 @@
 """
 handles connections with ordering terminals.
 """
+import argparse
 import asyncio
+import json
 import logging
 
 from stustapay.core import database
@@ -23,12 +25,9 @@ class Api(SubCommand):
     Talk with Terminals in the field.
     """
 
-    @staticmethod
-    def argparse_register(subparser):
-        pass
-
     def __init__(self, args, config: Config, **rest):
         del rest
+        self.args = args
 
         self.cfg = config
         self.db_pool = None
@@ -49,7 +48,18 @@ class Api(SubCommand):
         self.server.add_router(customer.router)
         self.server.add_router(cashier.router)
 
+    @staticmethod
+    def argparse_register(subparser: argparse.ArgumentParser):
+        subparser.add_argument(
+            "--show-openapi",
+            action="store_true",
+        )
+
     async def run(self):
+        if self.args.show_openapi:
+            print(json.dumps(self.server.get_openapi_spec()))
+            return
+
         db_pool = await self.server.db_connect(self.cfg.database)
         await database.check_revision_version(db_pool)
 

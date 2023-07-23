@@ -19,7 +19,7 @@ export const TillButtonCreate: React.FC = () => {
       submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={NewTillButtonSchema}
-      onSubmit={createTillButton}
+      onSubmit={(button) => createTillButton({ newTillButton: button })}
     />
   );
 };

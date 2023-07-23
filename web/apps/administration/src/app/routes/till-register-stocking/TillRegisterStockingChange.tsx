@@ -1,15 +1,15 @@
-import { Paper, TextField, Button, LinearProgress, Typography } from "@mui/material";
+import { Button, LinearProgress, Paper, TextField, Typography } from "@mui/material";
 import * as React from "react";
-import { Formik, Form, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTillRegisterStocking } from "@stustapay/models";
+import { NewCashRegisterStocking } from "@api";
 import { NumericInput } from "@stustapay/components";
 
-export interface TillRegisterStockkingChangeProps<T extends NewTillRegisterStocking> {
+export interface TillRegisterStockingChangeProps<T extends NewCashRegisterStocking> {
   headerTitle: string;
   submitLabel: string;
   initialValues: T;
@@ -18,13 +18,13 @@ export interface TillRegisterStockkingChangeProps<T extends NewTillRegisterStock
   onSubmit: (t: T) => MutationActionCreatorResult<any>;
 }
 
-export function TillRegisterStockkingChange<T extends NewTillRegisterStocking>({
+export function TillRegisterStockingChange<T extends NewCashRegisterStocking>({
   headerTitle,
   submitLabel,
   initialValues,
   validationSchema,
   onSubmit,
-}: TillRegisterStockkingChangeProps<T>) {
+}: TillRegisterStockingChangeProps<T>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {

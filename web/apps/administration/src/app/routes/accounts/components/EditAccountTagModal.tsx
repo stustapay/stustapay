@@ -1,20 +1,20 @@
 import * as React from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
   Button,
+  Dialog,
   DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
   ListItem,
   ListItemText,
-  TextField,
-  LinearProgress,
   Stack,
+  TextField,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { Account, formatUserTagUid } from "@stustapay/models";
+import { formatUserTagUid } from "@stustapay/models";
 import { toast } from "react-toastify";
-import { useUpdateTagUidMutation } from "@api";
+import { Account, useUpdateTagUidMutation } from "@api";
 import { Formik, FormikHelpers } from "formik";
 import { z } from "zod";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -39,7 +39,10 @@ export const EditAccountTagModal: React.FC<EditAccountTagModalProps> = ({ accoun
 
   const handleSubmit = (values: FormValues, { setSubmitting, resetForm }: FormikHelpers<FormValues>) => {
     setSubmitting(true);
-    updateTagUid({ accountId: account.id, newTagUidHex: "0x" + values.newTagUidHex, comment: values.comment })
+    updateTagUid({
+      accountId: account.id,
+      updateTagUidPayload: { new_tag_uid_hex: "0x" + values.newTagUidHex, comment: values.comment },
+    })
       .unwrap()
       .then(() => {
         setSubmitting(false);

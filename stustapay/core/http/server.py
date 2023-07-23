@@ -9,6 +9,7 @@ import asyncpg
 import uvicorn
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.routing import APIRoute
 
 from stustapay import __version__
 from stustapay.core.config import DatabaseConfig, HTTPServerConfig
@@ -28,6 +29,18 @@ from stustapay.core.service.common.error import (
     ServiceException,
     Unauthorized,
 )
+
+
+def use_route_names_as_operation_ids(app: FastAPI) -> None:
+    """
+    Simplify operation IDs so that generated API clients have simpler function
+    names.
+
+    Should be called only after all routes have been added.
+    """
+    for route in app.routes:
+        if isinstance(route, APIRoute):
+            route.operation_id = route.name
 
 
 class Server:
@@ -78,6 +91,7 @@ class Server:
 
     def add_router(self, router: APIRouter):
         self.api.include_router(router)
+        use_route_names_as_operation_ids(self.api)
 
     def add_task(self, task: asyncio.Task):
         self.tasks.append(task)

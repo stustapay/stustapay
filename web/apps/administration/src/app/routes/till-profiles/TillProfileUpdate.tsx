@@ -1,7 +1,7 @@
-import { useUpdateTillProfileMutation, useGetTillProfileByIdQuery, selectTillProfileById } from "@api";
+import { useGetTillProfileQuery, useUpdateTillProfileMutation } from "@api";
 import * as React from "react";
 import { TillProfileSchema } from "@stustapay/models";
-import { useParams, Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TillProfileChange } from "./TillProfileChange";
 import { Loading } from "@stustapay/components";
@@ -9,12 +9,7 @@ import { Loading } from "@stustapay/components";
 export const TillProfileUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { profileId } = useParams();
-  const { profile, isLoading, error } = useGetTillProfileByIdQuery(Number(profileId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      profile: data ? selectTillProfileById(data, Number(profileId)) : undefined,
-    }),
-  });
+  const { data: profile, isLoading, error } = useGetTillProfileQuery({ profileId: Number(profileId) });
   const [updateProfile] = useUpdateTillProfileMutation();
 
   if (error) {
@@ -31,7 +26,7 @@ export const TillProfileUpdate: React.FC = () => {
       submitLabel={t("update")}
       initialValues={profile}
       validationSchema={TillProfileSchema}
-      onSubmit={updateProfile}
+      onSubmit={(profile) => updateProfile({ profileId: profile.id, newTillProfile: profile })}
     />
   );
 };

@@ -1,13 +1,13 @@
 import {
-  Select,
-  MenuItem,
   FormControl,
+  FormHelperText,
   InputLabel,
+  MenuItem,
+  Select,
   SelectChangeEvent,
   SelectProps,
-  FormHelperText,
 } from "@mui/material";
-import { selectTillLayoutAll, useGetTillLayoutsQuery } from "@api";
+import { selectTillLayoutAll, useListTillLayoutsQuery } from "@api";
 import * as React from "react";
 
 export interface TillLayoutSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
@@ -27,7 +27,7 @@ export const TillLayoutSelect: React.FC<TillLayoutSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { layouts } = useGetTillLayoutsQuery(undefined, {
+  const { layouts } = useListTillLayoutsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       layouts: data ? selectTillLayoutAll(data) : [],

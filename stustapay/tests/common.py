@@ -214,7 +214,16 @@ class TerminalTestCase(BaseTestCase):
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
         self.product = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="Helles", price=3, tax_name="ust", is_locked=True)
+            token=self.admin_token,
+            product=NewProduct(
+                name="Helles",
+                price=3,
+                tax_name="ust",
+                is_locked=True,
+                fixed_price=True,
+                restrictions=[],
+                is_returnable=False,
+            ),
         )
         self.till_button = await self.till_service.layout.create_button(
             token=self.admin_token, button=NewTillButton(name="Helles", product_ids=[self.product.id])

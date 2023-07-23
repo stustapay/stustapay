@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, st
 
 from stustapay.core.http.auth_user import CurrentAuthToken, CurrentAuthTokenFromCookie
 from stustapay.core.http.context import ContextOrderService
+from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.order import CompletedSaleProducts, EditSaleProducts, Order
 
 router = APIRouter(
@@ -13,16 +14,16 @@ router = APIRouter(
 )
 
 
-@router.get("/by-till/{till_id}", response_model=list[Order])
+@router.get("/by-till/{till_id}", response_model=NormalizedList[Order, int])
 async def list_orders_by_till(token: CurrentAuthToken, till_id: int, order_service: ContextOrderService):
-    return await order_service.list_orders_by_till(token=token, till_id=till_id)
+    return normalize_list(await order_service.list_orders_by_till(token=token, till_id=till_id))
 
 
-@router.get("", response_model=list[Order])
+@router.get("", response_model=NormalizedList[Order, int])
 async def list_orders(
     token: CurrentAuthToken, order_service: ContextOrderService, customer_account_id: Optional[int] = None
 ):
-    return await order_service.list_orders(token=token, customer_account_id=customer_account_id)
+    return normalize_list(await order_service.list_orders(token=token, customer_account_id=customer_account_id))
 
 
 @router.get("/{order_id}", response_model=Order)

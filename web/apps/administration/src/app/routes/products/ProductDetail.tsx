@@ -1,10 +1,10 @@
-import { Paper, ListItem, IconButton, ListItemText, List, Tooltip, Checkbox, Chip, Stack } from "@mui/material";
+import { Checkbox, Chip, IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
 import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useGetProductByIdQuery, useDeleteProductMutation, selectProductById, useLockProductMutation } from "@api";
+import { useDeleteProductMutation, useGetProductQuery, useUpdateProductMutation } from "@api";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "@hooks";
 
@@ -13,14 +13,9 @@ export const ProductDetail: React.FC = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
-  const [deleteproduct] = useDeleteProductMutation();
-  const [lockProduct] = useLockProductMutation();
-  const { product, error } = useGetProductByIdQuery(Number(productId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      product: data ? selectProductById(data, Number(productId)) : undefined,
-    }),
-  });
+  const [deleteProduct] = useDeleteProductMutation();
+  const { data: product, error } = useGetProductQuery({ productId: Number(productId) });
+  const [updateProduct] = useUpdateProductMutation();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error) {
@@ -31,9 +26,9 @@ export const ProductDetail: React.FC = () => {
     setShowConfirmDelete(true);
   };
 
-  const handleConfirmDeleteproduct: ConfirmDialogCloseHandler = (reason) => {
+  const handleConfirmDeleteProduct: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteproduct(Number(productId)).then(() => navigate("/products"));
+      deleteProduct({ productId: Number(productId) }).then(() => navigate("/products"));
     }
     setShowConfirmDelete(false);
   };
@@ -41,6 +36,10 @@ export const ProductDetail: React.FC = () => {
   if (product === undefined) {
     return <Loading />;
   }
+
+  const handleLockProduct = () => {
+    updateProduct({ productId: product.id, newProduct: { ...product, is_locked: true } });
+  };
 
   return (
     <Stack spacing={2}>
@@ -57,7 +56,7 @@ export const ProductDetail: React.FC = () => {
               </Tooltip>
               <Tooltip title={t("product.lock")}>
                 <span>
-                  <IconButton disabled={product.is_locked} onClick={() => lockProduct(product)} color="error">
+                  <IconButton disabled={product.is_locked} onClick={handleLockProduct} color="error">
                     <LockIcon />
                   </IconButton>
                 </span>
@@ -95,7 +94,7 @@ export const ProductDetail: React.FC = () => {
           <ListItem>
             <ListItemText
               primary={t("product.restrictions")}
-              secondary={product.restrictions.map((restriction) => (
+              secondary={product?.restrictions.map((restriction) => (
                 <Chip key={restriction} variant="outlined" label={restriction} sx={{ mr: 1 }} />
               ))}
             />
@@ -122,7 +121,7 @@ export const ProductDetail: React.FC = () => {
         title={t("product.delete")}
         body={t("product.deleteDescription")}
         show={showConfirmDelete}
-        onClose={handleConfirmDeleteproduct}
+        onClose={handleConfirmDeleteProduct}
       />
     </Stack>
   );

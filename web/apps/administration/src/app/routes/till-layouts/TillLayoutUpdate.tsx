@@ -1,7 +1,7 @@
-import { useUpdateTillLayoutMutation, useGetTillLayoutByIdQuery, selectTillLayoutById } from "@api";
+import { useGetTillLayoutQuery, useUpdateTillLayoutMutation } from "@api";
 import * as React from "react";
 import { TillLayoutSchema } from "@stustapay/models";
-import { useParams, Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TillLayoutChange } from "./TillLayoutChange";
 import { Loading } from "@stustapay/components";
@@ -9,12 +9,7 @@ import { Loading } from "@stustapay/components";
 export const TillLayoutUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { layoutId } = useParams();
-  const { layout, isLoading, error } = useGetTillLayoutByIdQuery(Number(layoutId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      layout: data ? selectTillLayoutById(data, Number(layoutId)) : undefined,
-    }),
-  });
+  const { data: layout, isLoading, error } = useGetTillLayoutQuery({ layoutId: Number(layoutId) });
   const [updateLayout] = useUpdateTillLayoutMutation();
 
   if (error) {
@@ -31,7 +26,7 @@ export const TillLayoutUpdate: React.FC = () => {
       submitLabel={t("update")}
       initialValues={layout}
       validationSchema={TillLayoutSchema}
-      onSubmit={updateLayout}
+      onSubmit={(layout) => updateLayout({ layoutId: layout.id, newTillLayout: layout })}
     />
   );
 };

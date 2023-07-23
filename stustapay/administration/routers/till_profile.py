@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
+from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.till import NewTillProfile, TillProfile
 
 router = APIRouter(
@@ -11,9 +12,9 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=list[TillProfile])
+@router.get("", response_model=NormalizedList[TillProfile, int])
 async def list_till_profiles(token: CurrentAuthToken, till_service: ContextTillService):
-    return await till_service.profile.list_profiles(token=token)
+    return normalize_list(await till_service.profile.list_profiles(token=token))
 
 
 @router.post("", response_model=NewTillProfile)

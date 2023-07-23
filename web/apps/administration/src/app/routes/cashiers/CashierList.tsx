@@ -1,11 +1,11 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useCurrencyFormatter } from "@hooks";
-import { Paper, Link, ListItem, FormControlLabel, Checkbox, ListItemText, Stack } from "@mui/material";
+import { Checkbox, FormControlLabel, Link, ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { selectCashierAll, selectTillById, useGetCashiersQuery, useGetTillsQuery } from "@api";
-import { Cashier, formatUserTagUid } from "@stustapay/models";
+import { Cashier, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@api";
+import { formatUserTagUid } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
 import { z } from "zod";
 import { StringyBoolean, useQueryState } from "@stustapay/utils";
@@ -24,7 +24,7 @@ export const CashierList: React.FC = () => {
     FilterOptionsSchema
   );
 
-  const { cashiers, isLoading: isCashiersLoading } = useGetCashiersQuery(undefined, {
+  const { cashiers, isLoading: isCashiersLoading } = useListCashiersQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       cashiers: data
@@ -40,7 +40,7 @@ export const CashierList: React.FC = () => {
         : undefined,
     }),
   });
-  const { data: tills, isLoading: isTillsLoading } = useGetTillsQuery();
+  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery();
 
   if (isCashiersLoading || isTillsLoading) {
     return <Loading />;

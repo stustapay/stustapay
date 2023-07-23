@@ -1,10 +1,11 @@
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
+from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.user import (
     NewUserRole,
     Privilege,
@@ -15,17 +16,16 @@ from stustapay.core.schema.user import (
 
 router = APIRouter(
     prefix="",
-    tags=["users"],
     responses={404: {"description": "Not found"}},
 )
 
-user_router = APIRouter(prefix="/users")
-user_role_router = APIRouter(prefix="/user_roles")
+user_router = APIRouter(prefix="/users", tags=["users"])
+user_role_router = APIRouter(prefix="/user-roles", tags=["user-roles"])
 
 
-@user_router.get("", response_model=list[User])
+@user_router.get("", response_model=NormalizedList[User, int])
 async def list_users(token: CurrentAuthToken, user_service: ContextUserService):
-    return await user_service.list_users(token=token)
+    return normalize_list(await user_service.list_users(token=token))
 
 
 class UpdateUserPayload(BaseModel):
@@ -37,7 +37,7 @@ class UpdateUserPayload(BaseModel):
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None
 
-    @validator("user_tag_uid_hex")
+    @field_validator("user_tag_uid_hex")
     def user_tag_uid_hex_must_be_hexadecimal(cls, v):  # pylint: disable=no-self-argument
         if v is None:
             return v
@@ -112,9 +112,9 @@ async def delete_user(user_id: int, token: CurrentAuthToken, user_service: Conte
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@user_role_router.get("", response_model=list[UserRole])
+@user_role_router.get("", response_model=NormalizedList[UserRole, int])
 async def list_user_roles(token: CurrentAuthToken, user_service: ContextUserService):
-    return await user_service.list_user_roles(token=token)
+    return normalize_list(await user_service.list_user_roles(token=token))
 
 
 @user_role_router.post("", response_model=UserRole)

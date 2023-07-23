@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Paper, Typography, ListItem, ListItemText, Stack } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import { ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { selectTaxRateAll, useDeleteTaxRateMutation, useGetTaxRatesQuery } from "@api";
+import { selectTaxRateAll, useDeleteTaxRateMutation, useListTaxRatesQuery } from "@api";
 import { useTranslation } from "react-i18next";
 import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,7 @@ export const TaxRateList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { taxRates, isLoading } = useGetTaxRatesQuery(undefined, {
+  const { taxRates, isLoading } = useListTaxRatesQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       taxRates: data ? selectTaxRateAll(data) : undefined,
@@ -32,7 +32,7 @@ export const TaxRateList: React.FC = () => {
 
   const handleConfirmDeleteTaxRate: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && taxRateToDelete !== null) {
-      deleteTaxRate(taxRateToDelete)
+      deleteTaxRate({ taxRateName: taxRateToDelete })
         .unwrap()
         .catch(() => undefined);
     }

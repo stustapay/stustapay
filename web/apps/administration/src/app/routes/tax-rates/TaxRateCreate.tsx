@@ -20,7 +20,7 @@ export const TaxRateCreate: React.FC = () => {
       submitLabel={t("add")}
       initialValues={initialValues}
       validationSchema={TaxRateSchema}
-      onSubmit={createTaxRate}
+      onSubmit={(taxRate) => createTaxRate({ taxRate })}
     />
   );
 };

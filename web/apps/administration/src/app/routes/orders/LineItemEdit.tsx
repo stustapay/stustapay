@@ -18,8 +18,7 @@ import {
 } from "@mui/material";
 import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
 import { Add as AddIcon, Delete as DeleteIcon, Remove as RemoveIcon } from "@mui/icons-material";
-import { selectProductAll, useEditSaleMutation, useGetProductsQuery } from "@api";
-import { Order, Product } from "@stustapay/models";
+import { Order, Product, selectProductAll, useEditOrderMutation, useListProductsQuery } from "@api";
 import { Loading, NumericInput } from "@stustapay/components";
 import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
@@ -41,13 +40,13 @@ export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
   const [selectedProducts, setSelectedProducts] = React.useState<SelectedProduct[]>([]);
   const navigate = useNavigate();
 
-  const { products } = useGetProductsQuery(undefined, {
+  const { products } = useListProductsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       products: data ? selectProductAll(data) : undefined,
     }),
   });
-  const [editSale] = useEditSaleMutation();
+  const [editSale] = useEditOrderMutation();
 
   React.useEffect(() => {
     setSelectedProducts(
@@ -117,16 +116,18 @@ export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
 
   const handleSave = () => {
     editSale({
-      order_id: order.id,
-      uuid: uuidv4(),
-      products: selectedProducts.map((p) => {
-        if (p.product.fixed_price) {
-          return { product_id: p.product.id, price: null, quantity: p.quantity };
-        } else {
-          return { product_id: p.product.id, price: p.price, quantity: null };
-        }
-      }),
-      used_vouchers: null, // TODO: provide numeric input field for used vouchers
+      orderId: order.id,
+      editSaleProducts: {
+        uuid: uuidv4(),
+        products: selectedProducts.map((p) => {
+          if (p.product.fixed_price) {
+            return { product_id: p.product.id, price: null, quantity: p.quantity };
+          } else {
+            return { product_id: p.product.id, price: p.price, quantity: null };
+          }
+        }),
+        used_vouchers: null, // TODO: provide numeric input field for used vouchers
+      },
     })
       .unwrap()
       .then(({ id }) => {

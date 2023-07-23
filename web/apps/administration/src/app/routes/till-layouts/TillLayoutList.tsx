@@ -1,10 +1,10 @@
 import * as React from "react";
-import { selectTillLayoutAll, useDeleteTillLayoutMutation, useGetTillLayoutsQuery } from "@api";
+import { selectTillLayoutAll, useDeleteTillLayoutMutation, useListTillLayoutsQuery } from "@api";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { Paper, Typography, ListItem, ListItemText, Stack, Link } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import { Link, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ButtonLink } from "@components";
+import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { TillLayout } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
@@ -13,7 +13,7 @@ export const TillLayoutList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { layouts, isLoading: isTillsLoading } = useGetTillLayoutsQuery(undefined, {
+  const { layouts, isLoading: isTillsLoading } = useListTillLayoutsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       layouts: data ? selectTillLayoutAll(data) : undefined,
@@ -32,7 +32,7 @@ export const TillLayoutList: React.FC = () => {
 
   const handleConfirmDeleteLayout: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && layoutToDelete !== null) {
-      deleteTill(layoutToDelete)
+      deleteTill({ layoutId: layoutToDelete })
         .unwrap()
         .catch(() => undefined);
     }

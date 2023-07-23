@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Paper, ListItem, ListItemText, Stack } from "@mui/material";
-import { selectAccountAll, useGetSystemAccountsQuery } from "@api";
+import { ListItem, ListItemText, Paper, Stack } from "@mui/material";
+import { selectAccountAll, useListSystemAccountsQuery } from "@api";
 import { useTranslation } from "react-i18next";
 import { Loading } from "@stustapay/components";
 import { AccountTable } from "./components/AccountTable";
@@ -8,7 +8,7 @@ import { AccountTable } from "./components/AccountTable";
 export const SystemAccountList: React.FC = () => {
   const { t } = useTranslation();
 
-  const { products: accounts, isLoading: isAccountsLoading } = useGetSystemAccountsQuery(undefined, {
+  const { products: accounts, isLoading: isAccountsLoading } = useListSystemAccountsQuery(undefined, {
     selectFromResult: ({ data, ...rest }) => ({
       ...rest,
       products: data ? selectAccountAll(data) : undefined,

@@ -1,33 +1,26 @@
 import * as React from "react";
 import {
-  Paper,
-  ListItem,
-  ListItemText,
-  Table,
-  TableHead,
-  TableBody,
-  TableContainer,
-  TableRow,
-  TableCell,
-  LinearProgress,
-  InputAdornment,
-  Button,
   Alert,
   AlertTitle,
+  Button,
+  InputAdornment,
+  LinearProgress,
+  ListItem,
+  ListItemText,
+  Paper,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
-import {
-  selectCashierById,
-  selectTillById,
-  useCloseOutCashierMutation,
-  useGetCashierByIdQuery,
-  useGetTillsQuery,
-} from "@api";
-import { CashingTextField, Loading } from "@stustapay/components";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { selectTillById, useCloseOutCashierMutation, useGetCashierQuery, useListTillsQuery } from "@api";
+import { CashingTextField, Loading, NumericInput } from "@stustapay/components";
 import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
-import { NumericInput } from "@stustapay/components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { Formik, FormikHelpers } from "formik";
@@ -85,13 +78,8 @@ export const CashierCloseOut: React.FC = () => {
   const currencySymbol = useCurrencySymbol();
 
   const [closeOut] = useCloseOutCashierMutation();
-  const { cashier, isLoading } = useGetCashierByIdQuery(Number(cashierId), {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      cashier: data ? selectCashierById(data, Number(cashierId)) : undefined,
-    }),
-  });
-  const { data: tills, isLoading: isTillsLoading } = useGetTillsQuery();
+  const { data: cashier, isLoading } = useGetCashierQuery({ cashierId: Number(cashierId) });
+  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery();
 
   if (!cashier || isLoading || !tills || isTillsLoading) {
     return <Loading />;
@@ -107,10 +95,12 @@ export const CashierCloseOut: React.FC = () => {
   const handleSubmit = (values: CloseOutData, { setSubmitting }: FormikHelpers<CloseOutData>) => {
     setSubmitting(true);
     closeOut({
-      comment: values.comment,
-      cashier_id: Number(cashierId),
-      actual_cash_drawer_balance: computeSum(values),
-      closing_out_user_id: values.closingOutUserId,
+      cashierId: Number(cashierId),
+      closeOut: {
+        comment: values.comment,
+        actual_cash_drawer_balance: computeSum(values),
+        closing_out_user_id: values.closingOutUserId,
+      },
     })
       .unwrap()
       .then(() => {
