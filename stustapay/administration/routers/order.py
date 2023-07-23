@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, st
 
 from stustapay.core.http.auth_user import CurrentAuthToken, CurrentAuthTokenFromCookie
 from stustapay.core.http.context import ContextOrderService
-from stustapay.core.http.normalize_data import normalize_list, NormalizedList
+from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.order import CompletedSaleProducts, EditSaleProducts, Order
 
 router = APIRouter(

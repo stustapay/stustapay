@@ -1,11 +1,11 @@
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
-from stustapay.core.http.normalize_data import normalize_list, NormalizedList
+from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.user import (
     NewUserRole,
     Privilege,
@@ -37,7 +37,7 @@ class UpdateUserPayload(BaseModel):
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None
 
-    @validator("user_tag_uid_hex")
+    @field_validator("user_tag_uid_hex")
     def user_tag_uid_hex_must_be_hexadecimal(cls, v):  # pylint: disable=no-self-argument
         if v is None:
             return v

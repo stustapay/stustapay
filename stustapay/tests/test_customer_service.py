@@ -77,10 +77,28 @@ class CustomerServiceTest(TerminalTestCase):
         )
 
         product1 = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="Bier", price=5.0, tax_name="ust")
+            token=self.admin_token,
+            product=NewProduct(
+                name="Bier",
+                price=5.0,
+                tax_name="ust",
+                restrictions=[],
+                is_locked=True,
+                is_returnable=False,
+                fixed_price=True,
+            ),
         )
         product2 = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="Pfand", price=2.0, tax_name="none")
+            token=self.admin_token,
+            product=NewProduct(
+                name="Pfand",
+                price=2.0,
+                tax_name="none",
+                restrictions=[],
+                is_locked=True,
+                is_returnable=False,
+                fixed_price=True,
+            ),
         )
 
         line_items = [
@@ -623,7 +641,7 @@ class CustomerServiceTest(TerminalTestCase):
             )
 
         with self.assertRaises(InvalidArgument):
-            await self.customer_service.update_customer_donation(
+            await self.customer_service.update_customer_info_donate_all(
                 token=auth.token,
             )
 

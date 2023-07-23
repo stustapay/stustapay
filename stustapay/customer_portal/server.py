@@ -12,6 +12,7 @@ from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.user import AuthService
 from stustapay.core.subcommand import SubCommand
+
 from .routers import auth, base, sumup
 
 

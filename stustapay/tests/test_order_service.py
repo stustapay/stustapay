@@ -96,6 +96,8 @@ class OrderLogicTest(TerminalTestCase):
                 target_account_id=None,
                 price_in_vouchers=1,
                 is_locked=True,
+                restrictions=[],
+                is_returnable=False,
             ),
         )
         self.beer_product_full = await self.product_service.create_product(
@@ -108,6 +110,8 @@ class OrderLogicTest(TerminalTestCase):
                 target_account_id=None,
                 price_in_vouchers=2,
                 is_locked=True,
+                is_returnable=False,
+                restrictions=[],
             ),
         )
         self.deposit_product = await self.product_service.create_product(
@@ -120,6 +124,7 @@ class OrderLogicTest(TerminalTestCase):
                 target_account_id=ACCOUNT_DEPOSIT,
                 is_locked=True,
                 is_returnable=True,
+                restrictions=[],
             ),
         )
         self.beer_button = await self.till_service.layout.create_button(
