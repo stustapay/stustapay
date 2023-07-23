@@ -11,8 +11,7 @@ const config = {
   favicon: "img/logo.svg",
 
   // Set the production url of your site here
-  url: "https://stustapay.de",
-  // Set the /<baseUrl>/ pathname under which your site is served
+  url: "https://stustapay.de", // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often "/<projectName>/"
   baseUrl: "/",
 
@@ -31,7 +30,7 @@ const config = {
   // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: "en",
-    locales: ["en"],
+    locales: ["en"]
   },
 
   presets: [
@@ -40,45 +39,52 @@ const config = {
       /** @type {import("@docusaurus/preset-classic").Options} */
       ({
         docs: {
-          sidebarPath: require.resolve("./sidebars.js"),
-          // Please change this to your repo.
+          sidebarPath: require.resolve("./sidebars.js"), // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/stustapay/stustapay/tree/master/website/",
+          editUrl: "https://github.com/stustapay/stustapay/tree/master/website/"
         },
         blog: {
-          showReadingTime: true,
-          // Please change this to your repo.
+          showReadingTime: true, // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/stustapay/stustapay/tree/master/website/",
+          editUrl: "https://github.com/stustapay/stustapay/tree/master/website/"
         },
         theme: {
-          customCss: require.resolve("./src/css/custom.css"),
-        },
-      }),
+          customCss: require.resolve("./src/css/custom.css")
+        }
+      })
     ],
     [
-      'redocusaurus',
+      "redocusaurus",
       {
         // Plugin Options for loading OpenAPI files
         specs: [
           {
-            spec: 'openapi.json',
-            route: '/api/',
+            id: "administration-api",
+            spec: "../api/administration.json",
+            route: "/api/administration"
           },
-        ],
+          {
+            id: "terminalserver-api",
+            spec: "../api/terminalserver.json",
+            route: "/api/terminalserver"
+          },
+          {
+            id: "customer_portal-api",
+            spec: "../api/customer_portal.json",
+            route: "/api/customer_portal"
+          }
+        ]
         // Theme Options for modifying how redoc renders them
         // theme: {
         //   // Change with your site colors
         //   primaryColor: '#1890ff',
         // },
-      },
-    ],
+      }
+    ]
   ],
 
   themeConfig:
-    /** @type {import("@docusaurus/preset-classic").ThemeConfig} */
+  /** @type {import("@docusaurus/preset-classic").ThemeConfig} */
     ({
       // Replace with your project"s social card
       // image: "img/docusaurus-social-card.jpg",
@@ -86,27 +92,22 @@ const config = {
         title: "StuStaPay",
         logo: {
           alt: "StuStaPay Logo",
-          src: "img/logo.svg",
+          src: "img/logo.svg"
         },
         items: [
           {
             type: "docSidebar",
             sidebarId: "tutorialSidebar",
             position: "left",
-            label: "Docs",
+            label: "Docs"
           },
-          {
-            to: "/api",
-            label: "Api",
-            position: "left",
-          },
-          {to: "/blog", label: "Blog", position: "left"},
+          { to: "/blog", label: "Blog", position: "left" },
           {
             href: "https://github.com/stustapay/stustapay",
             label: "GitHub",
-            position: "right",
-          },
-        ],
+            position: "right"
+          }
+        ]
       },
       footer: {
         style: "dark",
@@ -116,31 +117,31 @@ const config = {
             items: [
               {
                 label: "Get Started",
-                to: "/docs/intro",
-              },
-            ],
+                to: "/docs/intro"
+              }
+            ]
           },
           {
             title: "More",
             items: [
               {
                 label: "Blog",
-                to: "/blog",
+                to: "/blog"
               },
               {
                 label: "GitHub",
-                href: "https://github.com/stustapay/stustapay",
-              },
-            ],
-          },
+                href: "https://github.com/stustapay/stustapay"
+              }
+            ]
+          }
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} StuStaPay Developers. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} StuStaPay Developers. Built with Docusaurus.`
       },
       prism: {
         theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
-    }),
+        darkTheme: darkCodeTheme
+      }
+    })
 };
 
 module.exports = config;
