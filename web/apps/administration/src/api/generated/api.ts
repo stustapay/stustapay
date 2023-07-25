@@ -1,5 +1,4 @@
 import { emptySplitApi as api } from "./emptyApi";
-
 export const addTagTypes = [
   "products",
   "users",
@@ -776,13 +775,13 @@ export type HttpValidationError = {
 export type NewProduct = {
   name: string;
   price: number | null;
-  fixed_price: boolean;
+  fixed_price?: boolean;
   price_in_vouchers?: number | null;
   price_per_voucher?: number | null;
   tax_name: string;
-  restrictions: ProductRestriction[];
-  is_locked: boolean;
-  is_returnable: boolean;
+  restrictions?: ProductRestriction[];
+  is_locked?: boolean;
+  is_returnable?: boolean;
   target_account_id?: number | null;
 };
 export type User = {
@@ -791,10 +790,10 @@ export type User = {
   role_names: string[];
   description?: string | null;
   user_tag_uid?: number | null;
-  user_tag_uid_hex?: string | null;
   transport_account_id?: number | null;
   cashier_account_id?: number | null;
   id: number;
+  user_tag_uid_hex?: string;
 };
 export type NormalizedListUserInt = {
   ids: number[];
@@ -884,6 +883,7 @@ export type CurrentUser = {
   transport_account_id?: number | null;
   cashier_account_id?: number | null;
   cash_register_id?: number | null;
+  user_tag_uid_hex?: string;
 };
 export type LoginResponse = {
   user: CurrentUser;
@@ -1077,10 +1077,10 @@ export type NormalizedListConfigEntryStr = {
 export type AccountType = "virtual" | "internal" | "private";
 export type UserTagHistoryEntry = {
   user_tag_uid: number;
-  user_tag_uid_hex: string;
   account_id: number;
   comment?: string | null;
   mapping_was_valid_until: string;
+  user_tag_uid_hex?: string;
 };
 export type Account = {
   id: number;
@@ -1090,10 +1090,10 @@ export type Account = {
   balance: number;
   vouchers: number;
   user_tag_uid: number | null;
-  user_tag_uid_hex: string | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
   tag_history: UserTagHistoryEntry[];
+  user_tag_uid_hex?: string;
 };
 export type NormalizedListAccountInt = {
   ids: number[];
@@ -1123,10 +1123,10 @@ export type UserTagAccountAssociation = {
 };
 export type UserTagDetail = {
   user_tag_uid: number;
-  user_tag_uid_hex: string;
   comment?: string | null;
   account_id?: number | null;
   account_history: UserTagAccountAssociation[];
+  user_tag_uid_hex?: string;
 };
 export type UpdateCommentPayload = {
   comment: string;
@@ -1163,8 +1163,8 @@ export type Order = {
   till_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
-  customer_tag_uid_hex: string | null;
   line_items: LineItem[];
+  customer_tag_uid_hex?: string;
 };
 export type NormalizedListOrderInt = {
   ids: number[];
@@ -1178,6 +1178,7 @@ export type PendingLineItem = {
   product_price: number;
   tax_name: string;
   tax_rate: number;
+  total_price?: number;
 };
 export type BookedProduct = {
   product_id: number;
@@ -1209,12 +1210,12 @@ export type Cashier = {
   display_name: string;
   description?: string | null;
   user_tag_uid?: number | null;
-  user_tag_uid_hex?: string | null;
   transport_account_id?: number | null;
   cashier_account_id: number;
   cash_register_id?: number | null;
   cash_drawer_balance: number;
   till_ids: number[];
+  user_tag_uid_hex?: string;
 };
 export type NormalizedListCashierInt = {
   ids: number[];

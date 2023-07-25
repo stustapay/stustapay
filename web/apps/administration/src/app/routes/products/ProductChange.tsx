@@ -156,7 +156,7 @@ export function ProductChange<T extends NewProduct>({
               label={t("product.restrictions")}
               margin="normal"
               variant="standard"
-              value={values.restrictions}
+              value={values.restrictions ?? []}
               disabled={values.is_locked}
               onChange={(value) => setFieldValue("restrictions", value)}
               error={touched.restrictions && !!errors.restrictions}

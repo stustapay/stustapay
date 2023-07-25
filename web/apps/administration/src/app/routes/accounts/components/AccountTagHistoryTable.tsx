@@ -58,7 +58,7 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
     <DataGrid
       autoHeight
       slots={{ toolbar: () => <DataGridTitle title={t("account.history.title")} /> }}
-      getRowId={(row) => row.user_tag_uid_hex}
+      getRowId={(row) => `${row.account_id}-${row.user_tag_uid_hex}`}
       rows={history}
       columns={columns}
       disableRowSelectionOnClick

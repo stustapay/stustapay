@@ -1,16 +1,17 @@
 import * as React from "react";
 import {
-  Select,
-  MenuItem,
+  Checkbox,
   FormControl,
+  FormHelperText,
   InputLabel,
+  ListItemText,
+  MenuItem,
+  Select,
   SelectChangeEvent,
   SelectProps,
-  FormHelperText,
-  Checkbox,
-  ListItemText,
 } from "@mui/material";
-import { ProductRestriction, ProductRestrictions } from "@stustapay/models";
+import { ProductRestrictions } from "@stustapay/models";
+import { ProductRestriction } from "@api";
 
 export interface RestrictionSelectProps
   extends Omit<SelectProps, "value" | "onChange" | "margin" | "multiple" | "renderValue"> {
