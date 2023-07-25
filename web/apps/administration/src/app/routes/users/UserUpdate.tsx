@@ -1,12 +1,12 @@
 import { Alert, Button, LinearProgress, Paper, TextField, Typography } from "@mui/material";
 import * as React from "react";
 import { Form, Formik, FormikHelpers } from "formik";
-import { User, UserSchema } from "@stustapay/models";
+import { UserSchema } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { useGetUserQuery, useUpdateUserMutation } from "@api";
+import { useGetUserQuery, User, useUpdateUserMutation } from "@api";
 import { Loading } from "@stustapay/components";
 import { RoleSelect } from "./RoleSelect";
 
