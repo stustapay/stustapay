@@ -1,16 +1,16 @@
+import { selectUserRoleById, useListUserRolesQuery, useUpdateUserRoleMutation } from "@/api";
+import { UserRoleRoutes } from "@/app/routes";
+import { PrivilegeSelect } from "@/components/features";
 import { Alert, Button, Checkbox, FormControlLabel, LinearProgress, Paper, Typography } from "@mui/material";
-import * as React from "react";
-import { Form, Formik, FormikHelpers } from "formik";
-import { z } from "zod";
+import { Loading } from "@stustapay/components";
 import { PrivilegeSchema } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { useNavigate, useParams } from "react-router-dom";
+import { Form, Formik, FormikHelpers } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { selectUserRoleById, useListUserRolesQuery, useUpdateUserRoleMutation } from "@api";
-import { Loading } from "@stustapay/components";
-import { PrivilegeSelect } from "@/components/PrivilegeSelect";
-import { UserRoleRoutes } from "@/app/routes";
+import { z } from "zod";
 
 const UpdateSchema = z.object({
   id: z.number(),

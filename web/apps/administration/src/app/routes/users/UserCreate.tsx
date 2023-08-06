@@ -1,14 +1,14 @@
+import { useCreateUserMutation } from "@/api";
+import { UserRoutes } from "@/app/routes";
+import { RoleSelect } from "@/components/features";
 import { Button, LinearProgress, Paper, TextField, Typography } from "@mui/material";
-import * as React from "react";
-import { Form, Formik, FormikHelpers } from "formik";
 import { NewUser, NewUserSchema } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { useNavigate } from "react-router-dom";
+import { Form, Formik, FormikHelpers } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useCreateUserMutation } from "@api";
-import { RoleSelect } from "@/components/RoleSelect";
-import { UserRoutes } from "@/app/routes";
 
 const initialValues: NewUser = {
   login: "",

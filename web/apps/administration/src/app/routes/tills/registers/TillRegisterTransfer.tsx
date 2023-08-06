@@ -2,11 +2,11 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, AlertTitle, Button, LinearProgress, Paper, Typography } from "@mui/material";
 import { Form, Formik, FormikHelpers } from "formik";
-import { selectTillRegisterById, useListCashRegistersAdminQuery, useTransferRegisterMutation } from "@api";
+import { selectTillRegisterById, useListCashRegistersAdminQuery, useTransferRegisterMutation } from "@/api";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Loading } from "@stustapay/components";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { UserSelect } from "@components";
+import { UserSelect } from "@/components/features";
 import { z } from "zod";
 import { TillRegistersRoutes } from "@/app/routes";
 

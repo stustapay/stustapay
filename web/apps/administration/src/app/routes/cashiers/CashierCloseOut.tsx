@@ -18,13 +18,13 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
-import { selectTillById, useCloseOutCashierMutation, useGetCashierQuery, useListTillsQuery } from "@api";
+import { selectTillById, useCloseOutCashierMutation, useGetCashierQuery, useListTillsQuery } from "@/api";
 import { CashingTextField, Loading, NumericInput } from "@stustapay/components";
-import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
+import { useCurrencyFormatter, useCurrencySymbol } from "@/hooks";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { Formik, FormikHelpers } from "formik";
-import { UserSelect } from "@components/UserSelect";
+import { UserSelect } from "@/components/features";
 import { getUserName } from "@stustapay/models";
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
 

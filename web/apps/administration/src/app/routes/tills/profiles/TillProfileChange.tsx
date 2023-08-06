@@ -1,3 +1,6 @@
+import { NewTillProfile } from "@/api";
+import { TillProfileRoutes } from "@/app/routes";
+import { RoleSelect, TillLayoutSelect } from "@/components/features";
 import {
   Button,
   Checkbox,
@@ -8,17 +11,12 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import * as React from "react";
-import { Form, Formik, FormikHelpers } from "formik";
-import { toFormikValidationSchema } from "@stustapay/utils";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { z } from "zod";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTillProfile } from "@api";
-import { TillLayoutSelect } from "@/components/TillLayoutSelect";
-import { RoleSelect } from "@/components/RoleSelect";
-import { TillProfileRoutes } from "@/app/routes";
+import { toFormikValidationSchema } from "@stustapay/utils";
+import { Form, Formik, FormikHelpers } from "formik";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod";
 
 export interface TillChangeProps<T extends NewTillProfile> {
   headerTitle: string;

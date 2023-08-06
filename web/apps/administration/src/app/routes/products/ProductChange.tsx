@@ -10,16 +10,15 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import { Form, Formik, FormikHelpers } from "formik";
-import { NewProduct } from "@api";
+import { NewProduct } from "@/api";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { TaxRateSelect } from "@components/TaxRateSelect";
+import { TaxRateSelect, RestrictionSelect } from "@/components/features";
 import { NumericInput } from "@stustapay/components";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { RestrictionSelect } from "@/components";
-import { useCurrencySymbol } from "@hooks";
+import { useCurrencySymbol } from "@/hooks";
 import { ProductRoutes } from "@/app/routes";
 
 export interface ProductChangeProps<T extends NewProduct> {

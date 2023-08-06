@@ -1,9 +1,9 @@
 import * as React from "react";
 import { ListItem, ListItemText, Paper, Stack } from "@mui/material";
-import { selectOrderAll, useListOrdersQuery } from "@api";
+import { selectOrderAll, useListOrdersQuery } from "@/api";
 import { useTranslation } from "react-i18next";
 import { Loading } from "@stustapay/components";
-import { OrderTable } from "@components";
+import { OrderTable } from "@/components/features";
 
 export const OrderList: React.FC = () => {
   const { t } = useTranslation();

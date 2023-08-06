@@ -1,14 +1,14 @@
+import { useCreateUserRoleMutation } from "@/api";
+import { UserRoleRoutes } from "@/app/routes";
+import { PrivilegeSelect } from "@/components/features";
 import { Button, Checkbox, FormControlLabel, LinearProgress, Paper, TextField, Typography } from "@mui/material";
-import * as React from "react";
-import { Form, Formik, FormikHelpers } from "formik";
 import { NewUserRole, NewUserRoleSchema } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { useNavigate } from "react-router-dom";
+import { Form, Formik, FormikHelpers } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useCreateUserRoleMutation } from "@api";
-import { PrivilegeSelect } from "@/components/PrivilegeSelect";
-import { UserRoleRoutes } from "@/app/routes";
 
 const initialValues: NewUserRole = {
   name: "",

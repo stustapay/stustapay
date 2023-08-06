@@ -1,14 +1,13 @@
-import { Button, LinearProgress, Paper, TextField, Typography } from "@mui/material";
-import * as React from "react";
-import { Form, Formik, FormikHelpers } from "formik";
-import { toFormikValidationSchema } from "@stustapay/utils";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { z } from "zod";
-import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { NewTill } from "@api";
-import { TillProfileSelect } from "@/components/TillProfileSelect";
+import { NewTill } from "@/api";
 import { TillRoutes } from "@/app/routes";
+import { TillProfileSelect } from "@/components/features";
+import { Button, LinearProgress, Paper, TextField, Typography } from "@mui/material";
+import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
+import { toFormikValidationSchema } from "@stustapay/utils";
+import { Form, Formik, FormikHelpers } from "formik";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod";
 
 export interface TillChangeProps<T extends NewTill> {
   headerTitle: string;

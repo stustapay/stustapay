@@ -1,5 +1,6 @@
 import { Box, Button, Checkbox, IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
-import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink, OrderTable } from "@components";
+import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink } from "@/components";
+import { OrderTable } from "@/components/features";
 import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

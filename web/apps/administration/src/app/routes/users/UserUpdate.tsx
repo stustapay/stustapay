@@ -1,15 +1,15 @@
+import { User, useGetUserQuery, useUpdateUserMutation } from "@/api";
+import { UserRoutes } from "@/app/routes";
+import { RoleSelect } from "@/components/features";
 import { Alert, Button, LinearProgress, Paper, TextField, Typography } from "@mui/material";
-import * as React from "react";
-import { Form, Formik, FormikHelpers } from "formik";
+import { Loading } from "@stustapay/components";
 import { UserSchema } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { useNavigate, useParams } from "react-router-dom";
+import { Form, Formik, FormikHelpers } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useGetUserQuery, User, useUpdateUserMutation } from "@api";
-import { Loading } from "@stustapay/components";
-import { RoleSelect } from "@/components/RoleSelect";
-import { UserRoutes } from "@/app/routes";
 
 export const UserUpdate: React.FC = () => {
   const { t } = useTranslation();

@@ -1,25 +1,26 @@
-import * as React from "react";
-import { Button, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Stack } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
   Account,
   selectOrderAll,
   useDisableAccountMutation,
   useListOrdersQuery,
   useUpdateAccountCommentMutation,
-} from "@api";
-import { Loading } from "@stustapay/components";
-import { toast } from "react-toastify";
-import { EditableListItem, OrderTable } from "@components";
-import { useCurrencyFormatter } from "@hooks";
-import { Edit as EditIcon } from "@mui/icons-material";
-import { EditAccountBalanceModal } from "./components/EditAccountBalanceModal";
-import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAmountModal";
-import { EditAccountTagModal } from "./components/EditAccountTagModal";
-import { formatUserTagUid } from "@stustapay/models";
-import { AccountTagHistoryTable } from "./components/AccountTagHistoryTable";
+} from "@/api";
 import { UserTagRoutes } from "@/app/routes";
+import { EditableListItem } from "@/components";
+import { OrderTable } from "@/components/features";
+import { useCurrencyFormatter } from "@/hooks";
+import { Edit as EditIcon } from "@mui/icons-material";
+import { Button, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Stack } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { formatUserTagUid } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { AccountTagHistoryTable } from "./components/AccountTagHistoryTable";
+import { EditAccountBalanceModal } from "./components/EditAccountBalanceModal";
+import { EditAccountTagModal } from "./components/EditAccountTagModal";
+import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAmountModal";
 
 export const CustomerAccountDetail: React.FC<{ account: Account }> = ({ account }) => {
   const { t } = useTranslation();

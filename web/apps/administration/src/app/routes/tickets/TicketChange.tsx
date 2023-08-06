@@ -1,15 +1,15 @@
 import { Button, InputAdornment, LinearProgress, Paper, TextField, Typography } from "@mui/material";
 import * as React from "react";
 import { Form, Formik, FormikHelpers } from "formik";
-import { NewTicket } from "@api";
+import { NewTicket } from "@/api";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { NumericInput } from "@stustapay/components";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { ProductSelect, RestrictionSelect } from "@components";
-import { useCurrencySymbol } from "@hooks";
+import { ProductSelect, RestrictionSelect } from "@/components/features";
+import { useCurrencySymbol } from "@/hooks";
 import { TicketRoutes } from "@/app/routes";
 
 export interface TicketChangeProps<T extends NewTicket> {
