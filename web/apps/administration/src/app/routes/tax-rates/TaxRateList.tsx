@@ -8,6 +8,7 @@ import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@component
 import { useNavigate } from "react-router-dom";
 import { TaxRate } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
+import { TaxRateRoutes } from "@/app/routes";
 
 export const TaxRateList: React.FC = () => {
   const { t } = useTranslation();
@@ -68,7 +69,7 @@ export const TaxRateList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit")}
-          onClick={() => navigate(`/tax-rates/${params.row.name}/edit`)}
+          onClick={() => navigate(TaxRateRoutes.edit(params.row.name))}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
@@ -85,7 +86,7 @@ export const TaxRateList: React.FC = () => {
       <Paper>
         <ListItem
           secondaryAction={
-            <ButtonLink to="/tax-rates/new" endIcon={<AddIcon />} variant="contained" color="primary">
+            <ButtonLink to={TaxRateRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
               {t("add")}
             </ButtonLink>
           }

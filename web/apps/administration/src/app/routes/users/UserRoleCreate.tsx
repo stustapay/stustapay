@@ -7,7 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useCreateUserRoleMutation } from "@api";
-import { PrivilegeSelect } from "./PrivilegeSelect";
+import { PrivilegeSelect } from "@/components/PrivilegeSelect";
+import { UserRoleRoutes } from "@/app/routes";
 
 const initialValues: NewUserRole = {
   name: "",
@@ -27,7 +28,7 @@ export const UserRoleCreate: React.FC = () => {
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/user-roles");
+        navigate(UserRoleRoutes.list());
       })
       .catch((err) => {
         setSubmitting(false);

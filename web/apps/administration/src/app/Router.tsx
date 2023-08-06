@@ -1,23 +1,37 @@
 import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
-import { TillList } from "./routes/tills/TillList";
 import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
 import { TicketCreate, TicketDetail, TicketList, TicketUpdate } from "./routes/tickets";
 import { TaxRateCreate, TaxRateList, TaxRateUpdate } from "./routes/tax-rates";
-import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
+import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout";
 import { Settings } from "./routes/settings/Settings";
 import { Login, Logout, Profile } from "./routes/auth";
-import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
-import { TillCreate } from "./routes/tills/TillCreate";
-import { TillUpdate } from "./routes/tills/TillUpdate";
-import { TillDetail } from "./routes/tills/TillDetail";
-import { TillLayoutCreate, TillLayoutDetail, TillLayoutList, TillLayoutUpdate } from "./routes/till-layouts";
-import { TillProfileCreate, TillProfileList, TillProfileUpdate } from "./routes/till-profiles";
-import { TillProfileDetail } from "./routes/till-profiles/TillProfileDetail";
-import { TillButtonUpdate } from "./routes/till-buttons/TillButtonUpdate";
-import { TillButtonCreate } from "./routes/till-buttons/TillButtonCreate";
-import { TillButtonList } from "./routes/till-buttons/TillButtonList";
+import {
+  TillCreate,
+  TillUpdate,
+  TillDetail,
+  TillList,
+  TillLayoutCreate,
+  TillLayoutDetail,
+  TillLayoutList,
+  TillLayoutUpdate,
+  TillProfileCreate,
+  TillProfileList,
+  TillProfileUpdate,
+  TillProfileDetail,
+  TillButtonList,
+  TillButtonCreate,
+  TillButtonUpdate,
+  TillPageLayout,
+  TillRegisterCreate,
+  TillRegisterList,
+  TillRegisterTransfer,
+  TillRegisterUpdate,
+  TillRegisterStockingCreate,
+  TillRegisterStockingList,
+  TillRegisterStockingUpdate,
+} from "./routes/tills";
 import {
   UserCreate,
   UserDetail,
@@ -26,29 +40,13 @@ import {
   UserRoleList,
   UserRoleUpdate,
   UserUpdate,
+  UserPageLayout,
 } from "./routes/users";
-import {
-  CustomerAccountDetail,
-  FindAccounts,
-  SystemAccountDetail,
-  SystemAccountList,
-  UserTagDetail,
-} from "./routes/accounts";
-import { OrderDetail, SaleEdit, OrderList } from "./routes/orders";
+import { AccountDetail, FindAccounts, SystemAccountList, AccountPageLayout } from "./routes/accounts";
+import { UserTagDetail, UserTagPageLayout } from "./routes/user-tags";
+import { OrderDetail, OrderList, SaleEdit } from "./routes/orders";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
-import { PrivilegeGuard } from "./routes/PrivilegeGuard";
-import {
-  TillRegisterStockingCreate,
-  TillRegisterStockingList,
-  TillRegisterStockingUpdate,
-} from "./routes/till-register-stocking";
-import {
-  TillRegisterCreate,
-  TillRegisterList,
-  TillRegisterTransfer,
-  TillRegisterUpdate,
-} from "./routes/till-registers";
-import { FestivalOverview, MoneyOverview } from "./routes/overview";
+import { NodePageLayout, FestivalOverview, MoneyOverview } from "./routes/nodes";
 
 const router = createBrowserRouter([
   {
@@ -65,32 +63,23 @@ const router = createBrowserRouter([
         element: <Profile />,
       },
       {
-        path: "overview",
+        path: "node/:nodeId",
+        element: <NodePageLayout />,
         children: [
+          { index: true, element: <FestivalOverview /> },
+          { path: "stats", element: <MoneyOverview /> },
           {
-            path: "money",
-            element: (
-              <PrivilegeGuard privilege="account_management">
-                <MoneyOverview />
-              </PrivilegeGuard>
-            ),
-          },
-          {
-            path: "festival",
-            element: (
-              <PrivilegeGuard privilege="festival_overview">
-                <FestivalOverview />
-              </PrivilegeGuard>
-            ),
+            path: "settings",
+            element: <Settings />,
           },
         ],
       },
       {
-        path: "products",
+        path: "node/:nodeId/products",
         element: <PrivilegeGuard privilege="product_management" />,
         children: [
           {
-            path: "",
+            index: true,
             element: <ProductList />,
           },
           {
@@ -108,11 +97,11 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "tickets",
+        path: "node/:nodeId/tickets",
         element: <PrivilegeGuard privilege="product_management" />,
         children: [
           {
-            path: "",
+            index: true,
             element: <TicketList />,
           },
           {
@@ -130,11 +119,11 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "cashiers",
+        path: "node/:nodeId/cashiers",
         element: <PrivilegeGuard privilege="cashier_management" />,
         children: [
           {
-            path: "",
+            index: true,
             element: <CashierList />,
           },
           {
@@ -152,11 +141,11 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "tax-rates",
+        path: "node/:nodeId/tax-rates",
         element: <PrivilegeGuard privilege="tax_rate_management" />,
         children: [
           {
-            path: "",
+            index: true,
             element: <TaxRateList />,
           },
           {
@@ -170,12 +159,88 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "tills",
-        element: <PrivilegeGuard privilege="till_management" />,
+        path: "node/:nodeId/tills",
+        element: (
+          <PrivilegeGuard privilege="till_management">
+            <TillPageLayout />
+          </PrivilegeGuard>
+        ),
         children: [
           {
-            path: "",
+            index: true,
             element: <TillList />,
+          },
+          {
+            path: "profiles",
+            element: <TillProfileList />,
+          },
+          {
+            path: "profiles/new",
+            element: <TillProfileCreate />,
+          },
+          {
+            path: "profiles/:profileId/edit",
+            element: <TillProfileUpdate />,
+          },
+          {
+            path: "profiles/:profileId",
+            element: <TillProfileDetail />,
+          },
+          {
+            path: "layouts",
+            element: <TillLayoutList />,
+          },
+          {
+            path: "layouts/new",
+            element: <TillLayoutCreate />,
+          },
+          {
+            path: "layouts/:layoutId/edit",
+            element: <TillLayoutUpdate />,
+          },
+          {
+            path: "layouts/:layoutId",
+            element: <TillLayoutDetail />,
+          },
+          {
+            path: "buttons",
+            element: <TillButtonList />,
+          },
+          {
+            path: "buttons/new",
+            element: <TillButtonCreate />,
+          },
+          {
+            path: "buttons/:buttonId/edit",
+            element: <TillButtonUpdate />,
+          },
+          {
+            path: "registers",
+            element: <TillRegisterList />,
+          },
+          {
+            path: "registers/new",
+            element: <TillRegisterCreate />,
+          },
+          {
+            path: "registers/:registerId/edit",
+            element: <TillRegisterUpdate />,
+          },
+          {
+            path: "registers/:registerId/transfer",
+            element: <TillRegisterTransfer />,
+          },
+          {
+            path: "stockings",
+            element: <TillRegisterStockingList />,
+          },
+          {
+            path: "stockings/new",
+            element: <TillRegisterStockingCreate />,
+          },
+          {
+            path: "stockings/:stockingId/edit",
+            element: <TillRegisterStockingUpdate />,
           },
           {
             path: "new",
@@ -192,134 +257,35 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "till-buttons",
-        element: <PrivilegeGuard privilege="till_management" />,
+        path: "node/:nodeId/accounts",
+        element: (
+          <PrivilegeGuard privilege="account_management">
+            <AccountPageLayout />
+          </PrivilegeGuard>
+        ),
         children: [
+          { index: true, element: <MoneyOverview /> },
           {
-            path: "",
-            element: <TillButtonList />,
+            path: ":accountId",
+            element: <AccountDetail />,
           },
           {
-            path: "new",
-            element: <TillButtonCreate />,
-          },
-          {
-            path: ":buttonId/edit",
-            element: <TillButtonUpdate />,
-          },
-        ],
-      },
-      {
-        path: "till-register-stockings",
-        element: <PrivilegeGuard privilege="till_management" />,
-        children: [
-          {
-            path: "",
-            element: <TillRegisterStockingList />,
-          },
-          {
-            path: "new",
-            element: <TillRegisterStockingCreate />,
-          },
-          {
-            path: ":stockingId/edit",
-            element: <TillRegisterStockingUpdate />,
-          },
-        ],
-      },
-      {
-        path: "till-registers",
-        element: <PrivilegeGuard privilege="till_management" />,
-        children: [
-          {
-            path: "",
-            element: <TillRegisterList />,
-          },
-          {
-            path: "new",
-            element: <TillRegisterCreate />,
-          },
-          {
-            path: ":registerId/edit",
-            element: <TillRegisterUpdate />,
-          },
-          {
-            path: ":registerId/transfer",
-            element: <TillRegisterTransfer />,
-          },
-        ],
-      },
-      {
-        path: "till-layouts",
-        element: <PrivilegeGuard privilege="till_management" />,
-        children: [
-          {
-            path: "",
-            element: <TillLayoutList />,
-          },
-          {
-            path: "new",
-            element: <TillLayoutCreate />,
-          },
-          {
-            path: ":layoutId/edit",
-            element: <TillLayoutUpdate />,
-          },
-          {
-            path: ":layoutId",
-            element: <TillLayoutDetail />,
-          },
-        ],
-      },
-      {
-        path: "till-profiles",
-        element: <PrivilegeGuard privilege="till_management" />,
-        children: [
-          {
-            path: "",
-            element: <TillProfileList />,
-          },
-          {
-            path: "new",
-            element: <TillProfileCreate />,
-          },
-          {
-            path: ":profileId/edit",
-            element: <TillProfileUpdate />,
-          },
-          {
-            path: ":profileId",
-            element: <TillProfileDetail />,
-          },
-        ],
-      },
-      {
-        path: "system-accounts",
-        element: <PrivilegeGuard privilege="account_management" />,
-        children: [
-          {
-            path: "",
+            path: "system",
             element: <SystemAccountList />,
           },
           {
-            path: ":accountId",
-            element: <SystemAccountDetail />,
+            path: "find",
+            element: <FindAccounts />,
           },
         ],
       },
       {
-        path: "customer-accounts",
-        element: <PrivilegeGuard privilege="account_management" />,
-        children: [
-          {
-            path: ":accountId",
-            element: <CustomerAccountDetail />,
-          },
-        ],
-      },
-      {
-        path: "user-tags",
-        element: <PrivilegeGuard privilege="account_management" />,
+        path: "node/:nodeId/user-tags",
+        element: (
+          <PrivilegeGuard privilege="account_management">
+            <UserTagPageLayout />
+          </PrivilegeGuard>
+        ),
         children: [
           {
             path: ":userTagUidHex",
@@ -328,21 +294,11 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "find-accounts",
-        element: <PrivilegeGuard privilege="account_management" />,
-        children: [
-          {
-            path: "",
-            element: <FindAccounts />,
-          },
-        ],
-      },
-      {
-        path: "orders",
+        path: "node/:nodeId/orders",
         element: <PrivilegeGuard privilege="order_management" />,
         children: [
           {
-            path: "",
+            index: true,
             element: <OrderList />,
           },
           {
@@ -356,26 +312,32 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "settings",
-        element: <PrivilegeGuard privilege="config_management" />,
+        path: "node/:nodeId/users",
+        element: (
+          <PrivilegeGuard privilege="user_management">
+            <UserPageLayout />
+          </PrivilegeGuard>
+        ),
         children: [
           {
-            path: "",
-            element: <Settings />,
-          },
-        ],
-      },
-      {
-        path: "users",
-        element: <PrivilegeGuard privilege="user_management" />,
-        children: [
-          {
-            path: "",
+            index: true,
             element: <UserList />,
           },
           {
             path: "new",
             element: <UserCreate />,
+          },
+          {
+            path: "roles",
+            element: <UserRoleList />,
+          },
+          {
+            path: "roles/new",
+            element: <UserRoleCreate />,
+          },
+          {
+            path: "roles/:userId/edit",
+            element: <UserRoleUpdate />,
           },
           {
             path: ":userId/edit",
@@ -384,24 +346,6 @@ const router = createBrowserRouter([
           {
             path: ":userId",
             element: <UserDetail />,
-          },
-        ],
-      },
-      {
-        path: "user-roles",
-        element: <PrivilegeGuard privilege="user_management" />,
-        children: [
-          {
-            path: "",
-            element: <UserRoleList />,
-          },
-          {
-            path: "new",
-            element: <UserRoleCreate />,
-          },
-          {
-            path: ":userId/edit",
-            element: <UserRoleUpdate />,
           },
         ],
       },

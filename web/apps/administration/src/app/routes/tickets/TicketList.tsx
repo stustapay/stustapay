@@ -9,6 +9,7 @@ import { Ticket } from "@stustapay/models";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "src/hooks";
+import { ProductRoutes, TicketRoutes } from "@/app/routes";
 
 export const TicketList: React.FC = () => {
   const { t } = useTranslation();
@@ -47,7 +48,7 @@ export const TicketList: React.FC = () => {
       headerName: t("ticket.name") as string,
       flex: 1,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/tickets/${params.row.id}`}>
+        <Link component={RouterLink} to={TicketRoutes.detail(params.row.id)}>
           {params.row.name}
         </Link>
       ),
@@ -61,7 +62,7 @@ export const TicketList: React.FC = () => {
       field: "product_id",
       headerName: t("ticket.product") as string,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/products/${params.row.product_id}`}>
+        <Link component={RouterLink} to={ProductRoutes.detail(params.row.product_id)}>
           {params.row.product_name}
         </Link>
       ),
@@ -100,7 +101,7 @@ export const TicketList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit")}
-          onClick={() => navigate(`/tickets/${params.row.id}/edit`)}
+          onClick={() => navigate(TicketRoutes.edit(params.row.id))}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
@@ -117,7 +118,7 @@ export const TicketList: React.FC = () => {
       <Paper>
         <ListItem
           secondaryAction={
-            <ButtonLink to="/tickets/new" endIcon={<AddIcon />} variant="contained" color="primary">
+            <ButtonLink to={TicketRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
               {t("add")}
             </ButtonLink>
           }

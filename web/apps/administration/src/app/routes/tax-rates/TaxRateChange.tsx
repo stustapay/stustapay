@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { NumericInput } from "@stustapay/components";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
+import { TaxRateRoutes } from "@/app/routes";
 
 export interface TaxRateChangeProps<T extends TaxRate> {
   headerTitle: string;
@@ -34,7 +35,7 @@ export function TaxRateChange<T extends TaxRate>({
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/tax-rates");
+        navigate(TaxRateRoutes.list());
       })
       .catch((err) => {
         setSubmitting(false);

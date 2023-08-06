@@ -5,10 +5,14 @@ export type Theme = "light" | "dark" | "browser";
 
 interface UiState {
   theme: Theme;
+  expandedNodes: string[];
+  selectedNodes: string[];
 }
 
 const initialState: UiState = {
   theme: "browser",
+  expandedNodes: [],
+  selectedNodes: [],
 };
 
 export const uiSlice = createSlice({
@@ -18,9 +22,24 @@ export const uiSlice = createSlice({
     setTheme: (state, action: PayloadAction<Theme>) => {
       state.theme = action.payload;
     },
+    setExpandedNodes: (state, action: PayloadAction<string[]>) => {
+      state.expandedNodes = action.payload;
+    },
+    extendExpandedNodes: (state, action: PayloadAction<string[]>) => {
+      for (const node of action.payload) {
+        if (!state.expandedNodes.includes(node)) {
+          state.expandedNodes.push(node) ;
+        }
+      }
+    },
+    setSelectedNodes: (state, action: PayloadAction<string[]>) => {
+      state.selectedNodes = action.payload;
+    },
   },
 });
 
-export const { setTheme } = uiSlice.actions;
+export const { setTheme, setExpandedNodes, setSelectedNodes, extendExpandedNodes } = uiSlice.actions;
 
 export const selectTheme = (state: RootState) => state.ui.theme;
+export const selectExpandedNodes = (state: RootState) => state.ui.expandedNodes;
+export const selectSelectedNodes = (state: RootState) => state.ui.selectedNodes;

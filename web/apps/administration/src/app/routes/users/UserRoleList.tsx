@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Loading } from "@stustapay/components";
+import { UserRoleRoutes } from "@/app/routes";
 
 export const UserRoleList: React.FC = () => {
   const { t } = useTranslation();
@@ -26,7 +27,7 @@ export const UserRoleList: React.FC = () => {
   }
 
   const addUserRole = () => {
-    navigate("/user-roles/new");
+    navigate(UserRoleRoutes.add());
   };
 
   const openConfirmDeleteDialog = (userId: number) => {
@@ -68,7 +69,7 @@ export const UserRoleList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit")}
-          onClick={() => navigate(`/user-roles/${params.row.id}/edit`)}
+          onClick={() => navigate(UserRoleRoutes.edit(params.row.id))}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}

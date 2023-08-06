@@ -5,3 +5,4 @@ export * from "./UserUpdate";
 export * from "./UserRoleCreate";
 export * from "./UserRoleUpdate";
 export * from "./UserRoleList";
+export * from "./UserPageLayout"

@@ -5,6 +5,7 @@ import { Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TaxRateChange } from "./TaxRateChange";
 import { Loading } from "@stustapay/components";
+import { TaxRateRoutes } from "@/app/routes";
 
 export const TaxRateUpdate: React.FC = () => {
   const { t } = useTranslation();
@@ -13,7 +14,7 @@ export const TaxRateUpdate: React.FC = () => {
   const [updateTaxRate] = useUpdateTaxRateMutation();
 
   if (error) {
-    return <Navigate to="/tax-rates" />;
+    return <Navigate to={TaxRateRoutes.list()} />;
   }
 
   if (isLoading || !taxRate) {

@@ -7,6 +7,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useDeleteUserMutation, useGetUserQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { formatUserTagUid } from "@stustapay/models";
+import { UserRoutes } from "@/app/routes";
 
 export const UserDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -17,7 +18,7 @@ export const UserDetail: React.FC = () => {
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error) {
-    return <Navigate to="/users" />;
+    return <Navigate to={UserRoutes.list()} />;
   }
 
   const openConfirmDeleteDialog = () => {
@@ -26,7 +27,7 @@ export const UserDetail: React.FC = () => {
 
   const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteUser({ userId: Number(userId) }).then(() => navigate("/users"));
+      deleteUser({ userId: Number(userId) }).then(() => navigate(UserRoutes.list()));
     }
     setShowConfirmDelete(false);
   };
@@ -41,7 +42,7 @@ export const UserDetail: React.FC = () => {
         <ListItem
           secondaryAction={
             <>
-              <IconButtonLink to={`/users/${userId}/edit`} color="primary" sx={{ mr: 1 }}>
+              <IconButtonLink to={UserRoutes.edit(userId)} color="primary" sx={{ mr: 1 }}>
                 <EditIcon />
               </IconButtonLink>
               <Tooltip title={t("delete")}>

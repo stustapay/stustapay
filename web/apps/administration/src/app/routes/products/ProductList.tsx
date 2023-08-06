@@ -23,6 +23,7 @@ import { Product } from "@stustapay/models";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "src/hooks";
+import { ProductRoutes } from "@/app/routes";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation();
@@ -88,7 +89,7 @@ export const ProductList: React.FC = () => {
       headerName: t("product.name") as string,
       flex: 1,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/products/${params.row.id}`}>
+        <Link component={RouterLink} to={ProductRoutes.detail(params.row.id)}>
           {params.row.name}
         </Link>
       ),
@@ -141,7 +142,7 @@ export const ProductList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit")}
-          onClick={() => navigate(`/products/${params.row.id}/edit`)}
+          onClick={() => navigate(ProductRoutes.edit(params.row.id))}
         />,
         <GridActionsCellItem
           icon={<ContentCopyIcon />}
@@ -172,7 +173,7 @@ export const ProductList: React.FC = () => {
       <Paper>
         <ListItem
           secondaryAction={
-            <ButtonLink to="/products/new" endIcon={<AddIcon />} variant="contained" color="primary">
+            <ButtonLink to={ProductRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
               {t("add")}
             </ButtonLink>
           }

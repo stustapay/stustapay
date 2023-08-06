@@ -5,6 +5,7 @@ import { Navigate, useParams } from "react-router-dom";
 import { ProductChange } from "./ProductChange";
 import { ProductSchema } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
+import { ProductRoutes } from "@/app/routes";
 
 export const ProductUpdate: React.FC = () => {
   const { t } = useTranslation();
@@ -13,7 +14,7 @@ export const ProductUpdate: React.FC = () => {
   const [updateProduct] = useUpdateProductMutation();
 
   if (error) {
-    return <Navigate to="/products" />;
+    return <Navigate to={ProductRoutes.list()} />;
   }
 
   if (isLoading || !product) {

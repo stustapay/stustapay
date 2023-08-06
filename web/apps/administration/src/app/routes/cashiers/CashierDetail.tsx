@@ -21,6 +21,7 @@ import { toast } from "react-toastify";
 import { useCurrencyFormatter } from "@hooks";
 import { CashierShift, formatUserTagUid, getUserName } from "@stustapay/models";
 import { formatDate } from "@stustapay/utils";
+import { TillRoutes } from "@/app/routes";
 
 export const CashierDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -184,7 +185,7 @@ export const CashierDetail: React.FC = () => {
           </ListItemLink>
           {cashier.till_ids.length !== 0 ? (
             cashier.till_ids.map((till_id) => (
-              <ListItemLink key={till_id} to={`/tills/${getTill(till_id)?.id}`}>
+              <ListItemLink key={till_id} to={TillRoutes.detail(getTill(till_id)?.id)}>
                 <ListItemText primary={t("cashier.till")} secondary={getTill(till_id)?.name} />
               </ListItemLink>
             ))

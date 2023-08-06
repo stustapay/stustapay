@@ -10,6 +10,7 @@ import { NumericInput } from "@stustapay/components";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 import { ProductSelect, RestrictionSelect } from "@components";
 import { useCurrencySymbol } from "@hooks";
+import { TicketRoutes } from "@/app/routes";
 
 export interface TicketChangeProps<T extends NewTicket> {
   headerTitle: string;
@@ -37,7 +38,7 @@ export function TicketChange<T extends NewTicket>({
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/tickets");
+        navigate(TicketRoutes.list());
       })
       .catch((err) => {
         setSubmitting(false);

@@ -8,6 +8,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { formatUserTagUid, User } from "@stustapay/models";
 import { ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
 import { Loading } from "@stustapay/components";
+import { UserRoutes } from "@/app/routes";
 
 export const UserList: React.FC = () => {
   const { t } = useTranslation();
@@ -27,7 +28,7 @@ export const UserList: React.FC = () => {
   }
 
   const addUser = () => {
-    navigate("/users/new");
+    navigate(UserRoutes.add());
   };
 
   const openConfirmDeleteDialog = (userId: number) => {
@@ -49,7 +50,7 @@ export const UserList: React.FC = () => {
       headerName: t("userLogin") as string,
       flex: 1,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/users/${params.row.id}`}>
+        <Link component={RouterLink} to={UserRoutes.detail(params.row.id)}>
           {params.row.login}
         </Link>
       ),
@@ -85,7 +86,7 @@ export const UserList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit")}
-          onClick={() => navigate(`/users/${params.row.id}/edit`)}
+          onClick={() => navigate(UserRoutes.edit(params.row.id))}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}

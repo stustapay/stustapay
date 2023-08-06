@@ -19,8 +19,8 @@ class ProductSoldStats(Product):
 
 
 class VoucherStats(BaseModel):
-    vouchers_issued: int = 0
-    vouchers_spent: int = 0
+    vouchers_issued: int
+    vouchers_spent: int
 
 
 class ProductStats(BaseModel):
@@ -62,8 +62,7 @@ class OrderStatsService(DBService):
             to_timestamp,
         )
 
-        voucher_stats = await conn.fetch_one(
-            VoucherStats,
+        voucher_stats_raw = await conn.fetchrow(
             "select * from voucher_stats(from_timestamp => $1, to_timestamp => $2)",
             from_timestamp,
             to_timestamp,
@@ -76,5 +75,8 @@ class OrderStatsService(DBService):
         return ProductStats(
             product_quantities=stats_by_products,
             product_quantities_by_till=product_quantities_by_till,
-            voucher_stats=voucher_stats,
+            voucher_stats=VoucherStats(
+                vouchers_issued=voucher_stats_raw["vouchers_issued"] or 0,
+                vouchers_spent=voucher_stats_raw["vouchers_spent"] or 0,
+            ),
         )

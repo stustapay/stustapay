@@ -19,7 +19,8 @@
       "@api": ["src/api/index.ts"],
       "@api/*": ["src/api/*"],
       "@hooks": ["src/hooks/index.ts"],
-      "@hooks/*": ["src/hooks/*"]
+      "@hooks/*": ["src/hooks/*"],
+      "@/*": ["src/*"]
     }
   },
   "files": [],

@@ -15,11 +15,12 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { TaxRateSelect } from "./TaxRateSelect";
+import { TaxRateSelect } from "@components/TaxRateSelect";
 import { NumericInput } from "@stustapay/components";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
-import { RestrictionSelect } from "@components";
+import { RestrictionSelect } from "@/components";
 import { useCurrencySymbol } from "@hooks";
+import { ProductRoutes } from "@/app/routes";
 
 export interface ProductChangeProps<T extends NewProduct> {
   headerTitle: string;
@@ -47,7 +48,7 @@ export function ProductChange<T extends NewProduct>({
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/products");
+        navigate(ProductRoutes.list());
       })
       .catch((err) => {
         setSubmitting(false);

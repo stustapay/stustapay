@@ -1,11 +1,11 @@
 import * as React from "react";
 import { Button, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
+  Account,
   selectOrderAll,
   useDisableAccountMutation,
-  useGetAccountQuery,
   useListOrdersQuery,
   useUpdateAccountCommentMutation,
 } from "@api";
@@ -19,10 +19,10 @@ import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAm
 import { EditAccountTagModal } from "./components/EditAccountTagModal";
 import { formatUserTagUid } from "@stustapay/models";
 import { AccountTagHistoryTable } from "./components/AccountTagHistoryTable";
+import { UserTagRoutes } from "@/app/routes";
 
-export const CustomerAccountDetail: React.FC = () => {
+export const CustomerAccountDetail: React.FC<{ account: Account }> = ({ account }) => {
   const { t } = useTranslation();
-  const { accountId } = useParams();
   const navigate = useNavigate();
 
   const formatCurrency = useCurrencyFormatter();
@@ -33,13 +33,12 @@ export const CustomerAccountDetail: React.FC = () => {
   const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
   const [tagModalOpen, setTagModalOpen] = React.useState(false);
 
-  const { data: account, error, isLoading: isAccountLoading } = useGetAccountQuery({ accountId: Number(accountId) });
   const {
     orders,
     error: orderError,
     isLoading: isOrdersLoading,
   } = useListOrdersQuery(
-    { customerAccountId: Number(accountId) },
+    { customerAccountId: account.id },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
@@ -48,18 +47,18 @@ export const CustomerAccountDetail: React.FC = () => {
     }
   );
 
-  if (isAccountLoading || isOrdersLoading || (!account && !error) || (!orders && !orderError)) {
+  if (isOrdersLoading || (!orders && !orderError)) {
     return <Loading />;
   }
 
-  if (error || !account || orderError || !orders) {
+  if (orderError || !orders) {
     toast.error("Error loading account");
     navigate(-1);
     return null;
   }
 
   const handleDisableAccount = () => {
-    disableAccount({ accountId: Number(accountId) })
+    disableAccount({ accountId: account.id })
       .unwrap()
       .then(() => {
         toast.success(t("account.disableSuccess"));
@@ -71,7 +70,7 @@ export const CustomerAccountDetail: React.FC = () => {
   };
 
   const handleUpdateComment = (newComment: string) => {
-    updateComment({ accountId: Number(accountId), updateAccountCommentPayload: { comment: newComment } });
+    updateComment({ accountId: account.id, updateAccountCommentPayload: { comment: newComment } });
   };
 
   return (
@@ -99,7 +98,7 @@ export const CustomerAccountDetail: React.FC = () => {
             <ListItemText
               primary={t("account.user_tag_uid")}
               secondary={
-                <RouterLink to={`/user-tags/${account.user_tag_uid_hex}`}>
+                <RouterLink to={UserTagRoutes.detail(account.user_tag_uid_hex)}>
                   {formatUserTagUid(account.user_tag_uid_hex)}
                 </RouterLink>
               }

@@ -9,7 +9,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { selectUserRoleById, useListUserRolesQuery, useUpdateUserRoleMutation } from "@api";
 import { Loading } from "@stustapay/components";
-import { PrivilegeSelect } from "./PrivilegeSelect";
+import { PrivilegeSelect } from "@/components/PrivilegeSelect";
+import { UserRoleRoutes } from "@/app/routes";
 
 const UpdateSchema = z.object({
   id: z.number(),
@@ -41,7 +42,7 @@ export const UserRoleUpdate: React.FC = () => {
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/user-roles");
+        navigate(UserRoleRoutes.list());
       })
       .catch((err) => {
         setSubmitting(false);

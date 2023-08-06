@@ -1,5 +1,4 @@
 export * from "./SystemAccountList";
-export * from "./CustomerAccountDetail";
-export * from "./SystemAccountDetail";
+export * from "./AccountDetail";
 export * from "./FindAccounts";
-export * from "./UserTagDetail";
+export * from "./AccountPageLayout";

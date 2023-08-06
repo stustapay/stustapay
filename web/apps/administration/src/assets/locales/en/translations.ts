@@ -29,7 +29,13 @@ export const translations = {
   tillProfiles: "Till Profiles",
   registerStockings: "Cash Register Stockings",
   registers: "Cash Registers",
+  nodes: {
+    overview: "Overview",
+    statistics: "Stats",
+    settings: "Settings",
+  },
   account: {
+    overview: "Overview",
     name: "Name",
     comment: "Comment",
     balance: "Balance",
@@ -58,6 +64,7 @@ export const translations = {
     },
   },
   userTag: {
+    userTags: "User Tags",
     uid: "User Tag Uid",
     comment: "Comment",
     noAccount: "No account associated",
@@ -227,6 +234,7 @@ export const translations = {
   deleteTaxRateDescription: "Confirm tax rate deletion",
   till: {
     till: "Till",
+    tills: "Tills",
     id: "ID",
     name: "Name",
     profile: "Profile",
@@ -339,6 +347,7 @@ export const translations = {
   deleteUser: "Delete User",
   deleteUserDescription: "Confirm user deletion",
   user: {
+    users: "Users",
     roles: "Roles",
     login: "Login",
     displayName: "Display Name",

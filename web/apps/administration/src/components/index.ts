@@ -4,7 +4,7 @@ export * from "./IconButtonLink";
 export * from "./ConfirmDialog";
 export * from "./SearchInput";
 export * from "./EditableListItem";
-export * from "./layout";
+export * from "./layouts";
 export * from "./OrderTable";
 export * from "./ExpandableLinkMenu";
 export * from "./RestrictionSelect";

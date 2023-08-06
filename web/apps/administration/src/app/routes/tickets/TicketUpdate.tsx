@@ -5,6 +5,7 @@ import { Navigate, useParams } from "react-router-dom";
 import { TicketChange } from "./TicketChange";
 import { TicketSchema } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
+import { TicketRoutes } from "@/app/routes";
 
 export const TicketUpdate: React.FC = () => {
   const { t } = useTranslation();
@@ -13,7 +14,7 @@ export const TicketUpdate: React.FC = () => {
   const [updateTicket] = useUpdateTicketMutation();
 
   if (error) {
-    return <Navigate to="/tickets" />;
+    return <Navigate to={TicketRoutes.list()} />;
   }
 
   if (isLoading || !ticket) {

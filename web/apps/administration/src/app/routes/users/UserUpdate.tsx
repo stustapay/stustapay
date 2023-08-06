@@ -8,7 +8,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useGetUserQuery, User, useUpdateUserMutation } from "@api";
 import { Loading } from "@stustapay/components";
-import { RoleSelect } from "./RoleSelect";
+import { RoleSelect } from "@/components/RoleSelect";
+import { UserRoutes } from "@/app/routes";
 
 export const UserUpdate: React.FC = () => {
   const { t } = useTranslation();
@@ -28,7 +29,7 @@ export const UserUpdate: React.FC = () => {
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/users");
+        navigate(UserRoutes.list());
       })
       .catch((err) => {
         setSubmitting(false);

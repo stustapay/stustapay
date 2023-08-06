@@ -7,6 +7,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useDeleteTicketMutation, useGetTicketQuery } from "@api";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "@hooks";
+import { ProductRoutes, TicketRoutes } from "@/app/routes";
 
 export const TicketDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -18,7 +19,7 @@ export const TicketDetail: React.FC = () => {
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error) {
-    return <Navigate to="/tickets" />;
+    return <Navigate to={TicketRoutes.list()} />;
   }
 
   const openConfirmDeleteDialog = () => {
@@ -27,7 +28,7 @@ export const TicketDetail: React.FC = () => {
 
   const handleConfirmDeleteTicket: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteTicket({ ticketId: Number(ticketId) }).then(() => navigate("/tickets"));
+      deleteTicket({ ticketId: Number(ticketId) }).then(() => navigate(TicketRoutes.list()));
     }
     setShowConfirmDelete(false);
   };
@@ -42,7 +43,7 @@ export const TicketDetail: React.FC = () => {
         <ListItem
           secondaryAction={
             <>
-              <IconButtonLink to={`/tickets/${ticketId}/edit`} color="primary">
+              <IconButtonLink to={TicketRoutes.edit(ticketId)} color="primary">
                 <EditIcon />
               </IconButtonLink>
               <Tooltip title={t("delete")}>
@@ -73,7 +74,7 @@ export const TicketDetail: React.FC = () => {
               secondary={formatCurrency(ticket.initial_top_up_amount)}
             />
           </ListItem>
-          <ListItemLink to={`/products/${ticket.product_id}`}>
+          <ListItemLink to={ProductRoutes.detail(ticket.product_id)}>
             <ListItemText primary={t("ticket.product")} secondary={ticket.product_name} />
           </ListItemLink>
         </List>

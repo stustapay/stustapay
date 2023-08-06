@@ -7,6 +7,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useDeleteProductMutation, useGetProductQuery, useUpdateProductMutation } from "@api";
 import { Loading } from "@stustapay/components";
 import { useCurrencyFormatter } from "@hooks";
+import { ProductRoutes } from "@/app/routes";
 
 export const ProductDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -19,7 +20,7 @@ export const ProductDetail: React.FC = () => {
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error) {
-    return <Navigate to="/products" />;
+    return <Navigate to={ProductRoutes.list()} />;
   }
 
   const openConfirmDeleteDialog = () => {
@@ -28,7 +29,7 @@ export const ProductDetail: React.FC = () => {
 
   const handleConfirmDeleteProduct: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteProduct({ productId: Number(productId) }).then(() => navigate("/products"));
+      deleteProduct({ productId: Number(productId) }).then(() => navigate(ProductRoutes.list()));
     }
     setShowConfirmDelete(false);
   };
@@ -49,7 +50,7 @@ export const ProductDetail: React.FC = () => {
             <>
               <Tooltip title={t("edit")}>
                 <span>
-                  <IconButtonLink to={`/products/${productId}/edit`} color="primary">
+                  <IconButtonLink to={ProductRoutes.edit(productId)} color="primary">
                     <EditIcon />
                   </IconButtonLink>
                 </span>

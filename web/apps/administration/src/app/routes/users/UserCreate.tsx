@@ -7,7 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useCreateUserMutation } from "@api";
-import { RoleSelect } from "./RoleSelect";
+import { RoleSelect } from "@/components/RoleSelect";
+import { UserRoutes } from "@/app/routes";
 
 const initialValues: NewUser = {
   login: "",
@@ -29,7 +30,7 @@ export const UserCreate: React.FC = () => {
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/users");
+        navigate(UserRoutes.list());
       })
       .catch((err) => {
         setSubmitting(false);
