@@ -1,8 +1,10 @@
-import * as React from "react";
-import { NewTillProfile, NewTillProfileSchema } from "@stustapay/models";
+import { TillProfileRoutes } from "@/app/routes";
 import { useCreateTillProfileMutation } from "@api";
+import { CreateLayout } from "@components";
+import { NewTillProfile, NewTillProfileSchema } from "@stustapay/models";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { TillProfileChange } from "./TillProfileChange";
+import { TillProfileForm } from "./TillProfileForm";
 
 const initialValues: NewTillProfile = {
   name: "",
@@ -19,12 +21,14 @@ export const TillProfileCreate: React.FC = () => {
   const [createProfile] = useCreateTillProfileMutation();
 
   return (
-    <TillProfileChange
-      headerTitle={t("profile.create")}
+    <CreateLayout
+      title={t("profile.create")}
       submitLabel={t("add")}
+      successRoute={TillProfileRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTillProfileSchema}
       onSubmit={(profile) => createProfile({ newTillProfile: profile })}
+      form={TillProfileForm}
     />
   );
 };

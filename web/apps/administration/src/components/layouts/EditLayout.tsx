@@ -1,7 +1,7 @@
-import * as React from "react";
+import { ChangeLayout, ChangeLayoutProps } from "./ChangeLayout";
 
-export interface EditLayoutProps {}
+export type EditLayoutProps<T extends Record<string, any>> = ChangeLayoutProps<T>;
 
-export const EditLayout: React.FC<EditLayoutProps> = () => {
-  return null;
-};
+export function EditLayout<T extends Record<string, any>>(props: EditLayoutProps<T>) {
+  return <ChangeLayout {...props} />;
+}

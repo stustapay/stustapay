@@ -1,11 +1,12 @@
-import { useGetTillButtonQuery, useUpdateTillButtonMutation } from "@api";
-import * as React from "react";
-import { Navigate, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { Loading } from "@stustapay/components";
-import { TillButtonChange } from "./TillButtonChange";
-import { UpdateTillButtonSchema } from "@stustapay/models";
 import { TillButtonsRoutes } from "@/app/routes";
+import { useGetTillButtonQuery, useUpdateTillButtonMutation } from "@api";
+import { EditLayout } from "@components";
+import { Loading } from "@stustapay/components";
+import { UpdateTillButtonSchema } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useParams } from "react-router-dom";
+import { TillButtonForm } from "./TillButtonForm";
 
 export const TillButtonUpdate: React.FC = () => {
   const { t } = useTranslation();
@@ -22,12 +23,14 @@ export const TillButtonUpdate: React.FC = () => {
   }
 
   return (
-    <TillButtonChange
-      headerTitle={t("button.update")}
+    <EditLayout
+      title={t("button.update")}
       submitLabel={t("update")}
+      successRoute={TillButtonsRoutes.detail(button.id)}
       initialValues={button}
       validationSchema={UpdateTillButtonSchema}
-      onSubmit={(button) => updateButton({ buttonId: button.id, newTillButton: button })}
+      onSubmit={(b) => updateButton({ buttonId: button.id, newTillButton: b })}
+      form={TillButtonForm}
     />
   );
 };

@@ -1,11 +1,12 @@
-import { useGetTaxRateQuery, useUpdateTaxRateMutation } from "@api";
-import * as React from "react";
-import { TaxRateSchema } from "@stustapay/models";
-import { Navigate, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { TaxRateChange } from "./TaxRateChange";
-import { Loading } from "@stustapay/components";
 import { TaxRateRoutes } from "@/app/routes";
+import { useGetTaxRateQuery, useUpdateTaxRateMutation } from "@api";
+import { EditLayout } from "@components";
+import { Loading } from "@stustapay/components";
+import { TaxRateSchema } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useParams } from "react-router-dom";
+import { TaxRateForm } from "./TaxRateForm";
 
 export const TaxRateUpdate: React.FC = () => {
   const { t } = useTranslation();
@@ -22,12 +23,14 @@ export const TaxRateUpdate: React.FC = () => {
   }
 
   return (
-    <TaxRateChange
-      headerTitle={t("updateTaxRate")}
+    <EditLayout
+      title={t("updateTaxRate")}
       submitLabel={t("update")}
+      successRoute={TaxRateRoutes.detail(taxRate.name)}
       initialValues={taxRate}
       validationSchema={TaxRateSchema}
       onSubmit={(taxRate) => updateTaxRate({ taxRateName: taxRate.name, taxRateWithoutName: taxRate })}
+      form={TaxRateForm}
     />
   );
 };

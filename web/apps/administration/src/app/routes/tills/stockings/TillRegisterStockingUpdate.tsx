@@ -1,11 +1,16 @@
-import { selectTillRegisterStockingById, useListRegisterStockingsQuery, useUpdateRegisterStockingMutation } from "@api";
-import * as React from "react";
-import { UpdateTillRegisterStockingSchema } from "@stustapay/models";
-import { Navigate, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { Loading } from "@stustapay/components";
-import { TillRegisterStockingChange } from "./TillRegisterStockingChange";
+import {
+  selectTillRegisterStockingById,
+  useListRegisterStockingsQuery,
+  useUpdateRegisterStockingMutation,
+} from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { Loading } from "@stustapay/components";
+import { UpdateTillRegisterStockingSchema } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useParams } from "react-router-dom";
+import { TillRegisterStockingForm } from "./TillRegisterStockingForm";
 
 export const TillRegisterStockingUpdate: React.FC = () => {
   const { t } = useTranslation();
@@ -27,12 +32,14 @@ export const TillRegisterStockingUpdate: React.FC = () => {
   }
 
   return (
-    <TillRegisterStockingChange
-      headerTitle={t("profile.update")}
+    <EditLayout
+      title={t("profile.update")}
       submitLabel={t("update")}
+      successRoute={TillStockingsRoutes.detail(stocking.id)}
       initialValues={stocking}
       validationSchema={UpdateTillRegisterStockingSchema}
-      onSubmit={(stocking) => updateStocking({ stockingId: stocking.id, newCashRegisterStocking: stocking })}
+      onSubmit={(s) => updateStocking({ stockingId: stocking.id, newCashRegisterStocking: s })}
+      form={TillRegisterStockingForm}
     />
   );
 };

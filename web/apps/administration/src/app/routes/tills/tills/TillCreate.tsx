@@ -1,8 +1,10 @@
-import * as React from "react";
-import { NewTill, NewTillSchema } from "@stustapay/models";
+import { TillRoutes } from "@/app/routes";
 import { useCreateTillMutation } from "@api";
+import { CreateLayout } from "@components";
+import { NewTill, NewTillSchema } from "@stustapay/models";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { TillChange } from "./TillChange";
+import { TillForm } from "./TillForm";
 
 const initialValues: NewTill = {
   name: "",
@@ -17,12 +19,14 @@ export const TillCreate: React.FC = () => {
   const [createTill] = useCreateTillMutation();
 
   return (
-    <TillChange
-      headerTitle={t("till.create")}
+    <CreateLayout
+      title={t("till.create")}
       submitLabel={t("add")}
+      successRoute={TillRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTillSchema}
       onSubmit={(till) => createTill({ newTill: till })}
+      form={TillForm}
     />
   );
 };

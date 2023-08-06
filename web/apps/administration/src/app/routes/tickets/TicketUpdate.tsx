@@ -1,11 +1,12 @@
+import { TicketRoutes } from "@/app/routes";
+import { useGetTicketQuery, useUpdateTicketMutation } from "@api";
+import { EditLayout } from "@components";
+import { Loading } from "@stustapay/components";
+import { TicketSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useGetTicketQuery, useUpdateTicketMutation } from "@api";
 import { Navigate, useParams } from "react-router-dom";
-import { TicketChange } from "./TicketChange";
-import { TicketSchema } from "@stustapay/models";
-import { Loading } from "@stustapay/components";
-import { TicketRoutes } from "@/app/routes";
+import { TicketForm } from "./TicketForm";
 
 export const TicketUpdate: React.FC = () => {
   const { t } = useTranslation();
@@ -22,12 +23,14 @@ export const TicketUpdate: React.FC = () => {
   }
 
   return (
-    <TicketChange
-      headerTitle={t("ticket.update")}
+    <EditLayout
+      title={t("ticket.update")}
       submitLabel={t("update")}
+      successRoute={TicketRoutes.detail(ticket.id)}
       initialValues={ticket}
       validationSchema={TicketSchema}
-      onSubmit={(ticket) => updateTicket({ ticketId: ticket.id, newTicket: ticket })}
+      onSubmit={(t) => updateTicket({ ticketId: ticket.id, newTicket: t })}
+      form={TicketForm}
     />
   );
 };

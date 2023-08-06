@@ -1,8 +1,10 @@
-import * as React from "react";
-import { useCreateTicketMutation } from "../../../api";
-import { useTranslation } from "react-i18next";
-import { TicketChange } from "./TicketChange";
+import { TicketRoutes } from "@/app/routes";
+import { CreateLayout } from "@components";
 import { NewTicket, NewTicketSchema } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useCreateTicketMutation } from "../../../api";
+import { TicketForm } from "./TicketForm";
 
 const initialValues: NewTicket = {
   name: "",
@@ -17,12 +19,14 @@ export const TicketCreate: React.FC = () => {
   const [createTicket] = useCreateTicketMutation();
 
   return (
-    <TicketChange
-      headerTitle={t("ticket.create")}
+    <CreateLayout
+      title={t("ticket.create")}
       submitLabel={t("add")}
+      successRoute={TicketRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTicketSchema}
       onSubmit={(ticket) => createTicket({ newTicket: ticket })}
+      form={TicketForm}
     />
   );
 };

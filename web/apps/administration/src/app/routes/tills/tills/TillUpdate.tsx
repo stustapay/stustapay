@@ -1,11 +1,12 @@
-import { useGetTillQuery, useUpdateTillMutation } from "@api";
-import * as React from "react";
-import { UpdateTillSchema } from "@stustapay/models";
-import { Navigate, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { TillChange } from "./TillChange";
-import { Loading } from "@stustapay/components";
+import { useGetTillQuery, useUpdateTillMutation } from "@/api";
 import { TillRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { Loading } from "@stustapay/components";
+import { UpdateTillSchema } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useParams } from "react-router-dom";
+import { TillForm } from "./TillForm";
 
 export const TillUpdate: React.FC = () => {
   const { t } = useTranslation();
@@ -22,12 +23,14 @@ export const TillUpdate: React.FC = () => {
   }
 
   return (
-    <TillChange
-      headerTitle={t("till.update")}
+    <EditLayout
+      title={t("till.update")}
       submitLabel={t("update")}
+      successRoute={TillRoutes.detail(till.id)}
       initialValues={till}
+      form={TillForm}
       validationSchema={UpdateTillSchema}
-      onSubmit={(till) => updateTill({ tillId: till.id, newTill: till })}
+      onSubmit={(t) => updateTill({ tillId: till.id, newTill: t })}
     />
   );
 };

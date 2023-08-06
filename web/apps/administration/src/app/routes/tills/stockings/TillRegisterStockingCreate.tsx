@@ -1,8 +1,10 @@
-import * as React from "react";
-import { NewTillRegisterStocking, NewTillRegisterStockingSchema } from "@stustapay/models";
-import { useTranslation } from "react-i18next";
-import { TillRegisterStockingChange } from "./TillRegisterStockingChange";
+import { TillStockingsRoutes } from "@/app/routes";
 import { useCreateRegisterStockingMutation } from "@api";
+import { CreateLayout } from "@components";
+import { NewTillRegisterStocking, NewTillRegisterStockingSchema } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { TillRegisterStockingForm } from "./TillRegisterStockingForm";
 
 const initialValues: NewTillRegisterStocking = {
   name: "",
@@ -28,12 +30,14 @@ export const TillRegisterStockingCreate: React.FC = () => {
   const [createStocking] = useCreateRegisterStockingMutation();
 
   return (
-    <TillRegisterStockingChange
-      headerTitle={t("register.createStocking")}
+    <CreateLayout
+      title={t("register.createStocking")}
       submitLabel={t("add")}
+      successRoute={TillStockingsRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTillRegisterStockingSchema}
       onSubmit={(stocking) => createStocking({ newCashRegisterStocking: stocking })}
+      form={TillRegisterStockingForm}
     />
   );
 };
