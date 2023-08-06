@@ -1,12 +1,13 @@
-import * as React from "react";
+import { Order } from "@/api";
+import { OrderRoutes } from "@/app/routes";
+import { useCurrencyFormatter } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { useTranslation } from "react-i18next";
-import { Link as RouterLink } from "react-router-dom";
-import { useCurrencyFormatter } from "@hooks";
-import { Order } from "@api";
 import { DataGridTitle } from "@stustapay/components";
 import { formatDate } from "@stustapay/utils";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink } from "react-router-dom";
 
 export interface OrderListProps {
   orders: Order[];
@@ -21,7 +22,7 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
       field: "id",
       headerName: t("order.id") as string,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/orders/${params.row.id}`}>
+        <Link component={RouterLink} to={OrderRoutes.detail(params.row.id)}>
           {params.row.id}
         </Link>
       ),

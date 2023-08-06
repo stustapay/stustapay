@@ -6,11 +6,11 @@ import {
   useUpdateAccountCommentMutation,
 } from "@/api";
 import { UserTagRoutes } from "@/app/routes";
-import { EditableListItem } from "@/components";
+import { DetailLayout, EditableListItem } from "@/components";
 import { OrderTable } from "@/components/features";
 import { useCurrencyFormatter } from "@/hooks";
-import { Edit as EditIcon } from "@mui/icons-material";
-import { Button, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Stack } from "@mui/material";
+import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
+import { IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
@@ -75,18 +75,12 @@ export const CustomerAccountDetail: React.FC<{ account: Account }> = ({ account 
   };
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <Button color="error" onClick={handleDisableAccount}>
-              {t("account.disable")}
-            </Button>
-          }
-        >
-          <ListItemText primary={account.id} />
-        </ListItem>
-      </Paper>
+    <DetailLayout
+      title={`Customer Account ${account.id}`}
+      actions={[
+        { label: t("account.disable"), onClick: handleDisableAccount, color: "error", icon: <RemoveCircleIcon /> },
+      ]}
+    >
       <Paper>
         <List>
           <ListItem>
@@ -151,6 +145,6 @@ export const CustomerAccountDetail: React.FC<{ account: Account }> = ({ account 
         </>
       )}
       <OrderTable orders={orders} />
-    </Stack>
+    </DetailLayout>
   );
 };

@@ -1,13 +1,12 @@
-import * as React from "react";
-import { Button, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { selectUserRoleAll, useDeleteUserRoleMutation, useListUserRolesQuery, UserRole } from "@api";
+import { UserRoleRoutes } from "@/app/routes";
+import { UserRole, selectUserRoleAll, useDeleteUserRoleMutation, useListUserRolesQuery } from "@api";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@components";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { Loading } from "@stustapay/components";
-import { UserRoleRoutes } from "@/app/routes";
 
 export const UserRoleList: React.FC = () => {
   const { t } = useTranslation();
@@ -25,10 +24,6 @@ export const UserRoleList: React.FC = () => {
   if (isLoading) {
     return <Loading />;
   }
-
-  const addUserRole = () => {
-    navigate(UserRoleRoutes.add());
-  };
 
   const openConfirmDeleteDialog = (userId: number) => {
     setUserRoleToDelete(userId);
@@ -82,19 +77,7 @@ export const UserRoleList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <Button onClick={addUserRole} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </Button>
-          }
-        >
-          <ListItemText primary={t("userRoles")} />
-        </ListItem>
-        <Typography variant="body1">{}</Typography>
-      </Paper>
+    <ListLayout title={t("userRoles")} routes={UserRoleRoutes}>
       <DataGrid
         autoHeight
         rows={userRoles ?? []}
@@ -108,6 +91,6 @@ export const UserRoleList: React.FC = () => {
         show={userRoleToDelete !== null}
         onClose={handleConfirmDeleteUser}
       />
-    </Stack>
+    </ListLayout>
   );
 };

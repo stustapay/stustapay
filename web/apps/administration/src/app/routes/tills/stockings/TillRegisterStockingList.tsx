@@ -1,16 +1,14 @@
-import * as React from "react";
-
-import { ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { useNavigate } from "react-router-dom";
-import { TillRegisterStocking } from "@stustapay/models";
-import { Loading } from "@stustapay/components";
-import { selectTillRegisterStockingAll, useDeleteRegisterStockingMutation, useListRegisterStockingsQuery } from "@api";
-import { useCurrencyFormatter } from "@hooks";
+import { selectTillRegisterStockingAll, useDeleteRegisterStockingMutation, useListRegisterStockingsQuery } from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { useCurrencyFormatter } from "@/hooks";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import { TillRegisterStocking } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 export const TillRegisterStockingList: React.FC = () => {
   const { t } = useTranslation();
@@ -78,19 +76,7 @@ export const TillRegisterStockingList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to={TillStockingsRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("register.stockings")} />
-        </ListItem>
-        <Typography variant="body1">{}</Typography>
-      </Paper>
+    <ListLayout title={t("register.stockings")} routes={TillStockingsRoutes}>
       <DataGrid
         autoHeight
         rows={stockings ?? []}
@@ -104,6 +90,6 @@ export const TillRegisterStockingList: React.FC = () => {
         show={stockingToDelete !== null}
         onClose={handleConfirmDeleteProfile}
       />
-    </Stack>
+    </ListLayout>
   );
 };

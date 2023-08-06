@@ -1,14 +1,14 @@
-import * as React from "react";
-import { selectTillLayoutAll, useDeleteTillLayoutMutation, useListTillLayoutsQuery } from "@api";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { Link, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { TillLayout } from "@stustapay/models";
-import { Loading } from "@stustapay/components";
 import { TillLayoutRoutes } from "@/app/routes";
+import { selectTillLayoutAll, useDeleteTillLayoutMutation, useListTillLayoutsQuery } from "@api";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@components";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Link } from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import { TillLayout } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export const TillLayoutList: React.FC = () => {
   const { t } = useTranslation();
@@ -79,19 +79,7 @@ export const TillLayoutList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to={TillLayoutRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("layout.layouts")} />
-        </ListItem>
-        <Typography variant="body1">{}</Typography>
-      </Paper>
+    <ListLayout title={t("layout.layouts")} routes={TillLayoutRoutes}>
       <DataGrid
         autoHeight
         rows={layouts ?? []}
@@ -105,6 +93,6 @@ export const TillLayoutList: React.FC = () => {
         show={layoutToDelete !== null}
         onClose={handleConfirmDeleteLayout}
       />
-    </Stack>
+    </ListLayout>
   );
 };

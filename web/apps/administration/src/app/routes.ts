@@ -23,13 +23,17 @@ class RouteBuilder implements IRouteBuilder {
         return this.base();
     }
     public add = () =>  {
-        return this.base() + `/add`;
+        return this.base() + `/new`;
     }
     public edit = (id?: string | number) =>  {
         return this.base() + `/${id}/edit`;
     }
     public detail = (id?: string | number) =>  {
         return this.base() + `/${id}`;
+    }
+
+    public detailAction = (id: string | number, suffix: string) => {
+        return `${this.detail(id)}/${suffix}`
     }
 }
 

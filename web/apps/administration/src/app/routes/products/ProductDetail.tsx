@@ -1,13 +1,13 @@
-import { Checkbox, Chip, IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
-import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
+import { ProductRoutes } from "@/app/routes";
+import { useDeleteProductMutation, useGetProductQuery, useUpdateProductMutation } from "@api";
+import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout } from "@components";
+import { useCurrencyFormatter } from "@hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
+import { Checkbox, Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useDeleteProductMutation, useGetProductQuery, useUpdateProductMutation } from "@api";
-import { Loading } from "@stustapay/components";
-import { useCurrencyFormatter } from "@hooks";
-import { ProductRoutes } from "@/app/routes";
 
 export const ProductDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -43,38 +43,31 @@ export const ProductDetail: React.FC = () => {
   };
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <>
-              <Tooltip title={t("edit")}>
-                <span>
-                  <IconButtonLink to={ProductRoutes.edit(productId)} color="primary">
-                    <EditIcon />
-                  </IconButtonLink>
-                </span>
-              </Tooltip>
-              <Tooltip title={t("product.lock")}>
-                <span>
-                  <IconButton disabled={product.is_locked} onClick={handleLockProduct} color="error">
-                    <LockIcon />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title={t("delete")}>
-                <span>
-                  <IconButton disabled={product.is_locked} onClick={openConfirmDeleteDialog} color="error">
-                    <DeleteIcon />
-                  </IconButton>
-                </span>
-              </Tooltip>
-            </>
-          }
-        >
-          <ListItemText primary={product.name} />
-        </ListItem>
-      </Paper>
+    <DetailLayout
+      title={product.name}
+      actions={[
+        {
+          label: t("edit"),
+          onClick: () => navigate(ProductRoutes.edit(productId)),
+          color: "primary",
+          icon: <EditIcon />,
+        },
+        {
+          label: t("product.lock"),
+          disabled: product.is_locked,
+          onClick: handleLockProduct,
+          color: "error",
+          icon: <LockIcon />,
+        },
+        {
+          label: t("delete"),
+          disabled: product.is_locked,
+          onClick: openConfirmDeleteDialog,
+          color: "error",
+          icon: <DeleteIcon />,
+        },
+      ]}
+    >
       <Paper>
         <List>
           <ListItem>
@@ -124,6 +117,6 @@ export const ProductDetail: React.FC = () => {
         show={showConfirmDelete}
         onClose={handleConfirmDeleteProduct}
       />
-    </Stack>
+    </DetailLayout>
   );
 };

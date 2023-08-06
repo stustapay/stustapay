@@ -1,29 +1,23 @@
-import * as React from "react";
-
-import { Link, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import {
-  Add as AddIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  SwapHoriz as SwapHorizIcon,
-} from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { getUserName, TillRegister } from "@stustapay/models";
-import { Loading } from "@stustapay/components";
 import {
   selectCashierById,
   selectTillById,
   selectTillRegisterAll,
   useDeleteRegisterMutation,
-  useListCashiersQuery,
   useListCashRegistersAdminQuery,
+  useListCashiersQuery,
   useListTillsQuery,
-} from "@api";
-import { useCurrencyFormatter } from "@hooks";
+} from "@/api";
 import { CashierRoutes, TillRegistersRoutes, TillRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { useCurrencyFormatter } from "@/hooks";
+import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
+import { Link } from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import { TillRegister, getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export const TillRegisterList: React.FC = () => {
   const { t } = useTranslation();
@@ -145,19 +139,7 @@ export const TillRegisterList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to={TillRegistersRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("register.registers")} />
-        </ListItem>
-        <Typography variant="body1">{}</Typography>
-      </Paper>
+    <ListLayout title={t("register.registers")} routes={TillRegistersRoutes}>
       <DataGrid
         autoHeight
         rows={registers ?? []}
@@ -171,6 +153,6 @@ export const TillRegisterList: React.FC = () => {
         show={registerToDelete !== null}
         onClose={handleConfirmDeleteProfile}
       />
-    </Stack>
+    </ListLayout>
   );
 };

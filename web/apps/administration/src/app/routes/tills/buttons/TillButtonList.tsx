@@ -1,14 +1,13 @@
-import * as React from "react";
-import { ListItem, ListItemText, Paper, Stack } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { selectTillButtonAll, useDeleteTillButtonMutation, useListTillButtonsQuery } from "@api";
-import { useTranslation } from "react-i18next";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { useNavigate } from "react-router-dom";
-import { TillButton } from "@stustapay/models";
-import { Loading } from "@stustapay/components";
+import { selectTillButtonAll, useDeleteTillButtonMutation, useListTillButtonsQuery } from "@/api";
 import { TillButtonsRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import { TillButton } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 export const TillButtonList: React.FC = () => {
   const { t } = useTranslation();
@@ -75,18 +74,7 @@ export const TillButtonList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to={TillButtonsRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("button.buttons")} />
-        </ListItem>
-      </Paper>
+    <ListLayout title={t("button.buttons")} routes={TillButtonsRoutes}>
       <DataGrid
         autoHeight
         getRowId={(row) => row.name}
@@ -101,6 +89,6 @@ export const TillButtonList: React.FC = () => {
         show={buttonToDelete !== null}
         onClose={handleConfirmDeleteTaxRate}
       />
-    </Stack>
+    </ListLayout>
   );
 };

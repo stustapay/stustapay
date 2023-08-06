@@ -1,8 +1,3 @@
-import * as React from "react";
-import { List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import {
   selectCashierShiftAll,
   selectTillById,
@@ -13,15 +8,20 @@ import {
   useListCashRegistersAdminQuery,
   useListTillsQuery,
   useListUsersQuery,
-} from "@api";
+} from "@/api";
+import { CashierRoutes, TillRoutes } from "@/app/routes";
+import { useCurrencyFormatter } from "@/hooks";
+import { ButtonLink, DetailLayout, ListItemLink } from "@components";
+import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
+import { List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Typography } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { ButtonLink, IconButtonLink, ListItemLink } from "@components";
-import { Edit as EditIcon } from "@mui/icons-material";
-import { toast } from "react-toastify";
-import { useCurrencyFormatter } from "@hooks";
 import { CashierShift, formatUserTagUid, getUserName } from "@stustapay/models";
 import { formatDate } from "@stustapay/utils";
-import { TillRoutes } from "@/app/routes";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export const CashierDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -152,23 +152,23 @@ export const CashierDetail: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <>
-              {cashier.cash_drawer_balance !== 0 && (
-                <ButtonLink to={`/cashiers/${cashierId}/close-out`}>{t("cashier.closeOut")}</ButtonLink>
-              )}
-              <IconButtonLink to={`/cashiers/${cashierId}/edit`} color="primary" sx={{ mr: 1 }}>
-                <EditIcon />
-              </IconButtonLink>
-            </>
-          }
-        >
-          <ListItemText primary={getUserName(cashier)} />
-        </ListItem>
-      </Paper>
+    <DetailLayout
+      title={getUserName(cashier)}
+      actions={[
+        {
+          label: t("cashier.closeOut"),
+          hidden: cashier.cash_drawer_balance === 0,
+          onClick: () => navigate(CashierRoutes.detailAction(cashier.id, "close-out")),
+          icon: <PointOfSaleIcon />,
+        },
+        {
+          label: t("edit"),
+          onClick: () => navigate(CashierRoutes.edit(cashier.id)),
+          color: "primary",
+          icon: <EditIcon />,
+        },
+      ]}
+    >
       <Paper>
         <List>
           <ListItem>
@@ -224,6 +224,6 @@ export const CashierDetail: React.FC = () => {
           sx={{ border: "none" }}
         />
       </Paper>
-    </Stack>
+    </DetailLayout>
   );
 };

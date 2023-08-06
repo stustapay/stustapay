@@ -1,14 +1,14 @@
-import * as React from "react";
-import { Button, Link, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { selectUserAll, useDeleteUserMutation, useListUsersQuery } from "@api";
+import { selectUserAll, useDeleteUserMutation, useListUsersQuery } from "@/api";
+import { UserRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import { User, formatUserTagUid } from "@stustapay/models";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { formatUserTagUid, User } from "@stustapay/models";
-import { ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { Loading } from "@stustapay/components";
-import { UserRoutes } from "@/app/routes";
 
 export const UserList: React.FC = () => {
   const { t } = useTranslation();
@@ -26,10 +26,6 @@ export const UserList: React.FC = () => {
   if (isLoading) {
     return <Loading />;
   }
-
-  const addUser = () => {
-    navigate(UserRoutes.add());
-  };
 
   const openConfirmDeleteDialog = (userId: number) => {
     setUserToDelete(userId);
@@ -99,19 +95,7 @@ export const UserList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <Button onClick={addUser} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </Button>
-          }
-        >
-          <ListItemText primary={t("users")} />
-        </ListItem>
-        <Typography variant="body1">{}</Typography>
-      </Paper>
+    <ListLayout title={t("users")} routes={UserRoutes}>
       <DataGrid
         autoHeight
         rows={users ?? []}
@@ -125,6 +109,6 @@ export const UserList: React.FC = () => {
         show={userToDelete !== null}
         onClose={handleConfirmDeleteUser}
       />
-    </Stack>
+    </ListLayout>
   );
 };

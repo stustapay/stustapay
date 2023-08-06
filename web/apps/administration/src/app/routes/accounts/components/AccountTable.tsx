@@ -1,11 +1,12 @@
-import * as React from "react";
-import { formatUserTagUid } from "@stustapay/models";
+import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { Account } from "@api";
-import { useTranslation } from "react-i18next";
-import { Link as RouterLink } from "react-router-dom";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useCurrencyFormatter } from "@hooks";
 import { Link } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { formatUserTagUid } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink } from "react-router-dom";
 
 export interface AccountTableProps {
   accounts: Account[];
@@ -19,21 +20,11 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
     {
       field: "name",
       headerName: t("account.name") as string,
-      renderCell: (params) => {
-        if (params.row.type === "private") {
-          return (
-            <Link component={RouterLink} to={`/customer-accounts/${params.row.id}`}>
-              customer
-            </Link>
-          );
-        } else {
-          return (
-            <Link component={RouterLink} to={`/system-accounts/${params.row.id}`}>
-              {params.row.name}
-            </Link>
-          );
-        }
-      },
+      renderCell: (params) => (
+        <Link component={RouterLink} to={AccountRoutes.detail(params.row.id)}>
+          {params.row.name}
+        </Link>
+      ),
       minWidth: 250,
     },
     {
@@ -46,7 +37,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       headerName: t("account.user_tag_uid") as string,
       align: "right",
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/user-tags/${params.row.user_tag_uid_hex}`}>
+        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_uid_hex)}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}
         </Link>
       ),

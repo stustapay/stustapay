@@ -1,19 +1,20 @@
-import * as React from "react";
 import {
   selectTillLayoutById,
   selectTillProfileAll,
   useDeleteTillProfileMutation,
   useListTillLayoutsQuery,
   useListTillProfilesQuery,
-} from "@api";
-import { Link, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
+} from "@/api";
+import { TillProfileRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
-import { TillProfile } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
+import { TillProfile } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 
 export const TillProfileList: React.FC = () => {
   const { t } = useTranslation();
@@ -128,24 +129,7 @@ export const TillProfileList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink
-              to={`/node/${nodeId}/tills/profiles/new`}
-              endIcon={<AddIcon />}
-              variant="contained"
-              color="primary"
-            >
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("profile.profiles")} />
-        </ListItem>
-        <Typography variant="body1">{}</Typography>
-      </Paper>
+    <ListLayout title={t("profile.profiles")} routes={TillProfileRoutes}>
       <DataGrid
         autoHeight
         rows={profiles ?? []}
@@ -159,6 +143,6 @@ export const TillProfileList: React.FC = () => {
         show={profileToDelete !== null}
         onClose={handleConfirmDeleteProfile}
       />
-    </Stack>
+    </ListLayout>
   );
 };

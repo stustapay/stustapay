@@ -1,10 +1,3 @@
-import { Box, Button, Checkbox, IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
-import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink } from "@/components";
-import { OrderTable } from "@/components/features";
-import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   selectOrderAll,
   selectTillProfileById,
@@ -16,15 +9,23 @@ import {
   useListTillProfilesQuery,
   useListUsersQuery,
   useLogoutTillMutation,
-} from "@api";
-import { Loading } from "@stustapay/components";
-import QRCode from "react-qr-code";
-import { encodeTillRegistrationQrCode } from "@core";
-import { config } from "@api/common";
-import { toast } from "react-toastify";
-import { getUserName } from "@stustapay/models";
-import { useCurrencyFormatter } from "@hooks";
+} from "@/api";
+import { config } from "@/api/common";
 import { CashierRoutes, TillProfileRoutes, TillRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListItemLink } from "@/components";
+import { OrderTable } from "@/components/features";
+import { DetailLayout } from "@/components/layouts";
+import { encodeTillRegistrationQrCode } from "@/core";
+import { useCurrencyFormatter } from "@/hooks";
+import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
+import { Box, Button, Checkbox, List, ListItem, ListItemText, Paper } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import QRCode from "react-qr-code";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export const TillDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -121,36 +122,20 @@ export const TillDetail: React.FC = () => {
   };
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <>
-              <Tooltip title={t("edit")}>
-                <span>
-                  <IconButtonLink to={TillRoutes.edit(tillId)} color="primary" sx={{ mr: 1 }}>
-                    <EditIcon />
-                  </IconButtonLink>
-                </span>
-              </Tooltip>
-              {till.session_uuid != null && (
-                <Tooltip title={t("till.logout")}>
-                  <IconButton onClick={openUnregisterTillDialog} color="warning">
-                    <LogoutIcon />
-                  </IconButton>
-                </Tooltip>
-              )}
-              <Tooltip title={t("delete")}>
-                <IconButton onClick={openConfirmDeleteDialog} color="error">
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            </>
-          }
-        >
-          <ListItemText primary={till.name} />
-        </ListItem>
-      </Paper>
+    <DetailLayout
+      title={till.name}
+      actions={[
+        { label: t("edit"), onClick: () => navigate(TillRoutes.edit(tillId)), color: "primary", icon: <EditIcon /> },
+        {
+          label: t("till.logout"),
+          onClick: openUnregisterTillDialog,
+          color: "warning",
+          icon: <LogoutIcon />,
+          hidden: till.session_uuid == null,
+        },
+        { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+      ]}
+    >
       <Paper>
         <List>
           <ListItem>
@@ -244,6 +229,6 @@ export const TillDetail: React.FC = () => {
         show={showConfirmDelete}
         onClose={handleConfirmDeleteTill}
       />
-    </Stack>
+    </DetailLayout>
   );
 };

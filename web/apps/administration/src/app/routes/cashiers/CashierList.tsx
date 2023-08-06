@@ -1,14 +1,15 @@
+import { Cashier, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@/api";
+import { ListLayout } from "@/components";
+import { useCurrencyFormatter } from "@/hooks";
+import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import { formatUserTagUid } from "@stustapay/models";
+import { StringyBoolean, useQueryState } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useCurrencyFormatter } from "@hooks";
-import { Checkbox, FormControlLabel, Link, ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Cashier, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@api";
-import { formatUserTagUid } from "@stustapay/models";
-import { Loading } from "@stustapay/components";
 import { z } from "zod";
-import { StringyBoolean, useQueryState } from "@stustapay/utils";
 
 const FilterOptionsSchema = z.object({
   showZeroBalance: StringyBoolean,
@@ -113,12 +114,7 @@ export const CashierList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem>
-          <ListItemText primary={t("cashiers")} />
-        </ListItem>
-      </Paper>
+    <ListLayout title={t("cashiers")}>
       <Paper sx={{ p: 1 }}>
         <FormControlLabel
           control={
@@ -146,6 +142,6 @@ export const CashierList: React.FC = () => {
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
-    </Stack>
+    </ListLayout>
   );
 };

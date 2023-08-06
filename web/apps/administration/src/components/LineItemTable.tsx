@@ -1,11 +1,12 @@
-import * as React from "react";
+import { LineItem, selectProductById, selectTaxRateById, useListProductsQuery, useListTaxRatesQuery } from "@/api";
+import { ProductRoutes } from "@/app/routes";
+import { useCurrencyFormatter } from "@/hooks";
 import { Tooltip } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGridTitle, Loading } from "@stustapay/components";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
-import { LineItem, selectProductById, selectTaxRateById, useListProductsQuery, useListTaxRatesQuery } from "@api";
-import { DataGridTitle, Loading } from "@stustapay/components";
-import { useCurrencyFormatter } from "src/hooks";
 
 export interface LineItemTableProps {
   lineItems: LineItem[];
@@ -32,7 +33,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
       return "";
     }
 
-    return <RouterLink to={`/products/${product.id}`}>{product.name}</RouterLink>;
+    return <RouterLink to={ProductRoutes.detail(product.id)}>{product.name}</RouterLink>;
   };
 
   const renderTaxRate = (name: string, rate: number) => {

@@ -1,11 +1,4 @@
-import { Box, Button, LinearProgress, Paper, Tab, TextField, Typography } from "@mui/material";
-import * as React from "react";
-import { Form, Formik, FormikHelpers } from "formik";
-import { toFormikValidationSchema } from "@stustapay/utils";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { z } from "zod";
-import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
+import { TillLayoutRoutes } from "@/app/routes";
 import {
   NewTillLayout,
   selectTicketAll,
@@ -13,9 +6,17 @@ import {
   useListTicketsQuery,
   useListTillButtonsQuery,
 } from "@api";
-import { TillLayoutDesigner } from "./TillLayoutDesigner";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { Box, Button, LinearProgress, Paper, Tab, TextField, Typography } from "@mui/material";
+import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 import { Loading } from "@stustapay/components";
+import { toFormikValidationSchema } from "@stustapay/utils";
+import { Form, Formik, FormikHelpers } from "formik";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod";
+import { TillLayoutDesigner } from "./TillLayoutDesigner";
 
 export interface TillChangeProps<T extends NewTillLayout> {
   headerTitle: string;
@@ -62,7 +63,7 @@ export function TillLayoutChange<T extends NewTillLayout>({
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate("/till-layouts");
+        navigate(TillLayoutRoutes.list());
       })
       .catch((err) => {
         setSubmitting(false);

@@ -1,9 +1,9 @@
-import * as React from "react";
-import { ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import { selectOrderAll, useListOrdersQuery } from "@/api";
-import { useTranslation } from "react-i18next";
-import { Loading } from "@stustapay/components";
 import { OrderTable } from "@/components/features";
+import { ListLayout } from "@components";
+import { Loading } from "@stustapay/components";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 export const OrderList: React.FC = () => {
   const { t } = useTranslation();
@@ -23,13 +23,8 @@ export const OrderList: React.FC = () => {
   }
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem>
-          <ListItemText primary={t("orders")} />
-        </ListItem>
-      </Paper>
+    <ListLayout title={t("orders")}>
       <OrderTable orders={orders ?? []} />
-    </Stack>
+    </ListLayout>
   );
 };

@@ -1,8 +1,8 @@
-import * as React from "react";
-import { ListItem, ListItemText, Paper, Stack } from "@mui/material";
-import { selectAccountAll, useListSystemAccountsQuery } from "@api";
-import { useTranslation } from "react-i18next";
+import { selectAccountAll, useListSystemAccountsQuery } from "@/api";
+import { ListLayout } from "@/components";
 import { Loading } from "@stustapay/components";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { AccountTable } from "./components/AccountTable";
 
 export const SystemAccountList: React.FC = () => {
@@ -20,13 +20,8 @@ export const SystemAccountList: React.FC = () => {
   }
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem>
-          <ListItemText primary={t("systemAccounts")} />
-        </ListItem>
-      </Paper>
+    <ListLayout title={t("systemAccounts")}>
       <AccountTable accounts={accounts ?? []} />
-    </Stack>
+    </ListLayout>
   );
 };

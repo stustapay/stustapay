@@ -1,20 +1,20 @@
-import * as React from "react";
 import {
+  Till,
   selectTillAll,
   selectTillProfileById,
-  Till,
   useDeleteTillMutation,
   useListTillProfilesQuery,
   useListTillsQuery,
-} from "@api";
-import { Link, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { useTranslation } from "react-i18next";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { Loading } from "@stustapay/components";
+} from "@/api";
 import { TillProfileRoutes, TillRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Link } from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export const TillList: React.FC = () => {
   const { t } = useTranslation();
@@ -113,19 +113,7 @@ export const TillList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to={TillRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("tills")} />
-        </ListItem>
-        <Typography variant="body1">{}</Typography>
-      </Paper>
+    <ListLayout title={t("tills")} routes={TillRoutes}>
       <DataGrid
         autoHeight
         rows={tills ?? []}
@@ -139,6 +127,6 @@ export const TillList: React.FC = () => {
         show={tillToDelete !== null}
         onClose={handleConfirmDeleteTill}
       />
-    </Stack>
+    </ListLayout>
   );
 };

@@ -1,14 +1,13 @@
-import * as React from "react";
-import { ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { selectTaxRateAll, useDeleteTaxRateMutation, useListTaxRatesQuery } from "@api";
-import { useTranslation } from "react-i18next";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { useNavigate } from "react-router-dom";
-import { TaxRate } from "@stustapay/models";
-import { Loading } from "@stustapay/components";
+import { selectTaxRateAll, useDeleteTaxRateMutation, useListTaxRatesQuery } from "@/api";
 import { TaxRateRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import { TaxRate } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 export const TaxRateList: React.FC = () => {
   const { t } = useTranslation();
@@ -82,19 +81,7 @@ export const TaxRateList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to={TaxRateRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("taxRates")} />
-        </ListItem>
-        <Typography variant="body1">{}</Typography>
-      </Paper>
+    <ListLayout title={t("taxRates")} routes={TaxRateRoutes}>
       <DataGrid
         autoHeight
         getRowId={(row) => row.name}
@@ -109,6 +96,6 @@ export const TaxRateList: React.FC = () => {
         show={taxRateToDelete !== null}
         onClose={handleConfirmDeleteTaxRate}
       />
-    </Stack>
+    </ListLayout>
   );
 };

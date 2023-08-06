@@ -1,11 +1,12 @@
+import { selectAccountAll, useFindAccountsMutation } from "@/api";
+import { DetailLayout } from "@/components";
+import { Button, LinearProgress, Paper, TextField } from "@mui/material";
+import { toFormikValidationSchema } from "@stustapay/utils";
+import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
-import { Button, LinearProgress, ListItem, ListItemText, Paper, Stack, TextField } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { selectAccountAll, useFindAccountsMutation } from "@api";
 import { toast } from "react-toastify";
 import { z } from "zod";
-import { Form, Formik, FormikHelpers } from "formik";
-import { toFormikValidationSchema } from "@stustapay/utils";
 import { AccountTable } from "./components/AccountTable";
 
 const SearchFormSchema = z.object({
@@ -36,12 +37,7 @@ export const FindAccounts: React.FC = () => {
   };
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem>
-          <ListItemText primary={t("findAccounts")} />
-        </ListItem>
-      </Paper>
+    <DetailLayout title={t("findAccounts")}>
       <Paper sx={{ p: 3 }}>
         <Formik
           initialValues={initialValues}
@@ -65,6 +61,6 @@ export const FindAccounts: React.FC = () => {
         </Formik>
       </Paper>
       {searchResult.data && <AccountTable accounts={selectAccountAll(searchResult.data)} />}
-    </Stack>
+    </DetailLayout>
   );
 };

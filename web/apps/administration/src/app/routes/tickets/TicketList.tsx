@@ -1,15 +1,15 @@
-import * as React from "react";
-import { Link, ListItem, ListItemText, Paper, Stack } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { selectTicketAll, useDeleteTicketMutation, useListTicketsQuery } from "@api";
-import { useTranslation } from "react-i18next";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { Ticket } from "@stustapay/models";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { Loading } from "@stustapay/components";
-import { useCurrencyFormatter } from "src/hooks";
+import { selectTicketAll, useDeleteTicketMutation, useListTicketsQuery } from "@/api";
 import { ProductRoutes, TicketRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { useCurrencyFormatter } from "@/hooks";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Link } from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import { Ticket } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export const TicketList: React.FC = () => {
   const { t } = useTranslation();
@@ -114,18 +114,7 @@ export const TicketList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to={TicketRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("tickets")} />
-        </ListItem>
-      </Paper>
+    <ListLayout title={t("tickets")} routes={TicketRoutes}>
       <DataGrid
         autoHeight
         rows={tickets ?? []}
@@ -139,6 +128,6 @@ export const TicketList: React.FC = () => {
         show={ticketToDelete !== null}
         onClose={handleConfirmDeleteTicket}
       />
-    </Stack>
+    </ListLayout>
   );
 };

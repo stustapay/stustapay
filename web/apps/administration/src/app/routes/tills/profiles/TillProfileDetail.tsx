@@ -1,17 +1,18 @@
-import { Checkbox, Chip, IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
-import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Link as RouterLink, Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   selectTillLayoutById,
   useDeleteTillProfileMutation,
   useGetTillProfileQuery,
   useListTillLayoutsQuery,
-} from "@api";
-import { Loading } from "@stustapay/components";
+} from "@/api";
 import { TillLayoutRoutes, TillProfileRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler } from "@/components";
+import { DetailLayout } from "@/components/layouts";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Checkbox, Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 
 export const TillProfileDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -45,25 +46,18 @@ export const TillProfileDetail: React.FC = () => {
   const layout = selectTillLayoutById(layouts, profile.layout_id);
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <>
-              <IconButtonLink to={TillProfileRoutes.edit(profileId)} color="primary" sx={{ mr: 1 }}>
-                <EditIcon />
-              </IconButtonLink>
-              <Tooltip title={t("delete")}>
-                <IconButton onClick={openConfirmDeleteDialog} color="error">
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            </>
-          }
-        >
-          <ListItemText primary={profile.name} />
-        </ListItem>
-      </Paper>
+    <DetailLayout
+      title={profile.name}
+      actions={[
+        {
+          label: t("edit"),
+          onClick: () => navigate(TillProfileRoutes.edit(profileId)),
+          color: "primary",
+          icon: <EditIcon />,
+        },
+        { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+      ]}
+    >
       <Paper>
         <List>
           <ListItem>
@@ -108,6 +102,6 @@ export const TillProfileDetail: React.FC = () => {
         show={showConfirmDelete}
         onClose={handleConfirmDeleteProfile}
       />
-    </Stack>
+    </DetailLayout>
   );
 };

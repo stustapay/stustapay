@@ -1,13 +1,13 @@
-import { IconButton, List, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
-import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink, ListItemLink } from "@components";
+import { useDeleteTicketMutation, useGetTicketQuery } from "@/api";
+import { ProductRoutes, TicketRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout, ListItemLink } from "@/components";
+import { useCurrencyFormatter } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { List, ListItem, ListItemText, Paper } from "@mui/material";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useDeleteTicketMutation, useGetTicketQuery } from "@api";
-import { Loading } from "@stustapay/components";
-import { useCurrencyFormatter } from "@hooks";
-import { ProductRoutes, TicketRoutes } from "@/app/routes";
 
 export const TicketDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -38,25 +38,18 @@ export const TicketDetail: React.FC = () => {
   }
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <>
-              <IconButtonLink to={TicketRoutes.edit(ticketId)} color="primary">
-                <EditIcon />
-              </IconButtonLink>
-              <Tooltip title={t("delete")}>
-                <IconButton onClick={openConfirmDeleteDialog} color="error">
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            </>
-          }
-        >
-          <ListItemText primary={ticket.name} />
-        </ListItem>
-      </Paper>
+    <DetailLayout
+      title={ticket.name}
+      actions={[
+        {
+          label: t("edit"),
+          onClick: () => navigate(TicketRoutes.edit(ticketId)),
+          color: "primary",
+          icon: <EditIcon />,
+        },
+        { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+      ]}
+    >
       <Paper>
         <List>
           <ListItem>
@@ -85,6 +78,6 @@ export const TicketDetail: React.FC = () => {
         show={showConfirmDelete}
         onClose={handleConfirmDeleteTicket}
       />
-    </Stack>
+    </DetailLayout>
   );
 };

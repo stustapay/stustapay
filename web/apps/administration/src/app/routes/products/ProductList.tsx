@@ -1,13 +1,4 @@
-import * as React from "react";
-import { Link, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import {
-  Add as AddIcon,
-  ContentCopy as ContentCopyIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Lock as LockIcon,
-} from "@mui/icons-material";
+import { ProductRoutes } from "@/app/routes";
 import {
   selectProductAll,
   selectTaxRateById,
@@ -17,13 +8,21 @@ import {
   useListTaxRatesQuery,
   useUpdateProductMutation,
 } from "@api";
-import { useTranslation } from "react-i18next";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { Product } from "@stustapay/models";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@components";
+import {
+  ContentCopy as ContentCopyIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Lock as LockIcon,
+} from "@mui/icons-material";
+import { Link, Tooltip } from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { Product } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useCurrencyFormatter } from "src/hooks";
-import { ProductRoutes } from "@/app/routes";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation();
@@ -169,18 +168,7 @@ export const ProductList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to={ProductRoutes.add()} endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("products")} />
-        </ListItem>
-      </Paper>
+    <ListLayout title={t("products")} routes={ProductRoutes}>
       <DataGrid
         autoHeight
         rows={products ?? []}
@@ -194,6 +182,6 @@ export const ProductList: React.FC = () => {
         show={productToDelete !== null}
         onClose={handleConfirmDeleteProduct}
       />
-    </Stack>
+    </ListLayout>
   );
 };

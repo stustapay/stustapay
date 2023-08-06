@@ -1,9 +1,3 @@
-import { Box, IconButton, List, ListItem, ListItemText, Paper, Stack, Tab, Tooltip } from "@mui/material";
-import { ConfirmDialog, ConfirmDialogCloseHandler, IconButtonLink } from "@components";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   selectTicketById,
   selectTillButtonById,
@@ -11,12 +5,18 @@ import {
   useGetTillLayoutQuery,
   useListTicketsQuery,
   useListTillButtonsQuery,
-} from "@api";
+} from "@/api";
+import { TillLayoutRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout } from "@/components";
+import { useCurrencyFormatter } from "@/hooks";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { Box, List, ListItem, ListItemText, Paper, Tab } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { Ticket, TillButton } from "@stustapay/models";
-import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { useCurrencyFormatter } from "@hooks";
-import { TillLayoutRoutes } from "@/app/routes";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const TillLayoutDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -56,25 +56,18 @@ export const TillLayoutDetail: React.FC = () => {
     layout.ticket_ids == null ? [] : [...layout.ticket_ids].map((i) => selectTicketById(tickets, i) as Ticket);
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <>
-              <IconButtonLink to={TillLayoutRoutes.edit(layoutId)} color="primary" sx={{ mr: 1 }}>
-                <EditIcon />
-              </IconButtonLink>
-              <Tooltip title={t("delete")}>
-                <IconButton onClick={openConfirmDeleteDialog} color="error">
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            </>
-          }
-        >
-          <ListItemText primary={layout.name} />
-        </ListItem>
-      </Paper>
+    <DetailLayout
+      title={layout.name}
+      actions={[
+        {
+          label: t("edit"),
+          onClick: () => navigate(TillLayoutRoutes.edit(layoutId)),
+          color: "primary",
+          icon: <EditIcon />,
+        },
+        { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+      ]}
+    >
       <Paper>
         <List>
           <ListItem>
@@ -121,6 +114,6 @@ export const TillLayoutDetail: React.FC = () => {
         show={showConfirmDelete}
         onClose={handleConfirmDeleteLayout}
       />
-    </Stack>
+    </DetailLayout>
   );
 };
