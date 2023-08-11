@@ -43,7 +43,7 @@ import {
   UserPageLayout,
 } from "./routes/users";
 import { AccountDetail, FindAccounts, SystemAccountList, AccountPageLayout } from "./routes/accounts";
-import { UserTagDetail, UserTagPageLayout } from "./routes/user-tags";
+import { UserTagDetail, UserTagPageLayout, FindUserTags } from "./routes/user-tags";
 import { OrderDetail, OrderList, SaleEdit } from "./routes/orders";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
 import { NodePageLayout, FestivalOverview, MoneyOverview } from "./routes/nodes";
@@ -287,6 +287,10 @@ const router = createBrowserRouter([
           </PrivilegeGuard>
         ),
         children: [
+          {
+            index: true,
+            element: <FindUserTags />,
+          },
           {
             path: ":userTagUidHex",
             element: <UserTagDetail />,

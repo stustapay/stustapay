@@ -8,10 +8,9 @@ from stustapay.core.database import Connection
 from stustapay.core.schema.account import (
     ACCOUNT_MONEY_VOUCHER_CREATE,
     Account,
-    UserTagDetail,
 )
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
+from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -54,30 +53,6 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
-    async def get_user_tag_detail(self, *, conn: Connection, user_tag_uid: int) -> Optional[UserTagDetail]:
-        return await conn.fetch_maybe_one(
-            UserTagDetail, "select * from user_tag_with_history utwh where user_tag_uid = $1", user_tag_uid
-        )
-
-    @with_db_transaction
-    @requires_user([Privilege.account_management])
-    async def update_user_tag_comment(
-        self, *, conn: Connection, current_user: CurrentUser, user_tag_uid: int, comment: str
-    ) -> UserTagDetail:
-        ret = await conn.fetchval(
-            "update user_tag set comment = $1 where uid = $2 returning uid", comment, user_tag_uid
-        )
-        if ret is None:
-            raise InvalidArgument(f"User tag {format_user_tag_uid(user_tag_uid)} does not exist")
-
-        detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_user=current_user, user_tag_uid=user_tag_uid
-        )
-        assert detail is not None
-        return detail
-
-    @with_db_transaction
-    @requires_user([Privilege.account_management])
     async def list_system_accounts(self, *, conn: Connection) -> list[Account]:
         return await conn.fetch_many(Account, "select * from account_with_history where type != 'private'")
 
@@ -110,7 +85,7 @@ class AccountService(DBService):
             "   or comment like $1 "
             "   or (user_tag_uid is not null and to_hex(user_tag_uid::bigint) like $1) "
             "   or (user_tag_uid is not null and user_tag_uid = $2)",
-            f"%{search_term}%",
+            f"%{search_term.lower()}%",
             value_as_int,
         )
 

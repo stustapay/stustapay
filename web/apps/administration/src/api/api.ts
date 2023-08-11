@@ -17,6 +17,7 @@ import {
   TillProfile,
   User,
   UserRole,
+  UserTagDetail,
 } from "./generated/api";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
@@ -28,6 +29,10 @@ const userAdapter = createEntityAdapter<User>({
 
 const accountAdapter = createEntityAdapter<Account>({
   sortComparer: (a, b) => (a.name?.toLowerCase() ?? "").localeCompare(b.name?.toLowerCase() ?? ""),
+});
+
+const userTagAdapter = createEntityAdapter<UserTagDetail>({
+  sortComparer: (a, b) => (a.user_tag_uid_hex?.toLowerCase() ?? "").localeCompare(b.user_tag_uid_hex?.toLowerCase() ?? ""),
 });
 
 const userRoleAdapter = createEntityAdapter<UserRole>({
@@ -230,3 +235,6 @@ export const {
 
 export const { selectAccountById, selectAccountEntities, selectAccountTotal, selectAccountIds, selectAccountAll } =
   convertEntityAdaptorSelectors("Account", accountAdapter.getSelectors());
+
+export const { selectUserTagAll, selectUserTagEntities, selectUserTagTotal, selectUserTagIds, selectUserTagById } =
+  convertEntityAdaptorSelectors("UserTag", userTagAdapter.getSelectors());

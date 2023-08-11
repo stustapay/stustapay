@@ -13,20 +13,20 @@ export interface CommonActionLayoutProps {
 export const CommonActionLayout: React.FC<CommonActionLayoutProps> = ({ title, children, actions }) => {
   const navigate = useNavigate();
 
-  const renderedActions = actions?.map(({ hidden, label, icon, onClick, ...props }) => {
+  const renderedActions = actions?.map(({ hidden, label, icon, onClick, ...props }, index) => {
     if (hidden) {
       return null;
     }
 
     if (label) {
       return (
-        <Button variant="outlined" startIcon={icon} onClick={onClick} {...props}>
+        <Button key={label} variant="outlined" startIcon={icon} onClick={onClick} {...props}>
           {label}
         </Button>
       );
     }
     return (
-      <IconButton onClick={onClick} {...props}>
+      <IconButton key={index} onClick={onClick} {...props}>
         {icon}
       </IconButton>
     );

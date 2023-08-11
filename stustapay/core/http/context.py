@@ -21,6 +21,7 @@ from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
+from stustapay.core.service.user_tag import UserTagService
 
 
 @dataclass
@@ -42,6 +43,7 @@ class Context:
     account_service: Optional[AccountService] = None
     cashier_service: Optional[CashierService] = None
     ticket_service: Optional[TicketService] = None
+    user_tag_service: Optional[UserTagService] = None
 
 
 class ContextMiddleware:
@@ -160,6 +162,10 @@ def get_ticket_service(request: Request) -> TicketService:
     return request.state.context.ticket_service
 
 
+def get_user_tag_service(request: Request) -> UserService:
+    return request.state.context.user_tag_service
+
+
 ContextOrderService = Annotated[OrderService, Depends(get_order_service)]
 ContextProductService = Annotated[ProductService, Depends(get_product_service)]
 ContextTaxRateService = Annotated[TaxRateService, Depends(get_tax_rate_service)]
@@ -168,6 +174,7 @@ ContextCustomerService = Annotated[CustomerService, Depends(get_customer_service
 ContextTillService = Annotated[TillService, Depends(get_till_service)]
 ContextConfigService = Annotated[ConfigService, Depends(get_config_service)]
 ContextAccountService = Annotated[AccountService, Depends(get_account_service)]
+ContextUserTagService = Annotated[UserTagService, Depends(get_user_tag_service)]
 ContextCashierService = Annotated[CashierService, Depends(get_cashier_service)]
 ContextTicketService = Annotated[TicketService, Depends(get_ticket_service)]
 

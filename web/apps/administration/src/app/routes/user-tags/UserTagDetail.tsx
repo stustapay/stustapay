@@ -1,6 +1,7 @@
+import { AccountRoutes } from "@/app/routes";
 import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@api";
-import { EditableListItem, ListItemLink } from "@components";
-import { List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
+import { DetailLayout, EditableListItem, ListItemLink } from "@components";
+import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DataGridTitle, Loading } from "@stustapay/components";
 import { formatUserTagUid, UserTagDetail as UserTagDetailType } from "@stustapay/models";
@@ -36,7 +37,7 @@ export const UserTagDetail: React.FC = () => {
       field: "account_id",
       headerName: t("account.history.account") as string,
       renderCell: (params) => (
-        <RouterLink to={`/customer-accounts/${params.row.account_id}`}>{params.row.account_id}</RouterLink>
+        <RouterLink to={AccountRoutes.detail(params.row.account_id)}>{params.row.account_id}</RouterLink>
       ),
       width: 100,
     },
@@ -54,12 +55,7 @@ export const UserTagDetail: React.FC = () => {
   };
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem>
-          <ListItemText primary={formatUserTagUid(data.user_tag_uid_hex)} />
-        </ListItem>
-      </Paper>
+    <DetailLayout title={formatUserTagUid(data.user_tag_uid_hex)}>
       <Paper>
         <List>
           <ListItem>
@@ -67,7 +63,7 @@ export const UserTagDetail: React.FC = () => {
           </ListItem>
           <EditableListItem label={t("userTag.comment")} value={data.comment ?? ""} onChange={handleUpdateComment} />
           {data.account_id ? (
-            <ListItemLink to={`/customer-accounts/${data.account_id}`}>
+            <ListItemLink to={AccountRoutes.detail(data.account_id)}>
               <ListItemText primary={t("userTag.account")} secondary={data.account_id} />
             </ListItemLink>
           ) : (
@@ -86,6 +82,6 @@ export const UserTagDetail: React.FC = () => {
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
-    </Stack>
+    </DetailLayout>
   );
 };

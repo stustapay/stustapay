@@ -32,12 +32,7 @@ export const UserTagPageLayout: React.FC = () => {
         sx={{ borderBottom: 1, borderColor: "divider" }}
         aria-label="User Tags"
       >
-        <Tab
-          label={t("userTag.userTags")}
-          component={RouterLink}
-          value={UserTagRoutes.list()}
-          to={UserTagRoutes.list()}
-        />
+        <Tab label={t("userTag.find")} component={RouterLink} value={UserTagRoutes.list()} to={UserTagRoutes.list()} />
       </Tabs>
       <Box sx={{ mt: 2 }}>
         <Outlet />

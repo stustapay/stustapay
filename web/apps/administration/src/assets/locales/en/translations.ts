@@ -65,6 +65,8 @@ export const translations = {
   },
   userTag: {
     userTags: "User Tags",
+    find: "Find User Tags",
+    searchTerm: "Search Term",
     uid: "User Tag Uid",
     comment: "Comment",
     noAccount: "No account associated",

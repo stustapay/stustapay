@@ -17,6 +17,7 @@ export const addTagTypes = [
   "cashiers",
   "stats",
   "tickets",
+  "user_tags",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -332,18 +333,6 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["accounts"],
       }),
-      getUserTagDetail: build.query<GetUserTagDetailApiResponse, GetUserTagDetailApiArg>({
-        query: (queryArg) => ({ url: `/user-tags/${queryArg.userTagUidHex}` }),
-        providesTags: ["accounts"],
-      }),
-      updateUserTagComment: build.mutation<UpdateUserTagCommentApiResponse, UpdateUserTagCommentApiArg>({
-        query: (queryArg) => ({
-          url: `/user-tags/${queryArg.userTagUidHex}/update-comment`,
-          method: "POST",
-          body: queryArg.updateCommentPayload,
-        }),
-        invalidatesTags: ["accounts"],
-      }),
       listOrdersByTill: build.query<ListOrdersByTillApiResponse, ListOrdersByTillApiArg>({
         query: (queryArg) => ({ url: `/orders/by-till/${queryArg.tillId}` }),
         providesTags: ["orders"],
@@ -421,6 +410,22 @@ const injectedRtkApi = api
       deleteTicket: build.mutation<DeleteTicketApiResponse, DeleteTicketApiArg>({
         query: (queryArg) => ({ url: `/tickets/${queryArg.ticketId}`, method: "DELETE" }),
         invalidatesTags: ["tickets"],
+      }),
+      findUserTags: build.mutation<FindUserTagsApiResponse, FindUserTagsApiArg>({
+        query: (queryArg) => ({ url: `/user-tags/find-user-tags`, method: "POST", body: queryArg.findUserTagPayload }),
+        invalidatesTags: ["user_tags"],
+      }),
+      getUserTagDetail: build.query<GetUserTagDetailApiResponse, GetUserTagDetailApiArg>({
+        query: (queryArg) => ({ url: `/user-tags/${queryArg.userTagUidHex}` }),
+        providesTags: ["user_tags"],
+      }),
+      updateUserTagComment: build.mutation<UpdateUserTagCommentApiResponse, UpdateUserTagCommentApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tags/${queryArg.userTagUidHex}/update-comment`,
+          method: "POST",
+          body: queryArg.updateCommentPayload,
+        }),
+        invalidatesTags: ["user_tags"],
       }),
     }),
     overrideExisting: false,
@@ -669,15 +674,6 @@ export type UpdateAccountCommentApiArg = {
   accountId: number;
   updateAccountCommentPayload: UpdateAccountCommentPayload;
 };
-export type GetUserTagDetailApiResponse = /** status 200 Successful Response */ UserTagDetail;
-export type GetUserTagDetailApiArg = {
-  userTagUidHex: string;
-};
-export type UpdateUserTagCommentApiResponse = /** status 200 Successful Response */ UserTagDetail;
-export type UpdateUserTagCommentApiArg = {
-  userTagUidHex: string;
-  updateCommentPayload: UpdateCommentPayload;
-};
 export type ListOrdersByTillApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
 export type ListOrdersByTillApiArg = {
   tillId: number;
@@ -742,6 +738,19 @@ export type UpdateTicketApiArg = {
 export type DeleteTicketApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTicketApiArg = {
   ticketId: number;
+};
+export type FindUserTagsApiResponse = /** status 200 Successful Response */ NormalizedListUserTagDetailInt;
+export type FindUserTagsApiArg = {
+  findUserTagPayload: FindUserTagPayload;
+};
+export type GetUserTagDetailApiResponse = /** status 200 Successful Response */ UserTagDetail;
+export type GetUserTagDetailApiArg = {
+  userTagUidHex: string;
+};
+export type UpdateUserTagCommentApiResponse = /** status 200 Successful Response */ UserTagDetail;
+export type UpdateUserTagCommentApiArg = {
+  userTagUidHex: string;
+  updateCommentPayload: UpdateCommentPayload;
 };
 export type ProductRestriction = "under_16" | "under_18";
 export type Product = {
@@ -1117,20 +1126,6 @@ export type UpdateTagUidPayload = {
 export type UpdateAccountCommentPayload = {
   comment: string;
 };
-export type UserTagAccountAssociation = {
-  account_id: number;
-  mapping_was_valid_until: string;
-};
-export type UserTagDetail = {
-  user_tag_uid: number;
-  comment?: string | null;
-  account_id?: number | null;
-  account_history: UserTagAccountAssociation[];
-  user_tag_uid_hex?: string;
-};
-export type UpdateCommentPayload = {
-  comment: string;
-};
 export type PaymentMethod = "cash" | "sumup" | "tag" | "sumup_online";
 export type OrderType =
   | "sale"
@@ -1271,8 +1266,8 @@ export type ProductSoldStats = {
   quantity_sold: number;
 };
 export type VoucherStats = {
-  vouchers_issued?: number;
-  vouchers_spent?: number;
+  vouchers_issued: number;
+  vouchers_spent: number;
 };
 export type ProductStats2 = {
   product_quantities: ProductSoldStats[];
@@ -1306,6 +1301,29 @@ export type NewTicket = {
   product_id: number;
   initial_top_up_amount: number;
   restriction?: ProductRestriction | null;
+};
+export type UserTagAccountAssociation = {
+  account_id: number;
+  mapping_was_valid_until: string;
+};
+export type UserTagDetail = {
+  user_tag_uid: number;
+  comment?: string | null;
+  account_id?: number | null;
+  account_history: UserTagAccountAssociation[];
+  user_tag_uid_hex?: string;
+};
+export type NormalizedListUserTagDetailInt = {
+  ids: number[];
+  entities: {
+    [key: string]: UserTagDetail;
+  };
+};
+export type FindUserTagPayload = {
+  search_term: string;
+};
+export type UpdateCommentPayload = {
+  comment: string;
 };
 export const {
   useListProductsQuery,
@@ -1372,8 +1390,6 @@ export const {
   useUpdateVoucherAmountMutation,
   useUpdateTagUidMutation,
   useUpdateAccountCommentMutation,
-  useGetUserTagDetailQuery,
-  useUpdateUserTagCommentMutation,
   useListOrdersByTillQuery,
   useListOrdersQuery,
   useGetOrderQuery,
@@ -1390,4 +1406,7 @@ export const {
   useGetTicketQuery,
   useUpdateTicketMutation,
   useDeleteTicketMutation,
+  useFindUserTagsMutation,
+  useGetUserTagDetailQuery,
+  useUpdateUserTagCommentMutation,
 } = injectedRtkApi;

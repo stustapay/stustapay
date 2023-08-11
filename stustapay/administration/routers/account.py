@@ -1,12 +1,12 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextAccountService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
-from stustapay.core.schema.account import Account, UserTagDetail
+from stustapay.core.schema.account import Account
 
 router = APIRouter(
     prefix="",
@@ -95,31 +95,3 @@ async def update_account_comment(
     payload: UpdateAccountCommentPayload,
 ):
     return await account_service.update_account_comment(token=token, account_id=account_id, comment=payload.comment)
-
-
-@router.get("/user-tags/{user_tag_uid_hex}", response_model=UserTagDetail)
-async def get_user_tag_detail(
-    token: CurrentAuthToken,
-    account_service: ContextAccountService,
-    user_tag_uid_hex: str,
-):
-    resp = await account_service.get_user_tag_detail(token=token, user_tag_uid=int(user_tag_uid_hex, 16))
-    if resp is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return resp
-
-
-class UpdateCommentPayload(BaseModel):
-    comment: str
-
-
-@router.post("/user-tags/{user_tag_uid_hex}/update-comment", response_model=UserTagDetail)
-async def update_user_tag_comment(
-    token: CurrentAuthToken,
-    account_service: ContextAccountService,
-    user_tag_uid_hex: str,
-    payload: UpdateCommentPayload,
-):
-    return await account_service.update_user_tag_comment(
-        token=token, user_tag_uid=int(user_tag_uid_hex, 16), comment=payload.comment
-    )
