@@ -6,3 +6,4 @@ export * from "./SearchInput";
 export * from "./EditableListItem";
 export * from "./layouts";
 export * from "./ExpandableLinkMenu";
+export * from "./MarkdownEditor";

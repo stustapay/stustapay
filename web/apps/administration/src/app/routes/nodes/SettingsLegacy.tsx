@@ -7,7 +7,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
-export const Settings: React.FC = () => {
+export const SettingsLegacy: React.FC = () => {
   const { t } = useTranslation();
   const { data: configEntries } = useListConfigEntriesQuery();
   const [updateConfigEntry] = useSetConfigEntryMutation();

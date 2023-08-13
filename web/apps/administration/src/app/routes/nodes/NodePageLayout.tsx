@@ -17,6 +17,9 @@ const getActiveTab = (nodeId: string, location: string) => {
   if (location.startsWith(`/node/${nodeId}/settings`)) {
     return `/node/${nodeId}/settings`;
   }
+  if (location.startsWith(`/node/${nodeId}/settings-legacy`)) {
+    return `/node/${nodeId}/settings-legacy`;
+  }
   return `/node/${nodeId}`;
 };
 
@@ -67,6 +70,14 @@ export const NodePageLayout: React.FC = () => {
           icon={<SettingsIcon />}
           iconPosition="start"
           to={`${nodeUrl}/settings`}
+        />
+        <Tab
+          label="Settings Legacy"
+          component={RouterLink}
+          value={`${nodeUrl}/settings-legacy`}
+          icon={<SettingsIcon />}
+          iconPosition="start"
+          to={`${nodeUrl}/settings-legacy`}
         />
       </Tabs>
       <Box sx={{ mt: 2 }}>

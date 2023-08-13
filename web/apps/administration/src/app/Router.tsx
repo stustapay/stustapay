@@ -5,7 +5,6 @@ import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./rout
 import { TicketCreate, TicketDetail, TicketList, TicketUpdate } from "./routes/tickets";
 import { TaxRateCreate, TaxRateList, TaxRateUpdate } from "./routes/tax-rates";
 import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout";
-import { Settings } from "./routes/settings/Settings";
 import { Login, Logout, Profile } from "./routes/auth";
 import {
   TillCreate,
@@ -46,7 +45,7 @@ import { AccountDetail, FindAccounts, SystemAccountList, AccountPageLayout } fro
 import { UserTagDetail, UserTagPageLayout, FindUserTags } from "./routes/user-tags";
 import { OrderDetail, OrderList, SaleEdit } from "./routes/orders";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
-import { NodePageLayout, FestivalOverview, MoneyOverview } from "./routes/nodes";
+import { SettingsLegacy, Settings, NodePageLayout, FestivalOverview, MoneyOverview } from "./routes/nodes";
 
 const router = createBrowserRouter([
   {
@@ -68,6 +67,10 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <FestivalOverview /> },
           { path: "stats", element: <MoneyOverview /> },
+          {
+            path: "settings-legacy",
+            element: <SettingsLegacy />,
+          },
           {
             path: "settings",
             element: <Settings />,
