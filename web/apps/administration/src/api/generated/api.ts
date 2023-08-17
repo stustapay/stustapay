@@ -19,6 +19,7 @@ export const addTagTypes = [
   "tickets",
   "user_tags",
   "tses",
+  "payouts",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -429,8 +430,28 @@ const injectedRtkApi = api
         invalidatesTags: ["user_tags"],
       }),
       listTses: build.query<ListTsesApiResponse, ListTsesApiArg>({
-        query: () => ({ url: `/` }),
+        query: () => ({ url: `/tses/` }),
         providesTags: ["tses"],
+      }),
+      listPayoutRuns: build.query<ListPayoutRunsApiResponse, ListPayoutRunsApiArg>({
+        query: () => ({ url: `/payouts/` }),
+        providesTags: ["payouts"],
+      }),
+      createPayoutRun: build.mutation<CreatePayoutRunApiResponse, CreatePayoutRunApiArg>({
+        query: (queryArg) => ({ url: `/payouts/`, method: "POST", body: queryArg.newPayoutRun }),
+        invalidatesTags: ["payouts"],
+      }),
+      pendingPayoutDetail: build.query<PendingPayoutDetailApiResponse, PendingPayoutDetailApiArg>({
+        query: () => ({ url: `/payouts/pending-payout-detail` }),
+        providesTags: ["payouts"],
+      }),
+      payoutRunCsvExport: build.query<PayoutRunCsvExportApiResponse, PayoutRunCsvExportApiArg>({
+        query: (queryArg) => ({ url: `/payouts/${queryArg.payoutRunId}/csv` }),
+        providesTags: ["payouts"],
+      }),
+      payoutRunSepaXmlExport: build.query<PayoutRunSepaXmlExportApiResponse, PayoutRunSepaXmlExportApiArg>({
+        query: (queryArg) => ({ url: `/payouts/${queryArg.payoutRunId}/sepa_xml` }),
+        providesTags: ["payouts"],
       }),
     }),
     overrideExisting: false,
@@ -759,6 +780,22 @@ export type UpdateUserTagCommentApiArg = {
 };
 export type ListTsesApiResponse = /** status 200 Successful Response */ NormalizedListTseInt;
 export type ListTsesApiArg = void;
+export type ListPayoutRunsApiResponse = /** status 200 Successful Response */ NormalizedListPayoutRunWithStatsInt;
+export type ListPayoutRunsApiArg = void;
+export type CreatePayoutRunApiResponse = /** status 200 Successful Response */ PayoutRunWithStats;
+export type CreatePayoutRunApiArg = {
+  newPayoutRun: NewPayoutRun;
+};
+export type PendingPayoutDetailApiResponse = /** status 200 Successful Response */ PendingPayoutDetail;
+export type PendingPayoutDetailApiArg = void;
+export type PayoutRunCsvExportApiResponse = /** status 200 Successful Response */ string;
+export type PayoutRunCsvExportApiArg = {
+  payoutRunId: number;
+};
+export type PayoutRunSepaXmlExportApiResponse = /** status 200 Successful Response */ string;
+export type PayoutRunSepaXmlExportApiArg = {
+  payoutRunId: number;
+};
 export type ProductRestriction = "under_16" | "under_18";
 export type Product = {
   name: string;
@@ -1351,89 +1388,155 @@ export type NormalizedListTseInt = {
     [key: string]: Tse;
   };
 };
+export type PayoutRunWithStats = {
+  id: number;
+  created_by: string;
+  created_at: string;
+  execution_date: string;
+  total_donation_amount: number;
+  total_payout_amount: number;
+  n_payouts: number;
+};
+export type NormalizedListPayoutRunWithStatsInt = {
+  ids: number[];
+  entities: {
+    [key: string]: PayoutRunWithStats;
+  };
+};
+export type NewPayoutRun = {
+  execution_date: string;
+  max_payout_sum: number;
+};
+export type PendingPayoutDetail = {
+  total_payout_amount: number;
+  total_donation_amount: number;
+  n_payouts: number;
+};
 export const {
   useListProductsQuery,
+  useLazyListProductsQuery,
   useCreateProductMutation,
   useGetProductQuery,
+  useLazyGetProductQuery,
   useUpdateProductMutation,
   useDeleteProductMutation,
   useListUsersQuery,
+  useLazyListUsersQuery,
   useCreateUserMutation,
   useGetUserQuery,
+  useLazyGetUserQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
   useListUserRolesQuery,
+  useLazyListUserRolesQuery,
   useCreateUserRoleMutation,
   useUpdateUserRoleMutation,
   useDeleteUserRoleMutation,
   useListTaxRatesQuery,
+  useLazyListTaxRatesQuery,
   useCreateTaxRateMutation,
   useGetTaxRateQuery,
+  useLazyGetTaxRateQuery,
   useUpdateTaxRateMutation,
   useDeleteTaxRateMutation,
   useLoginMutation,
   useChangePasswordMutation,
   useLogoutMutation,
   useListTillsQuery,
+  useLazyListTillsQuery,
   useCreateTillMutation,
   useGetTillQuery,
+  useLazyGetTillQuery,
   useUpdateTillMutation,
   useDeleteTillMutation,
   useLogoutTillMutation,
   useForceLogoutUserMutation,
   useListTillLayoutsQuery,
+  useLazyListTillLayoutsQuery,
   useCreateTillLayoutMutation,
   useGetTillLayoutQuery,
+  useLazyGetTillLayoutQuery,
   useUpdateTillLayoutMutation,
   useDeleteTillLayoutMutation,
   useListTillProfilesQuery,
+  useLazyListTillProfilesQuery,
   useCreateTillProfileMutation,
   useGetTillProfileQuery,
+  useLazyGetTillProfileQuery,
   useUpdateTillProfileMutation,
   useDeleteTillProfileMutation,
   useListTillButtonsQuery,
+  useLazyListTillButtonsQuery,
   useCreateTillButtonMutation,
   useGetTillButtonQuery,
+  useLazyGetTillButtonQuery,
   useUpdateTillButtonMutation,
   useDeleteTillButtonMutation,
   useListRegisterStockingsQuery,
+  useLazyListRegisterStockingsQuery,
   useCreateRegisterStockingMutation,
   useUpdateRegisterStockingMutation,
   useDeleteRegisterStockingMutation,
   useListCashRegistersAdminQuery,
+  useLazyListCashRegistersAdminQuery,
   useCreateRegisterMutation,
   useTransferRegisterMutation,
   useUpdateRegisterMutation,
   useDeleteRegisterMutation,
   useGetPublicConfigQuery,
+  useLazyGetPublicConfigQuery,
   useListConfigEntriesQuery,
+  useLazyListConfigEntriesQuery,
   useSetConfigEntryMutation,
   useListSystemAccountsQuery,
+  useLazyListSystemAccountsQuery,
   useFindAccountsMutation,
   useGetAccountQuery,
+  useLazyGetAccountQuery,
   useDisableAccountMutation,
   useUpdateBalanceMutation,
   useUpdateVoucherAmountMutation,
   useUpdateTagUidMutation,
   useUpdateAccountCommentMutation,
   useListOrdersByTillQuery,
+  useLazyListOrdersByTillQuery,
   useListOrdersQuery,
+  useLazyListOrdersQuery,
   useGetOrderQuery,
+  useLazyGetOrderQuery,
   useCancelOrderMutation,
   useEditOrderMutation,
   useListCashiersQuery,
+  useLazyListCashiersQuery,
   useGetCashierQuery,
+  useLazyGetCashierQuery,
   useGetCashierShiftsQuery,
+  useLazyGetCashierShiftsQuery,
   useGetCashierShiftStatsQuery,
+  useLazyGetCashierShiftStatsQuery,
   useCloseOutCashierMutation,
   useGetProductStatsQuery,
+  useLazyGetProductStatsQuery,
   useListTicketsQuery,
+  useLazyListTicketsQuery,
   useCreateTicketMutation,
   useGetTicketQuery,
+  useLazyGetTicketQuery,
   useUpdateTicketMutation,
   useDeleteTicketMutation,
   useFindUserTagsMutation,
   useGetUserTagDetailQuery,
+  useLazyGetUserTagDetailQuery,
   useUpdateUserTagCommentMutation,
   useListTsesQuery,
+  useLazyListTsesQuery,
+  useListPayoutRunsQuery,
+  useLazyListPayoutRunsQuery,
+  useCreatePayoutRunMutation,
+  usePendingPayoutDetailQuery,
+  useLazyPendingPayoutDetailQuery,
+  usePayoutRunCsvExportQuery,
+  useLazyPayoutRunCsvExportQuery,
+  usePayoutRunSepaXmlExportQuery,
+  useLazyPayoutRunSepaXmlExportQuery,
 } = injectedRtkApi;

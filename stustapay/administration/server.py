@@ -11,6 +11,7 @@ from stustapay.core.http.server import Server
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
+from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
@@ -20,9 +21,11 @@ from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.service.user_tag import UserTagService
 from stustapay.core.subcommand import SubCommand
-from .routers import account, auth, cashier
-from .routers import config as config_router
 from .routers import (
+    account,
+    auth,
+    cashier,
+    config as config_router,
     order,
     product,
     stats,
@@ -37,6 +40,7 @@ from .routers import (
     user,
     user_tag,
     tse,
+    payout,
 )
 
 
@@ -74,6 +78,7 @@ class Api(SubCommand):
         self.server.add_router(ticket.router)
         self.server.add_router(user_tag.router)
         self.server.add_router(tse.router)
+        self.server.add_router(payout.router)
 
     @staticmethod
     def argparse_register(subparser: argparse.ArgumentParser):
@@ -94,6 +99,7 @@ class Api(SubCommand):
         product_service = ProductService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
         till_service = TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
         order_service = OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
+        config_service = ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
 
         context = Context(
             config=self.cfg,
@@ -102,13 +108,16 @@ class Api(SubCommand):
             tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             till_service=till_service,
-            config_service=ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            config_service=config_service,
             account_service=AccountService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             cashier_service=CashierService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             order_service=order_service,
             ticket_service=TicketService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_tag_service=UserTagService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             tse_service=TseService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            customer_service=CustomerService(
+                db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service
+            ),
         )
         try:
             self.server.add_task(asyncio.create_task(run_healthcheck(db_pool=db_pool, service_name="administration")))

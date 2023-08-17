@@ -375,7 +375,7 @@ export const translations = {
     deleteDescription: "Confirm user role deletion",
   },
   tse: {
-    tses: "Tses",
+    tses: "TSE",
     name: "Name",
     status: "Status",
     serial: "Serial",
@@ -384,6 +384,21 @@ export const translations = {
     publicKey: "Public Key",
     certificate: "Certificate",
     processDataEncoding: "Process Data Encoding",
+  },
+  payoutRun: {
+    id: "ID",
+    pendingPayoutDetails: "Overview of customers which do not have an assigned payout run",
+    maxPayoutSum: "Max amount to be paid out in this payout run",
+    downloadCsv: "CSV",
+    downloadSepa: "SEPA",
+    create: "Create a new payout run",
+    createdAt: "Created At",
+    createdBy: "Created By",
+    executionDate: "Execution Date",
+    totalPayoutAmount: "Total Payout Amount",
+    totalDonationAmount: "Total Donation Amount",
+    nPayouts: "Num. Payouts",
+    payoutRuns: "Payout Runs",
   }
 };
 

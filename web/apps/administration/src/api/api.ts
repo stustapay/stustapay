@@ -7,6 +7,7 @@ import {
   CashierShift,
   ConfigEntry,
   Order,
+  PayoutRunWithStats,
   Product,
   TaxRate,
   Ticket,
@@ -96,6 +97,10 @@ const tseAdapter = createEntityAdapter<Tse>({
   sortComparer: (a, b) => a.tse_name.toLowerCase().localeCompare(b.tse_name.toLowerCase()),
 });
 
+const payoutRunAdaptor = createEntityAdapter<PayoutRunWithStats>({
+  sortComparer: (a, b) => a.created_at.toLowerCase().localeCompare(b.created_at.toLowerCase()),
+});
+
 export const api = generatedApi.enhanceEndpoints({
   endpoints: {
     listUsers: {
@@ -157,6 +162,9 @@ export const api = generatedApi.enhanceEndpoints({
     },
     listTses: {
       providesTags: (result) => generateCacheKeys("tses", result),
+    },
+    listPayoutRuns: {
+      providesTags: (result) => generateCacheKeys("payouts", result),
     },
   },
 });
@@ -247,5 +255,8 @@ export const { selectAccountById, selectAccountEntities, selectAccountTotal, sel
 export const { selectUserTagAll, selectUserTagEntities, selectUserTagTotal, selectUserTagIds, selectUserTagById } =
   convertEntityAdaptorSelectors("UserTag", userTagAdapter.getSelectors());
 
-  export const { selectTseAll, selectTseById, selectTseEntities, selectTseIds, selectTseTotal } =
+export const { selectTseAll, selectTseById, selectTseEntities, selectTseIds, selectTseTotal } =
   convertEntityAdaptorSelectors("Tse", tseAdapter.getSelectors());
+
+export const { selectPayoutRunAll, selectPayoutRunById, selectPayoutRunEntities, selectPayoutRunIds, selectPayoutRunTotal } =
+  convertEntityAdaptorSelectors("PayoutRun", payoutRunAdaptor.getSelectors());

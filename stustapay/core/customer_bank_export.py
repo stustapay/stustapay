@@ -7,7 +7,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.service.config import ConfigService
-from stustapay.core.service.customer.customer import (
+from stustapay.core.service.customer.payout import (
     create_payout_run,
     csv_export,
     get_customer_bank_data,
@@ -15,7 +15,6 @@ from stustapay.core.service.customer.customer import (
     sepa_export,
 )
 from stustapay.core.subcommand import SubCommand
-
 from . import database
 from .config import Config
 from .service.auth import AuthService

@@ -26,6 +26,8 @@ from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import (
     CustomerBank,
     CustomerService,
+)
+from stustapay.core.service.customer.payout import (
     Payout,
     create_payout_run,
     csv_export,

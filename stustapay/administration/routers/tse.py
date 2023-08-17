@@ -6,7 +6,7 @@ from stustapay.core.http.normalize_data import normalize_list, NormalizedList
 from stustapay.core.schema.tse import Tse
 
 router = APIRouter(
-    prefix="",
+    prefix="/tses",
     tags=["tses"],
     responses={404: {"description": "Not found"}},
 )

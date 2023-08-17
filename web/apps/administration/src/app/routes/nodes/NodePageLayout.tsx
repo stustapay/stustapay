@@ -1,14 +1,15 @@
 import { useNode } from "@api/nodes";
 import {
   Dashboard as DashboardIcon,
-  Settings as SettingsIcon,
   Leaderboard as LeaderboardIcon,
+  Money as MoneyIcon,
+  Settings as SettingsIcon,
 } from "@mui/icons-material";
-import { Box, Tabs, Tab } from "@mui/material";
+import { Box, Tab, Tabs } from "@mui/material";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useParams, Link as RouterLink, Outlet } from "react-router-dom";
-import { Loading } from "@stustapay/components";
+import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
 
 const getActiveTab = (nodeId: string, location: string) => {
   if (location.startsWith(`/node/${nodeId}/stats`)) {
@@ -19,6 +20,9 @@ const getActiveTab = (nodeId: string, location: string) => {
   }
   if (location.startsWith(`/node/${nodeId}/settings-legacy`)) {
     return `/node/${nodeId}/settings-legacy`;
+  }
+  if (location.startsWith(`/node/${nodeId}/payout-runs`)) {
+    return `/node/${nodeId}/payout-runs`;
   }
   return `/node/${nodeId}`;
 };
@@ -62,6 +66,14 @@ export const NodePageLayout: React.FC = () => {
           icon={<LeaderboardIcon />}
           iconPosition="start"
           to={`${nodeUrl}/stats`}
+        />
+        <Tab
+          label="Payouts"
+          component={RouterLink}
+          value={`${nodeUrl}/payout-runs`}
+          icon={<MoneyIcon />}
+          iconPosition="start"
+          to={`${nodeUrl}/payout-runs`}
         />
         <Tab
           label={t("nodes.settings")}

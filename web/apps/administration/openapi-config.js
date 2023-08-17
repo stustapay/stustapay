@@ -7,7 +7,7 @@ const config = {
   outputFile: "./src/api/generated/api.ts",
   exportName: "api",
   tag: true,
-  hooks: true,
+  hooks: {queries: true, lazyQueries: true, mutations: true},
 };
 
 // export default config;
