@@ -7,7 +7,8 @@ export type ObjectType =
   | "account"
   | "order"
   | "tax_rate"
-  | "user-tags";
+  | "user-tags"
+  | "tses";
 
 export interface TreeNode {
   id: string;
@@ -37,7 +38,7 @@ const tree: TreeNode = {
               id: "ssc-2023",
               type: "event",
               name: "SSC 2023",
-              allowedObjectTypes: ["user", "account", "product", "ticket", "user_role", "user-tags"],
+              allowedObjectTypes: ["user", "account", "product", "ticket", "user_role", "user-tags", "tses"],
               parents: [],
               children: [
                 {

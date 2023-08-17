@@ -10,7 +10,7 @@ from stustapay.core.schema.user import (
 )
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied
-
+from stustapay.core.service.user_tag import UserTagService
 from .common import TerminalTestCase
 
 
@@ -19,6 +19,9 @@ class AccountServiceTest(TerminalTestCase):
         await super().asyncSetUp()
 
         self.account_service = AccountService(
+            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
+        )
+        self.user_tag_service = UserTagService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
 
@@ -48,13 +51,13 @@ class AccountServiceTest(TerminalTestCase):
         user = await self.user_service.get_user(token=self.admin_token, user_id=user.id)
         self.assertEqual(new_user_tag_uid, user.user_tag_uid)
 
-        user_tag_2 = await self.account_service.get_user_tag_detail(
+        user_tag_2 = await self.user_tag_service.get_user_tag_detail(
             token=self.admin_token, user_tag_uid=new_user_tag_uid
         )
         self.assertIsNotNone(user_tag_2)
         self.assertEqual(0, len(user_tag_2.account_history))
 
-        user_tag_1 = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=user_tag_uid)
+        user_tag_1 = await self.user_tag_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=user_tag_uid)
         self.assertIsNotNone(user_tag_1)
         self.assertEqual(1, len(user_tag_1.account_history))
         self.assertEqual(acc.id, user_tag_1.account_history[0].account_id)
@@ -175,15 +178,3 @@ class AccountServiceTest(TerminalTestCase):
         acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
         self.assertIsNotNone(acc)
         self.assertEqual("foobar", acc.comment)
-
-    async def test_user_tag_comment_updates(self):
-        await self.db_conn.execute("insert into user_tag (uid) values (1)")
-
-        user_tag_detail = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
-        self.assertIsNotNone(user_tag_detail)
-        self.assertIsNone(user_tag_detail.comment)
-
-        await self.account_service.update_user_tag_comment(token=self.admin_token, user_tag_uid=1, comment="foobar")
-        user_tag_detail = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
-        self.assertIsNotNone(user_tag_detail)
-        self.assertEqual("foobar", user_tag_detail.comment)

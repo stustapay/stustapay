@@ -1,51 +1,52 @@
 import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
-import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
-import { TicketCreate, TicketDetail, TicketList, TicketUpdate } from "./routes/tickets";
-import { TaxRateCreate, TaxRateList, TaxRateUpdate } from "./routes/tax-rates";
 import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout";
+import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
 import { Login, Logout, Profile } from "./routes/auth";
+import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
+import { FestivalOverview, MoneyOverview, NodePageLayout, Settings, SettingsLegacy } from "./routes/nodes";
+import { OrderDetail, OrderList, SaleEdit } from "./routes/orders";
+import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
+import { TaxRateCreate, TaxRateList, TaxRateUpdate } from "./routes/tax-rates";
+import { TicketCreate, TicketDetail, TicketList, TicketUpdate } from "./routes/tickets";
 import {
+  TillButtonCreate,
+  TillButtonList,
+  TillButtonUpdate,
   TillCreate,
-  TillUpdate,
   TillDetail,
-  TillList,
   TillLayoutCreate,
   TillLayoutDetail,
   TillLayoutList,
   TillLayoutUpdate,
+  TillList,
+  TillPageLayout,
   TillProfileCreate,
+  TillProfileDetail,
   TillProfileList,
   TillProfileUpdate,
-  TillProfileDetail,
-  TillButtonList,
-  TillButtonCreate,
-  TillButtonUpdate,
-  TillPageLayout,
   TillRegisterCreate,
   TillRegisterList,
-  TillRegisterTransfer,
-  TillRegisterUpdate,
   TillRegisterStockingCreate,
   TillRegisterStockingList,
   TillRegisterStockingUpdate,
+  TillRegisterTransfer,
+  TillRegisterUpdate,
+  TillUpdate,
 } from "./routes/tills";
+import { TseDetail, TseList } from "./routes/tse";
+import { FindUserTags, UserTagDetail, UserTagPageLayout } from "./routes/user-tags";
 import {
   UserCreate,
   UserDetail,
   UserList,
+  UserPageLayout,
   UserRoleCreate,
   UserRoleList,
   UserRoleUpdate,
   UserUpdate,
-  UserPageLayout,
 } from "./routes/users";
-import { AccountDetail, FindAccounts, SystemAccountList, AccountPageLayout } from "./routes/accounts";
-import { UserTagDetail, UserTagPageLayout, FindUserTags } from "./routes/user-tags";
-import { OrderDetail, OrderList, SaleEdit } from "./routes/orders";
-import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
-import { SettingsLegacy, Settings, NodePageLayout, FestivalOverview, MoneyOverview } from "./routes/nodes";
 
 const router = createBrowserRouter([
   {
@@ -353,6 +354,23 @@ const router = createBrowserRouter([
           {
             path: ":userId",
             element: <UserDetail />,
+          },
+        ],
+      },
+      {
+        path: "node/:nodeId/tses",
+        element: (
+          // <PrivilegeGuard privilege="tse_management"/>
+          <PrivilegeGuard privilege="till_management" />
+        ),
+        children: [
+          {
+            index: true,
+            element: <TseList />,
+          },
+          {
+            path: ":tseId",
+            element: <TseDetail />,
           },
         ],
       },

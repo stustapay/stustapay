@@ -1,5 +1,5 @@
+import { Privilege } from "@/api";
 import { selectCurrentUser, useAppSelector } from "@store";
-import { Privilege } from "@stustapay/models";
 import * as React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 

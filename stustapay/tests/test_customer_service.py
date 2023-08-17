@@ -472,7 +472,7 @@ class CustomerServiceTest(TerminalTestCase):
         result = await self.customer_service.get_orders_with_bon(token=result.token)
         self.assertIsNotNone(result)
 
-        self.assertEqual(Order(**result[0].dict()), self.order)
+        self.assertEqual(Order(**result[0].model_dump()), self.order)
 
         # test bon data
         self.assertTrue(result[0].bon_generated)

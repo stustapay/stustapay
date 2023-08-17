@@ -374,6 +374,17 @@ export const translations = {
     delete: "Delete user role",
     deleteDescription: "Confirm user role deletion",
   },
+  tse: {
+    tses: "Tses",
+    name: "Name",
+    status: "Status",
+    serial: "Serial",
+    hashalgo: "Hash Algorithm",
+    timeFormat: "Time Format",
+    publicKey: "Public Key",
+    certificate: "Certificate",
+    processDataEncoding: "Process Data Encoding",
+  }
 };
 
 export type Translations = typeof translations;

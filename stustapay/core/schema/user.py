@@ -36,6 +36,7 @@ class Privilege(enum.Enum):
     till_management = "till_management"
     order_management = "order_management"
     festival_overview = "festival_overview"
+    tse_management = "tse_management"
 
     # festival workflow privileges
     terminal_login = "terminal_login"

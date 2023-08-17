@@ -18,6 +18,7 @@ export const addTagTypes = [
   "stats",
   "tickets",
   "user_tags",
+  "tses",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -427,6 +428,10 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["user_tags"],
       }),
+      listTses: build.query<ListTsesApiResponse, ListTsesApiArg>({
+        query: () => ({ url: `/` }),
+        providesTags: ["tses"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -752,6 +757,8 @@ export type UpdateUserTagCommentApiArg = {
   userTagUidHex: string;
   updateCommentPayload: UpdateCommentPayload;
 };
+export type ListTsesApiResponse = /** status 200 Successful Response */ NormalizedListTseInt;
+export type ListTsesApiArg = void;
 export type ProductRestriction = "under_16" | "under_18";
 export type Product = {
   name: string;
@@ -839,6 +846,7 @@ export type Privilege =
   | "till_management"
   | "order_management"
   | "festival_overview"
+  | "tse_management"
   | "terminal_login"
   | "supervised_terminal_login"
   | "can_book_orders"
@@ -1325,6 +1333,24 @@ export type FindUserTagPayload = {
 export type UpdateCommentPayload = {
   comment: string;
 };
+export type TseStatus = "new" | "active" | "disabled" | "failed";
+export type Tse = {
+  tse_id: number;
+  tse_name: string;
+  tse_status: TseStatus;
+  tse_serial: string | null;
+  tse_hashalgo: string | null;
+  tse_time_format: string | null;
+  tse_public_key: string | null;
+  tse_certificate: string | null;
+  tse_process_data_encoding: string | null;
+};
+export type NormalizedListTseInt = {
+  ids: number[];
+  entities: {
+    [key: string]: Tse;
+  };
+};
 export const {
   useListProductsQuery,
   useCreateProductMutation,
@@ -1409,4 +1435,5 @@ export const {
   useFindUserTagsMutation,
   useGetUserTagDetailQuery,
   useUpdateUserTagCommentMutation,
+  useListTsesQuery,
 } = injectedRtkApi;

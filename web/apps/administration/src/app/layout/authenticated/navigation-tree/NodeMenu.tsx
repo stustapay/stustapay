@@ -1,19 +1,18 @@
+import { TreeNode } from "@api/nodes";
 import {
   AccountBalance as AccountBalanceIcon,
   AddShoppingCart as AddShoppingCartIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
-  Percent as PercentIcon,
   Nfc as NfcIcon,
+  Percent as PercentIcon,
+  Person as PersonIcon,
+  PointOfSale as PointOfSaleIcon,
+  Shield as ShieldIcon,
+  ShoppingCart as ShoppingCartIcon,
 } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { NavigationTreeItem } from "./NavigationTreeItem";
-import {
-  Person as PersonIcon,
-  PointOfSale as PointOfSaleIcon,
-  ShoppingCart as ShoppingCartIcon,
-} from "@mui/icons-material";
-import { TreeNode } from "@api/nodes";
 
 export interface NodeMenuProps {
   node: TreeNode;
@@ -69,6 +68,10 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("userTag.userTags")} labelIcon={NfcIcon} />
     );
+  }
+  if (node.allowedObjectTypes.includes("tses")) {
+    const id = `/node/${node.id}/tses`;
+    items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tse.tses")} labelIcon={ShieldIcon} />);
   }
 
   return <>{items}</>;

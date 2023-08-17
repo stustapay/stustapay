@@ -16,6 +16,7 @@ from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
+from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.service.user_tag import UserTagService
 from stustapay.core.subcommand import SubCommand
@@ -35,6 +36,7 @@ from .routers import (
     till_registers,
     user,
     user_tag,
+    tse,
 )
 
 
@@ -71,6 +73,7 @@ class Api(SubCommand):
         self.server.add_router(stats.router)
         self.server.add_router(ticket.router)
         self.server.add_router(user_tag.router)
+        self.server.add_router(tse.router)
 
     @staticmethod
     def argparse_register(subparser: argparse.ArgumentParser):
@@ -105,6 +108,7 @@ class Api(SubCommand):
             order_service=order_service,
             ticket_service=TicketService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_tag_service=UserTagService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            tse_service=TseService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
         try:
             self.server.add_task(asyncio.create_task(run_healthcheck(db_pool=db_pool, service_name="administration")))

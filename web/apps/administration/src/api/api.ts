@@ -1,11 +1,10 @@
 import { createEntityAdapter } from "@reduxjs/toolkit";
 import {
   Account,
-  api as generatedApi,
-  Cashier,
-  CashierShift,
   CashRegister,
   CashRegisterStocking,
+  Cashier,
+  CashierShift,
   ConfigEntry,
   Order,
   Product,
@@ -15,9 +14,11 @@ import {
   TillButton,
   TillLayout,
   TillProfile,
+  Tse,
   User,
   UserRole,
   UserTagDetail,
+  api as generatedApi,
 } from "./generated/api";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
@@ -91,6 +92,10 @@ const cashRegisterStockingAdapter = createEntityAdapter<CashRegisterStocking>({
   sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
 });
 
+const tseAdapter = createEntityAdapter<Tse>({
+  sortComparer: (a, b) => a.tse_name.toLowerCase().localeCompare(b.tse_name.toLowerCase()),
+});
+
 export const api = generatedApi.enhanceEndpoints({
   endpoints: {
     listUsers: {
@@ -149,6 +154,9 @@ export const api = generatedApi.enhanceEndpoints({
     },
     getTillProfile: {
       providesTags: (result, error, arg) => [{ type: "till-profiles", id: arg.profileId }],
+    },
+    listTses: {
+      providesTags: (result) => generateCacheKeys("tses", result),
     },
   },
 });
@@ -238,3 +246,6 @@ export const { selectAccountById, selectAccountEntities, selectAccountTotal, sel
 
 export const { selectUserTagAll, selectUserTagEntities, selectUserTagTotal, selectUserTagIds, selectUserTagById } =
   convertEntityAdaptorSelectors("UserTag", userTagAdapter.getSelectors());
+
+  export const { selectTseAll, selectTseById, selectTseEntities, selectTseIds, selectTseTotal } =
+  convertEntityAdaptorSelectors("Tse", tseAdapter.getSelectors());
