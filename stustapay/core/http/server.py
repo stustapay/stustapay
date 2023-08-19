@@ -108,6 +108,7 @@ class Server:
         patched_schemas = {
             "Account": user_tag_uid_hex_field,
             "UserTagDetail": user_tag_uid_hex_field,
+            "Payout": user_tag_uid_hex_field,
             "UserTagHistoryEntry": user_tag_uid_hex_field,
             "UserWithoutId": user_tag_uid_hex_field,
             "User": user_tag_uid_hex_field,

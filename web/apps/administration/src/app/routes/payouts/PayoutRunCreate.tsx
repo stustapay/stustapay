@@ -1,62 +1,38 @@
-import { useCreatePayoutRunMutation, usePendingPayoutDetailQuery } from "@/api";
+import { useCreatePayoutRunMutation } from "@/api";
 import { PayoutRunRoutes } from "@/app/routes";
-import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
+import { useCurrencySymbol } from "@hooks";
 import { ChevronLeft } from "@mui/icons-material";
-import {
-  Button,
-  Grid,
-  IconButton,
-  InputAdornment,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemText,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Loading, NumericInput } from "@stustapay/components";
+import { Button, Grid, IconButton, InputAdornment, LinearProgress, Paper, Stack, Typography } from "@mui/material";
+import { NumericInput } from "@stustapay/components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
-import { DateTime } from "luxon";
 import * as React from "react";
-
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { PendingPayoutDetail } from "./PendingPayoutDetail";
 
 const NewPayoutRunSchema = z.object({
-  max_payout_sum: z.number(),
+  max_payout_sum: z.number().gt(0),
 });
 
-type NewPayoutRun = z.infer<typeof NewPayoutRunSchema> & { execution_date: DateTime };
+type NewPayoutRun = z.infer<typeof NewPayoutRunSchema>;
 
 const initialValues: NewPayoutRun = {
-  execution_date: DateTime.now(),
   max_payout_sum: 0,
 };
 
 export const PayoutRunCreate: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const formatCurrency = useCurrencyFormatter();
   const currencySymbol = useCurrencySymbol();
 
   const [createPayoutRun] = useCreatePayoutRunMutation();
 
-  const { data: pendingPayoutDetail } = usePendingPayoutDetailQuery();
-
   const handleSubmit = (values: NewPayoutRun, { setSubmitting }: FormikHelpers<NewPayoutRun>) => {
     setSubmitting(true);
 
-    const isoDate = values.execution_date.toISODate();
-    if (isoDate == null) {
-      // TODO: proper validation
-      return;
-    }
-
-    createPayoutRun({ newPayoutRun: { execution_date: isoDate, max_payout_sum: values.max_payout_sum } })
+    createPayoutRun({ newPayoutRun: { max_payout_sum: values.max_payout_sum } })
       .unwrap()
       .then(() => {
         setSubmitting(false);
@@ -87,34 +63,8 @@ export const PayoutRunCreate: React.FC = () => {
         {({ handleSubmit, isSubmitting, touched, values, errors, setFieldValue }) => (
           <Form onSubmit={handleSubmit}>
             <Stack spacing={2}>
+              <PendingPayoutDetail />
               <Paper sx={{ p: 3 }}>
-                <Typography variant="h6">{t("payoutRun.pendingPayoutDetails")}</Typography>
-                <List>
-                  {pendingPayoutDetail ? (
-                    <ListItem>
-                      <ListItemText
-                        primary={t("payoutRun.totalDonationAmount")}
-                        secondary={formatCurrency(pendingPayoutDetail.total_donation_amount)}
-                      />
-                      <ListItemText
-                        primary={t("payoutRun.totalPayoutAmount")}
-                        secondary={formatCurrency(pendingPayoutDetail.total_payout_amount)}
-                      />
-                      <ListItemText primary={t("payoutRun.nPayouts")} secondary={pendingPayoutDetail.n_payouts} />
-                    </ListItem>
-                  ) : (
-                    <Loading />
-                  )}
-                </List>
-              </Paper>
-              <Paper sx={{ p: 3 }}>
-                <DatePicker
-                  label={t("payoutRun.executionDate")}
-                  value={values.execution_date}
-                  sx={{ width: "100%" }}
-                  onChange={(value) => setFieldValue("execution_date", value)}
-                />
-
                 <NumericInput
                   variant="outlined"
                   margin="normal"

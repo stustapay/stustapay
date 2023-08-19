@@ -8,6 +8,7 @@ import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+import { PendingPayoutDetail } from "./PendingPayoutDetail";
 
 export const PayoutRunList: React.FC = () => {
   const { t } = useTranslation();
@@ -62,13 +63,6 @@ export const PayoutRunList: React.FC = () => {
       minWidth: 200,
     },
     {
-      field: "execution_date",
-      headerName: t("payoutRun.executionDate") as string,
-      type: "date",
-      valueGetter: (params) => new Date(params.row.execution_date),
-      minWidth: 150,
-    },
-    {
       field: "total_payout_amount",
       headerName: t("payoutRun.totalPayoutAmount") as string,
       valueFormatter: ({ value }) => formatCurrency(value),
@@ -110,10 +104,16 @@ export const PayoutRunList: React.FC = () => {
 
   return (
     <ListLayout title={t("payoutRun.payoutRuns")} routes={PayoutRunRoutes}>
+      <PendingPayoutDetail />
       <DataGrid
         autoHeight
         rows={payoutRuns ?? []}
         columns={columns}
+        initialState={{
+          sorting: {
+            sortModel: [{ field: "created_at", sort: "desc" }],
+          },
+        }}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />

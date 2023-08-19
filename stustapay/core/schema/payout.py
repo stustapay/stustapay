@@ -1,11 +1,11 @@
-from datetime import datetime, date
-from typing import Optional
+from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
+
+from stustapay.core.schema.user import format_user_tag_uid
 
 
 class NewPayoutRun(BaseModel):
-    execution_date: date
     max_payout_sum: float
 
 
@@ -13,7 +13,6 @@ class PayoutRun(BaseModel):
     id: int
     created_by: str
     created_at: datetime
-    execution_date: date
 
 
 class PendingPayoutDetail(BaseModel):
@@ -34,5 +33,10 @@ class Payout(BaseModel):
     account_name: str
     email: str
     user_tag_uid: int
+
+    @computed_field
+    def user_tag_uid_hex(self) -> str:
+        return format_user_tag_uid(self.user_tag_uid)  # type: ignore
+
     balance: float
-    payout_run_id: Optional[int]
+    payout_run_id: int

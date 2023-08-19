@@ -1,6 +1,5 @@
 import datetime
 import logging
-import math
 import os
 from typing import Optional
 
@@ -9,10 +8,10 @@ import asyncpg
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.payout import (
     create_payout_run,
-    csv_export,
     get_customer_bank_data,
     get_number_of_payouts,
-    sepa_export,
+    dump_payout_run_as_sepa_xml,
+    dump_payout_run_as_csv,
 )
 from stustapay.core.subcommand import SubCommand
 from . import database
@@ -126,9 +125,7 @@ async def export_customer_payouts(
     async with db_pool.acquire() as conn:
         async with conn.transaction():
             if payout_run_id is None:
-                payout_run_id, number_of_payouts = await create_payout_run(
-                    conn, created_by, execution_date, max_payout_sum
-                )
+                payout_run_id, number_of_payouts = await create_payout_run(conn, created_by, max_payout_sum)
             else:
                 number_of_payouts = await get_number_of_payouts(conn=conn, payout_run_id=payout_run_id)
 
@@ -145,40 +142,37 @@ async def export_customer_payouts(
             sepa_config = await cfg_srvc.get_sepa_config(conn=conn)
 
             # sepa export
-            for i in range(math.ceil(number_of_payouts / max_export_items_per_batch)):
-                customers_bank_data = await get_customer_bank_data(
-                    conn=conn,
-                    payout_run_id=payout_run_id,
-                    max_export_items_per_batch=max_export_items_per_batch,
-                    ith_batch=i,
-                )
-                file_path = os.path.join(output_path, SEPA_PATH.format(payout_run_id, i + 1))
-                await sepa_export(
-                    customers_bank_data=customers_bank_data,
-                    output_path=file_path,
-                    sepa_config=sepa_config,
-                    currency_ident=currency_ident,
-                    execution_date=execution_date,
-                )
-
-            # csv export
-            file_path = os.path.join(output_path, CSV_PATH.format(payout_run_id))
             customers_bank_data = await get_customer_bank_data(
-                conn=conn, payout_run_id=payout_run_id, max_export_items_per_batch=number_of_payouts
+                conn=conn,
+                payout_run_id=payout_run_id,
             )
-            await csv_export(
+            sepa_batches = dump_payout_run_as_sepa_xml(
                 customers_bank_data=customers_bank_data,
-                output_path=file_path,
                 sepa_config=sepa_config,
-                currency_ident=currency_ident,
                 execution_date=execution_date,
+                currency_ident=currency_ident,
+                batch_size=max_export_items_per_batch,
             )
+            for i, batch in enumerate(sepa_batches):
+                file_path = os.path.join(output_path, SEPA_PATH.format(payout_run_id, i + 1))
+                with open(file_path, "w+") as f:
+                    f.write(batch)
+
+            # csv export, only one batch
+            csv_batches = list(
+                dump_payout_run_as_csv(
+                    customers_bank_data=customers_bank_data, sepa_config=sepa_config, currency_ident=currency_ident
+                )
+            )
+            file_path = os.path.join(output_path, CSV_PATH.format(payout_run_id))
+            with open(file_path, "w+") as f:
+                f.write(csv_batches[0])
             if dry_run:
                 # abort transaction
                 await conn.execute("rollback")
                 logging.warning("Dry run. No database entry created!")
 
     logging.info(
-        f"Exported payouts of {number_of_payouts} customers into #{i + 1} files named "
+        f"Exported payouts of {number_of_payouts} customers into {max_export_items_per_batch} files named "
         f"{SEPA_PATH.format(payout_run_id, 'x')} and {CSV_PATH.format(payout_run_id)}"
     )

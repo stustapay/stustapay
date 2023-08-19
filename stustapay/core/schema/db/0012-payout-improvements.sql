@@ -1,6 +1,9 @@
 -- revision: 8697011c
 -- requires: 2a15b453
 
+alter table payout_run
+    drop column execution_date;
+
 create or replace view customer as
     select
         a.*,

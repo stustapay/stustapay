@@ -445,13 +445,25 @@ const injectedRtkApi = api
         query: () => ({ url: `/payouts/pending-payout-detail` }),
         providesTags: ["payouts"],
       }),
-      payoutRunCsvExport: build.query<PayoutRunCsvExportApiResponse, PayoutRunCsvExportApiArg>({
+      payoutRunPayouts: build.query<PayoutRunPayoutsApiResponse, PayoutRunPayoutsApiArg>({
         query: (queryArg) => ({ url: `/payouts/${queryArg.payoutRunId}/csv` }),
         providesTags: ["payouts"],
       }),
-      payoutRunSepaXmlExport: build.query<PayoutRunSepaXmlExportApiResponse, PayoutRunSepaXmlExportApiArg>({
-        query: (queryArg) => ({ url: `/payouts/${queryArg.payoutRunId}/sepa_xml` }),
-        providesTags: ["payouts"],
+      payoutRunCsvExport: build.mutation<PayoutRunCsvExportApiResponse, PayoutRunCsvExportApiArg>({
+        query: (queryArg) => ({
+          url: `/payouts/${queryArg.payoutRunId}/csv`,
+          method: "POST",
+          body: queryArg.createCsvPayload,
+        }),
+        invalidatesTags: ["payouts"],
+      }),
+      payoutRunSepaXmlExport: build.mutation<PayoutRunSepaXmlExportApiResponse, PayoutRunSepaXmlExportApiArg>({
+        query: (queryArg) => ({
+          url: `/payouts/${queryArg.payoutRunId}/sepa_xml`,
+          method: "POST",
+          body: queryArg.createSepaXmlPayload,
+        }),
+        invalidatesTags: ["payouts"],
       }),
     }),
     overrideExisting: false,
@@ -788,13 +800,19 @@ export type CreatePayoutRunApiArg = {
 };
 export type PendingPayoutDetailApiResponse = /** status 200 Successful Response */ PendingPayoutDetail;
 export type PendingPayoutDetailApiArg = void;
-export type PayoutRunCsvExportApiResponse = /** status 200 Successful Response */ string;
-export type PayoutRunCsvExportApiArg = {
+export type PayoutRunPayoutsApiResponse = /** status 200 Successful Response */ Payout[];
+export type PayoutRunPayoutsApiArg = {
   payoutRunId: number;
 };
-export type PayoutRunSepaXmlExportApiResponse = /** status 200 Successful Response */ string;
+export type PayoutRunCsvExportApiResponse = /** status 200 Successful Response */ string[];
+export type PayoutRunCsvExportApiArg = {
+  payoutRunId: number;
+  createCsvPayload: CreateCsvPayload;
+};
+export type PayoutRunSepaXmlExportApiResponse = /** status 200 Successful Response */ string[];
 export type PayoutRunSepaXmlExportApiArg = {
   payoutRunId: number;
+  createSepaXmlPayload: CreateSepaXmlPayload;
 };
 export type ProductRestriction = "under_16" | "under_18";
 export type Product = {
@@ -1392,7 +1410,6 @@ export type PayoutRunWithStats = {
   id: number;
   created_by: string;
   created_at: string;
-  execution_date: string;
   total_donation_amount: number;
   total_payout_amount: number;
   n_payouts: number;
@@ -1404,13 +1421,29 @@ export type NormalizedListPayoutRunWithStatsInt = {
   };
 };
 export type NewPayoutRun = {
-  execution_date: string;
   max_payout_sum: number;
 };
 export type PendingPayoutDetail = {
   total_payout_amount: number;
   total_donation_amount: number;
   n_payouts: number;
+};
+export type Payout = {
+  customer_account_id: number;
+  iban: string;
+  account_name: string;
+  email: string;
+  user_tag_uid: number;
+  balance: number;
+  payout_run_id: number;
+  user_tag_uid_hex?: string;
+};
+export type CreateCsvPayload = {
+  batch_size?: number | null;
+};
+export type CreateSepaXmlPayload = {
+  execution_date: string;
+  batch_size?: number | null;
 };
 export const {
   useListProductsQuery,
@@ -1535,8 +1568,8 @@ export const {
   useCreatePayoutRunMutation,
   usePendingPayoutDetailQuery,
   useLazyPendingPayoutDetailQuery,
-  usePayoutRunCsvExportQuery,
-  useLazyPayoutRunCsvExportQuery,
-  usePayoutRunSepaXmlExportQuery,
-  useLazyPayoutRunSepaXmlExportQuery,
+  usePayoutRunPayoutsQuery,
+  useLazyPayoutRunPayoutsQuery,
+  usePayoutRunCsvExportMutation,
+  usePayoutRunSepaXmlExportMutation,
 } = injectedRtkApi;

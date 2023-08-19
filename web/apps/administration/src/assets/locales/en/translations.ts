@@ -7,10 +7,12 @@ export const translations = {
   findAccounts: "Find Accounts",
   orders: "Orders",
   submit: "Submit",
+  download: "Download",
   products: "Products",
   tickets: "Tickets",
   actions: "Actions",
   add: "Add",
+    email: "E-Mail",
   edit: "Edit",
   delete: "Delete",
   copy: "Copy",
@@ -391,6 +393,8 @@ export const translations = {
     maxPayoutSum: "Max amount to be paid out in this payout run",
     downloadCsv: "CSV",
     downloadSepa: "SEPA",
+    downloadSepaModalTitle: "Download SEPA XML",
+    batchSize: "Batch Size",
     create: "Create a new payout run",
     createdAt: "Created At",
     createdBy: "Created By",
@@ -399,6 +403,13 @@ export const translations = {
     totalDonationAmount: "Total Donation Amount",
     nPayouts: "Num. Payouts",
     payoutRuns: "Payout Runs",
+    payoutsInPayoutRun: "Customers to be paid out in this payout run",
+    payout: {
+      id: "Account ID",
+    }
+  },
+  customer: {
+    bankAccountHolder: "Account holder",
   }
 };
 
