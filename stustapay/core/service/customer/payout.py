@@ -112,7 +112,6 @@ def dump_payout_run_as_sepa_xml(
     execution_date: datetime.date,
     batch_size: Optional[int] = None,
 ) -> Iterator[str]:
-    print(customers_bank_data)
     if len(customers_bank_data) == 0:
         # avoid error in sepa library
         logging.warning("No customers with bank data found. Nothing to export.")

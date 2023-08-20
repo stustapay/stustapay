@@ -9,7 +9,6 @@ import xml.etree.ElementTree as ET
 from io import StringIO
 
 from dateutil.parser import parse
-from schwifty.exceptions import InvalidChecksumDigits
 
 from stustapay.core.customer_bank_export import (
     CSV_PATH,
@@ -353,55 +352,55 @@ class CustomerServiceTest(TerminalTestCase):
         tmp_bank_data = copy.deepcopy(customers_bank_data)
         tmp_bank_data[0].iban = invalid_iban
 
-        with self.assertRaises(InvalidChecksumDigits):
-            dump_payout_run_as_sepa_xml(
+        with self.assertRaises(ValueError):
+            list(dump_payout_run_as_sepa_xml(
                 customers_bank_data=tmp_bank_data,
                 sepa_config=sepa_config,
                 currency_ident=currency_ident,
                 execution_date=datetime.date.today(),
-            )
+            ))
 
         # test invalid iban sender
         test_sepa_config = copy.deepcopy(sepa_config)
         test_sepa_config.sender_iban = invalid_iban
-        with self.assertRaises(InvalidChecksumDigits):
-            dump_payout_run_as_sepa_xml(
+        with self.assertRaises(ValueError):
+            list(dump_payout_run_as_sepa_xml(
                 customers_bank_data=customers_bank_data,
                 sepa_config=test_sepa_config,
                 currency_ident=currency_ident,
                 execution_date=datetime.date.today(),
-            )
+            ))
 
         # test invalid execution date
         with self.assertRaises(ValueError):
-            dump_payout_run_as_sepa_xml(
+            list(dump_payout_run_as_sepa_xml(
                 customers_bank_data=customers_bank_data,
                 sepa_config=sepa_config,
                 currency_ident=currency_ident,
                 execution_date=datetime.date.today() - datetime.timedelta(days=1),
-            )
+            ))
 
         # test invalid amount
         tmp_bank_data = copy.deepcopy(customers_bank_data)
         tmp_bank_data[0].balance = -1
         with self.assertRaises(ValueError):
-            dump_payout_run_as_sepa_xml(
+            list(dump_payout_run_as_sepa_xml(
                 customers_bank_data=tmp_bank_data,
                 sepa_config=sepa_config,
                 currency_ident=currency_ident,
                 execution_date=datetime.date.today(),
-            )
+            ))
 
         # test invalid description
         test_sepa_config = copy.deepcopy(sepa_config)
         test_sepa_config.description = "invalid {user_tag_uid}#%^;&*"
         with self.assertRaises(ValueError):
-            dump_payout_run_as_sepa_xml(
+            list(dump_payout_run_as_sepa_xml(
                 customers_bank_data=customers_bank_data,
                 sepa_config=test_sepa_config,
                 currency_ident=currency_ident,
                 execution_date=datetime.date.today(),
-            )
+            ))
 
     async def test_auth_customer(self):
         # test login_customer
