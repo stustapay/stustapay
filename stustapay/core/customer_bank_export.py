@@ -8,12 +8,13 @@ import asyncpg
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.payout import (
     create_payout_run,
+    dump_payout_run_as_csv,
+    dump_payout_run_as_sepa_xml,
     get_customer_bank_data,
     get_number_of_payouts,
-    dump_payout_run_as_sepa_xml,
-    dump_payout_run_as_csv,
 )
 from stustapay.core.subcommand import SubCommand
+
 from . import database
 from .config import Config
 from .service.auth import AuthService

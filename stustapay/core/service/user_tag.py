@@ -6,10 +6,10 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.database import Connection
 from stustapay.core.schema.account import UserTagDetail
-from stustapay.core.schema.user import Privilege, CurrentUser, format_user_tag_uid
+from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user
+from stustapay.core.service.common.decorators import requires_user, with_db_transaction
 from stustapay.core.service.common.error import InvalidArgument
 
 

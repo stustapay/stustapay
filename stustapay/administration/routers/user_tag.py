@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserTagService
-from stustapay.core.http.normalize_data import normalize_list, NormalizedList
+from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.account import UserTagDetail
 
 router = APIRouter(

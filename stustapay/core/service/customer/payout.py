@@ -3,7 +3,7 @@ import datetime
 import io
 import logging
 import re
-from typing import Optional, Iterator
+from typing import Iterator, Optional
 
 import asyncpg
 from schwifty import IBAN
@@ -12,11 +12,16 @@ from sepaxml import SepaTransfer
 from stustapay.core.config import Config
 from stustapay.core.database import Connection
 from stustapay.core.schema.config import SEPAConfig
-from stustapay.core.schema.payout import Payout, PayoutRunWithStats, NewPayoutRun, PendingPayoutDetail
-from stustapay.core.schema.user import format_user_tag_uid, Privilege, CurrentUser
+from stustapay.core.schema.payout import (
+    NewPayoutRun,
+    Payout,
+    PayoutRunWithStats,
+    PendingPayoutDetail,
+)
+from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_user
+from stustapay.core.service.common.decorators import requires_user, with_db_transaction
 from stustapay.core.service.config import ConfigService
 
 

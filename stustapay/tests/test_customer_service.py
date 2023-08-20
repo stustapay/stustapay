@@ -27,17 +27,14 @@ from stustapay.core.service.common.error import (
     Unauthorized,
 )
 from stustapay.core.service.config import ConfigService
-from stustapay.core.service.customer.customer import (
-    CustomerBank,
-    CustomerService,
-)
+from stustapay.core.service.customer.customer import CustomerBank, CustomerService
 from stustapay.core.service.customer.payout import (
     Payout,
     create_payout_run,
-    get_customer_bank_data,
-    get_number_of_payouts,
     dump_payout_run_as_csv,
     dump_payout_run_as_sepa_xml,
+    get_customer_bank_data,
+    get_number_of_payouts,
 )
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order

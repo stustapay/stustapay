@@ -1,6 +1,7 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
 from stustapay.core.service.user_tag import UserTagService
+
 from .common import TerminalTestCase
 
 

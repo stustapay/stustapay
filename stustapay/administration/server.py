@@ -21,12 +21,12 @@ from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.service.user_tag import UserTagService
 from stustapay.core.subcommand import SubCommand
+
+from .routers import account, auth, cashier
+from .routers import config as config_router
 from .routers import (
-    account,
-    auth,
-    cashier,
-    config as config_router,
     order,
+    payout,
     product,
     stats,
     tax_rate,
@@ -37,10 +37,9 @@ from .routers import (
     till_profile,
     till_register_stockings,
     till_registers,
+    tse,
     user,
     user_tag,
-    tse,
-    payout,
 )
 
 

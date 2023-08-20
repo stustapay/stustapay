@@ -11,6 +11,7 @@ from stustapay.core.schema.user import (
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.user_tag import UserTagService
+
 from .common import TerminalTestCase
 
 

@@ -6,8 +6,13 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
-from stustapay.core.http.normalize_data import normalize_list, NormalizedList
-from stustapay.core.schema.payout import PayoutRunWithStats, NewPayoutRun, PendingPayoutDetail, Payout
+from stustapay.core.http.normalize_data import NormalizedList, normalize_list
+from stustapay.core.schema.payout import (
+    NewPayoutRun,
+    Payout,
+    PayoutRunWithStats,
+    PendingPayoutDetail,
+)
 
 router = APIRouter(
     prefix="/payouts",

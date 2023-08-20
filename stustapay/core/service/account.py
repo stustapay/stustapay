@@ -5,10 +5,7 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.database import Connection
-from stustapay.core.schema.account import (
-    ACCOUNT_MONEY_VOUCHER_CREATE,
-    Account,
-)
+from stustapay.core.schema.account import ACCOUNT_MONEY_VOUCHER_CREATE, Account
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
