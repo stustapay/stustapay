@@ -19,7 +19,7 @@ const getActiveTab = (location: string) => {
 export const AccountPageLayout: React.FC = () => {
   const { t } = useTranslation();
   const { nodeId } = useParams();
-  const { node } = useNode({ nodeId: nodeId ?? "" });
+  const { node } = useNode({ nodeId: Number(nodeId) });
   const location = useLocation();
 
   if (!nodeId) {

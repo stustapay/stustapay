@@ -1,4 +1,4 @@
-import { TreeNode } from "@api/nodes";
+import { Node } from "@/api";
 import {
   AccountBalance as AccountBalanceIcon,
   AddShoppingCart as AddShoppingCartIcon,
@@ -15,61 +15,61 @@ import { useTranslation } from "react-i18next";
 import { NavigationTreeItem } from "./NavigationTreeItem";
 
 export interface NodeMenuProps {
-  node: TreeNode;
+  node: Node;
 }
 
 export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
   const { t } = useTranslation();
 
-  if (node.allowedObjectTypes === undefined) {
+  if (node.allowed_objects_at_node === undefined) {
     return null;
   }
 
   const items: React.ReactElement[] = [];
 
-  if (node.allowedObjectTypes.includes("user") || node.allowedObjectTypes.includes("user_role")) {
+  if (node.allowed_objects_at_node.includes("user") || node.allowed_objects_at_node.includes("user_role")) {
     const id = `/node/${node.id}/users`;
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("users")} labelIcon={PersonIcon} />);
   }
-  if (node.allowedObjectTypes.includes("tax_rate")) {
+  if (node.allowed_objects_at_node.includes("tax_rate")) {
     const id = `/node/${node.id}/tax-rates`;
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("taxRates")} labelIcon={PercentIcon} />);
   }
-  if (node.allowedObjectTypes.includes("product")) {
+  if (node.allowed_objects_at_node.includes("product")) {
     const id = `/node/${node.id}/products`;
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("products")} labelIcon={ShoppingCartIcon} />
     );
   }
-  if (node.allowedObjectTypes.includes("ticket")) {
+  if (node.allowed_objects_at_node.includes("ticket")) {
     const id = `/node/${node.id}/tickets`;
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tickets")} labelIcon={ConfirmationNumberIcon} />
     );
   }
-  if (node.allowedObjectTypes.includes("till")) {
+  if (node.allowed_objects_at_node.includes("till")) {
     const id = `/node/${node.id}/tills`;
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tills")} labelIcon={PointOfSaleIcon} />);
   }
-  if (node.allowedObjectTypes.includes("account")) {
+  if (node.allowed_objects_at_node.includes("account")) {
     const id = `/node/${node.id}/accounts`;
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("accounts")} labelIcon={AccountBalanceIcon} />
     );
   }
-  if (node.allowedObjectTypes.includes("order")) {
+  if (node.allowed_objects_at_node.includes("order")) {
     const id = `/node/${node.id}/orders`;
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("orders")} labelIcon={AddShoppingCartIcon} />
     );
   }
-  if (node.allowedObjectTypes.includes("user-tags")) {
+  if (node.allowed_objects_at_node.includes("user_tags")) {
     const id = `/node/${node.id}/user-tags`;
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("userTag.userTags")} labelIcon={NfcIcon} />
     );
   }
-  if (node.allowedObjectTypes.includes("tses")) {
+  if (node.allowed_objects_at_node.includes("tse")) {
     const id = `/node/${node.id}/tses`;
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tse.tses")} labelIcon={ShieldIcon} />);
   }

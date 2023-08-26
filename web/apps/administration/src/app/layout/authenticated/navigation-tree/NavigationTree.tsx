@@ -7,9 +7,10 @@ import {
 import { TreeView } from "@mui/lab";
 import * as React from "react";
 import { NavigationTreeItem } from "./NavigationTreeItem";
-import { findNode, TreeNode, useNodeTree } from "@api/nodes";
+import { findNode, useNodeTree } from "@api/nodes";
 import { NodeMenu } from "./NodeMenu";
 import { useLocation } from "react-router-dom";
+import { Node } from "@/api";
 import { nodeUrlBaseRegex } from "@/app/routes";
 import {
   extendExpandedNodes,
@@ -21,10 +22,10 @@ import {
   useAppSelector,
 } from "@store";
 
-const getNavigationTreeItemLabel = (node: TreeNode) => {
-  if (node.type === "event") {
-    return EventIcon;
-  }
+const getNavigationTreeItemLabel = (node: Node) => {
+  // if (node.type === "event") {
+  //   return EventIcon;
+  // }
   return FolderIcon;
 };
 
@@ -61,16 +62,16 @@ export const NavigationTree: React.FC = () => {
     const match = location.pathname.match(nodeUrlBaseRegex);
     if (match) {
       const nodeId = match[0];
-      const node = findNode(match[1], tree);
+      const node = findNode(Number(match[1]), tree);
       if (!node) {
         return;
       }
-      dispatch(extendExpandedNodes([nodeId, ...node.parents.map((parent) => `/node/${parent}`)]));
+      dispatch(extendExpandedNodes([nodeId, ...node.parent_ids.map((parent) => `/node/${parent}`)]));
       setSelected([location.pathname]);
     }
   }, [location, tree, setSelected, dispatch]);
 
-  const renderTree = (rootNode: TreeNode) => (
+  const renderTree = (rootNode: Node) => (
     <NavigationTreeItem
       key={rootNode.id}
       nodeId={`/node/${rootNode.id}`}

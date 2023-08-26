@@ -6,7 +6,7 @@ export interface IRouteBuilder {
     base: () => string;
 }
 
-export const nodeUrlBaseRegex = /^\/node\/(?<nodeId>[\w-]+)/
+export const nodeUrlBaseRegex = /^\/node\/(?<nodeId>[\d]+)/
 
 class RouteBuilder implements IRouteBuilder {
     constructor(private resourceUrl: string) {}

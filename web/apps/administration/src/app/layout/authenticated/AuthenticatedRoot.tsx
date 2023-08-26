@@ -1,6 +1,8 @@
 import * as React from "react";
 import { useTheme } from "@mui/material/styles";
 import {
+  Alert,
+  AlertTitle,
   Box,
   Button,
   CircularProgress,
@@ -21,9 +23,10 @@ import { AppBar, DrawerHeader, Main } from "@components";
 import { drawerWidth } from "@/components/layouts/constants";
 import { useTranslation } from "react-i18next";
 import { selectCurrentUser, useAppSelector } from "@store";
-import { TestModeDisclaimer } from "@stustapay/components";
+import { Loading, TestModeDisclaimer } from "@stustapay/components";
 import { config } from "@api/common";
 import { NavigationTree } from "./navigation-tree";
+import { useGetTreeForCurrentUserQuery } from "@api";
 
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
@@ -32,6 +35,8 @@ export const AuthenticatedRoot: React.FC = () => {
   const location = useLocation();
 
   const user = useAppSelector(selectCurrentUser);
+
+  const { isLoading: isTreeLoading, error: treeError } = useGetTreeForCurrentUserQuery();
 
   if (!user) {
     const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
@@ -93,13 +98,29 @@ export const AuthenticatedRoot: React.FC = () => {
         </DrawerHeader>
         <Divider />
         {/* <Sidebar /> */}
-        <NavigationTree />
+        {isTreeLoading ? (
+          <Loading />
+        ) : treeError ? (
+          <Alert severity="error">
+            <AlertTitle>Error loading tree data</AlertTitle>
+          </Alert>
+        ) : (
+          <NavigationTree />
+        )}
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
         <TestModeDisclaimer testMode={config.testMode} testModeMessage={config.testModeMessage} />
         <React.Suspense fallback={<CircularProgress />}>
-          <Outlet />
+          {isTreeLoading ? (
+            <Loading />
+          ) : treeError ? (
+            <Alert severity="error">
+              <AlertTitle>Error loading tree data</AlertTitle>
+            </Alert>
+          ) : (
+            <Outlet />
+          )}
         </React.Suspense>
       </Main>
     </Box>

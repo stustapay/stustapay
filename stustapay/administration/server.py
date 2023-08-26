@@ -21,7 +21,6 @@ from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.service.user_tag import UserTagService
 from stustapay.core.subcommand import SubCommand
-
 from .routers import account, auth, cashier
 from .routers import config as config_router
 from .routers import (
@@ -40,7 +39,9 @@ from .routers import (
     tse,
     user,
     user_tag,
+    tree
 )
+from ..core.service.tree import TreeService
 
 
 class Api(SubCommand):
@@ -78,6 +79,7 @@ class Api(SubCommand):
         self.server.add_router(user_tag.router)
         self.server.add_router(tse.router)
         self.server.add_router(payout.router)
+        self.server.add_router(tree.router)
 
     @staticmethod
     def argparse_register(subparser: argparse.ArgumentParser):
@@ -114,6 +116,7 @@ class Api(SubCommand):
             ticket_service=TicketService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_tag_service=UserTagService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             tse_service=TseService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            tree_service=TreeService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             customer_service=CustomerService(
                 db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service
             ),

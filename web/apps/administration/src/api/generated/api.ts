@@ -20,6 +20,7 @@ export const addTagTypes = [
   "user_tags",
   "tses",
   "payouts",
+  "tree",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -465,6 +466,10 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["payouts"],
       }),
+      getTreeForCurrentUser: build.query<GetTreeForCurrentUserApiResponse, GetTreeForCurrentUserApiArg>({
+        query: () => ({ url: `/tree/` }),
+        providesTags: ["tree"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -814,6 +819,8 @@ export type PayoutRunSepaXmlExportApiArg = {
   payoutRunId: number;
   createSepaXmlPayload: CreateSepaXmlPayload;
 };
+export type GetTreeForCurrentUserApiResponse = /** status 200 Successful Response */ Node;
+export type GetTreeForCurrentUserApiArg = void;
 export type ProductRestriction = "under_16" | "under_18";
 export type Product = {
   name: string;
@@ -1445,6 +1452,27 @@ export type CreateSepaXmlPayload = {
   execution_date: string;
   batch_size?: number | null;
 };
+export type ObjectType =
+  | "user"
+  | "product"
+  | "ticket"
+  | "till"
+  | "user_role"
+  | "account"
+  | "order"
+  | "user_tags"
+  | "tax_rate"
+  | "tse";
+export type Node = {
+  id: number;
+  parent: number | null;
+  name: string;
+  description: string;
+  path: string;
+  parent_ids: number[];
+  allowed_objects_at_node: ObjectType[];
+  children: Node[];
+};
 export const {
   useListProductsQuery,
   useLazyListProductsQuery,
@@ -1572,4 +1600,6 @@ export const {
   useLazyPayoutRunPayoutsQuery,
   usePayoutRunCsvExportMutation,
   usePayoutRunSepaXmlExportMutation,
+  useGetTreeForCurrentUserQuery,
+  useLazyGetTreeForCurrentUserQuery,
 } = injectedRtkApi;
