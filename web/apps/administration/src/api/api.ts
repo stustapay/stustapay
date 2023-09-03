@@ -94,7 +94,7 @@ const cashRegisterStockingAdapter = createEntityAdapter<CashRegisterStocking>({
 });
 
 const tseAdapter = createEntityAdapter<Tse>({
-  sortComparer: (a, b) => a.tse_name.toLowerCase().localeCompare(b.tse_name.toLowerCase()),
+  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
 });
 
 const payoutRunAdaptor = createEntityAdapter<PayoutRunWithStats>({

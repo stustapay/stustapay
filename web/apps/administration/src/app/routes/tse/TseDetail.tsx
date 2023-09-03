@@ -42,7 +42,7 @@ export const TseDetail: React.FC = () => {
 
   return (
     <DetailLayout
-      title={tse.tse_name}
+      title={tse.name}
       actions={[
         {
           label: t("edit"),
@@ -56,28 +56,37 @@ export const TseDetail: React.FC = () => {
       <Paper>
         <List>
           <ListItem>
-            <ListItemText primary={t("tse.name")} secondary={tse.tse_name} />
+            <ListItemText primary={t("tse.name")} secondary={tse.name} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("tse.status")} secondary={tse.tse_status} />
+            <ListItemText primary={t("tse.type")} secondary={tse.type} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("tse.serial")} secondary={tse.tse_serial} />
+            <ListItemText primary={t("tse.status")} secondary={tse.status} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("tse.hashalgo")} secondary={tse.tse_hashalgo} />
+            <ListItemText primary={t("tse.serial")} secondary={tse.serial} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("tse.timeFormat")} secondary={tse.tse_time_format} />
+            <ListItemText primary={t("tse.wsUrl")} secondary={tse.ws_url} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("tse.publicKey")} secondary={tse.tse_public_key} />
+            <ListItemText primary={t("tse.wsTimeout")} secondary={tse.ws_timeout} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("tse.certificate")} secondary={tse.tse_certificate} />
+            <ListItemText primary={t("tse.hashalgo")} secondary={tse.hashalgo} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("tse.processDataEncoding")} secondary={tse.tse_process_data_encoding} />
+            <ListItemText primary={t("tse.timeFormat")} secondary={tse.time_format} />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary={t("tse.publicKey")} secondary={tse.public_key} />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary={t("tse.certificate")} secondary={tse.certificate} />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary={t("tse.processDataEncoding")} secondary={tse.process_data_encoding} />
           </ListItem>
         </List>
       </Paper>

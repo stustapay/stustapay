@@ -36,7 +36,7 @@ import {
   TillRegisterUpdate,
   TillUpdate,
 } from "./routes/tills";
-import { TseDetail, TseList } from "./routes/tse";
+import { TseCreate, TseDetail, TseList, TseUpdate } from "./routes/tse";
 import { FindUserTags, UserTagDetail, UserTagPageLayout } from "./routes/user-tags";
 import {
   UserCreate,
@@ -380,6 +380,14 @@ const router = createBrowserRouter([
           {
             index: true,
             element: <TseList />,
+          },
+          {
+            path: "new",
+            element: <TseCreate />,
+          },
+          {
+            path: ":tseId/edit",
+            element: <TseUpdate />,
           },
           {
             path: ":tseId",

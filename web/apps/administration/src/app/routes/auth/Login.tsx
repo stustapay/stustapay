@@ -39,7 +39,7 @@ export const Login: React.FC = () => {
 
   const handleSubmit = (values: FormSchema, { setSubmitting }: FormikHelpers<FormSchema>) => {
     setSubmitting(true);
-    login({ bodyLoginAuthLoginPost: { username: values.username, password: values.password } })
+    login({ loginPayload: { username: values.username, password: values.password } })
       .unwrap()
       .then(() => {
         setSubmitting(false);

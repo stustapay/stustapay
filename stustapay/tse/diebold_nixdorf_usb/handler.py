@@ -82,7 +82,7 @@ class DieboldNixdorfUSBTSE(TSEHandler):
                     return
                 assert self._ws is not None
 
-                receive_task = create_task_protected(self.recieve_loop(), f"receive_loop_task {self}", self._stop.set)
+                receive_task = create_task_protected(self.receive_loop(), f"receive_loop_task {self}", self._stop.set)
 
                 async def await_receive_task():
                     await receive_task
@@ -151,7 +151,7 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         kwargs["Password"] = base64.b64encode(self.password.encode("utf-8")).decode("ascii")
         return await self.request(*args, **kwargs)
 
-    async def recieve_loop(self) -> None:
+    async def receive_loop(self) -> None:
         """
         Receives and processes websocket messages.
         Messages that we receive from the websocket are expected to be responses to requests

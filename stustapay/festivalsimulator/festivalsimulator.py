@@ -474,7 +474,7 @@ class Simulator(SubCommand):
 
     async def login_admin(self) -> str:
         async with aiohttp.ClientSession(base_url=self.admin_url) as client:
-            async with client.post("/auth/login", data={"username": "admin", "password": "admin"}) as resp:
+            async with client.post("/auth/login", json={"username": "admin", "password": "admin"}) as resp:
                 if resp.status != 200:
                     raise RuntimeError("Error trying to log in admin user")
                 payload = await resp.json()

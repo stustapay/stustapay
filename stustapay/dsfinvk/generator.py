@@ -9,7 +9,6 @@ from dateutil import parser
 
 from stustapay.core.database import Connection
 from stustapay.tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
-
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import (
     Bonkopf,
@@ -461,7 +460,7 @@ class Generator:
         if len(tses) == 1:
             # Fall, dass wir nur eine TSE für diese Kasse haben: Einfach
             row = await conn.fetchrow(
-                "select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from till join tse on till.tse_id = tse.tse_id where till.id = $1",
+                "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, tse.public_key, tse.certificate from till join tse on till.tse_id = tse.id where till.id = $1",
                 Z_KASSE_ID,
             )
 
@@ -493,7 +492,7 @@ class Generator:
 
                 # und jetzt die stammdaten dieser TSE
                 row = await conn.fetchrow(
-                    "select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from tse  where tse_id = $1",
+                    "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, tse.public_key, tse.certificate from tse where id = $1",
                     aktuelle_tse_id,
                 )
 
@@ -526,38 +525,38 @@ class Generator:
 
             # und jetzt die stammdaten dieser TSE
             row = await conn.fetchrow(
-                "select tse.tse_id, tse.tse_serial, tse.tse_hashalgo, tse.tse_time_format, tse.tse_process_data_encoding, tse.tse_public_key, tse.tse_certificate from tse  where tse_id = $1",
+                "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, tse.public_key, tse.certificate from tse where id = $1",
                 aktuelle_tse_id,
             )
 
         # LOGGER.info(row)
         # LOGGER.info(f'Z_KASSE_ID: {Z_KASSE_ID}, Z_NR: {Z_NR}')
-        a.TSE_ID = int(row["tse_id"])
-        a.TSE_SERIAL = row["tse_serial"]
-        a.TSE_SIG_ALGO = row["tse_hashalgo"]
-        a.TSE_ZEITFORMAT = row["tse_time_format"]
-        a.TSE_PD_ENCODING = row["tse_process_data_encoding"]
-        a.TSE_PUBLIC_KEY = row["tse_public_key"]
-        if len(row["tse_certificate"]) < 1001:
-            a.TSE_ZERTIFIKAT_I = row["tse_certificate"]
-        elif len(row["tse_certificate"]) > 1000 and len(row["tse_certificate"]) < 2001:
-            a.TSE_ZERTIFIKAT_I = row["tse_certificate"][0:1000]
-            a.TSE_ZERTIFIKAT_II = row["tse_certificate"][1001:]
-        elif len(row["tse_certificate"]) > 2001 and len(row["tse_certificate"]) < 3001:
-            a.TSE_ZERTIFIKAT_I = row["tse_certificate"][0:1000]
-            a.TSE_ZERTIFIKAT_II = row["tse_certificate"][1000:2001]
-            a.TSE_ZERTIFIKAT_III = row["tse_certificate"][2000:3001]
-        elif len(row["tse_certificate"]) > 3001 and len(row["tse_certificate"]) < 4001:
-            a.TSE_ZERTIFIKAT_I = row["tse_certificate"][0:1000]
-            a.TSE_ZERTIFIKAT_II = row["tse_certificate"][1000:2001]
-            a.TSE_ZERTIFIKAT_III = row["tse_certificate"][2000:3001]
-            a.TSE_ZERTIFIKAT_IV = row["tse_certificate"][3000:4001]
-        elif len(row["tse_certificate"]) > 4001 and len(row["tse_certificate"]) < 5001:
-            a.TSE_ZERTIFIKAT_I = row["tse_certificate"][0:1000]
-            a.TSE_ZERTIFIKAT_II = row["tse_certificate"][1000:2001]
-            a.TSE_ZERTIFIKAT_III = row["tse_certificate"][2000:3001]
-            a.TSE_ZERTIFIKAT_IV = row["tse_certificate"][3000:4001]
-            a.TSE_ZERTIFIKAT_V = row["tse_certificate"][4000:5001]
+        a.TSE_ID = int(row["id"])
+        a.TSE_SERIAL = row["serial"]
+        a.TSE_SIG_ALGO = row["hashalgo"]
+        a.TSE_ZEITFORMAT = row["time_format"]
+        a.TSE_PD_ENCODING = row["process_data_encoding"]
+        a.TSE_PUBLIC_KEY = row["public_key"]
+        if len(row["certificate"]) < 1001:
+            a.TSE_ZERTIFIKAT_I = row["certificate"]
+        elif 1000 < len(row["certificate"]) < 2001:
+            a.TSE_ZERTIFIKAT_I = row["certificate"][0:1000]
+            a.TSE_ZERTIFIKAT_II = row["certificate"][1001:]
+        elif 2001 < len(row["certificate"]) < 3001:
+            a.TSE_ZERTIFIKAT_I = row["certificate"][0:1000]
+            a.TSE_ZERTIFIKAT_II = row["certificate"][1000:2001]
+            a.TSE_ZERTIFIKAT_III = row["certificate"][2000:3001]
+        elif 3001 < len(row["certificate"]) < 4001:
+            a.TSE_ZERTIFIKAT_I = row["certificate"][0:1000]
+            a.TSE_ZERTIFIKAT_II = row["certificate"][1000:2001]
+            a.TSE_ZERTIFIKAT_III = row["certificate"][2000:3001]
+            a.TSE_ZERTIFIKAT_IV = row["certificate"][3000:4001]
+        elif 4001 < len(row["certificate"]) < 5001:
+            a.TSE_ZERTIFIKAT_I = row["certificate"][0:1000]
+            a.TSE_ZERTIFIKAT_II = row["certificate"][1000:2001]
+            a.TSE_ZERTIFIKAT_III = row["certificate"][2000:3001]
+            a.TSE_ZERTIFIKAT_IV = row["certificate"][3000:4001]
+            a.TSE_ZERTIFIKAT_V = row["certificate"][4000:5001]
         else:
             LOGGER.error(
                 f"Zertifikat zu lang. Länge: {len(row['tse_certificate'])} Zeichen. Maximal unterstützt: 5000 Zeichen"

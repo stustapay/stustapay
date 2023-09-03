@@ -113,7 +113,7 @@ const injectedRtkApi = api
         invalidatesTags: ["tax-rates"],
       }),
       login: build.mutation<LoginApiResponse, LoginApiArg>({
-        query: (queryArg) => ({ url: `/auth/login`, method: "POST", body: queryArg.bodyLoginAuthLoginPost }),
+        query: (queryArg) => ({ url: `/auth/login`, method: "POST", body: queryArg.loginPayload }),
         invalidatesTags: ["auth"],
       }),
       changePassword: build.mutation<ChangePasswordApiResponse, ChangePasswordApiArg>({
@@ -434,6 +434,14 @@ const injectedRtkApi = api
         query: () => ({ url: `/tses/` }),
         providesTags: ["tses"],
       }),
+      createTse: build.mutation<CreateTseApiResponse, CreateTseApiArg>({
+        query: (queryArg) => ({ url: `/tses/`, method: "POST", body: queryArg.newTse }),
+        invalidatesTags: ["tses"],
+      }),
+      updateTse: build.mutation<UpdateTseApiResponse, UpdateTseApiArg>({
+        query: (queryArg) => ({ url: `/tses/${queryArg.tseId}`, method: "POST", body: queryArg.updateTse }),
+        invalidatesTags: ["tses"],
+      }),
       listPayoutRuns: build.query<ListPayoutRunsApiResponse, ListPayoutRunsApiArg>({
         query: () => ({ url: `/payouts/` }),
         providesTags: ["payouts"],
@@ -548,7 +556,7 @@ export type DeleteTaxRateApiArg = {
 };
 export type LoginApiResponse = /** status 200 Successful Response */ LoginResponse;
 export type LoginApiArg = {
-  bodyLoginAuthLoginPost: BodyLoginAuthLoginPost;
+  loginPayload: LoginPayload;
 };
 export type ChangePasswordApiResponse = /** status 200 Successful Response */ any;
 export type ChangePasswordApiArg = {
@@ -797,6 +805,15 @@ export type UpdateUserTagCommentApiArg = {
 };
 export type ListTsesApiResponse = /** status 200 Successful Response */ NormalizedListTseInt;
 export type ListTsesApiArg = void;
+export type CreateTseApiResponse = /** status 200 Successful Response */ Tse;
+export type CreateTseApiArg = {
+  newTse: NewTse;
+};
+export type UpdateTseApiResponse = /** status 200 Successful Response */ Tse;
+export type UpdateTseApiArg = {
+  tseId: number;
+  updateTse: UpdateTse;
+};
 export type ListPayoutRunsApiResponse = /** status 200 Successful Response */ NormalizedListPayoutRunWithStatsInt;
 export type ListPayoutRunsApiArg = void;
 export type CreatePayoutRunApiResponse = /** status 200 Successful Response */ PayoutRunWithStats;
@@ -969,13 +986,9 @@ export type LoginResponse = {
   access_token: string;
   grant_type?: string;
 };
-export type BodyLoginAuthLoginPost = {
-  grant_type?: string | null;
+export type LoginPayload = {
   username: string;
   password: string;
-  scope?: string;
-  client_id?: string | null;
-  client_secret?: string | null;
 };
 export type ChangePasswordPayload = {
   old_password: string;
@@ -1395,23 +1408,42 @@ export type FindUserTagPayload = {
 export type UpdateCommentPayload = {
   comment: string;
 };
+export type TseType = any;
 export type TseStatus = "new" | "active" | "disabled" | "failed";
 export type Tse = {
-  tse_id: number;
-  tse_name: string;
-  tse_status: TseStatus;
-  tse_serial: string | null;
-  tse_hashalgo: string | null;
-  tse_time_format: string | null;
-  tse_public_key: string | null;
-  tse_certificate: string | null;
-  tse_process_data_encoding: string | null;
+  name: string;
+  ws_url: string;
+  ws_timeout: number;
+  password: string;
+  type: TseType;
+  serial: string | null;
+  id: number;
+  status: TseStatus;
+  hashalgo: string | null;
+  time_format: string | null;
+  public_key: string | null;
+  certificate: string | null;
+  process_data_encoding: string | null;
 };
 export type NormalizedListTseInt = {
   ids: number[];
   entities: {
     [key: string]: Tse;
   };
+};
+export type NewTse = {
+  name: string;
+  ws_url: string;
+  ws_timeout: number;
+  password: string;
+  type: TseType;
+  serial: string | null;
+};
+export type UpdateTse = {
+  name: string;
+  ws_url: string;
+  ws_timeout: number;
+  password: string;
 };
 export type PayoutRunWithStats = {
   id: number;
@@ -1591,6 +1623,8 @@ export const {
   useUpdateUserTagCommentMutation,
   useListTsesQuery,
   useLazyListTsesQuery,
+  useCreateTseMutation,
+  useUpdateTseMutation,
   useListPayoutRunsQuery,
   useLazyListPayoutRunsQuery,
   useCreatePayoutRunMutation,

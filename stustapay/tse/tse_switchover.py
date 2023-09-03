@@ -1,7 +1,6 @@
 import asyncio
 import contextlib
 import curses
-
 # import functools
 import logging
 from curses import wrapper
@@ -11,7 +10,6 @@ import asyncpg
 
 from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.subcommand import SubCommand
-
 from .config import Config
 
 LOGGER = logging.getLogger(__name__)
@@ -31,16 +29,16 @@ def add_status_line(status, line, attr):
 
 
 async def draw_meters(meters, db):
-    tses = await db.fetch("select * from tse order by tse_id")
+    tses = await db.fetch("select * from tse order by id")
     for i in range(len(tses)):
         meters[i].clear()
-        if tses[i]["tse_status"] == "new":
+        if tses[i]["status"] == "new":
             colorscheme = curses.color_pair(2)
-        elif tses[i]["tse_status"] == "active":
+        elif tses[i]["status"] == "active":
             colorscheme = curses.color_pair(4)
-        elif tses[i]["tse_status"] == "disabled":
+        elif tses[i]["status"] == "disabled":
             colorscheme = curses.color_pair(1)
-        elif tses[i]["tse_status"] == "failed":
+        elif tses[i]["status"] == "failed":
             colorscheme = curses.color_pair(5)
 
         # assigned tills
@@ -93,7 +91,7 @@ async def window_main(stdscr, db):
     LEN = MAX_COLS - 1
 
     meters = []
-    tses = await db.fetch("select * from tse order by tse_id")
+    tses = await db.fetch("select * from tse order by id")
     # tills = await db.fetch("select * from tse order by tse_id")
     if len(tses) > ROW * COL:
         stdscr.addstr(0, 0, "to many tses", curses.A_BLINK | curses.color_pair(1))

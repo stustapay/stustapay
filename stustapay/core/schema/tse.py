@@ -11,13 +11,27 @@ class TseStatus(enum.Enum):
     failed = "failed"
 
 
-class Tse(BaseModel):
-    tse_id: int
-    tse_name: str
-    tse_status: TseStatus
-    tse_serial: Optional[str]
-    tse_hashalgo: Optional[str]
-    tse_time_format: Optional[str]
-    tse_public_key: Optional[str]
-    tse_certificate: Optional[str]
-    tse_process_data_encoding: Optional[str]
+class TseType(enum.Enum):
+    diebold_nixdorf = "diebold_nixdorf"
+
+
+class UpdateTse(BaseModel):
+    name: str
+    ws_url: str
+    ws_timeout: float
+    password: str
+
+
+class NewTse(UpdateTse):
+    type: TseType
+    serial: Optional[str]
+
+
+class Tse(NewTse):
+    id: int
+    status: TseStatus
+    hashalgo: Optional[str]
+    time_format: Optional[str]
+    public_key: Optional[str]
+    certificate: Optional[str]
+    process_data_encoding: Optional[str]
