@@ -12,7 +12,7 @@ from stustapay.core.database import create_db_pool
 from stustapay.core.schema.till import NewCashRegister, NewTill
 from stustapay.core.service.till.register import create_cash_register
 from stustapay.core.service.till.till import create_till
-from stustapay.core.subcommand import SubCommand
+from stustapay.framework.subcommand import SubCommand
 
 
 class TagSecretSchema(BaseModel):
@@ -21,7 +21,7 @@ class TagSecretSchema(BaseModel):
     description: str
 
 
-class PopulateCli(SubCommand):
+class PopulateCli(SubCommand[Config]):
     def __init__(self, args, config: Config, **rest):
         del rest  # unused
         self.args = args

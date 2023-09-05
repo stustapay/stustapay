@@ -18,13 +18,13 @@ from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import ADMIN_ROLE_ID, CASHIER_ROLE_ID
-from stustapay.core.subcommand import SubCommand
 from stustapay.festivalsimulator.festivalsetup import (
     PROFILE_ID_BEER,
     PROFILE_ID_COCKTAIL,
     PROFILE_ID_TICKET,
     PROFILE_ID_TOPUP,
 )
+from stustapay.framework.subcommand import SubCommand
 
 
 @dataclass
@@ -48,7 +48,7 @@ class Terminal:
         ]
 
 
-class Simulator(SubCommand):
+class Simulator(SubCommand[Config]):
     def __init__(self, args, config: Config, **rest):
         del rest  # unused
         self.args = args

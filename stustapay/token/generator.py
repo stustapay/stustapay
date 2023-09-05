@@ -3,10 +3,11 @@ import logging
 import random
 from textwrap import wrap
 
-from stustapay.core.subcommand import SubCommand
+from stustapay.core.config import Config
+from stustapay.framework.subcommand import SubCommand
 
 
-class Generator(SubCommand):
+class Generator(SubCommand[Config]):
     """
     Token id generationCommand which listens for database changes on bons and generates the bons immediately as pdf
     """

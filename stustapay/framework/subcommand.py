@@ -3,11 +3,12 @@ Provides the SubCommand abstract base class
 """
 import abc
 from argparse import Namespace
+from typing import Generic, TypeVar
 
-from .config import Config
+ConfigType = TypeVar("ConfigType")
 
 
-class SubCommand(abc.ABC):
+class SubCommand(abc.ABC, Generic[ConfigType]):
     """
     Abstract base class for subcommands.
 
@@ -30,7 +31,7 @@ class SubCommand(abc.ABC):
     def argparse_validate(args, error_cb):
         """
         Implement this method to add your own custom validation
-        of arguparse arguments.
+        of argparse arguments.
 
         This will be called immediately after the arguments have been parsed;
         calling error_cb with a str argument causes argparse to exit with that
@@ -41,7 +42,7 @@ class SubCommand(abc.ABC):
         del args, error_cb  # unused
 
     @abc.abstractmethod
-    def __init__(self, args: Namespace, config: Config, **kwargs):
+    def __init__(self, args: Namespace, config: ConfigType, **kwargs):
         del self, args, config, kwargs  # unused
         raise NotImplementedError
 

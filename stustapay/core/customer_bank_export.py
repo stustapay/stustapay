@@ -13,7 +13,7 @@ from stustapay.core.service.customer.payout import (
     get_customer_bank_data,
     get_number_of_payouts,
 )
-from stustapay.core.subcommand import SubCommand
+from stustapay.framework.subcommand import SubCommand
 
 from . import database
 from .config import Config
@@ -27,7 +27,7 @@ SEPA_PATH = "sepa__run_{}__num_{}.xml"
 CSV_PATH = "bank_export__run_{}.csv"
 
 
-class CustomerBankExport(SubCommand):
+class CustomerBankExport(SubCommand[Config]):
     """
     Customer SEPA Export utility CLI.
 

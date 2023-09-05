@@ -1,8 +1,6 @@
 import asyncio
 import contextlib
 import curses
-
-# import functools
 import logging
 from curses import wrapper
 from datetime import datetime
@@ -10,7 +8,7 @@ from datetime import datetime
 import asyncpg
 
 from stustapay.core.database import Connection, create_db_pool
-from stustapay.core.subcommand import SubCommand
+from stustapay.framework.subcommand import SubCommand
 
 from .config import Config
 
@@ -134,7 +132,7 @@ async def window_main(stdscr, db):
     return
 
 
-class TseSwitchover(SubCommand):
+class TseSwitchover(SubCommand[Config]):
     @staticmethod
     def argparse_register(subparser):
         subparser.add_argument("-s", "--show", action="store_true", default=False, help="only show status")

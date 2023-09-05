@@ -16,11 +16,11 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
-from stustapay.core.subcommand import SubCommand
+from stustapay.framework.subcommand import SubCommand
 from stustapay.terminalserver.router import auth, base, cashier, customer, order, user
 
 
-class Api(SubCommand):
+class Api(SubCommand[Config]):
     """
     Talk with Terminals in the field.
     """

@@ -18,8 +18,8 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import with_db_transaction
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
-from stustapay.core.subcommand import SubCommand
 from stustapay.customer_portal.server import Api as CustomerApi
+from stustapay.framework.subcommand import SubCommand
 from stustapay.terminalserver.server import Api as TerminalApi
 from stustapay.tse.config import read_config as read_tse_config
 from stustapay.tse.signature_processor import SignatureProcessor
@@ -46,7 +46,7 @@ def empty_sysargs():
         sys.argv = args
 
 
-class FestivalSetup(SubCommand):
+class FestivalSetup(SubCommand[Config]):
     def __init__(self, args, config: Config, **rest):
         del rest  # unused
         self.args = args

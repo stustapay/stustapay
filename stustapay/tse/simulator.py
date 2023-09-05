@@ -1,9 +1,10 @@
-from ..core.subcommand import SubCommand
+from stustapay.framework.subcommand import SubCommand
+
 from .config import Config
 from .diebold_nixdorf_usb.simulator import WebsocketInterface
 
 
-class Simulator(SubCommand):
+class Simulator(SubCommand[Config]):
     @staticmethod
     def argparse_register(subparser):
         subparser.add_argument("--host", default="localhost", help="local bind address, default localhost")

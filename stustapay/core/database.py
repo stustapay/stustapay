@@ -19,7 +19,9 @@ import asyncpg
 import asyncpg.exceptions
 from pydantic import BaseModel
 
-from . import subcommand, util
+from stustapay.framework import subcommand
+
+from . import util
 from .config import Config, DatabaseConfig
 from .schema import DATA_PATH, DEFAULT_EXAMPLE_DATA_FILE, REVISION_PATH
 
@@ -31,7 +33,7 @@ REVISION_TABLE = "schema_revision"
 CURRENT_REVISION = "8697011c"
 
 
-class DatabaseManage(subcommand.SubCommand):
+class DatabaseManage(subcommand.SubCommand[Config]):
     def __init__(self, args, config: Config, **rest):
         del rest
 

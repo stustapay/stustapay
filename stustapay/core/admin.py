@@ -3,15 +3,16 @@ from pprint import pprint
 
 import asyncpg
 
+from stustapay.framework.subcommand import SubCommand
+
 from . import database
 from .config import Config
 from .schema.user import UserWithoutId
 from .service.auth import AuthService
 from .service.user import UserService, list_user_roles
-from .subcommand import SubCommand
 
 
-class AdminCli(SubCommand):
+class AdminCli(SubCommand[Config]):
     """
     Admin utility cli
     """

@@ -11,12 +11,12 @@ from stustapay.core.http.server import Server
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.user import AuthService
-from stustapay.core.subcommand import SubCommand
+from stustapay.framework.subcommand import SubCommand
 
 from .routers import auth, base, sumup
 
 
-class Api(SubCommand):
+class Api(SubCommand[Config]):
     def __init__(self, args, config: Config, **rest):
         del rest  # unused
         self.args = args

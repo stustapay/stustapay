@@ -3,15 +3,15 @@ import logging
 import asyncpg
 
 from stustapay.core.database import create_db_pool
+from stustapay.framework.subcommand import SubCommand
 
-from ..core.subcommand import SubCommand
 from .config import Config
 from .generator import Generator
 
 LOGGER = logging.getLogger(__name__)
 
 
-class Exporter(SubCommand):
+class Exporter(SubCommand[Config]):
     @staticmethod
     def argparse_register(subparser):
         subparser.add_argument(

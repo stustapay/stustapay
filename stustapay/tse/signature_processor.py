@@ -9,7 +9,7 @@ from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.tse import list_tses
-from stustapay.core.subcommand import SubCommand
+from stustapay.framework.subcommand import SubCommand
 
 from .config import Config, get_tse_handler
 from .wrapper import TSEWrapper
@@ -17,7 +17,7 @@ from .wrapper import TSEWrapper
 LOGGER = logging.getLogger(__name__)
 
 
-class SignatureProcessor(SubCommand):
+class SignatureProcessor(SubCommand[Config]):
     @staticmethod
     def argparse_register(subparser):
         del subparser  # unused, no extra arguments

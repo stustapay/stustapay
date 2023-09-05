@@ -13,10 +13,10 @@ from stustapay.bon.config import Config
 from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
-from stustapay.core.subcommand import SubCommand
+from stustapay.framework.subcommand import SubCommand
 
 
-class Generator(SubCommand):
+class Generator(SubCommand[Config]):
     """
     Command which listens for database changes on bons and generates the bons immediately as pdf
     """

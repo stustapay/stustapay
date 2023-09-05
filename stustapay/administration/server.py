@@ -17,12 +17,12 @@ from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
+from stustapay.core.service.tree import TreeService
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.service.user_tag import UserTagService
-from stustapay.core.subcommand import SubCommand
+from stustapay.framework.subcommand import SubCommand
 
-from ..core.service.tree import TreeService
 from .routers import account, auth, cashier
 from .routers import config as config_router
 from .routers import (
