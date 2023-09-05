@@ -9,8 +9,8 @@ from typing import Callable
 
 import asyncpg
 
-from stustapay.core.database import Connection
 from stustapay.core.util import create_task_protected
+from stustapay.framework.database import Connection
 
 from .handler import TSEHandler, TSESignature, TSESignatureRequest
 from .kassenbeleg_v1 import Kassenbeleg_V1

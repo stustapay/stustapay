@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from schwifty import IBAN
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.config import PublicConfig
 from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
@@ -22,6 +21,7 @@ from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.payout import PayoutService
 from stustapay.core.service.customer.sumup import SumupService
+from stustapay.framework.database import Connection
 
 
 class PublicCustomerApiConfig(PublicConfig):

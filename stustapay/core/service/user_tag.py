@@ -4,7 +4,6 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.account import UserTagDetail
 from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
@@ -15,6 +14,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument
+from stustapay.framework.database import Connection
 
 
 class UserTagService(DBService):

@@ -6,7 +6,6 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.user import (
     CASHIER_ROLE_NAME,
     FINANZORGA_ROLE_NAME,
@@ -28,6 +27,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument, NotFound
+from stustapay.framework.database import Connection
 
 
 class UserLoginSuccess(BaseModel):

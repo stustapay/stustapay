@@ -11,7 +11,6 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.account import ACCOUNT_SUMUP_CUSTOMER_TOPUP
 from stustapay.core.schema.customer import (
     Customer,
@@ -41,6 +40,7 @@ from stustapay.core.service.order.booking import (
 )
 from stustapay.core.service.order.order import fetch_max_account_balance
 from stustapay.core.service.product import fetch_top_up_product
+from stustapay.framework.database import Connection
 
 
 class SumUpError(ServiceException):

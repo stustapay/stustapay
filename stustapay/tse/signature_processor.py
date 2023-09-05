@@ -5,10 +5,10 @@ from typing import Optional
 
 import asyncpg
 
-from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.tse import list_tses
+from stustapay.framework.database import Connection, create_db_pool
 from stustapay.framework.subcommand import SubCommand
 
 from .config import Config, get_tse_handler

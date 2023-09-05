@@ -3,7 +3,6 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, Account
 from stustapay.core.schema.till import (
     CashRegister,
@@ -28,6 +27,7 @@ from stustapay.core.service.common.decorators import (
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.order.booking import BookingIdentifier, book_money_transfer
 from stustapay.core.service.transaction import book_transaction
+from stustapay.framework.database import Connection
 
 
 async def get_cash_register(conn: Connection, register_id: int) -> Optional[CashRegister]:

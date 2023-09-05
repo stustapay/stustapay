@@ -3,7 +3,6 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.till import NewTillProfile, TillProfile
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.dbservice import DBService
@@ -14,6 +13,7 @@ from stustapay.core.service.common.decorators import (
 )
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.user import AuthService
+from stustapay.framework.database import Connection
 
 
 class TillProfileService(DBService):

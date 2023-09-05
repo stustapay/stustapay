@@ -10,7 +10,6 @@ from schwifty import IBAN
 from sepaxml import SepaTransfer
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.config import SEPAConfig
 from stustapay.core.schema.payout import (
     NewPayoutRun,
@@ -23,6 +22,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_user, with_db_transaction
 from stustapay.core.service.config import ConfigService
+from stustapay.framework.database import Connection
 
 
 async def get_number_of_payouts(conn: Connection, payout_run_id: Optional[int]) -> int:

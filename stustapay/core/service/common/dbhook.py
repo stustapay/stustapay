@@ -10,7 +10,7 @@ from typing import Awaitable, Callable, Optional, Type, Union
 
 import asyncpg.exceptions
 
-from stustapay.core.database import Connection
+from stustapay.framework.database import Connection
 
 
 class DBHook:

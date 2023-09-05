@@ -10,9 +10,9 @@ from asyncpg.exceptions import PostgresError
 
 from stustapay.bon.bon import BonConfig, fetch_base_config, generate_bon
 from stustapay.bon.config import Config
-from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
+from stustapay.framework.database import Connection, create_db_pool
 from stustapay.framework.subcommand import SubCommand
 
 

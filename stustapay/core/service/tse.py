@@ -1,7 +1,6 @@
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.tse import NewTse, Tse, UpdateTse
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
@@ -12,6 +11,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import NotFound
+from stustapay.framework.database import Connection
 
 
 async def list_tses(conn: Connection) -> list[Tse]:

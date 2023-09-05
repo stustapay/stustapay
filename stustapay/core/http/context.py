@@ -10,7 +10,6 @@ from fastapi import Depends, Request, WebSocket
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
@@ -24,6 +23,7 @@ from stustapay.core.service.tree import TreeService
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import UserService
 from stustapay.core.service.user_tag import UserTagService
+from stustapay.framework.database import Connection
 
 
 @dataclass

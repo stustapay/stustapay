@@ -6,12 +6,12 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.framework.database import Connection
 
 
 class ProductSoldStats(Product):

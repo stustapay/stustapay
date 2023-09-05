@@ -5,7 +5,6 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, ACCOUNT_IMBALANCE
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
 from stustapay.core.schema.order import OrderType, PaymentMethod
@@ -17,6 +16,7 @@ from stustapay.core.service.common.decorators import (
     requires_user,
     with_db_transaction,
 )
+from stustapay.framework.database import Connection
 
 from .common.error import NotFound, ServiceException
 from .order.booking import (

@@ -9,7 +9,6 @@ from asyncpg.pool import Pool
 
 from stustapay.core import database
 from stustapay.core.config import Config, DatabaseConfig
-from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import (
@@ -34,6 +33,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
+from stustapay.framework.database import Connection, create_db_pool
 
 
 def get_test_db_config() -> DatabaseConfig:

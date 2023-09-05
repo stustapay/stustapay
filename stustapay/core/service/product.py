@@ -3,7 +3,6 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.product import (
     DISCOUNT_PRODUCT_ID,
     MONEY_DIFFERENCE_PRODUCT_ID,
@@ -22,6 +21,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import ServiceException
+from stustapay.framework.database import Connection
 
 
 async def fetch_product(*, conn: Connection, product_id: int) -> Optional[Product]:

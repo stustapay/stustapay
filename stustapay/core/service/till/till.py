@@ -3,7 +3,6 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.terminal import (
     Terminal,
@@ -35,6 +34,7 @@ from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.till.register import TillRegisterService
 from stustapay.core.service.user import AuthService, list_user_roles
+from stustapay.framework.database import Connection
 
 
 class TillService(DBService):

@@ -1,7 +1,7 @@
-from typing import Optional
-
 import yaml
 from pydantic import BaseModel
+
+from stustapay.framework.database import DatabaseConfig
 
 
 class HTTPServerConfig(BaseModel):
@@ -20,16 +20,6 @@ class TerminalApiConfig(HTTPServerConfig):
     base_url: str
     host: str = "localhost"
     port: int = 8080
-
-
-class DatabaseConfig(BaseModel):
-    user: Optional[str] = None
-    password: Optional[str] = None
-    host: Optional[str] = None
-    port: Optional[int] = 5432
-    dbname: str
-    require_ssl: bool = False
-    sslrootcert: Optional[str] = None
 
 
 class CoreConfig(BaseModel):

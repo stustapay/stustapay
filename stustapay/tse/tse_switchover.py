@@ -7,7 +7,7 @@ from datetime import datetime
 
 import asyncpg
 
-from stustapay.core.database import Connection, create_db_pool
+from stustapay.framework.database import Connection, create_db_pool
 from stustapay.framework.subcommand import SubCommand
 
 from .config import Config

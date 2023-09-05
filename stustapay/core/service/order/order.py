@@ -8,7 +8,6 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.account import (
     ACCOUNT_CASH_ENTRY,
     ACCOUNT_CASH_EXIT,
@@ -72,6 +71,7 @@ from stustapay.core.service.product import (
 )
 from stustapay.core.service.till.common import fetch_till
 from stustapay.core.service.transaction import book_transaction
+from stustapay.framework.database import Connection
 
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService

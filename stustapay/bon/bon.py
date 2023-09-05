@@ -11,7 +11,7 @@ from stustapay.bon.pdflatex import (
     pdflatex,
     render_template,
 )
-from stustapay.core.database import Connection
+from stustapay.framework.database import Connection
 
 
 async def fetch_base_config(conn: Connection) -> BonConfig:

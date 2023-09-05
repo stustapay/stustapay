@@ -1,13 +1,13 @@
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.config import ConfigEntry, PublicConfig, SEPAConfig
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_user, with_db_transaction
 from stustapay.core.service.common.error import NotFound
+from stustapay.framework.database import Connection
 
 
 async def get_currency_identifier(*, conn: Connection) -> str:
