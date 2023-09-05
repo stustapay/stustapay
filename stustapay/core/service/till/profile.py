@@ -7,7 +7,11 @@ from stustapay.core.database import Connection
 from stustapay.core.schema.till import NewTillProfile, TillProfile
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.user import AuthService
 
@@ -37,6 +41,7 @@ class TillProfileService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def create_profile(self, *, conn: Connection, profile: NewTillProfile) -> TillProfile:
         profile_id = await conn.fetchval(
             "insert into till_profile (name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id) "
@@ -60,16 +65,19 @@ class TillProfileService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def list_profiles(self, *, conn: Connection) -> list[TillProfile]:
         return await conn.fetch_many(TillProfile, "select * from till_profile_with_allowed_roles")
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def get_profile(self, *, conn: Connection, profile_id: int) -> Optional[TillProfile]:
         return await self._get_profile(conn=conn, profile_id=profile_id)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def update_profile(
         self, *, conn: Connection, profile_id: int, profile: NewTillProfile
     ) -> Optional[TillProfile]:
@@ -99,6 +107,7 @@ class TillProfileService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def delete_profile(self, *, conn: Connection, till_profile_id: int) -> bool:
         result = await conn.execute(
             "delete from till_profile where id = $1",

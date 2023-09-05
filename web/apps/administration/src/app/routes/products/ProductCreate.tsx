@@ -1,6 +1,7 @@
 import { ProductRoutes } from "@/app/routes";
 import { useCreateProductMutation } from "@api";
 import { CreateLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { NewProduct, NewProductSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -19,6 +20,7 @@ const initialValues: NewProduct = {
 
 export const ProductCreate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [createProduct] = useCreateProductMutation();
 
   return (
@@ -28,7 +30,7 @@ export const ProductCreate: React.FC = () => {
       successRoute={ProductRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewProductSchema}
-      onSubmit={(product) => createProduct({ newProduct: product })}
+      onSubmit={(product) => createProduct({ nodeId: currentNode.id, newProduct: product })}
       form={ProductForm}
     />
   );

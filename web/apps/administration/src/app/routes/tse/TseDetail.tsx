@@ -1,6 +1,7 @@
 import { selectTseById, useListTsesQuery } from "@/api";
 import { TseRoutes } from "@/app/routes";
 import { DetailLayout } from "@/components";
+import { useCurrentNode } from "@hooks";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -10,31 +11,22 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const TseDetail: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { tseId } = useParams();
   const navigate = useNavigate();
-  //   const [deleteTse] = useDeleteTseMutation();
-  const { tse, error } = useListTsesQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      tse: data ? selectTseById(data, Number(tseId)) : undefined,
-    }),
-  });
-  //   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
+  const { tse, error } = useListTsesQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        tse: data ? selectTseById(data, Number(tseId)) : undefined,
+      }),
+    }
+  );
 
   if (error) {
     return <Navigate to={TseRoutes.list()} />;
   }
-
-  //   const openConfirmDeleteDialog = () => {
-  //     setShowConfirmDelete(true);
-  //   };
-
-  //   const handleConfirmDeleteTse: ConfirmDialogCloseHandler = (reason) => {
-  //     if (reason === "confirm") {
-  //       deleteTse({ tseId: Number(tseId) }).then(() => navigate(TseRoutes.list()));
-  //     }
-  //     setShowConfirmDelete(false);
-  //   };
 
   if (tse === undefined) {
     return <Loading />;
@@ -50,7 +42,6 @@ export const TseDetail: React.FC = () => {
           color: "primary",
           icon: <EditIcon />,
         },
-        // { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >
       <Paper>
@@ -90,12 +81,6 @@ export const TseDetail: React.FC = () => {
           </ListItem>
         </List>
       </Paper>
-      {/* <ConfirmDialog
-        title={t("tse.delete")}
-        body={t("tse.deleteDescription")}
-        show={showConfirmDelete}
-        onClose={handleConfirmDeleteTse}
-      /> */}
     </DetailLayout>
   );
 };

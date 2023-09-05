@@ -1,6 +1,7 @@
 import { ProductRoutes } from "@/app/routes";
 import { useGetProductQuery, useUpdateProductMutation } from "@api";
 import { EditLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { Loading } from "@stustapay/components";
 import { ProductSchema } from "@stustapay/models";
 import * as React from "react";
@@ -10,8 +11,13 @@ import { ProductForm } from "./ProductForm";
 
 export const ProductUpdate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { productId } = useParams();
-  const { data: product, isLoading, error } = useGetProductQuery({ productId: Number(productId) });
+  const {
+    data: product,
+    isLoading,
+    error,
+  } = useGetProductQuery({ nodeId: currentNode.id, productId: Number(productId) });
   const [updateProduct] = useUpdateProductMutation();
 
   if (error) {
@@ -29,7 +35,7 @@ export const ProductUpdate: React.FC = () => {
       successRoute={ProductRoutes.detail(product.id)}
       initialValues={product}
       validationSchema={ProductSchema}
-      onSubmit={(p) => updateProduct({ productId: product.id, newProduct: p })}
+      onSubmit={(p) => updateProduct({ nodeId: currentNode.id, productId: product.id, newProduct: p })}
       form={ProductForm}
     />
   );

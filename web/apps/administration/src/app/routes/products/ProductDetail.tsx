@@ -1,7 +1,7 @@
 import { ProductRoutes } from "@/app/routes";
 import { useDeleteProductMutation, useGetProductQuery, useUpdateProductMutation } from "@api";
 import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout } from "@components";
-import { useCurrencyFormatter } from "@hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import { Checkbox, Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -11,11 +11,12 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const ProductDetail: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { productId } = useParams();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
   const [deleteProduct] = useDeleteProductMutation();
-  const { data: product, error } = useGetProductQuery({ productId: Number(productId) });
+  const { data: product, error } = useGetProductQuery({ nodeId: currentNode.id, productId: Number(productId) });
   const [updateProduct] = useUpdateProductMutation();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
@@ -29,7 +30,9 @@ export const ProductDetail: React.FC = () => {
 
   const handleConfirmDeleteProduct: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteProduct({ productId: Number(productId) }).then(() => navigate(ProductRoutes.list()));
+      deleteProduct({ nodeId: currentNode.id, productId: Number(productId) }).then(() =>
+        navigate(ProductRoutes.list())
+      );
     }
     setShowConfirmDelete(false);
   };
@@ -39,7 +42,7 @@ export const ProductDetail: React.FC = () => {
   }
 
   const handleLockProduct = () => {
-    updateProduct({ productId: product.id, newProduct: { ...product, is_locked: true } });
+    updateProduct({ nodeId: currentNode.id, productId: product.id, newProduct: { ...product, is_locked: true } });
   };
 
   return (

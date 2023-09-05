@@ -1,6 +1,7 @@
 import { UserRoleRoutes } from "@/app/routes";
 import { UserRole, selectUserRoleAll, useDeleteUserRoleMutation, useListUserRolesQuery } from "@api";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -10,14 +11,18 @@ import { useNavigate } from "react-router-dom";
 
 export const UserRoleList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
 
-  const { userRoles, isLoading } = useListUserRolesQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      userRoles: data ? selectUserRoleAll(data) : undefined,
-    }),
-  });
+  const { userRoles, isLoading } = useListUserRolesQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        userRoles: data ? selectUserRoleAll(data) : undefined,
+      }),
+    }
+  );
   const [deleteUserRole] = useDeleteUserRoleMutation();
   const [userRoleToDelete, setUserRoleToDelete] = React.useState<number | null>(null);
 
@@ -31,7 +36,7 @@ export const UserRoleList: React.FC = () => {
 
   const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && userRoleToDelete !== null) {
-      deleteUserRole({ userRoleId: userRoleToDelete })
+      deleteUserRole({ nodeId: currentNode.id, userRoleId: userRoleToDelete })
         .unwrap()
         .catch(() => undefined);
     }

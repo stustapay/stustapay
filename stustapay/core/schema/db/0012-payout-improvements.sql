@@ -72,11 +72,3 @@ alter table tse
     rename column tse_certificate to certificate;
 alter table tse
     rename column tse_process_data_encoding to process_data_encoding;
-alter table tse_signature
-    drop constraint tse_signature_tse_id_fkey;
-alter table tse_signature
-    add constraint tse_signature_tse_id_fkey foreign key (tse_id) references tse (id);
-alter table till
-    drop constraint till_tse_id_fkey;
-alter table till
-    add constraint till_tse_id_fkey foreign key (tse_id) references tse (id);

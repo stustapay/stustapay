@@ -8,6 +8,7 @@ import {
 } from "@/api";
 import { TillProfileRoutes, TillRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { useCurrentNode } from "@hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -18,15 +19,19 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export const TillList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
 
-  const { tills, isLoading: isTillsLoading } = useListTillsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      tills: data ? selectTillAll(data) : undefined,
-    }),
-  });
-  const { data: profiles, isLoading: isProfilesLoading } = useListTillProfilesQuery();
+  const { tills, isLoading: isTillsLoading } = useListTillsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        tills: data ? selectTillAll(data) : undefined,
+      }),
+    }
+  );
+  const { data: profiles, isLoading: isProfilesLoading } = useListTillProfilesQuery({ nodeId: currentNode.id });
   const [deleteTill] = useDeleteTillMutation();
 
   const [tillToDelete, setTillToDelete] = React.useState<number | null>(null);
@@ -56,7 +61,7 @@ export const TillList: React.FC = () => {
 
   const handleConfirmDeleteTill: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && tillToDelete !== null) {
-      deleteTill({ tillId: tillToDelete })
+      deleteTill({ nodeId: currentNode.id, tillId: tillToDelete })
         .unwrap()
         .catch(() => undefined);
     }

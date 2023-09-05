@@ -4,6 +4,7 @@ import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
 import { useGetProductStatsQuery } from "@api";
 import { Loading } from "@stustapay/components";
+import { useCurrentNode } from "@hooks";
 
 export interface ProductStatsCardProps {
   fromTimestamp?: string;
@@ -11,8 +12,10 @@ export interface ProductStatsCardProps {
 }
 
 export const ProductStatsCard: React.FC<ProductStatsCardProps> = ({ fromTimestamp, toTimestamp }) => {
+  const { currentNode } = useCurrentNode();
   const { t } = useTranslation();
   const { data, error } = useGetProductStatsQuery({
+    nodeId: currentNode.id,
     fromTimestamp: fromTimestamp,
     toTimestamp: toTimestamp,
   });

@@ -1,6 +1,6 @@
 import { Cashier, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@/api";
 import { ListLayout } from "@/components";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -18,6 +18,7 @@ const FilterOptionsSchema = z.object({
 
 export const CashierList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
 
   const [filterOptions, setFilterOptions] = useQueryState(
@@ -25,23 +26,26 @@ export const CashierList: React.FC = () => {
     FilterOptionsSchema
   );
 
-  const { cashiers, isLoading: isCashiersLoading } = useListCashiersQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      cashiers: data
-        ? selectCashierAll(data).filter((cashier) => {
-            if (!filterOptions.showWithoutTill && cashier.till_ids.length === 0) {
-              return false;
-            }
-            if (!filterOptions.showZeroBalance && cashier.cash_drawer_balance === 0) {
-              return false;
-            }
-            return true;
-          })
-        : undefined,
-    }),
-  });
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery();
+  const { cashiers, isLoading: isCashiersLoading } = useListCashiersQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        cashiers: data
+          ? selectCashierAll(data).filter((cashier) => {
+              if (!filterOptions.showWithoutTill && cashier.till_ids.length === 0) {
+                return false;
+              }
+              if (!filterOptions.showZeroBalance && cashier.cash_drawer_balance === 0) {
+                return false;
+              }
+              return true;
+            })
+          : undefined,
+      }),
+    }
+  );
+  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
 
   if (isCashiersLoading || isTillsLoading) {
     return <Loading />;

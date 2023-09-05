@@ -10,7 +10,7 @@ import {
   useListUsersQuery,
 } from "@/api";
 import { CashierRoutes, TillRoutes } from "@/app/routes";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { ButtonLink, DetailLayout, ListItemLink } from "@components";
 import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Typography } from "@mui/material";
@@ -25,11 +25,16 @@ import { toast } from "react-toastify";
 
 export const CashierDetail: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { cashierId } = useParams();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { data: cashier, error, isLoading } = useGetCashierQuery({ cashierId: Number(cashierId) });
+  const {
+    data: cashier,
+    error,
+    isLoading,
+  } = useGetCashierQuery({ nodeId: currentNode.id, cashierId: Number(cashierId) });
   const {
     cashierShifts,
     error: shiftsError,
@@ -43,9 +48,13 @@ export const CashierDetail: React.FC = () => {
       }),
     }
   );
-  const { data: tills, isLoading: isTillsLoading, error: tillError } = useListTillsQuery();
-  const { data: users, isLoading: isUsersLoading, error: userError } = useListUsersQuery();
-  const { data: registers, isLoading: isRegistersLoading, error: registerError } = useListCashRegistersAdminQuery();
+  const { data: tills, isLoading: isTillsLoading, error: tillError } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: users, isLoading: isUsersLoading, error: userError } = useListUsersQuery({ nodeId: currentNode.id });
+  const {
+    data: registers,
+    isLoading: isRegistersLoading,
+    error: registerError,
+  } = useListCashRegistersAdminQuery({ nodeId: currentNode.id });
 
   if (error || tillError || shiftsError || userError || registerError) {
     navigate(-1);

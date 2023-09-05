@@ -16,7 +16,7 @@ import { ConfirmDialog, ConfirmDialogCloseHandler, ListItemLink } from "@/compon
 import { OrderTable } from "@/components/features";
 import { DetailLayout } from "@/components/layouts";
 import { encodeTillRegistrationQrCode } from "@/core";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import { Box, Button, Checkbox, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -30,6 +30,7 @@ import { toast } from "react-toastify";
 export const TillDetail: React.FC = () => {
   const { t } = useTranslation();
   const { tillId } = useParams();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
@@ -39,9 +40,9 @@ export const TillDetail: React.FC = () => {
   const [forceLogoutUser] = useForceLogoutUserMutation();
   const [deleteTill] = useDeleteTillMutation();
   const [logoutTill] = useLogoutTillMutation();
-  const { data: till, error: tillError } = useGetTillQuery({ tillId: Number(tillId) });
+  const { data: till, error: tillError } = useGetTillQuery({ nodeId: currentNode.id, tillId: Number(tillId) });
   const { orders, error: orderError } = useListOrdersByTillQuery(
-    { tillId: Number(tillId) },
+    { nodeId: currentNode.id, tillId: Number(tillId) },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
@@ -49,8 +50,8 @@ export const TillDetail: React.FC = () => {
       }),
     }
   );
-  const { data: profiles, error: profileError } = useListTillProfilesQuery();
-  const { data: users, error: userError } = useListUsersQuery();
+  const { data: profiles, error: profileError } = useListTillProfilesQuery({ nodeId: currentNode.id });
+  const { data: users, error: userError } = useListUsersQuery({ nodeId: currentNode.id });
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (tillError || orderError || userError || profileError) {
@@ -64,7 +65,7 @@ export const TillDetail: React.FC = () => {
 
   const handleConfirmDeleteTill: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteTill({ tillId: Number(tillId) }).then(() => navigate(TillRoutes.list()));
+      deleteTill({ nodeId: currentNode.id, tillId: Number(tillId) }).then(() => navigate(TillRoutes.list()));
     }
     setShowConfirmDelete(false);
   };
@@ -75,7 +76,7 @@ export const TillDetail: React.FC = () => {
 
   const handleUnregisterTill: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      logoutTill({ tillId: Number(tillId) });
+      logoutTill({ nodeId: currentNode.id, tillId: Number(tillId) });
     }
     setShowUnregisterTillDlg(false);
   };
@@ -116,7 +117,7 @@ export const TillDetail: React.FC = () => {
 
   const handleConfirmForceLogout: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      forceLogoutUser({ tillId: Number(tillId) });
+      forceLogoutUser({ nodeId: currentNode.id, tillId: Number(tillId) });
     }
     setShowForceLogoutDlg(false);
   };

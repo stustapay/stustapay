@@ -1,6 +1,7 @@
 import { selectTillButtonAll, useDeleteTillButtonMutation, useListTillButtonsQuery } from "@/api";
 import { TillButtonsRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { useCurrentNode } from "@hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -11,14 +12,18 @@ import { useNavigate } from "react-router-dom";
 
 export const TillButtonList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
 
-  const { buttons, isLoading } = useListTillButtonsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      buttons: data ? selectTillButtonAll(data) : undefined,
-    }),
-  });
+  const { buttons, isLoading } = useListTillButtonsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        buttons: data ? selectTillButtonAll(data) : undefined,
+      }),
+    }
+  );
   const [deleteButton] = useDeleteTillButtonMutation();
 
   const [buttonToDelete, setButtonToDelete] = React.useState<number | null>(null);
@@ -32,7 +37,7 @@ export const TillButtonList: React.FC = () => {
 
   const handleConfirmDeleteTaxRate: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && buttonToDelete !== null) {
-      deleteButton({ buttonId: buttonToDelete })
+      deleteButton({ nodeId: currentNode.id, buttonId: buttonToDelete })
         .unwrap()
         .catch(() => undefined);
     }

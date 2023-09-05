@@ -2,11 +2,15 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.database import Connection
-from stustapay.core.schema.tse import Tse, NewTse, UpdateTse
+from stustapay.core.schema.tse import NewTse, Tse, UpdateTse
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
 from stustapay.core.service.common.error import NotFound
 
 
@@ -22,6 +26,7 @@ class TseService(DBService):
     @with_db_transaction
     @requires_user([Privilege.account_management])  # TODO: tse_management
     # @requires_user([Privilege.tse_management])
+    @requires_node()
     async def create_tse(self, *, conn: Connection, new_tse: NewTse) -> Tse:
         tse_id = await conn.fetchval(
             "insert into tse (name, serial, ws_url, ws_timeout, password, status) "
@@ -36,6 +41,7 @@ class TseService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])  # TODO: tse_management
+    @requires_node()
     # @requires_user([Privilege.tse_management])
     async def update_tse(self, *, conn: Connection, tse_id: int, updated_tse: UpdateTse) -> Tse:
         tse_id = await conn.fetchval(
@@ -52,6 +58,7 @@ class TseService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])  # TODO: tse_management
+    @requires_node()
     # @requires_user([Privilege.tse_management])
     async def list_tses(self, *, conn: Connection) -> list[Tse]:
         return await list_tses(conn=conn)

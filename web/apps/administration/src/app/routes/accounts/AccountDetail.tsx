@@ -7,11 +7,17 @@ import { AccountRoutes } from "@/app/routes";
 import { CustomerAccountDetail } from "./CustomerAccountDetail";
 import { SystemAccountDetail } from "./SystemAccountDetail";
 import { Alert, AlertTitle } from "@mui/material";
+import { useCurrentNode } from "@hooks";
 
 export const AccountDetail: React.FC = () => {
   const { accountId } = useParams();
   const navigate = useNavigate();
-  const { data: account, error, isLoading: isAccountLoading } = useGetAccountQuery({ accountId: Number(accountId) });
+  const { currentNode } = useCurrentNode();
+  const {
+    data: account,
+    error,
+    isLoading: isAccountLoading,
+  } = useGetAccountQuery({ nodeId: currentNode.id, accountId: Number(accountId) });
 
   if (isAccountLoading || (!account && !error)) {
     return <Loading />;

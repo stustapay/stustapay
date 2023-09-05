@@ -1,7 +1,7 @@
 import { useDeleteTicketMutation, useGetTicketQuery } from "@/api";
 import { ProductRoutes, TicketRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout, ListItemLink } from "@/components";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -11,11 +11,12 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const TicketDetail: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { ticketId } = useParams();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
   const [deleteTicket] = useDeleteTicketMutation();
-  const { data: ticket, error } = useGetTicketQuery({ ticketId: Number(ticketId) });
+  const { data: ticket, error } = useGetTicketQuery({ nodeId: currentNode.id, ticketId: Number(ticketId) });
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error) {
@@ -28,7 +29,7 @@ export const TicketDetail: React.FC = () => {
 
   const handleConfirmDeleteTicket: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteTicket({ ticketId: Number(ticketId) }).then(() => navigate(TicketRoutes.list()));
+      deleteTicket({ nodeId: currentNode.id, ticketId: Number(ticketId) }).then(() => navigate(TicketRoutes.list()));
     }
     setShowConfirmDelete(false);
   };

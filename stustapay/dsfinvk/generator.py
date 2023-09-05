@@ -9,6 +9,7 @@ from dateutil import parser
 
 from stustapay.core.database import Connection
 from stustapay.tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
+
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import (
     Bonkopf,

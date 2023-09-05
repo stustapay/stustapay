@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
@@ -13,26 +15,22 @@ router = APIRouter(
 
 
 @router.get("", response_model=NormalizedList[Ticket, int])
-async def list_tickets(token: CurrentAuthToken, ticket_service: ContextTicketService):
-    return normalize_list(await ticket_service.list_tickets(token=token))
+async def list_tickets(token: CurrentAuthToken, ticket_service: ContextTicketService, node_id: Optional[int] = None):
+    return normalize_list(await ticket_service.list_tickets(token=token, node_id=node_id))
 
 
 @router.post("", response_model=Ticket)
 async def create_ticket(
-    ticket: NewTicket,
-    token: CurrentAuthToken,
-    ticket_service: ContextTicketService,
+    ticket: NewTicket, token: CurrentAuthToken, ticket_service: ContextTicketService, node_id: Optional[int] = None
 ):
-    return await ticket_service.create_ticket(token=token, ticket=ticket)
+    return await ticket_service.create_ticket(token=token, ticket=ticket, node_id=node_id)
 
 
 @router.get("/{ticket_id}", response_model=Ticket)
 async def get_ticket(
-    ticket_id: int,
-    token: CurrentAuthToken,
-    ticket_service: ContextTicketService,
+    ticket_id: int, token: CurrentAuthToken, ticket_service: ContextTicketService, node_id: Optional[int] = None
 ):
-    ticket = await ticket_service.get_ticket(token=token, ticket_id=ticket_id)
+    ticket = await ticket_service.get_ticket(token=token, ticket_id=ticket_id, node_id=node_id)
     if ticket is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -45,8 +43,9 @@ async def update_ticket(
     ticket: NewTicket,
     token: CurrentAuthToken,
     ticket_service: ContextTicketService,
+    node_id: Optional[int] = None,
 ):
-    ticket = await ticket_service.update_ticket(token=token, ticket_id=ticket_id, ticket=ticket)
+    ticket = await ticket_service.update_ticket(token=token, ticket_id=ticket_id, ticket=ticket, node_id=node_id)
     if ticket is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -55,10 +54,8 @@ async def update_ticket(
 
 @router.delete("/{ticket_id}")
 async def delete_ticket(
-    ticket_id: int,
-    token: CurrentAuthToken,
-    ticket_service: ContextTicketService,
+    ticket_id: int, token: CurrentAuthToken, ticket_service: ContextTicketService, node_id: Optional[int] = None
 ):
-    deleted = await ticket_service.delete_ticket(token=token, ticket_id=ticket_id)
+    deleted = await ticket_service.delete_ticket(token=token, ticket_id=ticket_id, node_id=node_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

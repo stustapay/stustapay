@@ -1,6 +1,7 @@
 import { NewTse, useCreateTseMutation } from "@/api";
 import { TseRoutes } from "@/app/routes";
 import { CreateLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { NewTseSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -17,6 +18,7 @@ const initialValues: NewTse = {
 
 export const TseCreate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [createTse] = useCreateTseMutation();
 
   return (
@@ -26,7 +28,7 @@ export const TseCreate: React.FC = () => {
       successRoute={TseRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTseSchema}
-      onSubmit={(tse) => createTse({ newTse: tse })}
+      onSubmit={(tse) => createTse({ nodeId: currentNode.id, newTse: tse })}
       form={TseForm}
     />
   );

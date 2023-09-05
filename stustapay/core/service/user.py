@@ -22,6 +22,7 @@ from stustapay.core.schema.user import (
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
+    requires_node,
     requires_terminal,
     requires_user,
     with_db_transaction,
@@ -57,11 +58,13 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def list_user_roles(self, *, conn: Connection) -> list[UserRole]:
         return await list_user_roles(conn=conn)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def create_user_role(self, *, conn: Connection, new_role: NewUserRole) -> UserRole:
         role_id = await conn.fetchval(
             "insert into user_role (name, is_privileged) values ($1, $2) returning id",
@@ -80,6 +83,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def update_user_role_privileges(
         self, *, conn: Connection, role_id: int, is_privileged: bool, privileges: list[Privilege]
     ) -> UserRole:
@@ -101,6 +105,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def delete_user_role(self, *, conn: Connection, role_id: int) -> bool:
         result = await conn.execute(
             "delete from user_role where id = $1",
@@ -173,6 +178,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def create_user(
         self,
         *,
@@ -216,6 +222,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def create_user_with_tag(self, *, conn: Connection, current_user: CurrentUser, new_user: NewUser) -> User:
         """
         Create a user at a Terminal, where a name and the user tag must be provided
@@ -242,6 +249,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def promote_to_cashier(self, *, conn: Connection, user_id: int) -> User:
         user = await self._get_user(conn=conn, user_id=user_id)
         if user is None:
@@ -255,6 +263,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def promote_to_finanzorga(self, *, conn: Connection, user_id: int) -> User:
         user = await self._get_user(conn=conn, user_id=user_id)
         if user is None:
@@ -268,6 +277,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def list_users(self, *, conn: Connection) -> list[User]:
         return await conn.fetch_many(User, "select * from user_with_roles")
 
@@ -280,6 +290,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def get_user(self, *, conn: Connection, user_id: int) -> Optional[User]:
         return await self._get_user(conn=conn, user_id=user_id)
 
@@ -306,6 +317,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def update_user_roles(self, *, conn: Connection, user_id: int, role_names: list[str]) -> Optional[User]:
         found = await conn.fetchval("select true from usr where id = $1", user_id)
         if not found:
@@ -316,11 +328,13 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def update_user(self, *, conn: Connection, user_id: int, user: UserWithoutId) -> Optional[User]:
         return await self._update_user(conn=conn, user_id=user_id, user=user)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
+    @requires_node()
     async def delete_user(self, *, conn: Connection, user_id: int) -> bool:
         result = await conn.execute(
             "delete from usr where id = $1",

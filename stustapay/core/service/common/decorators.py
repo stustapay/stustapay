@@ -62,6 +62,25 @@ def with_retryable_db_transaction(n_retries=3):
     return f
 
 
+def requires_node():
+    """
+    This makes a node_id: int parameter optional by reading it from the current users topmost node if not passed.
+    """
+
+    def f(func):
+        @wraps(func)
+        async def wrapper(self, **kwargs):
+            kwargs["node_id"] = 1
+            # TODO: actually read the node_id from the current user if not passed / forward it if passed
+            if "node_id" not in signature(func).parameters:
+                kwargs.pop("node_id")
+            return await func(self, **kwargs)
+
+        return wrapper
+
+    return f
+
+
 def requires_user(privileges: Optional[list[Privilege]] = None):
     """
     Check if a user is logged in via a user jwt token and has ALL provided privileges.

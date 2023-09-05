@@ -7,6 +7,7 @@ import {
 } from "@/api";
 import { TillProfileRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { useCurrentNode } from "@hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -18,16 +19,20 @@ import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 
 export const TillProfileList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
   const { nodeId } = useParams();
 
-  const { profiles, isLoading: isTillsLoading } = useListTillProfilesQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      profiles: data ? selectTillProfileAll(data) : undefined,
-    }),
-  });
-  const { data: layouts, isLoading: isLayoutsLoading } = useListTillLayoutsQuery();
+  const { profiles, isLoading: isTillsLoading } = useListTillProfilesQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        profiles: data ? selectTillProfileAll(data) : undefined,
+      }),
+    }
+  );
+  const { data: layouts, isLoading: isLayoutsLoading } = useListTillLayoutsQuery({ nodeId: currentNode.id });
   const [deleteTillProfile] = useDeleteTillProfileMutation();
 
   const [profileToDelete, setProfileToDelete] = React.useState<number | null>(null);
@@ -58,7 +63,7 @@ export const TillProfileList: React.FC = () => {
 
   const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && profileToDelete !== null) {
-      deleteTillProfile({ profileId: profileToDelete })
+      deleteTillProfile({ nodeId: currentNode.id, profileId: profileToDelete })
         .unwrap()
         .catch(() => undefined);
     }

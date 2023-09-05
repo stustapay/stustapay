@@ -11,6 +11,7 @@ from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
+    requires_node,
     requires_terminal,
     requires_user,
     with_db_transaction,
@@ -50,11 +51,13 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def list_system_accounts(self, *, conn: Connection) -> list[Account]:
         return await conn.fetch_many(Account, "select * from account_with_history where type != 'private'")
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def get_account(self, *, conn: Connection, account_id: int) -> Account:
         account = await get_account_by_id(conn=conn, account_id=account_id)
         if account is None:
@@ -63,11 +66,13 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def get_account_by_tag_uid(self, *, conn: Connection, user_tag_uid: int) -> Optional[Account]:
         return await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def find_accounts(self, *, conn: Connection, search_term: str) -> list[Account]:
         value_as_int = None
         if re.match("^[A-Fa-f0-9]+$", search_term):
@@ -88,6 +93,7 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def disable_account(self, *, conn: Connection, account_id: int):
         row = await conn.fetchval("update account set user_tag_uid = null where id = $1 returning id", account_id)
         if row is None:
@@ -95,6 +101,7 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def update_account_balance(
         self, *, conn: Connection, current_user: User, account_id: int, new_balance: float
     ) -> bool:
@@ -126,6 +133,7 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def update_account_vouchers(
         self, *, conn: Connection, current_user: User, account_id: int, new_voucher_amount: int
     ) -> bool:
@@ -212,6 +220,7 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def update_account_comment(self, *, conn: Connection, account_id: int, comment: str) -> Account:
         ret = await conn.fetchval("update account set comment = $1 where id = $2 returning id", comment, account_id)
         if ret is None:
@@ -237,6 +246,7 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def switch_account_tag_uid_admin(
         self, *, conn: Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
     ):

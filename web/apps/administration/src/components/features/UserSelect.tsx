@@ -1,4 +1,5 @@
 import { selectUserAll, useListUsersQuery } from "@api";
+import { useCurrentNode } from "@hooks";
 import {
   FormControl,
   FormHelperText,
@@ -30,12 +31,16 @@ export const UserSelect: React.FC<UserSelectProps> = ({
   filterRole,
   ...props
 }) => {
-  const { users } = useListUsersQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      users: data ? selectUserAll(data) : [],
-    }),
-  });
+  const { currentNode } = useCurrentNode();
+  const { users } = useListUsersQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        users: data ? selectUserAll(data) : [],
+      }),
+    }
+  );
 
   const filteredUsers = React.useMemo(() => {
     if (!filterRole) {

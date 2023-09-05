@@ -18,6 +18,7 @@ import { Account, useUpdateTagUidMutation } from "@api";
 import { Formik, FormikHelpers } from "formik";
 import { z } from "zod";
 import { toFormikValidationSchema } from "@stustapay/utils";
+import { useCurrentNode } from "@hooks";
 
 const FormSchema = z.object({
   comment: z.string(),
@@ -34,12 +35,14 @@ export interface EditAccountTagModalProps {
 
 export const EditAccountTagModal: React.FC<EditAccountTagModalProps> = ({ account, open, handleClose }) => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
 
   const [updateTagUid] = useUpdateTagUidMutation();
 
   const handleSubmit = (values: FormValues, { setSubmitting, resetForm }: FormikHelpers<FormValues>) => {
     setSubmitting(true);
     updateTagUid({
+      nodeId: currentNode.id,
       accountId: account.id,
       updateTagUidPayload: { new_tag_uid_hex: "0x" + values.newTagUidHex, comment: values.comment },
     })

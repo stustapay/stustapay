@@ -1,6 +1,6 @@
 import { useCreatePayoutRunMutation } from "@/api";
 import { PayoutRunRoutes } from "@/app/routes";
-import { useCurrencySymbol } from "@hooks";
+import { useCurrencySymbol, useCurrentNode } from "@hooks";
 import { ChevronLeft } from "@mui/icons-material";
 import { Button, Grid, IconButton, InputAdornment, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import { NumericInput } from "@stustapay/components";
@@ -25,6 +25,7 @@ const initialValues: NewPayoutRun = {
 export const PayoutRunCreate: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const currencySymbol = useCurrencySymbol();
 
   const [createPayoutRun] = useCreatePayoutRunMutation();
@@ -32,7 +33,7 @@ export const PayoutRunCreate: React.FC = () => {
   const handleSubmit = (values: NewPayoutRun, { setSubmitting }: FormikHelpers<NewPayoutRun>) => {
     setSubmitting(true);
 
-    createPayoutRun({ newPayoutRun: { max_payout_sum: values.max_payout_sum } })
+    createPayoutRun({ nodeId: currentNode.id, newPayoutRun: { max_payout_sum: values.max_payout_sum } })
       .unwrap()
       .then(() => {
         setSubmitting(false);

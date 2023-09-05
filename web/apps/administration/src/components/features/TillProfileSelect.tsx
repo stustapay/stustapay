@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { selectTillProfileAll, useListTillProfilesQuery } from "@api";
 import * as React from "react";
+import { useCurrentNode } from "@hooks";
 
 export interface TillProfileSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
   label: string;
@@ -27,12 +28,16 @@ export const TillProfileSelect: React.FC<TillProfileSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { profiles } = useListTillProfilesQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      profiles: data ? selectTillProfileAll(data) : [],
-    }),
-  });
+  const { currentNode } = useCurrentNode();
+  const { profiles } = useListTillProfilesQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        profiles: data ? selectTillProfileAll(data) : [],
+      }),
+    }
+  );
 
   const handleChange = (evt: SelectChangeEvent<unknown>) => {
     if (!isNaN(Number(evt.target.value))) {

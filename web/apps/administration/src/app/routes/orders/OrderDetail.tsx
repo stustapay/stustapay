@@ -2,6 +2,7 @@ import { OrderRoutes } from "@/app/routes";
 import { useCancelOrderMutation, useGetOrderQuery } from "@api";
 import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout, ListItemLink } from "@components";
 import { LineItemTable } from "@components/LineItemTable";
+import { useCurrentNode } from "@hooks";
 import { Cancel as CancelIcon, Edit as EditIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -15,11 +16,16 @@ export const OrderDetail: React.FC = () => {
   const { t } = useTranslation();
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const { currentNode } = useCurrentNode();
   const [showCancelOrderConfirm, setShowCancelOrderConfirm] = React.useState(false);
 
   const [cancelSale] = useCancelOrderMutation();
 
-  const { data: order, error, isLoading: isOrderLoading } = useGetOrderQuery({ orderId: Number(orderId) });
+  const {
+    data: order,
+    error,
+    isLoading: isOrderLoading,
+  } = useGetOrderQuery({ nodeId: currentNode.id, orderId: Number(orderId) });
 
   if (isOrderLoading) {
     return <Loading />;
@@ -34,7 +40,7 @@ export const OrderDetail: React.FC = () => {
 
   const handleCancelOrderConfirmClose: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      cancelSale({ orderId: order.id })
+      cancelSale({ orderId: order.id, nodeId: currentNode.id })
         .unwrap()
         .then(() => toast.success(t("order.cancelSuccessful")))
         .catch((err) => undefined); // to avoid uncaught promise errors

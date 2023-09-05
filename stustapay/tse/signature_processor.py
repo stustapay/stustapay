@@ -10,6 +10,7 @@ from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.tse import list_tses
 from stustapay.core.subcommand import SubCommand
+
 from .config import Config, get_tse_handler
 from .wrapper import TSEWrapper
 
@@ -59,9 +60,9 @@ class SignatureProcessor(SubCommand):
             # initialize the TSE wrappers
             async with self.db_pool.acquire() as conn:
                 tses_in_db = await list_tses(conn=conn)
-                for tse in tses_in_db:
-                    factory = get_tse_handler(tse)
-                    tse = TSEWrapper(name=tse.name, factory_function=factory)
+                for tse_in_db in tses_in_db:
+                    factory = get_tse_handler(tse_in_db)
+                    tse = TSEWrapper(name=tse_in_db.name, factory_function=factory)
                     tse.start(self.db_pool)
                     aes.push_async_callback(tse.stop)
                     self.tses[tse.name] = tse

@@ -1,6 +1,7 @@
 import { TillRegistersRoutes } from "@/app/routes";
 import { selectTillRegisterById, useListCashRegistersAdminQuery, useUpdateRegisterMutation } from "@api";
 import { EditLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { Loading } from "@stustapay/components";
 import { TillRegisterSchema } from "@stustapay/models";
 import * as React from "react";
@@ -10,13 +11,17 @@ import { TillRegisterForm } from "./TillRegisterForm";
 
 export const TillRegisterUpdate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { registerId } = useParams();
-  const { register, isLoading, error } = useListCashRegistersAdminQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      register: data ? selectTillRegisterById(data, Number(registerId)) : undefined,
-    }),
-  });
+  const { register, isLoading, error } = useListCashRegistersAdminQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        register: data ? selectTillRegisterById(data, Number(registerId)) : undefined,
+      }),
+    }
+  );
   const [update] = useUpdateRegisterMutation();
 
   if (error) {
@@ -34,7 +39,7 @@ export const TillRegisterUpdate: React.FC = () => {
       successRoute={TillRegistersRoutes.detail(register.id)}
       initialValues={register}
       validationSchema={TillRegisterSchema}
-      onSubmit={(r) => update({ registerId: register.id, newCashRegister: r })}
+      onSubmit={(r) => update({ nodeId: currentNode.id, registerId: register.id, newCashRegister: r })}
       form={TillRegisterForm}
     />
   );

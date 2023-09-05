@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
@@ -13,26 +15,22 @@ router = APIRouter(
 
 
 @router.get("", response_model=NormalizedList[TillButton, int])
-async def list_till_buttons(token: CurrentAuthToken, till_service: ContextTillService):
-    return normalize_list(await till_service.layout.list_buttons(token=token))
+async def list_till_buttons(token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None):
+    return normalize_list(await till_service.layout.list_buttons(token=token, node_id=node_id))
 
 
 @router.post("", response_model=NewTillButton)
 async def create_till_button(
-    button: NewTillButton,
-    token: CurrentAuthToken,
-    till_service: ContextTillService,
+    button: NewTillButton, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
 ):
-    return await till_service.layout.create_button(token=token, button=button)
+    return await till_service.layout.create_button(token=token, button=button, node_id=node_id)
 
 
 @router.get("/{button_id}", response_model=TillButton)
 async def get_till_button(
-    button_id: int,
-    token: CurrentAuthToken,
-    till_service: ContextTillService,
+    button_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
 ):
-    till = await till_service.layout.get_button(token=token, button_id=button_id)
+    till = await till_service.layout.get_button(token=token, button_id=button_id, node_id=node_id)
     if till is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -45,8 +43,9 @@ async def update_till_button(
     button: NewTillButton,
     token: CurrentAuthToken,
     till_service: ContextTillService,
+    node_id: Optional[int] = None,
 ):
-    till = await till_service.layout.update_button(token=token, button_id=button_id, button=button)
+    till = await till_service.layout.update_button(token=token, button_id=button_id, button=button, node_id=node_id)
     if till is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -55,10 +54,8 @@ async def update_till_button(
 
 @router.delete("/{button_id}")
 async def delete_till_button(
-    button_id: int,
-    token: CurrentAuthToken,
-    till_service: ContextTillService,
+    button_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
 ):
-    deleted = await till_service.layout.delete_button(token=token, button_id=button_id)
+    deleted = await till_service.layout.delete_button(token=token, button_id=button_id, node_id=node_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

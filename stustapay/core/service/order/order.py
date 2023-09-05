@@ -8,6 +8,7 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
+from stustapay.core.database import Connection
 from stustapay.core.schema.account import (
     ACCOUNT_CASH_ENTRY,
     ACCOUNT_CASH_EXIT,
@@ -55,6 +56,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
+    requires_node,
     requires_terminal,
     requires_user,
     with_db_transaction,
@@ -68,10 +70,8 @@ from stustapay.core.service.product import (
     fetch_product,
     fetch_top_up_product,
 )
+from stustapay.core.service.till.common import fetch_till
 from stustapay.core.service.transaction import book_transaction
-
-from ...database import Connection
-from ..till.common import fetch_till
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
@@ -239,6 +239,7 @@ class OrderService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
+    @requires_node()
     async def register_for_order_updates(self, conn: Connection) -> Subscription:
         del conn  # unused
 
@@ -314,7 +315,7 @@ class OrderService(DBService):
                     raise InvalidArgument("The line item price was set for a fixed price item")
                 # other case (not fixed_price and not item_price) is implicitly checked with the database constraints,
                 # pydantic constraints and previous test
-                price = product.price
+                price: float | None = product.price
                 if not product.fixed_price:
                     price = booked_product.price
                     booked_product.quantity = 1
@@ -760,6 +761,7 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction()
     @requires_user([Privilege.can_book_orders])
+    @requires_node()
     async def book_sale_products(
         self,
         *,
@@ -807,6 +809,7 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction()
     @requires_user([Privilege.can_book_orders])
+    @requires_node()
     async def edit_sale_products(
         self,
         *,
@@ -904,6 +907,7 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction()
     @requires_user([Privilege.can_book_orders])
+    @requires_node()
     async def cancel_sale_admin(self, *, conn: Connection, current_user: CurrentUser, order_id: int):
         await self._cancel_sale(conn=conn, till_id=VIRTUAL_TILL_ID, current_user=current_user, order_id=order_id)
 
@@ -1287,6 +1291,7 @@ class OrderService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
+    @requires_node()
     async def list_orders(self, *, conn: Connection, customer_account_id: Optional[int] = None) -> list[Order]:
         if customer_account_id is not None:
             return await conn.fetch_many(
@@ -1297,10 +1302,12 @@ class OrderService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
+    @requires_node()
     async def list_orders_by_till(self, *, conn: Connection, till_id: int) -> list[Order]:
         return await conn.fetch_many(Order, "select * from order_value where till_id = $1", till_id)
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
+    @requires_node()
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)

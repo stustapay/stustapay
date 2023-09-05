@@ -19,6 +19,7 @@ from stustapay.core.service.account import (
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
+    requires_node,
     requires_terminal,
     requires_user,
     with_db_transaction,
@@ -59,6 +60,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def list_cash_register_stockings_admin(self, *, conn: Connection) -> list[CashRegisterStocking]:
         return await self._list_cash_register_stockings(conn=conn)
 
@@ -69,6 +71,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def create_cash_register_stockings(
         self, *, conn: Connection, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
@@ -101,6 +104,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def update_cash_register_stockings(
         self, *, conn: Connection, stocking_id: int, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
@@ -135,6 +139,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def delete_cash_register_stockings(self, *, conn: Connection, stocking_id: int):
         result = await conn.execute(
             "delete from cash_register_stocking where id = $1",
@@ -160,16 +165,19 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def list_cash_registers_admin(self, *, conn: Connection, hide_assigned_registers=False) -> list[CashRegister]:
         return await self._list_cash_registers(conn=conn, hide_assigned_registers=hide_assigned_registers)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def create_cash_register(self, *, conn: Connection, new_register: NewCashRegister) -> CashRegister:
         return await create_cash_register(conn=conn, new_register=new_register)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def update_cash_register(
         self, *, conn: Connection, register_id: int, register: NewCashRegister
     ) -> CashRegister:
@@ -184,6 +192,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def delete_cash_register(self, *, conn: Connection, register_id: int):
         result = await conn.execute(
             "delete from cash_register where id = $1",
@@ -370,6 +379,7 @@ class TillRegisterService(DBService):
 
     @with_retryable_db_transaction()
     @requires_user([Privilege.cashier_management])
+    @requires_node()
     async def transfer_cash_register_admin(
         self, *, conn: Connection, source_cashier_id: int, target_cashier_id: int
     ) -> CashRegister:

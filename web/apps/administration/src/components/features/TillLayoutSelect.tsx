@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { selectTillLayoutAll, useListTillLayoutsQuery } from "@api";
 import * as React from "react";
+import { useCurrentNode } from "@hooks";
 
 export interface TillLayoutSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
   label: string;
@@ -27,12 +28,16 @@ export const TillLayoutSelect: React.FC<TillLayoutSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { layouts } = useListTillLayoutsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      layouts: data ? selectTillLayoutAll(data) : [],
-    }),
-  });
+  const { currentNode } = useCurrentNode();
+  const { layouts } = useListTillLayoutsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        layouts: data ? selectTillLayoutAll(data) : [],
+      }),
+    }
+  );
 
   const handleChange = (evt: SelectChangeEvent<unknown>) => {
     if (!isNaN(Number(evt.target.value))) {

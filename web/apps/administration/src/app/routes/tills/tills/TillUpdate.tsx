@@ -1,6 +1,7 @@
 import { useGetTillQuery, useUpdateTillMutation } from "@/api";
 import { TillRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
+import { useCurrentNode } from "@hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTillSchema } from "@stustapay/models";
 import * as React from "react";
@@ -11,7 +12,8 @@ import { TillForm } from "./TillForm";
 export const TillUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { tillId } = useParams();
-  const { data: till, isLoading, error } = useGetTillQuery({ tillId: Number(tillId) });
+  const { currentNode } = useCurrentNode();
+  const { data: till, isLoading, error } = useGetTillQuery({ nodeId: currentNode.id, tillId: Number(tillId) });
   const [updateTill] = useUpdateTillMutation();
 
   if (error) {
@@ -30,7 +32,7 @@ export const TillUpdate: React.FC = () => {
       initialValues={till}
       form={TillForm}
       validationSchema={UpdateTillSchema}
-      onSubmit={(t) => updateTill({ tillId: till.id, newTill: t })}
+      onSubmit={(t) => updateTill({ nodeId: currentNode.id, tillId: till.id, newTill: t })}
     />
   );
 };

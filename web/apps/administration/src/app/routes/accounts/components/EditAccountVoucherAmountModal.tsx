@@ -4,6 +4,7 @@ import { NumericInput } from "@stustapay/components";
 import { useTranslation } from "react-i18next";
 import { Account, useUpdateVoucherAmountMutation } from "@api";
 import { toast } from "react-toastify";
+import { useCurrentNode } from "@hooks";
 
 export interface EditAccountVoucherAmountModalProps {
   account: Account;
@@ -17,6 +18,7 @@ export const EditAccountVoucherAmountModal: React.FC<EditAccountVoucherAmountMod
   handleClose,
 }) => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
 
   const [updateVoucherAmount] = useUpdateVoucherAmountMutation();
 
@@ -27,7 +29,11 @@ export const EditAccountVoucherAmountModal: React.FC<EditAccountVoucherAmountMod
   }, [account]);
 
   const handleConfirm = () => {
-    updateVoucherAmount({ accountId: account.id, updateVoucherAmountPayload: { new_voucher_amount: voucherAmount } })
+    updateVoucherAmount({
+      nodeId: currentNode.id,
+      accountId: account.id,
+      updateVoucherAmountPayload: { new_voucher_amount: voucherAmount },
+    })
       .unwrap()
       .then(() => {
         handleClose();

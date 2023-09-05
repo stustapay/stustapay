@@ -9,7 +9,7 @@ import {
 } from "@/api";
 import { CashierRoutes, TillRegistersRoutes, TillRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -21,17 +21,21 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export const TillRegisterList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { data: tills } = useListTillsQuery();
-  const { data: cashiers } = useListCashiersQuery();
-  const { stockings: registers, isLoading } = useListCashRegistersAdminQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      stockings: data ? selectTillRegisterAll(data) : undefined,
-    }),
-  });
+  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: cashiers } = useListCashiersQuery({ nodeId: currentNode.id });
+  const { stockings: registers, isLoading } = useListCashRegistersAdminQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        stockings: data ? selectTillRegisterAll(data) : undefined,
+      }),
+    }
+  );
   const [deleteRegister] = useDeleteRegisterMutation();
 
   const [registerToDelete, setToDelete] = React.useState<number | null>(null);
@@ -45,7 +49,7 @@ export const TillRegisterList: React.FC = () => {
 
   const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && registerToDelete !== null) {
-      deleteRegister({ registerId: registerToDelete })
+      deleteRegister({ nodeId: currentNode.id, registerId: registerToDelete })
         .unwrap()
         .catch(() => undefined);
     }

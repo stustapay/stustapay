@@ -6,7 +6,7 @@ import {
   useListUsersQuery,
 } from "@api";
 import { DetailLayout } from "@components";
-import { useCurrencyFormatter } from "@hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@hooks";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { getUserName } from "@stustapay/models";
@@ -19,8 +19,9 @@ export const CashierShiftDetail: React.FC = () => {
   const { t } = useTranslation();
   const { cashierId, shiftId } = useParams();
   const formatCurrency = useCurrencyFormatter();
+  const { currentNode } = useCurrentNode();
 
-  const { data: cashier } = useGetCashierQuery({ cashierId: Number(cashierId) });
+  const { data: cashier } = useGetCashierQuery({ nodeId: currentNode.id, cashierId: Number(cashierId) });
   const { cashierShift } = useGetCashierShiftsQuery(
     { cashierId: Number(cashierId) },
     {
@@ -30,7 +31,7 @@ export const CashierShiftDetail: React.FC = () => {
       }),
     }
   );
-  const { data: users } = useListUsersQuery();
+  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
 
   if (cashierShift === undefined || cashier === undefined || users === undefined) {
     return <Loading />;

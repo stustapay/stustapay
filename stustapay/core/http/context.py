@@ -173,6 +173,7 @@ def get_user_tag_service(request: Request) -> UserService:
 def get_tse_service(request: Request) -> TseService:
     return request.state.context.tse_service
 
+
 def get_tree_service(request: Request) -> TreeService:
     return request.state.context.tree_service
 

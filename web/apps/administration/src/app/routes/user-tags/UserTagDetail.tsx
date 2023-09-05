@@ -1,6 +1,7 @@
 import { AccountRoutes } from "@/app/routes";
 import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@api";
 import { DetailLayout, EditableListItem, ListItemLink } from "@components";
+import { useCurrentNode } from "@hooks";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DataGridTitle, Loading } from "@stustapay/components";
@@ -16,11 +17,15 @@ type HistoryEntry = ArrayElement<History>;
 
 export const UserTagDetail: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { userTagUidHex } = useParams();
   const navigate = useNavigate();
 
   const [updateComment] = useUpdateUserTagCommentMutation();
-  const { data, error, isLoading } = useGetUserTagDetailQuery({ userTagUidHex: userTagUidHex as string });
+  const { data, error, isLoading } = useGetUserTagDetailQuery({
+    nodeId: currentNode.id,
+    userTagUidHex: userTagUidHex as string,
+  });
 
   if (isLoading || (!data && !error)) {
     return <Loading />;
@@ -51,7 +56,11 @@ export const UserTagDetail: React.FC = () => {
   ];
 
   const handleUpdateComment = (newComment: string) => {
-    updateComment({ userTagUidHex: userTagUidHex as string, updateCommentPayload: { comment: newComment } });
+    updateComment({
+      nodeId: currentNode.id,
+      userTagUidHex: userTagUidHex as string,
+      updateCommentPayload: { comment: newComment },
+    });
   };
 
   return (

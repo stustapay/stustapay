@@ -3,6 +3,7 @@ import { Alert, Card, CardContent, List, ListItem, ListItemText, Typography } fr
 import { useTranslation } from "react-i18next";
 import { useGetProductStatsQuery } from "@api";
 import { Loading } from "@stustapay/components";
+import { useCurrentNode } from "@hooks";
 
 export interface DepositStatsCardProps {
   fromTimestamp?: string;
@@ -11,7 +12,9 @@ export interface DepositStatsCardProps {
 
 export const DepositStatsCard: React.FC<DepositStatsCardProps> = ({ fromTimestamp, toTimestamp }) => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { data, error } = useGetProductStatsQuery({
+    nodeId: currentNode.id,
     fromTimestamp: fromTimestamp,
     toTimestamp: toTimestamp,
   });

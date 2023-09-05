@@ -1,5 +1,5 @@
 import { usePendingPayoutDetailQuery } from "@/api";
-import { useCurrencyFormatter } from "@hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@hooks";
 import { List, ListItem, ListItemText, Paper, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
@@ -7,8 +7,9 @@ import { useTranslation } from "react-i18next";
 
 export const PendingPayoutDetail: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
-  const { data: pendingPayoutDetail } = usePendingPayoutDetailQuery();
+  const { data: pendingPayoutDetail } = usePendingPayoutDetailQuery({ nodeId: currentNode.id });
 
   return (
     <Paper sx={{ p: 3 }}>

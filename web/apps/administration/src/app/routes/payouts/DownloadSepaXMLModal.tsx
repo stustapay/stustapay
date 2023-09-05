@@ -1,4 +1,5 @@
 import { usePayoutRunSepaXmlExportMutation } from "@api";
+import { useCurrentNode } from "@hooks";
 import { Download as DownloadIcon } from "@mui/icons-material";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -30,6 +31,7 @@ const initialValues: FormValues = {
 
 export const DownloadSepaXMLModal: React.FC<DownloadSepaXMLModalProps> = ({ payoutRunId, show, onClose }) => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [sepaExport] = usePayoutRunSepaXmlExportMutation();
 
   const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
@@ -43,6 +45,7 @@ export const DownloadSepaXMLModal: React.FC<DownloadSepaXMLModalProps> = ({ payo
       console.log("exporting sepa");
       const data = await sepaExport({
         payoutRunId: payoutRunId,
+        nodeId: currentNode.id,
         createSepaXmlPayload: { execution_date: isoDate, batch_size: values.batch_size },
       }).unwrap();
       data.forEach((batch, index) => {

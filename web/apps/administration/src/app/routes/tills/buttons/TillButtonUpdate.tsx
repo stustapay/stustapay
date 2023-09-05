@@ -1,6 +1,7 @@
 import { TillButtonsRoutes } from "@/app/routes";
 import { useGetTillButtonQuery, useUpdateTillButtonMutation } from "@api";
 import { EditLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTillButtonSchema } from "@stustapay/models";
 import * as React from "react";
@@ -10,8 +11,13 @@ import { TillButtonForm } from "./TillButtonForm";
 
 export const TillButtonUpdate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { buttonId } = useParams();
-  const { data: button, isLoading, error } = useGetTillButtonQuery({ buttonId: Number(buttonId) });
+  const {
+    data: button,
+    isLoading,
+    error,
+  } = useGetTillButtonQuery({ nodeId: currentNode.id, buttonId: Number(buttonId) });
   const [updateButton] = useUpdateTillButtonMutation();
 
   if (error) {
@@ -29,7 +35,7 @@ export const TillButtonUpdate: React.FC = () => {
       successRoute={TillButtonsRoutes.detail(button.id)}
       initialValues={button}
       validationSchema={UpdateTillButtonSchema}
-      onSubmit={(b) => updateButton({ buttonId: button.id, newTillButton: b })}
+      onSubmit={(b) => updateButton({ nodeId: currentNode.id, buttonId: button.id, newTillButton: b })}
       form={TillButtonForm}
     />
   );

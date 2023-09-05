@@ -1,6 +1,7 @@
 import { TillRegistersRoutes } from "@/app/routes";
 import { useCreateRegisterMutation } from "@api";
 import { CreateLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { NewTillRegister, NewTillRegisterSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -12,6 +13,7 @@ const initialValues: NewTillRegister = {
 
 export const TillRegisterCreate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [createRegister] = useCreateRegisterMutation();
 
   return (
@@ -21,7 +23,7 @@ export const TillRegisterCreate: React.FC = () => {
       successRoute={TillRegistersRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTillRegisterSchema}
-      onSubmit={(register) => createRegister({ newCashRegister: register })}
+      onSubmit={(register) => createRegister({ nodeId: currentNode.id, newCashRegister: register })}
       form={TillRegisterForm}
     />
   );

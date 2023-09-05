@@ -2,6 +2,7 @@ import { useDeleteUserMutation, useGetUserQuery } from "@/api";
 import { UserRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler } from "@/components";
 import { DetailLayout } from "@components/layouts";
+import { useCurrentNode } from "@hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -12,10 +13,11 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const UserDetail: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { userId } = useParams();
   const navigate = useNavigate();
   const [deleteUser] = useDeleteUserMutation();
-  const { data: user, error } = useGetUserQuery({ userId: Number(userId) });
+  const { data: user, error } = useGetUserQuery({ nodeId: currentNode.id, userId: Number(userId) });
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error) {
@@ -28,7 +30,7 @@ export const UserDetail: React.FC = () => {
 
   const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteUser({ userId: Number(userId) }).then(() => navigate(UserRoutes.list()));
+      deleteUser({ nodeId: currentNode.id, userId: Number(userId) }).then(() => navigate(UserRoutes.list()));
     }
     setShowConfirmDelete(false);
   };

@@ -1,5 +1,6 @@
 import { selectAccountAll, useFindAccountsMutation } from "@/api";
 import { DetailLayout } from "@/components";
+import { useCurrentNode } from "@hooks";
 import { Button, LinearProgress, Paper, TextField } from "@mui/material";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
@@ -21,11 +22,12 @@ const initialValues: SearchForm = {
 
 export const FindAccounts: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [findAccounts, searchResult] = useFindAccountsMutation();
 
   const handleSubmit = (values: SearchForm, { setSubmitting }: FormikHelpers<SearchForm>) => {
     setSubmitting(true);
-    findAccounts({ findAccountPayload: { search_term: values.searchTerm } })
+    findAccounts({ nodeId: currentNode.id, findAccountPayload: { search_term: values.searchTerm } })
       .unwrap()
       .then(() => {
         setSubmitting(false);

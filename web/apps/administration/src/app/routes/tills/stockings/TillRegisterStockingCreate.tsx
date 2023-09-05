@@ -1,6 +1,7 @@
 import { TillStockingsRoutes } from "@/app/routes";
 import { useCreateRegisterStockingMutation } from "@api";
 import { CreateLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { NewTillRegisterStocking, NewTillRegisterStockingSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -27,6 +28,7 @@ const initialValues: NewTillRegisterStocking = {
 
 export const TillRegisterStockingCreate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [createStocking] = useCreateRegisterStockingMutation();
 
   return (
@@ -36,7 +38,7 @@ export const TillRegisterStockingCreate: React.FC = () => {
       successRoute={TillStockingsRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTillRegisterStockingSchema}
-      onSubmit={(stocking) => createStocking({ newCashRegisterStocking: stocking })}
+      onSubmit={(stocking) => createStocking({ nodeId: currentNode.id, newCashRegisterStocking: stocking })}
       form={TillRegisterStockingForm}
     />
   );

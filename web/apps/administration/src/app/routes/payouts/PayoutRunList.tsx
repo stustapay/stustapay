@@ -1,7 +1,7 @@
 import { PayoutRunWithStats, selectPayoutRunAll, useListPayoutRunsQuery } from "@/api";
 import { PayoutRunRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrencyFormatter } from "@hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -12,33 +12,22 @@ import { PendingPayoutDetail } from "./PendingPayoutDetail";
 
 export const PayoutRunList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
 
-  const { payoutRuns, isLoading: isPayoutRunsLoading } = useListPayoutRunsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      payoutRuns: data ? selectPayoutRunAll(data) : undefined,
-    }),
-  });
-  //   const [deletePayoutRun] = useDeletePayoutRunMutation();
+  const { payoutRuns, isLoading: isPayoutRunsLoading } = useListPayoutRunsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        payoutRuns: data ? selectPayoutRunAll(data) : undefined,
+      }),
+    }
+  );
 
-  //   const [tseToDelete, setPayoutRunToDelete] = React.useState<number | null>(null);
   if (isPayoutRunsLoading) {
     return <Loading />;
   }
-
-  //   const openConfirmDeleteDialog = (tseId: number) => {
-  //     setPayoutRunToDelete(tseId);
-  //   };
-
-  //   const handleConfirmDeletePayoutRun: ConfirmDialogCloseHandler = (reason) => {
-  //     if (reason === "confirm" && tseToDelete !== null) {
-  //       deletePayoutRun({ tseId: tseToDelete })
-  //         .unwrap()
-  //         .catch(() => undefined);
-  //     }
-  //     setPayoutRunToDelete(null);
-  //   };
 
   const columns: GridColDef<PayoutRunWithStats>[] = [
     {
@@ -80,26 +69,6 @@ export const PayoutRunList: React.FC = () => {
       type: "number",
       minWidth: 150,
     },
-    // {
-    //   field: "actions",
-    //   type: "actions",
-    //   headerName: t("actions") as string,
-    //   width: 150,
-    //   getActions: (params) => [
-    //     <GridActionsCellItem
-    //       icon={<EditIcon />}
-    //       color="primary"
-    //       label={t("edit")}
-    //       onClick={() => navigate(PayoutRunRoutes.edit(params.row.tse_id))}
-    //     />,
-    //     <GridActionsCellItem
-    //       icon={<DeleteIcon />}
-    //       color="error"
-    //       label={t("delete")}
-    //       onClick={() => openConfirmDeleteDialog(params.row.id)}
-    //     />,
-    //   ],
-    // },
   ];
 
   return (
@@ -117,12 +86,6 @@ export const PayoutRunList: React.FC = () => {
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
-      {/* <ConfirmDialog
-        title={t("tse.delete")}
-        body={t("tse.deleteDescription")}
-        show={tseToDelete !== null}
-        onClose={handleConfirmDeletePayoutRun}
-      /> */}
     </ListLayout>
   );
 };

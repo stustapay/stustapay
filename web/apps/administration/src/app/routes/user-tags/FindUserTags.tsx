@@ -1,5 +1,6 @@
 import { selectUserTagAll, useFindUserTagsMutation } from "@/api";
 import { DetailLayout } from "@/components";
+import { useCurrentNode } from "@hooks";
 import { Button, LinearProgress, Paper, TextField } from "@mui/material";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
@@ -21,11 +22,12 @@ const initialValues: SearchForm = {
 
 export const FindUserTags: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [findUserTags, searchResult] = useFindUserTagsMutation();
 
   const handleSubmit = (values: SearchForm, { setSubmitting }: FormikHelpers<SearchForm>) => {
     setSubmitting(true);
-    findUserTags({ findUserTagPayload: { search_term: values.searchTerm } })
+    findUserTags({ nodeId: currentNode.id, findUserTagPayload: { search_term: values.searchTerm } })
       .unwrap()
       .then(() => {
         setSubmitting(false);

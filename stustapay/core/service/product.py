@@ -16,7 +16,11 @@ from stustapay.core.schema.product import (
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
 from stustapay.core.service.common.error import ServiceException
 
 
@@ -65,6 +69,7 @@ class ProductService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
+    @requires_node()
     async def create_product(self, *, conn: Connection, product: NewProduct) -> Product:
         product_id = await conn.fetchval(
             "insert into product "
@@ -94,16 +99,19 @@ class ProductService(DBService):
 
     @with_db_transaction
     @requires_user()
+    @requires_node()
     async def list_products(self, *, conn: Connection) -> list[Product]:
         return await conn.fetch_many(Product, "select * from product_with_tax_and_restrictions")
 
     @with_db_transaction
     @requires_user()
+    @requires_node()
     async def get_product(self, *, conn: Connection, product_id: int) -> Optional[Product]:
         return await fetch_product(conn=conn, product_id=product_id)
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
+    @requires_node()
     async def update_product(self, *, conn: Connection, product_id: int, product: NewProduct) -> Optional[Product]:
         current_product = await fetch_product(conn=conn, product_id=product_id)
         if current_product is None:
@@ -152,6 +160,7 @@ class ProductService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
+    @requires_node()
     async def delete_product(self, *, conn: Connection, product_id: int) -> bool:
         result = await conn.execute(
             "delete from product where id = $1",

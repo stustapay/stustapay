@@ -8,7 +8,7 @@ import {
 } from "@/api";
 import { TillLayoutRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout } from "@/components";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, List, ListItem, ListItemText, Paper, Tab } from "@mui/material";
@@ -20,13 +20,14 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const TillLayoutDetail: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { layoutId } = useParams();
   const formatCurrency = useCurrencyFormatter();
   const navigate = useNavigate();
   const [deleteLayout] = useDeleteTillLayoutMutation();
-  const { data: layout, error } = useGetTillLayoutQuery({ layoutId: Number(layoutId) });
-  const { data: buttons, error: buttonsError } = useListTillButtonsQuery();
-  const { data: tickets, error: ticketsError } = useListTicketsQuery();
+  const { data: layout, error } = useGetTillLayoutQuery({ nodeId: currentNode.id, layoutId: Number(layoutId) });
+  const { data: buttons, error: buttonsError } = useListTillButtonsQuery({ nodeId: currentNode.id });
+  const { data: tickets, error: ticketsError } = useListTicketsQuery({ nodeId: currentNode.id });
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   const [selectedTab, setSelectedTab] = React.useState<"buttons" | "tickets">("buttons");
@@ -41,7 +42,9 @@ export const TillLayoutDetail: React.FC = () => {
 
   const handleConfirmDeleteLayout: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteLayout({ layoutId: Number(layoutId) }).then(() => navigate(TillLayoutRoutes.list()));
+      deleteLayout({ nodeId: currentNode.id, layoutId: Number(layoutId) }).then(() =>
+        navigate(TillLayoutRoutes.list())
+      );
     }
     setShowConfirmDelete(false);
   };

@@ -1,6 +1,7 @@
 import { selectTseById, useListTsesQuery, useUpdateTseMutation } from "@/api";
 import { TseRoutes } from "@/app/routes";
 import { EditLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTseSchema } from "@stustapay/models";
 import * as React from "react";
@@ -11,12 +12,16 @@ import { UpdateTseForm } from "./UpdateTseForm";
 export const TseUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { tseId } = useParams();
-  const { tse, isLoading, error } = useListTsesQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      tse: data ? selectTseById(data, Number(tseId)) : undefined,
-    }),
-  });
+  const { currentNode } = useCurrentNode();
+  const { tse, isLoading, error } = useListTsesQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        tse: data ? selectTseById(data, Number(tseId)) : undefined,
+      }),
+    }
+  );
   const [updateTse] = useUpdateTseMutation();
 
   if (isLoading || !tse) {
@@ -34,7 +39,7 @@ export const TseUpdate: React.FC = () => {
       submitLabel={t("update")}
       initialValues={tse}
       validationSchema={UpdateTseSchema}
-      onSubmit={(t) => updateTse({ tseId: tse.id, updateTse: t })}
+      onSubmit={(t) => updateTse({ nodeId: currentNode.id, tseId: tse.id, updateTse: t })}
       form={UpdateTseForm}
     />
   );

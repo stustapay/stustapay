@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { selectUserRoleAll, useListUserRolesQuery } from "@api";
 import * as React from "react";
+import { useCurrentNode } from "@hooks";
 
 export interface RoleSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
   label: string;
@@ -30,12 +31,16 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { roles } = useListUserRolesQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      roles: data ? selectUserRoleAll(data) : [],
-    }),
-  });
+  const { currentNode } = useCurrentNode();
+  const { roles } = useListUserRolesQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        roles: data ? selectUserRoleAll(data) : [],
+      }),
+    }
+  );
 
   const handleChange = (evt: SelectChangeEvent<unknown>) => {
     const newVal = evt.target.value;

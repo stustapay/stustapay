@@ -24,6 +24,7 @@ from stustapay.core.schema.user import (
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
+    requires_node,
     requires_terminal,
     requires_user,
     with_db_transaction,
@@ -52,21 +53,25 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def create_till(self, *, conn: Connection, till: NewTill) -> Till:
         return await create_till(conn=conn, till=till)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def list_tills(self, *, conn: Connection) -> list[Till]:
         return await conn.fetch_many(Till, "select * from till_with_cash_register")
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def get_till(self, *, conn: Connection, till_id: int) -> Optional[Till]:
         return await fetch_till(conn=conn, till_id=till_id)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def update_till(self, *, conn: Connection, till_id: int, till: NewTill) -> Optional[Till]:
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5 "
@@ -84,6 +89,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def delete_till(self, *, conn: Connection, till_id: int) -> bool:
         result = await conn.execute(
             "delete from till where id = $1",
@@ -109,6 +115,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def logout_terminal_id(self, *, conn: Connection, till_id: int) -> bool:
         id_ = await conn.fetchval(
             "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
@@ -128,6 +135,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def force_logout_user(self, *, conn: Connection, till_id: int):
         result = await conn.fetchval(
             "update till set active_user_id = null, active_user_role_id = null where id = $1 returning id",

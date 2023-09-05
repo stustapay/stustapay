@@ -5,6 +5,7 @@ import { ProductSoldStats, selectTillAll, useGetProductStatsQuery, useListTillsQ
 import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Link as RouterLink } from "react-router-dom";
+import { useCurrentNode } from "@hooks";
 
 export interface TillStatsTableProps {
   fromTimestamp?: string;
@@ -13,12 +14,14 @@ export interface TillStatsTableProps {
 
 export const TillStatsTable: React.FC<TillStatsTableProps> = ({ toTimestamp, fromTimestamp }) => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { data } = useGetProductStatsQuery({
+    nodeId: currentNode.id,
     fromTimestamp: fromTimestamp,
     toTimestamp: toTimestamp,
   });
   const [selectedTill, setSelectedTill] = React.useState<number | null>(null);
-  const { data: tills } = useListTillsQuery();
+  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
 
   if (!data || !tills) {
     return <Loading />;

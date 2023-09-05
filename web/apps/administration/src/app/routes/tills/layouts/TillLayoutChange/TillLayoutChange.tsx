@@ -6,6 +6,7 @@ import {
   useListTicketsQuery,
   useListTillButtonsQuery,
 } from "@api";
+import { useCurrentNode } from "@hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, LinearProgress, Paper, Tab, TextField, Typography } from "@mui/material";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
@@ -36,19 +37,26 @@ export function TillLayoutChange<T extends NewTillLayout>({
 }: TillChangeProps<T>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
 
-  const { buttons } = useListTillButtonsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      buttons: data ? selectTillButtonAll(data) : undefined,
-    }),
-  });
-  const { tickets } = useListTicketsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      tickets: data ? selectTicketAll(data) : undefined,
-    }),
-  });
+  const { buttons } = useListTillButtonsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        buttons: data ? selectTillButtonAll(data) : undefined,
+      }),
+    }
+  );
+  const { tickets } = useListTicketsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        tickets: data ? selectTicketAll(data) : undefined,
+      }),
+    }
+  );
 
   const [selectedTab, setSelectedTab] = React.useState<"buttons" | "tickets">("buttons");
 

@@ -3,6 +3,7 @@ import { Grid, Alert, Card, CardContent, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useGetProductStatsQuery } from "@api";
 import { Loading } from "@stustapay/components";
+import { useCurrentNode } from "@hooks";
 
 export interface VoucherStatsCardProps {
   fromTimestamp?: string;
@@ -11,7 +12,9 @@ export interface VoucherStatsCardProps {
 
 export const VoucherStatsCard: React.FC<VoucherStatsCardProps> = ({ fromTimestamp, toTimestamp }) => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { data, error } = useGetProductStatsQuery({
+    nodeId: currentNode.id,
     fromTimestamp: fromTimestamp,
     toTimestamp: toTimestamp,
   });

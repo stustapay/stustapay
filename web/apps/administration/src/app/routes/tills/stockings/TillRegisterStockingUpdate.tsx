@@ -5,6 +5,7 @@ import {
 } from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
+import { useCurrentNode } from "@hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTillRegisterStockingSchema } from "@stustapay/models";
 import * as React from "react";
@@ -14,13 +15,17 @@ import { TillRegisterStockingForm } from "./TillRegisterStockingForm";
 
 export const TillRegisterStockingUpdate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { stockingId } = useParams();
-  const { stocking, isLoading, error } = useListRegisterStockingsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      stocking: data ? selectTillRegisterStockingById(data, Number(stockingId)) : undefined,
-    }),
-  });
+  const { stocking, isLoading, error } = useListRegisterStockingsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        stocking: data ? selectTillRegisterStockingById(data, Number(stockingId)) : undefined,
+      }),
+    }
+  );
   const [updateStocking] = useUpdateRegisterStockingMutation();
 
   if (error) {
@@ -38,7 +43,7 @@ export const TillRegisterStockingUpdate: React.FC = () => {
       successRoute={TillStockingsRoutes.detail(stocking.id)}
       initialValues={stocking}
       validationSchema={UpdateTillRegisterStockingSchema}
-      onSubmit={(s) => updateStocking({ stockingId: stocking.id, newCashRegisterStocking: s })}
+      onSubmit={(s) => updateStocking({ nodeId: currentNode.id, stockingId: stocking.id, newCashRegisterStocking: s })}
       form={TillRegisterStockingForm}
     />
   );

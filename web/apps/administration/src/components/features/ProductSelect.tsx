@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { selectProductAll, useListProductsQuery } from "@api";
 import * as React from "react";
+import { useCurrentNode } from "@hooks";
 
 export interface ProductSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
   label: string;
@@ -27,12 +28,16 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({
   margin,
   ...props
 }) => {
-  const { products } = useListProductsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      products: data ? selectProductAll(data) : [],
-    }),
-  });
+  const { currentNode } = useCurrentNode();
+  const { products } = useListProductsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        products: data ? selectProductAll(data) : [],
+      }),
+    }
+  );
 
   const handleChange = (evt: SelectChangeEvent<unknown>) => {
     if (!isNaN(Number(evt.target.value))) {

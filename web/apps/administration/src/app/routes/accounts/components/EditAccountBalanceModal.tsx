@@ -12,7 +12,7 @@ import {
 import { NumericInput } from "@stustapay/components";
 import { useTranslation } from "react-i18next";
 import { Account, useUpdateBalanceMutation } from "@api";
-import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
+import { useCurrencyFormatter, useCurrencySymbol, useCurrentNode } from "@hooks";
 import { toast } from "react-toastify";
 
 export interface EditAccountBalanceModalProps {
@@ -23,6 +23,7 @@ export interface EditAccountBalanceModalProps {
 
 export const EditAccountBalanceModal: React.FC<EditAccountBalanceModalProps> = ({ account, open, handleClose }) => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
 
   const formatCurrency = useCurrencyFormatter();
   const currencySymbol = useCurrencySymbol();
@@ -35,7 +36,7 @@ export const EditAccountBalanceModal: React.FC<EditAccountBalanceModalProps> = (
   }, [account]);
 
   const handleConfirm = () => {
-    updateBalance({ accountId: account.id, updateBalancePayload: { new_balance: balance } })
+    updateBalance({ nodeId: currentNode.id, accountId: account.id, updateBalancePayload: { new_balance: balance } })
       .unwrap()
       .then(() => {
         handleClose();

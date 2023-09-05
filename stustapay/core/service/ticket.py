@@ -8,7 +8,11 @@ from stustapay.core.schema.ticket import NewTicket, Ticket
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
 
 
 async def fetch_ticket(*, conn: Connection, ticket_id: int) -> Optional[Ticket]:
@@ -22,6 +26,7 @@ class TicketService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
+    @requires_node()
     async def create_ticket(self, *, conn: Connection, ticket: NewTicket) -> Ticket:
         ticket_id = await conn.fetchval(
             "insert into ticket "
@@ -43,16 +48,19 @@ class TicketService(DBService):
 
     @with_db_transaction
     @requires_user()
+    @requires_node()
     async def list_tickets(self, *, conn: Connection) -> list[Ticket]:
         return await conn.fetch_many(Ticket, "select * from ticket_with_product")
 
     @with_db_transaction
     @requires_user()
+    @requires_node()
     async def get_ticket(self, *, conn: Connection, ticket_id: int) -> Optional[Ticket]:
         return await fetch_ticket(conn=conn, ticket_id=ticket_id)
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
+    @requires_node()
     async def update_ticket(self, *, conn: Connection, ticket_id: int, ticket: NewTicket) -> Optional[Ticket]:
         row = await conn.fetchrow(
             "update ticket set name = $2, description = $3, product_id = $4, initial_top_up_amount = $5, "
@@ -73,6 +81,7 @@ class TicketService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
+    @requires_node()
     async def delete_ticket(self, *, conn: Connection, ticket_id: int) -> bool:
         result = await conn.execute(
             "delete from ticket where id = $1",

@@ -1,6 +1,7 @@
 import { useCreateUserMutation } from "@/api";
 import { UserRoutes } from "@/app/routes";
 import { CreateLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { NewUser, NewUserSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -16,6 +17,7 @@ const initialValues: NewUser = {
 
 export const UserCreate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [createUser] = useCreateUserMutation();
 
   return (
@@ -25,7 +27,7 @@ export const UserCreate: React.FC = () => {
       validationSchema={NewUserSchema}
       submitLabel={t("add")}
       successRoute={UserRoutes.list()}
-      onSubmit={(u) => createUser({ createUserPayload: u })}
+      onSubmit={(u) => createUser({ nodeId: currentNode.id, createUserPayload: u })}
       form={UserCreateForm}
     />
   );

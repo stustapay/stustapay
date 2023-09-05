@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import curses
+
 # import functools
 import logging
 from curses import wrapper
@@ -10,6 +11,7 @@ import asyncpg
 
 from stustapay.core.database import Connection, create_db_pool
 from stustapay.core.subcommand import SubCommand
+
 from .config import Config
 
 LOGGER = logging.getLogger(__name__)

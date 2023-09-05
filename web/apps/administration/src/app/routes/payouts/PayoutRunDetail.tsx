@@ -7,7 +7,7 @@ import {
 } from "@/api";
 import { AccountRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailLayout } from "@/components";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { FileDownload as FileDownloadIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemText, Paper, Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -21,17 +21,21 @@ import { DownloadSepaXMLModal } from "./DownloadSepaXMLModal";
 export const PayoutRunDetail: React.FC = () => {
   const { t } = useTranslation();
   const { payoutRunId } = useParams();
+  const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const [showSepaModal, setShowSepaModal] = React.useState(false);
 
   const [csvExport] = usePayoutRunCsvExportMutation();
-  const { payoutRun, error } = useListPayoutRunsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      payoutRun: data ? selectPayoutRunById(data, Number(payoutRunId)) : undefined,
-    }),
-  });
-  const { data: payouts } = usePayoutRunPayoutsQuery({ payoutRunId: Number(payoutRunId) });
+  const { payoutRun, error } = useListPayoutRunsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        payoutRun: data ? selectPayoutRunById(data, Number(payoutRunId)) : undefined,
+      }),
+    }
+  );
+  const { data: payouts } = usePayoutRunPayoutsQuery({ nodeId: currentNode.id, payoutRunId: Number(payoutRunId) });
 
   if (error) {
     return <Navigate to={PayoutRunRoutes.list()} />;
@@ -43,7 +47,11 @@ export const PayoutRunDetail: React.FC = () => {
 
   const downloadCsv = async () => {
     try {
-      const data = await csvExport({ payoutRunId: Number(payoutRunId), createCsvPayload: {} }).unwrap();
+      const data = await csvExport({
+        nodeId: currentNode.id,
+        payoutRunId: Number(payoutRunId),
+        createCsvPayload: {},
+      }).unwrap();
       const url = window.URL.createObjectURL(new Blob([data[0]], { type: "text/csv" }));
       const link = document.createElement("a");
       link.setAttribute("href", url);

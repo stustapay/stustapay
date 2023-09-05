@@ -21,6 +21,8 @@ from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.service.user_tag import UserTagService
 from stustapay.core.subcommand import SubCommand
+
+from ..core.service.tree import TreeService
 from .routers import account, auth, cashier
 from .routers import config as config_router
 from .routers import (
@@ -36,12 +38,11 @@ from .routers import (
     till_profile,
     till_register_stockings,
     till_registers,
+    tree,
     tse,
     user,
     user_tag,
-    tree
 )
-from ..core.service.tree import TreeService
 
 
 class Api(SubCommand):

@@ -1,5 +1,6 @@
 import { NewTillButton, Product, selectProductById, useListProductsQuery } from "@/api";
 import { ProductSelect } from "@components/features";
+import { useCurrentNode } from "@hooks";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, TextField } from "@mui/material";
 import { FormikProps } from "formik";
@@ -13,7 +14,8 @@ interface ProductSelectProps {
 
 const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }) => {
   const { t } = useTranslation();
-  const { data: products } = useListProductsQuery();
+  const { currentNode } = useCurrentNode();
+  const { data: products } = useListProductsQuery({ nodeId: currentNode.id });
 
   const getProductById = (id: number) => (products != null ? selectProductById(products, id) : undefined);
   const mapped = products ? (productIds.map((id) => getProductById(id)) as Product[]) : [];

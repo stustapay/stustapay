@@ -1,6 +1,7 @@
 import { TillRoutes } from "@/app/routes";
 import { useCreateTillMutation } from "@api";
 import { CreateLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { NewTill, NewTillSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -16,6 +17,7 @@ const initialValues: NewTill = {
 
 export const TillCreate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [createTill] = useCreateTillMutation();
 
   return (
@@ -25,7 +27,7 @@ export const TillCreate: React.FC = () => {
       successRoute={TillRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTillSchema}
-      onSubmit={(till) => createTill({ newTill: till })}
+      onSubmit={(till) => createTill({ nodeId: currentNode.id, newTill: till })}
       form={TillForm}
     />
   );

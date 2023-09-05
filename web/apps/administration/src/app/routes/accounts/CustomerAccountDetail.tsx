@@ -8,7 +8,7 @@ import {
 import { UserTagRoutes } from "@/app/routes";
 import { DetailLayout, EditableListItem } from "@/components";
 import { OrderTable } from "@/components/features";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
 import { IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -25,6 +25,7 @@ import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAm
 export const CustomerAccountDetail: React.FC<{ account: Account }> = ({ account }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { currentNode } = useCurrentNode();
 
   const formatCurrency = useCurrencyFormatter();
   const [disableAccount] = useDisableAccountMutation();
@@ -39,7 +40,7 @@ export const CustomerAccountDetail: React.FC<{ account: Account }> = ({ account 
     error: orderError,
     isLoading: isOrdersLoading,
   } = useListOrdersQuery(
-    { customerAccountId: account.id },
+    { nodeId: currentNode.id, customerAccountId: account.id },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
@@ -59,7 +60,7 @@ export const CustomerAccountDetail: React.FC<{ account: Account }> = ({ account 
   }
 
   const handleDisableAccount = () => {
-    disableAccount({ accountId: account.id })
+    disableAccount({ nodeId: currentNode.id, accountId: account.id })
       .unwrap()
       .then(() => {
         toast.success(t("account.disableSuccess"));
@@ -71,7 +72,11 @@ export const CustomerAccountDetail: React.FC<{ account: Account }> = ({ account 
   };
 
   const handleUpdateComment = (newComment: string) => {
-    updateComment({ accountId: account.id, updateAccountCommentPayload: { comment: newComment } });
+    updateComment({
+      nodeId: currentNode.id,
+      accountId: account.id,
+      updateAccountCommentPayload: { comment: newComment },
+    });
   };
 
   return (

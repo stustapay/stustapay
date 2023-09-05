@@ -20,7 +20,8 @@ async def get_product_stats(
     order_service: ContextOrderService,
     to_timestamp: Optional[datetime] = None,
     from_timestamp: Optional[datetime] = None,
+    node_id: Optional[int] = None,
 ):
     return await order_service.stats.get_product_stats(
-        token=token, to_timestamp=to_timestamp, from_timestamp=from_timestamp
+        token=token, to_timestamp=to_timestamp, from_timestamp=from_timestamp, node_id=node_id
     )

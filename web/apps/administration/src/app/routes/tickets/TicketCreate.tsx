@@ -1,5 +1,6 @@
 import { TicketRoutes } from "@/app/routes";
 import { CreateLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { NewTicket, NewTicketSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -16,6 +17,7 @@ const initialValues: NewTicket = {
 
 export const TicketCreate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [createTicket] = useCreateTicketMutation();
 
   return (
@@ -25,7 +27,7 @@ export const TicketCreate: React.FC = () => {
       successRoute={TicketRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTicketSchema}
-      onSubmit={(ticket) => createTicket({ newTicket: ticket })}
+      onSubmit={(ticket) => createTicket({ nodeId: currentNode.id, newTicket: ticket })}
       form={TicketForm}
     />
   );

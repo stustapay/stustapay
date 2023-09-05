@@ -3,7 +3,7 @@ import { Card, CardActions, CardContent, Grid, Typography } from "@mui/material"
 import * as React from "react";
 import { Loading } from "@stustapay/components";
 import { SystemAccounts } from "@stustapay/models";
-import { useCurrencyFormatter } from "@hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@hooks";
 import { ButtonLink } from "@components";
 import { useTranslation } from "react-i18next";
 import { AccountRoutes } from "@/app/routes";
@@ -50,7 +50,8 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
 };
 
 export const MoneyOverview: React.FC = () => {
-  const { data, isLoading: isAccountsLoading } = useListSystemAccountsQuery();
+  const { currentNode } = useCurrentNode();
+  const { data, isLoading: isAccountsLoading } = useListSystemAccountsQuery({ nodeId: currentNode.id });
 
   if (!data || isAccountsLoading) {
     return <Loading />;

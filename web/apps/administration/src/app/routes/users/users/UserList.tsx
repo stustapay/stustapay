@@ -1,6 +1,7 @@
 import { selectUserAll, useDeleteUserMutation, useListUsersQuery } from "@/api";
 import { UserRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { useCurrentNode } from "@hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -12,14 +13,18 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export const UserList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
 
-  const { users, isLoading } = useListUsersQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      users: data ? selectUserAll(data) : undefined,
-    }),
-  });
+  const { users, isLoading } = useListUsersQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        users: data ? selectUserAll(data) : undefined,
+      }),
+    }
+  );
   const [deleteUser] = useDeleteUserMutation();
   const [userToDelete, setUserToDelete] = React.useState<number | null>(null);
 
@@ -33,7 +38,7 @@ export const UserList: React.FC = () => {
 
   const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && userToDelete !== null) {
-      deleteUser({ userId: userToDelete })
+      deleteUser({ nodeId: currentNode.id, userId: userToDelete })
         .unwrap()
         .catch(() => undefined);
     }

@@ -7,6 +7,7 @@ import {
 import { TillLayoutRoutes, TillProfileRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler } from "@/components";
 import { DetailLayout } from "@/components/layouts";
+import { useCurrentNode } from "@hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Checkbox, Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -16,12 +17,13 @@ import { Navigate, Link as RouterLink, useNavigate, useParams } from "react-rout
 
 export const TillProfileDetail: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { profileId } = useParams();
   const navigate = useNavigate();
   const [deleteProfile] = useDeleteTillProfileMutation();
-  const { data: profile, error } = useGetTillProfileQuery({ profileId: Number(profileId) });
+  const { data: profile, error } = useGetTillProfileQuery({ nodeId: currentNode.id, profileId: Number(profileId) });
 
-  const { data: layouts, error: layoutError } = useListTillLayoutsQuery();
+  const { data: layouts, error: layoutError } = useListTillLayoutsQuery({ nodeId: currentNode.id });
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error || layoutError) {
@@ -34,7 +36,9 @@ export const TillProfileDetail: React.FC = () => {
 
   const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm") {
-      deleteProfile({ profileId: Number(profileId) }).then(() => navigate(TillProfileRoutes.list()));
+      deleteProfile({ nodeId: currentNode.id, profileId: Number(profileId) }).then(() =>
+        navigate(TillProfileRoutes.list())
+      );
     }
     setShowConfirmDelete(false);
   };

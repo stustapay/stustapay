@@ -29,51 +29,84 @@ const injectedRtkApi = api
   .injectEndpoints({
     endpoints: (build) => ({
       listProducts: build.query<ListProductsApiResponse, ListProductsApiArg>({
-        query: () => ({ url: `/products` }),
+        query: (queryArg) => ({ url: `/products`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["products"],
       }),
       createProduct: build.mutation<CreateProductApiResponse, CreateProductApiArg>({
-        query: (queryArg) => ({ url: `/products`, method: "POST", body: queryArg.newProduct }),
+        query: (queryArg) => ({
+          url: `/products`,
+          method: "POST",
+          body: queryArg.newProduct,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["products"],
       }),
       getProduct: build.query<GetProductApiResponse, GetProductApiArg>({
-        query: (queryArg) => ({ url: `/products/${queryArg.productId}` }),
+        query: (queryArg) => ({ url: `/products/${queryArg.productId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["products"],
       }),
       updateProduct: build.mutation<UpdateProductApiResponse, UpdateProductApiArg>({
-        query: (queryArg) => ({ url: `/products/${queryArg.productId}`, method: "POST", body: queryArg.newProduct }),
+        query: (queryArg) => ({
+          url: `/products/${queryArg.productId}`,
+          method: "POST",
+          body: queryArg.newProduct,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["products"],
       }),
       deleteProduct: build.mutation<DeleteProductApiResponse, DeleteProductApiArg>({
-        query: (queryArg) => ({ url: `/products/${queryArg.productId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/products/${queryArg.productId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["products"],
       }),
       listUsers: build.query<ListUsersApiResponse, ListUsersApiArg>({
-        query: () => ({ url: `/users` }),
+        query: (queryArg) => ({ url: `/users`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["users"],
       }),
       createUser: build.mutation<CreateUserApiResponse, CreateUserApiArg>({
-        query: (queryArg) => ({ url: `/users`, method: "POST", body: queryArg.createUserPayload }),
+        query: (queryArg) => ({
+          url: `/users`,
+          method: "POST",
+          body: queryArg.createUserPayload,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["users"],
       }),
       getUser: build.query<GetUserApiResponse, GetUserApiArg>({
-        query: (queryArg) => ({ url: `/users/${queryArg.userId}` }),
+        query: (queryArg) => ({ url: `/users/${queryArg.userId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["users"],
       }),
       updateUser: build.mutation<UpdateUserApiResponse, UpdateUserApiArg>({
-        query: (queryArg) => ({ url: `/users/${queryArg.userId}`, method: "POST", body: queryArg.updateUserPayload }),
+        query: (queryArg) => ({
+          url: `/users/${queryArg.userId}`,
+          method: "POST",
+          body: queryArg.updateUserPayload,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["users"],
       }),
       deleteUser: build.mutation<DeleteUserApiResponse, DeleteUserApiArg>({
-        query: (queryArg) => ({ url: `/users/${queryArg.userId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/users/${queryArg.userId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["users"],
       }),
       listUserRoles: build.query<ListUserRolesApiResponse, ListUserRolesApiArg>({
-        query: () => ({ url: `/user-roles` }),
+        query: (queryArg) => ({ url: `/user-roles`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["user-roles"],
       }),
       createUserRole: build.mutation<CreateUserRoleApiResponse, CreateUserRoleApiArg>({
-        query: (queryArg) => ({ url: `/user-roles`, method: "POST", body: queryArg.newUserRole }),
+        query: (queryArg) => ({
+          url: `/user-roles`,
+          method: "POST",
+          body: queryArg.newUserRole,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["user-roles"],
       }),
       updateUserRole: build.mutation<UpdateUserRoleApiResponse, UpdateUserRoleApiArg>({
@@ -81,23 +114,33 @@ const injectedRtkApi = api
           url: `/user-roles/${queryArg.userRoleId}`,
           method: "POST",
           body: queryArg.updateUserRolePrivilegesPayload,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["user-roles"],
       }),
       deleteUserRole: build.mutation<DeleteUserRoleApiResponse, DeleteUserRoleApiArg>({
-        query: (queryArg) => ({ url: `/user-roles/${queryArg.userRoleId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/user-roles/${queryArg.userRoleId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["user-roles"],
       }),
       listTaxRates: build.query<ListTaxRatesApiResponse, ListTaxRatesApiArg>({
-        query: () => ({ url: `/tax-rates` }),
+        query: (queryArg) => ({ url: `/tax-rates`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["tax-rates"],
       }),
       createTaxRate: build.mutation<CreateTaxRateApiResponse, CreateTaxRateApiArg>({
-        query: (queryArg) => ({ url: `/tax-rates`, method: "POST", body: queryArg.taxRate }),
+        query: (queryArg) => ({
+          url: `/tax-rates`,
+          method: "POST",
+          body: queryArg.taxRate,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tax-rates"],
       }),
       getTaxRate: build.query<GetTaxRateApiResponse, GetTaxRateApiArg>({
-        query: (queryArg) => ({ url: `/tax-rates/${queryArg.taxRateName}` }),
+        query: (queryArg) => ({ url: `/tax-rates/${queryArg.taxRateName}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["tax-rates"],
       }),
       updateTaxRate: build.mutation<UpdateTaxRateApiResponse, UpdateTaxRateApiArg>({
@@ -105,11 +148,16 @@ const injectedRtkApi = api
           url: `/tax-rates/${queryArg.taxRateName}`,
           method: "POST",
           body: queryArg.taxRateWithoutName,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["tax-rates"],
       }),
       deleteTaxRate: build.mutation<DeleteTaxRateApiResponse, DeleteTaxRateApiArg>({
-        query: (queryArg) => ({ url: `/tax-rates/${queryArg.taxRateName}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/tax-rates/${queryArg.taxRateName}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tax-rates"],
       }),
       login: build.mutation<LoginApiResponse, LoginApiArg>({
@@ -125,43 +173,70 @@ const injectedRtkApi = api
         invalidatesTags: ["auth"],
       }),
       listTills: build.query<ListTillsApiResponse, ListTillsApiArg>({
-        query: () => ({ url: `/tills` }),
+        query: (queryArg) => ({ url: `/tills`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["tills"],
       }),
       createTill: build.mutation<CreateTillApiResponse, CreateTillApiArg>({
-        query: (queryArg) => ({ url: `/tills`, method: "POST", body: queryArg.newTill }),
+        query: (queryArg) => ({
+          url: `/tills`,
+          method: "POST",
+          body: queryArg.newTill,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tills"],
       }),
       getTill: build.query<GetTillApiResponse, GetTillApiArg>({
-        query: (queryArg) => ({ url: `/tills/${queryArg.tillId}` }),
+        query: (queryArg) => ({ url: `/tills/${queryArg.tillId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["tills"],
       }),
       updateTill: build.mutation<UpdateTillApiResponse, UpdateTillApiArg>({
-        query: (queryArg) => ({ url: `/tills/${queryArg.tillId}`, method: "POST", body: queryArg.newTill }),
+        query: (queryArg) => ({
+          url: `/tills/${queryArg.tillId}`,
+          method: "POST",
+          body: queryArg.newTill,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tills"],
       }),
       deleteTill: build.mutation<DeleteTillApiResponse, DeleteTillApiArg>({
-        query: (queryArg) => ({ url: `/tills/${queryArg.tillId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/tills/${queryArg.tillId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tills"],
       }),
       logoutTill: build.mutation<LogoutTillApiResponse, LogoutTillApiArg>({
-        query: (queryArg) => ({ url: `/tills/${queryArg.tillId}/logout`, method: "POST" }),
+        query: (queryArg) => ({
+          url: `/tills/${queryArg.tillId}/logout`,
+          method: "POST",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tills"],
       }),
       forceLogoutUser: build.mutation<ForceLogoutUserApiResponse, ForceLogoutUserApiArg>({
-        query: (queryArg) => ({ url: `/tills/${queryArg.tillId}/force-logout-user`, method: "POST" }),
+        query: (queryArg) => ({
+          url: `/tills/${queryArg.tillId}/force-logout-user`,
+          method: "POST",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tills"],
       }),
       listTillLayouts: build.query<ListTillLayoutsApiResponse, ListTillLayoutsApiArg>({
-        query: () => ({ url: `/till-layouts` }),
+        query: (queryArg) => ({ url: `/till-layouts`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["till-layouts"],
       }),
       createTillLayout: build.mutation<CreateTillLayoutApiResponse, CreateTillLayoutApiArg>({
-        query: (queryArg) => ({ url: `/till-layouts`, method: "POST", body: queryArg.newTillLayout }),
+        query: (queryArg) => ({
+          url: `/till-layouts`,
+          method: "POST",
+          body: queryArg.newTillLayout,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["till-layouts"],
       }),
       getTillLayout: build.query<GetTillLayoutApiResponse, GetTillLayoutApiArg>({
-        query: (queryArg) => ({ url: `/till-layouts/${queryArg.layoutId}` }),
+        query: (queryArg) => ({ url: `/till-layouts/${queryArg.layoutId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["till-layouts"],
       }),
       updateTillLayout: build.mutation<UpdateTillLayoutApiResponse, UpdateTillLayoutApiArg>({
@@ -169,23 +244,33 @@ const injectedRtkApi = api
           url: `/till-layouts/${queryArg.layoutId}`,
           method: "POST",
           body: queryArg.newTillLayout,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["till-layouts"],
       }),
       deleteTillLayout: build.mutation<DeleteTillLayoutApiResponse, DeleteTillLayoutApiArg>({
-        query: (queryArg) => ({ url: `/till-layouts/${queryArg.layoutId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/till-layouts/${queryArg.layoutId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["till-layouts"],
       }),
       listTillProfiles: build.query<ListTillProfilesApiResponse, ListTillProfilesApiArg>({
-        query: () => ({ url: `/till-profiles` }),
+        query: (queryArg) => ({ url: `/till-profiles`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["till-profiles"],
       }),
       createTillProfile: build.mutation<CreateTillProfileApiResponse, CreateTillProfileApiArg>({
-        query: (queryArg) => ({ url: `/till-profiles`, method: "POST", body: queryArg.newTillProfile }),
+        query: (queryArg) => ({
+          url: `/till-profiles`,
+          method: "POST",
+          body: queryArg.newTillProfile,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["till-profiles"],
       }),
       getTillProfile: build.query<GetTillProfileApiResponse, GetTillProfileApiArg>({
-        query: (queryArg) => ({ url: `/till-profiles/${queryArg.profileId}` }),
+        query: (queryArg) => ({ url: `/till-profiles/${queryArg.profileId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["till-profiles"],
       }),
       updateTillProfile: build.mutation<UpdateTillProfileApiResponse, UpdateTillProfileApiArg>({
@@ -193,23 +278,33 @@ const injectedRtkApi = api
           url: `/till-profiles/${queryArg.profileId}`,
           method: "POST",
           body: queryArg.newTillProfile,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["till-profiles"],
       }),
       deleteTillProfile: build.mutation<DeleteTillProfileApiResponse, DeleteTillProfileApiArg>({
-        query: (queryArg) => ({ url: `/till-profiles/${queryArg.profileId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/till-profiles/${queryArg.profileId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["till-profiles"],
       }),
       listTillButtons: build.query<ListTillButtonsApiResponse, ListTillButtonsApiArg>({
-        query: () => ({ url: `/till-buttons` }),
+        query: (queryArg) => ({ url: `/till-buttons`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["till-buttons"],
       }),
       createTillButton: build.mutation<CreateTillButtonApiResponse, CreateTillButtonApiArg>({
-        query: (queryArg) => ({ url: `/till-buttons`, method: "POST", body: queryArg.newTillButton }),
+        query: (queryArg) => ({
+          url: `/till-buttons`,
+          method: "POST",
+          body: queryArg.newTillButton,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["till-buttons"],
       }),
       getTillButton: build.query<GetTillButtonApiResponse, GetTillButtonApiArg>({
-        query: (queryArg) => ({ url: `/till-buttons/${queryArg.buttonId}` }),
+        query: (queryArg) => ({ url: `/till-buttons/${queryArg.buttonId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["till-buttons"],
       }),
       updateTillButton: build.mutation<UpdateTillButtonApiResponse, UpdateTillButtonApiArg>({
@@ -217,15 +312,20 @@ const injectedRtkApi = api
           url: `/till-buttons/${queryArg.buttonId}`,
           method: "POST",
           body: queryArg.newTillButton,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["till-buttons"],
       }),
       deleteTillButton: build.mutation<DeleteTillButtonApiResponse, DeleteTillButtonApiArg>({
-        query: (queryArg) => ({ url: `/till-buttons/${queryArg.buttonId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/till-buttons/${queryArg.buttonId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["till-buttons"],
       }),
       listRegisterStockings: build.query<ListRegisterStockingsApiResponse, ListRegisterStockingsApiArg>({
-        query: () => ({ url: `/till-register-stockings` }),
+        query: (queryArg) => ({ url: `/till-register-stockings`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["till-register-stockings"],
       }),
       createRegisterStocking: build.mutation<CreateRegisterStockingApiResponse, CreateRegisterStockingApiArg>({
@@ -233,6 +333,7 @@ const injectedRtkApi = api
           url: `/till-register-stockings`,
           method: "POST",
           body: queryArg.newCashRegisterStocking,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["till-register-stockings"],
       }),
@@ -241,19 +342,29 @@ const injectedRtkApi = api
           url: `/till-register-stockings/${queryArg.stockingId}`,
           method: "POST",
           body: queryArg.newCashRegisterStocking,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["till-register-stockings"],
       }),
       deleteRegisterStocking: build.mutation<DeleteRegisterStockingApiResponse, DeleteRegisterStockingApiArg>({
-        query: (queryArg) => ({ url: `/till-register-stockings/${queryArg.stockingId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/till-register-stockings/${queryArg.stockingId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["till-register-stockings"],
       }),
       listCashRegistersAdmin: build.query<ListCashRegistersAdminApiResponse, ListCashRegistersAdminApiArg>({
-        query: () => ({ url: `/till-registers` }),
+        query: (queryArg) => ({ url: `/till-registers`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["till-registers"],
       }),
       createRegister: build.mutation<CreateRegisterApiResponse, CreateRegisterApiArg>({
-        query: (queryArg) => ({ url: `/till-registers`, method: "POST", body: queryArg.newCashRegister }),
+        query: (queryArg) => ({
+          url: `/till-registers`,
+          method: "POST",
+          body: queryArg.newCashRegister,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["till-registers"],
       }),
       transferRegister: build.mutation<TransferRegisterApiResponse, TransferRegisterApiArg>({
@@ -261,6 +372,7 @@ const injectedRtkApi = api
           url: `/till-registers/transfer-register`,
           method: "POST",
           body: queryArg.transferRegisterPayload,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["till-registers"],
       }),
@@ -269,11 +381,16 @@ const injectedRtkApi = api
           url: `/till-registers/${queryArg.registerId}`,
           method: "POST",
           body: queryArg.newCashRegister,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["till-registers"],
       }),
       deleteRegister: build.mutation<DeleteRegisterApiResponse, DeleteRegisterApiArg>({
-        query: (queryArg) => ({ url: `/till-registers/${queryArg.registerId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/till-registers/${queryArg.registerId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["till-registers"],
       }),
       getPublicConfig: build.query<GetPublicConfigApiResponse, GetPublicConfigApiArg>({
@@ -289,19 +406,28 @@ const injectedRtkApi = api
         invalidatesTags: ["config"],
       }),
       listSystemAccounts: build.query<ListSystemAccountsApiResponse, ListSystemAccountsApiArg>({
-        query: () => ({ url: `/system-accounts` }),
+        query: (queryArg) => ({ url: `/system-accounts`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["accounts"],
       }),
       findAccounts: build.mutation<FindAccountsApiResponse, FindAccountsApiArg>({
-        query: (queryArg) => ({ url: `/accounts/find-accounts`, method: "POST", body: queryArg.findAccountPayload }),
+        query: (queryArg) => ({
+          url: `/accounts/find-accounts`,
+          method: "POST",
+          body: queryArg.findAccountPayload,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["accounts"],
       }),
       getAccount: build.query<GetAccountApiResponse, GetAccountApiArg>({
-        query: (queryArg) => ({ url: `/accounts/${queryArg.accountId}` }),
+        query: (queryArg) => ({ url: `/accounts/${queryArg.accountId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["accounts"],
       }),
       disableAccount: build.mutation<DisableAccountApiResponse, DisableAccountApiArg>({
-        query: (queryArg) => ({ url: `/accounts/${queryArg.accountId}/disable`, method: "POST" }),
+        query: (queryArg) => ({
+          url: `/accounts/${queryArg.accountId}/disable`,
+          method: "POST",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["accounts"],
       }),
       updateBalance: build.mutation<UpdateBalanceApiResponse, UpdateBalanceApiArg>({
@@ -309,6 +435,7 @@ const injectedRtkApi = api
           url: `/accounts/${queryArg.accountId}/update-balance`,
           method: "POST",
           body: queryArg.updateBalancePayload,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["accounts"],
       }),
@@ -317,6 +444,7 @@ const injectedRtkApi = api
           url: `/accounts/${queryArg.accountId}/update-voucher-amount`,
           method: "POST",
           body: queryArg.updateVoucherAmountPayload,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["accounts"],
       }),
@@ -325,6 +453,7 @@ const injectedRtkApi = api
           url: `/accounts/${queryArg.accountId}/update-tag-uid`,
           method: "POST",
           body: queryArg.updateTagUidPayload,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["accounts"],
       }),
@@ -333,23 +462,31 @@ const injectedRtkApi = api
           url: `/accounts/${queryArg.accountId}/update-comment`,
           method: "POST",
           body: queryArg.updateAccountCommentPayload,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["accounts"],
       }),
       listOrdersByTill: build.query<ListOrdersByTillApiResponse, ListOrdersByTillApiArg>({
-        query: (queryArg) => ({ url: `/orders/by-till/${queryArg.tillId}` }),
+        query: (queryArg) => ({ url: `/orders/by-till/${queryArg.tillId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["orders"],
       }),
       listOrders: build.query<ListOrdersApiResponse, ListOrdersApiArg>({
-        query: (queryArg) => ({ url: `/orders`, params: { customer_account_id: queryArg.customerAccountId } }),
+        query: (queryArg) => ({
+          url: `/orders`,
+          params: { customer_account_id: queryArg.customerAccountId, node_id: queryArg.nodeId },
+        }),
         providesTags: ["orders"],
       }),
       getOrder: build.query<GetOrderApiResponse, GetOrderApiArg>({
-        query: (queryArg) => ({ url: `/orders/${queryArg.orderId}` }),
+        query: (queryArg) => ({ url: `/orders/${queryArg.orderId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["orders"],
       }),
       cancelOrder: build.mutation<CancelOrderApiResponse, CancelOrderApiArg>({
-        query: (queryArg) => ({ url: `/orders/${queryArg.orderId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/orders/${queryArg.orderId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["orders"],
       }),
       editOrder: build.mutation<EditOrderApiResponse, EditOrderApiArg>({
@@ -357,25 +494,26 @@ const injectedRtkApi = api
           url: `/orders/${queryArg.orderId}/edit`,
           method: "POST",
           body: queryArg.editSaleProducts,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["orders"],
       }),
       listCashiers: build.query<ListCashiersApiResponse, ListCashiersApiArg>({
-        query: () => ({ url: `/cashiers` }),
+        query: (queryArg) => ({ url: `/cashiers`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["cashiers"],
       }),
       getCashier: build.query<GetCashierApiResponse, GetCashierApiArg>({
-        query: (queryArg) => ({ url: `/cashiers/${queryArg.cashierId}` }),
+        query: (queryArg) => ({ url: `/cashiers/${queryArg.cashierId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["cashiers"],
       }),
       getCashierShifts: build.query<GetCashierShiftsApiResponse, GetCashierShiftsApiArg>({
-        query: (queryArg) => ({ url: `/cashiers/${queryArg.cashierId}/shifts` }),
+        query: (queryArg) => ({ url: `/cashiers/${queryArg.cashierId}/shifts`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["cashiers"],
       }),
       getCashierShiftStats: build.query<GetCashierShiftStatsApiResponse, GetCashierShiftStatsApiArg>({
         query: (queryArg) => ({
           url: `/cashiers/${queryArg.cashierId}/shift-stats`,
-          params: { shift_id: queryArg.shiftId },
+          params: { shift_id: queryArg.shiftId, node_id: queryArg.nodeId },
         }),
         providesTags: ["cashiers"],
       }),
@@ -384,42 +522,66 @@ const injectedRtkApi = api
           url: `/cashiers/${queryArg.cashierId}/close-out`,
           method: "POST",
           body: queryArg.closeOut,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["cashiers"],
       }),
       getProductStats: build.query<GetProductStatsApiResponse, GetProductStatsApiArg>({
         query: (queryArg) => ({
           url: `/stats/products`,
-          params: { to_timestamp: queryArg.toTimestamp, from_timestamp: queryArg.fromTimestamp },
+          params: {
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+            node_id: queryArg.nodeId,
+          },
         }),
         providesTags: ["stats"],
       }),
       listTickets: build.query<ListTicketsApiResponse, ListTicketsApiArg>({
-        query: () => ({ url: `/tickets` }),
+        query: (queryArg) => ({ url: `/tickets`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["tickets"],
       }),
       createTicket: build.mutation<CreateTicketApiResponse, CreateTicketApiArg>({
-        query: (queryArg) => ({ url: `/tickets`, method: "POST", body: queryArg.newTicket }),
+        query: (queryArg) => ({
+          url: `/tickets`,
+          method: "POST",
+          body: queryArg.newTicket,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tickets"],
       }),
       getTicket: build.query<GetTicketApiResponse, GetTicketApiArg>({
-        query: (queryArg) => ({ url: `/tickets/${queryArg.ticketId}` }),
+        query: (queryArg) => ({ url: `/tickets/${queryArg.ticketId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["tickets"],
       }),
       updateTicket: build.mutation<UpdateTicketApiResponse, UpdateTicketApiArg>({
-        query: (queryArg) => ({ url: `/tickets/${queryArg.ticketId}`, method: "POST", body: queryArg.newTicket }),
+        query: (queryArg) => ({
+          url: `/tickets/${queryArg.ticketId}`,
+          method: "POST",
+          body: queryArg.newTicket,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tickets"],
       }),
       deleteTicket: build.mutation<DeleteTicketApiResponse, DeleteTicketApiArg>({
-        query: (queryArg) => ({ url: `/tickets/${queryArg.ticketId}`, method: "DELETE" }),
+        query: (queryArg) => ({
+          url: `/tickets/${queryArg.ticketId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tickets"],
       }),
       findUserTags: build.mutation<FindUserTagsApiResponse, FindUserTagsApiArg>({
-        query: (queryArg) => ({ url: `/user-tags/find-user-tags`, method: "POST", body: queryArg.findUserTagPayload }),
+        query: (queryArg) => ({
+          url: `/user-tags/find-user-tags`,
+          method: "POST",
+          body: queryArg.findUserTagPayload,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["user_tags"],
       }),
       getUserTagDetail: build.query<GetUserTagDetailApiResponse, GetUserTagDetailApiArg>({
-        query: (queryArg) => ({ url: `/user-tags/${queryArg.userTagUidHex}` }),
+        query: (queryArg) => ({ url: `/user-tags/${queryArg.userTagUidHex}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["user_tags"],
       }),
       updateUserTagComment: build.mutation<UpdateUserTagCommentApiResponse, UpdateUserTagCommentApiArg>({
@@ -427,35 +589,51 @@ const injectedRtkApi = api
           url: `/user-tags/${queryArg.userTagUidHex}/update-comment`,
           method: "POST",
           body: queryArg.updateCommentPayload,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["user_tags"],
       }),
       listTses: build.query<ListTsesApiResponse, ListTsesApiArg>({
-        query: () => ({ url: `/tses/` }),
+        query: (queryArg) => ({ url: `/tses/`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["tses"],
       }),
       createTse: build.mutation<CreateTseApiResponse, CreateTseApiArg>({
-        query: (queryArg) => ({ url: `/tses/`, method: "POST", body: queryArg.newTse }),
+        query: (queryArg) => ({
+          url: `/tses/`,
+          method: "POST",
+          body: queryArg.newTse,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tses"],
       }),
       updateTse: build.mutation<UpdateTseApiResponse, UpdateTseApiArg>({
-        query: (queryArg) => ({ url: `/tses/${queryArg.tseId}`, method: "POST", body: queryArg.updateTse }),
+        query: (queryArg) => ({
+          url: `/tses/${queryArg.tseId}`,
+          method: "POST",
+          body: queryArg.updateTse,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["tses"],
       }),
       listPayoutRuns: build.query<ListPayoutRunsApiResponse, ListPayoutRunsApiArg>({
-        query: () => ({ url: `/payouts/` }),
+        query: (queryArg) => ({ url: `/payouts/`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["payouts"],
       }),
       createPayoutRun: build.mutation<CreatePayoutRunApiResponse, CreatePayoutRunApiArg>({
-        query: (queryArg) => ({ url: `/payouts/`, method: "POST", body: queryArg.newPayoutRun }),
+        query: (queryArg) => ({
+          url: `/payouts/`,
+          method: "POST",
+          body: queryArg.newPayoutRun,
+          params: { node_id: queryArg.nodeId },
+        }),
         invalidatesTags: ["payouts"],
       }),
       pendingPayoutDetail: build.query<PendingPayoutDetailApiResponse, PendingPayoutDetailApiArg>({
-        query: () => ({ url: `/payouts/pending-payout-detail` }),
+        query: (queryArg) => ({ url: `/payouts/pending-payout-detail`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["payouts"],
       }),
       payoutRunPayouts: build.query<PayoutRunPayoutsApiResponse, PayoutRunPayoutsApiArg>({
-        query: (queryArg) => ({ url: `/payouts/${queryArg.payoutRunId}/csv` }),
+        query: (queryArg) => ({ url: `/payouts/${queryArg.payoutRunId}/csv`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["payouts"],
       }),
       payoutRunCsvExport: build.mutation<PayoutRunCsvExportApiResponse, PayoutRunCsvExportApiArg>({
@@ -463,6 +641,7 @@ const injectedRtkApi = api
           url: `/payouts/${queryArg.payoutRunId}/csv`,
           method: "POST",
           body: queryArg.createCsvPayload,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["payouts"],
       }),
@@ -471,6 +650,7 @@ const injectedRtkApi = api
           url: `/payouts/${queryArg.payoutRunId}/sepa_xml`,
           method: "POST",
           body: queryArg.createSepaXmlPayload,
+          params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["payouts"],
       }),
@@ -483,76 +663,99 @@ const injectedRtkApi = api
   });
 export { injectedRtkApi as api };
 export type ListProductsApiResponse = /** status 200 Successful Response */ NormalizedListProductInt;
-export type ListProductsApiArg = void;
+export type ListProductsApiArg = {
+  nodeId?: number | null;
+};
 export type CreateProductApiResponse = /** status 200 Successful Response */ Product;
 export type CreateProductApiArg = {
+  nodeId?: number | null;
   newProduct: NewProduct;
 };
 export type GetProductApiResponse = /** status 200 Successful Response */ Product;
 export type GetProductApiArg = {
   productId: number;
+  nodeId?: number | null;
 };
 export type UpdateProductApiResponse = /** status 200 Successful Response */ Product;
 export type UpdateProductApiArg = {
   productId: number;
+  nodeId?: number | null;
   newProduct: NewProduct;
 };
 export type DeleteProductApiResponse = /** status 200 Successful Response */ any;
 export type DeleteProductApiArg = {
   productId: number;
+  nodeId?: number | null;
 };
 export type ListUsersApiResponse = /** status 200 Successful Response */ NormalizedListUserInt;
-export type ListUsersApiArg = void;
+export type ListUsersApiArg = {
+  nodeId?: number | null;
+};
 export type CreateUserApiResponse = /** status 200 Successful Response */ User;
 export type CreateUserApiArg = {
+  nodeId?: number | null;
   createUserPayload: CreateUserPayload;
 };
 export type GetUserApiResponse = /** status 200 Successful Response */ User;
 export type GetUserApiArg = {
   userId: number;
+  nodeId?: number | null;
 };
 export type UpdateUserApiResponse = /** status 200 Successful Response */ User;
 export type UpdateUserApiArg = {
   userId: number;
+  nodeId?: number | null;
   updateUserPayload: UpdateUserPayload;
 };
 export type DeleteUserApiResponse = /** status 200 Successful Response */ any;
 export type DeleteUserApiArg = {
   userId: number;
+  nodeId?: number | null;
 };
 export type ListUserRolesApiResponse = /** status 200 Successful Response */ NormalizedListUserRoleInt;
-export type ListUserRolesApiArg = void;
+export type ListUserRolesApiArg = {
+  nodeId?: number | null;
+};
 export type CreateUserRoleApiResponse = /** status 200 Successful Response */ UserRole;
 export type CreateUserRoleApiArg = {
+  nodeId?: number | null;
   newUserRole: NewUserRole;
 };
 export type UpdateUserRoleApiResponse = /** status 200 Successful Response */ UserRole;
 export type UpdateUserRoleApiArg = {
   userRoleId: number;
+  nodeId?: number | null;
   updateUserRolePrivilegesPayload: UpdateUserRolePrivilegesPayload;
 };
 export type DeleteUserRoleApiResponse = /** status 200 Successful Response */ any;
 export type DeleteUserRoleApiArg = {
   userRoleId: number;
+  nodeId?: number | null;
 };
 export type ListTaxRatesApiResponse = /** status 200 Successful Response */ NormalizedListTaxRateStr;
-export type ListTaxRatesApiArg = void;
+export type ListTaxRatesApiArg = {
+  nodeId?: number | null;
+};
 export type CreateTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type CreateTaxRateApiArg = {
+  nodeId?: number | null;
   taxRate: TaxRate;
 };
 export type GetTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type GetTaxRateApiArg = {
   taxRateName: string;
+  nodeId?: number | null;
 };
 export type UpdateTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type UpdateTaxRateApiArg = {
   taxRateName: string;
+  nodeId?: number | null;
   taxRateWithoutName: TaxRateWithoutName;
 };
 export type DeleteTaxRateApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTaxRateApiArg = {
   taxRateName: string;
+  nodeId?: number | null;
 };
 export type LoginApiResponse = /** status 200 Successful Response */ LoginResponse;
 export type LoginApiArg = {
@@ -565,123 +768,160 @@ export type ChangePasswordApiArg = {
 export type LogoutApiResponse = unknown;
 export type LogoutApiArg = void;
 export type ListTillsApiResponse = /** status 200 Successful Response */ NormalizedListTillInt;
-export type ListTillsApiArg = void;
+export type ListTillsApiArg = {
+  nodeId?: number | null;
+};
 export type CreateTillApiResponse = /** status 200 Successful Response */ Till;
 export type CreateTillApiArg = {
+  nodeId?: number | null;
   newTill: NewTill;
 };
 export type GetTillApiResponse = /** status 200 Successful Response */ Till;
 export type GetTillApiArg = {
   tillId: number;
+  nodeId?: number | null;
 };
 export type UpdateTillApiResponse = /** status 200 Successful Response */ Till;
 export type UpdateTillApiArg = {
   tillId: number;
+  nodeId?: number | null;
   newTill: NewTill;
 };
 export type DeleteTillApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTillApiArg = {
   tillId: number;
+  nodeId?: number | null;
 };
 export type LogoutTillApiResponse = /** status 200 Successful Response */ any;
 export type LogoutTillApiArg = {
   tillId: number;
+  nodeId?: number | null;
 };
 export type ForceLogoutUserApiResponse = /** status 200 Successful Response */ any;
 export type ForceLogoutUserApiArg = {
   tillId: number;
+  nodeId?: number | null;
 };
 export type ListTillLayoutsApiResponse = /** status 200 Successful Response */ NormalizedListTillLayoutInt;
-export type ListTillLayoutsApiArg = void;
+export type ListTillLayoutsApiArg = {
+  nodeId?: number | null;
+};
 export type CreateTillLayoutApiResponse = /** status 200 Successful Response */ NewTillLayout;
 export type CreateTillLayoutApiArg = {
+  nodeId?: number | null;
   newTillLayout: NewTillLayout;
 };
 export type GetTillLayoutApiResponse = /** status 200 Successful Response */ TillLayout;
 export type GetTillLayoutApiArg = {
   layoutId: number;
+  nodeId?: number | null;
 };
 export type UpdateTillLayoutApiResponse = /** status 200 Successful Response */ TillLayout;
 export type UpdateTillLayoutApiArg = {
   layoutId: number;
+  nodeId?: number | null;
   newTillLayout: NewTillLayout;
 };
 export type DeleteTillLayoutApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTillLayoutApiArg = {
   layoutId: number;
+  nodeId?: number | null;
 };
 export type ListTillProfilesApiResponse = /** status 200 Successful Response */ NormalizedListTillProfileInt;
-export type ListTillProfilesApiArg = void;
+export type ListTillProfilesApiArg = {
+  nodeId?: number | null;
+};
 export type CreateTillProfileApiResponse = /** status 200 Successful Response */ NewTillProfile;
 export type CreateTillProfileApiArg = {
+  nodeId?: number | null;
   newTillProfile: NewTillProfile;
 };
 export type GetTillProfileApiResponse = /** status 200 Successful Response */ TillProfile;
 export type GetTillProfileApiArg = {
   profileId: number;
+  nodeId?: number | null;
 };
 export type UpdateTillProfileApiResponse = /** status 200 Successful Response */ TillProfile;
 export type UpdateTillProfileApiArg = {
   profileId: number;
+  nodeId?: number | null;
   newTillProfile: NewTillProfile;
 };
 export type DeleteTillProfileApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTillProfileApiArg = {
   profileId: number;
+  nodeId?: number | null;
 };
 export type ListTillButtonsApiResponse = /** status 200 Successful Response */ NormalizedListTillButtonInt;
-export type ListTillButtonsApiArg = void;
+export type ListTillButtonsApiArg = {
+  nodeId?: number | null;
+};
 export type CreateTillButtonApiResponse = /** status 200 Successful Response */ NewTillButton;
 export type CreateTillButtonApiArg = {
+  nodeId?: number | null;
   newTillButton: NewTillButton;
 };
 export type GetTillButtonApiResponse = /** status 200 Successful Response */ TillButton;
 export type GetTillButtonApiArg = {
   buttonId: number;
+  nodeId?: number | null;
 };
 export type UpdateTillButtonApiResponse = /** status 200 Successful Response */ TillButton;
 export type UpdateTillButtonApiArg = {
   buttonId: number;
+  nodeId?: number | null;
   newTillButton: NewTillButton;
 };
 export type DeleteTillButtonApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTillButtonApiArg = {
   buttonId: number;
+  nodeId?: number | null;
 };
 export type ListRegisterStockingsApiResponse =
   /** status 200 Successful Response */ NormalizedListCashRegisterStockingInt;
-export type ListRegisterStockingsApiArg = void;
+export type ListRegisterStockingsApiArg = {
+  nodeId?: number | null;
+};
 export type CreateRegisterStockingApiResponse = /** status 200 Successful Response */ CashRegisterStocking;
 export type CreateRegisterStockingApiArg = {
+  nodeId?: number | null;
   newCashRegisterStocking: NewCashRegisterStocking;
 };
 export type UpdateRegisterStockingApiResponse = /** status 200 Successful Response */ CashRegisterStocking;
 export type UpdateRegisterStockingApiArg = {
   stockingId: number;
+  nodeId?: number | null;
   newCashRegisterStocking: NewCashRegisterStocking;
 };
 export type DeleteRegisterStockingApiResponse = /** status 200 Successful Response */ any;
 export type DeleteRegisterStockingApiArg = {
   stockingId: number;
+  nodeId?: number | null;
 };
 export type ListCashRegistersAdminApiResponse = /** status 200 Successful Response */ NormalizedListCashRegisterInt;
-export type ListCashRegistersAdminApiArg = void;
+export type ListCashRegistersAdminApiArg = {
+  nodeId?: number | null;
+};
 export type CreateRegisterApiResponse = /** status 200 Successful Response */ CashRegister;
 export type CreateRegisterApiArg = {
+  nodeId?: number | null;
   newCashRegister: NewCashRegister;
 };
 export type TransferRegisterApiResponse = /** status 200 Successful Response */ any;
 export type TransferRegisterApiArg = {
+  nodeId?: number | null;
   transferRegisterPayload: TransferRegisterPayload;
 };
 export type UpdateRegisterApiResponse = /** status 200 Successful Response */ any;
 export type UpdateRegisterApiArg = {
   registerId: number;
+  nodeId?: number | null;
   newCashRegister: NewCashRegister;
 };
 export type DeleteRegisterApiResponse = /** status 200 Successful Response */ any;
 export type DeleteRegisterApiArg = {
   registerId: number;
+  nodeId?: number | null;
 };
 export type GetPublicConfigApiResponse = /** status 200 Successful Response */ Config;
 export type GetPublicConfigApiArg = void;
@@ -692,148 +932,190 @@ export type SetConfigEntryApiArg = {
   configEntry: ConfigEntry;
 };
 export type ListSystemAccountsApiResponse = /** status 200 Successful Response */ NormalizedListAccountInt;
-export type ListSystemAccountsApiArg = void;
+export type ListSystemAccountsApiArg = {
+  nodeId?: number | null;
+};
 export type FindAccountsApiResponse = /** status 200 Successful Response */ NormalizedListAccountInt;
 export type FindAccountsApiArg = {
+  nodeId?: number | null;
   findAccountPayload: FindAccountPayload;
 };
 export type GetAccountApiResponse = /** status 200 Successful Response */ Account;
 export type GetAccountApiArg = {
   accountId: number;
+  nodeId?: number | null;
 };
 export type DisableAccountApiResponse = /** status 200 Successful Response */ any;
 export type DisableAccountApiArg = {
   accountId: number;
+  nodeId?: number | null;
 };
 export type UpdateBalanceApiResponse = /** status 200 Successful Response */ any;
 export type UpdateBalanceApiArg = {
   accountId: number;
+  nodeId?: number | null;
   updateBalancePayload: UpdateBalancePayload;
 };
 export type UpdateVoucherAmountApiResponse = /** status 200 Successful Response */ any;
 export type UpdateVoucherAmountApiArg = {
   accountId: number;
+  nodeId?: number | null;
   updateVoucherAmountPayload: UpdateVoucherAmountPayload;
 };
 export type UpdateTagUidApiResponse = /** status 200 Successful Response */ any;
 export type UpdateTagUidApiArg = {
   accountId: number;
+  nodeId?: number | null;
   updateTagUidPayload: UpdateTagUidPayload;
 };
 export type UpdateAccountCommentApiResponse = /** status 200 Successful Response */ Account;
 export type UpdateAccountCommentApiArg = {
   accountId: number;
+  nodeId?: number | null;
   updateAccountCommentPayload: UpdateAccountCommentPayload;
 };
 export type ListOrdersByTillApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
 export type ListOrdersByTillApiArg = {
   tillId: number;
+  nodeId?: number | null;
 };
 export type ListOrdersApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
 export type ListOrdersApiArg = {
   customerAccountId?: number | null;
+  nodeId?: number | null;
 };
 export type GetOrderApiResponse = /** status 200 Successful Response */ Order;
 export type GetOrderApiArg = {
   orderId: number;
+  nodeId?: number | null;
 };
 export type CancelOrderApiResponse = /** status 200 Successful Response */ any;
 export type CancelOrderApiArg = {
   orderId: number;
+  nodeId?: number | null;
 };
 export type EditOrderApiResponse = /** status 200 Successful Response */ CompletedSaleProducts;
 export type EditOrderApiArg = {
   orderId: number;
+  nodeId?: number | null;
   editSaleProducts: EditSaleProducts;
 };
 export type ListCashiersApiResponse = /** status 200 Successful Response */ NormalizedListCashierInt;
-export type ListCashiersApiArg = void;
+export type ListCashiersApiArg = {
+  nodeId?: number | null;
+};
 export type GetCashierApiResponse = /** status 200 Successful Response */ Cashier;
 export type GetCashierApiArg = {
   cashierId: number;
+  nodeId?: number | null;
 };
 export type GetCashierShiftsApiResponse = /** status 200 Successful Response */ NormalizedListCashierShiftInt;
 export type GetCashierShiftsApiArg = {
   cashierId: number;
+  nodeId?: number | null;
 };
 export type GetCashierShiftStatsApiResponse = /** status 200 Successful Response */ CashierShiftStats;
 export type GetCashierShiftStatsApiArg = {
   cashierId: number;
   shiftId?: number | null;
+  nodeId?: number | null;
 };
 export type CloseOutCashierApiResponse = /** status 200 Successful Response */ CloseOutResult;
 export type CloseOutCashierApiArg = {
   cashierId: number;
+  nodeId?: number | null;
   closeOut: CloseOut;
 };
 export type GetProductStatsApiResponse = /** status 200 Successful Response */ ProductStats2;
 export type GetProductStatsApiArg = {
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  nodeId?: number | null;
 };
 export type ListTicketsApiResponse = /** status 200 Successful Response */ NormalizedListTicketInt;
-export type ListTicketsApiArg = void;
+export type ListTicketsApiArg = {
+  nodeId?: number | null;
+};
 export type CreateTicketApiResponse = /** status 200 Successful Response */ Ticket;
 export type CreateTicketApiArg = {
+  nodeId?: number | null;
   newTicket: NewTicket;
 };
 export type GetTicketApiResponse = /** status 200 Successful Response */ Ticket;
 export type GetTicketApiArg = {
   ticketId: number;
+  nodeId?: number | null;
 };
 export type UpdateTicketApiResponse = /** status 200 Successful Response */ Ticket;
 export type UpdateTicketApiArg = {
   ticketId: number;
+  nodeId?: number | null;
   newTicket: NewTicket;
 };
 export type DeleteTicketApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTicketApiArg = {
   ticketId: number;
+  nodeId?: number | null;
 };
 export type FindUserTagsApiResponse = /** status 200 Successful Response */ NormalizedListUserTagDetailInt;
 export type FindUserTagsApiArg = {
+  nodeId?: number | null;
   findUserTagPayload: FindUserTagPayload;
 };
 export type GetUserTagDetailApiResponse = /** status 200 Successful Response */ UserTagDetail;
 export type GetUserTagDetailApiArg = {
   userTagUidHex: string;
+  nodeId?: number | null;
 };
 export type UpdateUserTagCommentApiResponse = /** status 200 Successful Response */ UserTagDetail;
 export type UpdateUserTagCommentApiArg = {
   userTagUidHex: string;
+  nodeId?: number | null;
   updateCommentPayload: UpdateCommentPayload;
 };
 export type ListTsesApiResponse = /** status 200 Successful Response */ NormalizedListTseInt;
-export type ListTsesApiArg = void;
+export type ListTsesApiArg = {
+  nodeId?: number | null;
+};
 export type CreateTseApiResponse = /** status 200 Successful Response */ Tse;
 export type CreateTseApiArg = {
+  nodeId?: number | null;
   newTse: NewTse;
 };
 export type UpdateTseApiResponse = /** status 200 Successful Response */ Tse;
 export type UpdateTseApiArg = {
   tseId: number;
+  nodeId?: number | null;
   updateTse: UpdateTse;
 };
 export type ListPayoutRunsApiResponse = /** status 200 Successful Response */ NormalizedListPayoutRunWithStatsInt;
-export type ListPayoutRunsApiArg = void;
+export type ListPayoutRunsApiArg = {
+  nodeId?: number | null;
+};
 export type CreatePayoutRunApiResponse = /** status 200 Successful Response */ PayoutRunWithStats;
 export type CreatePayoutRunApiArg = {
+  nodeId?: number | null;
   newPayoutRun: NewPayoutRun;
 };
 export type PendingPayoutDetailApiResponse = /** status 200 Successful Response */ PendingPayoutDetail;
-export type PendingPayoutDetailApiArg = void;
+export type PendingPayoutDetailApiArg = {
+  nodeId?: number | null;
+};
 export type PayoutRunPayoutsApiResponse = /** status 200 Successful Response */ Payout[];
 export type PayoutRunPayoutsApiArg = {
   payoutRunId: number;
+  nodeId?: number | null;
 };
 export type PayoutRunCsvExportApiResponse = /** status 200 Successful Response */ string[];
 export type PayoutRunCsvExportApiArg = {
   payoutRunId: number;
+  nodeId?: number | null;
   createCsvPayload: CreateCsvPayload;
 };
 export type PayoutRunSepaXmlExportApiResponse = /** status 200 Successful Response */ string[];
 export type PayoutRunSepaXmlExportApiArg = {
   payoutRunId: number;
+  nodeId?: number | null;
   createSepaXmlPayload: CreateSepaXmlPayload;
 };
 export type GetTreeForCurrentUserApiResponse = /** status 200 Successful Response */ Node;

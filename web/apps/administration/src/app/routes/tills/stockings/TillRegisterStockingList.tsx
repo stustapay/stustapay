@@ -1,7 +1,7 @@
 import { selectTillRegisterStockingAll, useDeleteRegisterStockingMutation, useListRegisterStockingsQuery } from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -13,14 +13,18 @@ import { useNavigate } from "react-router-dom";
 export const TillRegisterStockingList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
 
-  const { stockings, isLoading } = useListRegisterStockingsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      stockings: data ? selectTillRegisterStockingAll(data) : undefined,
-    }),
-  });
+  const { stockings, isLoading } = useListRegisterStockingsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        stockings: data ? selectTillRegisterStockingAll(data) : undefined,
+      }),
+    }
+  );
   const [deleteStocking] = useDeleteRegisterStockingMutation();
 
   const [stockingToDelete, setStockingToDelete] = React.useState<number | null>(null);
@@ -34,7 +38,7 @@ export const TillRegisterStockingList: React.FC = () => {
 
   const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && stockingToDelete !== null) {
-      deleteStocking({ stockingId: stockingToDelete })
+      deleteStocking({ nodeId: currentNode.id, stockingId: stockingToDelete })
         .unwrap()
         .catch(() => undefined);
     }

@@ -7,13 +7,19 @@ import { Loading } from "@stustapay/components";
 import { ListItemLink } from "@components";
 import { formatUserTagUid } from "@stustapay/models";
 import { LineItemEdit } from "./LineItemEdit";
+import { useCurrentNode } from "@hooks";
 
 export const SaleEdit: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { orderId } = useParams();
   const navigate = useNavigate();
 
-  const { data: order, error, isLoading: isOrderLoading } = useGetOrderQuery({ orderId: Number(orderId) });
+  const {
+    data: order,
+    error,
+    isLoading: isOrderLoading,
+  } = useGetOrderQuery({ nodeId: currentNode.id, orderId: Number(orderId) });
 
   if (isOrderLoading) {
     return <Loading />;

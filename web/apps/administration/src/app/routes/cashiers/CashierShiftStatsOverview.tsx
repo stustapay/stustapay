@@ -3,6 +3,7 @@ import * as React from "react";
 import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
+import { useCurrentNode } from "@hooks";
 
 export interface CashierShiftStatsOverview {
   cashierId: number;
@@ -12,7 +13,8 @@ export interface CashierShiftStatsOverview {
 type ArrElement<ArrType> = ArrType extends readonly (infer ElementType)[] ? ElementType : never;
 
 export const CashierShiftStatsOverview: React.FC<CashierShiftStatsOverview> = ({ cashierId, shiftId }) => {
-  const { data } = useGetCashierShiftStatsQuery({ cashierId, shiftId });
+  const { currentNode } = useCurrentNode();
+  const { data } = useGetCashierShiftStatsQuery({ nodeId: currentNode.id, cashierId, shiftId });
   const { t } = useTranslation();
 
   if (!data) {

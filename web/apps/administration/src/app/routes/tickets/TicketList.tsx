@@ -1,7 +1,7 @@
 import { selectTicketAll, useDeleteTicketMutation, useListTicketsQuery } from "@/api";
 import { ProductRoutes, TicketRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -13,15 +13,19 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export const TicketList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { tickets, isLoading: isTicketsLoading } = useListTicketsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      tickets: data ? selectTicketAll(data) : undefined,
-    }),
-  });
+  const { tickets, isLoading: isTicketsLoading } = useListTicketsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        tickets: data ? selectTicketAll(data) : undefined,
+      }),
+    }
+  );
   const [deleteTicket] = useDeleteTicketMutation();
 
   const [ticketToDelete, setTicketToDelete] = React.useState<number | null>(null);
@@ -35,7 +39,7 @@ export const TicketList: React.FC = () => {
 
   const handleConfirmDeleteTicket: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && ticketToDelete !== null) {
-      deleteTicket({ ticketId: ticketToDelete })
+      deleteTicket({ nodeId: currentNode.id, ticketId: ticketToDelete })
         .unwrap()
         .catch(() => undefined);
     }

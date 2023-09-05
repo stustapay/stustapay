@@ -6,11 +6,17 @@ import { useTranslation } from "react-i18next";
 import { TillLayoutChange } from "./TillLayoutChange";
 import { Loading } from "@stustapay/components";
 import { TillLayoutRoutes } from "@/app/routes";
+import { useCurrentNode } from "@hooks";
 
 export const TillLayoutUpdate: React.FC = () => {
   const { t } = useTranslation();
   const { layoutId } = useParams();
-  const { data: layout, isLoading, error } = useGetTillLayoutQuery({ layoutId: Number(layoutId) });
+  const { currentNode } = useCurrentNode();
+  const {
+    data: layout,
+    isLoading,
+    error,
+  } = useGetTillLayoutQuery({ nodeId: currentNode.id, layoutId: Number(layoutId) });
   const [updateLayout] = useUpdateTillLayoutMutation();
 
   if (error) {
@@ -27,7 +33,7 @@ export const TillLayoutUpdate: React.FC = () => {
       submitLabel={t("update")}
       initialValues={layout}
       validationSchema={TillLayoutSchema}
-      onSubmit={(layout) => updateLayout({ layoutId: layout.id, newTillLayout: layout })}
+      onSubmit={(layout) => updateLayout({ nodeId: currentNode.id, layoutId: layout.id, newTillLayout: layout })}
     />
   );
 };

@@ -1,6 +1,7 @@
 import { TillProfileRoutes } from "@/app/routes";
 import { useGetTillProfileQuery, useUpdateTillProfileMutation } from "@api";
 import { EditLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { Loading } from "@stustapay/components";
 import { TillProfileSchema } from "@stustapay/models";
 import * as React from "react";
@@ -10,8 +11,13 @@ import { TillProfileForm } from "./TillProfileForm";
 
 export const TillProfileUpdate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { profileId } = useParams();
-  const { data: profile, isLoading, error } = useGetTillProfileQuery({ profileId: Number(profileId) });
+  const {
+    data: profile,
+    isLoading,
+    error,
+  } = useGetTillProfileQuery({ nodeId: currentNode.id, profileId: Number(profileId) });
   const [updateProfile] = useUpdateTillProfileMutation();
 
   if (error) {
@@ -29,7 +35,7 @@ export const TillProfileUpdate: React.FC = () => {
       submitLabel={t("update")}
       initialValues={profile}
       validationSchema={TillProfileSchema}
-      onSubmit={(p) => updateProfile({ profileId: profile.id, newTillProfile: p })}
+      onSubmit={(p) => updateProfile({ nodeId: currentNode.id, profileId: profile.id, newTillProfile: p })}
       form={TillProfileForm}
     />
   );

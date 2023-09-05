@@ -22,20 +22,24 @@ import { Product } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useCurrencyFormatter } from "src/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "src/hooks";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { products, isLoading: isProductsLoading } = useListProductsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      products: data ? selectProductAll(data) : undefined,
-    }),
-  });
-  const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery();
+  const { products, isLoading: isProductsLoading } = useListProductsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        products: data ? selectProductAll(data) : undefined,
+      }),
+    }
+  );
+  const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery({ nodeId: currentNode.id });
   const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
   const [updateProduct] = useUpdateProductMutation();
@@ -62,7 +66,7 @@ export const ProductList: React.FC = () => {
     );
   };
   const handleLockProduct = (product: Product) => {
-    updateProduct({ productId: product.id, newProduct: { ...product, is_locked: true } });
+    updateProduct({ nodeId: currentNode.id, productId: product.id, newProduct: { ...product, is_locked: true } });
   };
 
   const openConfirmDeleteDialog = (productId: number) => {
@@ -71,7 +75,7 @@ export const ProductList: React.FC = () => {
 
   const handleConfirmDeleteProduct: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && productToDelete !== null) {
-      deleteProduct({ productId: productToDelete })
+      deleteProduct({ nodeId: currentNode.id, productId: productToDelete })
         .unwrap()
         .catch(() => undefined);
     }
@@ -79,7 +83,7 @@ export const ProductList: React.FC = () => {
   };
 
   const copyProduct = (product: Product) => {
-    createProduct({ newProduct: { ...product, name: `${product.name} - ${t("copy")}` } });
+    createProduct({ nodeId: currentNode.id, newProduct: { ...product, name: `${product.name} - ${t("copy")}` } });
   };
 
   const columns: GridColDef<Product>[] = [

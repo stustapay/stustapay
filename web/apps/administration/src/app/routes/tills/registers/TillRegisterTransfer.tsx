@@ -9,6 +9,7 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { UserSelect } from "@/components/features";
 import { z } from "zod";
 import { TillRegistersRoutes } from "@/app/routes";
+import { useCurrentNode } from "@hooks";
 
 const TillTransferSchema = z.object({
   target_cashier_id: z.number().int(),
@@ -19,13 +20,17 @@ type FormValues = z.infer<typeof TillTransferSchema>;
 export const TillRegisterTransfer: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { currentNode } = useCurrentNode();
   const { registerId } = useParams();
-  const { register, isLoading, error } = useListCashRegistersAdminQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      register: data ? selectTillRegisterById(data, Number(registerId)) : undefined,
-    }),
-  });
+  const { register, isLoading, error } = useListCashRegistersAdminQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        register: data ? selectTillRegisterById(data, Number(registerId)) : undefined,
+      }),
+    }
+  );
   const [transferRegister] = useTransferRegisterMutation();
 
   const initialValues: FormValues = React.useMemo(() => {
@@ -48,7 +53,10 @@ export const TillRegisterTransfer: React.FC = () => {
     }
     setSubmitting(true);
 
-    transferRegister({ transferRegisterPayload: { source_cashier_id: register.current_cashier_id, ...values } })
+    transferRegister({
+      nodeId: currentNode.id,
+      transferRegisterPayload: { source_cashier_id: register.current_cashier_id, ...values },
+    })
       .unwrap()
       .then(() => {
         setSubmitting(false);

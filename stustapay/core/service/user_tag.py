@@ -9,7 +9,11 @@ from stustapay.core.schema.account import UserTagDetail
 from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
 from stustapay.core.service.common.error import InvalidArgument
 
 
@@ -20,6 +24,7 @@ class UserTagService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def get_user_tag_detail(self, *, conn: Connection, user_tag_uid: int) -> Optional[UserTagDetail]:
         return await conn.fetch_maybe_one(
             UserTagDetail, "select * from user_tag_with_history utwh where user_tag_uid = $1", user_tag_uid
@@ -27,6 +32,7 @@ class UserTagService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def update_user_tag_comment(
         self, *, conn: Connection, current_user: CurrentUser, user_tag_uid: int, comment: str
     ) -> UserTagDetail:
@@ -44,6 +50,7 @@ class UserTagService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def find_user_tags(self, *, conn: Connection, search_term: str) -> list[UserTagDetail]:
         value_as_int = None
         if re.match("^[A-Fa-f0-9]+$", search_term):

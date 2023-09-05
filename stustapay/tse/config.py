@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from stustapay.core.config import DatabaseConfig
 from stustapay.core.schema.tse import Tse, TseType
+
 from .diebold_nixdorf_usb.config import DieboldNixdorfUSBTSEConfig
 from .diebold_nixdorf_usb.handler import DieboldNixdorfUSBTSE
 from .handler import TSEHandler

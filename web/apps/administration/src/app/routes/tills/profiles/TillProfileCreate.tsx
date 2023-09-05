@@ -1,6 +1,7 @@
 import { TillProfileRoutes } from "@/app/routes";
 import { useCreateTillProfileMutation } from "@api";
 import { CreateLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { NewTillProfile, NewTillProfileSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -18,6 +19,7 @@ const initialValues: NewTillProfile = {
 
 export const TillProfileCreate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [createProfile] = useCreateTillProfileMutation();
 
   return (
@@ -27,7 +29,7 @@ export const TillProfileCreate: React.FC = () => {
       successRoute={TillProfileRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTillProfileSchema}
-      onSubmit={(profile) => createProfile({ newTillProfile: profile })}
+      onSubmit={(profile) => createProfile({ nodeId: currentNode.id, newTillProfile: profile })}
       form={TillProfileForm}
     />
   );

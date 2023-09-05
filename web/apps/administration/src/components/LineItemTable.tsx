@@ -1,6 +1,6 @@
 import { LineItem, selectProductById, selectTaxRateById, useListProductsQuery, useListTaxRatesQuery } from "@/api";
 import { ProductRoutes } from "@/app/routes";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Tooltip } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DataGridTitle, Loading } from "@stustapay/components";
@@ -14,11 +14,12 @@ export interface LineItemTableProps {
 
 export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
 
   const formatCurrency = useCurrencyFormatter();
 
-  const { data: products, isLoading: isProductsLoading } = useListProductsQuery();
-  const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery();
+  const { data: products, isLoading: isProductsLoading } = useListProductsQuery({ nodeId: currentNode.id });
+  const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery({ nodeId: currentNode.id });
 
   if (isProductsLoading || isTaxRatesLoading) {
     return <Loading />;
