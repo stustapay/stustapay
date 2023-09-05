@@ -72,6 +72,7 @@ from stustapay.core.service.product import (
 )
 from stustapay.core.service.till.common import fetch_till
 from stustapay.core.service.transaction import book_transaction
+
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
