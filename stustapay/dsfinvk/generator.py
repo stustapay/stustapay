@@ -4,11 +4,12 @@ import time
 from decimal import Decimal
 from typing import Dict
 
-import asyncpg
 from dateutil import parser
 
-from stustapay.framework.database import Connection
+from stustapay.core.config import Config
+from stustapay.framework.database import Connection, create_db_pool
 from stustapay.tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
+
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import (
     Bonkopf,
@@ -48,7 +49,8 @@ class BNU:
 
 
 class Generator:
-    def __init__(self, filename: str, xml: str, dtd: str, simulate: bool):
+    def __init__(self, config: Config, filename: str, xml: str, dtd: str, simulate: bool):
+        self.config = config
         self.filename = filename
         self.xml = xml  # path to index.xml file
         self.dtd = dtd  # path to *.dtd file
@@ -61,8 +63,10 @@ class Generator:
         self.Street = ""
         self.City = ""
 
-    async def run(self, db_pool: asyncpg.Pool):
+    async def run(self):
         async with contextlib.AsyncExitStack() as es:
+            db_pool = await create_db_pool(self.config.database)
+            es.push_async_callback(db_pool.close())
             conn: Connection = await es.enter_async_context(db_pool.acquire())
 
             # get paymentsystem config

@@ -1,5 +1,4 @@
 # pylint: disable=unexpected-keyword-arg,missing-kwoa,attribute-defined-outside-init
-import argparse
 import asyncio
 import logging
 import random
@@ -13,18 +12,17 @@ import aiohttp
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import create_db_pool
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import ADMIN_ROLE_ID, CASHIER_ROLE_ID
-from stustapay.festivalsimulator.festivalsetup import (
+from stustapay.festivalsimulator.database_setup import (
     PROFILE_ID_BEER,
     PROFILE_ID_COCKTAIL,
     PROFILE_ID_TICKET,
     PROFILE_ID_TOPUP,
 )
-from stustapay.framework.subcommand import SubCommand
+from stustapay.framework.database import create_db_pool
 
 
 @dataclass
@@ -43,20 +41,21 @@ class Terminal:
         buttons = random.choices(self.config.buttons, k=random.randint(1, len(self.config.buttons)))
 
         return [
-            Button(till_button_id=button.id, quantity=(-1 if button.is_returnable else 1) * random.randint(1, 4)).dict()
+            Button(
+                till_button_id=button.id, quantity=(-1 if button.is_returnable else 1) * random.randint(1, 4)
+            ).model_dump()
             for button in buttons
         ]
 
 
-class Simulator(SubCommand[Config]):
-    def __init__(self, args, config: Config, **rest):
-        del rest  # unused
-        self.args = args
+class Simulator:
+    def __init__(self, config: Config, bookings_per_second: float = 100.0):
         self.logger = logging.getLogger(__name__)
         self.config = config
 
         self.base_url = self.config.terminalserver.base_url
         self.admin_url = self.config.administration.base_url
+        self.bookings_per_second = bookings_per_second
         self.admin_tag_uid = None
         self.n_tills_total = None
 
@@ -70,19 +69,13 @@ class Simulator(SubCommand[Config]):
 
         self.cashier_lock = threading.Lock()
 
-    @staticmethod
-    def argparse_register(subparser: argparse.ArgumentParser):
-        subparser.add_argument(
-            "-b", "--bookings-per-second", type=float, help="number of bookings per second", default=100.0
-        )
-
     def sleep(self):
-        to_sleep = 1.0 / self.args.bookings_per_second
+        to_sleep = 1.0 / self.bookings_per_second
         to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
         time.sleep(to_sleep)
 
     def sleep_topup(self):
-        to_sleep = 10.0 / self.args.bookings_per_second
+        to_sleep = 10.0 / self.bookings_per_second
         to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
         time.sleep(to_sleep)
 

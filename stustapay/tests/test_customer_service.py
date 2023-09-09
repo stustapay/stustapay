@@ -545,12 +545,11 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(result.about_page_url, cpc.about_page_url)
 
     async def test_export_customer_bank_data(self):
-        output_path = os.path.join(self.tmp_dir, "test_export")
-        os.makedirs(output_path, exist_ok=True)
+        output_path = self.tmp_dir / "test_export"
+        output_path.mkdir(parents=True, exist_ok=True)
 
         await export_customer_payouts(
             config=self.test_config,
-            db_pool=self.db_pool,
             created_by="test",
             dry_run=True,
             output_path=output_path,
@@ -565,16 +564,15 @@ class CustomerServiceTest(TerminalTestCase):
         # check if dry run successful and no database entry created
         self.assertEqual(await get_number_of_payouts(self.db_conn, 1), 0)
 
-        output_path = os.path.join(self.tmp_dir, "test_export2")
-        os.makedirs(output_path, exist_ok=True)
+        output_path = self.tmp_dir / "test_export2"
+        output_path.mkdir(parents=True, exist_ok=True)
 
         # test several batches
         await export_customer_payouts(
             config=self.test_config,
-            db_pool=self.db_pool,
             created_by="Test",
             dry_run=True,
-            max_export_items_per_batch=1,
+            max_transactions_per_batch=1,
             output_path=output_path,
         )
         for i in range(len(self.customers_to_transfer)):
@@ -588,11 +586,10 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(2))))
 
         # test non dry run
-        output_path = os.path.join(self.tmp_dir, "test_export3")
-        os.makedirs(output_path, exist_ok=True)
+        output_path = self.tmp_dir / "test_export3"
+        output_path.mkdir(parents=True, exist_ok=True)
         await export_customer_payouts(
             config=self.test_config,
-            db_pool=self.db_pool,
             created_by="Test",
             dry_run=False,
             output_path=output_path,
@@ -631,15 +628,14 @@ class CustomerServiceTest(TerminalTestCase):
             )
 
     async def test_max_payout_sum(self):
-        output_path = os.path.join(self.tmp_dir, "test_max_payout_sum")
-        os.makedirs(output_path, exist_ok=True)
+        output_path = self.tmp_dir / "test_max_payout_sum"
+        output_path.mkdir(parents=True, exist_ok=True)
 
         num = 2
         s = sum(customer["balance"] - customer["donation"] for customer in self.customers_to_transfer[:num])
 
         await export_customer_payouts(
             config=self.test_config,
-            db_pool=self.db_pool,
             created_by="test",
             dry_run=False,
             output_path=output_path,
@@ -653,7 +649,8 @@ class CustomerServiceTest(TerminalTestCase):
         )
 
     async def test_payout_runs(self):
-        output_path = os.path.join(self.tmp_dir, "test_payout_runs")
+        output_path = self.tmp_dir / "test_payout_runs"
+        output_path.mkdir(parents=True, exist_ok=True)
         os.makedirs(output_path, exist_ok=True)
 
         uid_not_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[:2]]
@@ -665,7 +662,6 @@ class CustomerServiceTest(TerminalTestCase):
 
         await export_customer_payouts(
             config=self.test_config,
-            db_pool=self.db_pool,
             created_by="test",
             dry_run=False,
             output_path=output_path,
@@ -699,7 +695,6 @@ class CustomerServiceTest(TerminalTestCase):
 
         await export_customer_payouts(
             config=self.test_config,
-            db_pool=self.db_pool,
             created_by="test",
             dry_run=False,
             output_path=output_path,

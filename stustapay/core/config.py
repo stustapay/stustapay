@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import yaml
 from pydantic import BaseModel
 
@@ -48,15 +51,20 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     sumup_config: SumupConfig = SumupConfig()
 
 
+class BonConfig(BaseModel):
+    output_folder: Path
+
+
 class Config(BaseModel):
-    administration: AdministrationApiConfig
-    terminalserver: TerminalApiConfig
     database: DatabaseConfig
     core: CoreConfig
+    administration: AdministrationApiConfig
+    terminalserver: TerminalApiConfig
     customer_portal: CustomerPortalApiConfig
+    bon: BonConfig
 
 
-def read_config(config_path: str) -> Config:
+def read_config(config_path: os.PathLike) -> Config:
     with open(config_path, "r") as config_file:
         content = yaml.safe_load(config_file)
         config = Config(**content)

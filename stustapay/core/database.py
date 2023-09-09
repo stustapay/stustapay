@@ -2,81 +2,25 @@
 perform schema updates and get a db shell.
 """
 
-import argparse
 import logging
 from pathlib import Path
 from typing import Optional
 
 import asyncpg.exceptions
 
-from stustapay.framework import subcommand
-from stustapay.framework.database import (
-    REVISION_TABLE,
-    SchemaRevision,
-    create_db_pool,
-    psql_attach,
-)
+from stustapay.framework.database import REVISION_TABLE, SchemaRevision
 
-from .config import Config
-from .schema import DATA_PATH, DEFAULT_EXAMPLE_DATA_FILE, REVISION_PATH
+from .schema import DATA_PATH, REVISION_PATH
 
 logger = logging.getLogger(__name__)
 
 CURRENT_REVISION = "8697011c"
 
 
-class DatabaseManage(subcommand.SubCommand[Config]):
-    def __init__(self, args, config: Config, **rest):
-        del rest
-
-        self.config = config
-        self.action = args.action
-        self.args = args
-
-    @staticmethod
-    def argparse_register(subparser: argparse.ArgumentParser):
-        subparsers = subparser.add_subparsers(dest="action")
-        subparsers.add_parser("attach")
-        migrate_parser = subparsers.add_parser("migrate")
-        migrate_parser.add_argument("--until-revision", type=str, help="Only apply revisions until this version")
-
-        subparsers.add_parser("rebuild")
-        subparsers.add_parser("reset")
-        subparsers.add_parser("list_revisions")
-
-        add_data_parser = subparsers.add_parser("add_data", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-        add_data_parser.add_argument(
-            "--sql-file",
-            type=str,
-            help=f"Name of the .sql file in {DATA_PATH} that will get loaded into the DB",
-            default=DEFAULT_EXAMPLE_DATA_FILE,
-        )
-
-    async def run(self):
-        """
-        CLI entry point
-        """
-        if self.action == "attach":
-            return await psql_attach(self.config.database)
-
-        db_pool = await create_db_pool(self.config.database)
-        if self.action == "migrate":
-            await apply_revisions(db_pool=db_pool, until_revision=self.args.until_revision)
-        if self.action == "rebuild":
-            await reset_schema(db_pool=db_pool)
-            await apply_revisions(db_pool=db_pool)
-        if self.action == "reset":
-            await reset_schema(db_pool=db_pool)
-        if self.action == "add_data":
-            await add_data(db_pool=db_pool, sql_file=self.args.sql_file)
-        if self.action == "list_revisions":
-            revisions = SchemaRevision.revisions_from_dir(REVISION_PATH)
-            for revision in revisions:
-                print(
-                    f"Revision: {revision.version}, requires revision: {revision.requires}, filename: {revision.file_name}"
-                )
-
-        await db_pool.close()
+def list_revisions():
+    revisions = SchemaRevision.revisions_from_dir(REVISION_PATH)
+    for revision in revisions:
+        print(f"Revision: {revision.version}, requires revision: {revision.requires}, filename: {revision.file_name}")
 
 
 async def check_revision_version(db_pool: asyncpg.Pool):

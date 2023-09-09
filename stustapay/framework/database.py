@@ -47,26 +47,26 @@ async def psql_attach(config: DatabaseConfig):
             def escape_colon(value: str):
                 return value.replace("\\", "\\\\").replace(":", "\\:")
 
-            passfile = exitstack.enter_context(tempfile.NamedTemporaryFile("w"))
-            os.chmod(passfile.name, 0o600)
+            if config.user is not None and config.password is not None and config.host is not None:
+                passfile = exitstack.enter_context(tempfile.NamedTemporaryFile("w"))
+                os.chmod(passfile.name, 0o600)
 
-            passfile.write(
-                ":".join(
-                    [
-                        escape_colon(config.host),
-                        "*",
-                        escape_colon(config.dbname),
-                        escape_colon(config.user),
-                        escape_colon(config.password),
-                    ]
+                passfile.write(
+                    ":".join(
+                        [
+                            escape_colon(config.host),
+                            "*",
+                            escape_colon(config.dbname),
+                            escape_colon(config.user),
+                            escape_colon(config.password),
+                        ]
+                    )
                 )
-            )
-            passfile.write("\n")
-            passfile.flush()
-
-            env["PGHOST"] = config.host
-            env["PGUSER"] = config.user
-            env["PGPASSFILE"] = passfile.name
+                passfile.write("\n")
+                passfile.flush()
+                env["PGPASSFILE"] = passfile.name
+                env["PGHOST"] = config.host
+                env["PGUSER"] = config.user
 
         command = ["psql", "--variable", "ON_ERROR_STOP=1"]
         if shutil.which("pgcli") is not None:

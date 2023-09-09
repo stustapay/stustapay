@@ -1,4 +1,3 @@
-import argparse
 import asyncio
 import json
 import logging
@@ -21,7 +20,6 @@ from stustapay.core.service.tree import TreeService
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.service.user_tag import UserTagService
-from stustapay.framework.subcommand import SubCommand
 
 from .routers import account, auth, cashier
 from .routers import config as config_router
@@ -45,55 +43,51 @@ from .routers import (
 )
 
 
-class Api(SubCommand):
-    def __init__(self, args, config: Config, **rest):
-        del rest  # unused
-        self.args = args
+def get_server(config: Config):
+    server = Server(
+        title="StuStaPay Administration API",
+        config=config.administration,
+        cors=True,
+    )
 
+    server.add_router(product.router)
+    server.add_router(user.router)
+    server.add_router(tax_rate.router)
+    server.add_router(auth.router)
+    server.add_router(till.router)
+    server.add_router(till_layout.router)
+    server.add_router(till_profile.router)
+    server.add_router(till_button.router)
+    server.add_router(till_register_stockings.router)
+    server.add_router(till_registers.router)
+    server.add_router(config_router.router)
+    server.add_router(account.router)
+    server.add_router(order.router)
+    server.add_router(cashier.router)
+    server.add_router(stats.router)
+    server.add_router(ticket.router)
+    server.add_router(user_tag.router)
+    server.add_router(tse.router)
+    server.add_router(payout.router)
+    server.add_router(tree.router)
+    return server
+
+
+def print_openapi(config: Config):
+    server = get_server(config)
+    print(json.dumps(server.get_openapi_spec()))
+
+
+class Api:
+    def __init__(self, config: Config):
         self.cfg = config
         self.dbpool = None
 
         self.logger = logging.getLogger(__name__)
 
-        self.server = Server(
-            title="StuStaPay Administration API",
-            config=config.administration,
-            cors=True,
-        )
-
-        self.server.add_router(product.router)
-        self.server.add_router(user.router)
-        self.server.add_router(tax_rate.router)
-        self.server.add_router(auth.router)
-        self.server.add_router(till.router)
-        self.server.add_router(till_layout.router)
-        self.server.add_router(till_profile.router)
-        self.server.add_router(till_button.router)
-        self.server.add_router(till_register_stockings.router)
-        self.server.add_router(till_registers.router)
-        self.server.add_router(config_router.router)
-        self.server.add_router(account.router)
-        self.server.add_router(order.router)
-        self.server.add_router(cashier.router)
-        self.server.add_router(stats.router)
-        self.server.add_router(ticket.router)
-        self.server.add_router(user_tag.router)
-        self.server.add_router(tse.router)
-        self.server.add_router(payout.router)
-        self.server.add_router(tree.router)
-
-    @staticmethod
-    def argparse_register(subparser: argparse.ArgumentParser):
-        subparser.add_argument(
-            "--show-openapi",
-            action="store_true",
-        )
+        self.server = get_server(config)
 
     async def run(self):
-        if self.args.show_openapi:
-            print(json.dumps(self.server.get_openapi_spec()))
-            return
-
         db_pool = await self.server.db_connect(self.cfg.database)
         await database.check_revision_version(db_pool)
 

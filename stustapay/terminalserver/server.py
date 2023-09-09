@@ -1,7 +1,6 @@
 """
 handles connections with ordering terminals.
 """
-import argparse
 import asyncio
 import json
 import logging
@@ -16,50 +15,44 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
-from stustapay.framework.subcommand import SubCommand
 from stustapay.terminalserver.router import auth, base, cashier, customer, order, user
 
 
-class Api(SubCommand[Config]):
+def get_server(config: Config):
+    server = Server(
+        title="StuStaPay Terminal API",
+        config=config.terminalserver,
+        cors=True,
+    )
+
+    # endpoints available in the terminal server.
+    server.add_router(base.router)
+    server.add_router(order.router)
+    server.add_router(auth.router)
+    server.add_router(user.router)
+    server.add_router(customer.router)
+    server.add_router(cashier.router)
+    return server
+
+
+def print_openapi(config: Config):
+    server = get_server(config)
+    print(json.dumps(server.get_openapi_spec()))
+
+
+class Api:
     """
     Talk with Terminals in the field.
     """
 
-    def __init__(self, args, config: Config, **rest):
-        del rest
-        self.args = args
-
+    def __init__(self, config: Config):
         self.cfg = config
         self.db_pool = None
 
         self.logger = logging.getLogger(__name__)
-
-        self.server = Server(
-            title="StuStaPay Terminal API",
-            config=config.terminalserver,
-            cors=True,
-        )
-
-        # endpoints available in the terminal server.
-        self.server.add_router(base.router)
-        self.server.add_router(order.router)
-        self.server.add_router(auth.router)
-        self.server.add_router(user.router)
-        self.server.add_router(customer.router)
-        self.server.add_router(cashier.router)
-
-    @staticmethod
-    def argparse_register(subparser: argparse.ArgumentParser):
-        subparser.add_argument(
-            "--show-openapi",
-            action="store_true",
-        )
+        self.server = get_server(config)
 
     async def run(self):
-        if self.args.show_openapi:
-            print(json.dumps(self.server.get_openapi_spec()))
-            return
-
         db_pool = await self.server.db_connect(self.cfg.database)
         await database.check_revision_version(db_pool)
 

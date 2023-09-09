@@ -3,8 +3,8 @@
 import argparse
 import os
 
-from stustapay.core.database import SchemaRevision
 from stustapay.core.schema import REVISION_PATH
+from stustapay.framework.database import SchemaRevision
 
 
 def main(name: str):

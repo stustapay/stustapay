@@ -4,13 +4,12 @@ import curses
 import logging
 from curses import wrapper
 from datetime import datetime
+from typing import Optional
 
 import asyncpg
 
+from stustapay.core.config import Config
 from stustapay.framework.database import Connection, create_db_pool
-from stustapay.framework.subcommand import SubCommand
-
-from .config import Config
 
 LOGGER = logging.getLogger(__name__)
 
@@ -132,22 +131,13 @@ async def window_main(stdscr, db):
     return
 
 
-class TseSwitchover(SubCommand[Config]):
-    @staticmethod
-    def argparse_register(subparser):
-        subparser.add_argument("-s", "--show", action="store_true", default=False, help="only show status")
-        subparser.add_argument("-n", "--nc", action="store_true", default=False, help="curses interface")
-        subparser.add_argument("--disable", action="store_true", default=False, help="disable a failed TSE")
-        subparser.add_argument("--tse", type=str, default=None, help="TSE name to disable")
-
-    def __init__(self, args, config: Config, **rest):
-        del rest  # unused
-
+class TseSwitchover:
+    def __init__(self, config: Config, show: bool, nc: bool, disable: bool, tse: Optional[str]):
         self.config = config
-        self.show = args.show
-        self.nc = args.nc
-        self.tse_to_disable = args.tse
-        self.disable = args.disable
+        self.show = show
+        self.nc = nc
+        self.tse_to_disable = tse
+        self.disable = disable
         self.db_pool: asyncpg.Pool = None
         # contains event objects for each object that is waiting for new events.
 
@@ -168,7 +158,7 @@ class TseSwitchover(SubCommand[Config]):
                     raise ValueError("No TSE to disable specified")
                 if ";" in self.tse_to_disable:
                     raise ValueError("Illegal character in TSE name")
-                tse = await psql.fetchrow("select * from tse where tse_name=$1", self.tse_to_disable)
+                tse = await psql.fetchrow("select * from tse where name=$1", self.tse_to_disable)
                 if tse is None:
                     LOGGER.error(f"TSE with name {self.tse_to_disable} not found")
                     raise ValueError
@@ -241,16 +231,16 @@ class TseSwitchover(SubCommand[Config]):
                 print("setting TSE to disabled")
                 if manualfailed == "YES":
                     print("disabeling no matter what state the TSE has")
-                    await psql.execute("update tse set tse_status='disabled' where tse_name=$1", self.tse_to_disable)
+                    await psql.execute("update tse set status='disabled' where name=$1", self.tse_to_disable)
                 else:
                     print("disabeling only if in state failed")
                     await psql.execute(
-                        "update tse set tse_status='disabled' where tse_name=$1 and tse_status='failed'",
+                        "update tse set status='disabled' where name=$1 and status='failed'",
                         self.tse_to_disable,
                     )
 
                 # check
-                tse = await psql.fetchrow("select * from tse where tse_name=$1", self.tse_to_disable)
+                tse = await psql.fetchrow("select * from tse where name=$1", self.tse_to_disable)
                 if tse["tse_status"] == "disabled":
                     print("SUCCESS: TSE set to 'disabled'")
                 else:

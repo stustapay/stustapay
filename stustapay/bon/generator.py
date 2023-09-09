@@ -9,21 +9,20 @@ from uuid import UUID
 from asyncpg.exceptions import PostgresError
 
 from stustapay.bon.bon import BonConfig, fetch_base_config, generate_bon
-from stustapay.bon.config import Config
+from stustapay.core.config import Config
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.framework.database import Connection, create_db_pool
-from stustapay.framework.subcommand import SubCommand
 
 
-class Generator(SubCommand[Config]):
+class Generator:
     """
     Command which listens for database changes on bons and generates the bons immediately as pdf
     """
 
-    def __init__(self, args, config: Config, **rest):
-        del rest
-        self.args = args
+    def __init__(self, config: Config, n_workers: int = 1, worker_id: int = 0):
+        self.n_workers = n_workers
+        self.worker_id = worker_id
         self.config = config
         self.logger = logging.getLogger(__name__)
 
@@ -38,13 +37,8 @@ class Generator(SubCommand[Config]):
             self.logger.fatal(f"Failed to create bon output directory '{self.config.bon.output_folder}'. {e}")
             sys.exit(1)
 
-    @staticmethod
-    def argparse_register(subparser):
-        subparser.add_argument("-n", "--n-workers", type=int, default=1, help="Number of bon generator indices")
-        subparser.add_argument("-i", "--worker-id", type=int, default=0, help="Index of this worker instance")
-
     def _should_process_order(self, order_id: int) -> bool:
-        return order_id % self.args.n_workers == self.args.worker_id
+        return order_id % self.n_workers == self.worker_id
 
     async def run(self):
         # start all database connections and start the hook to listen for bon requests
@@ -61,7 +55,7 @@ class Generator(SubCommand[Config]):
 
         await asyncio.gather(
             self.db_hook.run(),
-            run_healthcheck(db_pool=self.pool, service_name=f"bon{self.args.worker_id}"),
+            run_healthcheck(db_pool=self.pool, service_name=f"bon{self.worker_id}"),
             return_exceptions=True,
         )
 
@@ -72,8 +66,8 @@ class Generator(SubCommand[Config]):
                 "select bon.id, o.uuid "
                 "from bon join ordr o on bon.id = o.id "
                 "where not generated and error is null and bon.id % $1 = $2",
-                self.args.n_workers,
-                self.args.worker_id,
+                self.n_workers,
+                self.worker_id,
             )
             for row in missing_bons:
                 async with conn.transaction():

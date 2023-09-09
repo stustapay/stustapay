@@ -3,12 +3,21 @@ import asyncio
 import logging
 import os
 import tempfile
+from pathlib import Path
 from unittest import IsolatedAsyncioTestCase as TestCase
 
 from asyncpg.pool import Pool
 
 from stustapay.core import database
-from stustapay.core.config import Config, DatabaseConfig
+from stustapay.core.config import (
+    AdministrationApiConfig,
+    BonConfig,
+    Config,
+    CoreConfig,
+    CustomerPortalApiConfig,
+    DatabaseConfig,
+    TerminalApiConfig,
+)
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import (
@@ -47,26 +56,27 @@ def get_test_db_config() -> DatabaseConfig:
 
 
 # input structure for core.config.Config
-TEST_CONFIG = {
-    "core": {"secret_key": "stuff1234"},
-    "administration": {
-        "base_url": "http://localhost:8081",
-        "host": "localhost",
-        "port": 8081,
-    },
-    "terminalserver": {
-        "base_url": "http://localhost:8080",
-        "host": "localhost",
-        "port": 8080,
-    },
-    "customer_portal": {
-        "base_url": "http://localhost:8082",
-        "base_bon_url": "https://bon.stustapay.de/{bon_output_file}",
-        "data_privacy_url": "https://stustapay.de/datenschutz",
-        "about_page_url": "https://stustapay.de/impressum",
-    },
-    "database": get_test_db_config(),
-}
+TEST_CONFIG = Config(
+    core=CoreConfig(secret_key="stuff1234"),
+    administration=AdministrationApiConfig(
+        base_url="http://localhost:8081",
+        host="localhost",
+        port=8081,
+    ),
+    terminalserver=TerminalApiConfig(
+        base_url="http://localhost:8080",
+        host="localhost",
+        port=8080,
+    ),
+    customer_portal=CustomerPortalApiConfig(
+        base_url="http://localhost:8082",
+        base_bon_url="https://bon.stustapay.de/{bon_output_file}",
+        data_privacy_url="https://stustapay.de/datenschutz",
+        about_page_url="https://stustapay.de/impressum",
+    ),
+    bon=BonConfig(output_folder=Path("tmp")),
+    database=get_test_db_config(),
+)
 
 
 async def get_test_db() -> Pool:
@@ -157,7 +167,7 @@ class BaseTestCase(TestCase):
 
         # create tmp folder for tests which handle files
         self.tmp_dir_obj = tempfile.TemporaryDirectory()
-        self.tmp_dir = self.tmp_dir_obj.name
+        self.tmp_dir = Path(self.tmp_dir_obj.name)
 
     async def _get_account_balance(self, account_id: int) -> float:
         account = await self.account_service.get_account(token=self.admin_token, account_id=account_id)

@@ -2,8 +2,8 @@
 import asyncio
 import threading
 
-from stustapay.core.database import create_db_pool
 from stustapay.core.service.common.dbhook import DBHook
+from stustapay.framework.database import create_db_pool
 
 from .common import BaseTestCase
 

@@ -5,26 +5,20 @@ from typing import Optional
 
 import asyncpg
 
+from stustapay.core.config import Config
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.tse import list_tses
 from stustapay.framework.database import Connection, create_db_pool
-from stustapay.framework.subcommand import SubCommand
 
-from .config import Config, get_tse_handler
+from .config import get_tse_handler
 from .wrapper import TSEWrapper
 
 LOGGER = logging.getLogger(__name__)
 
 
-class SignatureProcessor(SubCommand[Config]):
-    @staticmethod
-    def argparse_register(subparser):
-        del subparser  # unused, no extra arguments
-
-    def __init__(self, args, config: Config, **rest):
-        del args, rest  # unused
-
+class SignatureProcessor:
+    def __init__(self, config: Config):
         self.config = config
         self.tses: dict[str, TSEWrapper] = {}
         self.db_pool: Optional[asyncpg.Pool] = None

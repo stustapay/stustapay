@@ -13,7 +13,6 @@ from fastapi.routing import APIRoute
 
 from stustapay import __version__
 from stustapay.core.config import DatabaseConfig, HTTPServerConfig
-from stustapay.core.database import create_db_pool
 from stustapay.core.http.context import Context, ContextMiddleware
 from stustapay.core.http.error import (
     access_exception_handler,
@@ -29,6 +28,7 @@ from stustapay.core.service.common.error import (
     ServiceException,
     Unauthorized,
 )
+from stustapay.framework.database import create_db_pool
 
 
 def use_route_names_as_operation_ids(app: FastAPI) -> None:

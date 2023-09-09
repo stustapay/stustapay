@@ -1,6 +1,6 @@
 import datetime
 import logging
-import os
+from pathlib import Path
 from typing import Optional
 
 import asyncpg
@@ -13,7 +13,7 @@ from stustapay.core.service.customer.payout import (
     get_customer_bank_data,
     get_number_of_payouts,
 )
-from stustapay.framework.subcommand import SubCommand
+from stustapay.framework.database import create_db_pool
 
 from . import database
 from .config import Config
@@ -27,100 +27,19 @@ SEPA_PATH = "sepa__run_{}__num_{}.xml"
 CSV_PATH = "bank_export__run_{}.csv"
 
 
-class CustomerBankExport(SubCommand[Config]):
-    """
-    Customer SEPA Export utility CLI.
-
-    Use this to generate payouts for leftover customer balance.
-    """
-
-    def __init__(self, args, config: Config, **kwargs):
-        del kwargs
-        self.config = config
-        self.args = args
-
-    @staticmethod
-    def argparse_register(subparser):
-        subparser.add_argument(
-            "created_by", type=str, help="User who created the payout run. This is used for logging purposes."
-        )
-        subparser.add_argument(
-            "-t",
-            "--execution-date",
-            default=None,
-            type=str,
-            help="Execution date for SEPA transfer. Format: YYYY-MM-DD",
-        )
-        subparser.add_argument(
-            "-n",
-            "--max-transactions-batch",
-            default=None,
-            type=int,
-            help="Maximum amount of transactions per file. Not giving this argument means one large batch with all customers in a single file.",
-        )
-        subparser.add_argument(
-            "-d",
-            "--dry-run",
-            action="store_true",
-            help="If set, don't perform any database modifications.",
-        )
-        subparser.add_argument(
-            "-p",
-            "--payout-run-id",
-            default=None,
-            type=int,
-            help="Payout run id. If not given, a new payout run is created. If given, the payout run is recreated.",
-        )
-        subparser.add_argument(
-            "-o",
-            "--output-path",
-            default="",
-            type=str,
-            help="Output path for the generated files. If not given, the current working directory is used.",
-        )
-        subparser.add_argument(
-            "-s",
-            "--max-payout-sum",
-            default=50_000.0,
-            type=float,
-            help="Maximum sum of money being payed out for this payout run. Relevant is the bank only accepts a certain max. number that one can spend per day. If not given, the default is 50.000€.",
-        )
-
-    async def run(self):
-        db_pool = await database.create_db_pool(self.config.database)
-        try:
-            await database.check_revision_version(db_pool)
-            execution_date = (
-                datetime.datetime.strptime(self.args.execution_date, "%Y-%m-%d").date()
-                if self.args.execution_date
-                else None
-            )
-            await export_customer_payouts(
-                config=self.config,
-                db_pool=db_pool,
-                execution_date=execution_date,
-                created_by=self.args.created_by,
-                max_export_items_per_batch=self.args.max_transactions_batch,
-                dry_run=self.args.dry_run,
-                payout_run_id=self.args.payout_run_id,
-                output_path=self.args.output_path,
-                max_payout_sum=self.args.max_payout_sum,
-            )
-        finally:
-            await db_pool.close()
-
-
-async def export_customer_payouts(
+async def _export_customer_payouts(
     config: Config,
     db_pool: asyncpg.Pool,
     created_by: str,
-    execution_date: Optional[datetime.date] = None,
-    max_export_items_per_batch: Optional[int] = None,
-    dry_run: bool = False,
-    payout_run_id: Optional[int] = None,
-    output_path: str = "",
-    max_payout_sum: float = 50000.0,
+    execution_date: Optional[datetime.date],
+    max_export_items_per_batch: Optional[int],
+    dry_run: bool,
+    payout_run_id: Optional[int],
+    output_path: Optional[Path],
+    max_payout_sum: float,
 ):
+    if output_path is None:
+        output_path = Path.cwd()
     execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
 
     async with db_pool.acquire() as conn:
@@ -155,7 +74,7 @@ async def export_customer_payouts(
                 batch_size=max_export_items_per_batch,
             )
             for i, batch in enumerate(sepa_batches):
-                file_path = os.path.join(output_path, SEPA_PATH.format(payout_run_id, i + 1))
+                file_path = output_path / SEPA_PATH.format(payout_run_id, i + 1)
                 with open(file_path, "w+") as f:
                     f.write(batch)
 
@@ -165,7 +84,7 @@ async def export_customer_payouts(
                     customers_bank_data=customers_bank_data, sepa_config=sepa_config, currency_ident=currency_ident
                 )
             )
-            file_path = os.path.join(output_path, CSV_PATH.format(payout_run_id))
+            file_path = output_path / CSV_PATH.format(payout_run_id)
             with open(file_path, "w+") as f:
                 f.write(csv_batches[0])
             if dry_run:
@@ -177,3 +96,31 @@ async def export_customer_payouts(
         f"Exported payouts of {number_of_payouts} customers into {max_export_items_per_batch} files named "
         f"{SEPA_PATH.format(payout_run_id, 'x')} and {CSV_PATH.format(payout_run_id)}"
     )
+
+
+async def export_customer_payouts(
+    config: Config,
+    created_by: str,
+    dry_run: bool,
+    max_payout_sum: float = 50000.0,
+    execution_date: Optional[datetime.date] = None,
+    max_transactions_per_batch: Optional[int] = None,
+    payout_run_id: Optional[int] = None,
+    output_path: Optional[Path] = None,
+):
+    db_pool = await create_db_pool(config.database)
+    try:
+        await database.check_revision_version(db_pool)
+        await _export_customer_payouts(
+            config=config,
+            db_pool=db_pool,
+            execution_date=execution_date,
+            created_by=created_by,
+            max_export_items_per_batch=max_transactions_per_batch,
+            dry_run=dry_run,
+            payout_run_id=payout_run_id,
+            output_path=output_path,
+            max_payout_sum=max_payout_sum,
+        )
+    finally:
+        await db_pool.close()
