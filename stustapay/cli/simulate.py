@@ -1,5 +1,5 @@
 import asyncio
-from typing import Annotated
+from typing import Annotated, Optional
 
 import typer
 
@@ -13,7 +13,9 @@ simulate_cli = typer.Typer()
 @simulate_cli.command()
 def setup(
     ctx: typer.Context,
-    n_cashiers: Annotated[int, typer.Option(help="number of cashiers to create, default is number of tills plus 50%")],
+    n_cashiers: Annotated[
+        Optional[int], typer.Option(help="number of cashiers to create, default is number of tills plus 50%")
+    ] = None,
     n_tags: Annotated[int, typer.Option(help="number of tags to create")] = 1000,
     n_entry_tills: Annotated[int, typer.Option(help="number of entry tills to create")] = 10,
     n_topup_tills: Annotated[int, typer.Option(help="number of topup tills to create")] = 8,
@@ -43,7 +45,7 @@ def api(
     """Start all APIs which are necessary for a working, simulated environment."""
     config = ctx.obj.config
     api_starter = FestivalSetup(config=config, no_bon=no_bon, no_tse=no_tse)
-    asyncio.run(api_starter.run())
+    api_starter.run()
 
 
 @simulate_cli.command()
@@ -54,4 +56,4 @@ def start(
     """Simulate an actual load on a stustapay instance."""
     config = ctx.obj.config
     simulator = Simulator(config=config, bookings_per_second=bookings_per_second)
-    asyncio.run(simulator.run())
+    simulator.run()

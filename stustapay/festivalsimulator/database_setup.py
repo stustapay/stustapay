@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import logging
+from typing import Optional
 
 from stustapay.core.config import Config
 from stustapay.core.database import rebuild_with
@@ -26,7 +27,7 @@ class DatabaseSetup:
     def __init__(
         self,
         config: Config,
-        n_cashiers: int,
+        n_cashiers: Optional[int],
         n_tags: int,
         n_entry_tills: int,
         n_topup_tills: int,
@@ -34,7 +35,7 @@ class DatabaseSetup:
         n_cocktail_tills: int,
     ):
         self.config = config
-        self.n_cashiers = n_cashiers
+        self.n_cashiers = n_cashiers or int((n_topup_tills + n_beer_tills + n_cocktail_tills + n_entry_tills) * 1.5)
         self.n_tags = n_tags
         self.n_entry_tills = n_entry_tills
         self.n_topup_tills = n_topup_tills

@@ -22,6 +22,7 @@ from stustapay.festivalsimulator.database_setup import (
     PROFILE_ID_TICKET,
     PROFILE_ID_TOPUP,
 )
+from stustapay.framework.async_utils import AsyncThread, with_db_pool
 from stustapay.framework.database import create_db_pool
 
 
@@ -166,8 +167,8 @@ class Simulator:
                 config = TerminalConfig.model_validate(await resp.json())
             return Terminal(token=success.token, till=success.till, config=config)
 
-    async def voucher_granting(self):
-        db_pool = await create_db_pool(self.config.database, n_connections=1)
+    @with_db_pool
+    async def voucher_granting(self, db_pool: asyncpg.Pool):
         async with aiohttp.ClientSession(base_url=self.admin_url) as client:
             while True:
                 rows = await db_pool.fetch("select * from account where user_tag_uid is not null")
@@ -327,8 +328,8 @@ class Simulator:
                     db_pool=db_pool, terminal=terminal, cashier_tag_uid=cashier_tag_uids[0], stock_up=perform_close_out
                 )
 
-    async def entry_till(self):
-        db_pool = await create_db_pool(self.config.database, n_connections=2)
+    @with_db_pool
+    async def entry_till(self, db_pool: asyncpg.Pool):
         async with db_pool.acquire() as conn:
             rows = await conn.fetch("select id from till where id != 1 and active_profile_id = $1", PROFILE_ID_TICKET)
             terminals = await self._register_terminals(
@@ -368,8 +369,8 @@ class Simulator:
                 if random.randint(0, 100) == 0:
                     await self.perform_cashier_shift_change(db_pool=db_pool, terminal=terminal, perform_close_out=True)
 
-    async def topup_till(self):
-        db_pool = await create_db_pool(self.config.database, n_connections=2)
+    @with_db_pool
+    async def topup_till(self, db_pool: asyncpg.Pool):
         async with db_pool.acquire() as conn:
             rows = await conn.fetch("select id from till where id != 1 and active_profile_id = $1", PROFILE_ID_TOPUP)
             terminals = await self._register_terminals(
@@ -414,8 +415,8 @@ class Simulator:
                 if random.randint(0, 100) == 0:
                     await self.perform_cashier_shift_change(db_pool=db_pool, terminal=terminal, perform_close_out=True)
 
-    async def sale_till(self):
-        db_pool = await create_db_pool(self.config.database, n_connections=2)
+    @with_db_pool
+    async def sale_till(self, db_pool: asyncpg.Pool):
         async with db_pool.acquire() as conn:
             rows = await conn.fetch(
                 "select id from till where id != 1 and (active_profile_id = $1 or active_profile_id = $2)",
@@ -473,7 +474,7 @@ class Simulator:
                 payload = await resp.json()
             return payload["access_token"]
 
-    async def run(self):
+    async def initialize(self):
         db_pool = await create_db_pool(self.config.database, n_connections=1)
 
         self.start_time = datetime.now()
@@ -485,20 +486,28 @@ class Simulator:
         self.admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
         self.n_tills_total = await db_pool.fetchval("select count(*) from till")
 
-        entry_till_thread = threading.Thread(target=lambda: asyncio.run(self.entry_till()))
-        topup_till_thread = threading.Thread(target=lambda: asyncio.run(self.topup_till()))
-        sale_till_thread = threading.Thread(target=lambda: asyncio.run(self.sale_till()))
-        voucher_thread = threading.Thread(target=lambda: asyncio.run(self.voucher_granting()))
-        reporter_thread = threading.Thread(target=lambda: asyncio.run(self.reporter()))
+        await db_pool.close()
 
-        entry_till_thread.start()
-        topup_till_thread.start()
-        sale_till_thread.start()
-        voucher_thread.start()
-        reporter_thread.start()
+    def run(self):
+        asyncio.run(self.initialize())
+        threads = [
+            AsyncThread(self.entry_till),
+            AsyncThread(self.topup_till),
+            AsyncThread(self.sale_till),
+            AsyncThread(self.voucher_granting),
+            AsyncThread(self.reporter),
+        ]
 
-        entry_till_thread.join()
-        topup_till_thread.join()
-        sale_till_thread.join()
-        voucher_thread.join()
-        reporter_thread.join()
+        for thread in threads:
+            thread.start()
+
+        try:
+            while True:
+                time.sleep(0.1)
+        finally:
+            for thread in threads:
+                thread.stop()
+
+        # wait for all threads to actually stop
+        for thread in threads:
+            thread.join()
