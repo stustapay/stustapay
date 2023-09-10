@@ -30,6 +30,16 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
   if (node.allowed_objects_at_node.includes("user") || node.allowed_objects_at_node.includes("user_role")) {
     const id = `/node/${node.id}/users`;
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("users")} labelIcon={PersonIcon} />);
+    const cashierId = `/node/${node.id}/cashiers`;
+    items.push(
+      <NavigationTreeItem
+        key={cashierId}
+        nodeId={cashierId}
+        to={cashierId}
+        labelText={t("cashiers")}
+        labelIcon={PersonIcon}
+      />
+    );
   }
   if (node.allowed_objects_at_node.includes("tax_rate")) {
     const id = `/node/${node.id}/tax-rates`;

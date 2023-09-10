@@ -32,7 +32,7 @@ class RouteBuilder implements IRouteBuilder {
         return this.base() + `/${id}`;
     }
 
-    public detailAction = (id: string | number, suffix: string) => {
+    public detailAction = (id: string | number | undefined, suffix: string) => {
         return `${this.detail(id)}/${suffix}`
     }
 }

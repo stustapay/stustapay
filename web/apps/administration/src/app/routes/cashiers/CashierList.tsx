@@ -1,4 +1,5 @@
 import { Cashier, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@/api";
+import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
@@ -62,7 +63,7 @@ export const CashierList: React.FC = () => {
     }
 
     return (
-      <Link component={RouterLink} key={id} to={`/tills/${till.id}`}>
+      <Link component={RouterLink} key={id} to={TillRoutes.detail(till.id)}>
         {till.name}
       </Link>
     );
@@ -73,7 +74,7 @@ export const CashierList: React.FC = () => {
       field: "login",
       headerName: t("cashier.login") as string,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/cashiers/${params.row.id}`}>
+        <Link component={RouterLink} to={CashierRoutes.detail(params.row.id)}>
           {params.row.login}
         </Link>
       ),
@@ -102,7 +103,7 @@ export const CashierList: React.FC = () => {
       headerName: t("cashier.tagId") as string,
       type: "number",
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/user-tags/${params.row.user_tag_uid_hex}`}>
+        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_uid_hex)}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}
         </Link>
       ),

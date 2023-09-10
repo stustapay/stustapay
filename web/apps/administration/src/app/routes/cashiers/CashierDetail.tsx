@@ -9,7 +9,7 @@ import {
   useListTillsQuery,
   useListUsersQuery,
 } from "@/api";
-import { CashierRoutes, TillRoutes } from "@/app/routes";
+import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { ButtonLink, DetailLayout, ListItemLink } from "@components";
 import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
@@ -113,7 +113,7 @@ export const CashierDetail: React.FC = () => {
       field: "id",
       headerName: t("shift.id") as string,
       renderCell: (params) => (
-        <RouterLink to={`/cashiers/${cashierId}/shifts/${params.row.id}`}>{params.row.id}</RouterLink>
+        <RouterLink to={CashierRoutes.detail(cashierId) + `/shifts/${params.row.id}`}>{params.row.id}</RouterLink>
       ),
     },
     {
@@ -189,7 +189,7 @@ export const CashierDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("cashier.description")} secondary={cashier.description} />
           </ListItem>
-          <ListItemLink to={`/user-tags/${cashier.user_tag_uid_hex}`}>
+          <ListItemLink to={UserTagRoutes.detail(cashier.user_tag_uid_hex)}>
             <ListItemText primary={t("cashier.tagId")} secondary={formatUserTagUid(cashier.user_tag_uid_hex)} />
           </ListItemLink>
           {cashier.till_ids.length !== 0 ? (
@@ -210,7 +210,7 @@ export const CashierDetail: React.FC = () => {
             />
             {cashier.cash_drawer_balance !== 0 && (
               <ListItemSecondaryAction>
-                <ButtonLink to={`/cashiers/${cashierId}/close-out`}>{t("cashier.closeOut")}</ButtonLink>
+                <ButtonLink to={CashierRoutes.detailAction(cashierId, "close-out")}>{t("cashier.closeOut")}</ButtonLink>
               </ListItemSecondaryAction>
             )}
           </ListItem>
