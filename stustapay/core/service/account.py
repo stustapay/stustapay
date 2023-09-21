@@ -199,8 +199,10 @@ class AccountService(DBService):
             raise InvalidArgument("Tag is already registered")
 
         # create a new customer account for the given tag
+        # TODO: NODE use node_id here
         account_id = await conn.fetchval(
-            "insert into account (user_tag_uid, type) values ($1, 'private') returning id",
+            "insert into account (node_id, user_tag_uid, type) values ($1, 'private') returning id",
+            1,
             new_free_ticket_grant.user_tag_uid,
         )
 

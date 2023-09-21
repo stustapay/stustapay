@@ -30,9 +30,10 @@ class TicketService(DBService):
     async def create_ticket(self, *, conn: Connection, ticket: NewTicket) -> Ticket:
         ticket_id = await conn.fetchval(
             "insert into ticket "
-            "(name, description, product_id, initial_top_up_amount, restriction) "
-            "values ($1, $2, $3, $4, $5) "
+            "(node_id, name, description, product_id, initial_top_up_amount, restriction) "
+            "values ($1, $2, $3, $4, $5, $6) "
             "returning id",
+            ticket.node_id,
             ticket.name,
             ticket.description,
             ticket.product_id,

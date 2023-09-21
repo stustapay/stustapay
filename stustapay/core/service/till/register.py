@@ -37,7 +37,11 @@ async def get_cash_register(conn: Connection, register_id: int) -> Optional[Cash
 
 
 async def create_cash_register(*, conn: Connection, new_register: NewCashRegister) -> CashRegister:
-    register_id = await conn.fetchval("insert into cash_register (name) values ($1) returning id", new_register.name)
+    register_id = await conn.fetchval(
+        "insert into cash_register (node_id, name) values ($1, $2) returning id",
+        new_register.node_id,
+        new_register.name,
+    )
     register = await get_cash_register(conn=conn, register_id=register_id)
     assert register is not None
     return register
@@ -77,10 +81,11 @@ class TillRegisterService(DBService):
     ) -> CashRegisterStocking:
         stocking_id = await conn.fetchval(
             "insert into cash_register_stocking "
-            "   (euro200, euro100, euro50, euro20, euro10, euro5, euro2, euro1, "
+            "   (node_id, euro200, euro100, euro50, euro20, euro10, euro5, euro2, euro1, "
             "   cent50, cent20, cent10, cent5, cent2, cent1, variable_in_euro, name) "
-            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) "
             "returning id",
+            stocking.node_id,
             stocking.euro200,
             stocking.euro100,
             stocking.euro50,

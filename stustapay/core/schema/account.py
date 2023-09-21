@@ -83,6 +83,7 @@ class UserTagHistoryEntry(BaseModel):
 
 
 class Account(BaseModel):
+    node_id: int
     id: int
     type: AccountType
     name: Optional[str]

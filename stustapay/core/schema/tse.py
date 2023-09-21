@@ -28,6 +28,7 @@ class NewTse(UpdateTse):
 
 
 class Tse(NewTse):
+    node_id: int
     id: int
     status: TseStatus
     hashalgo: Optional[str]

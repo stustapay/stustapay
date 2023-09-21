@@ -14,6 +14,7 @@ class NewTicket(BaseModel):
 
 
 class Ticket(NewTicket):
+    node_id: int
     id: int
     product_name: str
     price: float

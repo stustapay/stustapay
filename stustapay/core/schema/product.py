@@ -33,6 +33,7 @@ class NewProduct(BaseModel):
 
 
 class Product(NewProduct):
+    node_id: int
     id: int
     tax_rate: float
     fixed_price: bool

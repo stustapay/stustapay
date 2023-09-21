@@ -29,8 +29,9 @@ class TseService(DBService):
     @requires_node()
     async def create_tse(self, *, conn: Connection, new_tse: NewTse) -> Tse:
         tse_id = await conn.fetchval(
-            "insert into tse (name, serial, ws_url, ws_timeout, password, status) "
-            "values ($1, $2, $3, $4, $5, 'new') returning id",
+            "insert into tse (node_id, name, serial, ws_url, ws_timeout, password, status) "
+            "values ($1, $2, $3, $4, $5, $6, 'new') returning id",
+            new_tse.node_id,
             new_tse.name,
             new_tse.serial,
             new_tse.ws_url,

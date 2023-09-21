@@ -73,9 +73,11 @@ class ProductService(DBService):
     async def create_product(self, *, conn: Connection, product: NewProduct) -> Product:
         product_id = await conn.fetchval(
             "insert into product "
-            "(name, price, tax_name, target_account_id, fixed_price, price_in_vouchers, is_locked, is_returnable) "
-            "values ($1, $2, $3, $4, $5, $6, $7, $8) "
+            "(node_id, name, price, tax_name, target_account_id, fixed_price, price_in_vouchers, is_locked, "
+            "is_returnable) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9) "
             "returning id",
+            product.node_id,
             product.name,
             product.price,
             product.tax_name,

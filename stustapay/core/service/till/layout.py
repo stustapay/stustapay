@@ -30,7 +30,8 @@ class TillLayoutService(DBService):
     @requires_node()
     async def create_button(self, *, conn: Connection, button: NewTillButton) -> TillButton:
         row = await conn.fetchrow(
-            "insert into till_button (name) values ($1) returning id, name",
+            "insert into till_button (node_id, name) values ($1, $2) returning id, name",
+            button.node_id,
             button.name,
         )
         button_id = row["id"]
@@ -94,7 +95,9 @@ class TillLayoutService(DBService):
     async def create_layout(self, *, conn: Connection, layout: NewTillLayout) -> TillLayout:
         till_layout = await conn.fetch_one(
             TillLayout,
-            "insert into till_layout (name, description) values ($1, $2) returning id, name, description",
+            "insert into till_layout (node_id, name, description) "
+            "values ($1, $2, $3) returning id, name, description",
+            layout.node_id,
             layout.name,
             layout.description,
         )

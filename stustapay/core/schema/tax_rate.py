@@ -9,4 +9,5 @@ class TaxRateWithoutName(BaseModel):
 
 
 class TaxRate(TaxRateWithoutName):
+    node_id: int
     name: str

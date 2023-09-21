@@ -78,6 +78,101 @@ async def psql_attach(config: DatabaseConfig):
         return ret
 
 
+async def drop_all_views(conn: asyncpg.Connection, schema: str):
+    # TODO: we might have to find out the dependency order of the views if drop cascade does not work
+    result = await conn.fetch(
+        "select table_name from information_schema.views where table_schema = $1 and table_name !~ '^pg_';",
+        schema,
+    )
+    views = [row["table_name"] for row in result]
+    if len(views) == 0:
+        return
+
+    # we use drop if exists here as the cascade dropping might lead the view to being already dropped
+    # due to being a dependency of another view
+    drop_statements = "\n".join([f"drop view if exists {view} cascade;" for view in views])
+    await conn.execute(drop_statements)
+
+
+async def drop_all_triggers(conn: asyncpg.Connection, schema: str):
+    result = await conn.fetch(
+        "select distinct on (trigger_name, event_object_table) trigger_name, event_object_table "
+        "from information_schema.triggers where trigger_schema = $1",
+        schema,
+    )
+    statements = []
+    for row in result:
+        trigger_name = row["trigger_name"]
+        table = row["event_object_table"]
+        statements.append(f"drop trigger {trigger_name} on {table};")
+
+    if len(statements) == 0:
+        return
+
+    drop_statements = "\n".join(statements)
+    await conn.execute(drop_statements)
+
+
+async def drop_all_functions(conn: asyncpg.Connection, schema: str):
+    result = await conn.fetch("select proname, prokind from pg_proc where pronamespace = $1::regnamespace;", schema)
+    drop_statements = []
+    for row in result:
+        kind = row["prokind"].decode("utf-8")
+        name = row["proname"]
+        if kind == "f" or kind == "w":
+            drop_type = "function"
+        elif kind == "a":
+            drop_type = "aggregate"
+        elif kind == "p":
+            drop_type = "procedure"
+        else:
+            raise RuntimeError(f'Unknown postgres function type "{kind}"')
+        drop_statements.append(f"drop {drop_type} {name} cascade;")
+
+    if len(drop_statements) == 0:
+        return
+
+    drop_code = "\n".join(drop_statements)
+    await conn.execute(drop_code)
+
+
+async def drop_all_constraints(conn: asyncpg.Connection, schema: str):
+    """drop all constraints in the given schema which are not unique, primary or foreign key constraints"""
+    result = await conn.fetch(
+        "select con.conname as constraint_name, rel.relname as table_name, con.contype as constraint_type "
+        "from pg_catalog.pg_constraint con "
+        "   join pg_catalog.pg_namespace nsp on nsp.oid = con.connamespace "
+        "   left join pg_catalog.pg_class rel on rel.oid = con.conrelid "
+        "where nsp.nspname = $1 and con.conname !~ '^pg_' "
+        "   and con.contype != 'p' and con.contype != 'f' and con.contype != 'u';",
+        schema,
+    )
+    constraints = []
+    for row in result:
+        constraint_name = row["constraint_name"]
+        constraint_type = row["constraint_type"].decode("utf-8")
+        table_name = row["table_name"]
+        if constraint_type == "c":
+            constraints.append(f"alter table {table_name} drop constraint {constraint_name};")
+        elif constraint_type == "t":
+            constraints.append(f"drop constraint trigger {constraint_name};")
+        else:
+            raise RuntimeError(f'Unknown constraint type "{constraint_type}" for constraint "{constraint_name}"')
+
+    if len(constraints) == 0:
+        return
+
+    drop_statements = "\n".join(constraints)
+    await conn.execute(drop_statements)
+
+
+async def drop_db_code(conn: asyncpg.Connection, schema: str):
+    await drop_all_triggers(conn, schema=schema)
+    await drop_all_functions(conn, schema=schema)
+    await drop_all_views(conn, schema=schema)
+    await drop_all_constraints(conn, schema=schema)
+
+
 class SchemaRevision:
     def __init__(self, file_name: Path, code: str, version: str, requires: Optional[str]):
         self.file_name = file_name
@@ -106,7 +201,8 @@ class SchemaRevision:
 
         # now we can actually apply the revision
         try:
-            await conn.execute(self.code)
+            if len(self.code.splitlines()) > 2:  # does not only consist of first two header comment lines
+                await conn.execute(self.code)
         except asyncpg.exceptions.PostgresSyntaxError as exc:
             exc_dict = exc.as_dict()
             position = int(exc_dict["position"])
@@ -127,7 +223,7 @@ class SchemaRevision:
             revision_content = revision.read_text("utf-8")
             lines = revision_content.splitlines()
             if not len(lines) > 2:
-                raise ValueError(f"Revision {revision} is invalid")
+                logger.warning(f"Revision {revision} is empty")
 
             if (version_match := REVISION_VERSION_RE.match(lines[0])) is None:
                 raise ValueError(
@@ -171,6 +267,43 @@ class SchemaRevision:
             sorted_revisions.append(next_revision)
 
         return sorted_revisions
+
+
+async def _apply_db_code(conn: asyncpg.Connection, code_path: Path):
+    for code_file in sorted(code_path.glob("*.sql")):
+        code = code_file.read_text("utf-8")
+        await conn.execute(code)
+
+
+async def apply_revisions(
+    db_pool: asyncpg.Pool, revision_path: Path, code_path: Path, until_revision: Optional[str] = None
+):
+    revisions = SchemaRevision.revisions_from_dir(revision_path)
+
+    async with db_pool.acquire() as conn:
+        async with conn.transaction():
+            await conn.execute(f"create table if not exists {REVISION_TABLE} (version text not null primary key)")
+
+            curr_revision = await conn.fetchval(f"select version from {REVISION_TABLE} limit 1")
+
+            await drop_db_code(conn=conn, schema="public")
+            # TODO: perform a dry run to check all revisions before doing anything
+
+            found = curr_revision is None
+            for revision in revisions:
+                if found:
+                    await revision.apply(conn)
+
+                if revision.version == curr_revision:
+                    found = True
+
+                if until_revision is not None and revision.version == until_revision:
+                    return
+
+            if not found:
+                raise ValueError(f"Unknown revision {curr_revision} present in database")
+
+            await _apply_db_code(conn=conn, code_path=code_path)
 
 
 T = TypeVar("T", bound=BaseModel)

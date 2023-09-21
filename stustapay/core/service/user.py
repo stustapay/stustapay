@@ -119,6 +119,7 @@ class UserService(DBService):
             await conn.execute("delete from user_to_role where user_id = $1", user_id)
 
         for role_name in role_names:
+            # TODO: NODE_ID incorporate node_id
             role_id = await conn.fetchval("select id from user_role where name = $1", role_name)
             if role_id is None:
                 raise InvalidArgument(f"User role with name '{role_name}' does not exist")
@@ -143,14 +144,18 @@ class UserService(DBService):
             )
 
         if customer_account_id is None:
+            # TODO: NODE_ID determine node id
             customer_account_id = await conn.fetchval(
-                "insert into account (user_tag_uid, type) values ($1, 'private') returning id", new_user.user_tag_uid
+                "insert into account (node_id, user_tag_uid, type) values ($1, $2, 'private') returning id",
+                new_user.node_id,
+                new_user.user_tag_uid,
             )
 
         user_id = await conn.fetchval(
-            "insert into usr (login, description, password, display_name, user_tag_uid, transport_account_id, "
+            "insert into usr (node_id, login, description, password, display_name, user_tag_uid, transport_account_id, "
             "   cashier_account_id, created_by, customer_account_id) "
-            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id",
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id",
+            new_user.node_id,
             new_user.login,
             new_user.description,
             hashed_password,

@@ -5,6 +5,7 @@ from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.framework.database import Connection
 
 dummy_tree = Node(
     id=1,
@@ -239,6 +240,10 @@ dummy_tree = Node(
         ),
     ],
 )
+
+
+async def fetch_node(conn: Connection, node_id: int) -> Node | None:
+    return await conn.fetch_one(Node, "select * from node where id = $1", node_id)
 
 
 class TreeService(DBService):

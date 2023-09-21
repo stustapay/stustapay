@@ -14,6 +14,7 @@ class NewTillButton(BaseModel):
 
 
 class TillButton(NewTillButton):
+    node_id: int
     id: int
     price: float
 
@@ -26,6 +27,7 @@ class NewTillLayout(BaseModel):
 
 
 class TillLayout(NewTillLayout):
+    node_id: int
     id: int
 
 
@@ -40,10 +42,12 @@ class NewTillProfile(BaseModel):
 
 
 class TillProfile(NewTillProfile):
+    node_id: int
     id: int
 
 
 class NewTill(BaseModel):
+    node_id: int
     name: str
     description: Optional[str] = None
     active_shift: Optional[str] = None
@@ -66,6 +70,7 @@ class Till(NewTill):
 
 
 class NewCashRegister(BaseModel):
+    node_id: int
     name: str
 
 
@@ -78,6 +83,7 @@ class CashRegister(NewCashRegister):
 
 
 class NewCashRegisterStocking(BaseModel):
+    node_id: int
     name: str
     euro200: int = 0
     euro100: int = 0

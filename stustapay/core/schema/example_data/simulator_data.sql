@@ -8,74 +8,87 @@ begin;
 set plpgsql.extra_warnings to 'all';
 set datestyle to 'ISO';
 
-insert into user_tag_secret (
-    id, key0, key1
+insert into node (
+    id, parent, name, description
 ) overriding system value
 values (
-    0, decode('000102030405060708090a0b0c0d0e0f', 'hex'), decode('000102030405060708090a0b0c0d0e0f', 'hex')
+    2, 1, 'SSC-Test', 'Test Event'
+);
+
+insert into user_tag_secret (
+    node_id, id, key0, key1
+) overriding system value
+values (
+    2, 0, decode('000102030405060708090a0b0c0d0e0f', 'hex'), decode('000102030405060708090a0b0c0d0e0f', 'hex')
 )
 on conflict do nothing;
 
 insert into user_tag (
-    uid, pin, serial, restriction, secret
+    node_id, uid, pin, serial, restriction, secret
 )
 values (
-    1, 'pin', null, null, null
+    2, 1, 'pin', null, null, null
 ),     -- admin + finanzorga tag
     (
-        2, 'pin', null, null, null
+        2, 2, 'pin', null, null, null
     ), -- finanzorga1 tag
     (
-        3, 'pin', null, null, null
+        2, 3, 'pin', null, null, null
     ), -- finanzorga2 tag
     (
-        4, 'pin', null, null, null
+        2, 4, 'pin', null, null, null
     ), -- finanzorga3 tag
     (
-        5, 'pin', null, null, null
+        2, 5, 'pin', null, null, null
     ), -- finanzorga4 tag
     (
-        6, 'pin', null, null, null
+        2, 6, 'pin', null, null, null
     )  -- finanzorga5 tag
 on conflict do nothing;
 
 
 insert into account (
-    id, type, user_tag_uid
+    node_id, id, type, user_tag_uid
 ) overriding system value
 values (
-    200, 'private', 1
+    2, 200, 'private', 1
 ), (
-    201, 'private', 2
+    2, 201, 'private', 2
 ), (
-    202, 'private', 3
+    2, 202, 'private', 3
 ), (
-    203, 'private', 4
+    2, 203, 'private', 4
 ), (
-    204, 'private', 5
+    2, 204, 'private', 5
 ), (
-    205, 'private', 6
+    2, 205, 'private', 6
 )
 on conflict do nothing;
 select setval('account_id_seq', 300);
 
 insert into usr (
-    id, login, password, description, transport_account_id, cashier_account_id, user_tag_uid, customer_account_id
+    node_id, id, login, password, description, transport_account_id, cashier_account_id, user_tag_uid,
+    customer_account_id
 ) overriding system value
 values
     -- password is admin
     (
-        0, 'admin', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Admin user', null, null, 1, 200
+        2, 0, 'admin', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Admin user', null, null, 1, 200
     ), (
-    1, 'finanzorga1', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 2, 201
+    2, 1, 'finanzorga1', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 2,
+    201
 ), (
-    2, 'finanzorga2', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 3, 202
+    2, 2, 'finanzorga2', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 3,
+    202
 ), (
-    3, 'finanzorga3', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 4, 203
+    2, 3, 'finanzorga3', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 4,
+    203
 ), (
-    4, 'finanzorga4', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 5, 204
+    2, 4, 'finanzorga4', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 5,
+    204
 ), (
-    5, 'finanzorga5', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 6, 205
+    2, 5, 'finanzorga5', '$2b$12$pic/ICOrv6eOAPDCPvLRuuwYihKbIAlP4MhXa8.ccCHy2IaTSVr0W', 'Finanzorga', null, null, 6,
+    205
 )
 on conflict do nothing;
 select setval('usr_id_seq', 100);
@@ -107,44 +120,43 @@ values (
 on conflict do nothing;
 
 insert into product (
-    id, name, price, price_in_vouchers, fixed_price, target_account_id, tax_name, is_returnable, is_locked
+    node_id, id, name, price, price_in_vouchers, fixed_price, target_account_id, tax_name, is_returnable, is_locked
 ) overriding system value
 values
-    -- Special Product: id 0-99
-    -- Pfand
+-- Special Product: id 0-99
+-- Pfand
     (
-        10, 'Pfand', 2.00, null, true, 2, 'none', true, true
+        2, 10, 'Pfand', 2.00, null, true, 2, 'none', true, true
     ),
-
-    -- Getränke
+-- Getränke
     (
-        100, 'Helles 1.0l', 5.00, 2, true, null, 'ust', false, true
+        2, 100, 'Helles 1.0l', 5.00, 2, true, null, 'ust', false, true
     ), (
-    101, 'Helles 0.5l', 3.00, 1, true, null, 'ust', false, true
+    2, 101, 'Helles 0.5l', 3.00, 1, true, null, 'ust', false, true
 ), (
-    102, 'Weißbier 1.0l', 5.00, 2, true, null, 'ust', false, true
+    2, 102, 'Weißbier 1.0l', 5.00, 2, true, null, 'ust', false, true
 ), (
-    103, 'Weißbier 0.5l', 3.00, 1, true, null, 'ust', false, true
+    2, 103, 'Weißbier 0.5l', 3.00, 1, true, null, 'ust', false, true
 ), (
-    104, 'Radler 1.0l', 5.00, 2, true, null, 'ust', false, true
+    2, 104, 'Radler 1.0l', 5.00, 2, true, null, 'ust', false, true
 ), (
-    105, 'Radler 0.5l', 3.00, 1, true, null, 'ust', false, true
+    2, 105, 'Radler 0.5l', 3.00, 1, true, null, 'ust', false, true
 ), (
-    106, 'Russ 1.0l', 5.00, 2, true, null, 'ust', false, true
+    2, 106, 'Russ 1.0l', 5.00, 2, true, null, 'ust', false, true
 ), (
-    107, 'Russ 0.5l', 3.00, 1, true, null, 'ust', false, true
+    2, 107, 'Russ 0.5l', 3.00, 1, true, null, 'ust', false, true
 ), (
-    108, 'Limonade 1.0l', 2.00, 2, true, null, 'ust', false, true
+    2, 108, 'Limonade 1.0l', 2.00, 2, true, null, 'ust', false, true
 ), (
-    109, 'Whisky 1.0l', 20.00, 10, true, null, 'ust', false, true
+    2, 109, 'Whisky 1.0l', 20.00, 10, true, null, 'ust', false, true
 ),
-    -- Essen
+-- Essen
     (
-        150, 'Weißwurst', 2.00, null, true, null, 'eust', false, true
+        2, 150, 'Weißwurst', 2.00, null, true, null, 'eust', false, true
     ),
-    -- Freipreis
+-- Freipreis
     (
-        160, 'Brotladen', null, null, false, null, 'transparent', false, true
+        2, 160, 'Brotladen', null, null, false, null, 'transparent', false, true
     )
 on conflict do nothing;
 select setval('product_id_seq', 200);
@@ -153,7 +165,7 @@ insert into product_restriction (
     id, restriction
 )
 values
-    -- alcohol is not allowed below 16
+-- alcohol is not allowed below 16
     (
         100, 'under_16'
     ), (
@@ -171,7 +183,7 @@ values
 ), (
     107, 'under_16'
 ),
-    -- whisky is not allowed below 18 (and thus explicit below 16)
+-- whisky is not allowed below 18 (and thus explicit below 16)
     (
         109, 'under_16'
     ), (
@@ -180,30 +192,30 @@ values
 on conflict do nothing;
 
 insert into till_button (
-    id, name
+    node_id, id, name
 ) overriding system value
 values (
-    0, 'Helles 1,0l'
+    2, 0, 'Helles 1,0l'
 ), (
-    1, 'Helles 0,5l'
+    2, 1, 'Helles 0,5l'
 ), (
-    2, 'Weißbier 1l'
+    2, 2, 'Weißbier 1l'
 ), (
-    3, 'Weißbier 0,5l'
+    2, 3, 'Weißbier 0,5l'
 ), (
-    4, 'Radler 1l'
+    2, 4, 'Radler 1l'
 ), (
-    5, 'Radler 0,5l'
+    2, 5, 'Radler 0,5l'
 ), (
-    6, 'Russ 1l'
+    2, 6, 'Russ 1l'
 ), (
-    7, 'Russ 0,5l'
+    2, 7, 'Russ 0,5l'
 ), (
-    8, 'Limonade 1.0l'
+    2, 8, 'Limonade 1.0l'
 ), (
-    9, 'Whiskey 1.0l'
+    2, 9, 'Whiskey 1.0l'
 ), (
-    10, 'Pfand'
+    2, 10, 'Pfand'
 )
 on conflict do nothing;
 select setval('till_button_id_seq', 100);
@@ -212,7 +224,7 @@ insert into till_button_product (
     button_id, product_id
 )
 values
-    -- getränke + pfand
+-- getränke + pfand
     (
         0, 100
     ), (
@@ -259,24 +271,24 @@ values
 on conflict do nothing;
 
 insert into ticket (
-    id, name, product_id, initial_top_up_amount
+    node_id, id, name, product_id, initial_top_up_amount
 ) overriding system value
 values (
-    0, 'Eintritt', 4, 8
+    2, 0, 'Eintritt', 4, 8
 );
 
 
 insert into till_layout (
-    id, name, description
+    node_id, id, name, description
 ) overriding system value
 values (
-    0, 'Bierkasse', 'Allgemeine Bierkasse'
+    2, 0, 'Bierkasse', 'Allgemeine Bierkasse'
 ), (
-    1, 'Cocktailkasse', 'Allgemeine Cocktailkasse'
+    2, 1, 'Cocktailkasse', 'Allgemeine Cocktailkasse'
 ), (
-    2, 'Aufladekasse', 'Allgemeine Aufladekasse'
+    2, 2, 'Aufladekasse', 'Allgemeine Aufladekasse'
 ), (
-    3, 'Eintrittskasse', 'Allgemeine Eintrittskasse'
+    2, 3, 'Eintrittskasse', 'Allgemeine Eintrittskasse'
 )
 on conflict do nothing;
 select setval('till_layout_id_seq', 100);
@@ -285,7 +297,7 @@ insert into till_layout_to_button (
     layout_id, button_id, sequence_number
 )
 values
-    -- Bierkasse
+-- Bierkasse
     (
         0, 0, 0
     ), (
@@ -307,7 +319,7 @@ values
 ), (
     0, 10, 10
 ), --pfand
-    -- Cocktail
+-- Cocktail
     (
         1, 9, 0
     ), (
@@ -326,16 +338,16 @@ values
 on conflict do nothing;
 
 insert into till_profile (
-    id, name, description, layout_id, allow_top_up, allow_cash_out, allow_ticket_sale
+    node_id, id, name, description, layout_id, allow_top_up, allow_cash_out, allow_ticket_sale
 ) overriding system value
 values (
-    0, 'Bierkasse', 'Allgemeine Pot Bierkasse', 0, false, false, false
+    2, 0, 'Bierkasse', 'Allgemeine Pot Bierkasse', 0, false, false, false
 ), (
-    1, 'Cocktailkasse', 'Cocktailkasse', 1, false, false, false
+    2, 1, 'Cocktailkasse', 'Cocktailkasse', 1, false, false, false
 ), (
-    2, 'Aufladekasse', 'Aufladekasse', 2, true, true, false
+    2, 2, 'Aufladekasse', 'Aufladekasse', 2, true, true, false
 ), (
-    3, 'Eintrittskasse', 'Eintrittskasse', 3, false, false, true
+    2, 3, 'Eintrittskasse', 'Eintrittskasse', 3, false, false, true
 )
 on conflict do nothing;
 select setval('till_profile_id_seq', 100);
@@ -386,6 +398,7 @@ values (
 );
 
 insert into tse (
+    node_id,
     name,
     serial,
     type,
@@ -393,6 +406,7 @@ insert into tse (
     password
 )
 values (
+    2,
     'tse1',
     '84ba2997f8fbf9d0feee48c7ba5812d6d1e37c33fdb11cdb06eb849b1336b1c7',
     'diebold_nixdorf',

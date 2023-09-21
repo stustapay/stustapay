@@ -8,6 +8,7 @@ from stustapay.core.schema.user import format_user_tag_uid
 
 
 class Cashier(BaseModel):
+    node_id: int
     id: int
     login: str
     display_name: str

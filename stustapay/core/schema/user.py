@@ -50,6 +50,7 @@ class Privilege(enum.Enum):
 
 
 class NewUserRole(BaseModel):
+    node_id: int
     name: str
     is_privileged: bool = False
     privileges: list[Privilege]
@@ -70,6 +71,7 @@ class LoginPayload(BaseModel):
 
 
 class NewUser(BaseModel):
+    node_id: int
     login: str
     display_name: str = ""
     user_tag_uid: int
@@ -78,6 +80,7 @@ class NewUser(BaseModel):
 
 
 class UserWithoutId(BaseModel):
+    node_id: int
     login: str
     display_name: str
     role_names: list[str]
@@ -105,6 +108,7 @@ class CurrentUser(BaseModel):
     Describes a logged-in user in the system
     """
 
+    node_id: int
     id: int
     login: str
     display_name: str

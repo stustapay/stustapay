@@ -44,9 +44,11 @@ class TillProfileService(DBService):
     @requires_node()
     async def create_profile(self, *, conn: Connection, profile: NewTillProfile) -> TillProfile:
         profile_id = await conn.fetchval(
-            "insert into till_profile (name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id) "
-            "values ($1, $2, $3, $4, $5, $6) "
+            "insert into till_profile (node_id, name, description, allow_top_up, allow_cash_out, "
+            "allow_ticket_sale, layout_id) "
+            "values ($1, $2, $3, $4, $5, $6, $7) "
             "returning id",
+            profile.node_id,
             profile.name,
             profile.description,
             profile.allow_top_up,

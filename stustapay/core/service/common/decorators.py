@@ -5,6 +5,7 @@ from typing import Optional
 import asyncpg.exceptions
 
 from stustapay.core.schema.terminal import Terminal
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.common.error import AccessDenied, Unauthorized
 
@@ -70,10 +71,10 @@ def requires_node():
     def f(func):
         @wraps(func)
         async def wrapper(self, **kwargs):
-            kwargs["node_id"] = 1
+            kwargs["node"] = Node()
             # TODO: actually read the node_id from the current user if not passed / forward it if passed
-            if "node_id" not in signature(func).parameters:
-                kwargs.pop("node_id")
+            if "node" not in signature(func).parameters:
+                kwargs.pop("node")
             return await func(self, **kwargs)
 
         return wrapper

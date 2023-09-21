@@ -1122,6 +1122,7 @@ export type GetTreeForCurrentUserApiResponse = /** status 200 Successful Respons
 export type GetTreeForCurrentUserApiArg = void;
 export type ProductRestriction = "under_16" | "under_18";
 export type Product = {
+  node_id: number;
   name: string;
   price: number | null;
   fixed_price: boolean;
@@ -1150,6 +1151,7 @@ export type HttpValidationError = {
   detail?: ValidationError[];
 };
 export type NewProduct = {
+  node_id: number;
   name: string;
   price: number | null;
   fixed_price?: boolean;
@@ -1162,6 +1164,7 @@ export type NewProduct = {
   target_account_id?: number | null;
 };
 export type User = {
+  node_id: number;
   login: string;
   display_name: string;
   role_names: string[];
@@ -1214,6 +1217,7 @@ export type Privilege =
   | "grant_free_tickets"
   | "grant_vouchers";
 export type UserRole = {
+  node_id: number;
   name: string;
   is_privileged?: boolean;
   privileges: Privilege[];
@@ -1226,6 +1230,7 @@ export type NormalizedListUserRoleInt = {
   };
 };
 export type NewUserRole = {
+  node_id: number;
   name: string;
   is_privileged?: boolean;
   privileges: Privilege[];
@@ -1235,6 +1240,7 @@ export type UpdateUserRolePrivilegesPayload = {
   privileges: Privilege[];
 };
 export type TaxRate = {
+  node_id: number;
   rate: number;
   description: string;
   name: string;
@@ -1246,10 +1252,12 @@ export type NormalizedListTaxRateStr = {
   };
 };
 export type TaxRateWithoutName = {
+  node_id: number;
   rate: number;
   description: string;
 };
 export type CurrentUser = {
+  node_id: number;
   id: number;
   login: string;
   display_name: string;
@@ -1277,6 +1285,7 @@ export type ChangePasswordPayload = {
   new_password: string;
 };
 export type Till = {
+  node_id: number;
   name: string;
   description?: string | null;
   active_shift?: string | null;
@@ -1299,12 +1308,14 @@ export type NormalizedListTillInt = {
   };
 };
 export type NewTill = {
+  node_id: number;
   name: string;
   description?: string | null;
   active_shift?: string | null;
   active_profile_id: number;
 };
 export type TillLayout = {
+  node_id: number;
   name: string;
   description: string;
   button_ids?: number[] | null;
@@ -1318,12 +1329,14 @@ export type NormalizedListTillLayoutInt = {
   };
 };
 export type NewTillLayout = {
+  node_id: number;
   name: string;
   description: string;
   button_ids?: number[] | null;
   ticket_ids?: number[] | null;
 };
 export type TillProfile = {
+  node_id: number;
   name: string;
   description?: string | null;
   layout_id: number;
@@ -1340,6 +1353,7 @@ export type NormalizedListTillProfileInt = {
   };
 };
 export type NewTillProfile = {
+  node_id: number;
   name: string;
   description?: string | null;
   layout_id: number;
@@ -1349,6 +1363,7 @@ export type NewTillProfile = {
   allowed_role_names: string[];
 };
 export type TillButton = {
+  node_id: number;
   name: string;
   product_ids: number[];
   id: number;
@@ -1361,10 +1376,12 @@ export type NormalizedListTillButtonInt = {
   };
 };
 export type NewTillButton = {
+  node_id: number;
   name: string;
   product_ids: number[];
 };
 export type CashRegisterStocking = {
+  node_id: number;
   name: string;
   euro200?: number;
   euro100?: number;
@@ -1391,6 +1408,7 @@ export type NormalizedListCashRegisterStockingInt = {
   };
 };
 export type NewCashRegisterStocking = {
+  node_id: number;
   name: string;
   euro200?: number;
   euro100?: number;
@@ -1409,6 +1427,7 @@ export type NewCashRegisterStocking = {
   variable_in_euro?: number;
 };
 export type CashRegister = {
+  node_id: number;
   name: string;
   id: number;
   current_cashier_id: number | null;
@@ -1423,6 +1442,7 @@ export type NormalizedListCashRegisterInt = {
   };
 };
 export type NewCashRegister = {
+  node_id: number;
   name: string;
 };
 export type TransferRegisterPayload = {
@@ -1457,6 +1477,7 @@ export type UserTagHistoryEntry = {
   user_tag_uid_hex?: string;
 };
 export type Account = {
+  node_id: number;
   id: number;
   type: AccountType;
   name: string | null;
@@ -1565,6 +1586,7 @@ export type EditSaleProducts = {
   products: BookedProduct[];
 };
 export type Cashier = {
+  node_id: number;
   id: number;
   login: string;
   display_name: string;
@@ -1616,6 +1638,7 @@ export type CloseOut = {
   closing_out_user_id: number;
 };
 export type ProductSoldStats = {
+  node_id: number;
   name: string;
   price: number | null;
   fixed_price: boolean;
@@ -1642,6 +1665,7 @@ export type ProductStats2 = {
   voucher_stats: VoucherStats;
 };
 export type Ticket = {
+  node_id: number;
   name: string;
   description?: string | null;
   product_id: number;
@@ -1661,6 +1685,7 @@ export type NormalizedListTicketInt = {
   };
 };
 export type NewTicket = {
+  node_id: number;
   name: string;
   description?: string | null;
   product_id: number;
@@ -1697,6 +1722,7 @@ export type Tse = {
   ws_url: string;
   ws_timeout: number;
   password: string;
+  node_id: number;
   type: TseType;
   serial: string | null;
   id: number;
@@ -1718,6 +1744,7 @@ export type NewTse = {
   ws_url: string;
   ws_timeout: number;
   password: string;
+  node_id: number;
   type: TseType;
   serial: string | null;
 };

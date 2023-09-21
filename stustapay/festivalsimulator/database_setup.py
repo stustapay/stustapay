@@ -42,6 +42,8 @@ class DatabaseSetup:
         self.n_beer_tills = n_beer_tills
         self.n_cocktail_tills = n_cocktail_tills
 
+        self.event_node_id = 2
+
         self.logger = logging.getLogger(__name__)
         self.db_pool = None
 
@@ -49,37 +51,47 @@ class DatabaseSetup:
     async def _create_tags(self, conn: Connection):
         self.logger.info(f"Creating {self.n_tags} tags")
         for i in range(self.n_tags):
-            await conn.execute("insert into user_tag (uid, pin) values ($1, $2)", i + CUSTOMER_TAG_START, "pin")
+            await conn.execute(
+                "insert into user_tag (node_id, uid, pin) values ($1, $2, $3)",
+                self.event_node_id,
+                i + CUSTOMER_TAG_START,
+                "pin",
+            )
 
     async def _create_tills(self, admin_token: str, till_service: TillService, n_tills: int):
         self.logger.info(f"Creating {n_tills} tills")
         for i in range(self.n_topup_tills):
             await till_service.create_till(
                 token=admin_token,
-                till=NewTill(name=f"Aufladekasse {i}", active_profile_id=PROFILE_ID_TOPUP),
+                till=NewTill(node_id=self.event_node_id, name=f"Aufladekasse {i}", active_profile_id=PROFILE_ID_TOPUP),
             )
         for i in range(self.n_entry_tills):
             await till_service.create_till(
                 token=admin_token,
-                till=NewTill(name=f"Eintrittskasse {i}", active_profile_id=PROFILE_ID_TICKET),
+                till=NewTill(
+                    node_id=self.event_node_id, name=f"Eintrittskasse {i}", active_profile_id=PROFILE_ID_TICKET
+                ),
             )
         for i in range(self.n_beer_tills):
             await till_service.create_till(
                 token=admin_token,
-                till=NewTill(name=f"Bierkasse {i}", active_profile_id=PROFILE_ID_BEER),
+                till=NewTill(node_id=self.event_node_id, name=f"Bierkasse {i}", active_profile_id=PROFILE_ID_BEER),
             )
         for i in range(self.n_cocktail_tills):
             await till_service.create_till(
                 token=admin_token,
-                till=NewTill(name=f"Cocktailkasse {i}", active_profile_id=PROFILE_ID_COCKTAIL),
+                till=NewTill(
+                    node_id=self.event_node_id, name=f"Cocktailkasse {i}", active_profile_id=PROFILE_ID_COCKTAIL
+                ),
             )
         for i in range(n_tills):
             await till_service.register.create_cash_register(
-                token=admin_token, new_register=NewCashRegister(name=f"Blechkasse {i}")
+                token=admin_token, new_register=NewCashRegister(node_id=self.event_node_id, name=f"Blechkasse {i}")
             )
 
         await till_service.register.create_cash_register_stockings(
-            token=admin_token, stocking=NewCashRegisterStocking(name="Stocking", euro20=2, euro10=1)
+            token=admin_token,
+            stocking=NewCashRegisterStocking(node_id=self.event_node_id, name="Stocking", euro20=2, euro10=1),
         )
 
     async def _create_cashiers(self, user_service: UserService, n_cashiers: int):
@@ -88,10 +100,13 @@ class DatabaseSetup:
         self.logger.info(f"Creating {n_cashiers} cashiers")
         for i in range(n_cashiers):
             cashier_tag_uid = await self.db_pool.fetchval(
-                "insert into user_tag (uid) values ($1) returning uid", i + CASHIER_TAG_START
+                "insert into user_tag (node_id, uid) values ($1, $2) returning uid",
+                self.event_node_id,
+                i + CASHIER_TAG_START,
             )
             await user_service.create_user_no_auth(
                 new_user=UserWithoutId(
+                    node_id=self.event_node_id,
                     login=f"Cashier {i}",
                     display_name=f"Cashier {i}",
                     role_names=[CASHIER_ROLE_NAME],

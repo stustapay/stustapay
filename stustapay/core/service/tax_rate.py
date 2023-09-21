@@ -26,7 +26,10 @@ class TaxRateService(DBService):
     async def create_tax_rate(self, *, conn: Connection, tax_rate: TaxRate) -> TaxRate:
         return await conn.fetch_one(
             TaxRate,
-            "insert into tax (name, rate, description) values ($1, $2, $3) returning name, rate, description",
+            "insert into tax (node_id, name, rate, description) "
+            "values ($1, $2, $3, $4) "
+            "returning node_id, name, rate, description",
+            tax_rate.node_id,
             tax_rate.name,
             tax_rate.rate,
             tax_rate.description,
