@@ -12,6 +12,7 @@ from stustapay.core.schema.product import (
     NewProduct,
     Product,
 )
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -70,14 +71,14 @@ class ProductService(DBService):
     @with_db_transaction
     @requires_user([Privilege.product_management])
     @requires_node()
-    async def create_product(self, *, conn: Connection, product: NewProduct) -> Product:
+    async def create_product(self, *, conn: Connection, node: Node, product: NewProduct) -> Product:
         product_id = await conn.fetchval(
             "insert into product "
             "(node_id, name, price, tax_name, target_account_id, fixed_price, price_in_vouchers, is_locked, "
             "is_returnable) "
             "values ($1, $2, $3, $4, $5, $6, $7, $8, $9) "
             "returning id",
-            product.node_id,
+            node.id,
             product.name,
             product.price,
             product.tax_name,

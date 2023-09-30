@@ -1,3 +1,58 @@
+-- return the id-array of a given node id's path,
+-- i.e. trace it up to the root.
+create or replace function node_trace(
+    start_node_id bigint
+) returns bigint[] as
+$$
+<<locals>> declare
+    has_cycle boolean;
+    trace     bigint[];
+begin
+
+    -- now for the juicy part - check if we have circular dependencies in clearing account relations
+    with recursive search_graph(node_id, depth, path, cycle) as (
+        -- base case: start at the requested node
+        select
+            start_node_id,
+            1,
+            array [start_node_id],
+            false
+        union all
+        -- add the node's parent to our result set (find the parents for all so-far evaluated nodes)
+        select
+            node.parent,
+            sg.depth + 1,
+            node.parent || sg.path,
+            node.parent = any (sg.path)
+        from
+            search_graph sg
+            join node on sg.node_id = node.id
+        where
+            node.id != 0
+            and not sg.cycle
+                                                                )
+    select
+        sg.path,
+        sg.cycle
+    into locals.trace, locals.has_cycle
+    from
+        search_graph sg
+    where
+        node_id = 0;
+
+    if locals.has_cycle then raise 'node has cycle: %', locals.trace; end if;
+
+    --     if start_node_id != 0 then
+--         raise 'stuff %, %', locals.trace, rofl;
+--     end if;
+
+    return locals.trace;
+end
+$$ language plpgsql
+    stable
+    set search_path = "$user", public;
+
+
 create or replace function user_to_role_updated() returns trigger
     set search_path = "$user", public
     language plpgsql as
@@ -359,8 +414,8 @@ execute function update_account_user_tag_association_to_user();
 create or replace function update_node_path() returns trigger as
 $$
 begin
-    NEW.parent_ids := node_trace(NEW.id);
-    NEW.path := array_to_string(NEW.parent_ids, '/');
+    NEW.parent_ids := node_trace(NEW.parent);
+    NEW.path := '/' || array_to_string(NEW.parent_ids || array[NEW.id], '/');
 
     return NEW;
 end

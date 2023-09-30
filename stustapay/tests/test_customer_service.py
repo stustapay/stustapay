@@ -60,19 +60,20 @@ class CustomerServiceTest(TerminalTestCase):
         self.balance = 120
 
         self.bon_path = "test_bon.pdf"
-        pc = await self.config_service.get_public_config()
-        self.currency_symbol = pc.currency_symbol
-        self.currency_identifier = pc.currency_identifier
-        self.contact_email = pc.contact_email
+        # self.currency_symbol = pc.currency_symbol
+        self.currency_identifier = self.event.currency_identifier
+        self.contact_email = self.event.customer_portal_contact_email
 
         await self.db_conn.execute(
-            "insert into user_tag (uid, pin) values ($1, $2)",
+            "insert into user_tag (node_id, uid, pin) values ($1, $2, $3)",
+            self.node_id,
             self.uid,
             self.pin,
         )
 
         self.account_id = await self.db_conn.fetchval(
-            "insert into account (user_tag_uid, balance, type) values ($1, $2, $3) returning id",
+            "insert into account (node_id, user_tag_uid, balance, type) values ($1, $2, $3, $4) returning id",
+            self.node_id,
             self.uid,
             self.balance,
             "private",
@@ -177,27 +178,30 @@ class CustomerServiceTest(TerminalTestCase):
         # last customer has same amount of donation as balance, thus should also not be included
         self.customers_to_transfer = self.customers[1:-1]
 
-        self.currency_ident = (await self.config_service.get_public_config(conn=self.db_conn)).currency_identifier
-        self.sepa_config = await self.config_service.get_sepa_config(conn=self.db_conn)
+        self.sepa_config = self.event.sepa_config
 
     async def _add_customers(self, data: list[dict]) -> None:
         for idx, customer in enumerate(data):
             await self.db_conn.execute(
-                "insert into user_tag (uid, pin) values ($1, $2)",
+                "insert into user_tag (node_id, uid, pin) values ($1, $2, $3)",
+                self.node_id,
                 customer["uid"],
                 customer["pin"],
             )
 
             await self.db_conn.execute(
-                "insert into account (id, user_tag_uid, balance, type) overriding system value values ($1, $2, $3, $4)",
+                "insert into account (id, node_id, user_tag_uid, balance, type) "
+                "overriding system value values ($1, $2, $3, $4, $5)",
                 idx + 100,
+                self.node_id,
                 customer["uid"],
                 customer["balance"],
                 "private",
             )
 
             await self.db_conn.execute(
-                "insert into customer_info (customer_account_id, iban, account_name, email, donation, payout_export) values ($1, $2, $3, $4, $5, $6)",
+                "insert into customer_info (customer_account_id, iban, account_name, email, donation, payout_export) "
+                "values ($1, $2, $3, $4, $5, $6)",
                 idx + 100,
                 customer["iban"],
                 customer["account_name"],
@@ -273,7 +277,9 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(len(result), 0)
 
         # create payout run
-        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test", 50000.0)
+        payout_run_id, number_of_payouts = await create_payout_run(
+            self.db_conn, node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
+        )
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
 
         self.assertEqual(
@@ -285,7 +291,9 @@ class CustomerServiceTest(TerminalTestCase):
         check_data(result, len(self.customers_to_transfer))
 
     async def test_csv_export(self):
-        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test", 50000.0)
+        payout_run_id, number_of_payouts = await create_payout_run(
+            self.db_conn, node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
+        )
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
 
         customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id)
@@ -294,7 +302,7 @@ class CustomerServiceTest(TerminalTestCase):
             dump_payout_run_as_csv(
                 customers_bank_data=customers_bank_data,
                 sepa_config=self.sepa_config,
-                currency_ident=self.currency_ident,
+                currency_ident=self.currency_identifier,
             )
         )
 
@@ -311,7 +319,7 @@ class CustomerServiceTest(TerminalTestCase):
             self.assertEqual(row["beneficiary_name"], customer["account_name"])
             self.assertEqual(row["iban"], customer["iban"])
             self.assertEqual(float(row["amount"]), round(customer["balance"] - customer["donation"], 2))
-            self.assertEqual(row["currency"], self.currency_ident)
+            self.assertEqual(row["currency"], self.currency_identifier)
             self.assertEqual(
                 row["reference"],
                 self.sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer["uid"])),
@@ -325,14 +333,13 @@ class CustomerServiceTest(TerminalTestCase):
 
     async def test_sepa_export(self):
         execution_date = datetime.date.today()
-        payout_run_id, number_of_payouts = await create_payout_run(self.db_conn, "Test", 50000.0)
+        payout_run_id, number_of_payouts = await create_payout_run(
+            self.db_conn, node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
+        )
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
         customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id)
 
-        currency_ident = (await self.config_service.get_public_config(conn=self.db_conn)).currency_identifier
-        sepa_config = await self.config_service.get_sepa_config(conn=self.db_conn)
-
-        test_sepa_config = copy.deepcopy(sepa_config)
+        test_sepa_config = copy.deepcopy(self.sepa_config)
 
         # allowed symbols
         test_sepa_config.description += "-.,:()/?'+"
@@ -340,7 +347,7 @@ class CustomerServiceTest(TerminalTestCase):
             dump_payout_run_as_sepa_xml(
                 customers_bank_data=customers_bank_data,
                 sepa_config=test_sepa_config,
-                currency_ident=currency_ident,
+                currency_ident=self.currency_identifier,
                 execution_date=execution_date,
             )
         )
@@ -356,21 +363,21 @@ class CustomerServiceTest(TerminalTestCase):
             list(
                 dump_payout_run_as_sepa_xml(
                     customers_bank_data=tmp_bank_data,
-                    sepa_config=sepa_config,
-                    currency_ident=currency_ident,
+                    sepa_config=self.sepa_config,
+                    currency_ident=self.currency_identifier,
                     execution_date=datetime.date.today(),
                 )
             )
 
         # test invalid iban sender
-        test_sepa_config = copy.deepcopy(sepa_config)
+        test_sepa_config = copy.deepcopy(self.sepa_config)
         test_sepa_config.sender_iban = invalid_iban
         with self.assertRaises(ValueError):
             list(
                 dump_payout_run_as_sepa_xml(
                     customers_bank_data=customers_bank_data,
                     sepa_config=test_sepa_config,
-                    currency_ident=currency_ident,
+                    currency_ident=self.currency_identifier,
                     execution_date=datetime.date.today(),
                 )
             )
@@ -380,8 +387,8 @@ class CustomerServiceTest(TerminalTestCase):
             list(
                 dump_payout_run_as_sepa_xml(
                     customers_bank_data=customers_bank_data,
-                    sepa_config=sepa_config,
-                    currency_ident=currency_ident,
+                    sepa_config=self.sepa_config,
+                    currency_ident=self.currency_identifier,
                     execution_date=datetime.date.today() - datetime.timedelta(days=1),
                 )
             )
@@ -393,21 +400,21 @@ class CustomerServiceTest(TerminalTestCase):
             list(
                 dump_payout_run_as_sepa_xml(
                     customers_bank_data=tmp_bank_data,
-                    sepa_config=sepa_config,
-                    currency_ident=currency_ident,
+                    sepa_config=self.sepa_config,
+                    currency_ident=self.currency_identifier,
                     execution_date=datetime.date.today(),
                 )
             )
 
         # test invalid description
-        test_sepa_config = copy.deepcopy(sepa_config)
+        test_sepa_config = copy.deepcopy(self.sepa_config)
         test_sepa_config.description = "invalid {user_tag_uid}#%^;&*"
         with self.assertRaises(ValueError):
             list(
                 dump_payout_run_as_sepa_xml(
                     customers_bank_data=customers_bank_data,
                     sepa_config=test_sepa_config,
-                    currency_ident=currency_ident,
+                    currency_ident=self.currency_identifier,
                     execution_date=datetime.date.today(),
                 )
             )
@@ -532,24 +539,13 @@ class CustomerServiceTest(TerminalTestCase):
         with self.assertRaises(Unauthorized):
             await self.customer_service.update_customer_info(token="wrong", customer_bank=customer_bank)
 
-    async def test_get_public_customer_api_config(self):
-        result = await self.customer_service.get_public_customer_api_config()
-        self.assertIsNotNone(result)
-        self.assertEqual(result.currency_identifier, self.currency_identifier)
-        self.assertEqual(result.currency_symbol, self.currency_symbol)
-        self.assertEqual(result.contact_email, self.contact_email)
-
-        # test config keys from yaml config
-        cpc = self.test_config.customer_portal
-        self.assertEqual(result.data_privacy_url, cpc.data_privacy_url)
-        self.assertEqual(result.about_page_url, cpc.about_page_url)
-
     async def test_export_customer_bank_data(self):
         output_path = self.tmp_dir / "test_export"
         output_path.mkdir(parents=True, exist_ok=True)
 
         await export_customer_payouts(
             config=self.test_config,
+            event_node_id=self.node_id,
             created_by="test",
             dry_run=True,
             output_path=output_path,
@@ -571,6 +567,7 @@ class CustomerServiceTest(TerminalTestCase):
         await export_customer_payouts(
             config=self.test_config,
             created_by="Test",
+            event_node_id=self.node_id,
             dry_run=True,
             max_transactions_per_batch=1,
             output_path=output_path,
@@ -591,6 +588,7 @@ class CustomerServiceTest(TerminalTestCase):
         await export_customer_payouts(
             config=self.test_config,
             created_by="Test",
+            event_node_id=self.node_id,
             dry_run=False,
             output_path=output_path,
         )
@@ -637,6 +635,7 @@ class CustomerServiceTest(TerminalTestCase):
         await export_customer_payouts(
             config=self.test_config,
             created_by="test",
+            event_node_id=self.node_id,
             dry_run=False,
             output_path=output_path,
             max_payout_sum=s,
@@ -656,13 +655,15 @@ class CustomerServiceTest(TerminalTestCase):
         uid_not_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[:2]]
 
         await self.db_conn.execute(
-            "update customer_info c set payout_export = false from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2)",
+            "update customer_info c set payout_export = false "
+            "from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2)",
             *uid_not_to_transfer,
         )
 
         await export_customer_payouts(
             config=self.test_config,
             created_by="test",
+            event_node_id=self.node_id,
             dry_run=False,
             output_path=output_path,
         )
@@ -683,13 +684,17 @@ class CustomerServiceTest(TerminalTestCase):
 
         # now set them to payout_export = true and run again
         await self.db_conn.execute(
-            "update customer_info c set payout_export = true from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2)",
+            "update customer_info c set payout_export = true "
+            "from account_with_history a "
+            "where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2)",
             *uid_not_to_transfer,
         )
 
         # but set customer 1 to an error
         await self.db_conn.execute(
-            "update customer_info c set payout_error = 'some error' from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid = $1",
+            "update customer_info c set payout_error = 'some error' "
+            "from account_with_history a "
+            "where a.id = c.customer_account_id and a.user_tag_uid = $1",
             self.customers_to_transfer[0]["uid"],
         )
 
@@ -697,6 +702,7 @@ class CustomerServiceTest(TerminalTestCase):
             config=self.test_config,
             created_by="test",
             dry_run=False,
+            event_node_id=self.node_id,
             output_path=output_path,
         )
         self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(2))))

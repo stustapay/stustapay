@@ -5,7 +5,7 @@ from stustapay.framework.database import create_db_pool
 
 from . import database
 from .config import Config
-from .schema.user import UserWithoutId
+from .schema.user import NewUser
 from .service.auth import AuthService
 from .service.user import UserService, list_user_roles
 
@@ -30,7 +30,7 @@ async def add_user(config: Config):
         role_names = input(f"Enter roles (comma separated, choose from {available_roles_formatted}:\n")
         display_name = input("Enter display name:\n")
 
-        new_user = UserWithoutId(
+        new_user = NewUser(
             login=username,
             description=None,
             role_names=role_names.split(","),

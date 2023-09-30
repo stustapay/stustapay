@@ -10,7 +10,11 @@ from stustapay.core.schema.product import Product
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
 from stustapay.framework.database import Connection
 
 
@@ -36,6 +40,7 @@ class OrderStatsService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
+    @requires_node()
     async def get_product_stats(
         self, *, conn: Connection, from_timestamp: Optional[datetime], to_timestamp: Optional[datetime]
     ) -> ProductStats:

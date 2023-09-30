@@ -50,7 +50,6 @@ class Privilege(enum.Enum):
 
 
 class NewUserRole(BaseModel):
-    node_id: int
     name: str
     is_privileged: bool = False
     privileges: list[Privilege]
@@ -58,6 +57,7 @@ class NewUserRole(BaseModel):
 
 class UserRole(NewUserRole):
     id: int
+    node_id: int
 
 
 class CheckLoginResult(BaseModel):
@@ -71,21 +71,15 @@ class LoginPayload(BaseModel):
 
 
 class NewUser(BaseModel):
-    node_id: int
-    login: str
-    display_name: str = ""
-    user_tag_uid: int
-    role_names: list[str]
-    description: Optional[str] = None
-
-
-class UserWithoutId(BaseModel):
-    node_id: int
     login: str
     display_name: str
+    user_tag_uid: Optional[int] = None
     role_names: list[str]
     description: Optional[str] = None
-    user_tag_uid: Optional[int] = None
+
+
+class UserWithoutId(NewUser):
+    node_id: int
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None
 

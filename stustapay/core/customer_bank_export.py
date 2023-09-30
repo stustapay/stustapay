@@ -5,7 +5,6 @@ from typing import Optional
 
 import asyncpg
 
-from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.payout import (
     create_payout_run,
     dump_payout_run_as_csv,
@@ -17,7 +16,8 @@ from stustapay.framework.database import create_db_pool
 
 from . import database
 from .config import Config
-from .service.auth import AuthService
+from .service.common.error import InvalidArgument
+from .service.tree.common import fetch_event_node_for_node
 
 # filename for the sepa transfer export,
 # can be batched into num_%d
@@ -28,8 +28,8 @@ CSV_PATH = "bank_export__run_{}.csv"
 
 
 async def _export_customer_payouts(
-    config: Config,
     db_pool: asyncpg.Pool,
+    event_node_id: int,
     created_by: str,
     execution_date: Optional[datetime.date],
     max_export_items_per_batch: Optional[int],
@@ -44,8 +44,13 @@ async def _export_customer_payouts(
 
     async with db_pool.acquire() as conn:
         async with conn.transaction():
+            event_node = await fetch_event_node_for_node(conn=conn, node_id=event_node_id)
+            assert event_node is not None
+            assert event_node.event is not None
             if payout_run_id is None:
-                payout_run_id, number_of_payouts = await create_payout_run(conn, created_by, max_payout_sum)
+                payout_run_id, number_of_payouts = await create_payout_run(
+                    conn=conn, node_id=event_node.id, created_by=created_by, max_payout_sum=max_payout_sum
+                )
             else:
                 number_of_payouts = await get_number_of_payouts(conn=conn, payout_run_id=payout_run_id)
 
@@ -55,17 +60,16 @@ async def _export_customer_payouts(
                 return
 
             max_export_items_per_batch = max_export_items_per_batch or number_of_payouts
-            cfg_srvc = ConfigService(
-                db_pool=db_pool, config=config, auth_service=AuthService(db_pool=db_pool, config=config)
-            )
-            currency_ident = (await cfg_srvc.get_public_config(conn=conn)).currency_identifier
-            sepa_config = await cfg_srvc.get_sepa_config(conn=conn)
+            currency_ident = event_node.event.currency_identifier
 
             # sepa export
             customers_bank_data = await get_customer_bank_data(
                 conn=conn,
                 payout_run_id=payout_run_id,
             )
+            sepa_config = event_node.event.sepa_config
+            if sepa_config is None:
+                raise InvalidArgument("SEPA payout is disabled for this event")
             sepa_batches = dump_payout_run_as_sepa_xml(
                 customers_bank_data=customers_bank_data,
                 sepa_config=sepa_config,
@@ -102,6 +106,7 @@ async def export_customer_payouts(
     config: Config,
     created_by: str,
     dry_run: bool,
+    event_node_id: int,
     max_payout_sum: float = 50000.0,
     execution_date: Optional[datetime.date] = None,
     max_transactions_per_batch: Optional[int] = None,
@@ -112,12 +117,12 @@ async def export_customer_payouts(
     try:
         await database.check_revision_version(db_pool)
         await _export_customer_payouts(
-            config=config,
             db_pool=db_pool,
             execution_date=execution_date,
             created_by=created_by,
             max_export_items_per_batch=max_transactions_per_batch,
             dry_run=dry_run,
+            event_node_id=event_node_id,
             payout_run_id=payout_run_id,
             output_path=output_path,
             max_payout_sum=max_payout_sum,

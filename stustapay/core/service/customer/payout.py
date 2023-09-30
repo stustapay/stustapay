@@ -17,11 +17,18 @@ from stustapay.core.schema.payout import (
     PayoutRunWithStats,
     PendingPayoutDetail,
 )
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
+from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.config import ConfigService
+from stustapay.core.service.tree.common import fetch_event_node_for_node
 from stustapay.framework.database import Connection
 
 
@@ -31,9 +38,10 @@ async def get_number_of_payouts(conn: Connection, payout_run_id: Optional[int]) 
     return await conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id)
 
 
-async def create_payout_run(conn: Connection, created_by: str, max_payout_sum: float) -> tuple[int, int]:
+async def create_payout_run(conn: Connection, node_id: int, created_by: str, max_payout_sum: float) -> tuple[int, int]:
     payout_run_id = await conn.fetchval(
-        "insert into payout_run (created_at, created_by) values (now(), $1) returning id",
+        "insert into payout_run (node_id, created_at, created_by) values ($1, now(), $2) returning id",
+        node_id,
         created_by,
     )
 
@@ -107,8 +115,8 @@ def dump_payout_run_as_csv(
 
 def dump_payout_run_as_sepa_xml(
     customers_bank_data: list[Payout],
-    sepa_config: SEPAConfig,
     currency_ident: str,
+    sepa_config: SEPAConfig,
     execution_date: datetime.date,
     batch_size: Optional[int] = None,
 ) -> Iterator[str]:
@@ -167,6 +175,7 @@ class PayoutService(DBService):
     @with_db_transaction
     @requires_user([Privilege.account_management])  # TODO: payout_management
     # @requires_user([Privilege.tse_management])
+    @requires_node()
     async def get_pending_payout_detail(self, *, conn: Connection) -> PendingPayoutDetail:
         return await conn.fetch_one(
             PendingPayoutDetail,
@@ -180,20 +189,28 @@ class PayoutService(DBService):
     @with_db_transaction
     @requires_user([Privilege.account_management])  # TODO: payout_management
     # @requires_user([Privilege.tse_management])
+    @requires_node()
     async def get_payout_run_payouts(self, *, conn: Connection, payout_run_id: int) -> list[Payout]:
         return await conn.fetch_many(Payout, "select * from payout where payout_run_id = $1", payout_run_id)
 
     @with_db_transaction
     @requires_user([Privilege.account_management])  # TODO: payout_management
     # @requires_user([Privilege.tse_management])
+    @requires_node()
     async def get_payout_run_csv(
-        self, *, conn: Connection, payout_run_id: int, batch_size: Optional[int]
+        self, *, conn: Connection, node: Node, payout_run_id: int, batch_size: Optional[int]
     ) -> Iterator[str]:
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=node.id)
+        assert event_node is not None
+        assert event_node.event is not None
+        sepa_config = event_node.event.sepa_config
+        if sepa_config is None:
+            raise InvalidArgument("SEPA payout is disabled for this event")
         customers_bank_data = await get_customer_bank_data(conn=conn, payout_run_id=payout_run_id)
-        currency_identifier = (await self.config_service.get_public_config()).currency_identifier
+        currency_identifier = event_node.event.currency_identifier
         return dump_payout_run_as_csv(
             customers_bank_data=customers_bank_data,
-            sepa_config=await self.config_service.get_sepa_config(),
+            sepa_config=sepa_config,
             currency_ident=currency_identifier,
             batch_size=batch_size,
         )
@@ -201,14 +218,27 @@ class PayoutService(DBService):
     @with_db_transaction
     @requires_user([Privilege.account_management])  # TODO: payout_management
     # @requires_user([Privilege.tse_management])
+    @requires_node()
     async def get_payout_run_sepa_xml(
-        self, *, conn: Connection, payout_run_id: int, execution_date: datetime.date, batch_size: Optional[int]
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        payout_run_id: int,
+        execution_date: datetime.date,
+        batch_size: Optional[int],
     ) -> Iterator[str]:
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=node.id)
+        assert event_node is not None
+        assert event_node.event is not None
+        sepa_config = event_node.event.sepa_config
+        if sepa_config is None:
+            raise InvalidArgument("SEPA payout is disabled for this event")
         customers_bank_data = await get_customer_bank_data(conn=conn, payout_run_id=payout_run_id)
-        currency_identifier = (await self.config_service.get_public_config()).currency_identifier
+        currency_identifier = event_node.event.currency_identifier
         return dump_payout_run_as_sepa_xml(
             customers_bank_data=customers_bank_data,
-            sepa_config=await self.config_service.get_sepa_config(),
+            sepa_config=sepa_config,
             currency_ident=currency_identifier,
             execution_date=execution_date,
             batch_size=batch_size,
@@ -217,11 +247,13 @@ class PayoutService(DBService):
     @with_db_transaction
     @requires_user([Privilege.account_management])  # TODO: payout_management
     # @requires_user([Privilege.tse_management])
+    @requires_node()
     async def create_payout_run(
-        self, *, conn: Connection, current_user: CurrentUser, new_payout_run: NewPayoutRun
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, new_payout_run: NewPayoutRun
     ) -> PayoutRunWithStats:
         run_id, _ = await create_payout_run(
             conn=conn,
+            node_id=node.id,
             created_by=current_user.login,
             max_payout_sum=new_payout_run.max_payout_sum,
         )
@@ -230,5 +262,6 @@ class PayoutService(DBService):
     @with_db_transaction
     @requires_user([Privilege.account_management])  # TODO: payout_management
     # @requires_user([Privilege.tse_management])
+    @requires_node()
     async def list_payout_runs(self, *, conn: Connection) -> list[PayoutRunWithStats]:
         return await conn.fetch_many(PayoutRunWithStats, "select * from payout_run_with_stats")

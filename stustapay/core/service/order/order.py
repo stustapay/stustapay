@@ -49,6 +49,7 @@ from stustapay.core.schema.product import TOP_UP_PRODUCT_ID, Product, ProductRes
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.ticket import Ticket
 from stustapay.core.schema.till import VIRTUAL_TILL_ID, Till
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
 from stustapay.core.service.account import get_account_by_id
 from stustapay.core.service.auth import AuthService
@@ -71,6 +72,7 @@ from stustapay.core.service.product import (
 )
 from stustapay.core.service.till.common import fetch_till
 from stustapay.core.service.transaction import book_transaction
+from stustapay.core.service.tree.common import fetch_event_node_for_node
 from stustapay.framework.database import Connection
 
 from .booking import BookingIdentifier, NewLineItem, book_order
@@ -202,10 +204,6 @@ async def fetch_order(*, conn: Connection, order_id: int) -> Optional[Order]:
     get all info about an order.
     """
     return await conn.fetch_maybe_one(Order, "select * from order_value where id = $1", order_id)
-
-
-async def fetch_max_account_balance(*, conn: Connection) -> float:
-    return await conn.fetchval("select value::double precision from config where key = 'max_account_balance'")
 
 
 class OrderService(DBService):
@@ -370,6 +368,9 @@ class OrderService(DBService):
         current_terminal: Terminal,
         new_topup: NewTopUp,
     ) -> PendingTopUp:
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert event_node is not None
+        assert event_node.event is not None
         if new_topup.amount <= 0.0:
             raise InvalidArgument("Only topups with a positive amount are allowed")
 
@@ -395,7 +396,7 @@ class OrderService(DBService):
             conn=conn, customer_tag_uid=new_topup.customer_tag_uid
         )
 
-        max_limit = await fetch_max_account_balance(conn=conn)
+        max_limit = event_node.event.max_account_balance
         new_balance = customer_account.balance + new_topup.amount
         if new_balance > max_limit:
             too_much = new_balance - max_limit
@@ -492,11 +493,14 @@ class OrderService(DBService):
             till_id=current_terminal.till.id,
         )
 
-    async def _check_sale(self, *, conn: Connection, till: Till, new_sale: InternalNewSale) -> InternalPendingSale:
+    async def _check_sale(
+        self, *, conn: Connection, event_node: Node, till: Till, new_sale: InternalNewSale
+    ) -> InternalPendingSale:
         """
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
         """
+        assert event_node.event is not None
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_sale.uuid)
         if uuid_exists:
             raise InvalidArgument("This order has already been booked, duplicate order uuid")
@@ -539,7 +543,7 @@ class OrderService(DBService):
             raise NotEnoughFundsException(needed_fund=order.total_price, available_fund=customer_account.balance)
         order.new_balance = customer_account.balance - order.total_price
 
-        max_limit = await fetch_max_account_balance(conn=conn)
+        max_limit = event_node.event.max_account_balance
         if order.new_balance > max_limit:
             too_much = order.new_balance - max_limit
             raise InvalidArgument(
@@ -561,6 +565,8 @@ class OrderService(DBService):
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
         """
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert event_node is not None
         internal_new_sale = InternalNewSale(
             uuid=new_sale.uuid,
             customer_tag_uid=new_sale.customer_tag_uid,
@@ -575,7 +581,9 @@ class OrderService(DBService):
                 for b in new_sale.buttons
             ],
         )
-        pending_sale = await self._check_sale(conn=conn, till=current_terminal.till, new_sale=internal_new_sale)
+        pending_sale = await self._check_sale(
+            conn=conn, event_node=event_node, till=current_terminal.till, new_sale=internal_new_sale
+        )
         return PendingSale(
             uuid=pending_sale.uuid,
             old_balance=pending_sale.old_balance,
@@ -600,6 +608,8 @@ class OrderService(DBService):
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
         """
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert event_node is not None
         internal_new_sale = InternalNewSale(
             uuid=new_sale.uuid,
             customer_tag_uid=new_sale.customer_tag_uid,
@@ -614,7 +624,9 @@ class OrderService(DBService):
                 for b in new_sale.products
             ],
         )
-        pending_sale = await self._check_sale(conn=conn, till=current_terminal.till, new_sale=internal_new_sale)
+        pending_sale = await self._check_sale(
+            conn=conn, event_node=event_node, till=current_terminal.till, new_sale=internal_new_sale
+        )
         return PendingSaleProducts(
             uuid=pending_sale.uuid,
             old_balance=pending_sale.old_balance,
@@ -630,6 +642,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
+        event_node: Node,
         till: Till,
         current_user: CurrentUser,
         new_sale: InternalNewSale,
@@ -639,6 +652,7 @@ class OrderService(DBService):
         """
         pending_sale = await self._check_sale(
             conn=conn,
+            event_node=event_node,
             till=till,
             new_sale=new_sale,
         )
@@ -725,6 +739,8 @@ class OrderService(DBService):
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
         """
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert event_node is not None
         internal_new_sale = InternalNewSale(
             uuid=new_sale.uuid,
             customer_tag_uid=new_sale.customer_tag_uid,
@@ -741,6 +757,7 @@ class OrderService(DBService):
         )
         completed_sale = await self._book_sale(
             conn=conn,
+            event_node=event_node,
             till=current_terminal.till,
             new_sale=internal_new_sale,
             current_user=current_user,
@@ -767,6 +784,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
+        node: Node,
         current_user: CurrentUser,
         new_sale: NewSaleProducts,
     ) -> CompletedSaleProducts:
@@ -774,6 +792,8 @@ class OrderService(DBService):
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
         """
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=node.id)
+        assert event_node is not None
         internal_new_sale = InternalNewSale(
             uuid=new_sale.uuid,
             customer_tag_uid=new_sale.customer_tag_uid,
@@ -791,7 +811,7 @@ class OrderService(DBService):
         till = await fetch_till(conn=conn, till_id=VIRTUAL_TILL_ID)
         assert till is not None
         completed_sale = await self._book_sale(
-            conn=conn, till=till, current_user=current_user, new_sale=internal_new_sale
+            conn=conn, event_node=event_node, till=till, current_user=current_user, new_sale=internal_new_sale
         )
         return CompletedSaleProducts(
             id=completed_sale.id,
@@ -816,6 +836,7 @@ class OrderService(DBService):
         *,
         conn: Connection,
         current_user: CurrentUser,
+        node: Node,
         order_id: int,
         edit_sale: EditSaleProducts,
     ) -> CompletedSaleProducts:
@@ -833,7 +854,12 @@ class OrderService(DBService):
             customer_tag_uid=order.customer_tag_uid,
         )
 
-        return await self.book_sale_products(conn=conn, current_user=current_user, new_sale=new_sale)
+        return await self.book_sale_products(  # pylint: disable=missing-kwoa,unexpected-keyword-arg
+            conn=conn,
+            node_id=node.id,
+            current_user=current_user,
+            new_sale=new_sale,
+        )
 
     @staticmethod
     async def _cancel_sale(
@@ -1185,6 +1211,8 @@ class OrderService(DBService):
         current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,
     ) -> CompletedTicketSale:
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert event_node is not None
         if new_ticket_sale.payment_method is None:
             raise InvalidArgument("No payment method provided")
 
@@ -1201,7 +1229,8 @@ class OrderService(DBService):
                 "select restriction from user_tag where uid = $1", scanned_ticket.customer_tag_uid
             )
             customer_account_id = await conn.fetchval(
-                "insert into account (user_tag_uid, type) values ($1, 'private') returning id",
+                "insert into account (node_id, user_tag_uid, type) values ($1, $2, 'private') returning id",
+                event_node.id,  # TODO: TREE, current tree node id
                 scanned_ticket.customer_tag_uid,
             )
             customers[customer_account_id] = (scanned_ticket.ticket.initial_top_up_amount, restriction)

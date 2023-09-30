@@ -10,6 +10,7 @@ from stustapay.core.schema.till import (
     NewCashRegister,
     NewCashRegisterStocking,
 )
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.account import (
     get_account_by_id,
@@ -36,10 +37,10 @@ async def get_cash_register(conn: Connection, register_id: int) -> Optional[Cash
     )
 
 
-async def create_cash_register(*, conn: Connection, new_register: NewCashRegister) -> CashRegister:
+async def create_cash_register(*, conn: Connection, node_id: int, new_register: NewCashRegister) -> CashRegister:
     register_id = await conn.fetchval(
         "insert into cash_register (node_id, name) values ($1, $2) returning id",
-        new_register.node_id,
+        node_id,
         new_register.name,
     )
     register = await get_cash_register(conn=conn, register_id=register_id)
@@ -77,7 +78,7 @@ class TillRegisterService(DBService):
     @requires_user([Privilege.till_management])
     @requires_node()
     async def create_cash_register_stockings(
-        self, *, conn: Connection, stocking: NewCashRegisterStocking
+        self, *, conn: Connection, node: Node, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
         stocking_id = await conn.fetchval(
             "insert into cash_register_stocking "
@@ -85,7 +86,7 @@ class TillRegisterService(DBService):
             "   cent50, cent20, cent10, cent5, cent2, cent1, variable_in_euro, name) "
             "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) "
             "returning id",
-            stocking.node_id,
+            node.id,
             stocking.euro200,
             stocking.euro100,
             stocking.euro50,
@@ -177,8 +178,10 @@ class TillRegisterService(DBService):
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
-    async def create_cash_register(self, *, conn: Connection, new_register: NewCashRegister) -> CashRegister:
-        return await create_cash_register(conn=conn, new_register=new_register)
+    async def create_cash_register(
+        self, *, conn: Connection, node: Node, new_register: NewCashRegister
+    ) -> CashRegister:
+        return await create_cash_register(conn=conn, node_id=node.id, new_register=new_register)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])

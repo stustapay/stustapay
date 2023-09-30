@@ -72,19 +72,6 @@ export const UpdateTillSchema = NewTillSchema.merge(z.object({ id: z.number() })
 
 export type UpdateTill = z.infer<typeof UpdateTillSchema>;
 
-export const TillSchema = UpdateTillSchema.merge(
-  z.object({
-    registration_uuid: z.string().nullable(),
-    session_uuid: z.string().nullable(),
-    current_cash_register_name: z.string().nullable(),
-    current_cash_register_balance: z.number().nullable(),
-    tse_id: z.number().int().nullable().optional(),
-    tse_serial: z.string().nullable().optional(),
-  })
-);
-
-export type Till = z.infer<typeof TillSchema>;
-
 export const NewTillRegisterStockingSchema = z.object({
   name: z.string(),
   euro200: z.number().int().optional(),

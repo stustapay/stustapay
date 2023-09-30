@@ -8,12 +8,42 @@ begin;
 set plpgsql.extra_warnings to 'all';
 set datestyle to 'ISO';
 
+insert into event (id, currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, bon_address, bon_title, customer_portal_contact_email, customer_portal_sepa_enabled)
+overriding system value
+values (100, 'EUR', true, 150, 'UST ID', 'Festival Y', 'Address', 'Festival Y - Receipt', 'contact@festival-y.com', false);
+
 insert into node (
-    id, parent, name, description
+    id, parent, event_id, name, description
 ) overriding system value
 values (
-    2, 1, 'SSC-Test', 'Test Event'
+    2, 0, 100, 'SSC-Test', 'Test Event'
 );
+
+insert into allowed_objects_at_node (node_id, object_name)
+values
+(2, 'user'),
+(2, 'user_role'),
+(2, 'product'),
+(2, 'ticket'),
+(2, 'till'),
+(2, 'account'),
+(2, 'order'),
+(2, 'user_tags'),
+(2, 'tax_rate'),
+(2, 'tse');
+
+insert into allowed_objects_in_subtree_at_node (node_id, object_name)
+values
+(2, 'user'),
+(2, 'user_role'),
+(2, 'product'),
+(2, 'ticket'),
+(2, 'till'),
+(2, 'account'),
+(2, 'order'),
+(2, 'user_tags'),
+(2, 'tax_rate'),
+(2, 'tse');
 
 insert into user_tag_secret (
     node_id, id, key0, key1

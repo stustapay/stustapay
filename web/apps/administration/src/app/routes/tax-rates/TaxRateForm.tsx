@@ -1,6 +1,6 @@
-import { TaxRate } from "@api";
 import { TextField } from "@mui/material";
 import { NumericInput } from "@stustapay/components";
+import { TaxRate } from "@stustapay/models";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 

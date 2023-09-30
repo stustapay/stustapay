@@ -5,7 +5,7 @@ from stustapay.core.schema.till import NewTill, Till
 from stustapay.framework.database import Connection
 
 
-async def create_till(*, conn: Connection, till: NewTill) -> Till:
+async def create_till(*, conn: Connection, node_id: int, till: NewTill) -> Till:
     return await conn.fetch_one(
         Till,
         "insert into till "
@@ -17,7 +17,7 @@ async def create_till(*, conn: Connection, till: NewTill) -> Till:
         uuid.uuid4(),
         till.active_shift,
         till.active_profile_id,
-        till.node_id,
+        node_id,
     )
 
 

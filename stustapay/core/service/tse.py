@@ -1,6 +1,7 @@
 import asyncpg
 
 from stustapay.core.config import Config
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.tse import NewTse, Tse, UpdateTse
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
@@ -27,11 +28,11 @@ class TseService(DBService):
     @requires_user([Privilege.account_management])  # TODO: tse_management
     # @requires_user([Privilege.tse_management])
     @requires_node()
-    async def create_tse(self, *, conn: Connection, new_tse: NewTse) -> Tse:
+    async def create_tse(self, *, conn: Connection, node: Node, new_tse: NewTse) -> Tse:
         tse_id = await conn.fetchval(
             "insert into tse (node_id, name, serial, ws_url, ws_timeout, password, status) "
             "values ($1, $2, $3, $4, $5, $6, 'new') returning id",
-            new_tse.node_id,
+            node.id,
             new_tse.name,
             new_tse.serial,
             new_tse.ws_url,

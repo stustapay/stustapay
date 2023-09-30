@@ -46,18 +46,17 @@ from stustapay.core.schema.user import (
     UserTag,
 )
 from stustapay.core.service.account import AccountService
+from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.order import NotEnoughVouchersException, OrderService
 from stustapay.core.service.order.order import (
     InvalidSaleException,
     NotEnoughFundsException,
     TillPermissionException,
-    fetch_max_account_balance,
 )
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
 
-from ..core.service.common.error import InvalidArgument
 from .common import TerminalTestCase
 
 START_BALANCE = 100
@@ -192,9 +191,12 @@ class OrderLogicTest(TerminalTestCase):
             ),
         )
         # add customer
-        self.customer_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (1234) returning uid")
+        self.customer_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 1234) returning uid", self.node_id
+        )
         self.customer_account_id = await self.db_conn.fetchval(
-            "insert into account (user_tag_uid, type, balance) values ($1, 'private', $2) returning id",
+            "insert into account (node_id, user_tag_uid, type, balance) values ($1, $2, 'private', $3) returning id",
+            self.node_id,
             self.customer_uid,
             START_BALANCE,
         )
@@ -348,7 +350,7 @@ class OrderLogicTest(TerminalTestCase):
         )
 
     async def test_deposit_returns_cannot_exceed_account_limit(self):
-        max_limit = await fetch_max_account_balance(conn=self.db_conn)
+        max_limit = self.event.max_account_balance
         n_deposits = int(max_limit / self.deposit_product.price) + 3
         new_sale = NewSale(
             uuid=uuid.uuid4(),
@@ -480,7 +482,7 @@ class OrderLogicTest(TerminalTestCase):
         )
 
     async def test_topup_exceeding_max_limit_fails(self):
-        max_limit = await fetch_max_account_balance(conn=self.db_conn)
+        max_limit = self.event.max_account_balance
         new_topup = NewTopUp(
             uuid=uuid.uuid4(),
             amount=max_limit + 1,
@@ -618,7 +620,9 @@ class OrderLogicTest(TerminalTestCase):
         cash_entry_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_ENTRY)
         sale_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_SALE_EXIT)
 
-        unused_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
+        unused_tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 12345) returning uid", self.node_id
+        )
 
         new_scan = NewTicketScan(customer_tag_uids=[unused_tag_uid])
         scan_result = await self.order_service.check_ticket_scan(token=self.terminal_token, new_ticket_scan=new_scan)
@@ -659,7 +663,9 @@ class OrderLogicTest(TerminalTestCase):
     async def test_ticket_flow_with_initial_topup_sumup(self):
         sumup_start_balance = await self._get_account_balance(account_id=ACCOUNT_SUMUP)
         sale_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_SALE_EXIT)
-        unused_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
+        unused_tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 12345) returning uid", self.node_id
+        )
 
         new_scan = NewTicketScan(customer_tag_uids=[unused_tag_uid])
         scan_result = await self.order_service.check_ticket_scan(token=self.terminal_token, new_ticket_scan=new_scan)
@@ -695,13 +701,19 @@ class OrderLogicTest(TerminalTestCase):
         cash_entry_start_balance = await self._get_account_balance(account_id=ACCOUNT_CASH_ENTRY)
         sale_exit_start_balance = await self._get_account_balance(account_id=ACCOUNT_SALE_EXIT)
 
-        tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
-        tag2_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12346) returning uid")
+        tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 12345) returning uid", self.node_id
+        )
+        tag2_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 12346) returning uid", self.node_id
+        )
         u18_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (uid, restriction) values (12347, 'under_18') returning uid"
+            "insert into user_tag (node_id, uid, restriction) values ($1, 12347, 'under_18') returning uid",
+            self.node_id,
         )
         u16_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (uid, restriction) values (12348, 'under_16') returning uid"
+            "insert into user_tag (node_id, uid, restriction) values ($1, 12348, 'under_16') returning uid",
+            self.node_id,
         )
 
         new_ticket = NewTicketSale(

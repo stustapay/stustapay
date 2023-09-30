@@ -14,7 +14,7 @@ class UserTagServiceTest(TerminalTestCase):
         )
 
     async def test_user_tag_comment_updates(self):
-        await self.db_conn.execute("insert into user_tag (uid) values (1)")
+        await self.db_conn.execute("insert into user_tag (node_id, uid) values ($1, 1)", self.node_id)
 
         user_tag_detail = await self.user_tag_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
         self.assertIsNotNone(user_tag_detail)

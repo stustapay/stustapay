@@ -19,7 +19,7 @@ from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
-from stustapay.core.service.tree import TreeService
+from stustapay.core.service.tree.service import TreeService
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import UserService
 from stustapay.core.service.user_tag import UserTagService

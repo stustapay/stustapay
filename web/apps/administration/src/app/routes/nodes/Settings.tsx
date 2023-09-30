@@ -1,4 +1,6 @@
+import { Event } from "@/api";
 import { MarkdownEditor } from "@components";
+import { useCurrentEvent } from "@hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, FormControl, FormLabel, Stack, Tab, TextField } from "@mui/material";
 import * as React from "react";
@@ -10,26 +12,25 @@ const TabMail: React.FC = () => {
   return <MarkdownEditor label="Email Template" value={mail} onChange={setMail} showPreview={true} />;
 };
 
-const TabCustomerPortal: React.FC = () => {
+const TabCustomerPortal: React.FC<{ event: Event }> = ({ event }) => {
   return (
     <Stack spacing={2}>
-      <TextField label="Contact E-Mail" />
+      <TextField label="Contact E-Mail" value={event.customer_portal_contact_email} />
     </Stack>
   );
 };
 
-const TabGeneral: React.FC = () => {
+const TabGeneral: React.FC<{ event: Event }> = ({ event }) => {
   return (
     <Stack spacing={2}>
-      <TextField label="Currency Symbol" value="€" />
-      <TextField label="Currency Identifier" value="EUR" />
-      <TextField label="Max account balance" value="100€" />
-      <TextField label="UST ID" value="Foobar" />
+      <TextField label="Currency Identifier" value={event.currency_identifier} />
+      <TextField label="Max account balance" value={event.max_account_balance} />
+      <TextField label="UST ID" value={event.ust_id} />
     </Stack>
   );
 };
 
-const TabPayment: React.FC = () => {
+const TabPayment: React.FC<{ event: Event }> = ({ event }) => {
   return (
     <Stack spacing={2}>
       <FormControl component="fieldset" variant="standard">
@@ -51,12 +52,12 @@ const TabPayment: React.FC = () => {
   );
 };
 
-const TabBon: React.FC = () => {
+const TabBon: React.FC<{ event: Event }> = ({ event }) => {
   return (
     <Stack spacing={2}>
-      <TextField label="Title" value="StuStaCulumn" />
-      <TextField label="Issuer" value="VKL" />
-      <TextField label="Address" value="Musterstraße 6" />
+      <TextField label="Title" value={event.bon_title} />
+      <TextField label="Issuer" value={event.bon_issuer} />
+      <TextField label="Address" value={event.bon_address} />
     </Stack>
   );
 };
@@ -64,6 +65,7 @@ const TabBon: React.FC = () => {
 export const Settings: React.FC = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = React.useState("general");
+  const { event } = useCurrentEvent();
 
   return (
     <TabContext value={activeTab}>
@@ -78,16 +80,16 @@ export const Settings: React.FC = () => {
           </TabList>
         </Box>
         <TabPanel value="general">
-          <TabGeneral />
+          <TabGeneral event={event} />
         </TabPanel>
         <TabPanel value="customerPortal">
-          <TabCustomerPortal />
+          <TabCustomerPortal event={event} />
         </TabPanel>
         <TabPanel value="payment">
-          <TabPayment />
+          <TabPayment event={event} />
         </TabPanel>
         <TabPanel value="bon">
-          <TabBon />
+          <TabBon event={event} />
         </TabPanel>
         <TabPanel value="email">
           <TabMail />

@@ -6,13 +6,7 @@ from pydantic import BaseModel, field_validator
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
-from stustapay.core.schema.user import (
-    NewUserRole,
-    Privilege,
-    User,
-    UserRole,
-    UserWithoutId,
-)
+from stustapay.core.schema.user import NewUser, NewUserRole, Privilege, User, UserRole
 
 router = APIRouter(
     prefix="",
@@ -34,8 +28,6 @@ class UpdateUserPayload(BaseModel):
     role_names: list[str]
     description: Optional[str] = None
     user_tag_uid_hex: Optional[str] = None
-    transport_account_id: Optional[int] = None
-    cashier_account_id: Optional[int] = None
 
     @field_validator("user_tag_uid_hex")
     def user_tag_uid_hex_must_be_hexadecimal(cls, v):  # pylint: disable=no-self-argument
@@ -58,14 +50,12 @@ async def create_user(
 ):
     return await user_service.create_user(
         token=token,
-        new_user=UserWithoutId(
+        new_user=NewUser(
             login=new_user.login,
             display_name=new_user.display_name,
             role_names=new_user.role_names,
             description=new_user.description,
             user_tag_uid=int(new_user.user_tag_uid_hex, 16) if new_user.user_tag_uid_hex is not None else None,
-            transport_account_id=new_user.transport_account_id,
-            cashier_account_id=new_user.cashier_account_id,
         ),
         password=new_user.password,
         node_id=node_id,
@@ -94,14 +84,12 @@ async def update_user(
     user = await user_service.update_user(
         token=token,
         user_id=user_id,
-        user=UserWithoutId(
+        user=NewUser(
             login=user.login,
             display_name=user.display_name,
             role_names=user.role_names,
             description=user.description,
             user_tag_uid=int(user.user_tag_uid_hex, 16) if user.user_tag_uid_hex is not None else None,
-            transport_account_id=user.transport_account_id,
-            cashier_account_id=user.cashier_account_id,
         ),
         node_id=node_id,
     )

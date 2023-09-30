@@ -21,6 +21,7 @@ from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.payout import PayoutService
 from stustapay.core.service.customer.sumup import SumupService
+from stustapay.core.service.tree.common import fetch_event_node_for_node
 from stustapay.framework.database import Connection
 
 
@@ -28,7 +29,8 @@ class PublicCustomerApiConfig(PublicConfig):
     data_privacy_url: str
     contact_email: str
     about_page_url: str
-    allowed_country_codes: list[str]
+    payout_enabled: bool
+    allowed_country_codes: Optional[list[str]]
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -119,6 +121,9 @@ class CustomerService(DBService):
     async def update_customer_info(
         self, *, conn: Connection, current_customer: Customer, customer_bank: CustomerBank
     ) -> None:
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
+        assert event_node is not None
+        assert event_node.event is not None
         await self.check_payout_run(conn, current_customer)
 
         # check iban
@@ -128,7 +133,9 @@ class CustomerService(DBService):
             raise InvalidArgument("Provided IBAN is not valid") from exc
 
         # check country code
-        allowed_country_codes = (await self.config_service.get_sepa_config(conn=conn)).allowed_country_codes
+        allowed_country_codes = event_node.event.customer_portal_sepa_allowed_country_codes
+        if allowed_country_codes is None:
+            raise InvalidArgument("SEPA payout is disabled")
         if iban.country_code not in allowed_country_codes:
             raise InvalidArgument("Provided IBAN contains country code which is not supported")
 
@@ -144,7 +151,8 @@ class CustomerService(DBService):
 
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(
-            "insert into customer_info (customer_account_id, iban, account_name, email, donation) values ($1, $2, $3, $4, $5) "
+            "insert into customer_info (customer_account_id, iban, account_name, email, donation) "
+            "values ($1, $2, $3, $4, $5) "
             "on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4, donation = $5",
             current_customer.id,
             iban.compact,
@@ -177,18 +185,5 @@ class CustomerService(DBService):
             round(current_customer.balance, 2),
         )
 
-    async def get_public_customer_api_config(self) -> PublicCustomerApiConfig:
-        public_config = await self.config_service.get_public_config()
-        allowed_country_codes = (await self.config_service.get_sepa_config()).allowed_country_codes
-
-        return PublicCustomerApiConfig(
-            test_mode=self.cfg.core.test_mode,
-            test_mode_message=self.cfg.core.test_mode_message,
-            sumup_topup_enabled=public_config.sumup_topup_enabled,
-            currency_identifier=public_config.currency_identifier,
-            currency_symbol=public_config.currency_symbol,
-            data_privacy_url=self.cfg.customer_portal.data_privacy_url,
-            contact_email=public_config.contact_email,
-            about_page_url=self.cfg.customer_portal.about_page_url,
-            allowed_country_codes=allowed_country_codes,
-        )
+    async def get_public_customer_api_config(self) -> PublicConfig:
+        return await self.config_service.get_public_config()

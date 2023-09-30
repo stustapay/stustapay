@@ -9,6 +9,7 @@ from stustapay.core.schema.till import (
     TillButton,
     TillLayout,
 )
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -28,10 +29,10 @@ class TillLayoutService(DBService):
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
-    async def create_button(self, *, conn: Connection, button: NewTillButton) -> TillButton:
+    async def create_button(self, *, conn: Connection, node: Node, button: NewTillButton) -> TillButton:
         row = await conn.fetchrow(
             "insert into till_button (node_id, name) values ($1, $2) returning id, name",
-            button.node_id,
+            node.id,
             button.name,
         )
         button_id = row["id"]
@@ -92,12 +93,12 @@ class TillLayoutService(DBService):
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
-    async def create_layout(self, *, conn: Connection, layout: NewTillLayout) -> TillLayout:
+    async def create_layout(self, *, conn: Connection, node: Node, layout: NewTillLayout) -> TillLayout:
         till_layout = await conn.fetch_one(
             TillLayout,
             "insert into till_layout (node_id, name, description) "
-            "values ($1, $2, $3) returning id, name, description",
-            layout.node_id,
+            "values ($1, $2, $3) returning id, name, description, node_id",
+            node.id,
             layout.name,
             layout.description,
         )

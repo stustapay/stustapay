@@ -1,7 +1,8 @@
+import type { BaseQueryApi, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { BaseQueryFn, BaseQueryApi, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { RootState, selectAuthToken } from "@store";
 import { z } from "zod";
+import { Config as BackendConfig } from "./api";
 
 export const siteHost = window.location.host;
 export const siteProtocol = window.location.protocol;
@@ -23,16 +24,6 @@ export const StaticAdminConfigSchema = z.object({
 
 export type StaticAdminConfig = z.infer<typeof StaticAdminConfigSchema>;
 
-export const PublicApiConfigSchema = z.object({
-  test_mode: z.boolean(),
-  test_mode_message: z.string(),
-  terminal_api_endpoint: z.string(),
-  currency_symbol: z.string(),
-  currency_identifier: z.string(),
-});
-
-export type PublicApiConfig = z.infer<typeof PublicApiConfigSchema>;
-
 export const ConfigSchema = StaticAdminConfigSchema.merge(
   z.object({
     testMode: z.boolean(),
@@ -41,8 +32,7 @@ export const ConfigSchema = StaticAdminConfigSchema.merge(
     adminApiBaseUrl: z.string(),
     adminApiBaseWebsocketUrl: z.string(),
     terminalApiBaseUrl: z.string(),
-    currencySymbol: z.string(),
-    currencyIdentifier: z.string(),
+    currencySymbol: z.string(), // TODO: remove as it is now based on the event
   })
 );
 
@@ -50,23 +40,22 @@ export type Config = z.infer<typeof ConfigSchema>;
 
 export let config: Config;
 
-const generateConfig = (staticConfig: StaticAdminConfig, publicApiConfig: PublicApiConfig): Config => {
+const generateConfig = (staticConfig: StaticAdminConfig, publicApiConfig: BackendConfig): Config => {
   return {
     ...staticConfig,
     terminalApiBaseUrl: publicApiConfig.terminal_api_endpoint,
     adminApiBaseUrl: staticConfig.adminApiEndpoint,
     adminApiBaseWebsocketUrl: `${siteProtocol === "https" ? "wss" : "ws"}://${staticConfig.adminApiEndpoint}`,
-    currencyIdentifier: publicApiConfig.currency_identifier,
-    currencySymbol: publicApiConfig.currency_symbol,
     testMode: publicApiConfig.test_mode,
     testModeMessage: publicApiConfig.test_mode_message,
+    currencySymbol: "€", // TODO: remove
   };
 };
 
-const fetchPublicConfig = async (clientConfig: StaticAdminConfig): Promise<PublicApiConfig> => {
+const fetchPublicConfig = async (clientConfig: StaticAdminConfig): Promise<BackendConfig> => {
   const resp = await fetch(`${clientConfig.adminApiEndpoint}/public-config`);
   const respJson = await resp.json();
-  return PublicApiConfigSchema.parse(respJson);
+  return respJson;
 };
 
 export const fetchConfig = async (): Promise<Config> => {

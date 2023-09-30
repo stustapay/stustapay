@@ -4,6 +4,7 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.ticket import NewTicket, Ticket
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -27,13 +28,13 @@ class TicketService(DBService):
     @with_db_transaction
     @requires_user([Privilege.product_management])
     @requires_node()
-    async def create_ticket(self, *, conn: Connection, ticket: NewTicket) -> Ticket:
+    async def create_ticket(self, *, conn: Connection, node: Node, ticket: NewTicket) -> Ticket:
         ticket_id = await conn.fetchval(
             "insert into ticket "
             "(node_id, name, description, product_id, initial_top_up_amount, restriction) "
             "values ($1, $2, $3, $4, $5, $6) "
             "returning id",
-            ticket.node_id,
+            node.id,
             ticket.name,
             ticket.description,
             ticket.product_id,

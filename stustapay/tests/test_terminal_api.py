@@ -5,9 +5,9 @@ from stustapay.core.schema.user import (
     FINANZORGA_ROLE_NAME,
     INFOZELT_ROLE_ID,
     CurrentUser,
+    NewUser,
     UserRole,
     UserTag,
-    UserWithoutId,
 )
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.tests.common import TerminalTestCase
@@ -16,15 +16,18 @@ from stustapay.tests.common import TerminalTestCase
 class TerminalAPiTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
-        self.finanzorga_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
+        self.finanzorga_tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 12345) returning uid", self.node_id
+        )
         self.finanzorga = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(
+            node_id=self.node_id,
+            new_user=NewUser(
                 login="Fianazorga",
                 description="",
                 role_names=[FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
                 user_tag_uid=self.finanzorga_tag_uid,
                 display_name="Finanzorga",
-            )
+            ),
         )
         await self.user_service.promote_to_finanzorga(token=self.admin_token, user_id=self.finanzorga.id)
         self.finanzorga = await self.user_service.get_user(token=self.admin_token, user_id=self.finanzorga.id)

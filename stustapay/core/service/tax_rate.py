@@ -3,7 +3,8 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName
+from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -23,13 +24,13 @@ class TaxRateService(DBService):
     @with_db_transaction
     @requires_user([Privilege.tax_rate_management])
     @requires_node()
-    async def create_tax_rate(self, *, conn: Connection, tax_rate: TaxRate) -> TaxRate:
+    async def create_tax_rate(self, *, conn: Connection, node: Node, tax_rate: NewTaxRate) -> TaxRate:
         return await conn.fetch_one(
             TaxRate,
             "insert into tax (node_id, name, rate, description) "
             "values ($1, $2, $3, $4) "
             "returning node_id, name, rate, description",
-            tax_rate.node_id,
+            node.id,
             tax_rate.name,
             tax_rate.rate,
             tax_rate.description,
@@ -50,12 +51,10 @@ class TaxRateService(DBService):
     @with_db_transaction
     @requires_user([Privilege.tax_rate_management])
     @requires_node()
-    async def update_tax_rate(
-        self, *, conn: Connection, tax_rate_name: str, tax_rate: TaxRateWithoutName
-    ) -> Optional[TaxRate]:
+    async def update_tax_rate(self, *, conn: Connection, tax_rate_name: str, tax_rate: NewTaxRate) -> Optional[TaxRate]:
         return await conn.fetch_maybe_one(
             TaxRate,
-            "update tax set rate = $2, description = $3 where name = $1 returning name, rate, description",
+            "update tax set rate = $2, description = $3 where name = $1 returning node_id, name, rate, description",
             tax_rate_name,
             tax_rate.rate,
             tax_rate.description,

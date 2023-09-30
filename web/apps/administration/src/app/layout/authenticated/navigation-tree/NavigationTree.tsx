@@ -1,17 +1,12 @@
+import { Node } from "@/api";
+import { nodeUrlBaseRegex } from "@/app/routes";
+import { findNode, useNodeTree } from "@api/nodes";
 import {
   ChevronRight as ChevronRightIcon,
-  Event as EventIcon,
   ExpandMore as ExpandMoreIcon,
   Folder as FolderIcon,
 } from "@mui/icons-material";
 import { TreeView } from "@mui/lab";
-import * as React from "react";
-import { NavigationTreeItem } from "./NavigationTreeItem";
-import { findNode, useNodeTree } from "@api/nodes";
-import { NodeMenu } from "./NodeMenu";
-import { useLocation } from "react-router-dom";
-import { Node } from "@/api";
-import { nodeUrlBaseRegex } from "@/app/routes";
 import {
   extendExpandedNodes,
   selectExpandedNodes,
@@ -21,6 +16,10 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "@store";
+import * as React from "react";
+import { useLocation } from "react-router-dom";
+import { NavigationTreeItem } from "./NavigationTreeItem";
+import { NodeMenu } from "./NodeMenu";
 
 const getNavigationTreeItemLabel = (node: Node) => {
   // if (node.type === "event") {
@@ -96,7 +95,7 @@ export const NavigationTree: React.FC = () => {
       sx={{ flexGrow: 1, overflowX: "auto" }}
     >
       {/* we do not explicitly display the root node */}
-      {tree.children.map((topLevelNode) => renderTree(topLevelNode))}
+      {renderTree(tree)}
     </TreeView>
   );
 };

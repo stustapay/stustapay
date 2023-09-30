@@ -55,12 +55,14 @@ class CashierService(DBService):
     @requires_user([Privilege.cashier_management])
     @requires_node()
     async def list_cashiers(self, *, conn: Connection) -> list[Cashier]:
+        # TODO: tree scope
         return await conn.fetch_many(Cashier, "select * from cashier")
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
     @requires_node()
     async def get_cashier(self, *, conn: Connection, cashier_id: int) -> Optional[Cashier]:
+        # TODO: tree scope
         return await conn.fetch_maybe_one(Cashier, "select * from cashier where id = $1", cashier_id)
 
     @staticmethod
@@ -73,6 +75,7 @@ class CashierService(DBService):
     @requires_user([Privilege.cashier_management])
     @requires_node()
     async def get_cashier_shifts(self, *, conn: Connection, current_user: User, cashier_id: int) -> list[CashierShift]:
+        # TODO: tree scope
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_user=current_user, cashier_id=cashier_id
         )

@@ -1,5 +1,5 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
-from stustapay.core.schema.tax_rate import TaxRate, TaxRateWithoutName
+from stustapay.core.schema.tax_rate import NewTaxRate, TaxRateWithoutName
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.tax_rate import TaxRateService
 
@@ -19,13 +19,13 @@ class TaxRateServiceTest(BaseTestCase):
         self.assertEqual(len(tax_rates), 4)
 
         tax_rate = await self.tax_rate_service.create_tax_rate(
-            token=self.admin_token, tax_rate=TaxRate(name="krass", rate=0.5, description="Krasse UST")
+            token=self.admin_token, tax_rate=NewTaxRate(name="krass", rate=0.5, description="Krasse UST")
         )
         self.assertEqual(tax_rate.name, "krass")
 
         with self.assertRaises(AccessDenied):
             await self.tax_rate_service.create_tax_rate(
-                token=self.cashier_token, tax_rate=TaxRate(name="Krasse UST", rate=0.5, description="Krasse UST")
+                token=self.cashier_token, tax_rate=NewTaxRate(name="Krasse UST", rate=0.5, description="Krasse UST")
             )
 
         updated_tax_rate = await self.tax_rate_service.update_tax_rate(

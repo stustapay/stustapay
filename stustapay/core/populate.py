@@ -21,7 +21,7 @@ class TagSecretSchema(BaseModel):
     description: str
 
 
-async def load_tag_secret(config: Config, secret_file: Path, dry_run: bool):
+async def load_tag_secret(config: Config, node_id: int, secret_file: Path, dry_run: bool):
     db_pool = await create_db_pool(config.database)
     try:
         if not secret_file.exists() or not secret_file.is_file():
@@ -39,11 +39,12 @@ async def load_tag_secret(config: Config, secret_file: Path, dry_run: bool):
         secret_id = None
         if not dry_run:
             secret_id = await db_pool.fetchval(
-                "insert into user_tag_secret (key0, key1, description) "
-                "values (decode($1, 'hex'), decode($2, 'hex'), $3) returning id",
+                "insert into user_tag_secret (key0, key1, description, node_id) "
+                "values (decode($1, 'hex'), decode($2, 'hex'), $3, $4) returning id",
                 key0,
                 key1,
                 secret.description,
+                node_id,
             )
 
         logger.info(f"Created secret '{secret.description}. ID {secret_id = }")
@@ -51,7 +52,9 @@ async def load_tag_secret(config: Config, secret_file: Path, dry_run: bool):
         await db_pool.close()
 
 
-async def load_tags(config: Config, csv_file: Path, restriction_type: Optional[str], tag_secret_id: int, dry_run: bool):
+async def load_tags(
+    config: Config, node_id: int, csv_file: Path, restriction_type: Optional[str], tag_secret_id: int, dry_run: bool
+):
     db_pool = await create_db_pool(config.database)
     try:
         if not csv_file.exists() or not csv_file.is_file():
@@ -79,8 +82,9 @@ async def load_tags(config: Config, csv_file: Path, restriction_type: Optional[s
                         if not dry_run:
                             # row is: [serial number,ID,PIN code,UID]
                             await conn.execute(
-                                "insert into user_tag(uid, pin, serial, restriction, secret) "
-                                "values ($1, $2, $3, $4, $5)",
+                                "insert into user_tag(node_id, uid, pin, serial, restriction, secret) "
+                                "values ($1, $2, $3, $4, $5, $6)",
+                                node_id,
                                 int(row[3], 16),  # UID
                                 row[2],  # PIN
                                 row[1],  # ID
@@ -91,7 +95,7 @@ async def load_tags(config: Config, csv_file: Path, restriction_type: Optional[s
         await db_pool.close()
 
 
-async def create_cash_registers(config: Config, n_registers: int, name_format: str, dry_run: bool):
+async def create_cash_registers(config: Config, node_id: int, n_registers: int, name_format: str, dry_run: bool):
     db_pool = await create_db_pool(config.database)
     try:
         async with db_pool.acquire() as conn:
@@ -101,12 +105,14 @@ async def create_cash_registers(config: Config, n_registers: int, name_format: s
                     logger.info(f"Creating cash register: '{register_name}'")
 
                     if not dry_run:
-                        await create_cash_register(conn=conn, new_register=NewCashRegister(name=register_name))
+                        await create_cash_register(
+                            conn=conn, node_id=node_id, new_register=NewCashRegister(name=register_name)
+                        )
     finally:
         await db_pool.close()
 
 
-async def create_tills(config: Config, n_tills: int, name_format: str, profile_id: int, dry_run: bool):
+async def create_tills(config: Config, node_id: int, n_tills: int, name_format: str, profile_id: int, dry_run: bool):
     db_pool = await create_db_pool(config.database)
     try:
         async with db_pool.acquire() as conn:
@@ -116,6 +122,8 @@ async def create_tills(config: Config, n_tills: int, name_format: str, profile_i
                     logger.info(f"Creating till: '{till_name}'")
 
                     if not dry_run:
-                        await create_till(conn=conn, till=NewTill(name=till_name, active_profile_id=profile_id))
+                        await create_till(
+                            conn=conn, node_id=node_id, till=NewTill(name=till_name, active_profile_id=profile_id)
+                        )
     finally:
         await db_pool.close()

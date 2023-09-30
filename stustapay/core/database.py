@@ -8,8 +8,10 @@ from typing import Optional
 
 import asyncpg.exceptions
 
-from stustapay.framework.database import REVISION_TABLE, SchemaRevision, apply_revisions as framework_apply_revisions
-from .schema import DATA_PATH, REVISION_PATH, DB_CODE_PATH
+from stustapay.framework.database import REVISION_TABLE, SchemaRevision
+from stustapay.framework.database import apply_revisions as framework_apply_revisions
+
+from .schema import DATA_PATH, DB_CODE_PATH, REVISION_PATH
 
 logger = logging.getLogger(__name__)
 

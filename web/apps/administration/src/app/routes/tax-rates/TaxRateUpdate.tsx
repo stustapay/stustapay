@@ -3,7 +3,7 @@ import { useGetTaxRateQuery, useUpdateTaxRateMutation } from "@api";
 import { EditLayout } from "@components";
 import { useCurrentNode } from "@hooks";
 import { Loading } from "@stustapay/components";
-import { TaxRateSchema } from "@stustapay/models";
+import { TaxRate, TaxRateSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
@@ -33,9 +33,9 @@ export const TaxRateUpdate: React.FC = () => {
       title={t("updateTaxRate")}
       submitLabel={t("update")}
       successRoute={TaxRateRoutes.detail(taxRate.name)}
-      initialValues={taxRate}
+      initialValues={taxRate as TaxRate}
       validationSchema={TaxRateSchema}
-      onSubmit={(taxRate) =>
+      onSubmit={(taxRate: TaxRate) =>
         updateTaxRate({ nodeId: currentNode.id, taxRateName: taxRate.name, taxRateWithoutName: taxRate })
       }
       form={TaxRateForm}

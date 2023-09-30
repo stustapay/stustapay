@@ -30,7 +30,7 @@ dependencies = [
     "asn1crypto==1.5.1",
     "ecdsa==0.18.0",
     "dateutils==0.6.12",
-    "pydantic~=2.0",
+    "pydantic[email]~=2.0",
 ]
 
 [project.scripts]

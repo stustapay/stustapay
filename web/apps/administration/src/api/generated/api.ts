@@ -134,7 +134,7 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/tax-rates`,
           method: "POST",
-          body: queryArg.taxRate,
+          body: queryArg.newTaxRate,
           params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["tax-rates"],
@@ -739,7 +739,7 @@ export type ListTaxRatesApiArg = {
 export type CreateTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type CreateTaxRateApiArg = {
   nodeId?: number | null;
-  taxRate: TaxRate;
+  newTaxRate: NewTaxRate;
 };
 export type GetTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type GetTaxRateApiArg = {
@@ -1122,7 +1122,6 @@ export type GetTreeForCurrentUserApiResponse = /** status 200 Successful Respons
 export type GetTreeForCurrentUserApiArg = void;
 export type ProductRestriction = "under_16" | "under_18";
 export type Product = {
-  node_id: number;
   name: string;
   price: number | null;
   fixed_price: boolean;
@@ -1133,6 +1132,7 @@ export type Product = {
   is_locked: boolean;
   is_returnable: boolean;
   target_account_id?: number | null;
+  node_id: number;
   id: number;
   tax_rate: number;
 };
@@ -1151,7 +1151,6 @@ export type HttpValidationError = {
   detail?: ValidationError[];
 };
 export type NewProduct = {
-  node_id: number;
   name: string;
   price: number | null;
   fixed_price?: boolean;
@@ -1164,12 +1163,12 @@ export type NewProduct = {
   target_account_id?: number | null;
 };
 export type User = {
-  node_id: number;
   login: string;
   display_name: string;
+  user_tag_uid?: number | null;
   role_names: string[];
   description?: string | null;
-  user_tag_uid?: number | null;
+  node_id: number;
   transport_account_id?: number | null;
   cashier_account_id?: number | null;
   id: number;
@@ -1187,8 +1186,6 @@ export type CreateUserPayload = {
   role_names: string[];
   description?: string | null;
   user_tag_uid_hex?: string | null;
-  transport_account_id?: number | null;
-  cashier_account_id?: number | null;
   password?: string | null;
 };
 export type UpdateUserPayload = {
@@ -1197,8 +1194,6 @@ export type UpdateUserPayload = {
   role_names: string[];
   description?: string | null;
   user_tag_uid_hex?: string | null;
-  transport_account_id?: number | null;
-  cashier_account_id?: number | null;
 };
 export type Privilege =
   | "account_management"
@@ -1217,11 +1212,11 @@ export type Privilege =
   | "grant_free_tickets"
   | "grant_vouchers";
 export type UserRole = {
-  node_id: number;
   name: string;
   is_privileged?: boolean;
   privileges: Privilege[];
   id: number;
+  node_id: number;
 };
 export type NormalizedListUserRoleInt = {
   ids: number[];
@@ -1230,7 +1225,6 @@ export type NormalizedListUserRoleInt = {
   };
 };
 export type NewUserRole = {
-  node_id: number;
   name: string;
   is_privileged?: boolean;
   privileges: Privilege[];
@@ -1240,10 +1234,10 @@ export type UpdateUserRolePrivilegesPayload = {
   privileges: Privilege[];
 };
 export type TaxRate = {
-  node_id: number;
   rate: number;
   description: string;
   name: string;
+  node_id: number;
 };
 export type NormalizedListTaxRateStr = {
   ids: string[];
@@ -1251,8 +1245,12 @@ export type NormalizedListTaxRateStr = {
     [key: string]: TaxRate;
   };
 };
+export type NewTaxRate = {
+  rate: number;
+  description: string;
+  name: string;
+};
 export type TaxRateWithoutName = {
-  node_id: number;
   rate: number;
   description: string;
 };
@@ -1285,11 +1283,11 @@ export type ChangePasswordPayload = {
   new_password: string;
 };
 export type Till = {
-  node_id: number;
   name: string;
   description?: string | null;
   active_shift?: string | null;
   active_profile_id: number;
+  node_id: number;
   id: number;
   z_nr: number;
   session_uuid?: string | null;
@@ -1308,18 +1306,17 @@ export type NormalizedListTillInt = {
   };
 };
 export type NewTill = {
-  node_id: number;
   name: string;
   description?: string | null;
   active_shift?: string | null;
   active_profile_id: number;
 };
 export type TillLayout = {
-  node_id: number;
   name: string;
   description: string;
   button_ids?: number[] | null;
   ticket_ids?: number[] | null;
+  node_id: number;
   id: number;
 };
 export type NormalizedListTillLayoutInt = {
@@ -1329,14 +1326,12 @@ export type NormalizedListTillLayoutInt = {
   };
 };
 export type NewTillLayout = {
-  node_id: number;
   name: string;
   description: string;
   button_ids?: number[] | null;
   ticket_ids?: number[] | null;
 };
 export type TillProfile = {
-  node_id: number;
   name: string;
   description?: string | null;
   layout_id: number;
@@ -1344,6 +1339,7 @@ export type TillProfile = {
   allow_cash_out: boolean;
   allow_ticket_sale: boolean;
   allowed_role_names: string[];
+  node_id: number;
   id: number;
 };
 export type NormalizedListTillProfileInt = {
@@ -1353,7 +1349,6 @@ export type NormalizedListTillProfileInt = {
   };
 };
 export type NewTillProfile = {
-  node_id: number;
   name: string;
   description?: string | null;
   layout_id: number;
@@ -1363,9 +1358,9 @@ export type NewTillProfile = {
   allowed_role_names: string[];
 };
 export type TillButton = {
-  node_id: number;
   name: string;
   product_ids: number[];
+  node_id: number;
   id: number;
   price: number;
 };
@@ -1376,12 +1371,10 @@ export type NormalizedListTillButtonInt = {
   };
 };
 export type NewTillButton = {
-  node_id: number;
   name: string;
   product_ids: number[];
 };
 export type CashRegisterStocking = {
-  node_id: number;
   name: string;
   euro200?: number;
   euro100?: number;
@@ -1398,6 +1391,7 @@ export type CashRegisterStocking = {
   cent2?: number;
   cent1?: number;
   variable_in_euro?: number;
+  node_id: number;
   id: number;
   total: number;
 };
@@ -1408,7 +1402,6 @@ export type NormalizedListCashRegisterStockingInt = {
   };
 };
 export type NewCashRegisterStocking = {
-  node_id: number;
   name: string;
   euro200?: number;
   euro100?: number;
@@ -1427,8 +1420,8 @@ export type NewCashRegisterStocking = {
   variable_in_euro?: number;
 };
 export type CashRegister = {
-  node_id: number;
   name: string;
+  node_id: number;
   id: number;
   current_cashier_id: number | null;
   current_cashier_tag_uid: number | null;
@@ -1442,7 +1435,6 @@ export type NormalizedListCashRegisterInt = {
   };
 };
 export type NewCashRegister = {
-  node_id: number;
   name: string;
 };
 export type TransferRegisterPayload = {
@@ -1452,10 +1444,7 @@ export type TransferRegisterPayload = {
 export type Config = {
   test_mode: boolean;
   test_mode_message: string;
-  sumup_topup_enabled: boolean;
-  currency_symbol: string;
-  currency_identifier: string;
-  contact_email: string;
+  sumup_topup_enabled_globally: boolean;
   terminal_api_endpoint: string;
 };
 export type ConfigEntry = {
@@ -1638,7 +1627,6 @@ export type CloseOut = {
   closing_out_user_id: number;
 };
 export type ProductSoldStats = {
-  node_id: number;
   name: string;
   price: number | null;
   fixed_price: boolean;
@@ -1649,6 +1637,7 @@ export type ProductSoldStats = {
   is_locked: boolean;
   is_returnable: boolean;
   target_account_id?: number | null;
+  node_id: number;
   id: number;
   tax_rate: number;
   quantity_sold: number;
@@ -1665,12 +1654,12 @@ export type ProductStats2 = {
   voucher_stats: VoucherStats;
 };
 export type Ticket = {
-  node_id: number;
   name: string;
   description?: string | null;
   product_id: number;
   initial_top_up_amount: number;
   restriction?: ProductRestriction | null;
+  node_id: number;
   id: number;
   product_name: string;
   price: number;
@@ -1685,7 +1674,6 @@ export type NormalizedListTicketInt = {
   };
 };
 export type NewTicket = {
-  node_id: number;
   name: string;
   description?: string | null;
   product_id: number;
@@ -1722,9 +1710,9 @@ export type Tse = {
   ws_url: string;
   ws_timeout: number;
   password: string;
-  node_id: number;
   type: TseType;
   serial: string | null;
+  node_id: number;
   id: number;
   status: TseStatus;
   hashalgo: string | null;
@@ -1744,7 +1732,6 @@ export type NewTse = {
   ws_url: string;
   ws_timeout: number;
   password: string;
-  node_id: number;
   type: TseType;
   serial: string | null;
 };
@@ -1793,6 +1780,17 @@ export type CreateSepaXmlPayload = {
   execution_date: string;
   batch_size?: number | null;
 };
+export type Event = {
+  id: number;
+  currency_identifier: string;
+  sumup_topup_enabled: boolean;
+  max_account_balance: number;
+  customer_portal_contact_email: string;
+  ust_id: string;
+  bon_issuer: string;
+  bon_address: string;
+  bon_title: string;
+};
 export type ObjectType =
   | "user"
   | "product"
@@ -1809,9 +1807,13 @@ export type Node = {
   parent: number | null;
   name: string;
   description: string;
+  event: Event | null;
   path: string;
   parent_ids: number[];
   allowed_objects_at_node: ObjectType[];
+  computed_allowed_objects_at_node: ObjectType[];
+  allowed_objects_in_subtree: ObjectType[];
+  computed_allowed_objects_in_subtree: ObjectType[];
   children: Node[];
 };
 export const {

@@ -34,13 +34,14 @@ from stustapay.core.schema.user import (
     CASHIER_ROLE_ID,
     CASHIER_ROLE_NAME,
     FINANZORGA_ROLE_NAME,
+    NewUser,
     UserTag,
-    UserWithoutId,
 )
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
+from stustapay.core.service.tree.common import fetch_event_node_for_node
 from stustapay.core.service.user import UserService
 from stustapay.framework.database import Connection, create_db_pool
 
@@ -105,10 +106,17 @@ class BaseTestCase(TestCase):
         self.db_pool = await get_test_db()
         self.db_conn: Connection = await self.db_pool.acquire()
 
+        self.node_id = 1
+        event_node = await fetch_event_node_for_node(conn=self.db_conn, node_id=self.node_id)
+        assert event_node is not None
+        assert event_node.event is not None
+        self.event = event_node.event
+
         await self.db_conn.execute(
-            "insert into user_tag_secret (id, key0, key1) overriding system value values "
-            "(0, decode('000102030405060708090a0b0c0d0e0f', 'hex'), decode('000102030405060708090a0b0c0d0e0f', 'hex')) "
-            "on conflict do nothing"
+            "insert into user_tag_secret (node_id, id, key0, key1) overriding system value values "
+            "($1, 0, decode('000102030405060708090a0b0c0d0e0f', 'hex'), decode('000102030405060708090a0b0c0d0e0f', 'hex')) "
+            "on conflict do nothing",
+            self.node_id,
         )
 
         self.test_config = Config.model_validate(TEST_CONFIG)
@@ -124,9 +132,12 @@ class BaseTestCase(TestCase):
             auth_service=self.auth_service,
         )
 
-        self.admin_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (13131313) returning uid")
+        self.admin_tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 13131313) returning uid", self.node_id
+        )
         self.admin_user = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(
+            node_id=self.node_id,
+            new_user=NewUser(
                 login="test-admin-user",
                 description="",
                 role_names=[ADMIN_ROLE_NAME],
@@ -137,10 +148,11 @@ class BaseTestCase(TestCase):
         )
         self.admin_token = (await self.user_service.login_user(username=self.admin_user.login, password="rolf")).token
         self.finanzorga_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (uid) values (1313131313) returning uid"
+            "insert into user_tag (node_id, uid) values ($1, 1313131313) returning uid", self.node_id
         )
         self.finanzorga_user = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(
+            node_id=self.node_id,
+            new_user=NewUser(
                 login="test-finanzorga-user",
                 description="",
                 role_names=[FINANZORGA_ROLE_NAME],
@@ -149,9 +161,12 @@ class BaseTestCase(TestCase):
             ),
             password="rolf",
         )
-        self.cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (54321) returning uid")
+        self.cashier_tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 54321) returning uid", self.node_id
+        )
         self.cashier = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(
+            node_id=self.node_id,
+            new_user=NewUser(
                 login="test-cashier-user",
                 user_tag_uid=self.cashier_tag_uid,
                 description="",
@@ -212,10 +227,13 @@ class TerminalTestCase(BaseTestCase):
         await super().asyncSetUp()
 
         self.customer_tag_uid = int(
-            await self.db_conn.fetchval("insert into user_tag (uid) values ($1) returning uid", 12345676)
+            await self.db_conn.fetchval(
+                "insert into user_tag (node_id, uid) values ($1, $2) returning uid", self.node_id, 12345676
+            )
         )
         await self.db_conn.execute(
-            "insert into account (user_tag_uid, type, balance) values ($1, $2, 100)",
+            "insert into account (node_id, user_tag_uid, type, balance) values ($1, $2, $3, 100)",
+            self.node_id,
             self.customer_tag_uid,
             AccountType.private.name,
         )
@@ -225,6 +243,7 @@ class TerminalTestCase(BaseTestCase):
         )
         self.product = await self.product_service.create_product(
             token=self.admin_token,
+            node_id=self.node_id,
             product=NewProduct(
                 name="Helles",
                 price=3,
@@ -240,10 +259,12 @@ class TerminalTestCase(BaseTestCase):
         )
         self.till_layout = await self.till_service.layout.create_layout(
             token=self.admin_token,
+            node_id=self.node_id,
             layout=NewTillLayout(name="test-layout", description="", button_ids=[self.till_button.id]),
         )
         self.till_profile = await self.till_service.profile.create_profile(
             token=self.admin_token,
+            node_id=self.node_id,
             profile=NewTillProfile(
                 name="test-profile",
                 description="",
@@ -256,6 +277,7 @@ class TerminalTestCase(BaseTestCase):
         )
         self.till = await self.till_service.create_till(
             token=self.admin_token,
+            node_id=self.node_id,
             till=NewTill(
                 name="test-till",
                 active_profile_id=self.till_profile.id,
@@ -265,10 +287,11 @@ class TerminalTestCase(BaseTestCase):
             await self.till_service.register_terminal(registration_uuid=self.till.registration_uuid)
         ).token
         self.register = await self.till_service.register.create_cash_register(
-            token=self.admin_token, new_register=NewCashRegister(name="Lade")
+            node_id=self.node_id, token=self.admin_token, new_register=NewCashRegister(name="Lade")
         )
         await self._login_supervised_user(user_tag_uid=self.admin_tag_uid, user_role_id=ADMIN_ROLE_ID)
         self.stocking = await self.till_service.register.create_cash_register_stockings(
+            node_id=self.node_id,
             token=self.admin_token,
             stocking=NewCashRegisterStocking(name="My fancy stocking"),
         )

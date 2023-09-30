@@ -20,6 +20,7 @@ def add_user(ctx: typer.Context):
 @admin_cli.command()
 def load_tag_secret(
     ctx: typer.Context,
+    node_id: Annotated[int, typer.Option(help="Id of the tree node the user tags secret should be created at")],
     secret_file: Annotated[
         Path,
         typer.Option(
@@ -34,7 +35,9 @@ def load_tag_secret(
         bool, typer.Option(help="perform a dry run, i.e. do not write anything to the database")
     ] = False,
 ):
-    asyncio.run(populate.load_tag_secret(config=ctx.obj.config, secret_file=secret_file, dry_run=dry_run))
+    asyncio.run(
+        populate.load_tag_secret(config=ctx.obj.config, node_id=node_id, secret_file=secret_file, dry_run=dry_run)
+    )
 
 
 @admin_cli.command()
@@ -48,6 +51,7 @@ def load_tags(
             help="Name of .csv file with tag configuration, expects 4 columns: [serial number,ID,PIN code,UID]",
         ),
     ],
+    node_id: Annotated[int, typer.Option(help="Id of the tree node the user tags should be created at")],
     tag_secret_id: Annotated[int, typer.Option(help="id of tag secret in database")],
     restriction_type: Annotated[
         Optional[str], typer.Option(help="tag restriction type, if omitted will assume tags have no restriction")
@@ -59,6 +63,7 @@ def load_tags(
     asyncio.run(
         populate.load_tags(
             config=ctx.obj.config,
+            node_id=node_id,
             csv_file=csv_file,
             tag_secret_id=tag_secret_id,
             dry_run=dry_run,
@@ -70,6 +75,7 @@ def load_tags(
 @admin_cli.command()
 def create_cash_registers(
     ctx: typer.Context,
+    node_id: Annotated[int, typer.Option(help="Id of the tree node the cash registers should be created at")],
     n_registers: Annotated[int, typer.Option("--n-registers", "-n", help="Number of cash registers to create")],
     name_format: Annotated[
         str, typer.Option(help="Format string used as the cash register name, available format variables: 'i'")
@@ -80,7 +86,7 @@ def create_cash_registers(
 ):
     asyncio.run(
         populate.create_cash_registers(
-            config=ctx.obj.config, n_registers=n_registers, name_format=name_format, dry_run=dry_run
+            config=ctx.obj.config, node_id=node_id, n_registers=n_registers, name_format=name_format, dry_run=dry_run
         )
     )
 
@@ -88,6 +94,7 @@ def create_cash_registers(
 @admin_cli.command()
 def create_tills(
     ctx: typer.Context,
+    node_id: Annotated[int, typer.Option(help="Id of the tree node the tills should be created at")],
     n_tills: Annotated[int, typer.Option("--n-tills", "-n", help="Number of tills to create")],
     profile_id: Annotated[int, typer.Option(help="Till profile id which will be assigned to the till")],
     name_format: Annotated[
@@ -99,7 +106,12 @@ def create_tills(
 ):
     asyncio.run(
         populate.create_tills(
-            config=ctx.obj.config, n_tills=n_tills, profile_id=profile_id, name_format=name_format, dry_run=dry_run
+            config=ctx.obj.config,
+            node_id=node_id,
+            n_tills=n_tills,
+            profile_id=profile_id,
+            name_format=name_format,
+            dry_run=dry_run,
         )
     )
 
@@ -110,6 +122,9 @@ def customer_bank_export(
     created_by: Annotated[
         str,
         typer.Option("--created-by", "-c", help="User who created the payout run. This is used for logging purposes."),
+    ],
+    event_node_id: Annotated[
+        int, typer.Option("--event-node-id", help="Event node in the tree the export should be created for")
     ],
     execution_date: Annotated[
         Optional[datetime],
@@ -163,6 +178,7 @@ def customer_bank_export(
             payout_run_id=payout_run_id,
             output_path=output_path,
             max_payout_sum=max_payout_sum,
+            event_node_id=event_node_id,
             dry_run=dry_run,
         )
     )

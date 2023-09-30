@@ -28,7 +28,6 @@ export const Privilege = PrivilegeSchema.enum;
 export type Privilege = z.infer<typeof PrivilegeSchema>;
 
 export const NewUserRoleSchema = z.object({
-  node_id: z.number().int(),
   name: z.string(),
   is_privileged: z.boolean(),
   privileges: z.array(PrivilegeSchema),
@@ -38,6 +37,7 @@ export type NewUserRole = z.infer<typeof NewUserRoleSchema>;
 
 export const UserRoleSchema = NewUserRoleSchema.merge(
   z.object({
+    node_id: z.number().int(),
     id: z.number(),
   })
 );

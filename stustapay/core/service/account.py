@@ -6,6 +6,8 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.account import ACCOUNT_MONEY_VOUCHER_CREATE, Account
 from stustapay.core.schema.order import NewFreeTicketGrant
+from stustapay.core.schema.terminal import Terminal
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -135,10 +137,10 @@ class AccountService(DBService):
     @requires_user([Privilege.account_management])
     @requires_node()
     async def update_account_vouchers(
-        self, *, conn: Connection, current_user: User, account_id: int, new_voucher_amount: int
+        self, *, conn: Connection, current_user: User, node: Node, account_id: int, new_voucher_amount: int
     ) -> bool:
         account = await self.get_account(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_user=current_user, account_id=account_id
+            conn=conn, node_id=node.id, current_user=current_user, account_id=account_id
         )
         if account is None:
             return False
@@ -185,7 +187,12 @@ class AccountService(DBService):
     @with_db_transaction
     @requires_terminal([Privilege.grant_free_tickets])
     async def grant_free_tickets(
-        self, *, conn: Connection, current_user: User, new_free_ticket_grant: NewFreeTicketGrant
+        self,
+        *,
+        conn: Connection,
+        current_terminal: Terminal,
+        current_user: User,
+        new_free_ticket_grant: NewFreeTicketGrant,
     ) -> Account:
         user_tag = await conn.fetchrow(
             "select true as found, a.id as account_id "
@@ -201,8 +208,8 @@ class AccountService(DBService):
         # create a new customer account for the given tag
         # TODO: NODE use node_id here
         account_id = await conn.fetchval(
-            "insert into account (node_id, user_tag_uid, type) values ($1, 'private') returning id",
-            1,
+            "insert into account (node_id, user_tag_uid, type) values ($1, $2, 'private') returning id",
+            current_terminal.till.node_id,
             new_free_ticket_grant.user_tag_uid,
         )
 

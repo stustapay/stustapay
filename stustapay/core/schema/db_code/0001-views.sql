@@ -1,59 +1,4 @@
--- return the id-array of a given node id's path,
--- i.e. trace it up to the root.
-create or replace function node_trace(
-    start_node_id bigint
-) returns bigint[] as
-$$
-<<locals>> declare
-    has_cycle boolean;
-    trace     bigint[];
-    rofl      json;
-begin
-
-    -- now for the juicy part - check if we have circular dependencies in clearing account relations
-    with recursive search_graph(node_id, depth, path, cycle) as (
-        -- base case: start at the requested node
-        select
-            start_node_id,
-            1,
-            array [start_node_id],
-            false
-        union all
-        -- add the node's parent to our result set (find the parents for all so-far evaluated nodes)
-        select
-            node.parent,
-            sg.depth + 1,
-            node.parent || sg.path,
-            node.parent = any (sg.path)
-        from
-            search_graph sg
-            join node on sg.node_id = node.id
-        where
-            node.id != 0
-            and not sg.cycle
-                                                                )
-    select
-        sg.path,
-        sg.cycle
-    into locals.trace, locals.has_cycle
-    from
-        search_graph sg
-    where
-        node_id = 0;
-
-    if locals.has_cycle then raise 'node has cycle: %', locals.trace; end if;
-
-    --     if start_node_id != 0 then
---         raise 'stuff %, %', locals.trace, rofl;
---     end if;
-
-    return locals.trace;
-end
-$$ language plpgsql
-    stable
-    set search_path = "$user", public;
-
-create or replace view till_with_cash_register as
+create view till_with_cash_register as
     select
         t.*,
         tse.serial,
@@ -66,7 +11,7 @@ create or replace view till_with_cash_register as
         left join cash_register cr on t.active_cash_register_id = cr.id
         left join tse on tse.id = t.tse_id;
 
-create or replace view cash_register_with_cashier as
+create view cash_register_with_cashier as
     select
         c.*,
         t.id                   as current_till_id,
@@ -79,7 +24,7 @@ create or replace view cash_register_with_cashier as
         left join account a on a.id = u.cashier_account_id
         left join till t on t.active_cash_register_id = c.id;
 
-create or replace view user_role_with_privileges as
+create view user_role_with_privileges as
     select
         r.*,
         coalesce(privs.privileges, '{}'::text array) as privileges
@@ -87,9 +32,9 @@ create or replace view user_role_with_privileges as
         user_role r
         left join (
             select ur.role_id, array_agg(ur.privilege) as privileges from user_role_to_privilege ur group by ur.role_id
-                  ) privs on r.id = privs.role_id;
+        ) privs on r.id = privs.role_id;
 
-create or replace view user_with_roles as
+create view user_with_roles as
     select
         usr.*,
         coalesce(roles.roles, '{}'::text array) as role_names
@@ -105,7 +50,7 @@ create or replace view user_with_roles as
             group by utr.user_id
                   ) roles on usr.id = roles.user_id;
 
-create or replace view user_with_privileges as
+create view user_with_privileges as
     select
         usr.*,
         coalesce(privs.privileges, '{}'::text array) as privileges
@@ -121,7 +66,7 @@ create or replace view user_with_privileges as
             group by utr.user_id
                   ) privs on usr.id = privs.user_id;
 
-create or replace view account_with_history as
+create view account_with_history as
     select
         a.*,
         ut.comment                             as user_tag_comment,
@@ -143,7 +88,7 @@ create or replace view account_with_history as
                   ) hist on a.id = hist.account_id;
 
 -- aggregates account and customer_info to customer
-create or replace view customer as
+create view customer as
     select
         a.*,
         customer_info.*
@@ -153,7 +98,7 @@ create or replace view customer as
     where
         a.type = 'private';
 
-create or replace view payout as
+create view payout as
     select
         c.node_id,
         c.customer_account_id,
@@ -172,7 +117,7 @@ create or replace view payout as
         and c.payout_export
         and c.payout_error is null;
 
-create or replace view payout_run_with_stats as
+create view payout_run_with_stats as
     select
         p.*,
         s.total_donation_amount,
@@ -192,7 +137,7 @@ create or replace view payout_run_with_stats as
             group by py.id
              ) s on p.id = s.id;
 
-create or replace view user_tag_with_history as
+create view user_tag_with_history as
     select
         ut.node_id,
         ut.uid                                     as user_tag_uid,
@@ -213,7 +158,7 @@ create or replace view user_tag_with_history as
             group by atah.user_tag_uid
                   ) hist on ut.uid = hist.user_tag_uid;
 
-create or replace view cashier as
+create view cashier as
     select
         usr.node_id,
         usr.id,
@@ -240,7 +185,7 @@ create or replace view cashier as
             group by t.active_user_id
                   ) tills on tills.user_id = usr.id;
 
-create or replace view product_with_tax_and_restrictions as
+create view product_with_tax_and_restrictions as
     select
         p.*,
         -- price_in_vouchers is never 0 due to constraint product_price_in_vouchers_not_zero
@@ -254,7 +199,7 @@ create or replace view product_with_tax_and_restrictions as
             select r.id, array_agg(r.restriction) as restrictions from product_restriction r group by r.id
                   ) pr on pr.id = p.id;
 
-create or replace view ticket_with_product as
+create view ticket_with_product as
     select
         t.*,
         p.name                            as product_name,
@@ -267,10 +212,11 @@ create or replace view ticket_with_product as
         ticket t
         join product_with_tax_and_restrictions p on t.product_id = p.id;
 
-create or replace view till_button_with_products as
+create view till_button_with_products as
     select
         t.id,
         t.name,
+        t.node_id,
         coalesce(j_view.price, 0)                        as price, -- sane defaults for buttons without a product
         coalesce(j_view.price_in_vouchers, 0)            as price_in_vouchers,
         coalesce(j_view.price_per_voucher, 0)            as price_per_voucher,
@@ -300,7 +246,7 @@ create or replace view till_button_with_products as
             window button_window as (partition by tlb.button_id)
                   ) j_view on t.id = j_view.button_id;
 
-create or replace view till_layout_with_buttons_and_tickets as
+create view till_layout_with_buttons_and_tickets as
     select
         t.*,
         coalesce(j_view.button_ids, '{}'::bigint array) as button_ids,
@@ -324,7 +270,7 @@ create or replace view till_layout_with_buttons_and_tickets as
             group by tltt.layout_id
                   ) t_view on t.id = t_view.layout_id;
 
-create or replace view line_item_aggregated_json as
+create view line_item_aggregated_json as
     with line_item_json as (
         select
             l.*,
@@ -344,7 +290,7 @@ create or replace view line_item_aggregated_json as
     group by
         order_id;
 
-create or replace view order_value as
+create view order_value as
     select
         ordr.*,
         a.user_tag_uid                              as customer_tag_uid,
@@ -358,7 +304,7 @@ create or replace view order_value as
         left join account a on ordr.customer_account_id = a.id;
 
 -- show all line items
-create or replace view order_items as
+create view order_items as
     select
         ordr.*,
         line_item.*
@@ -367,7 +313,7 @@ create or replace view order_items as
         left join line_item on (ordr.id = line_item.order_id);
 
 -- aggregated tax rate of items
-create or replace view order_tax_rates as
+create view order_tax_rates as
     select
         ordr.*,
         tax_name,
@@ -381,7 +327,7 @@ create or replace view order_tax_rates as
     group by
         ordr.id, tax_rate, tax_name;
 
-create or replace view order_value_with_bon as
+create view order_value_with_bon as
     select
         o.*,
         b.generated   as bon_generated,
@@ -390,7 +336,7 @@ create or replace view order_value_with_bon as
         order_value o
         left join bon b on (o.id = b.id);
 
-create or replace view till_profile_with_allowed_roles as
+create view till_profile_with_allowed_roles as
     select
         p.*,
         coalesce(roles.role_ids, '{}'::bigint array) as allowed_role_ids,
@@ -406,5 +352,30 @@ create or replace view till_profile_with_allowed_roles as
                 allowed_user_roles_for_till_profile a
                 join user_role ur on a.role_id = ur.id
             group by a.profile_id
-                  ) roles on roles.profile_id = p.id;
+        ) roles on roles.profile_id = p.id;
 
+-- TODO: this view will be monstrous, as it needs to do the transitive calculation of allowed objects at a tree
+create view node_with_allowed_objects as
+    with allowed_at_node_as_list as (
+        select node_id, array_agg(object_name) as object_names
+        from allowed_objects_at_node
+        group by node_id
+    ), allowed_in_tree_as_list as (
+        select node_id, array_agg(object_name) as object_names
+        from allowed_objects_in_subtree_at_node
+        group by node_id
+    ), event_as_json as (
+        select id, row_to_json(event) as json_row
+        from event
+    )
+    select
+        n.*,
+        coalesce(obj_at.object_names, '{}'::varchar(255) array) as allowed_objects_at_node,
+        coalesce(obj_at.object_names, '{}'::varchar(255) array) as computed_allowed_objects_at_node,
+        coalesce(obj_tree.object_names, '{}'::varchar(255) array) as allowed_objects_in_subtree,
+        coalesce(obj_tree.object_names , '{}'::varchar(255) array)as computed_allowed_objects_in_subtree,
+        ev.json_row as event
+    from node n
+    left join allowed_at_node_as_list obj_at on n.id = obj_at.node_id
+    left join allowed_in_tree_as_list obj_tree on n.id = obj_tree.node_id
+    left join event_as_json ev on n.event_id = ev.id

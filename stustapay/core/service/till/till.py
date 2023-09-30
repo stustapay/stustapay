@@ -13,6 +13,7 @@ from stustapay.core.schema.terminal import (
     UserTagSecret,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile, UserInfo
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import (
     CurrentUser,
     Privilege,
@@ -54,8 +55,8 @@ class TillService(DBService):
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
-    async def create_till(self, *, conn: Connection, till: NewTill) -> Till:
-        return await create_till(conn=conn, till=till)
+    async def create_till(self, *, conn: Connection, node: Node, till: NewTill) -> Till:
+        return await create_till(conn=conn, node_id=node.id, till=till)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])

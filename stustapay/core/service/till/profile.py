@@ -4,6 +4,7 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.till import NewTillProfile, TillProfile
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -42,13 +43,13 @@ class TillProfileService(DBService):
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
-    async def create_profile(self, *, conn: Connection, profile: NewTillProfile) -> TillProfile:
+    async def create_profile(self, *, conn: Connection, node: Node, profile: NewTillProfile) -> TillProfile:
         profile_id = await conn.fetchval(
             "insert into till_profile (node_id, name, description, allow_top_up, allow_cash_out, "
             "allow_ticket_sale, layout_id) "
             "values ($1, $2, $3, $4, $5, $6, $7) "
             "returning id",
-            profile.node_id,
+            node.id,
             profile.name,
             profile.description,
             profile.allow_top_up,

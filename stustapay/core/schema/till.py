@@ -47,7 +47,6 @@ class TillProfile(NewTillProfile):
 
 
 class NewTill(BaseModel):
-    node_id: int
     name: str
     description: Optional[str] = None
     active_shift: Optional[str] = None
@@ -55,6 +54,7 @@ class NewTill(BaseModel):
 
 
 class Till(NewTill):
+    node_id: int
     id: int
     z_nr: int
     session_uuid: Optional[UUID] = None
@@ -70,11 +70,11 @@ class Till(NewTill):
 
 
 class NewCashRegister(BaseModel):
-    node_id: int
     name: str
 
 
 class CashRegister(NewCashRegister):
+    node_id: int
     id: int
     current_cashier_id: Optional[int]
     current_cashier_tag_uid: Optional[int]
@@ -83,7 +83,6 @@ class CashRegister(NewCashRegister):
 
 
 class NewCashRegisterStocking(BaseModel):
-    node_id: int
     name: str
     euro200: int = 0
     euro100: int = 0
@@ -103,6 +102,7 @@ class NewCashRegisterStocking(BaseModel):
 
 
 class CashRegisterStocking(NewCashRegisterStocking):
+    node_id: int
     id: int
     total: float
 
