@@ -1,4 +1,11 @@
-from stustapay.core.schema.tree import NewEvent, ROOT_NODE_ID, Node, ALL_OBJECT_TYPES, NewNode
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,no-value-for-parameter
+from stustapay.core.schema.tree import (
+    ALL_OBJECT_TYPES,
+    ROOT_NODE_ID,
+    NewEvent,
+    NewNode,
+    Node,
+)
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.tree.service import TreeService
 from stustapay.tests.common import BaseTestCase

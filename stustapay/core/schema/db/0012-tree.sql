@@ -41,6 +41,8 @@ alter table tse
     rename column tse_certificate to certificate;
 alter table tse
     rename column tse_process_data_encoding to process_data_encoding;
+alter table user_tag
+    rename column secret to secret_id;
 
 -- this migration introduces tree structures for all records
 

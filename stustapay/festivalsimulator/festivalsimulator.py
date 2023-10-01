@@ -16,12 +16,6 @@ from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import ADMIN_ROLE_ID, CASHIER_ROLE_ID
-from stustapay.festivalsimulator.database_setup import (
-    PROFILE_ID_BEER,
-    PROFILE_ID_COCKTAIL,
-    PROFILE_ID_TICKET,
-    PROFILE_ID_TOPUP,
-)
 from stustapay.framework.async_utils import AsyncThread, with_db_pool
 from stustapay.framework.database import create_db_pool
 
@@ -331,7 +325,7 @@ class Simulator:
     @with_db_pool
     async def entry_till(self, db_pool: asyncpg.Pool):
         async with db_pool.acquire() as conn:
-            rows = await conn.fetch("select id from till where id != 1 and active_profile_id = $1", PROFILE_ID_TICKET)
+            rows = await conn.fetch("select id from till where name like '%Eintrittskasse%'")
             terminals = await self._register_terminals(
                 db_pool=db_pool, till_ids=[row["id"] for row in rows], stock_up=True
             )
@@ -372,7 +366,7 @@ class Simulator:
     @with_db_pool
     async def topup_till(self, db_pool: asyncpg.Pool):
         async with db_pool.acquire() as conn:
-            rows = await conn.fetch("select id from till where id != 1 and active_profile_id = $1", PROFILE_ID_TOPUP)
+            rows = await conn.fetch("select id from till where name like '%Aufladekasse%'")
             terminals = await self._register_terminals(
                 db_pool=db_pool, till_ids=[row["id"] for row in rows], stock_up=True
             )
@@ -419,9 +413,7 @@ class Simulator:
     async def sale_till(self, db_pool: asyncpg.Pool):
         async with db_pool.acquire() as conn:
             rows = await conn.fetch(
-                "select id from till where id != 1 and (active_profile_id = $1 or active_profile_id = $2)",
-                PROFILE_ID_BEER,
-                PROFILE_ID_COCKTAIL,
+                "select id from till where name like '%Bierkasse%' or name like '%Cocktailkasse%'",
             )
             terminals = await self._register_terminals(
                 db_pool=db_pool,

@@ -18,7 +18,7 @@ values
 
 
 insert into user_tag (
-    uid, pin, serial, restriction, secret
+    uid, pin, serial, restriction, secret_id
 )
 values
     (1234, 'pin', null, null, null),

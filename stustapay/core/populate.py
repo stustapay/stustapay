@@ -7,11 +7,12 @@ from typing import Optional
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
+from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.till import NewCashRegister, NewTill
-from stustapay.core.schema.user_tag import NewUserTagSecret
+from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
 from stustapay.core.service.till.register import create_cash_register
 from stustapay.core.service.till.till import create_till
-from stustapay.core.service.user_tag import create_user_tag_secret
+from stustapay.core.service.user_tag import create_user_tag_secret, create_user_tags
 from stustapay.framework.database import create_db_pool
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ async def load_tag_secret(config: Config, node_id: int, secret_file: Path, dry_r
         secret_id = None
         if not dry_run:
             async with db_pool.acquire() as conn:
-                secret = create_user_tag_secret(
+                await create_user_tag_secret(
                     conn=conn,
                     node_id=node_id,
                     secret=NewUserTagSecret(key0=key0, key1=key1, description=secret.description),
@@ -70,27 +71,31 @@ async def load_tags(
         with open(csv_file, "r") as csvfile:
             csv_reader = csv.reader(csvfile, delimiter=",")
             next(csv_reader, None)
-            async with db_pool.acquire() as conn:
-                async with conn.transaction():
-                    for row in csv_reader:
-                        if any(x == "" for x in row):
-                            logger.warning(f"Skipping row in csv: {row}")
-                            continue
 
-                        logger.debug(f"loading tag data into db: {row}")
+            tags = []
+            for row in csv_reader:
+                if any(x == "" for x in row):
+                    logger.warning(f"Skipping row in csv: {row}")
+                    continue
 
-                        if not dry_run:
-                            # row is: [serial number,ID,PIN code,UID]
-                            await conn.execute(
-                                "insert into user_tag(node_id, uid, pin, serial, restriction, secret) "
-                                "values ($1, $2, $3, $4, $5, $6)",
-                                node_id,
-                                int(row[3], 16),  # UID
-                                row[2],  # PIN
-                                row[1],  # ID
-                                restriction_type,
-                                tag_secret_id,
-                            )
+                logger.debug(f"loading tag data into db: {row}")
+
+                # row is: [serial number,ID,PIN code,UID]
+                tags.append(
+                    NewUserTag(
+                        secret_id=tag_secret_id,
+                        uid=int(row[3], 16),
+                        pin=row[2],
+                        serial=row[1],
+                        restriction=ProductRestriction[restriction_type] if restriction_type is not None else None,
+                    )
+                )
+
+            if not dry_run:
+                async with db_pool.acquire() as conn:
+                    async with conn.transaction():
+                        await create_user_tags(conn=conn, node_id=node_id, tags=tags)
+
     finally:
         await db_pool.close()
 

@@ -5,7 +5,11 @@ from stustapay.core.schema.tree import NewEvent, NewNode, Node, ObjectType
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction, requires_node
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.framework.database import Connection
 
@@ -41,6 +45,27 @@ async def _create_node(conn: Connection, parent_id: int, new_node: NewNode, even
     return result
 
 
+async def create_event(conn: Connection, node_id: int, event: NewEvent) -> Node:
+    # TODO: tree, create all needed resources, e.g. global accounts which have to and should
+    #  only exist at an event node
+    event_id = await conn.fetchval(
+        "insert into event (currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, "
+        "bon_address, bon_title, customer_portal_contact_email, customer_portal_sepa_enabled) "
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id",
+        event.currency_identifier,
+        event.sumup_topup_enabled,
+        event.max_account_balance,
+        event.ust_id,
+        event.bon_issuer,
+        event.bon_address,
+        event.bon_title,
+        event.customer_portal_contact_email,
+        False,
+    )
+
+    return await _create_node(conn=conn, parent_id=node_id, new_node=event, event_id=event_id)
+
+
 class TreeService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -56,22 +81,7 @@ class TreeService(DBService):
     @requires_user()  # TODO: privilege
     @requires_node()
     async def create_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
-        event_id = await conn.fetchval(
-            "insert into event (currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, "
-            "bon_address, bon_title, customer_portal_contact_email, customer_portal_sepa_enabled) "
-            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id",
-            event.currency_identifier,
-            event.sumup_topup_enabled,
-            event.max_account_balance,
-            event.ust_id,
-            event.bon_issuer,
-            event.bon_address,
-            event.bon_title,
-            event.customer_portal_contact_email,
-            False,
-        )
-
-        return await _create_node(conn=conn, parent_id=node.id, new_node=event, event_id=event_id)
+        return await create_event(conn=conn, node_id=node.id, event=event)
 
     @with_db_transaction
     @requires_user()

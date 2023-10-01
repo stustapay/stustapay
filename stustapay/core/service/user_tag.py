@@ -7,7 +7,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import UserTagDetail
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
-from stustapay.core.schema.user_tag import NewUserTagSecret, UserTagSecret
+from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret, UserTagSecret
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -38,9 +38,23 @@ async def create_user_tag_secret(conn: Connection, node_id: int, secret: NewUser
         secret.description,
         node_id,
     )
-    secret = await fetch_user_tag_secret(conn=conn, secret_id=secret_id)
-    assert secret is not None
-    return secret
+    result = await fetch_user_tag_secret(conn=conn, secret_id=secret_id)
+    assert result is not None
+    return result
+
+
+async def create_user_tags(conn: Connection, node_id: int, tags: list[NewUserTag]):
+    for tag in tags:
+        await conn.execute(
+            "insert into user_tag (node_id, uid, pin, serial, restriction, secret_id) "
+            "values ($1, $2, $3, $4, $5, $6)",
+            node_id,
+            tag.uid,
+            tag.pin,
+            tag.serial,
+            tag.restriction,
+            tag.secret_id,
+        )
 
 
 class UserTagService(DBService):

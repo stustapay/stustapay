@@ -66,7 +66,7 @@ class NewNode(BaseModel):
 
 class Node(BaseModel):
     id: int
-    parent: Optional[int]
+    parent: int
     name: str
     description: str
     event: Optional[Event]
