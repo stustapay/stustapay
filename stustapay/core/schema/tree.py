@@ -5,6 +5,9 @@ from pydantic import BaseModel, EmailStr
 
 from stustapay.core.schema.config import SEPAConfig
 
+ROOT_NODE_ID = 0
+INITIAL_EVENT_NODE_ID = 1
+
 
 class ObjectType(enum.Enum):
     user = "user"
@@ -17,6 +20,9 @@ class ObjectType(enum.Enum):
     user_tags = "user_tags"
     tax_rate = "tax_rate"
     tse = "tse"
+
+
+ALL_OBJECT_TYPES = [e for e in ObjectType]
 
 
 class Event(BaseModel):
@@ -52,10 +58,10 @@ class Event(BaseModel):
 
 
 class NewNode(BaseModel):
-    parent: int
     name: str
     description: str
     allowed_objects_at_node: list[ObjectType]
+    allowed_objects_in_subtree: list[ObjectType]
 
 
 class Node(BaseModel):

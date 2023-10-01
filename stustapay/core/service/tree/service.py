@@ -1,13 +1,44 @@
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.tree import NewEvent, NewNode, Node
+from stustapay.core.schema.tree import NewEvent, NewNode, Node, ObjectType
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import requires_user, with_db_transaction, requires_node
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.framework.database import Connection
+
+
+async def _update_allowed_objects_in_subtree(conn: Connection, node_id: int, allowed: list[ObjectType]):
+    for t in allowed:
+        await conn.execute(
+            "insert into allowed_objects_in_subtree_at_node (object_name, node_id) values ($1, $2)", t.value, node_id
+        )
+
+
+async def _update_allowed_objects_at_node(conn: Connection, node_id: int, allowed: list[ObjectType]):
+    for t in allowed:
+        await conn.execute(
+            "insert into allowed_objects_at_node (object_name, node_id) values ($1, $2)", t.value, node_id
+        )
+
+
+async def _create_node(conn: Connection, parent_id: int, new_node: NewNode, event_id: int | None = None) -> Node:
+    new_node_id = await conn.fetchval(
+        "insert into node (parent, name, description, event_id) values ($1, $2, $3, $4) returning id",
+        parent_id,
+        new_node.name,
+        new_node.description,
+        event_id,
+    )
+    await _update_allowed_objects_at_node(conn=conn, node_id=new_node_id, allowed=new_node.allowed_objects_at_node)
+    await _update_allowed_objects_in_subtree(
+        conn=conn, node_id=new_node_id, allowed=new_node.allowed_objects_in_subtree
+    )
+    result = await fetch_node(conn=conn, node_id=new_node_id)
+    assert result is not None
+    return result
 
 
 class TreeService(DBService):
@@ -17,12 +48,14 @@ class TreeService(DBService):
 
     @with_db_transaction
     @requires_user()  # TODO: privilege
-    async def create_node(self, conn: Connection, node: NewNode):
-        pass
+    @requires_node()
+    async def create_node(self, conn: Connection, node: Node, new_node: NewNode) -> Node:
+        return await _create_node(conn=conn, parent_id=node.id, new_node=new_node)
 
     @with_db_transaction
     @requires_user()  # TODO: privilege
-    async def create_event(self, conn: Connection, event: NewEvent) -> Node:
+    @requires_node()
+    async def create_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
         event_id = await conn.fetchval(
             "insert into event (currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, "
             "bon_address, bon_title, customer_portal_contact_email, customer_portal_sepa_enabled) "
@@ -38,16 +71,7 @@ class TreeService(DBService):
             False,
         )
 
-        node_id = await conn.fetchval(
-            "insert into node(parent, name, description, event_id) values ($1, $2, $3, $4)",
-            event.parent,
-            event.name,
-            event.description,
-            event_id,
-        )
-        node = await fetch_node(conn=conn, node_id=node_id)
-        assert node is not None
-        return node
+        return await _create_node(conn=conn, parent_id=node.id, new_node=event, event_id=event_id)
 
     @with_db_transaction
     @requires_user()
