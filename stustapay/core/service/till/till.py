@@ -205,9 +205,9 @@ class TillService(DBService):
     ) -> CurrentUser:
         """
         Login a User to the terminal, but only if the correct permissions exists:
-        wants to login | allowed to log in
-        official       | always
-        cashier        | only if official is logged in
+        wants to log in | allowed to log in
+        official        | always
+        cashier         | only if official is logged in
 
         where officials are admins and finanzorgas
 
@@ -329,6 +329,7 @@ class TillService(DBService):
             cash_register_id = cash_reg["id"]
             cash_register_name = cash_reg["name"]
 
+        # TODO: tree, fetch correct secret
         user_tag_secret = await conn.fetch_one(
             UserTagSecret,
             "select encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 from user_tag_secret limit 1",

@@ -8,8 +8,10 @@ from pydantic import BaseModel
 
 from stustapay.core.config import Config
 from stustapay.core.schema.till import NewCashRegister, NewTill
+from stustapay.core.schema.user_tag import NewUserTagSecret
 from stustapay.core.service.till.register import create_cash_register
 from stustapay.core.service.till.till import create_till
+from stustapay.core.service.user_tag import create_user_tag_secret
 from stustapay.framework.database import create_db_pool
 
 logger = logging.getLogger(__name__)
@@ -38,14 +40,12 @@ async def load_tag_secret(config: Config, node_id: int, secret_file: Path, dry_r
 
         secret_id = None
         if not dry_run:
-            secret_id = await db_pool.fetchval(
-                "insert into user_tag_secret (key0, key1, description, node_id) "
-                "values (decode($1, 'hex'), decode($2, 'hex'), $3, $4) returning id",
-                key0,
-                key1,
-                secret.description,
-                node_id,
-            )
+            async with db_pool.acquire() as conn:
+                secret = create_user_tag_secret(
+                    conn=conn,
+                    node_id=node_id,
+                    secret=NewUserTagSecret(key0=key0, key1=key1, description=secret.description),
+                )
 
         logger.info(f"Created secret '{secret.description}. ID {secret_id = }")
     finally:

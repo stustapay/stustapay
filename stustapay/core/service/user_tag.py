@@ -5,7 +5,9 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import UserTagDetail
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
+from stustapay.core.schema.user_tag import NewUserTagSecret, UserTagSecret
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -17,10 +19,42 @@ from stustapay.core.service.common.error import InvalidArgument
 from stustapay.framework.database import Connection
 
 
+async def fetch_user_tag_secret(conn: Connection, secret_id: int) -> UserTagSecret | None:
+    return await conn.fetch_maybe_one(
+        UserTagSecret,
+        "select id, node_id, description, encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 "
+        "from user_tag_secret where id = $1",
+        secret_id,
+    )
+
+
+async def create_user_tag_secret(conn: Connection, node_id: int, secret: NewUserTagSecret) -> UserTagSecret:
+    secret_id = await conn.fetchval(
+        "insert into user_tag_secret (key0, key1, description, node_id) "
+        "values (decode($1, 'hex'), decode($2, 'hex'), $3, $4) "
+        "returning id",
+        secret.key0,
+        secret.key1,
+        secret.description,
+        node_id,
+    )
+    secret = await fetch_user_tag_secret(conn=conn, secret_id=secret_id)
+    assert secret is not None
+    return secret
+
+
 class UserTagService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
+
+    @with_db_transaction
+    @requires_user([Privilege.account_management])
+    @requires_node()
+    async def create_user_tag_secret(
+        self, *, conn: Connection, node: Node, new_secret: NewUserTagSecret
+    ) -> UserTagSecret:
+        return await create_user_tag_secret(conn=conn, node_id=node.id, secret=new_secret)
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
