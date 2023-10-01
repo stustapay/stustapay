@@ -39,10 +39,12 @@ from stustapay.core.schema.user import (
 )
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.auth import AuthService
+from stustapay.core.service.config import ConfigService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.tree.common import fetch_event_node_for_node
 from stustapay.core.service.user import UserService
+from stustapay.core.service.user_tag import UserTagService
 from stustapay.framework.database import Connection, create_db_pool
 
 
@@ -126,6 +128,12 @@ class BaseTestCase(TestCase):
         self.account_service = AccountService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
+        self.config_service = ConfigService(
+            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
+        )
+        self.user_tag_service = UserTagService(
+            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
+        )
         self.till_service = TillService(
             db_pool=self.db_pool,
             config=self.test_config,
@@ -147,6 +155,8 @@ class BaseTestCase(TestCase):
             password="rolf",
         )
         self.admin_token = (await self.user_service.login_user(username=self.admin_user.login, password="rolf")).token
+        # TODO: tree, this has to be replaced as soon as we have proper tree visibility rules
+        self.global_admin_token = self.admin_token
         self.finanzorga_tag_uid = await self.db_conn.fetchval(
             "insert into user_tag (node_id, uid) values ($1, 1313131313) returning uid", self.node_id
         )

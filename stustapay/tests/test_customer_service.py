@@ -25,7 +25,6 @@ from stustapay.core.service.common.error import (
     InvalidArgument,
     Unauthorized,
 )
-from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerBank, CustomerService
 from stustapay.core.service.customer.payout import (
     Payout,
@@ -44,10 +43,6 @@ class CustomerServiceTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
 
-        self.config_service = ConfigService(
-            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
-        )
-
         self.customer_service = CustomerService(
             db_pool=self.db_pool,
             config=self.test_config,
@@ -60,7 +55,6 @@ class CustomerServiceTest(TerminalTestCase):
         self.balance = 120
 
         self.bon_path = "test_bon.pdf"
-        # self.currency_symbol = pc.currency_symbol
         self.currency_identifier = self.event.currency_identifier
         self.contact_email = self.event.customer_portal_contact_email
 
