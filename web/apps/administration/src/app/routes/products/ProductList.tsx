@@ -1,13 +1,4 @@
-import * as React from "react";
-import { Link, ListItem, ListItemText, Paper, Stack, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import {
-  Add as AddIcon,
-  ContentCopy as ContentCopyIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Lock as LockIcon,
-} from "@mui/icons-material";
+import { ProductRoutes } from "@/app/routes";
 import {
   selectProductAll,
   selectTaxRateById,
@@ -17,25 +8,38 @@ import {
   useListTaxRatesQuery,
   useUpdateProductMutation,
 } from "@api";
-import { useTranslation } from "react-i18next";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { Product } from "@stustapay/models";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@components";
+import {
+  ContentCopy as ContentCopyIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Lock as LockIcon,
+} from "@mui/icons-material";
+import { Link, Tooltip } from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { useCurrencyFormatter } from "src/hooks";
+import { Product } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useCurrencyFormatter, useCurrentNode } from "src/hooks";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { products, isLoading: isProductsLoading } = useListProductsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      products: data ? selectProductAll(data) : undefined,
-    }),
-  });
-  const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery();
+  const { products, isLoading: isProductsLoading } = useListProductsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        products: data ? selectProductAll(data) : undefined,
+      }),
+    }
+  );
+  const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery({ nodeId: currentNode.id });
   const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
   const [updateProduct] = useUpdateProductMutation();
@@ -62,7 +66,7 @@ export const ProductList: React.FC = () => {
     );
   };
   const handleLockProduct = (product: Product) => {
-    updateProduct({ productId: product.id, newProduct: { ...product, is_locked: true } });
+    updateProduct({ nodeId: currentNode.id, productId: product.id, newProduct: { ...product, is_locked: true } });
   };
 
   const openConfirmDeleteDialog = (productId: number) => {
@@ -71,7 +75,7 @@ export const ProductList: React.FC = () => {
 
   const handleConfirmDeleteProduct: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && productToDelete !== null) {
-      deleteProduct({ productId: productToDelete })
+      deleteProduct({ nodeId: currentNode.id, productId: productToDelete })
         .unwrap()
         .catch(() => undefined);
     }
@@ -79,7 +83,7 @@ export const ProductList: React.FC = () => {
   };
 
   const copyProduct = (product: Product) => {
-    createProduct({ newProduct: { ...product, name: `${product.name} - ${t("copy")}` } });
+    createProduct({ nodeId: currentNode.id, newProduct: { ...product, name: `${product.name} - ${t("copy")}` } });
   };
 
   const columns: GridColDef<Product>[] = [
@@ -88,7 +92,7 @@ export const ProductList: React.FC = () => {
       headerName: t("product.name") as string,
       flex: 1,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/products/${params.row.id}`}>
+        <Link component={RouterLink} to={ProductRoutes.detail(params.row.id)}>
           {params.row.name}
         </Link>
       ),
@@ -141,7 +145,7 @@ export const ProductList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit")}
-          onClick={() => navigate(`/products/${params.row.id}/edit`)}
+          onClick={() => navigate(ProductRoutes.edit(params.row.id))}
         />,
         <GridActionsCellItem
           icon={<ContentCopyIcon />}
@@ -168,18 +172,7 @@ export const ProductList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to="/products/new" endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("products")} />
-        </ListItem>
-      </Paper>
+    <ListLayout title={t("products")} routes={ProductRoutes}>
       <DataGrid
         autoHeight
         rows={products ?? []}
@@ -193,6 +186,6 @@ export const ProductList: React.FC = () => {
         show={productToDelete !== null}
         onClose={handleConfirmDeleteProduct}
       />
-    </Stack>
+    </ListLayout>
   );
 };

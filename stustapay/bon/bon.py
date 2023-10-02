@@ -11,7 +11,7 @@ from stustapay.bon.pdflatex import (
     pdflatex,
     render_template,
 )
-from stustapay.core.database import Connection
+from stustapay.framework.database import Connection
 
 
 async def fetch_base_config(conn: Connection) -> BonConfig:
@@ -31,11 +31,16 @@ async def render_receipt(context: BonTemplateContext, out_file: Path) -> tuple[b
 async def fetch_order(*, conn: Connection, order_id: int) -> Optional[OrderWithTse]:
     return await conn.fetch_maybe_one(
         OrderWithTse,
-        "select o.*, sig.*, tse.tse_hashalgo, tse.tse_time_format, tse.tse_public_key "
+        "select "
+        "   o.*, "
+        "   sig.*, "
+        "   tse.hashalgo as tse_hashalgo, "
+        "   tse.time_format as tse_time_format, "
+        "   tse.public_key as tse_public_key "
         "from order_value o "
         "join tse_signature sig on sig.id = o.id "
         "join till t on o.till_id = t.id "
-        "join tse on tse.tse_id = sig.tse_id "
+        "join tse on tse.id = sig.tse_id "
         "where o.id = $1",
         order_id,
     )

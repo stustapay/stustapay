@@ -1,6 +1,6 @@
 from typing import Optional
 
-from stustapay.core.database import Connection
+from stustapay.framework.database import Connection
 
 
 async def book_transaction(

@@ -1,24 +1,29 @@
-import * as React from "react";
-import { ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { selectTaxRateAll, useDeleteTaxRateMutation, useListTaxRatesQuery } from "@/api";
+import { TaxRateRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { useCurrentNode } from "@hooks";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { selectTaxRateAll, useDeleteTaxRateMutation, useListTaxRatesQuery } from "@api";
-import { useTranslation } from "react-i18next";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { useNavigate } from "react-router-dom";
-import { TaxRate } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
+import { TaxRate } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 export const TaxRateList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
 
-  const { taxRates, isLoading } = useListTaxRatesQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      taxRates: data ? selectTaxRateAll(data) : undefined,
-    }),
-  });
+  const { taxRates, isLoading } = useListTaxRatesQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        taxRates: data ? selectTaxRateAll(data) : undefined,
+      }),
+    }
+  );
   const [deleteTaxRate] = useDeleteTaxRateMutation();
 
   const [taxRateToDelete, setTaxRateToDelete] = React.useState<string | null>(null);
@@ -32,7 +37,7 @@ export const TaxRateList: React.FC = () => {
 
   const handleConfirmDeleteTaxRate: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && taxRateToDelete !== null) {
-      deleteTaxRate({ taxRateName: taxRateToDelete })
+      deleteTaxRate({ nodeId: currentNode.id, taxRateName: taxRateToDelete })
         .unwrap()
         .catch(() => undefined);
     }
@@ -68,7 +73,7 @@ export const TaxRateList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit")}
-          onClick={() => navigate(`/tax-rates/${params.row.name}/edit`)}
+          onClick={() => navigate(TaxRateRoutes.edit(params.row.name))}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
@@ -81,19 +86,7 @@ export const TaxRateList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to="/tax-rates/new" endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("taxRates")} />
-        </ListItem>
-        <Typography variant="body1">{}</Typography>
-      </Paper>
+    <ListLayout title={t("taxRates")} routes={TaxRateRoutes}>
       <DataGrid
         autoHeight
         getRowId={(row) => row.name}
@@ -108,6 +101,6 @@ export const TaxRateList: React.FC = () => {
         show={taxRateToDelete !== null}
         onClose={handleConfirmDeleteTaxRate}
       />
-    </Stack>
+    </ListLayout>
   );
 };

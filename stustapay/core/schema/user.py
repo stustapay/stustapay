@@ -36,6 +36,7 @@ class Privilege(enum.Enum):
     till_management = "till_management"
     order_management = "order_management"
     festival_overview = "festival_overview"
+    tse_management = "tse_management"
 
     # festival workflow privileges
     terminal_login = "terminal_login"
@@ -56,6 +57,7 @@ class NewUserRole(BaseModel):
 
 class UserRole(NewUserRole):
     id: int
+    node_id: int
 
 
 class CheckLoginResult(BaseModel):
@@ -70,18 +72,14 @@ class LoginPayload(BaseModel):
 
 class NewUser(BaseModel):
     login: str
-    display_name: str = ""
-    user_tag_uid: int
-    role_names: list[str]
-    description: Optional[str] = None
-
-
-class UserWithoutId(BaseModel):
-    login: str
     display_name: str
+    user_tag_uid: Optional[int] = None
     role_names: list[str]
     description: Optional[str] = None
-    user_tag_uid: Optional[int] = None
+
+
+class UserWithoutId(NewUser):
+    node_id: int
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None
 
@@ -104,6 +102,7 @@ class CurrentUser(BaseModel):
     Describes a logged-in user in the system
     """
 
+    node_id: int
     id: int
     login: str
     display_name: str

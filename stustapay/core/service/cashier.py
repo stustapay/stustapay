@@ -5,14 +5,18 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, ACCOUNT_IMBALANCE
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.till import VIRTUAL_TILL_ID
 from stustapay.core.schema.user import CurrentUser, Privilege, User
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
+from stustapay.framework.database import Connection
 
 from .common.error import NotFound, ServiceException
 from .order.booking import (
@@ -49,12 +53,16 @@ class CashierService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
+    @requires_node()
     async def list_cashiers(self, *, conn: Connection) -> list[Cashier]:
+        # TODO: tree scope
         return await conn.fetch_many(Cashier, "select * from cashier")
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
+    @requires_node()
     async def get_cashier(self, *, conn: Connection, cashier_id: int) -> Optional[Cashier]:
+        # TODO: tree scope
         return await conn.fetch_maybe_one(Cashier, "select * from cashier where id = $1", cashier_id)
 
     @staticmethod
@@ -65,7 +73,9 @@ class CashierService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
+    @requires_node()
     async def get_cashier_shifts(self, *, conn: Connection, current_user: User, cashier_id: int) -> list[CashierShift]:
+        # TODO: tree scope
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_user=current_user, cashier_id=cashier_id
         )
@@ -87,6 +97,7 @@ class CashierService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
+    @requires_node()
     async def get_cashier_shift_stats(
         self,
         *,
@@ -202,6 +213,7 @@ class CashierService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
+    @requires_node()
     async def close_out_cashier(
         self, *, conn: Connection, current_user: CurrentUser, cashier_id: int, close_out: CloseOut
     ) -> CloseOutResult:

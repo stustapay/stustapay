@@ -15,7 +15,7 @@ export const useQueryState = <T extends Record<string, boolean | string | number
   const [searchParams, setSearchParams] = useSearchParams();
 
   const updateState = React.useCallback(
-    (newState: T) => {
+    (newState: Partial<T>) => {
       setSearchParams((prevState) => ({
         ...Object.fromEntries(prevState.entries()),
         ...newState,

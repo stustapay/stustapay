@@ -8,5 +8,9 @@ class TaxRateWithoutName(BaseModel):
     description: str
 
 
-class TaxRate(TaxRateWithoutName):
+class NewTaxRate(TaxRateWithoutName):
     name: str
+
+
+class TaxRate(NewTaxRate):
+    node_id: int

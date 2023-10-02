@@ -3,7 +3,6 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, Account
 from stustapay.core.schema.till import (
     CashRegister,
@@ -11,6 +10,7 @@ from stustapay.core.schema.till import (
     NewCashRegister,
     NewCashRegisterStocking,
 )
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.account import (
     get_account_by_id,
@@ -19,6 +19,7 @@ from stustapay.core.service.account import (
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
+    requires_node,
     requires_terminal,
     requires_user,
     with_db_transaction,
@@ -27,6 +28,7 @@ from stustapay.core.service.common.decorators import (
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.order.booking import BookingIdentifier, book_money_transfer
 from stustapay.core.service.transaction import book_transaction
+from stustapay.framework.database import Connection
 
 
 async def get_cash_register(conn: Connection, register_id: int) -> Optional[CashRegister]:
@@ -35,8 +37,12 @@ async def get_cash_register(conn: Connection, register_id: int) -> Optional[Cash
     )
 
 
-async def create_cash_register(*, conn: Connection, new_register: NewCashRegister) -> CashRegister:
-    register_id = await conn.fetchval("insert into cash_register (name) values ($1) returning id", new_register.name)
+async def create_cash_register(*, conn: Connection, node_id: int, new_register: NewCashRegister) -> CashRegister:
+    register_id = await conn.fetchval(
+        "insert into cash_register (node_id, name) values ($1, $2) returning id",
+        node_id,
+        new_register.name,
+    )
     register = await get_cash_register(conn=conn, register_id=register_id)
     assert register is not None
     return register
@@ -59,6 +65,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def list_cash_register_stockings_admin(self, *, conn: Connection) -> list[CashRegisterStocking]:
         return await self._list_cash_register_stockings(conn=conn)
 
@@ -69,15 +76,17 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def create_cash_register_stockings(
-        self, *, conn: Connection, stocking: NewCashRegisterStocking
+        self, *, conn: Connection, node: Node, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
         stocking_id = await conn.fetchval(
             "insert into cash_register_stocking "
-            "   (euro200, euro100, euro50, euro20, euro10, euro5, euro2, euro1, "
+            "   (node_id, euro200, euro100, euro50, euro20, euro10, euro5, euro2, euro1, "
             "   cent50, cent20, cent10, cent5, cent2, cent1, variable_in_euro, name) "
-            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) "
             "returning id",
+            node.id,
             stocking.euro200,
             stocking.euro100,
             stocking.euro50,
@@ -101,6 +110,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def update_cash_register_stockings(
         self, *, conn: Connection, stocking_id: int, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
@@ -135,6 +145,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def delete_cash_register_stockings(self, *, conn: Connection, stocking_id: int):
         result = await conn.execute(
             "delete from cash_register_stocking where id = $1",
@@ -160,16 +171,21 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def list_cash_registers_admin(self, *, conn: Connection, hide_assigned_registers=False) -> list[CashRegister]:
         return await self._list_cash_registers(conn=conn, hide_assigned_registers=hide_assigned_registers)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def create_cash_register(self, *, conn: Connection, new_register: NewCashRegister) -> CashRegister:
-        return await create_cash_register(conn=conn, new_register=new_register)
+    @requires_node()
+    async def create_cash_register(
+        self, *, conn: Connection, node: Node, new_register: NewCashRegister
+    ) -> CashRegister:
+        return await create_cash_register(conn=conn, node_id=node.id, new_register=new_register)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def update_cash_register(
         self, *, conn: Connection, register_id: int, register: NewCashRegister
     ) -> CashRegister:
@@ -184,6 +200,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def delete_cash_register(self, *, conn: Connection, register_id: int):
         result = await conn.execute(
             "delete from cash_register where id = $1",
@@ -370,6 +387,7 @@ class TillRegisterService(DBService):
 
     @with_retryable_db_transaction()
     @requires_user([Privilege.cashier_management])
+    @requires_node()
     async def transfer_cash_register_admin(
         self, *, conn: Connection, source_cashier_id: int, target_cashier_id: int
     ) -> CashRegister:

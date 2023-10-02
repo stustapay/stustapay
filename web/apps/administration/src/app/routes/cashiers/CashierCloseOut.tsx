@@ -18,13 +18,13 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
-import { selectTillById, useCloseOutCashierMutation, useGetCashierQuery, useListTillsQuery } from "@api";
+import { selectTillById, useCloseOutCashierMutation, useGetCashierQuery, useListTillsQuery } from "@/api";
 import { CashingTextField, Loading, NumericInput } from "@stustapay/components";
-import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
+import { useCurrencyFormatter, useCurrencySymbol, useCurrentNode } from "@/hooks";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { Formik, FormikHelpers } from "formik";
-import { UserSelect } from "@components/UserSelect";
+import { UserSelect } from "@/components/features";
 import { getUserName } from "@stustapay/models";
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
 
@@ -71,6 +71,7 @@ const computeDifference = (values: CloseOutData, targetBalance: number): number 
 
 export const CashierCloseOut: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { cashierId } = useParams();
   const navigate = useNavigate();
 
@@ -78,8 +79,8 @@ export const CashierCloseOut: React.FC = () => {
   const currencySymbol = useCurrencySymbol();
 
   const [closeOut] = useCloseOutCashierMutation();
-  const { data: cashier, isLoading } = useGetCashierQuery({ cashierId: Number(cashierId) });
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery();
+  const { data: cashier, isLoading } = useGetCashierQuery({ nodeId: currentNode.id, cashierId: Number(cashierId) });
+  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
 
   if (!cashier || isLoading || !tills || isTillsLoading) {
     return <Loading />;
@@ -95,6 +96,7 @@ export const CashierCloseOut: React.FC = () => {
   const handleSubmit = (values: CloseOutData, { setSubmitting }: FormikHelpers<CloseOutData>) => {
     setSubmitting(true);
     closeOut({
+      nodeId: currentNode.id,
       cashierId: Number(cashierId),
       closeOut: {
         comment: values.comment,

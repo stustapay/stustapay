@@ -1,18 +1,15 @@
 import asyncio
 import contextlib
 import curses
-
-# import functools
 import logging
 from curses import wrapper
 from datetime import datetime
+from typing import Optional
 
 import asyncpg
 
-from stustapay.core.database import Connection, create_db_pool
-from stustapay.core.subcommand import SubCommand
-
-from .config import Config
+from stustapay.core.config import Config
+from stustapay.framework.database import Connection, create_db_pool
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,16 +28,16 @@ def add_status_line(status, line, attr):
 
 
 async def draw_meters(meters, db):
-    tses = await db.fetch("select * from tse order by tse_id")
+    tses = await db.fetch("select * from tse order by id")
     for i in range(len(tses)):
         meters[i].clear()
-        if tses[i]["tse_status"] == "new":
+        if tses[i]["status"] == "new":
             colorscheme = curses.color_pair(2)
-        elif tses[i]["tse_status"] == "active":
+        elif tses[i]["status"] == "active":
             colorscheme = curses.color_pair(4)
-        elif tses[i]["tse_status"] == "disabled":
+        elif tses[i]["status"] == "disabled":
             colorscheme = curses.color_pair(1)
-        elif tses[i]["tse_status"] == "failed":
+        elif tses[i]["status"] == "failed":
             colorscheme = curses.color_pair(5)
 
         # assigned tills
@@ -93,7 +90,7 @@ async def window_main(stdscr, db):
     LEN = MAX_COLS - 1
 
     meters = []
-    tses = await db.fetch("select * from tse order by tse_id")
+    tses = await db.fetch("select * from tse order by id")
     # tills = await db.fetch("select * from tse order by tse_id")
     if len(tses) > ROW * COL:
         stdscr.addstr(0, 0, "to many tses", curses.A_BLINK | curses.color_pair(1))
@@ -134,22 +131,13 @@ async def window_main(stdscr, db):
     return
 
 
-class TseSwitchover(SubCommand):
-    @staticmethod
-    def argparse_register(subparser):
-        subparser.add_argument("-s", "--show", action="store_true", default=False, help="only show status")
-        subparser.add_argument("-n", "--nc", action="store_true", default=False, help="curses interface")
-        subparser.add_argument("--disable", action="store_true", default=False, help="disable a failed TSE")
-        subparser.add_argument("--tse", type=str, default=None, help="TSE name to disable")
-
-    def __init__(self, args, config: Config, **rest):
-        del rest  # unused
-
+class TseSwitchover:
+    def __init__(self, config: Config, show: bool, nc: bool, disable: bool, tse: Optional[str]):
         self.config = config
-        self.show = args.show
-        self.nc = args.nc
-        self.tse_to_disable = args.tse
-        self.disable = args.disable
+        self.show = show
+        self.nc = nc
+        self.tse_to_disable = tse
+        self.disable = disable
         self.db_pool: asyncpg.Pool = None
         # contains event objects for each object that is waiting for new events.
 
@@ -170,7 +158,7 @@ class TseSwitchover(SubCommand):
                     raise ValueError("No TSE to disable specified")
                 if ";" in self.tse_to_disable:
                     raise ValueError("Illegal character in TSE name")
-                tse = await psql.fetchrow("select * from tse where tse_name=$1", self.tse_to_disable)
+                tse = await psql.fetchrow("select * from tse where name=$1", self.tse_to_disable)
                 if tse is None:
                     LOGGER.error(f"TSE with name {self.tse_to_disable} not found")
                     raise ValueError
@@ -243,16 +231,16 @@ class TseSwitchover(SubCommand):
                 print("setting TSE to disabled")
                 if manualfailed == "YES":
                     print("disabeling no matter what state the TSE has")
-                    await psql.execute("update tse set tse_status='disabled' where tse_name=$1", self.tse_to_disable)
+                    await psql.execute("update tse set status='disabled' where name=$1", self.tse_to_disable)
                 else:
                     print("disabeling only if in state failed")
                     await psql.execute(
-                        "update tse set tse_status='disabled' where tse_name=$1 and tse_status='failed'",
+                        "update tse set status='disabled' where name=$1 and status='failed'",
                         self.tse_to_disable,
                     )
 
                 # check
-                tse = await psql.fetchrow("select * from tse where tse_name=$1", self.tse_to_disable)
+                tse = await psql.fetchrow("select * from tse where name=$1", self.tse_to_disable)
                 if tse["tse_status"] == "disabled":
                     print("SUCCESS: TSE set to 'disabled'")
                 else:

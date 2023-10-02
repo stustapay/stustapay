@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 from hashlib import sha256, sha384
 from inspect import stack
 from random import randbytes, randrange
+from typing import Optional
 
 import ecdsa
 import uvicorn
@@ -65,7 +66,9 @@ MAGIC_PRODUCTION_CLIENT = "DN TSEProduction ef82abcedf"
 
 
 class VirtualTSE:
-    def __init__(self, delay: float, fast: bool, real: bool, private_key_hex: str, gen_key: bool, broken: bool):
+    def __init__(
+        self, delay: float, fast: bool, real: bool, private_key_hex: Optional[str], gen_key: bool, broken: bool
+    ):
         self._fast: bool = fast
         self._real: bool = real
         self._delay: float = delay
@@ -585,14 +588,14 @@ class VirtualTSE:
 class WebsocketInterface:
     def __init__(
         self,
-        host: str,
-        port: int,
-        delay: float,
-        fast: bool,
-        real: bool,
-        private_key_hex: str,
-        gen_key: bool,
-        broken: bool,
+        host: str = "localhost",
+        port: int = 10001,
+        delay: float = 0.25,
+        fast: bool = False,
+        real: bool = False,
+        private_key_hex: Optional[str] = None,
+        gen_key: bool = False,
+        broken: bool = False,
     ):
         self.host: str = host
         self.port: int = port

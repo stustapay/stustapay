@@ -11,7 +11,6 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.account import ACCOUNT_SUMUP_CUSTOMER_TOPUP
 from stustapay.core.schema.customer import (
     Customer,
@@ -39,8 +38,9 @@ from stustapay.core.service.order.booking import (
     NewLineItem,
     book_order,
 )
-from stustapay.core.service.order.order import fetch_max_account_balance
 from stustapay.core.service.product import fetch_top_up_product
+from stustapay.core.service.tree.common import fetch_event_node_for_node
+from stustapay.framework.database import Connection
 
 
 class SumUpError(ServiceException):
@@ -372,6 +372,10 @@ class SumupService(DBService):
     @requires_customer
     @requires_sumup_enabled
     async def create_checkout(self, *, conn: Connection, current_customer: Customer, amount: float) -> SumupCheckout:
+        # TODO: tree
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=1)
+        assert event_node is not None
+        assert event_node.event is not None
         # check if pending checkout already exists
         # if await conn.fetchval(
         #     "select exists(select * from customer_sumup_checkout where customer_account_id = $1 and status = $2)",
@@ -386,8 +390,7 @@ class SumupService(DBService):
         if amount <= 0:
             raise InvalidArgument("Must top up more than 0€")
 
-        max_account_balance = await fetch_max_account_balance(conn=conn)
-
+        max_account_balance = event_node.event.max_account_balance
         if amount != int(amount):
             raise InvalidArgument("Cent amounts are not allowed")
         if amount > max_account_balance - current_customer.balance:

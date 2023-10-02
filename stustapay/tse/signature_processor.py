@@ -1,32 +1,26 @@
 import asyncio
 import contextlib
-import functools
 import logging
 from typing import Optional
 
 import asyncpg
 
-from stustapay.core.database import Connection, create_db_pool
+from stustapay.core.config import Config
+from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
-from stustapay.core.subcommand import SubCommand
+from stustapay.core.service.tse import list_tses
+from stustapay.framework.database import Connection, create_db_pool
 
-from ..core.healthcheck import run_healthcheck
-from .config import Config
+from .config import get_tse_handler
 from .wrapper import TSEWrapper
 
 LOGGER = logging.getLogger(__name__)
 
 
-class SignatureProcessor(SubCommand):
-    @staticmethod
-    def argparse_register(subparser):
-        del subparser  # unused, no extra arguments
-
-    def __init__(self, args, config: Config, **rest):
-        del args, rest  # unused
-
+class SignatureProcessor:
+    def __init__(self, config: Config):
         self.config = config
-        self.tses = dict[str, TSEWrapper]()
+        self.tses: dict[str, TSEWrapper] = {}
         self.db_pool: Optional[asyncpg.Pool] = None
         # contains event objects for each object that is waiting for new events.
 
@@ -37,10 +31,10 @@ class SignatureProcessor(SubCommand):
             # Clean up pending signatures.
             # We have no idea what state the assigned TSE was in when our predecessor
             # process was stopped.
-            # In theory it might be possible to recover them by checking whether the
+            # In theory, it might be possible to recover them by checking whether the
             # indicated TSE has actually completed the signature and advancing it to
             # 'done' if yes, setting it back to 'new' else.
-            # This intruduces much complexity and potential for bugs though,
+            # This introduces much complexity and potential for bugs though,
             # so for now we just assume that the signature was interrupted and failed.
             # after this clean-up the database will be in a consistent state where
             # the till <-> tse mapping can be obtained via select name, tse_id from till;
@@ -58,17 +52,18 @@ class SignatureProcessor(SubCommand):
             )
 
             # initialize the TSE wrappers
-            self.tses = dict[str, TSEWrapper]()
-            for name, factory_function in self.config.tses.all_factories():
-                tse = TSEWrapper(name=name, factory_function=functools.partial(factory_function, name=name))
-                tse.start(self.db_pool)
-                aes.push_async_callback(tse.stop)
-                self.tses[name] = tse
+            async with self.db_pool.acquire() as conn:
+                tses_in_db = await list_tses(conn=conn)
+                for tse_in_db in tses_in_db:
+                    factory = get_tse_handler(tse_in_db)
+                    tse = TSEWrapper(name=tse_in_db.name, factory_function=factory)
+                    tse.start(self.db_pool)
+                    aes.push_async_callback(tse.stop)
+                    self.tses[tse.name] = tse
 
             # TODO Task to assign feral tills to a TSE
             LOGGER.info(f"Configured TSEs: {self.tses}")
 
-            # pylint: disable=attribute-defined-outside-init
             db_hook = DBHook(self.db_pool, "tse_signature", self.handle_hook, initial_run=True)
             await db_hook.run()
             await asyncio.gather(
@@ -109,22 +104,21 @@ class SignatureProcessor(SubCommand):
                 for till in feral_till_id_rows:
                     # get number of assigned tills per tse, but only of active TSEs
                     tse_stats = dict()
-                    active_tses = await psql.fetch("select tse_name from tse where tse_status='active'")
+                    active_tses = await psql.fetch("select name from tse where status='active'")
                     for tse in active_tses:
                         # TODO optimize this statement for really really large installations...
-                        tse_stats[tse["tse_name"]] = await psql.fetchval(
-                            "select count(*) from till join tse on till.tse_id = tse.tse_id where tse.tse_name=$1 and tse.tse_status='active'",
-                            tse["tse_name"],
+                        tse_stats[tse["name"]] = await psql.fetchval(
+                            "select count(*) from till join tse on till.tse_id = tse.id where tse.name=$1 and tse.status='active'",
+                            tse["name"],
                         )
                     tse_ranked = sorted(tse_stats.items(), key=lambda x: x[1])
-                    # assign this till to tse with lowest number
+                    # assign this till to tse with the lowest number
                     till_id_to_assign_to_tse = till["till_id"]
                     try:
                         tse_name_to_assign_to_till = tse_ranked[0][0]
 
-                        tse_id = await psql.fetchval(
-                            "select tse_id from tse where tse_name = $1 ", tse_name_to_assign_to_till
-                        )
+                        tse_id = await psql.fetchval("select id from tse where name = $1 ", tse_name_to_assign_to_till)
+                        assert tse_id is not None
                         await psql.execute(
                             "update till set tse_id = $1 where id = $2", tse_id, till_id_to_assign_to_tse
                         )
@@ -138,6 +132,6 @@ class SignatureProcessor(SubCommand):
                             "update tse_signature set signature_status='failure',result_message='TSE failure, no active TSE available', tse_id=1 where signature_status='new'"
                         )
 
-        # notify all of the TSEs
+        # notify all TSEs
         for tse in self.tses.values():
             tse.notify_maybe_orders_available()

@@ -1,26 +1,31 @@
-import * as React from "react";
-import { Link, ListItem, ListItemText, Paper, Stack } from "@mui/material";
+import { selectTicketAll, useDeleteTicketMutation, useListTicketsQuery } from "@/api";
+import { ProductRoutes, TicketRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { selectTicketAll, useDeleteTicketMutation, useListTicketsQuery } from "@api";
-import { useTranslation } from "react-i18next";
-import { ButtonLink, ConfirmDialog, ConfirmDialogCloseHandler } from "@components";
-import { Ticket } from "@stustapay/models";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { Loading } from "@stustapay/components";
-import { useCurrencyFormatter } from "src/hooks";
+import { Ticket } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export const TicketList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { tickets, isLoading: isTicketsLoading } = useListTicketsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      tickets: data ? selectTicketAll(data) : undefined,
-    }),
-  });
+  const { tickets, isLoading: isTicketsLoading } = useListTicketsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        tickets: data ? selectTicketAll(data) : undefined,
+      }),
+    }
+  );
   const [deleteTicket] = useDeleteTicketMutation();
 
   const [ticketToDelete, setTicketToDelete] = React.useState<number | null>(null);
@@ -34,7 +39,7 @@ export const TicketList: React.FC = () => {
 
   const handleConfirmDeleteTicket: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && ticketToDelete !== null) {
-      deleteTicket({ ticketId: ticketToDelete })
+      deleteTicket({ nodeId: currentNode.id, ticketId: ticketToDelete })
         .unwrap()
         .catch(() => undefined);
     }
@@ -47,7 +52,7 @@ export const TicketList: React.FC = () => {
       headerName: t("ticket.name") as string,
       flex: 1,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/tickets/${params.row.id}`}>
+        <Link component={RouterLink} to={TicketRoutes.detail(params.row.id)}>
           {params.row.name}
         </Link>
       ),
@@ -61,7 +66,7 @@ export const TicketList: React.FC = () => {
       field: "product_id",
       headerName: t("ticket.product") as string,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/products/${params.row.product_id}`}>
+        <Link component={RouterLink} to={ProductRoutes.detail(params.row.product_id)}>
           {params.row.product_name}
         </Link>
       ),
@@ -100,7 +105,7 @@ export const TicketList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit")}
-          onClick={() => navigate(`/tickets/${params.row.id}/edit`)}
+          onClick={() => navigate(TicketRoutes.edit(params.row.id))}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
@@ -113,18 +118,7 @@ export const TicketList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <ButtonLink to="/tickets/new" endIcon={<AddIcon />} variant="contained" color="primary">
-              {t("add")}
-            </ButtonLink>
-          }
-        >
-          <ListItemText primary={t("tickets")} />
-        </ListItem>
-      </Paper>
+    <ListLayout title={t("tickets")} routes={TicketRoutes}>
       <DataGrid
         autoHeight
         rows={tickets ?? []}
@@ -138,6 +132,6 @@ export const TicketList: React.FC = () => {
         show={ticketToDelete !== null}
         onClose={handleConfirmDeleteTicket}
       />
-    </Stack>
+    </ListLayout>
   );
 };

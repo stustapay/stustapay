@@ -1,7 +1,10 @@
-from typing import Optional
+import os
+from pathlib import Path
 
 import yaml
 from pydantic import BaseModel
+
+from stustapay.framework.database import DatabaseConfig
 
 
 class HTTPServerConfig(BaseModel):
@@ -20,16 +23,6 @@ class TerminalApiConfig(HTTPServerConfig):
     base_url: str
     host: str = "localhost"
     port: int = 8080
-
-
-class DatabaseConfig(BaseModel):
-    user: Optional[str] = None
-    password: Optional[str] = None
-    host: Optional[str] = None
-    port: Optional[int] = 5432
-    dbname: str
-    require_ssl: bool = False
-    sslrootcert: Optional[str] = None
 
 
 class CoreConfig(BaseModel):
@@ -58,15 +51,20 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     sumup_config: SumupConfig = SumupConfig()
 
 
+class BonConfig(BaseModel):
+    output_folder: Path
+
+
 class Config(BaseModel):
-    administration: AdministrationApiConfig
-    terminalserver: TerminalApiConfig
     database: DatabaseConfig
     core: CoreConfig
+    administration: AdministrationApiConfig
+    terminalserver: TerminalApiConfig
     customer_portal: CustomerPortalApiConfig
+    bon: BonConfig
 
 
-def read_config(config_path: str) -> Config:
+def read_config(config_path: os.PathLike) -> Config:
     with open(config_path, "r") as config_file:
         content = yaml.safe_load(config_file)
         config = Config(**content)

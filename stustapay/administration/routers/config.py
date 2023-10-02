@@ -24,11 +24,8 @@ async def get_public_config(context: Annotated[Context, Depends(get_context)], c
     return Config(
         test_mode=context.config.core.test_mode,
         test_mode_message=context.config.core.test_mode_message,
-        sumup_topup_enabled=await config_service.is_sumup_topup_enabled(),
+        sumup_topup_enabled_globally=config.sumup_topup_enabled_globally,
         terminal_api_endpoint=context.config.terminalserver.base_url,
-        currency_symbol=config.currency_symbol,
-        currency_identifier=config.currency_identifier,
-        contact_email=config.contact_email,
     )
 
 

@@ -1,7 +1,4 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, status
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
@@ -15,6 +12,11 @@ router = APIRouter(
 )
 
 
+class LoginPayload(BaseModel):
+    username: str
+    password: str
+
+
 class LoginResponse(BaseModel):
     user: CurrentUser
     access_token: str
@@ -23,7 +25,8 @@ class LoginResponse(BaseModel):
 
 @router.post("/login", summary="login with username and password", response_model=LoginResponse)
 async def login(
-    payload: Annotated[OAuth2PasswordRequestForm, Depends()],
+    # payload: Annotated[OAuth2PasswordRequestForm, Depends()],
+    payload: LoginPayload,
     user_service: ContextUserService,
 ):
     response = await user_service.login_user(username=payload.username, password=payload.password)

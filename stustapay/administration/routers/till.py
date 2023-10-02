@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
@@ -13,26 +15,22 @@ router = APIRouter(
 
 
 @router.get("", response_model=NormalizedList[Till, int])
-async def list_tills(token: CurrentAuthToken, till_service: ContextTillService):
-    return normalize_list(await till_service.list_tills(token=token))
+async def list_tills(token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None):
+    return normalize_list(await till_service.list_tills(token=token, node_id=node_id))
 
 
 @router.post("", response_model=Till)
 async def create_till(
-    till: NewTill,
-    token: CurrentAuthToken,
-    till_service: ContextTillService,
+    till: NewTill, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
 ):
-    return await till_service.create_till(token=token, till=till)
+    return await till_service.create_till(token=token, till=till, node_id=node_id)
 
 
 @router.get("/{till_id}", response_model=Till)
 async def get_till(
-    till_id: int,
-    token: CurrentAuthToken,
-    till_service: ContextTillService,
+    till_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
 ):
-    till = await till_service.get_till(token=token, till_id=till_id)
+    till = await till_service.get_till(token=token, till_id=till_id, node_id=node_id)
     if till is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -45,8 +43,9 @@ async def update_till(
     till: NewTill,
     token: CurrentAuthToken,
     till_service: ContextTillService,
+    node_id: Optional[int] = None,
 ):
-    till = await till_service.update_till(token=token, till_id=till_id, till=till)
+    till = await till_service.update_till(token=token, till_id=till_id, till=till, node_id=node_id)
     if till is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -55,30 +54,24 @@ async def update_till(
 
 @router.post("/{till_id}/logout")
 async def logout_till(
-    till_id: int,
-    token: CurrentAuthToken,
-    till_service: ContextTillService,
+    till_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
 ):
-    logged_out = await till_service.logout_terminal_id(token=token, till_id=till_id)
+    logged_out = await till_service.logout_terminal_id(token=token, till_id=till_id, node_id=node_id)
     if not logged_out:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 @router.post("/{till_id}/force-logout-user")
 async def force_logout_user(
-    till_id: int,
-    token: CurrentAuthToken,
-    till_service: ContextTillService,
+    till_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
 ):
-    await till_service.force_logout_user(token=token, till_id=till_id)
+    await till_service.force_logout_user(token=token, till_id=till_id, node_id=node_id)
 
 
 @router.delete("/{till_id}")
 async def delete_till(
-    till_id: int,
-    token: CurrentAuthToken,
-    till_service: ContextTillService,
+    till_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
 ):
-    deleted = await till_service.delete_till(token=token, till_id=till_id)
+    deleted = await till_service.delete_till(token=token, till_id=till_id, node_id=node_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

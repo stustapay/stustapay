@@ -1,5 +1,5 @@
 from functools import wraps
-from inspect import signature
+from inspect import Parameter, signature
 from typing import Optional
 
 import asyncpg.exceptions
@@ -7,6 +7,7 @@ import asyncpg.exceptions
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.common.error import AccessDenied, Unauthorized
+from stustapay.core.service.tree.common import fetch_node
 
 
 def with_db_connection(func):
@@ -62,6 +63,57 @@ def with_retryable_db_transaction(n_retries=3):
     return f
 
 
+def requires_node():
+    """
+    This makes a node_id: int parameter optional by reading it from the current users topmost node if not passed.
+    """
+
+    def f(func):
+        original_signature = signature(func)
+
+        @wraps(func)
+        async def wrapper(self, **kwargs):
+            # TODO: Tree node sanity checks for this logic
+            if "conn" not in kwargs:
+                raise RuntimeError(
+                    "requires_node needs a database connection, "
+                    "with_db_transaction needs to be put before this decorator"
+                )
+            conn = kwargs["conn"]
+            node_id = kwargs.pop("node_id", None)
+            if node_id is None:
+                current_user: CurrentUser | None = kwargs.get("current_user")
+                if current_user is None:
+                    raise RuntimeError(
+                        "Neither node_id was passed as an argument, nor a current_user was provided. "
+                        "Cannot set current tree node."
+                    )
+                node_id = current_user.node_id
+
+            node = await fetch_node(conn=conn, node_id=node_id)
+            if node is None:
+                raise RuntimeError(f"Node with id {node_id} does not exist")
+            if "node" in original_signature.parameters:
+                kwargs["node"] = node
+
+            if "current_user" not in original_signature.parameters:
+                kwargs.pop("current_user")
+
+            return await func(self, **kwargs)
+
+        if "current_user" not in original_signature.parameters:
+            sig = signature(func)
+            new_parameters = tuple(sig.parameters.values()) + (
+                Parameter("current_user", kind=Parameter.KEYWORD_ONLY, annotation=CurrentUser),
+            )
+            sig = sig.replace(parameters=new_parameters)
+            wrapper.__signature__ = sig
+
+        return wrapper
+
+    return f
+
+
 def requires_user(privileges: Optional[list[Privilege]] = None):
     """
     Check if a user is logged in via a user jwt token and has ALL provided privileges.
@@ -81,8 +133,8 @@ def requires_user(privileges: Optional[list[Privilege]] = None):
                     "with_db_transaction needs to be put before this decorator"
                 )
 
-            token = kwargs["token"] if "token" in kwargs else None
-            user = kwargs["current_user"] if "current_user" in kwargs else None
+            token = kwargs.get("token")
+            user = kwargs.get("current_user")
             conn = kwargs["conn"]
             if user is None:
                 if self.__class__.__name__ == "AuthService":
@@ -135,8 +187,8 @@ def requires_customer(func):
                 "with_db_transaction needs to be put before this decorator"
             )
 
-        token = kwargs["token"] if "token" in kwargs else None
-        customer = kwargs["current_customer"] if "current_customer" in kwargs else None
+        token = kwargs.get("token")
+        customer = kwargs.get("current_customer")
         conn = kwargs["conn"]
         if customer is None:
             if self.__class__.__name__ == "AuthService":
@@ -184,8 +236,8 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
                     "with_db_transaction needs to be put before this decorator"
                 )
 
-            token = kwargs["token"] if "token" in kwargs else None
-            terminal = kwargs["current_terminal"] if "current_terminal" in kwargs else None
+            token = kwargs.get("token")
+            terminal = kwargs.get("current_terminal")
             conn = kwargs["conn"]
             if terminal is None:
                 if self.__class__.__name__ == "AuthService":

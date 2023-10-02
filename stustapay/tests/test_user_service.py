@@ -7,7 +7,6 @@ from stustapay.core.schema.user import (
     INFOZELT_ROLE_NAME,
     NewUser,
     UserTag,
-    UserWithoutId,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.tests.common import TerminalTestCase
@@ -17,17 +16,24 @@ class UserServiceTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
 
-        self.cashier_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (654321) returning uid")
-        self.finanzorga_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (1337) returning uid")
-        admin_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values (12345) returning uid")
+        self.cashier_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 654321) returning uid", self.node_id
+        )
+        self.finanzorga_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 1337) returning uid", self.node_id
+        )
+        admin_tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 12345) returning uid", self.node_id
+        )
         self.admin = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(
+            node_id=self.node_id,
+            new_user=NewUser(
                 login="terminal_admin",
                 description="",
                 role_names=[ADMIN_ROLE_NAME],
                 user_tag_uid=admin_tag_uid,
                 display_name="Terminal",
-            )
+            ),
         )
         await self.till_service.login_user(
             token=self.terminal_token, user_tag=UserTag(uid=admin_tag_uid), user_role_id=ADMIN_ROLE_ID
@@ -43,7 +49,9 @@ class UserServiceTest(TerminalTestCase):
     async def test_user_creation(self):
         cashier = await self.user_service.create_user_terminal(
             token=self.terminal_token,
-            new_user=NewUser(login="test-cashier", user_tag_uid=self.cashier_uid, role_names=[CASHIER_ROLE_NAME]),
+            new_user=NewUser(
+                login="test-cashier", display_name="", user_tag_uid=self.cashier_uid, role_names=[CASHIER_ROLE_NAME]
+            ),
         )
         self.assertIsNotNone(cashier)
         self.assertEqual(cashier.login, "test-cashier")
@@ -55,7 +63,9 @@ class UserServiceTest(TerminalTestCase):
         with self.assertRaises(InvalidArgument):
             await self.user_service.create_user_terminal(
                 token=self.terminal_token,
-                new_user=NewUser(login="test-cashier", user_tag_uid=self.cashier_uid, role_names=[CASHIER_ROLE_NAME]),
+                new_user=NewUser(
+                    login="test-cashier", display_name="", user_tag_uid=self.cashier_uid, role_names=[CASHIER_ROLE_NAME]
+                ),
             )
 
         cashier = await self.user_service.update_user_roles_terminal(

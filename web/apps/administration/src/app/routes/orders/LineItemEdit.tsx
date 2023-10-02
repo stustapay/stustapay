@@ -16,7 +16,7 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { useCurrencyFormatter, useCurrencySymbol } from "@hooks";
+import { useCurrencyFormatter, useCurrencySymbol, useCurrentNode } from "@hooks";
 import { Add as AddIcon, Delete as DeleteIcon, Remove as RemoveIcon } from "@mui/icons-material";
 import { Order, Product, selectProductAll, useEditOrderMutation, useListProductsQuery } from "@api";
 import { Loading, NumericInput } from "@stustapay/components";
@@ -36,16 +36,20 @@ export interface LineItemEditProps {
 
 export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
   const currencySymbol = useCurrencySymbol();
+  const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const [selectedProducts, setSelectedProducts] = React.useState<SelectedProduct[]>([]);
   const navigate = useNavigate();
 
-  const { products } = useListProductsQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      products: data ? selectProductAll(data) : undefined,
-    }),
-  });
+  const { products } = useListProductsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        products: data ? selectProductAll(data) : undefined,
+      }),
+    }
+  );
   const [editSale] = useEditOrderMutation();
 
   React.useEffect(() => {
@@ -117,6 +121,7 @@ export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
   const handleSave = () => {
     editSale({
       orderId: order.id,
+      nodeId: currentNode.id,
       editSaleProducts: {
         uuid: uuidv4(),
         products: selectedProducts.map((p) => {

@@ -1,5 +1,4 @@
 # pylint: disable=unexpected-keyword-arg,missing-kwoa,attribute-defined-outside-init
-import argparse
 import asyncio
 import logging
 import random
@@ -13,18 +12,12 @@ import aiohttp
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import create_db_pool
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import ADMIN_ROLE_ID, CASHIER_ROLE_ID
-from stustapay.core.subcommand import SubCommand
-from stustapay.festivalsimulator.festivalsetup import (
-    PROFILE_ID_BEER,
-    PROFILE_ID_COCKTAIL,
-    PROFILE_ID_TICKET,
-    PROFILE_ID_TOPUP,
-)
+from stustapay.framework.async_utils import AsyncThread, with_db_pool
+from stustapay.framework.database import create_db_pool
 
 
 @dataclass
@@ -43,20 +36,21 @@ class Terminal:
         buttons = random.choices(self.config.buttons, k=random.randint(1, len(self.config.buttons)))
 
         return [
-            Button(till_button_id=button.id, quantity=(-1 if button.is_returnable else 1) * random.randint(1, 4)).dict()
+            Button(
+                till_button_id=button.id, quantity=(-1 if button.is_returnable else 1) * random.randint(1, 4)
+            ).model_dump()
             for button in buttons
         ]
 
 
-class Simulator(SubCommand):
-    def __init__(self, args, config: Config, **rest):
-        del rest  # unused
-        self.args = args
+class Simulator:
+    def __init__(self, config: Config, bookings_per_second: float = 100.0):
         self.logger = logging.getLogger(__name__)
         self.config = config
 
         self.base_url = self.config.terminalserver.base_url
         self.admin_url = self.config.administration.base_url
+        self.bookings_per_second = bookings_per_second
         self.admin_tag_uid = None
         self.n_tills_total = None
 
@@ -70,19 +64,13 @@ class Simulator(SubCommand):
 
         self.cashier_lock = threading.Lock()
 
-    @staticmethod
-    def argparse_register(subparser: argparse.ArgumentParser):
-        subparser.add_argument(
-            "-b", "--bookings-per-second", type=float, help="number of bookings per second", default=100.0
-        )
-
     def sleep(self):
-        to_sleep = 1.0 / self.args.bookings_per_second
+        to_sleep = 1.0 / self.bookings_per_second
         to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
         time.sleep(to_sleep)
 
     def sleep_topup(self):
-        to_sleep = 10.0 / self.args.bookings_per_second
+        to_sleep = 10.0 / self.bookings_per_second
         to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
         time.sleep(to_sleep)
 
@@ -173,8 +161,8 @@ class Simulator(SubCommand):
                 config = TerminalConfig.model_validate(await resp.json())
             return Terminal(token=success.token, till=success.till, config=config)
 
-    async def voucher_granting(self):
-        db_pool = await create_db_pool(self.config.database, n_connections=1)
+    @with_db_pool
+    async def voucher_granting(self, db_pool: asyncpg.Pool):
         async with aiohttp.ClientSession(base_url=self.admin_url) as client:
             while True:
                 rows = await db_pool.fetch("select * from account where user_tag_uid is not null")
@@ -334,10 +322,10 @@ class Simulator(SubCommand):
                     db_pool=db_pool, terminal=terminal, cashier_tag_uid=cashier_tag_uids[0], stock_up=perform_close_out
                 )
 
-    async def entry_till(self):
-        db_pool = await create_db_pool(self.config.database, n_connections=2)
+    @with_db_pool
+    async def entry_till(self, db_pool: asyncpg.Pool):
         async with db_pool.acquire() as conn:
-            rows = await conn.fetch("select id from till where id != 1 and active_profile_id = $1", PROFILE_ID_TICKET)
+            rows = await conn.fetch("select id from till where name like '%Eintrittskasse%'")
             terminals = await self._register_terminals(
                 db_pool=db_pool, till_ids=[row["id"] for row in rows], stock_up=True
             )
@@ -375,10 +363,10 @@ class Simulator(SubCommand):
                 if random.randint(0, 100) == 0:
                     await self.perform_cashier_shift_change(db_pool=db_pool, terminal=terminal, perform_close_out=True)
 
-    async def topup_till(self):
-        db_pool = await create_db_pool(self.config.database, n_connections=2)
+    @with_db_pool
+    async def topup_till(self, db_pool: asyncpg.Pool):
         async with db_pool.acquire() as conn:
-            rows = await conn.fetch("select id from till where id != 1 and active_profile_id = $1", PROFILE_ID_TOPUP)
+            rows = await conn.fetch("select id from till where name like '%Aufladekasse%'")
             terminals = await self._register_terminals(
                 db_pool=db_pool, till_ids=[row["id"] for row in rows], stock_up=True
             )
@@ -421,13 +409,11 @@ class Simulator(SubCommand):
                 if random.randint(0, 100) == 0:
                     await self.perform_cashier_shift_change(db_pool=db_pool, terminal=terminal, perform_close_out=True)
 
-    async def sale_till(self):
-        db_pool = await create_db_pool(self.config.database, n_connections=2)
+    @with_db_pool
+    async def sale_till(self, db_pool: asyncpg.Pool):
         async with db_pool.acquire() as conn:
             rows = await conn.fetch(
-                "select id from till where id != 1 and (active_profile_id = $1 or active_profile_id = $2)",
-                PROFILE_ID_BEER,
-                PROFILE_ID_COCKTAIL,
+                "select id from till where name like '%Bierkasse%' or name like '%Cocktailkasse%'",
             )
             terminals = await self._register_terminals(
                 db_pool=db_pool,
@@ -474,13 +460,13 @@ class Simulator(SubCommand):
 
     async def login_admin(self) -> str:
         async with aiohttp.ClientSession(base_url=self.admin_url) as client:
-            async with client.post("/auth/login", data={"username": "admin", "password": "admin"}) as resp:
+            async with client.post("/auth/login", json={"username": "admin", "password": "admin"}) as resp:
                 if resp.status != 200:
                     raise RuntimeError("Error trying to log in admin user")
                 payload = await resp.json()
             return payload["access_token"]
 
-    async def run(self):
+    async def initialize(self):
         db_pool = await create_db_pool(self.config.database, n_connections=1)
 
         self.start_time = datetime.now()
@@ -492,20 +478,28 @@ class Simulator(SubCommand):
         self.admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
         self.n_tills_total = await db_pool.fetchval("select count(*) from till")
 
-        entry_till_thread = threading.Thread(target=lambda: asyncio.run(self.entry_till()))
-        topup_till_thread = threading.Thread(target=lambda: asyncio.run(self.topup_till()))
-        sale_till_thread = threading.Thread(target=lambda: asyncio.run(self.sale_till()))
-        voucher_thread = threading.Thread(target=lambda: asyncio.run(self.voucher_granting()))
-        reporter_thread = threading.Thread(target=lambda: asyncio.run(self.reporter()))
+        await db_pool.close()
 
-        entry_till_thread.start()
-        topup_till_thread.start()
-        sale_till_thread.start()
-        voucher_thread.start()
-        reporter_thread.start()
+    def run(self):
+        asyncio.run(self.initialize())
+        threads = [
+            AsyncThread(self.entry_till),
+            AsyncThread(self.topup_till),
+            AsyncThread(self.sale_till),
+            AsyncThread(self.voucher_granting),
+            AsyncThread(self.reporter),
+        ]
 
-        entry_till_thread.join()
-        topup_till_thread.join()
-        sale_till_thread.join()
-        voucher_thread.join()
-        reporter_thread.join()
+        for thread in threads:
+            thread.start()
+
+        try:
+            while True:
+                time.sleep(0.1)
+        finally:
+            for thread in threads:
+                thread.stop()
+
+        # wait for all threads to actually stop
+        for thread in threads:
+            thread.join()

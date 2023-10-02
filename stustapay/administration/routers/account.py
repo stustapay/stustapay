@@ -1,12 +1,12 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextAccountService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
-from stustapay.core.schema.account import Account, UserTagDetail
+from stustapay.core.schema.account import Account
 
 router = APIRouter(
     prefix="",
@@ -16,8 +16,10 @@ router = APIRouter(
 
 
 @router.get("/system-accounts", response_model=NormalizedList[Account, int])
-async def list_system_accounts(token: CurrentAuthToken, account_service: ContextAccountService):
-    return normalize_list(await account_service.list_system_accounts(token=token))
+async def list_system_accounts(
+    token: CurrentAuthToken, account_service: ContextAccountService, node_id: Optional[int] = None
+):
+    return normalize_list(await account_service.list_system_accounts(token=token, node_id=node_id))
 
 
 class FindAccountPayload(BaseModel):
@@ -25,18 +27,29 @@ class FindAccountPayload(BaseModel):
 
 
 @router.post("/accounts/find-accounts", response_model=NormalizedList[Account, int])
-async def find_accounts(token: CurrentAuthToken, account_service: ContextAccountService, payload: FindAccountPayload):
-    return normalize_list(await account_service.find_accounts(token=token, search_term=payload.search_term))
+async def find_accounts(
+    token: CurrentAuthToken,
+    account_service: ContextAccountService,
+    payload: FindAccountPayload,
+    node_id: Optional[int] = None,
+):
+    return normalize_list(
+        await account_service.find_accounts(token=token, search_term=payload.search_term, node_id=node_id)
+    )
 
 
 @router.get("/accounts/{account_id}", response_model=Account)
-async def get_account(token: CurrentAuthToken, account_service: ContextAccountService, account_id: int):
-    return await account_service.get_account(token=token, account_id=account_id)
+async def get_account(
+    token: CurrentAuthToken, account_service: ContextAccountService, account_id: int, node_id: Optional[int] = None
+):
+    return await account_service.get_account(token=token, account_id=account_id, node_id=node_id)
 
 
 @router.post("/accounts/{account_id}/disable")
-async def disable_account(token: CurrentAuthToken, account_service: ContextAccountService, account_id: int):
-    await account_service.disable_account(token=token, account_id=account_id)
+async def disable_account(
+    token: CurrentAuthToken, account_service: ContextAccountService, account_id: int, node_id: Optional[int] = None
+):
+    await account_service.disable_account(token=token, account_id=account_id, node_id=node_id)
 
 
 class UpdateBalancePayload(BaseModel):
@@ -45,9 +58,15 @@ class UpdateBalancePayload(BaseModel):
 
 @router.post("/accounts/{account_id}/update-balance")
 async def update_balance(
-    token: CurrentAuthToken, account_service: ContextAccountService, account_id: int, payload: UpdateBalancePayload
+    token: CurrentAuthToken,
+    account_service: ContextAccountService,
+    account_id: int,
+    payload: UpdateBalancePayload,
+    node_id: Optional[int] = None,
 ):
-    await account_service.update_account_balance(token=token, account_id=account_id, new_balance=payload.new_balance)
+    await account_service.update_account_balance(
+        token=token, account_id=account_id, new_balance=payload.new_balance, node_id=node_id
+    )
 
 
 class UpdateVoucherAmountPayload(BaseModel):
@@ -60,9 +79,10 @@ async def update_voucher_amount(
     account_service: ContextAccountService,
     account_id: int,
     payload: UpdateVoucherAmountPayload,
+    node_id: Optional[int] = None,
 ):
     await account_service.update_account_vouchers(
-        token=token, account_id=account_id, new_voucher_amount=payload.new_voucher_amount
+        token=token, account_id=account_id, new_voucher_amount=payload.new_voucher_amount, node_id=node_id
     )
 
 
@@ -77,9 +97,14 @@ async def update_tag_uid(
     account_service: ContextAccountService,
     account_id: int,
     payload: UpdateTagUidPayload,
+    node_id: Optional[int] = None,
 ):
     await account_service.switch_account_tag_uid_admin(
-        token=token, account_id=account_id, new_user_tag_uid=int(payload.new_tag_uid_hex, 16), comment=payload.comment
+        token=token,
+        account_id=account_id,
+        new_user_tag_uid=int(payload.new_tag_uid_hex, 16),
+        comment=payload.comment,
+        node_id=node_id,
     )
 
 
@@ -93,33 +118,8 @@ async def update_account_comment(
     account_service: ContextAccountService,
     account_id: int,
     payload: UpdateAccountCommentPayload,
+    node_id: Optional[int] = None,
 ):
-    return await account_service.update_account_comment(token=token, account_id=account_id, comment=payload.comment)
-
-
-@router.get("/user-tags/{user_tag_uid_hex}", response_model=UserTagDetail)
-async def get_user_tag_detail(
-    token: CurrentAuthToken,
-    account_service: ContextAccountService,
-    user_tag_uid_hex: str,
-):
-    resp = await account_service.get_user_tag_detail(token=token, user_tag_uid=int(user_tag_uid_hex, 16))
-    if resp is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return resp
-
-
-class UpdateCommentPayload(BaseModel):
-    comment: str
-
-
-@router.post("/user-tags/{user_tag_uid_hex}/update-comment", response_model=UserTagDetail)
-async def update_user_tag_comment(
-    token: CurrentAuthToken,
-    account_service: ContextAccountService,
-    user_tag_uid_hex: str,
-    payload: UpdateCommentPayload,
-):
-    return await account_service.update_user_tag_comment(
-        token=token, user_tag_uid=int(user_tag_uid_hex, 16), comment=payload.comment
+    return await account_service.update_account_comment(
+        token=token, account_id=account_id, comment=payload.comment, node_id=node_id
     )

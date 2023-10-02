@@ -4,13 +4,13 @@ from typing import Optional
 from jose import JWTError, jwt
 from pydantic import BaseModel, ValidationError
 
-from stustapay.core.database import Connection
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import with_db_transaction
+from stustapay.framework.database import Connection
 
 
 class UserTokenMetadata(BaseModel):

@@ -10,8 +10,3 @@ class DieboldNixdorfUSBTSEConfig(BaseModel):
     password: str
     ws_url: str
     ws_timeout: float = 5
-
-    def factory(self, name: str):
-        from .handler import DieboldNixdorfUSBTSE
-
-        return DieboldNixdorfUSBTSE(name, self)

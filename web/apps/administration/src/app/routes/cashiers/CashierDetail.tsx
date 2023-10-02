@@ -1,8 +1,3 @@
-import * as React from "react";
-import { List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Stack, Typography } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import {
   selectCashierShiftAll,
   selectTillById,
@@ -13,22 +8,33 @@ import {
   useListCashRegistersAdminQuery,
   useListTillsQuery,
   useListUsersQuery,
-} from "@api";
+} from "@/api";
+import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { ButtonLink, DetailLayout, ListItemLink } from "@components";
+import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
+import { List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Typography } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { ButtonLink, IconButtonLink, ListItemLink } from "@components";
-import { Edit as EditIcon } from "@mui/icons-material";
-import { toast } from "react-toastify";
-import { useCurrencyFormatter } from "@hooks";
 import { CashierShift, formatUserTagUid, getUserName } from "@stustapay/models";
 import { formatDate } from "@stustapay/utils";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export const CashierDetail: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { cashierId } = useParams();
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
-  const { data: cashier, error, isLoading } = useGetCashierQuery({ cashierId: Number(cashierId) });
+  const {
+    data: cashier,
+    error,
+    isLoading,
+  } = useGetCashierQuery({ nodeId: currentNode.id, cashierId: Number(cashierId) });
   const {
     cashierShifts,
     error: shiftsError,
@@ -42,9 +48,13 @@ export const CashierDetail: React.FC = () => {
       }),
     }
   );
-  const { data: tills, isLoading: isTillsLoading, error: tillError } = useListTillsQuery();
-  const { data: users, isLoading: isUsersLoading, error: userError } = useListUsersQuery();
-  const { data: registers, isLoading: isRegistersLoading, error: registerError } = useListCashRegistersAdminQuery();
+  const { data: tills, isLoading: isTillsLoading, error: tillError } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: users, isLoading: isUsersLoading, error: userError } = useListUsersQuery({ nodeId: currentNode.id });
+  const {
+    data: registers,
+    isLoading: isRegistersLoading,
+    error: registerError,
+  } = useListCashRegistersAdminQuery({ nodeId: currentNode.id });
 
   if (error || tillError || shiftsError || userError || registerError) {
     navigate(-1);
@@ -103,7 +113,7 @@ export const CashierDetail: React.FC = () => {
       field: "id",
       headerName: t("shift.id") as string,
       renderCell: (params) => (
-        <RouterLink to={`/cashiers/${cashierId}/shifts/${params.row.id}`}>{params.row.id}</RouterLink>
+        <RouterLink to={CashierRoutes.detail(cashierId) + `/shifts/${params.row.id}`}>{params.row.id}</RouterLink>
       ),
     },
     {
@@ -151,23 +161,23 @@ export const CashierDetail: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <>
-              {cashier.cash_drawer_balance !== 0 && (
-                <ButtonLink to={`/cashiers/${cashierId}/close-out`}>{t("cashier.closeOut")}</ButtonLink>
-              )}
-              <IconButtonLink to={`/cashiers/${cashierId}/edit`} color="primary" sx={{ mr: 1 }}>
-                <EditIcon />
-              </IconButtonLink>
-            </>
-          }
-        >
-          <ListItemText primary={getUserName(cashier)} />
-        </ListItem>
-      </Paper>
+    <DetailLayout
+      title={getUserName(cashier)}
+      actions={[
+        {
+          label: t("cashier.closeOut"),
+          hidden: cashier.cash_drawer_balance === 0,
+          onClick: () => navigate(CashierRoutes.detailAction(cashier.id, "close-out")),
+          icon: <PointOfSaleIcon />,
+        },
+        {
+          label: t("edit"),
+          onClick: () => navigate(CashierRoutes.edit(cashier.id)),
+          color: "primary",
+          icon: <EditIcon />,
+        },
+      ]}
+    >
       <Paper>
         <List>
           <ListItem>
@@ -179,12 +189,12 @@ export const CashierDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("cashier.description")} secondary={cashier.description} />
           </ListItem>
-          <ListItemLink to={`/user-tags/${cashier.user_tag_uid_hex}`}>
+          <ListItemLink to={UserTagRoutes.detail(cashier.user_tag_uid_hex)}>
             <ListItemText primary={t("cashier.tagId")} secondary={formatUserTagUid(cashier.user_tag_uid_hex)} />
           </ListItemLink>
           {cashier.till_ids.length !== 0 ? (
             cashier.till_ids.map((till_id) => (
-              <ListItemLink key={till_id} to={`/tills/${getTill(till_id)?.id}`}>
+              <ListItemLink key={till_id} to={TillRoutes.detail(getTill(till_id)?.id)}>
                 <ListItemText primary={t("cashier.till")} secondary={getTill(till_id)?.name} />
               </ListItemLink>
             ))
@@ -200,7 +210,7 @@ export const CashierDetail: React.FC = () => {
             />
             {cashier.cash_drawer_balance !== 0 && (
               <ListItemSecondaryAction>
-                <ButtonLink to={`/cashiers/${cashierId}/close-out`}>{t("cashier.closeOut")}</ButtonLink>
+                <ButtonLink to={CashierRoutes.detailAction(cashierId, "close-out")}>{t("cashier.closeOut")}</ButtonLink>
               </ListItemSecondaryAction>
             )}
           </ListItem>
@@ -223,6 +233,6 @@ export const CashierDetail: React.FC = () => {
           sx={{ border: "none" }}
         />
       </Paper>
-    </Stack>
+    </DetailLayout>
   );
 };

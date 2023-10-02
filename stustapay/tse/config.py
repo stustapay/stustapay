@@ -1,39 +1,17 @@
-from typing import Callable, Iterable, Tuple
+from typing import Callable
 
-import yaml
-from pydantic import BaseModel
+from stustapay.core.schema.tse import Tse, TseType
 
-from ..core.config import DatabaseConfig
 from .diebold_nixdorf_usb.config import DieboldNixdorfUSBTSEConfig
+from .diebold_nixdorf_usb.handler import DieboldNixdorfUSBTSE
 from .handler import TSEHandler
 
-# import functools
-# import logging
 
+def get_tse_handler(tse: Tse) -> Callable[[], TSEHandler]:
+    if tse.type == TseType.diebold_nixdorf:
+        cfg = DieboldNixdorfUSBTSEConfig(
+            serial_number=tse.serial, password=tse.password, ws_url=tse.ws_url, ws_timeout=tse.ws_timeout
+        )
+        return lambda: DieboldNixdorfUSBTSE(tse.name, cfg)
 
-class TSEList(BaseModel):
-    diebold_nixdorf_usb: dict[str, DieboldNixdorfUSBTSEConfig]
-
-    def all_factories(self) -> Iterable[Tuple[str, Callable[[str], TSEHandler]]]:
-        """
-        Returns tuples of (name, function that constructs that TSEHandler)
-        """
-        names_seen = set()
-        for tse_type_list in [self.diebold_nixdorf_usb]:
-            for name, config in tse_type_list.items():
-                if name in names_seen:
-                    raise ValueError(f"duplicate TSE name {name!r}")
-                names_seen.add(name)
-                yield name, config.factory
-
-
-class Config(BaseModel):
-    database: DatabaseConfig
-    tses: TSEList
-
-
-def read_config(config_path: str) -> Config:
-    with open(config_path, "r") as config_file:
-        content = yaml.safe_load(config_file)
-        config = Config(**content)
-        return config
+    raise RuntimeError("Unknown tse type")

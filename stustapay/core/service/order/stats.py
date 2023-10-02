@@ -6,12 +6,16 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
+from stustapay.framework.database import Connection
 
 
 class ProductSoldStats(Product):
@@ -19,8 +23,8 @@ class ProductSoldStats(Product):
 
 
 class VoucherStats(BaseModel):
-    vouchers_issued: int = 0
-    vouchers_spent: int = 0
+    vouchers_issued: int
+    vouchers_spent: int
 
 
 class ProductStats(BaseModel):
@@ -36,6 +40,7 @@ class OrderStatsService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.order_management])
+    @requires_node()
     async def get_product_stats(
         self, *, conn: Connection, from_timestamp: Optional[datetime], to_timestamp: Optional[datetime]
     ) -> ProductStats:
@@ -62,8 +67,7 @@ class OrderStatsService(DBService):
             to_timestamp,
         )
 
-        voucher_stats = await conn.fetch_one(
-            VoucherStats,
+        voucher_stats_raw = await conn.fetchrow(
             "select * from voucher_stats(from_timestamp => $1, to_timestamp => $2)",
             from_timestamp,
             to_timestamp,
@@ -76,5 +80,8 @@ class OrderStatsService(DBService):
         return ProductStats(
             product_quantities=stats_by_products,
             product_quantities_by_till=product_quantities_by_till,
-            voucher_stats=voucher_stats,
+            voucher_stats=VoucherStats(
+                vouchers_issued=voucher_stats_raw["vouchers_issued"] or 0,
+                vouchers_spent=voucher_stats_raw["vouchers_spent"] or 0,
+            ),
         )

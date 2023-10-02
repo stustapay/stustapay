@@ -10,7 +10,6 @@ from fastapi import Depends, Request, WebSocket
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
@@ -20,7 +19,11 @@ from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
+from stustapay.core.service.tree.service import TreeService
+from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import UserService
+from stustapay.core.service.user_tag import UserTagService
+from stustapay.framework.database import Connection
 
 
 @dataclass
@@ -42,6 +45,9 @@ class Context:
     account_service: Optional[AccountService] = None
     cashier_service: Optional[CashierService] = None
     ticket_service: Optional[TicketService] = None
+    user_tag_service: Optional[UserTagService] = None
+    tse_service: Optional[TseService] = None
+    tree_service: Optional[TreeService] = None
 
 
 class ContextMiddleware:
@@ -160,6 +166,18 @@ def get_ticket_service(request: Request) -> TicketService:
     return request.state.context.ticket_service
 
 
+def get_user_tag_service(request: Request) -> UserService:
+    return request.state.context.user_tag_service
+
+
+def get_tse_service(request: Request) -> TseService:
+    return request.state.context.tse_service
+
+
+def get_tree_service(request: Request) -> TreeService:
+    return request.state.context.tree_service
+
+
 ContextOrderService = Annotated[OrderService, Depends(get_order_service)]
 ContextProductService = Annotated[ProductService, Depends(get_product_service)]
 ContextTaxRateService = Annotated[TaxRateService, Depends(get_tax_rate_service)]
@@ -168,8 +186,11 @@ ContextCustomerService = Annotated[CustomerService, Depends(get_customer_service
 ContextTillService = Annotated[TillService, Depends(get_till_service)]
 ContextConfigService = Annotated[ConfigService, Depends(get_config_service)]
 ContextAccountService = Annotated[AccountService, Depends(get_account_service)]
+ContextUserTagService = Annotated[UserTagService, Depends(get_user_tag_service)]
 ContextCashierService = Annotated[CashierService, Depends(get_cashier_service)]
 ContextTicketService = Annotated[TicketService, Depends(get_ticket_service)]
+ContextTseService = Annotated[TseService, Depends(get_tse_service)]
+ContextTreeService = Annotated[TreeService, Depends(get_tree_service)]
 
 
 async def get_db_conn(

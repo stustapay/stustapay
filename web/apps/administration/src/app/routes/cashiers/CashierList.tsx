@@ -1,14 +1,16 @@
+import { Cashier, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@/api";
+import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
+import { ListLayout } from "@/components";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import { formatUserTagUid } from "@stustapay/models";
+import { StringyBoolean, useQueryState } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useCurrencyFormatter } from "@hooks";
-import { Checkbox, FormControlLabel, Link, ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Cashier, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@api";
-import { formatUserTagUid } from "@stustapay/models";
-import { Loading } from "@stustapay/components";
 import { z } from "zod";
-import { StringyBoolean, useQueryState } from "@stustapay/utils";
 
 const FilterOptionsSchema = z.object({
   showZeroBalance: StringyBoolean,
@@ -17,6 +19,7 @@ const FilterOptionsSchema = z.object({
 
 export const CashierList: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
 
   const [filterOptions, setFilterOptions] = useQueryState(
@@ -24,23 +27,26 @@ export const CashierList: React.FC = () => {
     FilterOptionsSchema
   );
 
-  const { cashiers, isLoading: isCashiersLoading } = useListCashiersQuery(undefined, {
-    selectFromResult: ({ data, ...rest }) => ({
-      ...rest,
-      cashiers: data
-        ? selectCashierAll(data).filter((cashier) => {
-            if (!filterOptions.showWithoutTill && cashier.till_ids.length === 0) {
-              return false;
-            }
-            if (!filterOptions.showZeroBalance && cashier.cash_drawer_balance === 0) {
-              return false;
-            }
-            return true;
-          })
-        : undefined,
-    }),
-  });
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery();
+  const { cashiers, isLoading: isCashiersLoading } = useListCashiersQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        cashiers: data
+          ? selectCashierAll(data).filter((cashier) => {
+              if (!filterOptions.showWithoutTill && cashier.till_ids.length === 0) {
+                return false;
+              }
+              if (!filterOptions.showZeroBalance && cashier.cash_drawer_balance === 0) {
+                return false;
+              }
+              return true;
+            })
+          : undefined,
+      }),
+    }
+  );
+  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
 
   if (isCashiersLoading || isTillsLoading) {
     return <Loading />;
@@ -57,7 +63,7 @@ export const CashierList: React.FC = () => {
     }
 
     return (
-      <Link component={RouterLink} key={id} to={`/tills/${till.id}`}>
+      <Link component={RouterLink} key={id} to={TillRoutes.detail(till.id)}>
         {till.name}
       </Link>
     );
@@ -68,7 +74,7 @@ export const CashierList: React.FC = () => {
       field: "login",
       headerName: t("cashier.login") as string,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/cashiers/${params.row.id}`}>
+        <Link component={RouterLink} to={CashierRoutes.detail(params.row.id)}>
           {params.row.login}
         </Link>
       ),
@@ -97,7 +103,7 @@ export const CashierList: React.FC = () => {
       headerName: t("cashier.tagId") as string,
       type: "number",
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/user-tags/${params.row.user_tag_uid_hex}`}>
+        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_uid_hex)}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}
         </Link>
       ),
@@ -113,12 +119,7 @@ export const CashierList: React.FC = () => {
   ];
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem>
-          <ListItemText primary={t("cashiers")} />
-        </ListItem>
-      </Paper>
+    <ListLayout title={t("cashiers")}>
       <Paper sx={{ p: 1 }}>
         <FormControlLabel
           control={
@@ -146,6 +147,6 @@ export const CashierList: React.FC = () => {
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
       />
-    </Stack>
+    </ListLayout>
   );
 };

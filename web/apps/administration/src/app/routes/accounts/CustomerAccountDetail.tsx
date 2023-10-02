@@ -1,29 +1,31 @@
-import * as React from "react";
-import { Button, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Stack } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import {
+  Account,
   selectOrderAll,
   useDisableAccountMutation,
-  useGetAccountQuery,
   useListOrdersQuery,
   useUpdateAccountCommentMutation,
-} from "@api";
+} from "@/api";
+import { UserTagRoutes } from "@/app/routes";
+import { DetailLayout, EditableListItem } from "@/components";
+import { OrderTable } from "@/components/features";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
+import { IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { toast } from "react-toastify";
-import { EditableListItem, OrderTable } from "@components";
-import { useCurrencyFormatter } from "@hooks";
-import { Edit as EditIcon } from "@mui/icons-material";
-import { EditAccountBalanceModal } from "./components/EditAccountBalanceModal";
-import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAmountModal";
-import { EditAccountTagModal } from "./components/EditAccountTagModal";
 import { formatUserTagUid } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { AccountTagHistoryTable } from "./components/AccountTagHistoryTable";
+import { EditAccountBalanceModal } from "./components/EditAccountBalanceModal";
+import { EditAccountTagModal } from "./components/EditAccountTagModal";
+import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAmountModal";
 
-export const CustomerAccountDetail: React.FC = () => {
+export const CustomerAccountDetail: React.FC<{ account: Account }> = ({ account }) => {
   const { t } = useTranslation();
-  const { accountId } = useParams();
   const navigate = useNavigate();
+  const { currentNode } = useCurrentNode();
 
   const formatCurrency = useCurrencyFormatter();
   const [disableAccount] = useDisableAccountMutation();
@@ -33,13 +35,12 @@ export const CustomerAccountDetail: React.FC = () => {
   const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
   const [tagModalOpen, setTagModalOpen] = React.useState(false);
 
-  const { data: account, error, isLoading: isAccountLoading } = useGetAccountQuery({ accountId: Number(accountId) });
   const {
     orders,
     error: orderError,
     isLoading: isOrdersLoading,
   } = useListOrdersQuery(
-    { customerAccountId: Number(accountId) },
+    { nodeId: currentNode.id, customerAccountId: account.id },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
@@ -48,18 +49,18 @@ export const CustomerAccountDetail: React.FC = () => {
     }
   );
 
-  if (isAccountLoading || isOrdersLoading || (!account && !error) || (!orders && !orderError)) {
+  if (isOrdersLoading || (!orders && !orderError)) {
     return <Loading />;
   }
 
-  if (error || !account || orderError || !orders) {
+  if (orderError || !orders) {
     toast.error("Error loading account");
     navigate(-1);
     return null;
   }
 
   const handleDisableAccount = () => {
-    disableAccount({ accountId: Number(accountId) })
+    disableAccount({ nodeId: currentNode.id, accountId: account.id })
       .unwrap()
       .then(() => {
         toast.success(t("account.disableSuccess"));
@@ -71,22 +72,20 @@ export const CustomerAccountDetail: React.FC = () => {
   };
 
   const handleUpdateComment = (newComment: string) => {
-    updateComment({ accountId: Number(accountId), updateAccountCommentPayload: { comment: newComment } });
+    updateComment({
+      nodeId: currentNode.id,
+      accountId: account.id,
+      updateAccountCommentPayload: { comment: newComment },
+    });
   };
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem
-          secondaryAction={
-            <Button color="error" onClick={handleDisableAccount}>
-              {t("account.disable")}
-            </Button>
-          }
-        >
-          <ListItemText primary={account.id} />
-        </ListItem>
-      </Paper>
+    <DetailLayout
+      title={`Customer Account ${account.id}`}
+      actions={[
+        { label: t("account.disable"), onClick: handleDisableAccount, color: "error", icon: <RemoveCircleIcon /> },
+      ]}
+    >
       <Paper>
         <List>
           <ListItem>
@@ -99,7 +98,7 @@ export const CustomerAccountDetail: React.FC = () => {
             <ListItemText
               primary={t("account.user_tag_uid")}
               secondary={
-                <RouterLink to={`/user-tags/${account.user_tag_uid_hex}`}>
+                <RouterLink to={UserTagRoutes.detail(account.user_tag_uid_hex)}>
                   {formatUserTagUid(account.user_tag_uid_hex)}
                 </RouterLink>
               }
@@ -151,6 +150,6 @@ export const CustomerAccountDetail: React.FC = () => {
         </>
       )}
       <OrderTable orders={orders} />
-    </Stack>
+    </DetailLayout>
   );
 };

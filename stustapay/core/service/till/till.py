@@ -3,7 +3,6 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.terminal import (
     Terminal,
@@ -14,6 +13,7 @@ from stustapay.core.schema.terminal import (
     UserTagSecret,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile, UserInfo
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import (
     CurrentUser,
     Privilege,
@@ -24,6 +24,7 @@ from stustapay.core.schema.user import (
 from stustapay.core.service.auth import TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
+    requires_node,
     requires_terminal,
     requires_user,
     with_db_transaction,
@@ -34,6 +35,7 @@ from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.till.register import TillRegisterService
 from stustapay.core.service.user import AuthService, list_user_roles
+from stustapay.framework.database import Connection
 
 
 class TillService(DBService):
@@ -52,21 +54,25 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
-    async def create_till(self, *, conn: Connection, till: NewTill) -> Till:
-        return await create_till(conn=conn, till=till)
+    @requires_node()
+    async def create_till(self, *, conn: Connection, node: Node, till: NewTill) -> Till:
+        return await create_till(conn=conn, node_id=node.id, till=till)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def list_tills(self, *, conn: Connection) -> list[Till]:
         return await conn.fetch_many(Till, "select * from till_with_cash_register")
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def get_till(self, *, conn: Connection, till_id: int) -> Optional[Till]:
         return await fetch_till(conn=conn, till_id=till_id)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def update_till(self, *, conn: Connection, till_id: int, till: NewTill) -> Optional[Till]:
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5 "
@@ -84,6 +90,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def delete_till(self, *, conn: Connection, till_id: int) -> bool:
         result = await conn.execute(
             "delete from till where id = $1",
@@ -109,6 +116,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def logout_terminal_id(self, *, conn: Connection, till_id: int) -> bool:
         id_ = await conn.fetchval(
             "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
@@ -128,6 +136,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
+    @requires_node()
     async def force_logout_user(self, *, conn: Connection, till_id: int):
         result = await conn.fetchval(
             "update till set active_user_id = null, active_user_role_id = null where id = $1 returning id",
@@ -196,9 +205,9 @@ class TillService(DBService):
     ) -> CurrentUser:
         """
         Login a User to the terminal, but only if the correct permissions exists:
-        wants to login | allowed to log in
-        official       | always
-        cashier        | only if official is logged in
+        wants to log in | allowed to log in
+        official        | always
+        cashier         | only if official is logged in
 
         where officials are admins and finanzorgas
 
@@ -320,6 +329,7 @@ class TillService(DBService):
             cash_register_id = cash_reg["id"]
             cash_register_name = cash_reg["name"]
 
+        # TODO: tree, fetch correct secret
         user_tag_secret = await conn.fetch_one(
             UserTagSecret,
             "select encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 from user_tag_secret limit 1",

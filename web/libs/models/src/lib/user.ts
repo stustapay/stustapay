@@ -10,6 +10,7 @@ export const PrivilegeSchema = z.enum([
   "till_management",
   "order_management",
   "festival_overview",
+  "tse_management",
 
   // festival workflow privileges
   "terminal_login",
@@ -36,6 +37,7 @@ export type NewUserRole = z.infer<typeof NewUserRoleSchema>;
 
 export const UserRoleSchema = NewUserRoleSchema.merge(
   z.object({
+    node_id: z.number().int(),
     id: z.number(),
   })
 );

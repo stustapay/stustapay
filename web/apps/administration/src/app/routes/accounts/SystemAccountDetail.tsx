@@ -1,38 +1,17 @@
-import * as React from "react";
-import { List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
-import { useGetAccountQuery } from "@api";
-import { Loading } from "@stustapay/components";
-import { toast } from "react-toastify";
+import { Account } from "@api";
+import { DetailLayout } from "@components";
 import { useCurrencyFormatter } from "@hooks";
+import { List, ListItem, ListItemText, Paper } from "@mui/material";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
 
-export const SystemAccountDetail: React.FC = () => {
+export const SystemAccountDetail: React.FC<{ account: Account }> = ({ account }) => {
   const { t } = useTranslation();
-  const { accountId } = useParams();
-  const navigate = useNavigate();
 
   const formatCurrency = useCurrencyFormatter();
 
-  const { data: account, error, isLoading: isAccountLoading } = useGetAccountQuery({ accountId: Number(accountId) });
-
-  if (isAccountLoading || (!account && !error)) {
-    return <Loading />;
-  }
-
-  if (error || !account) {
-    toast.error("Error loading account");
-    navigate(-1);
-    return null;
-  }
-
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem>
-          <ListItemText primary={account.name} />
-        </ListItem>
-      </Paper>
+    <DetailLayout title={account.name ?? ""}>
       <Paper>
         <List>
           <ListItem>
@@ -55,6 +34,6 @@ export const SystemAccountDetail: React.FC = () => {
           </ListItem>
         </List>
       </Paper>
-    </Stack>
+    </DetailLayout>
   );
 };

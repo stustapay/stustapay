@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -14,17 +16,17 @@ router = APIRouter(
 
 
 @router.get("", response_model=NormalizedList[CashRegister, int])
-async def list_cash_registers_admin(token: CurrentAuthToken, till_service: ContextTillService):
-    return normalize_list(await till_service.register.list_cash_registers_admin(token=token))
+async def list_cash_registers_admin(
+    token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
+):
+    return normalize_list(await till_service.register.list_cash_registers_admin(token=token, node_id=node_id))
 
 
 @router.post("", response_model=CashRegister)
 async def create_register(
-    register: NewCashRegister,
-    token: CurrentAuthToken,
-    till_service: ContextTillService,
+    register: NewCashRegister, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
 ):
-    return await till_service.register.create_cash_register(token=token, new_register=register)
+    return await till_service.register.create_cash_register(token=token, new_register=register, node_id=node_id)
 
 
 class TransferRegisterPayload(BaseModel):
@@ -37,9 +39,13 @@ async def transfer_register(
     token: CurrentAuthToken,
     payload: TransferRegisterPayload,
     till_service: ContextTillService,
+    node_id: Optional[int] = None,
 ):
     return await till_service.register.transfer_cash_register_admin(
-        token=token, source_cashier_id=payload.source_cashier_id, target_cashier_id=payload.target_cashier_id
+        token=token,
+        source_cashier_id=payload.source_cashier_id,
+        target_cashier_id=payload.target_cashier_id,
+        node_id=node_id,
     )
 
 
@@ -49,14 +55,15 @@ async def update_register(
     register: NewCashRegister,
     token: CurrentAuthToken,
     till_service: ContextTillService,
+    node_id: Optional[int] = None,
 ):
-    return await till_service.register.update_cash_register(token=token, register_id=register_id, register=register)
+    return await till_service.register.update_cash_register(
+        token=token, register_id=register_id, register=register, node_id=node_id
+    )
 
 
 @router.delete("/{register_id}")
 async def delete_register(
-    register_id: int,
-    token: CurrentAuthToken,
-    till_service: ContextTillService,
+    register_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
 ):
-    return await till_service.register.delete_cash_register(token=token, register_id=register_id)
+    return await till_service.register.delete_cash_register(token=token, register_id=register_id, node_id=node_id)

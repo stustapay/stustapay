@@ -6,13 +6,7 @@ from pydantic import BaseModel, field_validator
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
-from stustapay.core.schema.user import (
-    NewUserRole,
-    Privilege,
-    User,
-    UserRole,
-    UserWithoutId,
-)
+from stustapay.core.schema.user import NewUser, NewUserRole, Privilege, User, UserRole
 
 router = APIRouter(
     prefix="",
@@ -24,8 +18,8 @@ user_role_router = APIRouter(prefix="/user-roles", tags=["user-roles"])
 
 
 @user_router.get("", response_model=NormalizedList[User, int])
-async def list_users(token: CurrentAuthToken, user_service: ContextUserService):
-    return normalize_list(await user_service.list_users(token=token))
+async def list_users(token: CurrentAuthToken, user_service: ContextUserService, node_id: Optional[int] = None):
+    return normalize_list(await user_service.list_users(token=token, node_id=node_id))
 
 
 class UpdateUserPayload(BaseModel):
@@ -34,8 +28,6 @@ class UpdateUserPayload(BaseModel):
     role_names: list[str]
     description: Optional[str] = None
     user_tag_uid_hex: Optional[str] = None
-    transport_account_id: Optional[int] = None
-    cashier_account_id: Optional[int] = None
 
     @field_validator("user_tag_uid_hex")
     def user_tag_uid_hex_must_be_hexadecimal(cls, v):  # pylint: disable=no-self-argument
@@ -54,25 +46,27 @@ async def create_user(
     new_user: CreateUserPayload,
     token: CurrentAuthToken,
     user_service: ContextUserService,
+    node_id: Optional[int] = None,
 ):
     return await user_service.create_user(
         token=token,
-        new_user=UserWithoutId(
+        new_user=NewUser(
             login=new_user.login,
             display_name=new_user.display_name,
             role_names=new_user.role_names,
             description=new_user.description,
             user_tag_uid=int(new_user.user_tag_uid_hex, 16) if new_user.user_tag_uid_hex is not None else None,
-            transport_account_id=new_user.transport_account_id,
-            cashier_account_id=new_user.cashier_account_id,
         ),
         password=new_user.password,
+        node_id=node_id,
     )
 
 
 @user_router.get("/{user_id}", response_model=User)
-async def get_user(user_id: int, token: CurrentAuthToken, user_service: ContextUserService):
-    user = await user_service.get_user(token=token, user_id=user_id)
+async def get_user(
+    user_id: int, token: CurrentAuthToken, user_service: ContextUserService, node_id: Optional[int] = None
+):
+    user = await user_service.get_user(token=token, user_id=user_id, node_id=node_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -85,19 +79,19 @@ async def update_user(
     user: UpdateUserPayload,
     token: CurrentAuthToken,
     user_service: ContextUserService,
+    node_id: Optional[int] = None,
 ):
     user = await user_service.update_user(
         token=token,
         user_id=user_id,
-        user=UserWithoutId(
+        user=NewUser(
             login=user.login,
             display_name=user.display_name,
             role_names=user.role_names,
             description=user.description,
             user_tag_uid=int(user.user_tag_uid_hex, 16) if user.user_tag_uid_hex is not None else None,
-            transport_account_id=user.transport_account_id,
-            cashier_account_id=user.cashier_account_id,
         ),
+        node_id=node_id,
     )
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -106,24 +100,24 @@ async def update_user(
 
 
 @user_router.delete("/{user_id}")
-async def delete_user(user_id: int, token: CurrentAuthToken, user_service: ContextUserService):
-    deleted = await user_service.delete_user(token=token, user_id=user_id)
+async def delete_user(
+    user_id: int, token: CurrentAuthToken, user_service: ContextUserService, node_id: Optional[int] = None
+):
+    deleted = await user_service.delete_user(token=token, user_id=user_id, node_id=node_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 @user_role_router.get("", response_model=NormalizedList[UserRole, int])
-async def list_user_roles(token: CurrentAuthToken, user_service: ContextUserService):
-    return normalize_list(await user_service.list_user_roles(token=token))
+async def list_user_roles(token: CurrentAuthToken, user_service: ContextUserService, node_id: Optional[int] = None):
+    return normalize_list(await user_service.list_user_roles(token=token, node_id=node_id))
 
 
 @user_role_router.post("", response_model=UserRole)
 async def create_user_role(
-    new_user_role: NewUserRole,
-    token: CurrentAuthToken,
-    user_service: ContextUserService,
+    new_user_role: NewUserRole, token: CurrentAuthToken, user_service: ContextUserService, node_id: Optional[int] = None
 ):
-    return await user_service.create_user_role(token=token, new_role=new_user_role)
+    return await user_service.create_user_role(token=token, new_role=new_user_role, node_id=node_id)
 
 
 class UpdateUserRolePrivilegesPayload(BaseModel):
@@ -137,9 +131,14 @@ async def update_user_role(
     updated_role: UpdateUserRolePrivilegesPayload,
     token: CurrentAuthToken,
     user_service: ContextUserService,
+    node_id: Optional[int] = None,
 ):
     role = await user_service.update_user_role_privileges(
-        token=token, role_id=user_role_id, is_privileged=updated_role.is_privileged, privileges=updated_role.privileges
+        token=token,
+        role_id=user_role_id,
+        is_privileged=updated_role.is_privileged,
+        privileges=updated_role.privileges,
+        node_id=node_id,
     )
     if role is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -148,8 +147,10 @@ async def update_user_role(
 
 
 @user_role_router.delete("/{user_role_id}")
-async def delete_user_role(user_role_id: int, token: CurrentAuthToken, user_service: ContextUserService):
-    deleted = await user_service.delete_user_role(token=token, role_id=user_role_id)
+async def delete_user_role(
+    user_role_id: int, token: CurrentAuthToken, user_service: ContextUserService, node_id: Optional[int] = None
+):
+    deleted = await user_service.delete_user_role(token=token, role_id=user_role_id, node_id=node_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 

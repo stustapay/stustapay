@@ -1,19 +1,27 @@
+import { TaxRateRoutes } from "@/app/routes";
 import { useGetTaxRateQuery, useUpdateTaxRateMutation } from "@api";
-import * as React from "react";
-import { TaxRateSchema } from "@stustapay/models";
-import { Navigate, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { TaxRateChange } from "./TaxRateChange";
+import { EditLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { Loading } from "@stustapay/components";
+import { TaxRate, TaxRateSchema } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useParams } from "react-router-dom";
+import { TaxRateForm } from "./TaxRateForm";
 
 export const TaxRateUpdate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const { taxRateName } = useParams();
-  const { data: taxRate, isLoading, error } = useGetTaxRateQuery({ taxRateName: taxRateName as string });
+  const {
+    data: taxRate,
+    isLoading,
+    error,
+  } = useGetTaxRateQuery({ nodeId: currentNode.id, taxRateName: taxRateName as string });
   const [updateTaxRate] = useUpdateTaxRateMutation();
 
   if (error) {
-    return <Navigate to="/tax-rates" />;
+    return <Navigate to={TaxRateRoutes.list()} />;
   }
 
   if (isLoading || !taxRate) {
@@ -21,12 +29,16 @@ export const TaxRateUpdate: React.FC = () => {
   }
 
   return (
-    <TaxRateChange
-      headerTitle={t("updateTaxRate")}
+    <EditLayout
+      title={t("updateTaxRate")}
       submitLabel={t("update")}
-      initialValues={taxRate}
+      successRoute={TaxRateRoutes.detail(taxRate.name)}
+      initialValues={taxRate as TaxRate}
       validationSchema={TaxRateSchema}
-      onSubmit={(taxRate) => updateTaxRate({ taxRateName: taxRate.name, taxRateWithoutName: taxRate })}
+      onSubmit={(taxRate: TaxRate) =>
+        updateTaxRate({ nodeId: currentNode.id, taxRateName: taxRate.name, taxRateWithoutName: taxRate })
+      }
+      form={TaxRateForm}
     />
   );
 };

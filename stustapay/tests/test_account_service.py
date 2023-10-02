@@ -2,35 +2,23 @@
 
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.till import NewTillProfile
-from stustapay.core.schema.user import (
-    ADMIN_ROLE_NAME,
-    NewUserRole,
-    Privilege,
-    UserWithoutId,
-)
-from stustapay.core.service.account import AccountService
+from stustapay.core.schema.user import ADMIN_ROLE_NAME, NewUser, NewUserRole, Privilege
 from stustapay.core.service.common.error import AccessDenied
 
 from .common import TerminalTestCase
 
 
 class AccountServiceTest(TerminalTestCase):
-    async def asyncSetUp(self) -> None:
-        await super().asyncSetUp()
-
-        self.account_service = AccountService(
-            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
-        )
-
     async def test_switch_user_tag(self):
         user_tag_uid = 1887
         new_user_tag_uid = 1999
-        await self.db_conn.execute("insert into user_tag (uid) values ($1)", user_tag_uid)
-        await self.db_conn.execute("insert into user_tag (uid) values ($1)", new_user_tag_uid)
+        await self.db_conn.execute("insert into user_tag (node_id, uid) values ($1, $2)", self.node_id, user_tag_uid)
+        await self.db_conn.execute(
+            "insert into user_tag (node_id, uid) values ($1, $2)", self.node_id, new_user_tag_uid
+        )
         user = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(
-                login="test-user", display_name="test-user", user_tag_uid=user_tag_uid, role_names=[]
-            )
+            node_id=self.node_id,
+            new_user=NewUser(login="test-user", display_name="test-user", user_tag_uid=user_tag_uid, role_names=[]),
         )
         account_id = await self.db_conn.fetchval("select id from account where user_tag_uid = $1", user_tag_uid)
 
@@ -48,13 +36,13 @@ class AccountServiceTest(TerminalTestCase):
         user = await self.user_service.get_user(token=self.admin_token, user_id=user.id)
         self.assertEqual(new_user_tag_uid, user.user_tag_uid)
 
-        user_tag_2 = await self.account_service.get_user_tag_detail(
+        user_tag_2 = await self.user_tag_service.get_user_tag_detail(
             token=self.admin_token, user_tag_uid=new_user_tag_uid
         )
         self.assertIsNotNone(user_tag_2)
         self.assertEqual(0, len(user_tag_2.account_history))
 
-        user_tag_1 = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=user_tag_uid)
+        user_tag_1 = await self.user_tag_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=user_tag_uid)
         self.assertIsNotNone(user_tag_1)
         self.assertEqual(1, len(user_tag_1.account_history))
         self.assertEqual(acc.id, user_tag_1.account_history[0].account_id)
@@ -86,9 +74,11 @@ class AccountServiceTest(TerminalTestCase):
         )
 
         # after updating the cashier roles we need to log out and log in with the new role
-        await super()._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=voucher_role.id)
+        await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=voucher_role.id)
 
-        volunteer_tag = await self.db_conn.fetchval("insert into user_tag (uid) values (1337) returning uid")
+        volunteer_tag = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 1337) returning uid", self.node_id
+        )
         grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag)
 
         with self.assertRaises(AccessDenied):
@@ -150,9 +140,11 @@ class AccountServiceTest(TerminalTestCase):
             role_names=[voucher_role.name],
         )
         # after updating the cashier roles we need to log out and log in with the new role
-        await super()._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=voucher_role.id)
+        await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=voucher_role.id)
 
-        volunteer_tag = await self.db_conn.fetchval("insert into user_tag (uid) values (1337) returning uid")
+        volunteer_tag = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, 1337) returning uid", self.node_id
+        )
         grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag, initial_voucher_amount=3)
         success = await self.account_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)
         self.assertTrue(success)
@@ -160,9 +152,10 @@ class AccountServiceTest(TerminalTestCase):
         self.assertEqual(customer.vouchers, 3)
 
     async def test_account_comment_updates(self):
-        await self.db_conn.execute("insert into user_tag (uid) values (1)")
+        await self.db_conn.execute("insert into user_tag (node_id, uid) values ($1, 1)", self.node_id)
         account_id = await self.db_conn.fetchval(
-            "insert into account(user_tag_uid, type, name) values (1, 'private', 'account-1') returning id"
+            "insert into account(node_id, user_tag_uid, type, name) values ($1, 1, 'private', 'account-1') returning id",
+            self.node_id,
         )
 
         acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
@@ -175,15 +168,3 @@ class AccountServiceTest(TerminalTestCase):
         acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
         self.assertIsNotNone(acc)
         self.assertEqual("foobar", acc.comment)
-
-    async def test_user_tag_comment_updates(self):
-        await self.db_conn.execute("insert into user_tag (uid) values (1)")
-
-        user_tag_detail = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
-        self.assertIsNotNone(user_tag_detail)
-        self.assertIsNone(user_tag_detail.comment)
-
-        await self.account_service.update_user_tag_comment(token=self.admin_token, user_tag_uid=1, comment="foobar")
-        user_tag_detail = await self.account_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
-        self.assertIsNotNone(user_tag_detail)
-        self.assertEqual("foobar", user_tag_detail.comment)

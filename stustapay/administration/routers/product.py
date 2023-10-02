@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
@@ -13,26 +15,22 @@ router = APIRouter(
 
 
 @router.get("", response_model=NormalizedList[Product, int])
-async def list_products(token: CurrentAuthToken, product_service: ContextProductService):
-    return normalize_list(await product_service.list_products(token=token))
+async def list_products(token: CurrentAuthToken, product_service: ContextProductService, node_id: Optional[int] = None):
+    return normalize_list(await product_service.list_products(token=token, node_id=node_id))
 
 
 @router.post("", response_model=Product)
 async def create_product(
-    product: NewProduct,
-    token: CurrentAuthToken,
-    product_service: ContextProductService,
+    product: NewProduct, token: CurrentAuthToken, product_service: ContextProductService, node_id: Optional[int] = None
 ):
-    return await product_service.create_product(token=token, product=product)
+    return await product_service.create_product(token=token, product=product, node_id=node_id)
 
 
 @router.get("/{product_id}", response_model=Product)
 async def get_product(
-    product_id: int,
-    token: CurrentAuthToken,
-    product_service: ContextProductService,
+    product_id: int, token: CurrentAuthToken, product_service: ContextProductService, node_id: Optional[int] = None
 ):
-    product = await product_service.get_product(token=token, product_id=product_id)
+    product = await product_service.get_product(token=token, product_id=product_id, node_id=node_id)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -45,8 +43,9 @@ async def update_product(
     product: NewProduct,
     token: CurrentAuthToken,
     product_service: ContextProductService,
+    node_id: Optional[int] = None,
 ):
-    product = await product_service.update_product(token=token, product_id=product_id, product=product)
+    product = await product_service.update_product(token=token, product_id=product_id, product=product, node_id=node_id)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -55,10 +54,8 @@ async def update_product(
 
 @router.delete("/{product_id}")
 async def delete_product(
-    product_id: int,
-    token: CurrentAuthToken,
-    product_service: ContextProductService,
+    product_id: int, token: CurrentAuthToken, product_service: ContextProductService, node_id: Optional[int] = None
 ):
-    deleted = await product_service.delete_product(token=token, product_id=product_id)
+    deleted = await product_service.delete_product(token=token, product_id=product_id, node_id=node_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

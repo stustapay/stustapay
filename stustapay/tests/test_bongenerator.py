@@ -35,6 +35,7 @@ class BonGeneratorTest(BaseTestCase):
                         order_id=1,
                         item_id=0,
                         product=Product(
+                            node_id=self.node_id,
                             name="Helles 1.0l",
                             price=5.00,
                             tax_name="ust",
@@ -57,6 +58,7 @@ class BonGeneratorTest(BaseTestCase):
                         order_id=1,
                         item_id=2,
                         product=Product(
+                            node_id=self.node_id,
                             name="Weißwurst",
                             price=2.0,
                             tax_name="eust",
@@ -79,6 +81,7 @@ class BonGeneratorTest(BaseTestCase):
                         order_id=1,
                         item_id=1,
                         product=Product(
+                            node_id=self.node_id,
                             name="Pfand",
                             price=2.00,
                             tax_name="none",

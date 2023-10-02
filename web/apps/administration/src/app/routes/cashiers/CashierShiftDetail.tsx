@@ -5,21 +5,23 @@ import {
   useGetCashierShiftsQuery,
   useListUsersQuery,
 } from "@api";
-import { useCurrencyFormatter } from "@hooks";
-import { List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
+import { DetailLayout } from "@components";
+import { useCurrencyFormatter, useCurrentNode } from "@hooks";
+import { List, ListItem, ListItemText, Paper } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { Loading } from "@stustapay/components";
-import { getUserName } from "@stustapay/models";
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
 
 export const CashierShiftDetail: React.FC = () => {
   const { t } = useTranslation();
   const { cashierId, shiftId } = useParams();
   const formatCurrency = useCurrencyFormatter();
+  const { currentNode } = useCurrentNode();
 
-  const { data: cashier } = useGetCashierQuery({ cashierId: Number(cashierId) });
+  const { data: cashier } = useGetCashierQuery({ nodeId: currentNode.id, cashierId: Number(cashierId) });
   const { cashierShift } = useGetCashierShiftsQuery(
     { cashierId: Number(cashierId) },
     {
@@ -29,7 +31,7 @@ export const CashierShiftDetail: React.FC = () => {
       }),
     }
   );
-  const { data: users } = useListUsersQuery();
+  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
 
   if (cashierShift === undefined || cashier === undefined || users === undefined) {
     return <Loading />;
@@ -49,12 +51,7 @@ export const CashierShiftDetail: React.FC = () => {
   };
 
   return (
-    <Stack spacing={2}>
-      <Paper>
-        <ListItem>
-          <ListItemText primary={getUserName(cashier)} />
-        </ListItem>
-      </Paper>
+    <DetailLayout title={getUserName(cashier)}>
       <Paper>
         <List>
           <ListItem>
@@ -93,6 +90,6 @@ export const CashierShiftDetail: React.FC = () => {
         </List>
       </Paper>
       <CashierShiftStatsOverview cashierId={Number(cashierId)} shiftId={Number(shiftId)} />
-    </Stack>
+    </DetailLayout>
   );
 };

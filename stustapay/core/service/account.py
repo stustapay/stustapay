@@ -4,23 +4,22 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.database import Connection
-from stustapay.core.schema.account import (
-    ACCOUNT_MONEY_VOUCHER_CREATE,
-    Account,
-    UserTagDetail,
-)
+from stustapay.core.schema.account import ACCOUNT_MONEY_VOUCHER_CREATE, Account
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
+from stustapay.core.schema.terminal import Terminal
+from stustapay.core.schema.tree import Node
+from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
+    requires_node,
     requires_terminal,
     requires_user,
     with_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.transaction import book_transaction
+from stustapay.framework.database import Connection
 
 
 async def get_account_by_id(*, conn: Connection, account_id: int) -> Optional[Account]:
@@ -54,35 +53,13 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
-    async def get_user_tag_detail(self, *, conn: Connection, user_tag_uid: int) -> Optional[UserTagDetail]:
-        return await conn.fetch_maybe_one(
-            UserTagDetail, "select * from user_tag_with_history utwh where user_tag_uid = $1", user_tag_uid
-        )
-
-    @with_db_transaction
-    @requires_user([Privilege.account_management])
-    async def update_user_tag_comment(
-        self, *, conn: Connection, current_user: CurrentUser, user_tag_uid: int, comment: str
-    ) -> UserTagDetail:
-        ret = await conn.fetchval(
-            "update user_tag set comment = $1 where uid = $2 returning uid", comment, user_tag_uid
-        )
-        if ret is None:
-            raise InvalidArgument(f"User tag {format_user_tag_uid(user_tag_uid)} does not exist")
-
-        detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_user=current_user, user_tag_uid=user_tag_uid
-        )
-        assert detail is not None
-        return detail
-
-    @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_node()
     async def list_system_accounts(self, *, conn: Connection) -> list[Account]:
         return await conn.fetch_many(Account, "select * from account_with_history where type != 'private'")
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def get_account(self, *, conn: Connection, account_id: int) -> Account:
         account = await get_account_by_id(conn=conn, account_id=account_id)
         if account is None:
@@ -91,11 +68,13 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def get_account_by_tag_uid(self, *, conn: Connection, user_tag_uid: int) -> Optional[Account]:
         return await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def find_accounts(self, *, conn: Connection, search_term: str) -> list[Account]:
         value_as_int = None
         if re.match("^[A-Fa-f0-9]+$", search_term):
@@ -110,12 +89,13 @@ class AccountService(DBService):
             "   or comment like $1 "
             "   or (user_tag_uid is not null and to_hex(user_tag_uid::bigint) like $1) "
             "   or (user_tag_uid is not null and user_tag_uid = $2)",
-            f"%{search_term}%",
+            f"%{search_term.lower()}%",
             value_as_int,
         )
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def disable_account(self, *, conn: Connection, account_id: int):
         row = await conn.fetchval("update account set user_tag_uid = null where id = $1 returning id", account_id)
         if row is None:
@@ -123,6 +103,7 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def update_account_balance(
         self, *, conn: Connection, current_user: User, account_id: int, new_balance: float
     ) -> bool:
@@ -154,11 +135,12 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def update_account_vouchers(
-        self, *, conn: Connection, current_user: User, account_id: int, new_voucher_amount: int
+        self, *, conn: Connection, current_user: User, node: Node, account_id: int, new_voucher_amount: int
     ) -> bool:
         account = await self.get_account(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_user=current_user, account_id=account_id
+            conn=conn, node_id=node.id, current_user=current_user, account_id=account_id
         )
         if account is None:
             return False
@@ -205,7 +187,12 @@ class AccountService(DBService):
     @with_db_transaction
     @requires_terminal([Privilege.grant_free_tickets])
     async def grant_free_tickets(
-        self, *, conn: Connection, current_user: User, new_free_ticket_grant: NewFreeTicketGrant
+        self,
+        *,
+        conn: Connection,
+        current_terminal: Terminal,
+        current_user: User,
+        new_free_ticket_grant: NewFreeTicketGrant,
     ) -> Account:
         user_tag = await conn.fetchrow(
             "select true as found, a.id as account_id "
@@ -219,8 +206,10 @@ class AccountService(DBService):
             raise InvalidArgument("Tag is already registered")
 
         # create a new customer account for the given tag
+        # TODO: NODE use node_id here
         account_id = await conn.fetchval(
-            "insert into account (user_tag_uid, type) values ($1, 'private') returning id",
+            "insert into account (node_id, user_tag_uid, type) values ($1, $2, 'private') returning id",
+            current_terminal.till.node_id,
             new_free_ticket_grant.user_tag_uid,
         )
 
@@ -240,6 +229,7 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def update_account_comment(self, *, conn: Connection, account_id: int, comment: str) -> Account:
         ret = await conn.fetchval("update account set comment = $1 where id = $2 returning id", comment, account_id)
         if ret is None:
@@ -265,6 +255,7 @@ class AccountService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
+    @requires_node()
     async def switch_account_tag_uid_admin(
         self, *, conn: Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
     ):

@@ -10,10 +10,8 @@ from typing import Callable
 import asyncpg
 
 from stustapay.core.util import create_task_protected
+from stustapay.framework.database import Connection
 
-from ..core.database import Connection
-
-# from stustapay.core.schema.order import Order
 from .handler import TSEHandler, TSESignature, TSESignatureRequest
 from .kassenbeleg_v1 import Kassenbeleg_V1
 
@@ -76,7 +74,7 @@ class TSEWrapper:
 
                 ##############################################
                 LOGGER.error("checking for new transactions and fail those older than 10 seconds")
-                self.tse_id = await conn.fetchval("select tse_id from tse where tse_name=$1", self.name)
+                self.tse_id = await conn.fetchval("select id from tse where name=$1", self.name)
                 if self.tse_id is None:
                     LOGGER.error(f"ERROR: TSE {self.name} is not in Database, cannot start, retrying in 10 seconds")
                     await asyncio.sleep(10)
@@ -116,7 +114,6 @@ class TSEWrapper:
                     """,
                     self.tse_id,
                 )
-                print(self.tse_id)
                 for request in new_sig_requests:
                     # check order time
                     delta = datetime.datetime.now().astimezone() - request["booked_at"]
@@ -138,7 +135,7 @@ class TSEWrapper:
                         )
                         # set tse_status to failed
                         await conn.execute(
-                            "update tse set tse_status='failed' where tse_id=$1 and tse_status='active'", self.tse_id
+                            "update tse set status='failed' where id=$1 and status='active'", self.tse_id
                         )
 
                 await asyncio.sleep(2)
@@ -151,7 +148,7 @@ class TSEWrapper:
         assert self._tse_handler is not None
 
         # get tse_id of the configured TSE
-        self.tse_id, tse_status = await conn.fetchrow("select tse_id, tse_status from tse where tse_name=$1", self.name)
+        self.tse_id, tse_status = await conn.fetchrow("select id, status from tse where name=$1", self.name)
         assert self.tse_id is not None
         assert tse_status is not None
 
@@ -164,15 +161,15 @@ class TSEWrapper:
             update
                 tse
             set
-                tse_status='active',
-                tse_serial=$1,
-                tse_hashalgo=$2,
-                tse_time_format=$3,
-                tse_public_key=$4,
-                tse_certificate=$5,
-                tse_process_data_encoding=$6
+                status='active',
+                serial=$1,
+                hashalgo=$2,
+                time_format=$3,
+                public_key=$4,
+                certificate=$5,
+                process_data_encoding=$6
             where
-                tse_id=$7
+                id=$7
             """,
                 masterdata.tse_serial,
                 masterdata.tse_hashalgo,
@@ -185,7 +182,7 @@ class TSEWrapper:
             LOGGER.info("New TSE registered in database")
         elif tse_status == "active":
             # check public key
-            tse_public_key_in_db = await conn.fetchval("select tse_public_key from tse where tse_name=$1", self.name)
+            tse_public_key_in_db = await conn.fetchval("select public_key from tse where name=$1", self.name)
             if tse_public_key_in_db != masterdata.tse_public_key:
                 LOGGER.error(f"TSE public key:  {masterdata.tse_public_key}\nKey in database: {tse_public_key_in_db}")
                 raise RuntimeError(
@@ -201,7 +198,7 @@ class TSEWrapper:
                 f"TSE {self.name} is recorded as failed in database. Help! Do something!, but apparently we can connect, so we check and then set to active again"
             )
             # check public key
-            tse_public_key_in_db = await conn.fetchval("select tse_public_key from tse where tse_name=$1", self.name)
+            tse_public_key_in_db = await conn.fetchval("select public_key from tse where name=$1", self.name)
             if tse_public_key_in_db != masterdata.tse_public_key:
                 LOGGER.error(f"TSE public key:  {masterdata.tse_public_key}\nKey in database: {tse_public_key_in_db}")
                 raise RuntimeError(
@@ -211,9 +208,7 @@ class TSEWrapper:
 
             LOGGER.warning(f"setting TSE {self.name} to active again")
             # only reactivate a failed tse, dont reactivate it, when it was set disabled
-            await conn.execute(
-                "update tse set tse_status='active' where tse_name=$1 and tse_status='failed'", self.name
-            )
+            await conn.execute("update tse set status='active' where name=$1 and status='failed'", self.name)
 
         else:
             raise RuntimeError("TSE has no state, forbidden db state")

@@ -19,8 +19,8 @@ from stustapay.core.schema.user import (
     CASHIER_ROLE_NAME,
     FINANZORGA_ROLE_ID,
     FINANZORGA_ROLE_NAME,
+    NewUser,
     UserTag,
-    UserWithoutId,
 )
 from stustapay.core.service.cashier import (
     CashierService,
@@ -70,11 +70,14 @@ class TillManagementTest(TerminalTestCase):
             "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
         )
 
-        cashier_tag_uid = await self.db_conn.fetchval("insert into user_tag (uid) values ($1) returning uid", 123413413)
+        cashier_tag_uid = await self.db_conn.fetchval(
+            "insert into user_tag (node_id, uid) values ($1, $2) returning uid", self.node_id, 123413413
+        )
         cashier = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(
+            node_id=self.node_id,
+            new_user=NewUser(
                 login="cashier-asdf", display_name="", role_names=[CASHIER_ROLE_NAME], user_tag_uid=cashier_tag_uid
-            )
+            ),
         )
         register = await self.till_service.register.create_cash_register(
             token=self.admin_token, new_register=NewCashRegister(name="Lade 25")
@@ -410,17 +413,19 @@ class TillManagementTest(TerminalTestCase):
     async def test_transfer_cash_register(self):
         cashier2_uid = 12323132
         row = await self.db_pool.fetchrow(
-            "select usr.cash_register_id, a.balance from usr join account a on usr.cashier_account_id = a.id where usr.id = $1",
+            "select usr.cash_register_id, a.balance "
+            "from usr join account a on usr.cashier_account_id = a.id where usr.id = $1",
             self.cashier.id,
         )
         self.assertEqual(self.stocking.total, row["balance"])
         self.assertEqual(self.register.id, row["cash_register_id"])
 
-        await self.db_pool.execute("insert into user_tag (uid) values ($1)", cashier2_uid)
+        await self.db_pool.execute("insert into user_tag (node_id, uid) values ($1, $2)", self.node_id, cashier2_uid)
         cashier2 = await self.user_service.create_user_no_auth(
-            new_user=UserWithoutId(
+            node_id=self.node_id,
+            new_user=NewUser(
                 login="cashier2", display_name="cashier2", role_names=["cashier"], user_tag_uid=cashier2_uid
-            )
+            ),
         )
 
         with self.assertRaises(InvalidArgument):

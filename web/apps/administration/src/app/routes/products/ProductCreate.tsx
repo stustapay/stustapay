@@ -1,8 +1,11 @@
-import * as React from "react";
+import { ProductRoutes } from "@/app/routes";
 import { useCreateProductMutation } from "@api";
-import { useTranslation } from "react-i18next";
-import { ProductChange } from "./ProductChange";
+import { CreateLayout } from "@components";
+import { useCurrentNode } from "@hooks";
 import { NewProduct, NewProductSchema } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { ProductForm } from "./ProductForm";
 
 const initialValues: NewProduct = {
   name: "",
@@ -17,15 +20,18 @@ const initialValues: NewProduct = {
 
 export const ProductCreate: React.FC = () => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
   const [createProduct] = useCreateProductMutation();
 
   return (
-    <ProductChange
-      headerTitle={t("product.create")}
+    <CreateLayout
+      title={t("product.create")}
       submitLabel={t("add")}
+      successRoute={ProductRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewProductSchema}
-      onSubmit={(product) => createProduct({ newProduct: product })}
+      onSubmit={(product) => createProduct({ nodeId: currentNode.id, newProduct: product })}
+      form={ProductForm}
     />
   );
 };

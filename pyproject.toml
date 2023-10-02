@@ -12,9 +12,10 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU Affero General Public License v3 (AGPLv3)",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
     "fastapi==0.100.0",
+    "typer==0.9.0",
     "python-multipart==0.0.6",
     "uvicorn[standard]==0.22.0",
     "passlib[bcrypt]==1.7.4",
@@ -29,8 +30,11 @@ dependencies = [
     "asn1crypto==1.5.1",
     "ecdsa==0.18.0",
     "dateutils==0.6.12",
-    "pydantic~=2.0",
+    "pydantic[email]~=2.0",
 ]
+
+[project.scripts]
+stustapay = "stustapay.cli.main:main"
 
 [project.optional-dependencies]
 test = [

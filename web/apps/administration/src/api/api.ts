@@ -1,13 +1,13 @@
 import { createEntityAdapter } from "@reduxjs/toolkit";
 import {
   Account,
-  api as generatedApi,
-  Cashier,
-  CashierShift,
   CashRegister,
   CashRegisterStocking,
+  Cashier,
+  CashierShift,
   ConfigEntry,
   Order,
+  PayoutRunWithStats,
   Product,
   TaxRate,
   Ticket,
@@ -15,8 +15,11 @@ import {
   TillButton,
   TillLayout,
   TillProfile,
+  Tse,
   User,
   UserRole,
+  UserTagDetail,
+  api as generatedApi,
 } from "./generated/api";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
@@ -28,6 +31,10 @@ const userAdapter = createEntityAdapter<User>({
 
 const accountAdapter = createEntityAdapter<Account>({
   sortComparer: (a, b) => (a.name?.toLowerCase() ?? "").localeCompare(b.name?.toLowerCase() ?? ""),
+});
+
+const userTagAdapter = createEntityAdapter<UserTagDetail>({
+  sortComparer: (a, b) => (a.user_tag_uid_hex?.toLowerCase() ?? "").localeCompare(b.user_tag_uid_hex?.toLowerCase() ?? ""),
 });
 
 const userRoleAdapter = createEntityAdapter<UserRole>({
@@ -84,6 +91,14 @@ const cashRegisterAdapter = createEntityAdapter<CashRegister>({
 
 const cashRegisterStockingAdapter = createEntityAdapter<CashRegisterStocking>({
   sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+});
+
+const tseAdapter = createEntityAdapter<Tse>({
+  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+});
+
+const payoutRunAdaptor = createEntityAdapter<PayoutRunWithStats>({
+  sortComparer: (a, b) => a.created_at.toLowerCase().localeCompare(b.created_at.toLowerCase()),
 });
 
 export const api = generatedApi.enhanceEndpoints({
@@ -144,6 +159,12 @@ export const api = generatedApi.enhanceEndpoints({
     },
     getTillProfile: {
       providesTags: (result, error, arg) => [{ type: "till-profiles", id: arg.profileId }],
+    },
+    listTses: {
+      providesTags: (result) => generateCacheKeys("tses", result),
+    },
+    listPayoutRuns: {
+      providesTags: (result) => generateCacheKeys("payouts", result),
     },
   },
 });
@@ -230,3 +251,12 @@ export const {
 
 export const { selectAccountById, selectAccountEntities, selectAccountTotal, selectAccountIds, selectAccountAll } =
   convertEntityAdaptorSelectors("Account", accountAdapter.getSelectors());
+
+export const { selectUserTagAll, selectUserTagEntities, selectUserTagTotal, selectUserTagIds, selectUserTagById } =
+  convertEntityAdaptorSelectors("UserTag", userTagAdapter.getSelectors());
+
+export const { selectTseAll, selectTseById, selectTseEntities, selectTseIds, selectTseTotal } =
+  convertEntityAdaptorSelectors("Tse", tseAdapter.getSelectors());
+
+export const { selectPayoutRunAll, selectPayoutRunById, selectPayoutRunEntities, selectPayoutRunIds, selectPayoutRunTotal } =
+  convertEntityAdaptorSelectors("PayoutRun", payoutRunAdaptor.getSelectors());
