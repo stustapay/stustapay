@@ -35,25 +35,21 @@ class Event(BaseModel):
     bon_issuer: str
     bon_address: str
     bon_title: str
-    customer_portal_sepa_enabled: bool
-    customer_portal_sepa_sender_name: Optional[str]
-    customer_portal_sepa_sender_iban: Optional[str]
-    customer_portal_sepa_description: Optional[str]
-    customer_portal_sepa_allowed_country_codes: Optional[list[str]]
+    sepa_enabled: bool
+    sepa_sender_name: str
+    sepa_sender_iban: str
+    sepa_description: str
+    sepa_allowed_country_codes: list[str]
 
     @property
     def sepa_config(self) -> SEPAConfig | None:
-        if not self.customer_portal_sepa_enabled:
+        if not self.sepa_enabled:
             return None
-        assert self.customer_portal_sepa_description is not None
-        assert self.customer_portal_sepa_sender_name is not None
-        assert self.customer_portal_sepa_sender_iban is not None
-        assert self.customer_portal_sepa_allowed_country_codes is not None
         return SEPAConfig(
-            sender_name=self.customer_portal_sepa_sender_name,
-            sender_iban=self.customer_portal_sepa_sender_iban,
-            description=self.customer_portal_sepa_description,
-            allowed_country_codes=self.customer_portal_sepa_allowed_country_codes,
+            sender_name=self.sepa_sender_name,
+            sender_iban=self.sepa_sender_iban,
+            description=self.sepa_description,
+            allowed_country_codes=self.sepa_allowed_country_codes,
         )
 
 
@@ -81,7 +77,7 @@ class Node(BaseModel):
     children: list["Node"]
 
 
-class NewEvent(NewNode):
+class UpdateEvent(BaseModel):
     currency_identifier: str
     sumup_topup_enabled: bool
     max_account_balance: float
@@ -90,3 +86,13 @@ class NewEvent(NewNode):
     bon_issuer: str
     bon_address: str
     bon_title: str
+
+    sepa_enabled: bool
+    sepa_sender_name: str
+    sepa_sender_iban: str
+    sepa_description: str
+    sepa_allowed_country_codes: list[str]
+
+
+class NewEvent(NewNode, UpdateEvent):
+    pass

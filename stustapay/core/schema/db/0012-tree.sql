@@ -61,17 +61,17 @@ create table event (
     customer_portal_contact_email text not null,
 
     -- TODO: constraint other values to be set if sepa is enabled
-    customer_portal_sepa_enabled bool not null,
-    customer_portal_sepa_sender_name text,
-    customer_portal_sepa_sender_iban text,
-    customer_portal_sepa_description text,
-    customer_portal_sepa_allowed_country_codes text[]
+    sepa_enabled bool not null,
+    sepa_sender_name text,
+    sepa_sender_iban text,
+    sepa_description text,
+    sepa_allowed_country_codes text[]
 );
 
 insert into event (
     id, currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, bon_address, bon_title,
-    customer_portal_contact_email, customer_portal_sepa_enabled, customer_portal_sepa_sender_name, customer_portal_sepa_sender_iban,
-    customer_portal_sepa_description, customer_portal_sepa_allowed_country_codes
+    customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban,
+    sepa_description, sepa_allowed_country_codes
 ) overriding system value
 select
     0,
@@ -88,6 +88,11 @@ select
     (select value from config where key = 'customer_portal.sepa.sender_iban'),
     (select value from config where key = 'customer_portal.sepa.description'),
     (select array(select json_array_elements_text(value::json)) from config where key = 'customer_portal.sepa.allowed_country_codes');
+
+alter table event alter column sepa_allowed_country_codes set not null;
+alter table event alter column sepa_description set not null;
+alter table event alter column sepa_sender_iban set not null;
+alter table event alter column sepa_sender_name set not null;
 
 -- we no longer need the hard coded entries in config table, all configuration has been made event specific
 delete from config; -- TODO: debate if we need the table at all -> now it is empty

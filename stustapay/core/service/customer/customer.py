@@ -133,9 +133,10 @@ class CustomerService(DBService):
             raise InvalidArgument("Provided IBAN is not valid") from exc
 
         # check country code
-        allowed_country_codes = event_node.event.customer_portal_sepa_allowed_country_codes
-        if allowed_country_codes is None:
+        if not event_node.event.sepa_enabled:
             raise InvalidArgument("SEPA payout is disabled")
+
+        allowed_country_codes = event_node.event.sepa_allowed_country_codes
         if iban.country_code not in allowed_country_codes:
             raise InvalidArgument("Provided IBAN contains country code which is not supported")
 

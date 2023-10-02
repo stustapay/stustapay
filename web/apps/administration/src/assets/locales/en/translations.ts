@@ -12,7 +12,7 @@ export const translations = {
   tickets: "Tickets",
   actions: "Actions",
   add: "Add",
-    email: "E-Mail",
+  email: "E-Mail",
   edit: "Edit",
   delete: "Delete",
   copy: "Copy",
@@ -211,22 +211,40 @@ export const translations = {
   },
   settings: {
     title: "Settings",
-    general: "General",
-    customerPortal: "Customer Portal",
-    bon: "Bon",
-    email: "E-Mail",
-    payment: "Payment",
     language: "Language",
-    "currency.symbol": "Currency Symbol",
-    "currency.identifier": "Currency Identifier",
+    updateEventSucessful: "Successfully updated event",
+    updateEventFailed: "Updating the event failed: {{reason}}.",
     juristiction: "Juristiction",
     serverSideConfig: "Server side settings",
     localConfig: "Local settings",
-    "bon.issuer": "Bon issuer",
-    "bon.addr": "Bon address",
-    "bon.title": "Bon title",
-    "bon.closing_texts": "Bon closing texts",
-    ust_id: "UST ID",
+    general: {
+      tabLabel: "General",
+      ust_id: "UST ID",
+      max_account_balance: "Max account balance",
+      currency_identifier: "Currency Identifier",
+    },
+    customerPortal: {
+      tabLabel: "Customer Portal",
+      contact_email: "Contact E-Mail",
+    },
+    bon: {
+      tabLabel: "Bon",
+      issuer: "Bon issuer",
+      address: "Bon address",
+      title: "Bon title",
+    },
+    payment: {
+      tabLabel: "Payment",
+      sumup_settings_title: "SumUp Settings",
+      payout_settings_title: "Payout Settings",
+      sepa_sender_name: "SEPA sender name",
+      sepa_sender_iban: "SEPA sender IBAN",
+      sepa_description: "SEPA description",
+      sepa_allowed_country_codes: "Allowed country codes for payout",
+    },
+    email: {
+      tabLabel: "E-Mail",
+    },
     settingsUpdateError: "Error updating setting: {{what}}",
     theme: {
       title: "Theme",
@@ -411,11 +429,11 @@ export const translations = {
     payoutsInPayoutRun: "Customers to be paid out in this payout run",
     payout: {
       id: "Account ID",
-    }
+    },
   },
   customer: {
     bankAccountHolder: "Account holder",
-  }
+  },
 };
 
 export type Translations = typeof translations;

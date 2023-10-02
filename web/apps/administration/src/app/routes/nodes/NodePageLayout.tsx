@@ -83,14 +83,6 @@ export const NodePageLayout: React.FC = () => {
           iconPosition="start"
           to={`${nodeUrl}/settings`}
         />
-        <Tab
-          label="Settings Legacy"
-          component={RouterLink}
-          value={`${nodeUrl}/settings-legacy`}
-          icon={<SettingsIcon />}
-          iconPosition="start"
-          to={`${nodeUrl}/settings-legacy`}
-        />
       </Tabs>
       <Box sx={{ mt: 2 }}>
         <Outlet />

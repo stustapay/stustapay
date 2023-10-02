@@ -492,6 +492,11 @@ class DatabaseSetup:
                     bon_issuer="Issuer",
                     bon_address="Address",
                     bon_title="Title",
+                    sepa_enabled=True,
+                    sepa_sender_name="Organizer",
+                    sepa_sender_iban="DE89370400440532013000",
+                    sepa_description="FestivalName, TagID: {user_tag_uid}",
+                    sepa_allowed_country_codes=["DE"],
                 ),
             )
             self.event_node_id = event_node.id

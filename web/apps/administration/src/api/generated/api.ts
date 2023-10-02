@@ -658,6 +658,10 @@ const injectedRtkApi = api
         query: () => ({ url: `/tree/` }),
         providesTags: ["tree"],
       }),
+      updateEvent: build.mutation<UpdateEventApiResponse, UpdateEventApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}`, method: "POST", body: queryArg.updateEvent }),
+        invalidatesTags: ["tree"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1120,13 +1124,17 @@ export type PayoutRunSepaXmlExportApiArg = {
 };
 export type GetTreeForCurrentUserApiResponse = /** status 200 Successful Response */ Node;
 export type GetTreeForCurrentUserApiArg = void;
+export type UpdateEventApiResponse = /** status 200 Successful Response */ Node;
+export type UpdateEventApiArg = {
+  nodeId: number;
+  updateEvent: UpdateEvent;
+};
 export type ProductRestriction = "under_16" | "under_18";
 export type Product = {
   name: string;
   price: number | null;
   fixed_price: boolean;
   price_in_vouchers?: number | null;
-  price_per_voucher?: number | null;
   tax_name: string;
   restrictions: ProductRestriction[];
   is_locked: boolean;
@@ -1135,6 +1143,7 @@ export type Product = {
   node_id: number;
   id: number;
   tax_rate: number;
+  price_per_voucher?: number | null;
 };
 export type NormalizedListProductInt = {
   ids: number[];
@@ -1155,7 +1164,6 @@ export type NewProduct = {
   price: number | null;
   fixed_price?: boolean;
   price_in_vouchers?: number | null;
-  price_per_voucher?: number | null;
   tax_name: string;
   restrictions?: ProductRestriction[];
   is_locked?: boolean;
@@ -1631,7 +1639,6 @@ export type ProductSoldStats = {
   price: number | null;
   fixed_price: boolean;
   price_in_vouchers?: number | null;
-  price_per_voucher?: number | null;
   tax_name: string;
   restrictions: ProductRestriction[];
   is_locked: boolean;
@@ -1640,6 +1647,7 @@ export type ProductSoldStats = {
   node_id: number;
   id: number;
   tax_rate: number;
+  price_per_voucher?: number | null;
   quantity_sold: number;
 };
 export type VoucherStats = {
@@ -1790,6 +1798,11 @@ export type Event = {
   bon_issuer: string;
   bon_address: string;
   bon_title: string;
+  sepa_enabled: boolean;
+  sepa_sender_name: string;
+  sepa_sender_iban: string;
+  sepa_description: string;
+  sepa_allowed_country_codes: string[];
 };
 export type ObjectType =
   | "user"
@@ -1804,7 +1817,7 @@ export type ObjectType =
   | "tse";
 export type Node = {
   id: number;
-  parent: number | null;
+  parent: number;
   name: string;
   description: string;
   event: Event | null;
@@ -1815,6 +1828,21 @@ export type Node = {
   allowed_objects_in_subtree: ObjectType[];
   computed_allowed_objects_in_subtree: ObjectType[];
   children: Node[];
+};
+export type UpdateEvent = {
+  currency_identifier: string;
+  sumup_topup_enabled: boolean;
+  max_account_balance: number;
+  customer_portal_contact_email: string;
+  ust_id: string;
+  bon_issuer: string;
+  bon_address: string;
+  bon_title: string;
+  sepa_enabled: boolean;
+  sepa_sender_name: string;
+  sepa_sender_iban: string;
+  sepa_description: string;
+  sepa_allowed_country_codes: string[];
 };
 export const {
   useListProductsQuery,
@@ -1947,4 +1975,5 @@ export const {
   usePayoutRunSepaXmlExportMutation,
   useGetTreeForCurrentUserQuery,
   useLazyGetTreeForCurrentUserQuery,
+  useUpdateEventMutation,
 } = injectedRtkApi;

@@ -59,6 +59,11 @@ class TreeTest(BaseTestCase):
                 bon_issuer="Issuer",
                 bon_address="Address",
                 bon_title="Title",
+                sepa_enabled=False,
+                sepa_description="",
+                sepa_sender_iban="",
+                sepa_allowed_country_codes=[],
+                sepa_sender_name="",
             ),
         )
         self.assertIsNotNone(event_node.event)

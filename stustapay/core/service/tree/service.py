@@ -10,6 +10,7 @@ from stustapay.core.service.common.decorators import (
     requires_user,
     with_db_transaction,
 )
+from stustapay.core.service.common.error import NotFound
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.framework.database import Connection
 
@@ -50,8 +51,9 @@ async def create_event(conn: Connection, node_id: int, event: NewEvent) -> Node:
     #  only exist at an event node
     event_id = await conn.fetchval(
         "insert into event (currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, "
-        "bon_address, bon_title, customer_portal_contact_email, customer_portal_sepa_enabled) "
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id",
+        "bon_address, bon_title, customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban, "
+        "sepa_description, sepa_allowed_country_codes) "
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning id",
         event.currency_identifier,
         event.sumup_topup_enabled,
         event.max_account_balance,
@@ -60,7 +62,11 @@ async def create_event(conn: Connection, node_id: int, event: NewEvent) -> Node:
         event.bon_address,
         event.bon_title,
         event.customer_portal_contact_email,
-        False,
+        event.sepa_enabled,
+        event.sepa_sender_name,
+        event.sepa_sender_iban,
+        event.sepa_description,
+        event.sepa_allowed_country_codes,
     )
 
     return await _create_node(conn=conn, parent_id=node_id, new_node=event, event_id=event_id)
@@ -82,6 +88,38 @@ class TreeService(DBService):
     @requires_node()
     async def create_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
         return await create_event(conn=conn, node_id=node.id, event=event)
+
+    @with_db_transaction
+    @requires_user()  # TODO: privilege
+    async def update_event(self, conn: Connection, node_id: int, event: NewEvent) -> Node:
+        event_id = await conn.fetchval("select event_id from node where id = $1", node_id)
+        if event_id is None:
+            raise NotFound(element_typ="event", element_id=node_id)
+
+        await conn.fetchval(
+            "update event set currency_identifier = $2, sumup_topup_enabled = $3, max_account_balance = $4, "
+            "   customer_portal_contact_email = $5, ust_id = $6, bon_issuer = $7, bon_address = $8, bon_title = $9, "
+            "   sepa_enabled = $10, sepa_sender_name = $11, sepa_sender_iban = $12, sepa_description = $13, "
+            "   sepa_allowed_country_codes = $14 "
+            "where id = $1",
+            event_id,
+            event.currency_identifier,
+            event.sumup_topup_enabled,
+            event.max_account_balance,
+            event.customer_portal_contact_email,
+            event.ust_id,
+            event.bon_issuer,
+            event.bon_address,
+            event.bon_title,
+            event.sepa_enabled,
+            event.sepa_sender_name,
+            event.sepa_sender_iban,
+            event.sepa_description,
+            event.sepa_allowed_country_codes,
+        )
+        node = await fetch_node(conn=conn, node_id=node_id)
+        assert node is not None
+        return node
 
     @with_db_transaction
     @requires_user()
