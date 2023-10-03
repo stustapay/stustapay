@@ -1,7 +1,7 @@
+import { useGetTicketQuery, useUpdateTicketMutation } from "@/api";
 import { TicketRoutes } from "@/app/routes";
-import { useGetTicketQuery, useUpdateTicketMutation } from "@api";
-import { EditLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { TicketSchema } from "@stustapay/models";
 import * as React from "react";

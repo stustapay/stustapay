@@ -1,4 +1,5 @@
-import * as React from "react";
+import { Account, useUpdateTagUidMutation } from "@/api";
+import { useCurrentNode } from "@/hooks";
 import {
   Button,
   Dialog,
@@ -11,14 +12,13 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import { useTranslation } from "react-i18next";
 import { formatUserTagUid } from "@stustapay/models";
-import { toast } from "react-toastify";
-import { Account, useUpdateTagUidMutation } from "@api";
-import { Formik, FormikHelpers } from "formik";
-import { z } from "zod";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { useCurrentNode } from "@hooks";
+import { Formik, FormikHelpers } from "formik";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const FormSchema = z.object({
   comment: z.string(),

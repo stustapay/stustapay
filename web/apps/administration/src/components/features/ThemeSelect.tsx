@@ -1,4 +1,4 @@
-import { selectTheme, Theme, useAppDispatch, useAppSelector, setTheme } from "@store";
+import { Theme, selectTheme, setTheme, useAppDispatch, useAppSelector } from "@/store";
 import { MenuItem, Select, SelectChangeEvent, SelectProps } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

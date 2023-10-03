@@ -1,12 +1,12 @@
+import { api } from "@/api";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/dist/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
-import { api } from "@api";
-import { authSlice } from "./authSlice";
-import { uiSlice } from "./uiSlice";
-import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE } from "redux-persist";
+import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE, persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { authSlice } from "./authSlice";
 import { errorMiddleware } from "./errorMiddleware";
+import { uiSlice } from "./uiSlice";
 
 const authPersistConfig = {
   key: "auth",

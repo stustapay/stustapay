@@ -1,5 +1,13 @@
-import * as React from "react";
-import { useTheme } from "@mui/material/styles";
+import { useGetTreeForCurrentUserQuery } from "@/api";
+import { config } from "@/api/common";
+import { AppBar, DrawerHeader, Main } from "@/components";
+import { drawerWidth } from "@/components/layouts/constants";
+import { selectCurrentUser, useAppSelector } from "@/store";
+import {
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Menu as MenuIcon,
+} from "@mui/icons-material";
 import {
   Alert,
   AlertTitle,
@@ -13,20 +21,12 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import {
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
-  Menu as MenuIcon,
-} from "@mui/icons-material";
-import { Link as RouterLink, Navigate, Outlet, useLocation } from "react-router-dom";
-import { AppBar, DrawerHeader, Main } from "@components";
-import { drawerWidth } from "@/components/layouts/constants";
-import { useTranslation } from "react-i18next";
-import { selectCurrentUser, useAppSelector } from "@store";
+import { useTheme } from "@mui/material/styles";
 import { Loading, TestModeDisclaimer } from "@stustapay/components";
-import { config } from "@api/common";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, Outlet, Link as RouterLink, useLocation } from "react-router-dom";
 import { NavigationTree } from "./navigation-tree";
-import { useGetTreeForCurrentUserQuery } from "@api";
 
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();

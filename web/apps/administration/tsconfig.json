@@ -9,17 +9,7 @@
     "paths": {
       "@stustapay/utils": ["../../libs/utils/src/index.ts"],
       "@stustapay/components": ["../../libs/components/src/index.ts"],
-      "@components": ["src/components/index.ts"],
-      "@components/*": ["src/components/*"],
-      "@store": ["src/store/index.ts"],
-      "@store/*": ["src/store/*"],
-      "@core": ["src/core/index.ts"],
-      "@core/*": ["src/core/*"],
       "@stustapay/models": ["../../libs/models/src/index.ts"],
-      "@api": ["src/api/index.ts"],
-      "@api/*": ["src/api/*"],
-      "@hooks": ["src/hooks/index.ts"],
-      "@hooks/*": ["src/hooks/*"],
       "@/*": ["src/*"]
     }
   },

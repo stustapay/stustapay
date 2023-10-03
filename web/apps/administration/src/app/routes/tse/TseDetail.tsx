@@ -1,7 +1,7 @@
 import { selectTseById, useListTsesQuery } from "@/api";
 import { TseRoutes } from "@/app/routes";
 import { DetailLayout } from "@/components";
-import { useCurrentNode } from "@hooks";
+import { useCurrentNode } from "@/hooks";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";

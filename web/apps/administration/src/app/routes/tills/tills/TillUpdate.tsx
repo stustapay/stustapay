@@ -1,7 +1,7 @@
 import { useGetTillQuery, useUpdateTillMutation } from "@/api";
 import { TillRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
-import { useCurrentNode } from "@hooks";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTillSchema } from "@stustapay/models";
 import * as React from "react";

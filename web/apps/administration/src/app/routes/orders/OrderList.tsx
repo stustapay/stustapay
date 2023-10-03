@@ -1,7 +1,7 @@
 import { selectOrderAll, useListOrdersQuery } from "@/api";
+import { ListLayout } from "@/components";
 import { OrderTable } from "@/components/features";
-import { ListLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

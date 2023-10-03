@@ -1,4 +1,4 @@
-import { useCurrentEvent, useCurrentNode } from "@hooks";
+import { useCurrentEvent, useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Tab } from "@mui/material";
 import * as React from "react";

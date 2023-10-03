@@ -1,7 +1,7 @@
+import { selectTillLayoutAll, useDeleteTillLayoutMutation, useListTillLayoutsQuery } from "@/api";
 import { TillLayoutRoutes } from "@/app/routes";
-import { selectTillLayoutAll, useDeleteTillLayoutMutation, useListTillLayoutsQuery } from "@api";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";

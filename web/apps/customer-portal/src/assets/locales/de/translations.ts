@@ -12,7 +12,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
   userTagPin: "Bändchen-Chip Pin",
   loginFailed: "Login fehlgeschlagen: {{reason}}.",
   errorLoadingCustomer: "Fehler beim Laden der Kundendaten",
-  payoutInfo: "Um dein Restguthaben nach dem Festival zu erhalten, <1>trage bitte deine Bankdaten hier ein</1>. Die erste Auszahlung findet voraussichtlich 3 Wochen nach Festivalende statt.",
+  payoutInfo:
+    "Um dein Restguthaben nach dem Festival zu erhalten, <1>trage bitte deine Bankdaten hier ein</1>. Die erste Auszahlung findet voraussichtlich 3 Wochen nach Festivalende statt.",
   about: "Impressum",
   contact: "Kontakt",
   wristbandTagExample: "Beispiel eines Bändchen-Chips",
@@ -54,7 +55,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     mustAcceptPrivacyPolicy: "Sie müssen die Datenschutserklärung akzeptieren",
     privacyPolicyCheck: "Ich habe die <1>Datenschutzerklärung</1> des StuStaCulum gelesen und akzeptiere sie.",
     errorFetchingData: "Fehler beim laden der Daten.",
-    updatedBankData: "Bankdaten erfolgreich aktualisiert. Die erste Auszahlung erfolgt voraussichtlich 3 Wochen nach Festivalende.",
+    updatedBankData:
+      "Bankdaten erfolgreich aktualisiert. Die erste Auszahlung erfolgt voraussichtlich 3 Wochen nach Festivalende.",
     errorWhileUpdatingBankData: "Fehler beim aktualisieren der Bankdaten.",
     donationMustBePositive: "Das Spende muss positiv sein",
     donationExceedsBalance: "Die Spende darf nicht den Kontostand überschreiten",

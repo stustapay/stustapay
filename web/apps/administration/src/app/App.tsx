@@ -1,11 +1,11 @@
-import * as React from "react";
+import { fetchConfig } from "@/api/common";
+import { useAppSelector } from "@/store";
+import { selectTheme } from "@/store/uiSlice";
 import { createTheme, CssBaseline, PaletteMode, ThemeProvider, useMediaQuery } from "@mui/material";
-import { Router } from "./Router";
-import { toast, ToastContainer } from "react-toastify";
-import { useAppSelector } from "@store";
-import { selectTheme } from "@store/uiSlice";
 import { Loading } from "@stustapay/components";
-import { fetchConfig } from "@api/common";
+import * as React from "react";
+import { toast, ToastContainer } from "react-toastify";
+import { Router } from "./Router";
 
 export function App() {
   const [loading, setLoading] = React.useState(true);

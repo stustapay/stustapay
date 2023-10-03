@@ -1,7 +1,7 @@
+import { useCreateTillProfileMutation } from "@/api";
 import { TillProfileRoutes } from "@/app/routes";
-import { useCreateTillProfileMutation } from "@api";
-import { CreateLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { NewTillProfile, NewTillProfileSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

@@ -1,7 +1,7 @@
+import { useCreateRegisterMutation } from "@/api";
 import { TillRegistersRoutes } from "@/app/routes";
-import { useCreateRegisterMutation } from "@api";
-import { CreateLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { NewTillRegister, NewTillRegisterSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

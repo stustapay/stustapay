@@ -1,8 +1,8 @@
+import { DraggableItemTypes } from "@/core";
+import { Identifier } from "dnd-core";
 import * as React from "react";
 import { useDrop } from "react-dnd";
-import { Identifier } from "dnd-core";
 import { DragButton } from "./DraggableButton";
-import { DraggableItemTypes } from "@core";
 
 export interface EmptyDragProps {
   moveButton: (buttonId: number) => void;

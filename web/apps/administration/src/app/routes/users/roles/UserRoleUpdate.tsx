@@ -1,7 +1,7 @@
 import { selectUserRoleById, useListUserRolesQuery, useUpdateUserRoleMutation } from "@/api";
 import { UserRoleRoutes } from "@/app/routes";
-import { EditLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

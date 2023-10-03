@@ -1,10 +1,10 @@
-import { Card, CardContent, Checkbox, FormControlLabel, Alert, Typography } from "@mui/material";
-import * as React from "react";
+import { useGetProductStatsQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
+import { Alert, Card, CardContent, Checkbox, FormControlLabel, Typography } from "@mui/material";
 import { ResponsivePie } from "@nivo/pie";
-import { useTranslation } from "react-i18next";
-import { useGetProductStatsQuery } from "@api";
 import { Loading } from "@stustapay/components";
-import { useCurrentNode } from "@hooks";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 export interface ProductStatsCardProps {
   fromTimestamp?: string;

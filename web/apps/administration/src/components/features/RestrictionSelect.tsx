@@ -1,4 +1,4 @@
-import * as React from "react";
+import { ProductRestriction } from "@/api";
 import {
   Checkbox,
   FormControl,
@@ -11,7 +11,7 @@ import {
   SelectProps,
 } from "@mui/material";
 import { ProductRestrictions } from "@stustapay/models";
-import { ProductRestriction } from "@api";
+import * as React from "react";
 
 export interface RestrictionSelectProps
   extends Omit<SelectProps, "value" | "onChange" | "margin" | "multiple" | "renderValue"> {

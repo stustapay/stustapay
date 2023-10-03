@@ -1,7 +1,7 @@
 import { Tse, selectTseAll, useListTsesQuery } from "@/api";
 import { TseRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrentNode } from "@hooks";
+import { useCurrentNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";

@@ -1,5 +1,5 @@
 import { usePendingPayoutDetailQuery } from "@/api";
-import { useCurrencyFormatter, useCurrentNode } from "@hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { List, ListItem, ListItemText, Paper, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";

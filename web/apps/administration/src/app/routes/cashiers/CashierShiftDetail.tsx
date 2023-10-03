@@ -4,9 +4,9 @@ import {
   useGetCashierQuery,
   useGetCashierShiftsQuery,
   useListUsersQuery,
-} from "@api";
-import { DetailLayout } from "@components";
-import { useCurrencyFormatter, useCurrentNode } from "@hooks";
+} from "@/api";
+import { DetailLayout } from "@/components";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { getUserName } from "@stustapay/models";

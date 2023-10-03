@@ -1,11 +1,11 @@
-import * as React from "react";
-import { z } from "zod";
-import { Form, Formik, FormikHelpers } from "formik";
-import { toast } from "react-toastify";
-import { toFormikValidationSchema } from "@stustapay/utils";
+import { useChangePasswordMutation } from "@/api";
 import { Button, LinearProgress, TextField } from "@mui/material";
+import { toFormikValidationSchema } from "@stustapay/utils";
+import { Form, Formik, FormikHelpers } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useChangePasswordMutation } from "@api";
+import { toast } from "react-toastify";
+import { z } from "zod";
 import i18n from "../../../../i18n";
 
 const validationSchema = z

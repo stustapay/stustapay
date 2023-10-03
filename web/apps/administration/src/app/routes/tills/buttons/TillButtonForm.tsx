@@ -1,6 +1,6 @@
 import { NewTillButton, Product, selectProductById, useListProductsQuery } from "@/api";
-import { ProductSelect } from "@components/features";
-import { useCurrentNode } from "@hooks";
+import { ProductSelect } from "@/components/features";
+import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, TextField } from "@mui/material";
 import { FormikProps } from "formik";

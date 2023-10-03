@@ -5,7 +5,7 @@ import {
 } from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
-import { useCurrentNode } from "@hooks";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTillRegisterStockingSchema } from "@stustapay/models";
 import * as React from "react";

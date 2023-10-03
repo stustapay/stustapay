@@ -1,7 +1,7 @@
+import { useCreateRegisterStockingMutation } from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
-import { useCreateRegisterStockingMutation } from "@api";
-import { CreateLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { NewTillRegisterStocking, NewTillRegisterStockingSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

@@ -1,4 +1,3 @@
-import { ProductRoutes } from "@/app/routes";
 import {
   selectProductAll,
   selectTaxRateById,
@@ -7,8 +6,9 @@ import {
   useListProductsQuery,
   useListTaxRatesQuery,
   useUpdateProductMutation,
-} from "@api";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@components";
+} from "@/api";
+import { ProductRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
 import {
   ContentCopy as ContentCopyIcon,
   Delete as DeleteIcon,

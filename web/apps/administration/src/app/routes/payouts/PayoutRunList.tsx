@@ -1,7 +1,7 @@
 import { PayoutRunWithStats, selectPayoutRunAll, useListPayoutRunsQuery } from "@/api";
 import { PayoutRunRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";

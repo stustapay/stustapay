@@ -1,7 +1,7 @@
+import { useDeleteProductMutation, useGetProductQuery, useUpdateProductMutation } from "@/api";
 import { ProductRoutes } from "@/app/routes";
-import { useDeleteProductMutation, useGetProductQuery, useUpdateProductMutation } from "@api";
-import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout } from "@components";
-import { useCurrencyFormatter, useCurrentNode } from "@hooks";
+import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout } from "@/components";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import { Checkbox, Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";

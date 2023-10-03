@@ -1,6 +1,6 @@
 import { useCreatePayoutRunMutation } from "@/api";
 import { PayoutRunRoutes } from "@/app/routes";
-import { useCurrencySymbol, useCurrentNode } from "@hooks";
+import { useCurrencySymbol, useCurrentNode } from "@/hooks";
 import { ChevronLeft } from "@mui/icons-material";
 import { Button, Grid, IconButton, InputAdornment, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import { NumericInput } from "@stustapay/components";

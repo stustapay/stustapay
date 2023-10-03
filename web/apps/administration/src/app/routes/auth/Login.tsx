@@ -1,14 +1,14 @@
-import React, { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Form, Formik, FormikHelpers } from "formik";
-import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, TextField, Typography } from "@mui/material";
-import { z } from "zod";
-import { selectIsAuthenticated, useAppSelector } from "@store";
+import { useLoginMutation } from "@/api";
+import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
-import { useLoginMutation } from "@api";
+import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, TextField, Typography } from "@mui/material";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { toast } from "react-toastify";
+import { Form, Formik, FormikHelpers } from "formik";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const validationSchema = z.object({
   username: z.string(),

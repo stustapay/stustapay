@@ -1,4 +1,4 @@
-import { config } from "@api/common";
+import { config } from "@/api/common";
 
 export const useCurrencySymbol = (): string => {
   return config.currencySymbol;

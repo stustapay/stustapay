@@ -28,7 +28,7 @@ export const uiSlice = createSlice({
     extendExpandedNodes: (state, action: PayloadAction<string[]>) => {
       for (const node of action.payload) {
         if (!state.expandedNodes.includes(node)) {
-          state.expandedNodes.push(node) ;
+          state.expandedNodes.push(node);
         }
       }
     },

@@ -1,6 +1,5 @@
 import { useGetTreeForCurrentUserQuery } from "./api";
-import {Node} from "@/api";
-
+import { Node } from "@/api";
 
 export const findNode = (nodeId: number, startNode: Node): Node | undefined => {
   const currNode = startNode;
@@ -17,15 +16,16 @@ export const findNode = (nodeId: number, startNode: Node): Node | undefined => {
 };
 
 export const useNodeTree = (): { root: Node } => {
-  const {data: rootNode} = useGetTreeForCurrentUserQuery();
+  const { data: rootNode } = useGetTreeForCurrentUserQuery();
   if (!rootNode) {
-    throw new Error("tree has not been loaded, please make sure to preload this before rendering a component which uses the useNodeTree hook");
+    throw new Error(
+      "tree has not been loaded, please make sure to preload this before rendering a component which uses the useNodeTree hook"
+    );
   }
   return { root: rootNode as Node };
 };
 
 export const useNode = ({ nodeId }: { nodeId: number }): { node: Node | undefined } => {
-  const {root} = useNodeTree();
+  const { root } = useNodeTree();
   return { node: findNode(nodeId, root) };
 };
-

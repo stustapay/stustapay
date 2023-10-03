@@ -1,7 +1,7 @@
 import { useCreateUserMutation } from "@/api";
 import { UserRoutes } from "@/app/routes";
-import { CreateLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { NewUser, NewUserSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

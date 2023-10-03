@@ -1,12 +1,12 @@
-import { TillLayoutRoutes } from "@/app/routes";
 import {
   NewTillLayout,
   selectTicketAll,
   selectTillButtonAll,
   useListTicketsQuery,
   useListTillButtonsQuery,
-} from "@api";
-import { useCurrentNode } from "@hooks";
+} from "@/api";
+import { TillLayoutRoutes } from "@/app/routes";
+import { useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, LinearProgress, Paper, Tab, TextField, Typography } from "@mui/material";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";

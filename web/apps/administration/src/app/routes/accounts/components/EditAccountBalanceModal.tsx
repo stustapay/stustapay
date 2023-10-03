@@ -1,4 +1,5 @@
-import * as React from "react";
+import { Account, useUpdateBalanceMutation } from "@/api";
+import { useCurrencyFormatter, useCurrencySymbol, useCurrentNode } from "@/hooks";
 import {
   Button,
   Dialog,
@@ -10,9 +11,8 @@ import {
   ListItemText,
 } from "@mui/material";
 import { NumericInput } from "@stustapay/components";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Account, useUpdateBalanceMutation } from "@api";
-import { useCurrencyFormatter, useCurrencySymbol, useCurrentNode } from "@hooks";
 import { toast } from "react-toastify";
 
 export interface EditAccountBalanceModalProps {

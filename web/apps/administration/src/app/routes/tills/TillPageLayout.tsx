@@ -1,10 +1,4 @@
-import { useNode } from "@api/nodes";
-import { PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
-import { Box, Tab, Tabs } from "@mui/material";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Outlet, useLocation, useParams, Link as RouterLink } from "react-router-dom";
-import { Loading } from "@stustapay/components";
+import { useNode } from "@/api/nodes";
 import {
   TillButtonsRoutes,
   TillLayoutRoutes,
@@ -13,6 +7,12 @@ import {
   TillRoutes,
   TillStockingsRoutes,
 } from "@/app/routes";
+import { PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
+import { Box, Tab, Tabs } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
 
 const getActiveTab = (location: string) => {
   if (location.startsWith(TillProfileRoutes.list())) {

@@ -1,5 +1,5 @@
-import { selectUserAll, useListUsersQuery } from "@api";
-import { useCurrentNode } from "@hooks";
+import { selectUserAll, useListUsersQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
 import {
   FormControl,
   FormHelperText,

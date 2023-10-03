@@ -1,6 +1,6 @@
 import { selectAccountAll, useFindAccountsMutation } from "@/api";
 import { DetailLayout } from "@/components";
-import { useCurrentNode } from "@hooks";
+import { useCurrentNode } from "@/hooks";
 import { Button, LinearProgress, Paper, TextField } from "@mui/material";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";

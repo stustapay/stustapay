@@ -1,12 +1,12 @@
-import { useGetTillLayoutQuery, useUpdateTillLayoutMutation } from "@api";
-import * as React from "react";
-import { TillLayoutSchema } from "@stustapay/models";
-import { Navigate, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { TillLayoutChange } from "./TillLayoutChange";
-import { Loading } from "@stustapay/components";
+import { useGetTillLayoutQuery, useUpdateTillLayoutMutation } from "@/api";
 import { TillLayoutRoutes } from "@/app/routes";
-import { useCurrentNode } from "@hooks";
+import { useCurrentNode } from "@/hooks";
+import { Loading } from "@stustapay/components";
+import { TillLayoutSchema } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useParams } from "react-router-dom";
+import { TillLayoutChange } from "./TillLayoutChange";
 
 export const TillLayoutUpdate: React.FC = () => {
   const { t } = useTranslation();

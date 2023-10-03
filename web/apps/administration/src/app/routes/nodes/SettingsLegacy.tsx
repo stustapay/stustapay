@@ -1,8 +1,8 @@
-import { selectConfigEntryAll, useListConfigEntriesQuery, useSetConfigEntryMutation } from "@api";
-import { EditableListItem } from "@components";
-import { Loading } from "@stustapay/components";
+import { selectConfigEntryAll, useListConfigEntriesQuery, useSetConfigEntryMutation } from "@/api";
+import { EditableListItem } from "@/components";
 import { List, Paper, Stack, Typography } from "@mui/material";
 import { Box } from "@mui/system";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";

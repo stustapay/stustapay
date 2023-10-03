@@ -1,5 +1,5 @@
 import { NewTill } from "@/api";
-import { TillProfileSelect } from "@components/features";
+import { TillProfileSelect } from "@/components/features";
 import { TextField } from "@mui/material";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";

@@ -1,5 +1,5 @@
-import { usePayoutRunSepaXmlExportMutation } from "@api";
-import { useCurrentNode } from "@hooks";
+import { usePayoutRunSepaXmlExportMutation } from "@/api";
+import { useCurrentNode } from "@/hooks";
 import { Download as DownloadIcon } from "@mui/icons-material";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
