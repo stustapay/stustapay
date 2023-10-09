@@ -1,5 +1,6 @@
 import { Event, useUpdateEventMutation } from "@/api";
-import { Button, LinearProgress, Stack, TextField } from "@mui/material";
+import { Button, LinearProgress, Stack } from "@mui/material";
+import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -39,42 +40,18 @@ export const TabBon: React.FC<{ nodeId: number; event: Event }> = ({ nodeId, eve
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(BonSettingsSchema)}
     >
-      {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, errors, touched }) => (
-        <Form onSubmit={handleSubmit}>
+      {(formik) => (
+        <Form onSubmit={formik.handleSubmit}>
           <Stack spacing={2}>
-            <TextField
-              label={t("settings.bon.title")}
-              name="bon_title"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.bon_title}
-              error={touched.bon_title && !!errors.bon_title}
-              helperText={(touched.bon_title && errors.bon_title) as string}
-            />
-            <TextField
-              label={t("settings.bon.issuer")}
-              name="bon_issuer"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.bon_issuer}
-              error={touched.bon_issuer && !!errors.bon_issuer}
-              helperText={(touched.bon_issuer && errors.bon_issuer) as string}
-            />
-            <TextField
-              label={t("settings.bon.address")}
-              name="bon_address"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.bon_address}
-              error={touched.bon_address && !!errors.bon_address}
-              helperText={(touched.bon_address && errors.bon_address) as string}
-            />
-            {isSubmitting && <LinearProgress />}
+            <FormTextField label={t("settings.bon.title")} name="bon_title" formik={formik} />
+            <FormTextField label={t("settings.bon.issuer")} name="bon_issuer" formik={formik} />
+            <FormTextField label={t("settings.bon.address")} name="bon_address" formik={formik} />
+            {formik.isSubmitting && <LinearProgress />}
             <Button
               type="submit"
               color="primary"
               variant="contained"
-              disabled={isSubmitting || Object.keys(touched).length === 0}
+              disabled={formik.isSubmitting || Object.keys(formik.touched).length === 0}
             >
               {t("save")}
             </Button>

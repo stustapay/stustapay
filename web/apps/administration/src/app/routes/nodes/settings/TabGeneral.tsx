@@ -1,5 +1,6 @@
 import { Event, useUpdateEventMutation } from "@/api";
-import { Button, LinearProgress, Stack, TextField } from "@mui/material";
+import { Button, LinearProgress, Stack } from "@mui/material";
+import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -39,42 +40,26 @@ export const TabGeneral: React.FC<{ nodeId: number; event: Event }> = ({ nodeId,
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(GeneralSettingsSchema)}
     >
-      {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, errors, touched }) => (
-        <Form onSubmit={handleSubmit}>
+      {(formik) => (
+        <Form onSubmit={formik.handleSubmit}>
           <Stack spacing={2}>
-            <TextField
+            <FormTextField
               label={t("settings.general.currency_identifier")}
               name="currency_identifier"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.currency_identifier}
-              error={touched.currency_identifier && !!errors.currency_identifier}
-              helperText={(touched.currency_identifier && errors.currency_identifier) as string}
+              formik={formik}
             />
-            <TextField
+            <FormTextField
               label={t("settings.general.max_account_balance")}
               name="max_account_balance"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.max_account_balance}
-              error={touched.max_account_balance && !!errors.max_account_balance}
-              helperText={(touched.max_account_balance && errors.max_account_balance) as string}
+              formik={formik}
             />
-            <TextField
-              label={t("settings.general.ust_id")}
-              name="ust_id"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.ust_id}
-              error={touched.ust_id && !!errors.ust_id}
-              helperText={(touched.ust_id && errors.ust_id) as string}
-            />
-            {isSubmitting && <LinearProgress />}
+            <FormTextField label={t("settings.general.ust_id")} name="ust_id" formik={formik} />
+            {formik.isSubmitting && <LinearProgress />}
             <Button
               type="submit"
               color="primary"
               variant="contained"
-              disabled={isSubmitting || Object.keys(touched).length === 0}
+              disabled={formik.isSubmitting || Object.keys(formik.touched).length === 0}
             >
               {t("save")}
             </Button>

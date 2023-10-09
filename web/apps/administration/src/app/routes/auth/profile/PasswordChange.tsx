@@ -1,5 +1,6 @@
 import { useChangePasswordMutation } from "@/api";
-import { Button, LinearProgress, TextField } from "@mui/material";
+import { Button, LinearProgress, Stack } from "@mui/material";
+import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -53,57 +54,38 @@ export const PasswordChange: React.FC = () => {
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(validationSchema)}
     >
-      {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, errors, touched }) => (
-        <Form onSubmit={handleSubmit}>
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            autoFocus
-            type="password"
-            label={t("auth.oldPassword")}
-            name="oldPassword"
-            onBlur={handleBlur}
-            onChange={handleChange}
-            value={values.oldPassword}
-            error={touched.oldPassword && !!errors.oldPassword}
-            helperText={(touched.oldPassword && errors.oldPassword) as string}
-          />
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            type="password"
-            label={t("auth.newPassword")}
-            name="newPassword"
-            onBlur={handleBlur}
-            onChange={handleChange}
-            value={values.newPassword}
-            error={touched.newPassword && !!errors.newPassword}
-            helperText={(touched.newPassword && errors.newPassword) as string}
-          />
+      {(formik) => (
+        <Form onSubmit={formik.handleSubmit}>
+          <Stack spacing={2}>
+            <FormTextField
+              variant="outlined"
+              autoFocus
+              type="password"
+              label={t("auth.oldPassword")}
+              name="oldPassword"
+              formik={formik}
+            />
+            <FormTextField
+              variant="outlined"
+              type="password"
+              label={t("auth.newPassword")}
+              name="newPassword"
+              formik={formik}
+            />
 
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            type="password"
-            label={t("auth.confirmNewPassword")}
-            name="confirmNewPassword"
-            onBlur={handleBlur}
-            onChange={handleChange}
-            value={values.confirmNewPassword}
-            error={touched.confirmNewPassword && !!errors.confirmNewPassword}
-            helperText={(touched.confirmNewPassword && errors.confirmNewPassword) as string}
-          />
+            <FormTextField
+              variant="outlined"
+              type="password"
+              label={t("auth.confirmNewPassword")}
+              name="confirmNewPassword"
+              formik={formik}
+            />
 
-          {isSubmitting && <LinearProgress />}
-          <Button type="submit" fullWidth variant="contained" color="primary" disabled={isSubmitting} sx={{ mt: 1 }}>
-            {t("submit")}
-          </Button>
+            {formik.isSubmitting && <LinearProgress />}
+            <Button type="submit" fullWidth variant="contained" color="primary" disabled={formik.isSubmitting}>
+              {t("submit")}
+            </Button>
+          </Stack>
         </Form>
       )}
     </Formik>

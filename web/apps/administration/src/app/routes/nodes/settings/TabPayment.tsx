@@ -1,19 +1,6 @@
 import { Event, useUpdateEventMutation } from "@/api";
-import {
-  Button,
-  Checkbox,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  InputLabel,
-  LinearProgress,
-  ListItemText,
-  MenuItem,
-  OutlinedInput,
-  Select,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Button, FormControl, FormLabel, LinearProgress, Stack } from "@mui/material";
+import { FormSelect, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import iban from "iban";
@@ -23,6 +10,7 @@ import { toast } from "react-toastify";
 import { z } from "zod";
 
 const PaymentSettingsSchema = z.object({
+  // sumup_api_key: z.string(),
   sepa_enabled: z.boolean(),
   sepa_sender_name: z.string(),
   sepa_sender_iban: z.string(),
@@ -56,84 +44,39 @@ export const TabPayment: React.FC<{ nodeId: number; event: Event }> = ({ nodeId,
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(PaymentSettingsSchema)}
     >
-      {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, errors, touched, setFieldValue }) => (
-        <Form onSubmit={handleSubmit}>
+      {(formik) => (
+        <Form onSubmit={formik.handleSubmit}>
           <Stack spacing={2}>
             <FormControl component="fieldset" variant="standard">
               <Stack spacing={2}>
                 <FormLabel component="legend">{t("settings.payment.sumup_settings_title")}</FormLabel>
-                <TextField label="SumUp API Key" value="" />
+                <FormTextField label="SumUp API Key" name="sumup_api_key" formik={formik} />
               </Stack>
             </FormControl>
             <FormControl component="fieldset" variant="standard">
               <Stack spacing={2}>
                 <FormLabel component="legend">{t("settings.payment.payout_settings_title")}</FormLabel>
-                <TextField
-                  label={t("settings.payment.sepa_sender_name")}
-                  name="sepa_sender_name"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.sepa_sender_name}
-                  error={touched.sepa_sender_name && !!errors.sepa_sender_name}
-                  helperText={(touched.sepa_sender_name && errors.sepa_sender_name) as string}
+                <FormTextField label={t("settings.payment.sepa_sender_name")} name="sepa_sender_name" formik={formik} />
+                <FormTextField label={t("settings.payment.sepa_sender_iban")} name="sepa_sender_iban" formik={formik} />
+                <FormTextField label={t("settings.payment.sepa_description")} name="sepa_description" formik={formik} />
+                <FormSelect
+                  label={t("settings.payment.sepa_allowed_country_codes")}
+                  multiple={true}
+                  name="sepa_allowed_country_codes"
+                  formik={formik}
+                  options={Object.keys(iban.countries)}
+                  getOptionKey={(iban) => iban}
+                  formatOption={(iban) => iban}
                 />
-                <TextField
-                  label={t("settings.payment.sepa_sender_iban")}
-                  name="sepa_sender_iban"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.sepa_sender_iban}
-                  error={touched.sepa_sender_iban && !!errors.sepa_sender_iban}
-                  helperText={(touched.sepa_sender_iban && errors.sepa_sender_iban) as string}
-                />
-                <TextField
-                  label={t("settings.payment.sepa_description")}
-                  name="sepa_description"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.sepa_description}
-                  error={touched.sepa_description && !!errors.sepa_description}
-                  helperText={(touched.sepa_description && errors.sepa_description) as string}
-                />
-                <FormControl error={touched.sepa_allowed_country_codes && !!errors.sepa_allowed_country_codes}>
-                  <InputLabel id="country-code-select-label">
-                    {t("settings.payment.sepa_allowed_country_codes")}
-                  </InputLabel>
-                  <Select
-                    labelId="country-code-select-label"
-                    multiple
-                    name="sepa_allowed_country_codes"
-                    value={values.sepa_allowed_country_codes}
-                    onChange={(ev) =>
-                      setFieldValue(
-                        "sepa_allowed_country_codes",
-                        typeof ev.target.value === "string" ? ev.target.value.split(",") : ev.target.value
-                      )
-                    }
-                    onBlur={handleBlur}
-                    renderValue={(selected) => selected.join(", ")}
-                    input={<OutlinedInput label={t("settings.payment.sepa_allowed_country_codes")} />}
-                  >
-                    {Object.keys(iban.countries).map((name) => (
-                      <MenuItem key={name} value={name}>
-                        <Checkbox checked={values.sepa_allowed_country_codes.includes(name)} />
-                        <ListItemText primary={name} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {touched.sepa_allowed_country_codes && errors.sepa_allowed_country_codes && (
-                    <FormHelperText>{errors.sepa_allowed_country_codes}</FormHelperText>
-                  )}
-                </FormControl>
               </Stack>
             </FormControl>
 
-            {isSubmitting && <LinearProgress />}
+            {formik.isSubmitting && <LinearProgress />}
             <Button
               type="submit"
               color="primary"
               variant="contained"
-              disabled={isSubmitting || Object.keys(touched).length === 0}
+              disabled={formik.isSubmitting || Object.keys(formik.touched).length === 0}
             >
               {t("save")}
             </Button>
