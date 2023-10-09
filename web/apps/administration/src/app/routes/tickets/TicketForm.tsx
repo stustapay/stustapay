@@ -1,64 +1,47 @@
 import { NewTicket } from "@/api";
 import { ProductSelect, RestrictionSelect } from "@/components/features";
 import { useCurrencySymbol } from "@/hooks";
-import { InputAdornment, TextField } from "@mui/material";
-import { NumericInput } from "@stustapay/components";
+import { InputAdornment } from "@mui/material";
+import { FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
 export type TicketFormProps<T extends NewTicket> = FormikProps<T>;
 
-export function TicketForm<T extends NewTicket>({
-  handleBlur,
-  handleChange,
-  values,
-  touched,
-  errors,
-  setFieldValue,
-}: TicketFormProps<T>) {
+export function TicketForm<T extends NewTicket>(props: TicketFormProps<T>) {
+  const { values, touched, errors, setFieldValue } = props;
   const { t } = useTranslation();
   const currencySymbol = useCurrencySymbol();
 
   return (
     <>
-      <TextField
+      <FormTextField
         variant="standard"
         margin="normal"
         fullWidth
         autoFocus
         name="name"
         label={t("ticket.name")}
-        error={touched.name && !!errors.name}
-        helperText={(touched.name && errors.name) as string}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        value={values.name}
+        formik={props}
       />
 
-      <TextField
+      <FormTextField
         variant="standard"
         margin="normal"
         fullWidth
         name="description"
         label={t("ticket.description")}
-        error={touched.description && !!errors.description}
-        helperText={(touched.description && errors.description) as string}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        value={values.description}
+        formik={props}
       />
 
-      <NumericInput
+      <FormNumericInput
         variant="standard"
         margin="normal"
         fullWidth
         name="price"
         label={t("ticket.initialTopUpAmount")}
         InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
-        error={touched.initial_top_up_amount && !!errors.initial_top_up_amount}
-        helperText={(touched.initial_top_up_amount && errors.initial_top_up_amount) as string}
-        onChange={(value) => setFieldValue("initial_top_up_amount", value)}
-        value={values.initial_top_up_amount}
+        formik={props}
       />
 
       <ProductSelect

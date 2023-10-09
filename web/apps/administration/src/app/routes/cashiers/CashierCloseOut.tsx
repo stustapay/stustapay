@@ -1,4 +1,6 @@
-import * as React from "react";
+import { selectTillById, useCloseOutCashierMutation, useGetCashierQuery, useListTillsQuery } from "@/api";
+import { UserSelect } from "@/components/features";
+import { useCurrencyFormatter, useCurrencySymbol, useCurrentNode } from "@/hooks";
 import {
   Alert,
   AlertTitle,
@@ -16,16 +18,15 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
+import { CashingTextField, Loading } from "@stustapay/components";
+import { FormNumericInput } from "@stustapay/form-components";
+import { getUserName } from "@stustapay/models";
+import { toFormikValidationSchema } from "@stustapay/utils";
+import { Form, Formik, FormikHelpers } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
-import { selectTillById, useCloseOutCashierMutation, useGetCashierQuery, useListTillsQuery } from "@/api";
-import { CashingTextField, Loading, NumericInput } from "@stustapay/components";
-import { useCurrencyFormatter, useCurrencySymbol, useCurrentNode } from "@/hooks";
-import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
-import { Formik, FormikHelpers } from "formik";
-import { UserSelect } from "@/components/features";
-import { getUserName } from "@stustapay/models";
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
 
 const CloseOutDataSchema = z.object({
@@ -137,8 +138,8 @@ export const CashierCloseOut: React.FC = () => {
         onSubmit={handleSubmit}
         validationSchema={toFormikValidationSchema(CloseOutDataSchema)}
       >
-        {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, setFieldValue, errors, touched }) => (
-          <>
+        {(formik) => (
+          <Form onSubmit={formik.handleSubmit}>
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
@@ -154,83 +155,59 @@ export const CashierCloseOut: React.FC = () => {
                     <TableCell rowSpan={7} colSpan={2} />
                     <TableCell align="right">{t("closeOut.coins")}</TableCell>
                     <TableCell>
-                      <NumericInput
+                      <FormNumericInput
                         fullWidth
-                        value={values.coins}
-                        onChange={(val) => setFieldValue("coins", val)}
+                        name="coins"
+                        formik={formik}
                         InputProps={{
                           endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment>,
                         }}
                       />
                     </TableCell>
-                    <TableCell align="right">= {formatCurrency(values.coins)}</TableCell>
+                    <TableCell align="right">= {formatCurrency(formik.values.coins)}</TableCell>
                     <TableCell rowSpan={7} />
                   </TableRow>
                   <TableRow>
                     <TableCell align="right">{t("closeOut.bill5Euro")}</TableCell>
                     <TableCell>
-                      <NumericInput
-                        fullWidth
-                        value={values.bill5Euro}
-                        onChange={(val) => setFieldValue("bill5Euro", val)}
-                      />
+                      <FormNumericInput fullWidth name="bill5Euro" formik={formik} />
                     </TableCell>
-                    <TableCell align="right">= {formatCurrency(values.bill5Euro * 5)}</TableCell>
+                    <TableCell align="right">= {formatCurrency(formik.values.bill5Euro * 5)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell align="right">{t("closeOut.bill10Euro")}</TableCell>
                     <TableCell>
-                      <NumericInput
-                        fullWidth
-                        value={values.bill10Euro}
-                        onChange={(val) => setFieldValue("bill10Euro", val)}
-                      />
+                      <FormNumericInput fullWidth name="bill10Eur0" formik={formik} />
                     </TableCell>
-                    <TableCell align="right">= {formatCurrency(values.bill10Euro * 10)}</TableCell>
+                    <TableCell align="right">= {formatCurrency(formik.values.bill10Euro * 10)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell align="right">{t("closeOut.bill20Euro")}</TableCell>
                     <TableCell>
-                      <NumericInput
-                        fullWidth
-                        value={values.bill20Euro}
-                        onChange={(val) => setFieldValue("bill20Euro", val)}
-                      />
+                      <FormNumericInput fullWidth name="bill20Euro" formik={formik} />
                     </TableCell>
-                    <TableCell align="right">= {formatCurrency(values.bill20Euro * 20)}</TableCell>
+                    <TableCell align="right">= {formatCurrency(formik.values.bill20Euro * 20)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell align="right">{t("closeOut.bill50Euro")}</TableCell>
                     <TableCell>
-                      <NumericInput
-                        fullWidth
-                        value={values.bill50Euro}
-                        onChange={(val) => setFieldValue("bill50Euro", val)}
-                      />
+                      <FormNumericInput fullWidth name="bill50Euro" formik={formik} />
                     </TableCell>
-                    <TableCell align="right">= {formatCurrency(values.bill50Euro * 50)}</TableCell>
+                    <TableCell align="right">= {formatCurrency(formik.values.bill50Euro * 50)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell align="right">{t("closeOut.bill100Euro")}</TableCell>
                     <TableCell>
-                      <NumericInput
-                        fullWidth
-                        value={values.bill100Euro}
-                        onChange={(val) => setFieldValue("bill100Euro", val)}
-                      />
+                      <FormNumericInput fullWidth name="bill100Euro" formik={formik} />
                     </TableCell>
-                    <TableCell align="right">= {formatCurrency(values.bill100Euro * 100)}</TableCell>
+                    <TableCell align="right">= {formatCurrency(formik.values.bill100Euro * 100)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell align="right">{t("closeOut.bill200Euro")}</TableCell>
                     <TableCell>
-                      <NumericInput
-                        fullWidth
-                        value={values.bill200Euro}
-                        onChange={(val) => setFieldValue("bill200Euro", val)}
-                      />
+                      <FormNumericInput fullWidth name="bill200Euro" formik={formik} />
                     </TableCell>
-                    <TableCell align="right">= {formatCurrency(values.bill200Euro * 200)}</TableCell>
+                    <TableCell align="right">= {formatCurrency(formik.values.bill200Euro * 200)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell sx={{ fontWeight: (theme) => theme.typography.fontWeightBold }}>
@@ -242,12 +219,13 @@ export const CashierCloseOut: React.FC = () => {
                     <TableCell align="right">{formatCurrency(0)}</TableCell>
                     <TableCell align="right">{formatCurrency(cashier.cash_drawer_balance)}</TableCell>
                     <TableCell colSpan={2} />
-                    <TableCell align="right">{formatCurrency(computeSum(values))}</TableCell>
+                    <TableCell align="right">{formatCurrency(computeSum(formik.values))}</TableCell>
                     <TableCell align="right">
-                      {formatCurrency(computeDifference(values, cashier.cash_drawer_balance))} (
+                      {formatCurrency(computeDifference(formik.values, cashier.cash_drawer_balance))} (
                       {(
-                        Math.abs(computeDifference(values, cashier.cash_drawer_balance) / cashier.cash_drawer_balance) *
-                        100
+                        Math.abs(
+                          computeDifference(formik.values, cashier.cash_drawer_balance) / cashier.cash_drawer_balance
+                        ) * 100
                       ).toFixed(2)}
                       %)
                     </TableCell>
@@ -262,30 +240,30 @@ export const CashierCloseOut: React.FC = () => {
                 margin="normal"
                 name="closingOutUserId"
                 label={t("closeOut.closingOutUser")}
-                value={values.closingOutUserId}
-                onBlur={handleBlur}
+                value={formik.values.closingOutUserId}
+                onBlur={formik.handleBlur}
                 filterRole="finanzorga"
-                onChange={(val) => setFieldValue("closingOutUserId", val)}
-                error={touched.closingOutUserId && !!errors.closingOutUserId}
-                helperText={(touched.closingOutUserId && errors.closingOutUserId) as string}
+                onChange={(val) => formik.setFieldValue("closingOutUserId", val)}
+                error={formik.touched.closingOutUserId && !!formik.errors.closingOutUserId}
+                helperText={(formik.touched.closingOutUserId && formik.errors.closingOutUserId) as string}
               />
               <CashingTextField
                 multiline
                 fullWidth
                 label={t("closeOut.comment")}
                 name="comment"
-                value={values.comment}
-                onChange={(val) => setFieldValue("comment", val)}
-                error={touched.comment && !!errors.comment}
-                helperText={(touched.comment && errors.comment) as string}
+                value={formik.values.comment}
+                onChange={(val) => formik.setFieldValue("comment", val)}
+                error={formik.touched.comment && !!formik.errors.comment}
+                helperText={(formik.touched.comment && formik.errors.comment) as string}
               />
-              {isSubmitting && <LinearProgress />}
-              <Button type="submit" onClick={() => handleSubmit()} disabled={isSubmitting}>
+              {formik.isSubmitting && <LinearProgress />}
+              <Button type="submit" disabled={formik.isSubmitting}>
                 {t("submit")}
               </Button>
             </Paper>
             <CashierShiftStatsOverview cashierId={cashier.id} />
-          </>
+          </Form>
         )}
       </Formik>
     </Stack>

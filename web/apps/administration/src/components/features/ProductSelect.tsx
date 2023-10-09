@@ -1,33 +1,14 @@
-import { selectProductAll, useListProductsQuery } from "@/api";
+import { Product, selectProductAll, useListProductsQuery } from "@/api";
 import { useCurrentNode } from "@/hooks";
-import {
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  SelectProps,
-} from "@mui/material";
+import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
-export interface ProductSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
-  label: string;
-  value: number | null;
-  helperText?: string;
-  margin?: SelectProps["margin"] | "normal";
-  onChange: (id: number) => void;
-}
+export type ProductSelectProps = Omit<
+  SelectProps<Product, number, false>,
+  "options" | "formatOption" | "multiple" | "getOptionKey"
+>;
 
-export const ProductSelect: React.FC<ProductSelectProps> = ({
-  label,
-  value,
-  onChange,
-  error,
-  helperText,
-  margin,
-  ...props
-}) => {
+export const ProductSelect: React.FC<ProductSelectProps> = (props) => {
   const { currentNode } = useCurrentNode();
   const { products } = useListProductsQuery(
     { nodeId: currentNode.id },
@@ -39,25 +20,13 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({
     }
   );
 
-  const handleChange = (evt: SelectChangeEvent<unknown>) => {
-    if (!isNaN(Number(evt.target.value))) {
-      onChange(Number(evt.target.value));
-    }
-  };
-
   return (
-    <FormControl fullWidth margin={margin} error={error}>
-      <InputLabel variant={props.variant} id="productSelectLabel">
-        {label}
-      </InputLabel>
-      <Select labelId="productSelectLabel" value={value === null ? "" : value} onChange={handleChange} {...props}>
-        {products.map((product) => (
-          <MenuItem key={product.id} value={product.id}>
-            {product.name} ({product.price}€)
-          </MenuItem>
-        ))}
-      </Select>
-      {helperText && <FormHelperText sx={{ ml: 0 }}>{helperText}</FormHelperText>}
-    </FormControl>
+    <Select
+      multiple={false}
+      options={products}
+      getOptionKey={(product: Product) => product.id}
+      formatOption={(product) => `${product.name} (${product.price})€`}
+      {...props}
+    />
   );
 };

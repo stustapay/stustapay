@@ -1,47 +1,34 @@
 import { NewTillProfile } from "@/api";
 import { RoleSelect, TillLayoutSelect } from "@/components/features";
-import { Checkbox, FormControlLabel, FormGroup, TextField } from "@mui/material";
+import { Checkbox, FormControlLabel, FormGroup } from "@mui/material";
+import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
 export type TillProfileFormProps<T extends NewTillProfile> = FormikProps<T>;
 
-export function TillProfileForm<T extends NewTillProfile>({
-  handleBlur,
-  handleChange,
-  values,
-  touched,
-  errors,
-  setFieldValue,
-}: TillProfileFormProps<T>) {
+export function TillProfileForm<T extends NewTillProfile>(props: TillProfileFormProps<T>) {
+  const { values, handleChange, touched, errors, setFieldValue } = props;
   const { t } = useTranslation();
   return (
     <>
-      <TextField
+      <FormTextField
         variant="standard"
         margin="normal"
         fullWidth
         autoFocus
         name="name"
         label={t("profile.name")}
-        error={touched.name && !!errors.name}
-        helperText={(touched.name && errors.name) as string}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        value={values.name}
+        formik={props}
       />
 
-      <TextField
+      <FormTextField
         variant="standard"
         margin="normal"
         fullWidth
         name="description"
         label={t("profile.description")}
-        error={touched.description && !!errors.description}
-        helperText={(touched.description && errors.description) as string}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        value={values.description}
+        formik={props}
       />
 
       <FormGroup>

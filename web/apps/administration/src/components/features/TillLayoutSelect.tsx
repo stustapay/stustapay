@@ -1,33 +1,14 @@
-import { selectTillLayoutAll, useListTillLayoutsQuery } from "@/api";
+import { TillLayout, selectTillLayoutAll, useListTillLayoutsQuery } from "@/api";
 import { useCurrentNode } from "@/hooks";
-import {
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  SelectProps,
-} from "@mui/material";
+import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
-export interface TillLayoutSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
-  label: string;
-  value?: number;
-  helperText?: string;
-  margin?: SelectProps["margin"] | "normal";
-  onChange: (id: number) => void;
-}
+export type TillLayoutSelectProps = Omit<
+  SelectProps<TillLayout, number, false>,
+  "options" | "formatOption" | "multiple" | "getOptionKey"
+>;
 
-export const TillLayoutSelect: React.FC<TillLayoutSelectProps> = ({
-  label,
-  value,
-  onChange,
-  error,
-  helperText,
-  margin,
-  ...props
-}) => {
+export const TillLayoutSelect: React.FC<TillLayoutSelectProps> = (props) => {
   const { currentNode } = useCurrentNode();
   const { layouts } = useListTillLayoutsQuery(
     { nodeId: currentNode.id },
@@ -39,25 +20,13 @@ export const TillLayoutSelect: React.FC<TillLayoutSelectProps> = ({
     }
   );
 
-  const handleChange = (evt: SelectChangeEvent<unknown>) => {
-    if (!isNaN(Number(evt.target.value))) {
-      onChange(Number(evt.target.value));
-    }
-  };
-
   return (
-    <FormControl fullWidth margin={margin} error={error}>
-      <InputLabel variant={props.variant} id="tillLayoutSelectLabel">
-        {label}
-      </InputLabel>
-      <Select labelId="tillLayoutSelectLabel" value={value ?? ""} onChange={handleChange} {...props}>
-        {layouts.map((layout) => (
-          <MenuItem key={layout.id} value={layout.id}>
-            {layout.name}
-          </MenuItem>
-        ))}
-      </Select>
-      {helperText && <FormHelperText sx={{ ml: 0 }}>{helperText}</FormHelperText>}
-    </FormControl>
+    <Select
+      multiple={false}
+      options={layouts}
+      getOptionKey={(layout: TillLayout) => layout.id}
+      formatOption={(layout: TillLayout) => layout.name}
+      {...props}
+    />
   );
 };

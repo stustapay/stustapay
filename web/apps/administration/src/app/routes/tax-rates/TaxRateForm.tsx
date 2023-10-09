@@ -1,60 +1,41 @@
-import { TextField } from "@mui/material";
-import { NumericInput } from "@stustapay/components";
+import { FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { TaxRate } from "@stustapay/models";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
 export type TaxRateFormProps<T extends TaxRate> = FormikProps<T>;
 
-export function TaxRateForm<T extends TaxRate>({
-  handleBlur,
-  handleChange,
-  values,
-  touched,
-  errors,
-  setFieldValue,
-}: TaxRateFormProps<T>) {
+export function TaxRateForm<T extends TaxRate>(props: TaxRateFormProps<T>) {
   const { t } = useTranslation();
 
   return (
     <>
-      <TextField
+      <FormTextField
         variant="standard"
         margin="normal"
         fullWidth
         autoFocus
         name="name"
         label={t("taxRateName")}
-        error={touched.name && !!errors.name}
-        helperText={(touched.name && errors.name) as string}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        value={values.name}
+        formik={props}
       />
 
-      <NumericInput
+      <FormNumericInput
         variant="standard"
         margin="normal"
         fullWidth
         name="rate"
         label={t("taxRateRate")}
-        error={touched.rate && !!errors.rate}
-        helperText={(touched.rate && errors.rate) as string}
-        onChange={(value) => setFieldValue("rate", value)}
-        value={values.rate}
+        formik={props}
       />
 
-      <TextField
+      <FormTextField
         variant="standard"
         margin="normal"
         fullWidth
         name="description"
         label={t("taxRateDescription")}
-        error={touched.description && !!errors.description}
-        helperText={(touched.description && errors.description) as string}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        value={values.description}
+        formik={props}
       />
     </>
   );

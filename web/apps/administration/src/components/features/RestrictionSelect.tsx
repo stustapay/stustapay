@@ -1,68 +1,20 @@
 import { ProductRestriction } from "@/api";
-import {
-  Checkbox,
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  ListItemText,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  SelectProps,
-} from "@mui/material";
+import { Select, SelectProps } from "@stustapay/components";
 import { ProductRestrictions } from "@stustapay/models";
-import * as React from "react";
 
-export interface RestrictionSelectProps
-  extends Omit<SelectProps, "value" | "onChange" | "margin" | "multiple" | "renderValue"> {
-  label: string;
-  multiple?: boolean;
-  value: ProductRestriction[];
-  helperText?: string;
-  margin?: SelectProps["margin"] | "normal";
-  onChange: (restrictions: ProductRestriction[]) => void;
-}
+export type RestrictionSelectProps<Multiple extends boolean> = Omit<
+  SelectProps<ProductRestriction, ProductRestriction, Multiple>,
+  "options" | "formatOption" | "getOptionKey"
+>;
 
-export const RestrictionSelect: React.FC<RestrictionSelectProps> = ({
-  label,
-  value,
-  onChange,
-  error,
-  helperText,
-  margin,
-  multiple = true,
-  ...props
-}) => {
-  const handleChange = (evt: SelectChangeEvent<unknown>) => {
-    const val = evt.target.value;
-    if (typeof val === "string") {
-      onChange(val.split(",") as ProductRestriction[]); // TODO: remove cast
-    } else {
-      onChange(val as ProductRestriction[]);
-    }
-  };
-
+export function RestrictionSelect<Multiple extends boolean>(props: RestrictionSelectProps<Multiple>) {
   return (
-    <FormControl fullWidth margin={margin} error={error}>
-      <InputLabel variant={props.variant} id="restrictionSelectLabel">
-        {label}
-      </InputLabel>
-      <Select
-        labelId="restrictionSelectLabel"
-        value={value}
-        onChange={handleChange}
-        renderValue={(selected) => (selected as string[]).join(", ")}
-        multiple={multiple}
-        {...props}
-      >
-        {ProductRestrictions.map((restriction) => (
-          <MenuItem key={restriction} value={restriction}>
-            {multiple && <Checkbox checked={value.includes(restriction)} />}
-            <ListItemText primary={restriction} />
-          </MenuItem>
-        ))}
-      </Select>
-      {helperText && <FormHelperText sx={{ ml: 0 }}>{helperText}</FormHelperText>}
-    </FormControl>
+    <Select
+      checkboxes={true}
+      options={ProductRestrictions}
+      getOptionKey={(restriction: ProductRestriction) => restriction}
+      formatOption={(restriction: ProductRestriction) => restriction}
+      {...props}
+    />
   );
-};
+}

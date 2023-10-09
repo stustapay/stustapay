@@ -8,9 +8,10 @@ import {
 import { TillLayoutRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Button, LinearProgress, Paper, Tab, TextField, Typography } from "@mui/material";
+import { Box, Button, LinearProgress, Paper, Tab, Typography } from "@mui/material";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
 import { Loading } from "@stustapay/components";
+import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -85,35 +86,27 @@ export function TillLayoutChange<T extends NewTillLayout>({
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(validationSchema)}
     >
-      {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, setFieldValue, errors, touched }) => (
-        <Form onSubmit={handleSubmit}>
+      {(formik) => (
+        <Form onSubmit={formik.handleSubmit}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h5">{headerTitle}</Typography>
-            <TextField
+            <FormTextField
               variant="standard"
               margin="normal"
               fullWidth
               autoFocus
               name="name"
               label={t("layout.name")}
-              error={touched.name && !!errors.name}
-              helperText={(touched.name && errors.name) as string}
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.name}
+              formik={formik}
             />
 
-            <TextField
+            <FormTextField
               variant="standard"
               margin="normal"
               fullWidth
               name="description"
               label={t("layout.description")}
-              error={touched.description && !!errors.description}
-              helperText={(touched.description && errors.description) as string}
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.description}
+              formik={formik}
             />
           </Paper>
           <Paper sx={{ mt: 2 }}>
@@ -126,23 +119,30 @@ export function TillLayoutChange<T extends NewTillLayout>({
               </Box>
               <TabPanel value="buttons">
                 <TillLayoutDesigner
-                  selectedIds={values.button_ids == null ? [] : values.button_ids}
-                  onChange={(buttonIds) => setFieldValue("button_ids", buttonIds)}
+                  selectedIds={formik.values.button_ids == null ? [] : formik.values.button_ids}
+                  onChange={(buttonIds) => formik.setFieldValue("button_ids", buttonIds)}
                   selectables={buttons}
                 />
               </TabPanel>
               <TabPanel value="tickets">
                 <TillLayoutDesigner
-                  selectedIds={values.ticket_ids == null ? [] : values.ticket_ids}
-                  onChange={(ticketIds) => setFieldValue("ticket_ids", ticketIds)}
+                  selectedIds={formik.values.ticket_ids == null ? [] : formik.values.ticket_ids}
+                  onChange={(ticketIds) => formik.setFieldValue("ticket_ids", ticketIds)}
                   selectables={tickets.map((t) => ({ id: t.id, name: t.name, price: t.total_price }))}
                 />
               </TabPanel>
             </TabContext>
           </Paper>
           <Paper sx={{ mt: 2, p: 2 }}>
-            {isSubmitting && <LinearProgress />}
-            <Button type="submit" fullWidth variant="contained" color="primary" disabled={isSubmitting} sx={{ mt: 1 }}>
+            {formik.isSubmitting && <LinearProgress />}
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              disabled={formik.isSubmitting}
+              sx={{ mt: 1 }}
+            >
               {submitLabel}
             </Button>
           </Paper>

@@ -1,7 +1,8 @@
 import { useLoginMutation } from "@/api";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
-import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, TextField, Typography } from "@mui/material";
+import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, Typography } from "@mui/material";
+import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import React, { useEffect } from "react";
@@ -66,10 +67,10 @@ export const Login: React.FC = () => {
           onSubmit={handleSubmit}
           validationSchema={toFormikValidationSchema(validationSchema)}
         >
-          {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, errors, touched }) => (
-            <Form onSubmit={handleSubmit}>
+          {(formik) => (
+            <Form onSubmit={formik.handleSubmit}>
               <input type="hidden" name="remember" value="true" />
-              <TextField
+              <FormTextField
                 variant="outlined"
                 margin="normal"
                 required
@@ -78,14 +79,10 @@ export const Login: React.FC = () => {
                 type="text"
                 label={t("auth.username")}
                 name="username"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.username}
-                error={touched.username && !!errors.username}
-                helperText={(touched.username && errors.username) as string}
+                formik={formik}
               />
 
-              <TextField
+              <FormTextField
                 variant="outlined"
                 margin="normal"
                 required
@@ -93,20 +90,16 @@ export const Login: React.FC = () => {
                 type="password"
                 name="password"
                 label={t("auth.password")}
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.password}
-                error={touched.password && !!errors.password}
-                helperText={(touched.password && errors.password) as string}
+                formik={formik}
               />
 
-              {isSubmitting && <LinearProgress />}
+              {formik.isSubmitting && <LinearProgress />}
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
                 color="primary"
-                disabled={isSubmitting}
+                disabled={formik.isSubmitting}
                 sx={{ mt: 1 }}
               >
                 {t("auth.login")}
