@@ -48,8 +48,9 @@ from stustapay.core.service.order.order import (
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
-from .common import TerminalTestCase
+
 from ..core.schema.account import AccountType
+from .common import TerminalTestCase
 
 START_BALANCE = 100
 

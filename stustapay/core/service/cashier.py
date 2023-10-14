@@ -16,6 +16,9 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.framework.database import Connection
+
+from ..schema.account import AccountType
+from ..schema.tree import Node
 from .account import get_system_account_for_node
 from .common.error import NotFound, ServiceException
 from .order.booking import (
@@ -27,8 +30,6 @@ from .order.booking import (
 )
 from .product import fetch_money_difference_product, fetch_product
 from .user import AuthService
-from ..schema.account import AccountType
-from ..schema.tree import Node
 
 
 class InvalidCloseOutException(ServiceException):
