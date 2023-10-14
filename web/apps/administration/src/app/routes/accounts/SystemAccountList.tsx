@@ -1,6 +1,6 @@
 import { selectAccountAll, useListSystemAccountsQuery } from "@/api";
 import { ListLayout } from "@/components";
-import { useCurrentNode } from "@hooks";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

@@ -1,7 +1,7 @@
+import { useCreateTaxRateMutation } from "@/api";
 import { TaxRateRoutes } from "@/app/routes";
-import { useCreateTaxRateMutation } from "@api";
-import { CreateLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { TaxRate, TaxRateSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

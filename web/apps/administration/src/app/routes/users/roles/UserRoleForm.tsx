@@ -1,35 +1,18 @@
 import { NewUserRole } from "@/api";
 import { PrivilegeSelect } from "@/components/features";
-import { Checkbox, FormControlLabel, TextField } from "@mui/material";
+import { Checkbox, FormControlLabel } from "@mui/material";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
+import { FormTextField } from "@stustapay/form-components";
 
 export type UserRoleFormProps<T extends NewUserRole> = FormikProps<T>;
 
-export function UserRoleForm<T extends NewUserRole>({
-  handleBlur,
-  handleChange,
-  values,
-  touched,
-  errors,
-  setFieldValue,
-}: UserRoleFormProps<T>) {
+export function UserRoleForm<T extends NewUserRole>(props: UserRoleFormProps<T>) {
   const { t } = useTranslation();
+  const { values, setFieldValue, touched, errors } = props;
   return (
     <>
-      <TextField
-        variant="standard"
-        margin="normal"
-        fullWidth
-        autoFocus
-        name="name"
-        label={t("userRole.name")}
-        error={touched.name && !!errors.name}
-        helperText={(touched.name && errors.name) as string}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        value={values.name}
-      />
+      <FormTextField autoFocus name="name" label={t("userRole.name")} formik={props} />
       <FormControlLabel
         label={t("userRole.isPrivileged")}
         control={
@@ -42,8 +25,6 @@ export function UserRoleForm<T extends NewUserRole>({
 
       <PrivilegeSelect
         label={t("userRole.privileges")}
-        variant="standard"
-        margin="normal"
         value={values.privileges}
         onChange={(val) => setFieldValue("privileges", val)}
         error={touched.privileges && !!errors.privileges}

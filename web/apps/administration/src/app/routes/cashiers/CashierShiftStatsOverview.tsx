@@ -1,9 +1,9 @@
-import { CashierShiftStats, useGetCashierShiftStatsQuery } from "@api";
-import * as React from "react";
-import { Loading } from "@stustapay/components";
+import { CashierShiftStats, useGetCashierShiftStatsQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useCurrentNode } from "@hooks";
 
 export interface CashierShiftStatsOverview {
   cashierId: number;

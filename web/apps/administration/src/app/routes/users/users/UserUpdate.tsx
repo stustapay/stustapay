@@ -1,7 +1,7 @@
 import { useGetUserQuery, useUpdateUserMutation } from "@/api";
 import { UserRoutes } from "@/app/routes";
-import { EditLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UserSchema } from "@stustapay/models";
 import * as React from "react";

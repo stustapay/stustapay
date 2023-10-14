@@ -1,4 +1,4 @@
-import { MarkdownEditor } from "@components";
+import { MarkdownEditor } from "@/components";
 import * as React from "react";
 
 export const TabMail: React.FC = () => {

@@ -1,5 +1,5 @@
-import * as React from "react";
-import { List, ListItemIcon, ListItemText } from "@mui/material";
+import { ExpandableLinkMenu, ListItemLink } from "@/components";
+import { selectCurrentUser, useAppSelector } from "@/store";
 import {
   AccountBalance as AccountBalanceIcon,
   AddShoppingCart as AddShoppingCartIcon,
@@ -13,10 +13,10 @@ import {
   Settings as SettingsIcon,
   ShoppingCart as ShoppingCartIcon,
 } from "@mui/icons-material";
-import { ExpandableLinkMenu, ListItemLink } from "@components";
-import { useTranslation } from "react-i18next";
+import { List, ListItemIcon, ListItemText } from "@mui/material";
 import { CurrentUser } from "@stustapay/models";
-import { selectCurrentUser, useAppSelector } from "@/store";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 const AdvancedMenu: React.FC<{ user: CurrentUser }> = ({ user }) => {
   const { t } = useTranslation();

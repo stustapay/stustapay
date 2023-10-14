@@ -1,5 +1,6 @@
 import { Event, useUpdateEventMutation } from "@/api";
-import { Button, LinearProgress, Stack, TextField } from "@mui/material";
+import { Button, LinearProgress, Stack } from "@mui/material";
+import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -36,25 +37,21 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; event: Event }> = ({ 
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(CustomerPortalSettingsSchema)}
     >
-      {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, errors, touched, setFieldValue }) => (
-        <Form onSubmit={handleSubmit}>
+      {(formik) => (
+        <Form onSubmit={formik.handleSubmit}>
           <Stack spacing={2}>
-            <TextField
+            <FormTextField
               label={t("settings.customerPortal.contact_email")}
               name="customer_portal_contact_email"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.customer_portal_contact_email}
-              error={touched.customer_portal_contact_email && !!errors.customer_portal_contact_email}
-              helperText={(touched.customer_portal_contact_email && errors.customer_portal_contact_email) as string}
+              formik={formik}
             />
 
-            {isSubmitting && <LinearProgress />}
+            {formik.isSubmitting && <LinearProgress />}
             <Button
               type="submit"
               color="primary"
               variant="contained"
-              disabled={isSubmitting || Object.keys(touched).length === 0}
+              disabled={formik.isSubmitting || Object.keys(formik.touched).length === 0}
             >
               {t("save")}
             </Button>

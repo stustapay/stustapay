@@ -1,14 +1,15 @@
-import React, { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Form, Formik, FormikHelpers } from "formik";
-import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, TextField, Typography } from "@mui/material";
-import { z } from "zod";
-import { selectIsAuthenticated, useAppSelector } from "@store";
+import { useLoginMutation } from "@/api";
+import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
-import { useLoginMutation } from "@api";
+import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, Typography } from "@mui/material";
+import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { toast } from "react-toastify";
+import { Form, Formik, FormikHelpers } from "formik";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const validationSchema = z.object({
   username: z.string(),
@@ -66,47 +67,33 @@ export const Login: React.FC = () => {
           onSubmit={handleSubmit}
           validationSchema={toFormikValidationSchema(validationSchema)}
         >
-          {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, errors, touched }) => (
-            <Form onSubmit={handleSubmit}>
+          {(formik) => (
+            <Form onSubmit={formik.handleSubmit}>
               <input type="hidden" name="remember" value="true" />
-              <TextField
+              <FormTextField
                 variant="outlined"
-                margin="normal"
-                required
-                fullWidth
                 autoFocus
                 type="text"
                 label={t("auth.username")}
                 name="username"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.username}
-                error={touched.username && !!errors.username}
-                helperText={(touched.username && errors.username) as string}
+                formik={formik}
               />
 
-              <TextField
+              <FormTextField
                 variant="outlined"
-                margin="normal"
-                required
-                fullWidth
                 type="password"
                 name="password"
                 label={t("auth.password")}
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.password}
-                error={touched.password && !!errors.password}
-                helperText={(touched.password && errors.password) as string}
+                formik={formik}
               />
 
-              {isSubmitting && <LinearProgress />}
+              {formik.isSubmitting && <LinearProgress />}
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
                 color="primary"
-                disabled={isSubmitting}
+                disabled={formik.isSubmitting}
                 sx={{ mt: 1 }}
               >
                 {t("auth.login")}

@@ -62,7 +62,9 @@ export function ChangeLayout<T extends Record<string, any>>({
           <Form onSubmit={props.handleSubmit}>
             <Stack spacing={2}>
               <Paper sx={{ p: 3 }}>
-                <ChildForm {...props} />
+                <Stack spacing={2}>
+                  <ChildForm {...props} />
+                </Stack>
                 {props.isSubmitting && <LinearProgress />}
               </Paper>
               <Button type="submit" fullWidth variant="contained" color="primary" disabled={props.isSubmitting}>

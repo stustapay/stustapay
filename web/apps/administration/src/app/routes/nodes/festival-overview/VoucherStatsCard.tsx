@@ -1,9 +1,9 @@
-import * as React from "react";
-import { Grid, Alert, Card, CardContent, Typography } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { useGetProductStatsQuery } from "@api";
+import { useGetProductStatsQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
+import { Alert, Card, CardContent, Grid, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { useCurrentNode } from "@hooks";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 export interface VoucherStatsCardProps {
   fromTimestamp?: string;

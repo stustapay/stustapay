@@ -1,7 +1,7 @@
+import { useCreateProductMutation } from "@/api";
 import { ProductRoutes } from "@/app/routes";
-import { useCreateProductMutation } from "@api";
-import { CreateLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { NewProduct, NewProductSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

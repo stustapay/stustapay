@@ -1,11 +1,11 @@
+import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@/api";
 import { AccountRoutes } from "@/app/routes";
-import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@api";
-import { DetailLayout, EditableListItem, ListItemLink } from "@components";
-import { useCurrentNode } from "@hooks";
+import { DetailLayout, EditableListItem, ListItemLink } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DataGridTitle, Loading } from "@stustapay/components";
-import { formatUserTagUid, UserTagDetail as UserTagDetailType } from "@stustapay/models";
+import { UserTagDetail as UserTagDetailType, formatUserTagUid } from "@stustapay/models";
 import { ArrayElement, formatDate } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

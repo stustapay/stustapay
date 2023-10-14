@@ -1,12 +1,12 @@
-import { Account, selectAccountById, useListSystemAccountsQuery } from "@api";
+import { Account, selectAccountById, useListSystemAccountsQuery } from "@/api";
+import { AccountRoutes } from "@/app/routes";
+import { ButtonLink } from "@/components";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Card, CardActions, CardContent, Grid, Typography } from "@mui/material";
-import * as React from "react";
 import { Loading } from "@stustapay/components";
 import { SystemAccounts } from "@stustapay/models";
-import { useCurrencyFormatter, useCurrentNode } from "@hooks";
-import { ButtonLink } from "@components";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { AccountRoutes } from "@/app/routes";
 
 interface BalanceCardProps {
   account?: Account;

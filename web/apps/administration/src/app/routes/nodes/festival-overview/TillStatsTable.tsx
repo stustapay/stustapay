@@ -1,11 +1,11 @@
+import { ProductSoldStats, selectTillAll, useGetProductStatsQuery, useListTillsQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
 import { Box, FormControl, InputLabel, Link, MenuItem, Paper, Select, Stack, Typography } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { ProductSoldStats, selectTillAll, useGetProductStatsQuery, useListTillsQuery } from "@api";
-import { Loading } from "@stustapay/components";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Link as RouterLink } from "react-router-dom";
-import { useCurrentNode } from "@hooks";
 
 export interface TillStatsTableProps {
   fromTimestamp?: string;

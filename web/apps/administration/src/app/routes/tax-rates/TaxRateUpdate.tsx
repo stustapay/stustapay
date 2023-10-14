@@ -1,7 +1,7 @@
+import { useGetTaxRateQuery, useUpdateTaxRateMutation } from "@/api";
 import { TaxRateRoutes } from "@/app/routes";
-import { useGetTaxRateQuery, useUpdateTaxRateMutation } from "@api";
-import { EditLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { TaxRate, TaxRateSchema } from "@stustapay/models";
 import * as React from "react";

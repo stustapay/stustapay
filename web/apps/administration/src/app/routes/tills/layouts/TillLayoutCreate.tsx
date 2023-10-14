@@ -1,9 +1,9 @@
-import * as React from "react";
+import { useCreateTillLayoutMutation } from "@/api";
+import { useCurrentNode } from "@/hooks";
 import { NewTillLayout, NewTillLayoutSchema } from "@stustapay/models";
-import { useCreateTillLayoutMutation } from "@api";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { TillLayoutChange } from "./TillLayoutChange";
-import { useCurrentNode } from "@hooks";
 
 const initialValues: NewTillLayout = {
   name: "",

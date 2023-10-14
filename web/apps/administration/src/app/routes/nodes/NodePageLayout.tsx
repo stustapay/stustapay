@@ -1,4 +1,4 @@
-import { useNode } from "@api/nodes";
+import { useNode } from "@/api/nodes";
 import {
   Dashboard as DashboardIcon,
   Leaderboard as LeaderboardIcon,

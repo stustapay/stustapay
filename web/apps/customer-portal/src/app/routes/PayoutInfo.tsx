@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useGetCustomerQuery, useUpdateCustomerInfoDonateAllMutation, useUpdateCustomerInfoMutation } from "@/api";
-import { Loading, NumericInput } from "@stustapay/components";
+import { Loading } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { Link as RouterLink, Navigate, useNavigate } from "react-router-dom";
@@ -15,7 +15,6 @@ import {
   InputAdornment,
   Link,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
 import { Formik, FormikHelpers } from "formik";
@@ -24,6 +23,7 @@ import { z } from "zod";
 import iban from "iban";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
+import { FormTextField, FormNumericInput } from "@stustapay/form-components";
 
 export const PayoutInfo: React.FC = () => {
   const { t } = useTranslation();
@@ -140,45 +140,14 @@ export const PayoutInfo: React.FC = () => {
           {(formik) => (
             <form onSubmit={formik.handleSubmit}>
               <Stack spacing={2}>
-                <TextField
-                  id="iban"
-                  name="iban"
-                  label={t("payout.iban")}
-                  variant="outlined"
-                  required
-                  fullWidth
-                  value={formik.values.iban}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.iban && Boolean(formik.errors.iban)}
-                  helperText={formik.touched.iban && formik.errors.iban}
-                />
-                <TextField
-                  id="account_name"
+                <FormTextField name="iban" label={t("payout.iban")} variant="outlined" formik={formik} />
+                <FormTextField
                   name="account_name"
                   label={t("payout.bankAccountHolder")}
                   variant="outlined"
-                  required
-                  fullWidth
-                  value={formik.values.account_name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.account_name && Boolean(formik.errors.account_name)}
-                  helperText={formik.touched.account_name && formik.errors.account_name}
+                  formik={formik}
                 />
-                <TextField
-                  id="email"
-                  name="email"
-                  label={t("payout.email")}
-                  variant="outlined"
-                  required
-                  fullWidth
-                  value={formik.values.email}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.email && Boolean(formik.errors.email)}
-                  helperText={formik.touched.email && formik.errors.email}
-                />
+                <FormTextField name="email" label={t("payout.email")} variant="outlined" formik={formik} />
                 <FormControl error={Boolean(formik.errors.privacy_policy)}>
                   <FormControlLabel
                     control={
@@ -205,18 +174,14 @@ export const PayoutInfo: React.FC = () => {
                   )}
                 </FormControl>
                 <Typography>{t("payout.donationDescription")}</Typography>
-                <NumericInput
+                <FormNumericInput
                   name="donation"
                   label={t("payout.donationAmount") + `(max ${formatCurrency(customer.balance)})`}
                   variant="outlined"
-                  fullWidth
-                  value={formik.values.donation}
-                  onChange={(val) => formik.setFieldValue("donation", val)}
+                  formik={formik}
                   InputProps={{
                     endAdornment: <InputAdornment position="end">{config.currency_symbol}</InputAdornment>,
                   }}
-                  error={formik.touched.donation && Boolean(formik.errors.donation)}
-                  helperText={(formik.touched.donation && formik.errors.donation) as string}
                 />
                 <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
                   {formik.isSubmitting ? "Submitting" : t("payout.submitPayoutData")}

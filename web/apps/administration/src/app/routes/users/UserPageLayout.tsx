@@ -1,11 +1,11 @@
-import { useNode } from "@api/nodes";
+import { useNode } from "@/api/nodes";
+import { UserRoleRoutes, UserRoutes } from "@/app/routes";
 import { Person as PersonIcon } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, useLocation, useParams, Link as RouterLink } from "react-router-dom";
-import { Loading } from "@stustapay/components";
-import { UserRoleRoutes, UserRoutes } from "@/app/routes";
+import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
 
 const getActiveTab = (location: string) => {
   if (location.startsWith(UserRoleRoutes.list())) {

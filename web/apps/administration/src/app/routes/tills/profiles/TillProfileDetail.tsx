@@ -7,7 +7,7 @@ import {
 import { TillLayoutRoutes, TillProfileRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler } from "@/components";
 import { DetailLayout } from "@/components/layouts";
-import { useCurrentNode } from "@hooks";
+import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Checkbox, Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";

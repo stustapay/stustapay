@@ -1,6 +1,6 @@
-import { useLogoutMutation } from "@api";
+import { useLogoutMutation } from "@/api";
+import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { Loading } from "@stustapay/components";
-import { selectIsAuthenticated, useAppSelector } from "@store";
 import * as React from "react";
 import { Navigate } from "react-router-dom";
 

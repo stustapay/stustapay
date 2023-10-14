@@ -34,7 +34,8 @@ const accountAdapter = createEntityAdapter<Account>({
 });
 
 const userTagAdapter = createEntityAdapter<UserTagDetail>({
-  sortComparer: (a, b) => (a.user_tag_uid_hex?.toLowerCase() ?? "").localeCompare(b.user_tag_uid_hex?.toLowerCase() ?? ""),
+  sortComparer: (a, b) =>
+    (a.user_tag_uid_hex?.toLowerCase() ?? "").localeCompare(b.user_tag_uid_hex?.toLowerCase() ?? ""),
 });
 
 const userRoleAdapter = createEntityAdapter<UserRole>({
@@ -258,5 +259,10 @@ export const { selectUserTagAll, selectUserTagEntities, selectUserTagTotal, sele
 export const { selectTseAll, selectTseById, selectTseEntities, selectTseIds, selectTseTotal } =
   convertEntityAdaptorSelectors("Tse", tseAdapter.getSelectors());
 
-export const { selectPayoutRunAll, selectPayoutRunById, selectPayoutRunEntities, selectPayoutRunIds, selectPayoutRunTotal } =
-  convertEntityAdaptorSelectors("PayoutRun", payoutRunAdaptor.getSelectors());
+export const {
+  selectPayoutRunAll,
+  selectPayoutRunById,
+  selectPayoutRunEntities,
+  selectPayoutRunIds,
+  selectPayoutRunTotal,
+} = convertEntityAdaptorSelectors("PayoutRun", payoutRunAdaptor.getSelectors());

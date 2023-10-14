@@ -1,11 +1,11 @@
 import * as React from "react";
 import { useGetCustomerQuery } from "@/api/customerApi";
-import { Loading, NumericInput } from "@stustapay/components";
+import { Loading } from "@stustapay/components";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { Link as RouterLink, Navigate } from "react-router-dom";
 import { Alert, AlertTitle, Box, Button, Grid, InputAdornment, LinearProgress, Link, Stack } from "@mui/material";
-import { Formik, FormikHelpers } from "formik";
+import { Formik, FormikHelpers, Form } from "formik";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { z } from "zod";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
@@ -13,6 +13,7 @@ import { useCreateCheckoutMutation, useUpdateCheckoutMutation } from "@/api/topu
 import i18n from "@/i18n";
 import type { SumUpCard, SumUpResponseType } from "./SumUpCard";
 import { Cancel as CancelIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
+import { FormNumericInput } from "@stustapay/form-components";
 
 const TopUpSchema = z.object({
   amount: z.number().int(i18n.t("topup.errorAmountMustBeIntegral")).positive(i18n.t("topup.errorAmountGreaterZero")),
@@ -196,28 +197,24 @@ export const TopUp: React.FC = () => {
             validationSchema={toFormikValidationSchema(TopUpSchema)}
             onSubmit={onSubmit}
           >
-            {({ handleSubmit, values, setFieldValue, touched, errors, isSubmitting }) => (
-              <form onSubmit={handleSubmit}>
+            {(formik) => (
+              <Form onSubmit={formik.handleSubmit}>
                 <Stack spacing={2}>
-                  <NumericInput
+                  <FormNumericInput
                     name="amount"
                     label={t("topup.amount")}
                     variant="outlined"
-                    fullWidth
-                    value={values.amount}
-                    onChange={(val) => setFieldValue("amount", val)}
+                    formik={formik}
                     InputProps={{
                       endAdornment: <InputAdornment position="end">{config.currency_symbol}</InputAdornment>,
                     }}
-                    error={touched.amount && Boolean(errors.amount)}
-                    helperText={(touched.amount && errors.amount) as string}
                   />
-                  {isSubmitting && <LinearProgress />}
-                  <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
+                  {formik.isSubmitting && <LinearProgress />}
+                  <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
                     {t("topup.next")}
                   </Button>
                 </Stack>
-              </form>
+              </Form>
             )}
           </Formik>
         </Container>

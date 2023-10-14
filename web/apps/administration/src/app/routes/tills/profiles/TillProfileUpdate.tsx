@@ -1,7 +1,7 @@
+import { useGetTillProfileQuery, useUpdateTillProfileMutation } from "@/api";
 import { TillProfileRoutes } from "@/app/routes";
-import { useGetTillProfileQuery, useUpdateTillProfileMutation } from "@api";
-import { EditLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { TillProfileSchema } from "@stustapay/models";
 import * as React from "react";

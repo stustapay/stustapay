@@ -1,7 +1,7 @@
+import { useGetTillButtonQuery, useUpdateTillButtonMutation } from "@/api";
 import { TillButtonsRoutes } from "@/app/routes";
-import { useGetTillButtonQuery, useUpdateTillButtonMutation } from "@api";
-import { EditLayout } from "@components";
-import { useCurrentNode } from "@hooks";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTillButtonSchema } from "@stustapay/models";
 import * as React from "react";

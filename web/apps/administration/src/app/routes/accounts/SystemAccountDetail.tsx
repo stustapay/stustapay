@@ -1,6 +1,6 @@
-import { Account } from "@api";
-import { DetailLayout } from "@components";
-import { useCurrencyFormatter } from "@hooks";
+import { Account } from "@/api";
+import { DetailLayout } from "@/components";
+import { useCurrencyFormatter } from "@/hooks";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

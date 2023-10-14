@@ -1,13 +1,13 @@
-import * as React from "react";
+import { useGetOrderQuery } from "@/api";
+import { ListItemLink } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Alert, List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { formatUserTagUid } from "@stustapay/models";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetOrderQuery } from "@api";
-import { Loading } from "@stustapay/components";
-import { ListItemLink } from "@components";
-import { formatUserTagUid } from "@stustapay/models";
 import { LineItemEdit } from "./LineItemEdit";
-import { useCurrentNode } from "@hooks";
 
 export const SaleEdit: React.FC = () => {
   const { t } = useTranslation();

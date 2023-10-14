@@ -1,10 +1,10 @@
-import * as React from "react";
-import { Link as RouterLink, Outlet, Navigate, useSearchParams } from "react-router-dom";
+import { config } from "@/api/common";
+import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { AppBar, Box, Button, CircularProgress, Container, CssBaseline, Toolbar, Typography } from "@mui/material";
-import { selectIsAuthenticated, useAppSelector } from "@store";
-import { useTranslation } from "react-i18next";
-import { config } from "@api/common";
 import { TestModeDisclaimer } from "@stustapay/components";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, Outlet, Link as RouterLink, useSearchParams } from "react-router-dom";
 
 export const UnauthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();

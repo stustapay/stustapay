@@ -1,4 +1,5 @@
-import * as React from "react";
+import { Account, useUpdateTagUidMutation } from "@/api";
+import { useCurrentNode } from "@/hooks";
 import {
   Button,
   Dialog,
@@ -9,16 +10,15 @@ import {
   ListItem,
   ListItemText,
   Stack,
-  TextField,
 } from "@mui/material";
-import { useTranslation } from "react-i18next";
+import { FormTextField } from "@stustapay/form-components";
 import { formatUserTagUid } from "@stustapay/models";
-import { toast } from "react-toastify";
-import { Account, useUpdateTagUidMutation } from "@api";
-import { Formik, FormikHelpers } from "formik";
-import { z } from "zod";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { useCurrentNode } from "@hooks";
+import { Formik, FormikHelpers } from "formik";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const FormSchema = z.object({
   comment: z.string(),
@@ -66,7 +66,7 @@ export const EditAccountTagModal: React.FC<EditAccountTagModalProps> = ({ accoun
         onSubmit={handleSubmit}
         validationSchema={toFormikValidationSchema(FormSchema)}
       >
-        {({ values, handleBlur, handleChange, handleSubmit, isSubmitting, errors, touched }) => (
+        {(formik) => (
           <>
             <DialogTitle>{t("account.changeTag")}</DialogTitle>
             <DialogContent>
@@ -74,37 +74,21 @@ export const EditAccountTagModal: React.FC<EditAccountTagModalProps> = ({ accoun
                 <ListItemText primary={t("account.oldTagUid")} secondary={formatUserTagUid(account.user_tag_uid_hex)} />
               </ListItem>
               <Stack spacing={1}>
-                <TextField
-                  variant="standard"
-                  fullWidth
+                <FormTextField
                   name="newTagUidHex"
                   inputProps={{ pattern: "[a-f0-9]+" }}
                   label={t("account.newTagUid")}
-                  error={touched.newTagUidHex && !!errors.newTagUidHex}
-                  helperText={(touched.newTagUidHex && errors.newTagUidHex) as string}
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.newTagUidHex}
+                  formik={formik}
                 />
-                <TextField
-                  variant="standard"
-                  fullWidth
-                  name="comment"
-                  label={t("account.history.comment")}
-                  error={touched.comment && !!errors.comment}
-                  helperText={(touched.comment && errors.comment) as string}
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.comment}
-                />
+                <FormTextField name="comment" label={t("account.history.comment")} formik={formik} />
               </Stack>
             </DialogContent>
-            {isSubmitting && <LinearProgress />}
+            {formik.isSubmitting && <LinearProgress />}
             <DialogActions>
               <Button onClick={handleClose} color="error">
                 {t("cancel")}
               </Button>
-              <Button onClick={() => handleSubmit()} disabled={isSubmitting} color="primary">
+              <Button onClick={() => formik.handleSubmit()} disabled={formik.isSubmitting} color="primary">
                 {t("submit")}
               </Button>
             </DialogActions>

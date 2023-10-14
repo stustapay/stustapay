@@ -1,8 +1,8 @@
+import { useCancelOrderMutation, useGetOrderQuery } from "@/api";
 import { OrderRoutes } from "@/app/routes";
-import { useCancelOrderMutation, useGetOrderQuery } from "@api";
-import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout, ListItemLink } from "@components";
-import { LineItemTable } from "@components/LineItemTable";
-import { useCurrentNode } from "@hooks";
+import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout, ListItemLink } from "@/components";
+import { LineItemTable } from "@/components/LineItemTable";
+import { useCurrentNode } from "@/hooks";
 import { Cancel as CancelIcon, Edit as EditIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";

@@ -10,8 +10,8 @@ import {
   useListUsersQuery,
 } from "@/api";
 import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
+import { ButtonLink, DetailLayout, ListItemLink } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { ButtonLink, DetailLayout, ListItemLink } from "@components";
 import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Typography } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";

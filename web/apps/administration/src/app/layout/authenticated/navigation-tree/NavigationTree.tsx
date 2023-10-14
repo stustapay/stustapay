@@ -1,12 +1,6 @@
 import { Node } from "@/api";
+import { findNode, useNodeTree } from "@/api/nodes";
 import { nodeUrlBaseRegex } from "@/app/routes";
-import { findNode, useNodeTree } from "@api/nodes";
-import {
-  ChevronRight as ChevronRightIcon,
-  ExpandMore as ExpandMoreIcon,
-  Folder as FolderIcon,
-} from "@mui/icons-material";
-import { TreeView } from "@mui/lab";
 import {
   extendExpandedNodes,
   selectExpandedNodes,
@@ -15,7 +9,13 @@ import {
   setSelectedNodes,
   useAppDispatch,
   useAppSelector,
-} from "@store";
+} from "@/store";
+import {
+  ChevronRight as ChevronRightIcon,
+  ExpandMore as ExpandMoreIcon,
+  Folder as FolderIcon,
+} from "@mui/icons-material";
+import { TreeView } from "@mui/lab";
 import * as React from "react";
 import { useLocation } from "react-router-dom";
 import { NavigationTreeItem } from "./NavigationTreeItem";

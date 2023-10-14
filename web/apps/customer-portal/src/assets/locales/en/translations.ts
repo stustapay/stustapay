@@ -12,7 +12,8 @@ export const translations = {
   },
   loginFailed: "Login failed: {{reason}}.",
   errorLoadingCustomer: "Error loading customer",
-  payoutInfo: "To get your payout after the festival, please <1>enter your bank account details here</1>. The first payout is scheduled approximately 3 weeks after the end of the festival.",
+  payoutInfo:
+    "To get your payout after the festival, please <1>enter your bank account details here</1>. The first payout is scheduled approximately 3 weeks after the end of the festival.",
   about: "About",
   contact: "Contact",
   wristbandTagExample: "Wristband Tag Example",
@@ -56,7 +57,8 @@ export const translations = {
     mustAcceptPrivacyPolicy: "You must accept the privacy policy",
     privacyPolicyCheck: "I have read and agree to StuStaCulum's <1>privacy policy</1>.",
     errorFetchingData: "Error fetching data.",
-    updatedBankData: "Successfully updated bank data. The first payout is expected to happen approximately 3 weeks after the end of the festival.",
+    updatedBankData:
+      "Successfully updated bank data. The first payout is expected to happen approximately 3 weeks after the end of the festival.",
     errorWhileUpdatingBankData: "Error occurred while updating bank data.",
     donationMustBePositive: "Donation must be positive",
     donationExceedsBalance: "Donation cannot exceed your balance",

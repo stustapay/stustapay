@@ -1,39 +1,21 @@
 import { NewProduct } from "@/api";
 import { RestrictionSelect, TaxRateSelect } from "@/components/features";
 import { useCurrencySymbol } from "@/hooks";
-import { Checkbox, FormControlLabel, InputAdornment, TextField } from "@mui/material";
-import { NumericInput } from "@stustapay/components";
+import { Checkbox, FormControlLabel, InputAdornment } from "@mui/material";
+import { FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
 export type ProductFormProps<T extends NewProduct> = FormikProps<T>;
 
-export function ProductForm<T extends NewProduct>({
-  handleBlur,
-  handleChange,
-  values,
-  touched,
-  errors,
-  setFieldValue,
-}: ProductFormProps<T>) {
+export function ProductForm<T extends NewProduct>(props: ProductFormProps<T>) {
+  const { values, touched, errors, setFieldValue } = props;
   const { t } = useTranslation();
   const currencySymbol = useCurrencySymbol();
 
   return (
     <>
-      <TextField
-        variant="standard"
-        margin="normal"
-        fullWidth
-        autoFocus
-        name="name"
-        label={t("product.name")}
-        error={touched.name && !!errors.name}
-        helperText={(touched.name && errors.name) as string}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        value={values.name}
-      />
+      <FormTextField autoFocus name="name" label={t("product.name")} formik={props} />
 
       <FormControlLabel
         label={t("product.isReturnable")}
@@ -68,38 +50,24 @@ export function ProductForm<T extends NewProduct>({
 
       {values.fixed_price && (
         <>
-          <NumericInput
-            variant="standard"
-            margin="normal"
-            fullWidth
+          <FormNumericInput
             name="price"
             label={t("product.price")}
+            formik={props}
             disabled={values.is_locked}
             InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
-            error={touched.price && !!errors.price}
-            helperText={(touched.price && errors.price) as string}
-            onChange={(value) => setFieldValue("price", value)}
-            value={values.price}
           />
-          <NumericInput
-            variant="standard"
-            margin="normal"
-            fullWidth
+          <FormNumericInput
             name="price_in_vouchers"
             label={t("product.priceInVouchers")}
+            formik={props}
             disabled={values.is_locked}
-            error={touched.price_in_vouchers && !!errors.price_in_vouchers}
-            helperText={(touched.price_in_vouchers && errors.price_in_vouchers) as string}
-            onChange={(value) => setFieldValue("price_in_vouchers", value)}
-            value={values.price_in_vouchers}
           />
         </>
       )}
 
       <TaxRateSelect
         name="tax"
-        margin="normal"
-        variant="standard"
         label={t("product.taxRate")}
         disabled={values.is_locked}
         error={touched.tax_name && !!errors.tax_name}
@@ -110,8 +78,7 @@ export function ProductForm<T extends NewProduct>({
 
       <RestrictionSelect
         label={t("product.restrictions")}
-        margin="normal"
-        variant="standard"
+        multiple={true}
         value={values.restrictions ?? []}
         disabled={values.is_locked}
         onChange={(value) => setFieldValue("restrictions", value)}

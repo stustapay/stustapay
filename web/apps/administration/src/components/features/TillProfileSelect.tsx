@@ -1,33 +1,14 @@
-import {
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  SelectProps,
-} from "@mui/material";
-import { selectTillProfileAll, useListTillProfilesQuery } from "@api";
+import { TillProfile, selectTillProfileAll, useListTillProfilesQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
+import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
-import { useCurrentNode } from "@hooks";
 
-export interface TillProfileSelectProps extends Omit<SelectProps, "value" | "onChange" | "margin"> {
-  label: string;
-  value?: number | null;
-  helperText?: string;
-  margin?: SelectProps["margin"] | "normal";
-  onChange: (id: number) => void;
-}
+export type TillProfileSelectProps = Omit<
+  SelectProps<TillProfile, number, false>,
+  "options" | "formatOption" | "multiple" | "getOptionKey"
+>;
 
-export const TillProfileSelect: React.FC<TillProfileSelectProps> = ({
-  label,
-  value,
-  onChange,
-  error,
-  helperText,
-  margin,
-  ...props
-}) => {
+export const TillProfileSelect: React.FC<TillProfileSelectProps> = (props) => {
   const { currentNode } = useCurrentNode();
   const { profiles } = useListTillProfilesQuery(
     { nodeId: currentNode.id },
@@ -39,25 +20,13 @@ export const TillProfileSelect: React.FC<TillProfileSelectProps> = ({
     }
   );
 
-  const handleChange = (evt: SelectChangeEvent<unknown>) => {
-    if (!isNaN(Number(evt.target.value))) {
-      onChange(Number(evt.target.value));
-    }
-  };
-
   return (
-    <FormControl fullWidth margin={margin} error={error}>
-      <InputLabel variant={props.variant} id="tillProfileSelectLabel">
-        {label}
-      </InputLabel>
-      <Select labelId="tillProfileSelectLabel" value={value != null ? value : ""} onChange={handleChange} {...props}>
-        {profiles.map((profile) => (
-          <MenuItem key={profile.id} value={profile.id}>
-            {profile.name}
-          </MenuItem>
-        ))}
-      </Select>
-      {helperText && <FormHelperText sx={{ ml: 0 }}>{helperText}</FormHelperText>}
-    </FormControl>
+    <Select
+      multiple={false}
+      options={profiles}
+      getOptionKey={(profile: TillProfile) => profile.id}
+      formatOption={(profile: TillProfile) => profile.name}
+      {...props}
+    />
   );
 };

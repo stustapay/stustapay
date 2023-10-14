@@ -1,8 +1,8 @@
 import { useDeleteUserMutation, useGetUserQuery } from "@/api";
 import { UserRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler } from "@/components";
-import { DetailLayout } from "@components/layouts";
-import { useCurrentNode } from "@hooks";
+import { DetailLayout } from "@/components/layouts";
+import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";

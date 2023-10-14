@@ -1,13 +1,13 @@
+import { useGetAccountQuery } from "@/api";
+import { AccountRoutes } from "@/app/routes";
+import { useCurrentNode } from "@/hooks";
+import { Alert, AlertTitle } from "@mui/material";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAccountQuery } from "@api";
-import { Loading } from "@stustapay/components";
 import { toast } from "react-toastify";
-import { AccountRoutes } from "@/app/routes";
 import { CustomerAccountDetail } from "./CustomerAccountDetail";
 import { SystemAccountDetail } from "./SystemAccountDetail";
-import { Alert, AlertTitle } from "@mui/material";
-import { useCurrentNode } from "@hooks";
 
 export const AccountDetail: React.FC = () => {
   const { accountId } = useParams();

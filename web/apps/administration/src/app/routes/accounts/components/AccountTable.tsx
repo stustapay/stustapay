@@ -1,6 +1,6 @@
+import { Account } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
-import { Account } from "@api";
-import { useCurrencyFormatter } from "@hooks";
+import { useCurrencyFormatter } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { formatUserTagUid } from "@stustapay/models";

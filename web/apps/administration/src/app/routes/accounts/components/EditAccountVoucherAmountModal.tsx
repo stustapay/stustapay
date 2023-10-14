@@ -1,10 +1,10 @@
-import * as React from "react";
+import { Account, useUpdateVoucherAmountMutation } from "@/api";
+import { useCurrentNode } from "@/hooks";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, ListItem, ListItemText } from "@mui/material";
 import { NumericInput } from "@stustapay/components";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Account, useUpdateVoucherAmountMutation } from "@api";
 import { toast } from "react-toastify";
-import { useCurrentNode } from "@hooks";
 
 export interface EditAccountVoucherAmountModalProps {
   account: Account;

@@ -1,11 +1,11 @@
+import { UserTagDetail } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
-import { UserTagDetail } from "@api";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
-import { formatUserTagUid } from "@stustapay/models";
 
 export interface UserTagTableProps {
   userTags: UserTagDetail[];
