@@ -70,3 +70,40 @@ class TreeTest(BaseTestCase):
         self.assertEqual(f"/0/{event_node.id}", event_node.path)
         self.assertListEqual([0], event_node.parent_ids)
         self.assertEqual(0, event_node.parent)
+
+        child_node: Node = await self.tree_service.create_node(
+            token=self.admin_token,
+            node_id=event_node.id,
+            new_node=NewNode(
+                name="Child node",
+                description="",
+                allowed_objects_at_node=ALL_OBJECT_TYPES,
+                allowed_objects_in_subtree=ALL_OBJECT_TYPES,
+            ),
+        )
+        self.assertIsNotNone(child_node)
+
+        with self.assertRaises(Exception):
+            await self.tree_service.create_event(
+                token=self.admin_token,
+                node_id=child_node.id,
+                event=NewEvent(
+                    name="Invalid Node",
+                    description="",
+                    allowed_objects_at_node=ALL_OBJECT_TYPES,
+                    allowed_objects_in_subtree=ALL_OBJECT_TYPES,
+                    currency_identifier="EUR",
+                    sumup_topup_enabled=False,
+                    max_account_balance=100,
+                    customer_portal_contact_email="test@test.com",
+                    ust_id="UST ID",
+                    bon_issuer="Issuer",
+                    bon_address="Address",
+                    bon_title="Title",
+                    sepa_enabled=False,
+                    sepa_description="",
+                    sepa_sender_iban="",
+                    sepa_allowed_country_codes=[],
+                    sepa_sender_name="",
+                ),
+            )

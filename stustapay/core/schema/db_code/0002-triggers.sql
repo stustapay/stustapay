@@ -1,49 +1,59 @@
 -- return the id-array of a given node id's path,
 -- i.e. trace it up to the root.
 create or replace function node_trace(
-    start_node_id bigint
+    start_node_id bigint,
+    start_node_is_event boolean
 ) returns bigint[] as
 $$
 <<locals>> declare
-    has_cycle boolean;
-    trace     bigint[];
+    has_cycle           boolean;
+    trace               bigint[];
+    n_events_in_trace   int;
 begin
 
-    -- now for the juicy part - check if we have circular dependencies in clearing account relations
-    with recursive search_graph(node_id, depth, path, cycle) as (
+    with recursive search_graph (node_id, depth, path, cycle, n_events_in_trace) as (
         -- base case: start at the requested node
         select
             start_node_id,
             1,
             array [start_node_id],
-            false
+            false,
+            case when start_node_is_event then 1 else 0 end
         union all
         -- add the node's parent to our result set (find the parents for all so-far evaluated nodes)
         select
             node.parent,
             sg.depth + 1,
             node.parent || sg.path,
-            node.parent = any (sg.path)
+            node.parent = any (sg.path),
+            sg.n_events_in_trace + (case when node.event_id is not null then 1 else 0 end)
         from
             search_graph sg
             join node on sg.node_id = node.id
         where
             node.id != 0
             and not sg.cycle
-                                                                )
+    )
     select
         sg.path,
-        sg.cycle
-    into locals.trace, locals.has_cycle
+        sg.cycle,
+        sg.n_events_in_trace
+    into locals.trace, locals.has_cycle, locals.n_events_in_trace
     from
         search_graph sg
     where
         node_id = 0;
 
-    if locals.has_cycle then raise 'node has cycle: %', locals.trace; end if;
+    if locals.n_events_in_trace > 1 then
+        raise 'events cannot be children of other events';
+    end if;
 
-    --     if start_node_id != 0 then
---         raise 'stuff %, %', locals.trace, rofl;
+    if locals.has_cycle then
+        raise 'node has cycle: %', locals.trace;
+    end if;
+
+--     if start_node_id != 0 then
+--         raise 'stuff %, %', locals.trace, locals.n_events_in_trace;
 --     end if;
 
     return locals.trace;
@@ -52,6 +62,42 @@ $$ language plpgsql
     stable
     set search_path = "$user", public;
 
+-- whenever a new node is inserted, calculate its path.
+-- when parent is updated, recalculate the path.
+create or replace function update_node_path() returns trigger as
+$$
+begin
+    NEW.parent_ids := node_trace(NEW.parent, NEW.event_id is not null);
+    NEW.path := '/' || array_to_string(NEW.parent_ids || array[NEW.id], '/');
+
+    return NEW;
+end
+$$ language plpgsql
+    stable
+    set search_path = "$user", public;
+
+create trigger update_trace_trigger
+    before insert
+    on node
+    for each row
+execute function update_node_path();
+
+create or replace function check_node_update() returns trigger as
+$$
+begin
+    perform node_trace(NEW.parent, NEW.event_id is not null);
+    return NEW;
+end
+$$ language plpgsql
+    stable
+    set search_path = "$user", public;
+
+create trigger check_node_update
+    before update
+    on node
+    for each row
+    when (OLD.event_id is distinct from NEW.event_id)
+execute function check_node_update();
 
 create or replace function user_to_role_updated() returns trigger
     set search_path = "$user", public
@@ -408,27 +454,6 @@ create trigger update_account_user_tag_association_to_user_trigger
     for each row
     when (OLD.user_tag_uid is distinct from NEW.user_tag_uid)
 execute function update_account_user_tag_association_to_user();
-
--- whenever a new node is inserted, calculate its path.
--- when parent is updated, recalculate the path.
-create or replace function update_node_path() returns trigger as
-$$
-begin
-    NEW.parent_ids := node_trace(NEW.parent);
-    NEW.path := '/' || array_to_string(NEW.parent_ids || array[NEW.id], '/');
-
-    return NEW;
-end
-$$ language plpgsql
-    stable
-    set search_path = "$user", public;
-
-drop trigger if exists update_trace_trigger on node;
-create trigger update_trace_trigger
-    before insert
-    on node
-    for each row
-execute function update_node_path();
 
 create function noupdate() returns trigger as
 $$
