@@ -156,7 +156,6 @@ export const CashierCloseOut: React.FC = () => {
                     <TableCell align="right">{t("closeOut.coins")}</TableCell>
                     <TableCell>
                       <FormNumericInput
-                        fullWidth
                         name="coins"
                         formik={formik}
                         InputProps={{
@@ -235,9 +234,6 @@ export const CashierCloseOut: React.FC = () => {
             </TableContainer>
             <Paper sx={{ mt: 2, p: 3 }}>
               <UserSelect
-                fullWidth
-                variant="standard"
-                margin="normal"
                 name="closingOutUserId"
                 label={t("closeOut.closingOutUser")}
                 value={formik.values.closingOutUserId}

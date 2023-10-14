@@ -17,8 +17,6 @@ export function UserUpdateForm<T extends UpdateUserPayload>(props: UserUpdateFor
       <FormTextField name="description" label={t("userDescription")} formik={props} />
       <RoleSelect
         label={t("user.roles")}
-        margin="normal"
-        variant="standard"
         value={values.role_names}
         onChange={(val) => setFieldValue("role_names", val)}
         error={touched.role_names && !!errors.role_names}

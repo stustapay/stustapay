@@ -10,33 +10,9 @@ export function TaxRateForm<T extends TaxRate>(props: TaxRateFormProps<T>) {
 
   return (
     <>
-      <FormTextField
-        variant="standard"
-        margin="normal"
-        fullWidth
-        autoFocus
-        name="name"
-        label={t("taxRateName")}
-        formik={props}
-      />
-
-      <FormNumericInput
-        variant="standard"
-        margin="normal"
-        fullWidth
-        name="rate"
-        label={t("taxRateRate")}
-        formik={props}
-      />
-
-      <FormTextField
-        variant="standard"
-        margin="normal"
-        fullWidth
-        name="description"
-        label={t("taxRateDescription")}
-        formik={props}
-      />
+      <FormTextField autoFocus name="name" label={t("taxRateName")} formik={props} />
+      <FormNumericInput name="rate" label={t("taxRateRate")} formik={props} />
+      <FormTextField name="description" label={t("taxRateDescription")} formik={props} />
     </>
   );
 }

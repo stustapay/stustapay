@@ -15,15 +15,7 @@ export function ProductForm<T extends NewProduct>(props: ProductFormProps<T>) {
 
   return (
     <>
-      <FormTextField
-        variant="standard"
-        margin="normal"
-        fullWidth
-        autoFocus
-        name="name"
-        label={t("product.name")}
-        formik={props}
-      />
+      <FormTextField autoFocus name="name" label={t("product.name")} formik={props} />
 
       <FormControlLabel
         label={t("product.isReturnable")}
@@ -59,9 +51,6 @@ export function ProductForm<T extends NewProduct>(props: ProductFormProps<T>) {
       {values.fixed_price && (
         <>
           <FormNumericInput
-            variant="standard"
-            margin="normal"
-            fullWidth
             name="price"
             label={t("product.price")}
             formik={props}
@@ -69,9 +58,6 @@ export function ProductForm<T extends NewProduct>(props: ProductFormProps<T>) {
             InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
           />
           <FormNumericInput
-            variant="standard"
-            margin="normal"
-            fullWidth
             name="price_in_vouchers"
             label={t("product.priceInVouchers")}
             formik={props}
@@ -82,8 +68,6 @@ export function ProductForm<T extends NewProduct>(props: ProductFormProps<T>) {
 
       <TaxRateSelect
         name="tax"
-        margin="normal"
-        variant="standard"
         label={t("product.taxRate")}
         disabled={values.is_locked}
         error={touched.tax_name && !!errors.tax_name}
@@ -94,8 +78,6 @@ export function ProductForm<T extends NewProduct>(props: ProductFormProps<T>) {
 
       <RestrictionSelect
         label={t("product.restrictions")}
-        margin="normal"
-        variant="standard"
         multiple={true}
         value={values.restrictions ?? []}
         disabled={values.is_locked}

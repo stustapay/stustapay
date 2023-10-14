@@ -38,8 +38,6 @@ export function UserRoleUpdateForm<T extends UserRoleUpdate>({
 
       <PrivilegeSelect
         label={t("userRole.privileges")}
-        variant="standard"
-        margin="normal"
         value={values.privileges}
         onChange={(val) => setFieldValue("privileges", val)}
         error={touched.privileges && !!errors.privileges}

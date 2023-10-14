@@ -18,8 +18,6 @@ export function UserCreateForm<T extends CreateUserPayload>(props: UserCreateFor
       <FormTextField type="password" name="password" label={t("userPassword")} formik={props} />
       <RoleSelect
         label={t("user.roles")}
-        variant="standard"
-        margin="normal"
         value={values.role_names}
         onChange={(val) => setFieldValue("role_names", val)}
         error={touched.role_names && !!errors.role_names}

@@ -9,12 +9,16 @@ export interface FormNumericInputProps<Values>
 
 // TODO: figure out how to introduce strong typing such that the name must be a key valid for those formik props
 export function FormNumericInput<Values>({ formik, name, ...props }: FormNumericInputProps<Values>) {
+  const handleChange = (value: number | null) => {
+    formik.setFieldValue(name, value);
+  };
+
   return (
     <NumericInput
       name={name}
       variant={props.variant ?? "standard"}
       fullWidth={props.fullWidth ?? true}
-      onChange={formik.handleChange}
+      onChange={handleChange}
       value={(formik.values as any)[name]}
       error={(formik.touched as any)[name] && !!(formik.errors as any)[name]}
       helperText={(formik.touched as any)[name] && (formik.errors as any)[name]}

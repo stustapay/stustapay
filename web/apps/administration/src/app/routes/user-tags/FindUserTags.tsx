@@ -1,7 +1,8 @@
 import { selectUserTagAll, useFindUserTagsMutation } from "@/api";
 import { DetailLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { Button, LinearProgress, Paper, TextField } from "@mui/material";
+import { Button, LinearProgress, Paper } from "@mui/material";
+import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -46,17 +47,10 @@ export const FindUserTags: React.FC = () => {
           onSubmit={handleSubmit}
           validationSchema={toFormikValidationSchema(SearchFormSchema)}
         >
-          {({ values, handleBlur, handleChange, handleSubmit, isSubmitting }) => (
-            <Form onSubmit={handleSubmit}>
-              <TextField
-                label={t("userTag.searchTerm")}
-                fullWidth
-                name="searchTerm"
-                value={values.searchTerm}
-                onChange={handleChange}
-                onBlur={handleBlur}
-              />
-              {isSubmitting && <LinearProgress />}
+          {(formik) => (
+            <Form onSubmit={formik.handleSubmit}>
+              <FormTextField label={t("userTag.searchTerm")} variant="outlined" name="searchTerm" formik={formik} />
+              {formik.isSubmitting && <LinearProgress />}
               <Button type="submit">{t("submit")}</Button>
             </Form>
           )}

@@ -3,7 +3,7 @@ import { useCurrentNode } from "@/hooks";
 import { Download as DownloadIcon } from "@mui/icons-material";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { NumericInput } from "@stustapay/components";
+import { FormNumericInput } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import { DateTime } from "luxon";
@@ -69,26 +69,16 @@ export const DownloadSepaXMLModal: React.FC<DownloadSepaXMLModalProps> = ({ payo
         validationSchema={toFormikValidationSchema(FormSchema)}
         initialValues={initialValues}
       >
-        {({ values, setFieldValue, handleSubmit, touched, errors }) => (
+        {(formik) => (
           <Form>
             <DialogContent>
               <DatePicker
                 label={t("payoutRun.executionDate")}
-                value={values.execution_date}
+                value={formik.values.execution_date}
                 sx={{ width: "100%" }}
-                onChange={(value) => setFieldValue("execution_date", value)}
+                onChange={(value) => formik.setFieldValue("execution_date", value)}
               />
-              <NumericInput
-                variant="outlined"
-                margin="normal"
-                fullWidth
-                name="batch_size"
-                label={t("payoutRun.batchSize")}
-                error={touched.batch_size && !!errors.batch_size}
-                helperText={(touched.batch_size && errors.batch_size) as string}
-                onChange={(value) => setFieldValue("batch_size", value)}
-                value={values.batch_size}
-              />
+              <FormNumericInput variant="outlined" name="batch_size" label={t("payoutRun.batchSize")} formik={formik} />
             </DialogContent>
             <DialogActions>
               <Button onClick={onClose} color="error">

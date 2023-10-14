@@ -72,9 +72,6 @@ export const Login: React.FC = () => {
               <input type="hidden" name="remember" value="true" />
               <FormTextField
                 variant="outlined"
-                margin="normal"
-                required
-                fullWidth
                 autoFocus
                 type="text"
                 label={t("auth.username")}
@@ -84,9 +81,6 @@ export const Login: React.FC = () => {
 
               <FormTextField
                 variant="outlined"
-                margin="normal"
-                required
-                fullWidth
                 type="password"
                 name="password"
                 label={t("auth.password")}

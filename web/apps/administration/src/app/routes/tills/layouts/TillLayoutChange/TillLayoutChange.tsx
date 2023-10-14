@@ -90,24 +90,8 @@ export function TillLayoutChange<T extends NewTillLayout>({
         <Form onSubmit={formik.handleSubmit}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h5">{headerTitle}</Typography>
-            <FormTextField
-              variant="standard"
-              margin="normal"
-              fullWidth
-              autoFocus
-              name="name"
-              label={t("layout.name")}
-              formik={formik}
-            />
-
-            <FormTextField
-              variant="standard"
-              margin="normal"
-              fullWidth
-              name="description"
-              label={t("layout.description")}
-              formik={formik}
-            />
+            <FormTextField autoFocus name="name" label={t("layout.name")} formik={formik} />
+            <FormTextField name="description" label={t("layout.description")} formik={formik} />
           </Paper>
           <Paper sx={{ mt: 2 }}>
             <TabContext value={selectedTab}>

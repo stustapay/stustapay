@@ -15,29 +15,9 @@ export function TicketForm<T extends NewTicket>(props: TicketFormProps<T>) {
 
   return (
     <>
-      <FormTextField
-        variant="standard"
-        margin="normal"
-        fullWidth
-        autoFocus
-        name="name"
-        label={t("ticket.name")}
-        formik={props}
-      />
-
-      <FormTextField
-        variant="standard"
-        margin="normal"
-        fullWidth
-        name="description"
-        label={t("ticket.description")}
-        formik={props}
-      />
-
+      <FormTextField autoFocus name="name" label={t("ticket.name")} formik={props} />
+      <FormTextField name="description" label={t("ticket.description")} formik={props} />
       <FormNumericInput
-        variant="standard"
-        margin="normal"
-        fullWidth
         name="price"
         label={t("ticket.initialTopUpAmount")}
         InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
@@ -46,8 +26,6 @@ export function TicketForm<T extends NewTicket>(props: TicketFormProps<T>) {
 
       <ProductSelect
         label={t("ticket.product")}
-        margin="normal"
-        variant="standard"
         value={values.product_id}
         onChange={(value) => setFieldValue("product_id", value)}
         error={touched.product_id && !!errors.product_id}
@@ -56,8 +34,6 @@ export function TicketForm<T extends NewTicket>(props: TicketFormProps<T>) {
 
       <RestrictionSelect
         label={t("ticket.restriction")}
-        margin="normal"
-        variant="standard"
         value={(values.restriction == null ? null : [values.restriction]) as any} // TODO: proper typing
         multiple={false}
         onChange={(value) => setFieldValue("restriction", value.length > 0 ? value[0] : null)}

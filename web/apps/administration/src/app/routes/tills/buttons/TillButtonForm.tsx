@@ -53,16 +53,7 @@ export function TillButtonForm<T extends NewTillButton>(props: TillButtonFormPro
   const { t } = useTranslation();
   return (
     <>
-      <FormTextField
-        variant="standard"
-        margin="normal"
-        fullWidth
-        autoFocus
-        name="name"
-        label={t("button.name")}
-        formik={props}
-      />
-
+      <FormTextField autoFocus name="name" label={t("button.name")} formik={props} />
       <ProductSelection
         productIds={values.product_ids}
         onChange={(productIds: number[]) => setFieldValue("product_ids", productIds)}

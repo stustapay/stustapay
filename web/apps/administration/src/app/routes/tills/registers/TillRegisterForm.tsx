@@ -7,15 +7,5 @@ export type TillRegisterFormProps<T extends NewCashRegister> = FormikProps<T>;
 
 export function TillRegisterForm<T extends NewCashRegister>(props: TillRegisterFormProps<T>) {
   const { t } = useTranslation();
-  return (
-    <FormTextField
-      variant="standard"
-      margin="normal"
-      fullWidth
-      autoFocus
-      name="name"
-      label={t("register.name")}
-      formik={props}
-    />
-  );
+  return <FormTextField autoFocus name="name" label={t("register.name")} formik={props} />;
 }

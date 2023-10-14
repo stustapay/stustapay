@@ -3,7 +3,7 @@ import { PayoutRunRoutes } from "@/app/routes";
 import { useCurrencySymbol, useCurrentNode } from "@/hooks";
 import { ChevronLeft } from "@mui/icons-material";
 import { Button, Grid, IconButton, InputAdornment, LinearProgress, Paper, Stack, Typography } from "@mui/material";
-import { NumericInput } from "@stustapay/components";
+import { FormNumericInput } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -61,27 +61,22 @@ export const PayoutRunCreate: React.FC = () => {
         onSubmit={handleSubmit}
         validationSchema={toFormikValidationSchema(NewPayoutRunSchema)}
       >
-        {({ handleSubmit, isSubmitting, touched, values, errors, setFieldValue }) => (
-          <Form onSubmit={handleSubmit}>
+        {(formik) => (
+          <Form onSubmit={formik.handleSubmit}>
             <Stack spacing={2}>
               <PendingPayoutDetail />
               <Paper sx={{ p: 3 }}>
-                <NumericInput
+                <FormNumericInput
                   variant="outlined"
-                  margin="normal"
-                  fullWidth
                   name="max_payout_sum"
                   label={t("payoutRun.maxPayoutSum")}
                   InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
-                  error={touched.max_payout_sum && !!errors.max_payout_sum}
-                  helperText={(touched.max_payout_sum && errors.max_payout_sum) as string}
-                  onChange={(value) => setFieldValue("max_payout_sum", value)}
-                  value={values.max_payout_sum}
+                  formik={formik}
                 />
 
-                {isSubmitting && <LinearProgress />}
+                {formik.isSubmitting && <LinearProgress />}
               </Paper>
-              <Button type="submit" fullWidth variant="contained" color="primary" disabled={isSubmitting}>
+              <Button type="submit" fullWidth variant="contained" color="primary" disabled={formik.isSubmitting}>
                 {t("submit")}
               </Button>
             </Stack>

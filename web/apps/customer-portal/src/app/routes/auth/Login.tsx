@@ -1,7 +1,8 @@
 import React from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Form, Formik, FormikHelpers } from "formik";
-import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, TextField, Typography } from "@mui/material";
+import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, Typography, Stack } from "@mui/material";
+import { FormTextField } from "@stustapay/form-components";
 import { z } from "zod";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
@@ -64,49 +65,34 @@ export const Login: React.FC = () => {
           onSubmit={handleSubmit}
           validationSchema={toFormikValidationSchema(validationSchema)}
         >
-          {({ values, handleBlur, handleChange, handleSubmit, isSubmitting }) => (
-            <Form onSubmit={handleSubmit}>
-              <input type="hidden" name="remember" value="true" />
+          {(formik) => (
+            <Form onSubmit={formik.handleSubmit}>
+              <Stack spacing={2}>
+                <input type="hidden" name="remember" value="true" />
 
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                autoFocus
-                type="text"
-                autoComplete="current-password"
-                name="userTagPin"
-                label={t("userTagPin")}
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.userTagPin}
-              />
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                type="text"
-                autoComplete="username"
-                label={t("userTagUid")}
-                name="userTagUid"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.userTagUid}
-              />
+                <FormTextField
+                  variant="outlined"
+                  autoFocus
+                  type="text"
+                  autoComplete="current-password"
+                  name="userTagPin"
+                  label={t("userTagPin")}
+                  formik={formik}
+                />
+                <FormTextField
+                  variant="outlined"
+                  type="text"
+                  autoComplete="username"
+                  label={t("userTagUid")}
+                  name="userTagUid"
+                  formik={formik}
+                />
 
-              {isSubmitting && <LinearProgress />}
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                color="primary"
-                disabled={isSubmitting}
-                sx={{ mt: 1 }}
-              >
-                {t("login")}
-              </Button>
+                {formik.isSubmitting && <LinearProgress />}
+                <Button type="submit" fullWidth variant="contained" color="primary" disabled={formik.isSubmitting}>
+                  {t("login")}
+                </Button>
+              </Stack>
             </Form>
           )}
         </Formik>
