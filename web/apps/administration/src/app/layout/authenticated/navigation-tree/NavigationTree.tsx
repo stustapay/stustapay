@@ -14,6 +14,7 @@ import {
   ChevronRight as ChevronRightIcon,
   ExpandMore as ExpandMoreIcon,
   Folder as FolderIcon,
+  Event as EventIcon,
 } from "@mui/icons-material";
 import { TreeView } from "@mui/lab";
 import * as React from "react";
@@ -22,9 +23,9 @@ import { NavigationTreeItem } from "./NavigationTreeItem";
 import { NodeMenu } from "./NodeMenu";
 
 const getNavigationTreeItemLabel = (node: Node) => {
-  // if (node.type === "event") {
-  //   return EventIcon;
-  // }
+  if (node.event) {
+    return EventIcon;
+  }
   return FolderIcon;
 };
 
