@@ -1,9 +1,9 @@
 import { createEntityAdapter } from "@reduxjs/toolkit";
 import {
-  Account,
+  AccountRead,
   CashRegister,
   CashRegisterStocking,
-  Cashier,
+  CashierRead,
   CashierShift,
   ConfigEntry,
   Order,
@@ -18,7 +18,7 @@ import {
   Tse,
   User,
   UserRole,
-  UserTagDetail,
+  UserTagDetailRead,
   api as generatedApi,
 } from "./generated/api";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
@@ -29,11 +29,11 @@ const userAdapter = createEntityAdapter<User>({
   sortComparer: (a, b) => a.login.toLowerCase().localeCompare(b.login.toLowerCase()),
 });
 
-const accountAdapter = createEntityAdapter<Account>({
+const accountAdapter = createEntityAdapter<AccountRead>({
   sortComparer: (a, b) => (a.name?.toLowerCase() ?? "").localeCompare(b.name?.toLowerCase() ?? ""),
 });
 
-const userTagAdapter = createEntityAdapter<UserTagDetail>({
+const userTagAdapter = createEntityAdapter<UserTagDetailRead>({
   sortComparer: (a, b) =>
     (a.user_tag_uid_hex?.toLowerCase() ?? "").localeCompare(b.user_tag_uid_hex?.toLowerCase() ?? ""),
 });
@@ -46,7 +46,7 @@ const productAdapter = createEntityAdapter<Product>({
   sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
 });
 
-const cashierAdapter = createEntityAdapter<Cashier>({
+const cashierAdapter = createEntityAdapter<CashierRead>({
   sortComparer: (a, b) => a.display_name.toLowerCase().localeCompare(b.display_name.toLowerCase()),
 });
 

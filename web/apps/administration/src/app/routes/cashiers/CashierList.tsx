@@ -1,4 +1,4 @@
-import { Cashier, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@/api";
+import { CashierRead, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@/api";
 import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
@@ -69,7 +69,7 @@ export const CashierList: React.FC = () => {
     );
   };
 
-  const columns: GridColDef<Cashier>[] = [
+  const columns: GridColDef<CashierRead>[] = [
     {
       field: "login",
       headerName: t("cashier.login") as string,

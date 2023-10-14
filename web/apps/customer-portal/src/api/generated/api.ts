@@ -49,17 +49,17 @@ const injectedRtkApi = api
     overrideExisting: false,
   });
 export { injectedRtkApi as api };
-export type LoginApiResponse = /** status 200 Successful Response */ LoginResponse;
+export type LoginApiResponse = /** status 200 Successful Response */ LoginResponseRead;
 export type LoginApiArg = {
   bodyLoginAuthLoginPost: BodyLoginAuthLoginPost;
 };
 export type LogoutApiResponse = unknown;
 export type LogoutApiArg = void;
-export type GetCustomerApiResponse = /** status 200 Successful Response */ Customer;
+export type GetCustomerApiResponse = /** status 200 Successful Response */ CustomerRead;
 export type GetCustomerApiArg = void;
-export type GetOrdersApiResponse = /** status 200 Successful Response */ OrderWithBon[];
+export type GetOrdersApiResponse = /** status 200 Successful Response */ OrderWithBonRead[];
 export type GetOrdersApiArg = void;
-export type UpdateCustomerInfoApiResponse = /** status 204 Successful Response */ undefined;
+export type UpdateCustomerInfoApiResponse = /** status 204 Successful Response */ void;
 export type UpdateCustomerInfoApiArg = {
   customerBank: CustomerBank;
 };
@@ -83,7 +83,15 @@ export type UserTagHistoryEntry = {
   comment?: string | null;
   mapping_was_valid_until: string;
 };
+export type UserTagHistoryEntryRead = {
+  user_tag_uid: number;
+  account_id: number;
+  comment?: string | null;
+  mapping_was_valid_until: string;
+  user_tag_uid_hex: string | null;
+};
 export type Customer = {
+  node_id: number;
   id: number;
   type: AccountType;
   name: string | null;
@@ -102,8 +110,34 @@ export type Customer = {
   payout_run_id: number | null;
   payout_export: boolean | null;
 };
+export type CustomerRead = {
+  node_id: number;
+  id: number;
+  type: AccountType;
+  name: string | null;
+  comment: string | null;
+  balance: number;
+  vouchers: number;
+  user_tag_uid: number | null;
+  user_tag_comment?: string | null;
+  restriction: ProductRestriction | null;
+  tag_history: UserTagHistoryEntryRead[];
+  iban: string | null;
+  account_name: string | null;
+  email: string | null;
+  donation: number | null;
+  payout_error: string | null;
+  payout_run_id: number | null;
+  payout_export: boolean | null;
+  user_tag_uid_hex: string | null;
+};
 export type LoginResponse = {
   customer: Customer;
+  access_token: string;
+  grant_type?: string;
+};
+export type LoginResponseRead = {
+  customer: CustomerRead;
   access_token: string;
   grant_type?: string;
 };
@@ -137,14 +171,15 @@ export type Product = {
   price: number | null;
   fixed_price: boolean;
   price_in_vouchers?: number | null;
-  price_per_voucher?: number | null;
   tax_name: string;
   restrictions: ProductRestriction[];
   is_locked: boolean;
   is_returnable: boolean;
   target_account_id?: number | null;
+  node_id: number;
   id: number;
   tax_rate: number;
+  price_per_voucher?: number | null;
 };
 export type LineItem = {
   quantity: number;
@@ -154,6 +189,16 @@ export type LineItem = {
   tax_rate: number;
   item_id: number;
   total_tax: number;
+};
+export type LineItemRead = {
+  quantity: number;
+  product: Product;
+  product_price: number;
+  tax_name: string;
+  tax_rate: number;
+  item_id: number;
+  total_tax: number;
+  total_price: number;
 };
 export type OrderWithBon = {
   id: number;
@@ -173,6 +218,25 @@ export type OrderWithBon = {
   bon_generated: boolean | null;
   bon_output_file: string | null;
 };
+export type OrderWithBonRead = {
+  id: number;
+  uuid: string;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+  cancels_order: number | null;
+  booked_at: string;
+  payment_method: PaymentMethod;
+  order_type: OrderType;
+  cashier_id: number | null;
+  till_id: number | null;
+  customer_account_id: number | null;
+  customer_tag_uid: number | null;
+  line_items: LineItemRead[];
+  bon_generated: boolean | null;
+  bon_output_file: string | null;
+  customer_tag_uid_hex: string | null;
+};
 export type CustomerBank = {
   iban: string;
   account_name: string;
@@ -182,13 +246,12 @@ export type CustomerBank = {
 export type PublicCustomerApiConfig = {
   test_mode: boolean;
   test_mode_message: string;
-  sumup_topup_enabled: boolean;
-  currency_symbol: string;
-  currency_identifier: string;
-  contact_email: string;
+  sumup_topup_enabled_globally: boolean;
   data_privacy_url: string;
+  contact_email: string;
   about_page_url: string;
-  allowed_country_codes: string[];
+  payout_enabled: boolean;
+  allowed_country_codes: string[] | null;
 };
 export type CreateCheckoutResponse = {
   checkout_id: string;

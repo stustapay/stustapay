@@ -1,5 +1,5 @@
 import {
-  Payout,
+  PayoutRead,
   selectPayoutRunById,
   useListPayoutRunsQuery,
   usePayoutRunCsvExportMutation,
@@ -63,7 +63,7 @@ export const PayoutRunDetail: React.FC = () => {
     }
   };
 
-  const columns: GridColDef<Payout>[] = [
+  const columns: GridColDef<PayoutRead>[] = [
     {
       field: "customer_account_id",
       headerName: t("customer.bankAccountHolder") as string,

@@ -97,34 +97,7 @@ class Server:
         self.tasks.append(task)
 
     def get_openapi_spec(self) -> dict:
-        # This is a temporary workaround to patch the generated openapi spec so that it works for web frontend code
-        # generation until fastapi supports pydantic computed fields in the openapi generation
-        user_tag_uid_hex_field = {"user_tag_uid_hex": {"type": "string", "title": "User Tag Uid Hex"}}
-        sale_fields = {
-            "used_vouchers": {"type": "number", "title": "Used vouchers"},
-            "item_count": {"type": "number", "title": "Item count"},
-            "total_price": {"type": "number", "title": "Total Price"},
-        }
-        patched_schemas = {
-            "Account": user_tag_uid_hex_field,
-            "UserTagDetail": user_tag_uid_hex_field,
-            "Payout": user_tag_uid_hex_field,
-            "UserTagHistoryEntry": user_tag_uid_hex_field,
-            "UserWithoutId": user_tag_uid_hex_field,
-            "User": user_tag_uid_hex_field,
-            "CurrentUser": user_tag_uid_hex_field,
-            "Cashier": user_tag_uid_hex_field,
-            "PendingLineItem": {"total_price": {"type": "number", "title": "Total Price"}},
-            "PendingSaleProducts": sale_fields,
-            "PendingSale": sale_fields,
-            "Order": {"customer_tag_uid_hex": {"type": "string", "title": "Customer Tag Uid Hex"}},
-        }
-        spec = self.api.openapi()
-        for schema, addition_fields in patched_schemas.items():
-            if schema in spec["components"]["schemas"]:
-                spec["components"]["schemas"][schema]["properties"].update(addition_fields)
-
-        return spec
+        return self.api.openapi()
 
     async def db_connect(self, cfg: DatabaseConfig):
         return await create_db_pool(cfg)

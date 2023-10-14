@@ -28,11 +28,11 @@ class RouteBuilder implements IRouteBuilder {
   public edit = (id?: string | number) => {
     return this.base() + `/${id}/edit`;
   };
-  public detail = (id?: string | number) => {
+  public detail = (id?: string | number | null) => {
     return this.base() + `/${id}`;
   };
 
-  public detailAction = (id: string | number | undefined, suffix: string) => {
+  public detailAction = (id: string | number | undefined | null, suffix: string) => {
     return `${this.detail(id)}/${suffix}`;
   };
 }

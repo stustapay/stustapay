@@ -1,5 +1,5 @@
 import {
-  Account,
+  AccountRead,
   selectOrderAll,
   useDisableAccountMutation,
   useListOrdersQuery,
@@ -22,7 +22,7 @@ import { EditAccountBalanceModal } from "./components/EditAccountBalanceModal";
 import { EditAccountTagModal } from "./components/EditAccountTagModal";
 import { EditAccountVoucherAmountModal } from "./components/EditAccountVoucherAmountModal";
 
-export const CustomerAccountDetail: React.FC<{ account: Account }> = ({ account }) => {
+export const CustomerAccountDetail: React.FC<{ account: AccountRead }> = ({ account }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { currentNode } = useCurrentNode();
