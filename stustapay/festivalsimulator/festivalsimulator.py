@@ -470,9 +470,16 @@ class Simulator:
         db_pool = await create_db_pool(self.config.database, n_connections=1)
 
         self.start_time = datetime.now()
+        self.event_node_id = await db_pool.fetchval(
+            "select id from node where event_id is not null and name = $1", "SSC-Test"
+        )
 
         self.admin_tag_uid = int(
-            await db_pool.fetchval("select user_tag_uid from user_with_roles where $1=any(role_names) limit 1", "admin")
+            await db_pool.fetchval(
+                "select user_tag_uid from user_with_roles where $1=any(role_names) and node_id = $2 limit 1",
+                "admin",
+                self.event_node_id,
+            )
         )
         self.admin_token = await self.login_admin()
         self.admin_headers = {"Authorization": f"Bearer {self.admin_token}"}

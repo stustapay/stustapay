@@ -1,5 +1,5 @@
 import { Node } from "@/api";
-import { findNode, useNodeTree } from "@/api/nodes";
+import { findNode, useTreeForCurrentUser } from "@/api/nodes";
 import { nodeUrlBaseRegex } from "@/app/routes";
 import {
   extendExpandedNodes,
@@ -30,7 +30,7 @@ const getNavigationTreeItemLabel = (node: Node) => {
 };
 
 export const NavigationTree: React.FC = () => {
-  const { root: tree } = useNodeTree();
+  const tree = useTreeForCurrentUser();
   const location = useLocation();
   const expanded = useAppSelector(selectExpandedNodes);
   const selected = useAppSelector(selectSelectedNodes);

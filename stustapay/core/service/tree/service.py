@@ -11,7 +11,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import NotFound
-from stustapay.core.service.tree.common import fetch_node
+from stustapay.core.service.tree.common import fetch_node, get_tree_for_current_user
 from stustapay.framework.database import Connection
 
 
@@ -29,7 +29,7 @@ async def _update_allowed_objects_at_node(conn: Connection, node_id: int, allowe
         )
 
 
-async def _create_node(conn: Connection, parent_id: int, new_node: NewNode, event_id: int | None = None) -> Node:
+async def create_node(conn: Connection, parent_id: int, new_node: NewNode, event_id: int | None = None) -> Node:
     new_node_id = await conn.fetchval(
         "insert into node (parent, name, description, event_id) values ($1, $2, $3, $4) returning id",
         parent_id,
@@ -46,7 +46,7 @@ async def _create_node(conn: Connection, parent_id: int, new_node: NewNode, even
     return result
 
 
-async def create_event(conn: Connection, node_id: int, event: NewEvent) -> Node:
+async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Node:
     # TODO: tree, create all needed resources, e.g. global accounts which have to and should
     #  only exist at an event node
     event_id = await conn.fetchval(
@@ -69,7 +69,7 @@ async def create_event(conn: Connection, node_id: int, event: NewEvent) -> Node:
         event.sepa_allowed_country_codes,
     )
 
-    return await _create_node(conn=conn, parent_id=node_id, new_node=event, event_id=event_id)
+    return await create_node(conn=conn, parent_id=parent_id, new_node=event, event_id=event_id)
 
 
 class TreeService(DBService):
@@ -81,13 +81,13 @@ class TreeService(DBService):
     @requires_user()  # TODO: privilege
     @requires_node()
     async def create_node(self, conn: Connection, node: Node, new_node: NewNode) -> Node:
-        return await _create_node(conn=conn, parent_id=node.id, new_node=new_node)
+        return await create_node(conn=conn, parent_id=node.id, new_node=new_node)
 
     @with_db_transaction
     @requires_user()  # TODO: privilege
     @requires_node()
     async def create_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
-        return await create_event(conn=conn, node_id=node.id, event=event)
+        return await create_event(conn=conn, parent_id=node.id, event=event)
 
     @with_db_transaction
     @requires_user()  # TODO: privilege
@@ -124,7 +124,4 @@ class TreeService(DBService):
     @with_db_transaction
     @requires_user()
     async def get_tree_for_current_user(self, *, conn: Connection, current_user: CurrentUser) -> Node:
-        # TODO: check logic here
-        node = await fetch_node(conn=conn, node_id=current_user.node_id)
-        assert node is not None
-        return node
+        return await get_tree_for_current_user(conn=conn, user_node_id=current_user.node_id)

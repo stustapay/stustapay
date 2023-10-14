@@ -18,7 +18,7 @@ from stustapay.core.schema.till import (
     NewTillLayout,
     NewTillProfile,
 )
-from stustapay.core.schema.tree import ALL_OBJECT_TYPES, ROOT_NODE_ID, NewEvent
+from stustapay.core.schema.tree import ALL_OBJECT_TYPES, ROOT_NODE_ID, NewEvent, NewNode
 from stustapay.core.schema.tse import NewTse, TseType
 from stustapay.core.schema.user import CASHIER_ROLE_NAME, NewUser
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
@@ -26,7 +26,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
-from stustapay.core.service.tree.service import create_event
+from stustapay.core.service.tree.service import create_event, create_node
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import UserService
 from stustapay.core.service.user_tag import create_user_tag_secret, create_user_tags
@@ -40,6 +40,13 @@ logger = logging.getLogger(__name__)
 
 async def _create_tags_and_users(conn: Connection, user_service: UserService, event_node_id: int, n_customer_tags: int):
     logger.info(f"Creating {n_customer_tags} tags")
+
+    await user_service.create_user_no_auth(
+        conn=conn,
+        node_id=ROOT_NODE_ID,
+        new_user=NewUser(login="global-admin", display_name="", user_tag_uid=None, role_names=["admin"]),
+        password="admin",
+    )
 
     secret = await create_user_tag_secret(
         conn=conn,
@@ -478,7 +485,7 @@ class DatabaseSetup:
         async with self.db_pool.acquire() as conn:
             event_node = await create_event(
                 conn=conn,
-                node_id=ROOT_NODE_ID,
+                parent_id=ROOT_NODE_ID,
                 event=NewEvent(
                     name="SSC-Test",
                     description="",
@@ -497,6 +504,26 @@ class DatabaseSetup:
                     sepa_sender_iban="DE89370400440532013000",
                     sepa_description="FestivalName, TagID: {user_tag_uid}",
                     sepa_allowed_country_codes=["DE"],
+                ),
+            )
+            await create_node(
+                conn=conn,
+                parent_id=event_node.id,
+                new_node=NewNode(
+                    name="Bierstand",
+                    description="",
+                    allowed_objects_at_node=ALL_OBJECT_TYPES,
+                    allowed_objects_in_subtree=ALL_OBJECT_TYPES,
+                ),
+            )
+            await create_node(
+                conn=conn,
+                parent_id=event_node.id,
+                new_node=NewNode(
+                    name="Cocktailstand",
+                    description="",
+                    allowed_objects_at_node=ALL_OBJECT_TYPES,
+                    allowed_objects_in_subtree=ALL_OBJECT_TYPES,
                 ),
             )
             self.event_node_id = event_node.id
