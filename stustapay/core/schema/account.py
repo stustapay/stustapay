@@ -8,45 +8,39 @@ from stustapay.core.schema.order import OrderType
 from stustapay.core.schema.product import Product, ProductRestriction
 from stustapay.core.schema.user import format_user_tag_uid
 
-# Global Account IDs for virtual accounts
-# The virtual accounts are all fixed in the database
-ACCOUNT_SALE_EXIT = 0
-ACCOUNT_CASH_ENTRY = 1
-ACCOUNT_DEPOSIT = 2
-ACCOUNT_SUMUP = 3
-ACCOUNT_CASH_VAULT = 4
-ACCOUNT_IMBALANCE = 5
-ACCOUNT_MONEY_VOUCHER_CREATE = 6
-ACCOUNT_CASH_EXIT = 7
-ACCOUNT_CASH_SALE_SOURCE = 8
-ACCOUNT_SUMUP_CUSTOMER_TOPUP = 9
-
 
 class AccountType(enum.Enum):
-    virtual = "virtual"
-    internal = "internal"
     private = "private"
+    sale_exit = "sale_exit"
+    cash_entry = "cash_entry"
+    cash_exit = "cash_exit"
+    cash_topup_source = "cash_topup_source"
+    cash_imbalance = "cash_imbalance"
+    cash_vault = "cash_vault"
+    sumup_entry = "sumup_entry"
+    sumup_online_entry = "sumup_online_entry"
+    transport = "transport"
+    cashier = "cashier"
+    voucher_create = "voucher_create"
 
 
-def get_source_account(order_type: OrderType, product: Product, customer_account: int):
+def get_source_account(order_type: OrderType, customer_account: int):
     """
     return the transaction source account, depending on the order type or sold product
     """
-    del product
     if order_type == OrderType.sale:
         return customer_account
     raise NotImplementedError()
 
 
-def get_target_account(order_type: OrderType, product: Product, customer_account: int):
+def get_target_account(order_type: OrderType, product: Product, sale_exit_account_id: int):
     """
     return the transaction target account, depending on the order type or sold product
     """
-    del customer_account
     if order_type == OrderType.sale:
         if product.target_account_id is not None:
             return product.target_account_id
-        return ACCOUNT_SALE_EXIT
+        return sale_exit_account_id
     raise NotImplementedError()
 
 

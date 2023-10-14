@@ -31,13 +31,7 @@ export const AccountDetail: React.FC = () => {
 
   if (account.type === "private") {
     return <CustomerAccountDetail account={account} />;
-  } else if (account.type === "virtual" || account.type === "internal") {
+  } else {
     return <SystemAccountDetail account={account} />;
   }
-
-  return (
-    <Alert severity="error">
-      <AlertTitle>Unknown account type {account.type}</AlertTitle>
-    </Alert>
-  );
 };

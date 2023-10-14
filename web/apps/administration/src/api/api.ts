@@ -16,16 +16,16 @@ import {
   TillLayout,
   TillProfile,
   Tse,
-  User,
   UserRole,
   UserTagDetailRead,
   api as generatedApi,
+  UserRead,
 } from "./generated/api";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
 export * from "./generated/api";
 
-const userAdapter = createEntityAdapter<User>({
+const userAdapter = createEntityAdapter<UserRead>({
   sortComparer: (a, b) => a.login.toLowerCase().localeCompare(b.login.toLowerCase()),
 });
 

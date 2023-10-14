@@ -4,7 +4,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import ACCOUNT_MONEY_VOUCHER_CREATE, Account
+from stustapay.core.schema.account import Account, AccountType
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.tree import Node
@@ -19,7 +19,17 @@ from stustapay.core.service.common.decorators import (
 )
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.transaction import book_transaction
+from stustapay.core.service.tree.common import fetch_node
 from stustapay.framework.database import Connection
+
+
+async def get_system_account_for_node(*, conn: Connection, node: Node, account_type: AccountType) -> Account:
+    return await conn.fetch_one(
+        Account,
+        "select * from account_with_history where type = $1 and node_id = any($2)",
+        account_type.value,
+        node.parent_ids + [node.id],
+    )
 
 
 async def get_account_by_id(*, conn: Connection, account_id: int) -> Optional[Account]:
@@ -54,13 +64,18 @@ class AccountService(DBService):
     @with_db_transaction
     @requires_user([Privilege.account_management])
     @requires_node()
-    async def list_system_accounts(self, *, conn: Connection) -> list[Account]:
-        return await conn.fetch_many(Account, "select * from account_with_history where type != 'private'")
+    async def list_system_accounts(self, *, conn: Connection, node: Node) -> list[Account]:
+        return await conn.fetch_many(
+            Account,
+            "select * from account_with_history where type != 'private' and node_id = any($1)",
+            node.ids_to_event_node,
+        )
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
     @requires_node()
     async def get_account(self, *, conn: Connection, account_id: int) -> Account:
+        # TODO: TREE visibility
         account = await get_account_by_id(conn=conn, account_id=account_id)
         if account is None:
             raise NotFound(element_typ="account", element_id=str(account_id))
@@ -70,12 +85,13 @@ class AccountService(DBService):
     @requires_user([Privilege.account_management])
     @requires_node()
     async def get_account_by_tag_uid(self, *, conn: Connection, user_tag_uid: int) -> Optional[Account]:
+        # TODO: TREE visibility
         return await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
     @requires_node()
-    async def find_accounts(self, *, conn: Connection, search_term: str) -> list[Account]:
+    async def find_accounts(self, *, conn: Connection, node: Node, search_term: str) -> list[Account]:
         value_as_int = None
         if re.match("^[A-Fa-f0-9]+$", search_term):
             value_as_int = int(search_term, base=16)
@@ -85,18 +101,21 @@ class AccountService(DBService):
         return await conn.fetch_many(
             Account,
             "select * from account_with_history "
-            "where name like $1 "
+            "where node_id = any ($3) and "
+            "   (name like $1 "
             "   or comment like $1 "
             "   or (user_tag_uid is not null and to_hex(user_tag_uid::bigint) like $1) "
-            "   or (user_tag_uid is not null and user_tag_uid = $2)",
+            "   or (user_tag_uid is not null and user_tag_uid = $2))",
             f"%{search_term.lower()}%",
             value_as_int,
+            node.ids_to_root,
         )
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
     @requires_node()
     async def disable_account(self, *, conn: Connection, account_id: int):
+        # TODO: TREE visibility
         row = await conn.fetchval("update account set user_tag_uid = null where id = $1 returning id", account_id)
         if row is None:
             raise NotFound(element_typ="account", element_id=str(account_id))
@@ -139,17 +158,22 @@ class AccountService(DBService):
     async def update_account_vouchers(
         self, *, conn: Connection, current_user: User, node: Node, account_id: int, new_voucher_amount: int
     ) -> bool:
+        # TODO: TREE visibility
         account = await self.get_account(  # pylint: disable=unexpected-keyword-arg
             conn=conn, node_id=node.id, current_user=current_user, account_id=account_id
         )
         if account is None:
             return False
 
+        voucher_create_acc = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.voucher_create
+        )
+
         imbalance = new_voucher_amount - account.vouchers
         await book_transaction(
             conn=conn,
             description="Admin override for account voucher amount",
-            source_account_id=ACCOUNT_MONEY_VOUCHER_CREATE,
+            source_account_id=voucher_create_acc.id,
             target_account_id=account.id,
             voucher_amount=imbalance,
             conducting_user_id=current_user.id,
@@ -159,8 +183,9 @@ class AccountService(DBService):
     @with_db_transaction
     @requires_terminal([Privilege.grant_vouchers])
     async def grant_vouchers(
-        self, *, conn: Connection, current_user: User, user_tag_uid: int, vouchers: int
+        self, *, conn: Connection, current_user: User, current_terminal: Terminal, user_tag_uid: int, vouchers: int
     ) -> Account:
+        # TODO: TREE visibility
         if vouchers <= 0:
             raise InvalidArgument("voucher amount must be positive")
 
@@ -168,11 +193,17 @@ class AccountService(DBService):
         if account is None:
             raise InvalidArgument(f"Tag {format_user_tag_uid(user_tag_uid)} is not registered")
 
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
+        voucher_create_acc = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.voucher_create
+        )
+
         try:
             await book_transaction(
                 conn=conn,
                 description="voucher grant",
-                source_account_id=ACCOUNT_MONEY_VOUCHER_CREATE,
+                source_account_id=voucher_create_acc.id,
                 target_account_id=account.id,
                 voucher_amount=vouchers,
                 conducting_user_id=current_user.id,
@@ -194,6 +225,7 @@ class AccountService(DBService):
         current_user: User,
         new_free_ticket_grant: NewFreeTicketGrant,
     ) -> Account:
+        # TODO: TREE visibility
         user_tag = await conn.fetchrow(
             "select true as found, a.id as account_id "
             "from user_tag u left join account a on a.user_tag_uid = u.uid where u.uid = $1",
@@ -213,11 +245,17 @@ class AccountService(DBService):
             new_free_ticket_grant.user_tag_uid,
         )
 
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
+        voucher_create_acc = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.voucher_create
+        )
+
         if new_free_ticket_grant.initial_voucher_amount > 0:
             await book_transaction(
                 conn=conn,
                 description="Initial voucher amount for volunteer ticket",
-                source_account_id=ACCOUNT_MONEY_VOUCHER_CREATE,
+                source_account_id=voucher_create_acc.id,
                 target_account_id=account_id,
                 voucher_amount=new_free_ticket_grant.initial_voucher_amount,
                 conducting_user_id=current_user.id,
@@ -231,6 +269,7 @@ class AccountService(DBService):
     @requires_user([Privilege.account_management])
     @requires_node()
     async def update_account_comment(self, *, conn: Connection, account_id: int, comment: str) -> Account:
+        # TODO: TREE visibility
         ret = await conn.fetchval("update account set comment = $1 where id = $2 returning id", comment, account_id)
         if ret is None:
             raise NotFound(element_typ="account", element_id=account_id)
@@ -259,6 +298,7 @@ class AccountService(DBService):
     async def switch_account_tag_uid_admin(
         self, *, conn: Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
     ):
+        # TODO: TREE visibility
         await self._switch_account_tag_uid(
             conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid, comment=comment
         )
@@ -268,6 +308,7 @@ class AccountService(DBService):
     async def switch_account_tag_uid_terminal(
         self, *, conn: Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
     ):
+        # TODO: TREE visibility
         await self._switch_account_tag_uid(
             conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid, comment=comment
         )

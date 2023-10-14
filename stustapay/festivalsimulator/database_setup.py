@@ -18,7 +18,13 @@ from stustapay.core.schema.till import (
     NewTillLayout,
     NewTillProfile,
 )
-from stustapay.core.schema.tree import ALL_OBJECT_TYPES, ROOT_NODE_ID, NewEvent, NewNode
+from stustapay.core.schema.tree import (
+    ALL_OBJECT_TYPES,
+    ROOT_NODE_ID,
+    NewEvent,
+    NewNode,
+    ObjectType,
+)
 from stustapay.core.schema.tse import NewTse, TseType
 from stustapay.core.schema.user import CASHIER_ROLE_NAME, NewUser
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
@@ -483,9 +489,19 @@ class DatabaseSetup:
         user_service = UserService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
 
         async with self.db_pool.acquire() as conn:
-            event_node = await create_event(
+            simulated_folder_node = await create_node(
                 conn=conn,
                 parent_id=ROOT_NODE_ID,
+                new_node=NewNode(
+                    name="SIMULATOR",
+                    description="",
+                    allowed_objects_at_node=[ObjectType.user, ObjectType.user_role],
+                    allowed_objects_in_subtree=[ObjectType.user, ObjectType.user_role],
+                ),
+            )
+            event_node = await create_event(
+                conn=conn,
+                parent_id=simulated_folder_node.id,
                 event=NewEvent(
                     name="SSC-Test",
                     description="",
@@ -506,11 +522,21 @@ class DatabaseSetup:
                     sepa_allowed_country_codes=["DE"],
                 ),
             )
-            await create_node(
+            beer_team_node = await create_node(
                 conn=conn,
                 parent_id=event_node.id,
                 new_node=NewNode(
-                    name="Bierstand",
+                    name="Bierteam",
+                    description="",
+                    allowed_objects_at_node=ALL_OBJECT_TYPES,
+                    allowed_objects_in_subtree=ALL_OBJECT_TYPES,
+                ),
+            )
+            await create_node(
+                conn=conn,
+                parent_id=beer_team_node.id,
+                new_node=NewNode(
+                    name="Weißbierinsel",
                     description="",
                     allowed_objects_at_node=ALL_OBJECT_TYPES,
                     allowed_objects_in_subtree=ALL_OBJECT_TYPES,

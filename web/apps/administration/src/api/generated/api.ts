@@ -1196,7 +1196,7 @@ export type UserRead = {
 export type NormalizedListUserInt = {
   ids: number[];
   entities: {
-    [key: string]: User;
+    [key: string]: UserRead;
   };
 };
 export type CreateUserPayload = {
@@ -1495,7 +1495,19 @@ export type NormalizedListConfigEntryStr = {
     [key: string]: ConfigEntry;
   };
 };
-export type AccountType = "virtual" | "internal" | "private";
+export type AccountType =
+  | "private"
+  | "sale_exit"
+  | "cash_entry"
+  | "cash_exit"
+  | "cash_topup_source"
+  | "cash_imbalance"
+  | "cash_vault"
+  | "sumup_entry"
+  | "sumup_online_entry"
+  | "transport"
+  | "cashier"
+  | "voucher_create";
 export type UserTagHistoryEntry = {
   user_tag_uid: number;
   account_id: number;

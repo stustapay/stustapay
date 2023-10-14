@@ -2,23 +2,32 @@
 -- i.e. trace it up to the root.
 create or replace function node_trace(
     start_node_id bigint,
+    start_node_parent_id bigint,
     start_node_is_event boolean
-) returns bigint[] as
+) returns table (
+    parent_ids bigint[],
+    event_node_id bigint,
+    parents_until_event_node bigint[]
+) as
 $$
 <<locals>> declare
-    has_cycle           boolean;
-    trace               bigint[];
-    n_events_in_trace   int;
+    has_cycle                   boolean;
+    trace                       bigint[];
+    n_events_in_trace           int;
+    event_node_id               bigint;
+    parents_until_event_node    bigint[];
 begin
 
-    with recursive search_graph (node_id, depth, path, cycle, n_events_in_trace) as (
+    with recursive search_graph (node_id, depth, path, cycle, n_events_in_trace, event_node_id, parents_until_event_node) as (
         -- base case: start at the requested node
         select
-            start_node_id,
+            start_node_parent_id,
             1,
-            array [start_node_id],
+            array[start_node_parent_id],
             false,
-            case when start_node_is_event then 1 else 0 end
+            case when start_node_is_event then 1 else 0 end,
+            case when start_node_is_event then start_node_id else null end,
+            case when start_node_is_event then array[]::bigint[] else array[start_node_parent_id] end
         union all
         -- add the node's parent to our result set (find the parents for all so-far evaluated nodes)
         select
@@ -26,7 +35,9 @@ begin
             sg.depth + 1,
             node.parent || sg.path,
             node.parent = any (sg.path),
-            sg.n_events_in_trace + (case when node.event_id is not null then 1 else 0 end)
+            sg.n_events_in_trace + (case when node.event_id is not null then 1 else 0 end),
+            coalesce(sg.event_node_id, case when node.event_id is not null then node.id else null end),
+            case when node.event_id is not null or sg.event_node_id is not null then sg.parents_until_event_node else node.parent || sg.parents_until_event_node end
         from
             search_graph sg
             join node on sg.node_id = node.id
@@ -37,8 +48,10 @@ begin
     select
         sg.path,
         sg.cycle,
-        sg.n_events_in_trace
-    into locals.trace, locals.has_cycle, locals.n_events_in_trace
+        sg.n_events_in_trace,
+        sg.event_node_id,
+        case when sg.event_node_id is null then null else sg.parents_until_event_node end
+    into locals.trace, locals.has_cycle, locals.n_events_in_trace, locals.event_node_id, locals.parents_until_event_node
     from
         search_graph sg
     where
@@ -56,7 +69,7 @@ begin
 --         raise 'stuff %, %', locals.trace, locals.n_events_in_trace;
 --     end if;
 
-    return locals.trace;
+    return query select locals.trace as parent_ids, locals.event_node_id, locals.parents_until_event_node;
 end
 $$ language plpgsql
     stable
@@ -66,8 +79,20 @@ $$ language plpgsql
 -- when parent is updated, recalculate the path.
 create or replace function update_node_path() returns trigger as
 $$
+<<locals>> declare
+    parent_ids                  bigint[];
+    event_node_id               bigint;
+    parents_until_event_node    bigint[];
 begin
-    NEW.parent_ids := node_trace(NEW.parent, NEW.event_id is not null);
+    select
+        n.parent_ids,
+        n.event_node_id,
+        n.parents_until_event_node
+        into locals.parent_ids, locals.event_node_id, locals.parents_until_event_node
+    from node_trace(NEW.id, NEW.parent, NEW.event_id is not null) n;
+    NEW.parent_ids := locals.parent_ids;
+    NEW.event_node_id := locals.event_node_id;
+    NEW.parents_until_event_node := locals.parents_until_event_node;
     NEW.path := '/' || array_to_string(NEW.parent_ids || array[NEW.id], '/');
 
     return NEW;
@@ -85,7 +110,7 @@ execute function update_node_path();
 create or replace function check_node_update() returns trigger as
 $$
 begin
-    perform node_trace(NEW.parent, NEW.event_id is not null);
+    perform node_trace(NEW.id, NEW.parent, NEW.event_id is not null);
     return NEW;
 end
 $$ language plpgsql
@@ -104,20 +129,40 @@ create or replace function user_to_role_updated() returns trigger
     language plpgsql as
 $$
 <<locals>> declare
-    node_id              bigint;
+    user_node_id         bigint;
+    user_node_parents    bigint[];
+    event_node_id        bigint;
     role_privileges      text[];
     user_login           text;
     cashier_account_id   bigint;
     transport_account_id bigint;
 begin
     select
-        ur.node_id,
         ur.privileges
-    into locals.node_id, locals.role_privileges
+    into locals.role_privileges
     from
         user_role_with_privileges ur
     where
         id = NEW.role_id;
+
+    select
+        u.node_id,
+        n.parent_ids
+    into locals.user_node_id, locals.user_node_parents
+    from
+        usr u
+    join node n on u.node_id = n.id
+    where
+        u.id = NEW.user_id;
+
+    select id into locals.event_node_id
+    from node
+    where event_id is not null and (id = locals.user_node_id or id = any(locals.user_node_parents));
+
+    -- TODO: this will not create cashier / transport accounts for users defined above event nodes (which makes sense)
+    if locals.event_node_id is null then
+        return NEW;
+    end if;
 
     select
         usr.cashier_account_id,
@@ -129,14 +174,14 @@ begin
     where
         id = NEW.user_id;
 
-    -- TODO: do not use role names here and instead use privileges
+    -- TODO: use a better privilege
     if 'can_book_orders' = any (locals.role_privileges) then
         if locals.cashier_account_id is null then
             insert into account (
                 node_id, type, name
             )
             values (
-                locals.node_id, 'internal', 'cashier account for ' || locals.user_login
+                locals.event_node_id, 'cashier', 'cashier account for ' || locals.user_login
             )
             returning id into locals.cashier_account_id;
 
@@ -150,7 +195,7 @@ begin
                 node_id, type, name
             )
             values (
-                locals.node_id, 'internal', 'transport account for ' || locals.user_login
+                locals.event_node_id, 'transport', 'transport account for ' || locals.user_login
             )
             returning id into locals.transport_account_id;
 

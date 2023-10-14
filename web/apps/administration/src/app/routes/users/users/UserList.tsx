@@ -1,4 +1,4 @@
-import { selectUserAll, useDeleteUserMutation, useListUsersQuery } from "@/api";
+import { selectUserAll, useDeleteUserMutation, useListUsersQuery, UserRead } from "@/api";
 import { UserRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
@@ -6,7 +6,7 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { User, formatUserTagUid } from "@stustapay/models";
+import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -45,7 +45,7 @@ export const UserList: React.FC = () => {
     setUserToDelete(null);
   };
 
-  const columns: GridColDef<User>[] = [
+  const columns: GridColDef<UserRead>[] = [
     {
       field: "login",
       headerName: t("userLogin") as string,

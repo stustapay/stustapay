@@ -5,7 +5,6 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, ACCOUNT_IMBALANCE
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.till import VIRTUAL_TILL_ID
@@ -17,7 +16,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.framework.database import Connection
-
+from .account import get_system_account_for_node
 from .common.error import NotFound, ServiceException
 from .order.booking import (
     BookingIdentifier,
@@ -28,6 +27,8 @@ from .order.booking import (
 )
 from .product import fetch_money_difference_product, fetch_product
 from .user import AuthService
+from ..schema.account import AccountType
+from ..schema.tree import Node
 
 
 class InvalidCloseOutException(ServiceException):
@@ -147,6 +148,7 @@ class CashierService(DBService):
         *,
         conn: Connection,
         current_user: CurrentUser,
+        node: Node,
         cashier_account_id: int,
         cash_register_id: int,
         imbalance: float,
@@ -162,8 +164,14 @@ class CashierService(DBService):
             )
         ]
 
+        cash_imbalance_acc = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.cash_imbalance
+        )
+
         bookings: dict[BookingIdentifier, float] = {
-            BookingIdentifier(source_account_id=cashier_account_id, target_account_id=ACCOUNT_IMBALANCE): -imbalance,
+            BookingIdentifier(
+                source_account_id=cashier_account_id, target_account_id=cash_imbalance_acc.id
+            ): -imbalance,
         }
 
         return await book_order(
@@ -195,12 +203,14 @@ class CashierService(DBService):
         *,
         conn: Connection,
         current_user: CurrentUser,
+        node: Node,
         cashier_account_id: int,
         cash_register_id: int,
         amount: float,
     ) -> OrderInfo:
+        cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
         bookings: dict[BookingIdentifier, float] = {
-            BookingIdentifier(source_account_id=cashier_account_id, target_account_id=ACCOUNT_CASH_VAULT): amount,
+            BookingIdentifier(source_account_id=cashier_account_id, target_account_id=cash_vault_acc.id): amount,
         }
         return await book_money_transfer(
             conn=conn,
@@ -215,7 +225,7 @@ class CashierService(DBService):
     @requires_user([Privilege.cashier_management])
     @requires_node()
     async def close_out_cashier(
-        self, *, conn: Connection, current_user: CurrentUser, cashier_id: int, close_out: CloseOut
+        self, *, conn: Connection, current_user: CurrentUser, node: Node, cashier_id: int, close_out: CloseOut
     ) -> CloseOutResult:
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_user=current_user, cashier_id=cashier_id
@@ -250,6 +260,7 @@ class CashierService(DBService):
         order_info = await self._book_money_transfer_cash_vault_order(
             conn=conn,
             current_user=current_user,
+            node=node,
             cashier_account_id=cashier.cashier_account_id,
             cash_register_id=cashier.cash_register_id,
             amount=close_out.actual_cash_drawer_balance,
@@ -257,6 +268,7 @@ class CashierService(DBService):
         imbalance_order_info = await self._book_imbalance_order(
             conn=conn,
             current_user=current_user,
+            node=node,
             cashier_account_id=cashier.cashier_account_id,
             cash_register_id=cashier.cash_register_id,
             imbalance=imbalance,

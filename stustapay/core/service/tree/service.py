@@ -46,6 +46,22 @@ async def create_node(conn: Connection, parent_id: int, new_node: NewNode, event
     return result
 
 
+async def _create_system_accounts(conn: Connection, node_id: int):
+    await conn.execute(
+        "insert into account (type, name, comment, node_id) values "
+        "   ('cash_entry', 'Cash Entry', 'source account when cash enters the system', $1), "
+        "   ('cash_exit', 'Cash Exit', 'target account when cash exits the system', $1), "
+        "   ('sale_exit', 'Sale Exit', 'target account when sales are made', $1), "
+        "   ('sumup_entry', 'Sumup Entry', 'source account when money enters the system via sumup', $1), "
+        "   ('sumup_online_entry', 'Sumup Online Entry', 'source account when money enters the system via sumup online payment', $1), "
+        "   ('cash_imbalance', 'Cash Imbalanace', 'used to correct cash imbalances, e.g. when closing out cash-handling tills ', $1), "
+        "   ('cash_vault', 'Cash Vault', 'represents the cash vault of an event', $1), "
+        "   ('cash_topup_source', 'Cash Top Up Source', 'account used when altering customer balances based on cash payments / payouts', $1), "
+        "   ('voucher_create', 'Voucher Create', 'Source / Target account for voucher creations / deletions', $1)",
+        node_id,
+    )
+
+
 async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Node:
     # TODO: tree, create all needed resources, e.g. global accounts which have to and should
     #  only exist at an event node
@@ -69,7 +85,9 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.sepa_allowed_country_codes,
     )
 
-    return await create_node(conn=conn, parent_id=parent_id, new_node=event, event_id=event_id)
+    node = await create_node(conn=conn, parent_id=parent_id, new_node=event, event_id=event_id)
+    await _create_system_accounts(conn=conn, node_id=node.id)
+    return node
 
 
 class TreeService(DBService):

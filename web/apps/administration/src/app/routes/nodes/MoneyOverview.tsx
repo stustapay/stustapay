@@ -1,10 +1,16 @@
-import { Account, selectAccountById, useListSystemAccountsQuery } from "@/api";
+import {
+  Account,
+  AccountRead,
+  AccountType,
+  selectAccountAll,
+  selectAccountById,
+  useListSystemAccountsQuery,
+} from "@/api";
 import { AccountRoutes } from "@/app/routes";
 import { ButtonLink } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Card, CardActions, CardContent, Grid, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { SystemAccounts } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -51,34 +57,43 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
 
 export const MoneyOverview: React.FC = () => {
   const { currentNode } = useCurrentNode();
-  const { data, isLoading: isAccountsLoading } = useListSystemAccountsQuery({ nodeId: currentNode.id });
+  const { accounts, isLoading: isAccountsLoading } = useListSystemAccountsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        accounts: data ? selectAccountAll(data) : undefined,
+      }),
+    }
+  );
 
-  if (!data || isAccountsLoading) {
+  if (!accounts || isAccountsLoading) {
     return <Loading />;
   }
+
+  const selectAccountByType = (type: AccountType): AccountRead => {
+    return accounts.find((a) => a.type === type)!;
+  };
 
   return (
     <Grid container spacing={2}>
       <Grid item sm={4} md={2}>
-        <BalanceCard account={selectAccountById(data, SystemAccounts.CASH_VAULT)} />
+        <BalanceCard account={selectAccountByType("cash_vault")} />
       </Grid>
       <Grid item sm={4} md={2}>
-        <BalanceCard account={selectAccountById(data, SystemAccounts.SUMUP)} />
+        <BalanceCard account={selectAccountByType("sumup_entry")} />
       </Grid>
       <Grid item sm={4} md={2}>
-        <BalanceCard account={selectAccountById(data, SystemAccounts.SALE_EXIT)} />
+        <BalanceCard account={selectAccountByType("sumup_online_entry")} />
       </Grid>
       <Grid item sm={4} md={2}>
-        <BalanceCard account={selectAccountById(data, SystemAccounts.IMBALANCE)} />
+        <BalanceCard account={selectAccountByType("sale_exit")} />
       </Grid>
       <Grid item sm={4} md={2}>
-        <BalanceCard account={selectAccountById(data, SystemAccounts.CASH_ENTRY)} />
+        <BalanceCard account={selectAccountByType("cash_imbalance")} />
       </Grid>
       <Grid item sm={4} md={2}>
-        <BalanceCard account={selectAccountById(data, SystemAccounts.DEPOSIT)} />
-      </Grid>
-      <Grid item sm={4} md={2}>
-        <BalanceCard account={selectAccountById(data, SystemAccounts.SUMUP_CUSTOMER_TOPUP)} />
+        <BalanceCard account={selectAccountByType("cash_entry")} />
       </Grid>
     </Grid>
   );

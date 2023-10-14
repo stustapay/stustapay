@@ -1,7 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import uuid
 
-from stustapay.core.schema.account import ACCOUNT_CASH_VAULT
 from stustapay.core.schema.order import Button, NewSale, OrderType
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.till import (
@@ -30,6 +29,7 @@ from stustapay.core.service.cashier import (
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.order import OrderService
 
+from ..core.schema.account import AccountType
 from .common import TerminalTestCase
 
 
@@ -96,7 +96,7 @@ class TillManagementTest(TerminalTestCase):
         self.assertTrue(success)
 
         await self._assert_account_balance(cashier.cashier_account_id, stocking.total)
-        await self._assert_account_balance(ACCOUNT_CASH_VAULT, -stocking.total)
+        await self._assert_system_account_balance(AccountType.cash_vault, -stocking.total)
 
         # before logging in we did not produce a money transfer order
         n_orders = await self.db_conn.fetchval(
@@ -191,7 +191,7 @@ class TillManagementTest(TerminalTestCase):
         )
 
         await self._assert_account_balance(self.finanzorga_user.transport_account_id, 100)
-        await self._assert_account_balance(ACCOUNT_CASH_VAULT, -100)
+        await self._assert_system_account_balance(AccountType.cash_vault, -100)
 
         with self.assertRaises(InvalidArgument):
             await self.till_service.register.modify_cashier_account_balance(
@@ -217,7 +217,7 @@ class TillManagementTest(TerminalTestCase):
             token=admin_terminal_token, orga_tag_uid=self.finanzorga_tag_uid, amount=-70
         )
         await self._assert_account_balance(self.finanzorga_user.transport_account_id, 0)
-        await self._assert_account_balance(ACCOUNT_CASH_VAULT, -30)
+        await self._assert_system_account_balance(AccountType.cash_vault, -30)
 
     async def test_basic_till_button_workflow(self):
         product1 = await self.product_service.create_product(
