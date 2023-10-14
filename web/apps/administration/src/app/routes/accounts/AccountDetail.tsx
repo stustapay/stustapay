@@ -1,7 +1,6 @@
 import { useGetAccountQuery } from "@/api";
 import { AccountRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
-import { Alert, AlertTitle } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useNavigate, useParams } from "react-router-dom";

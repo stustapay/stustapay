@@ -1,11 +1,4 @@
-import {
-  Account,
-  AccountRead,
-  AccountType,
-  selectAccountAll,
-  selectAccountById,
-  useListSystemAccountsQuery,
-} from "@/api";
+import { Account, AccountRead, AccountType, selectAccountAll, useListSystemAccountsQuery } from "@/api";
 import { AccountRoutes } from "@/app/routes";
 import { ButtonLink } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
@@ -71,8 +64,8 @@ export const MoneyOverview: React.FC = () => {
     return <Loading />;
   }
 
-  const selectAccountByType = (type: AccountType): AccountRead => {
-    return accounts.find((a) => a.type === type)!;
+  const selectAccountByType = (type: AccountType): AccountRead | undefined => {
+    return accounts.find((a) => a.type === type);
   };
 
   return (

@@ -26,6 +26,7 @@ export const translations = {
   confirm: "Confirm",
   cancel: "Cancel",
   tills: "Tills",
+  dsfinvk: "DSFinV-K",
   preview: "Preview",
   tillLayouts: "Till Layouts",
   tillButtons: "Till Buttons",
