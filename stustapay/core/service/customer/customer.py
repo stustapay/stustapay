@@ -54,9 +54,7 @@ class CustomerService(DBService):
         self.config_service = config_service
         self.logger = logging.getLogger("customer")
 
-        self.sumup = SumupService(
-            db_pool=db_pool, config=config, auth_service=auth_service
-        )
+        self.sumup = SumupService(db_pool=db_pool, config=config, auth_service=auth_service)
         self.payout = PayoutService(
             db_pool=db_pool, config=config, auth_service=auth_service, config_service=config_service
         )
@@ -196,6 +194,7 @@ class CustomerService(DBService):
         if node_id is None:
             raise InvalidArgument("Invalid customer portal configuration")
         node = await fetch_event_node_for_node(conn=conn, node_id=node_id)
+        assert node is not None
         assert node.event is not None
         return CustomerPortalApiConfig(
             test_mode=self.cfg.core.test_mode,

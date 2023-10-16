@@ -83,7 +83,7 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.sepa_sender_iban,
         event.sepa_description,
         event.sepa_allowed_country_codes,
-        event.customer_portal_url
+        event.customer_portal_url,
     )
 
     node = await create_node(conn=conn, parent_id=parent_id, new_node=event, event_id=event_id)
