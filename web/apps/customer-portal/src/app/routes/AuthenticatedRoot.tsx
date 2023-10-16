@@ -1,4 +1,8 @@
-import * as React from "react";
+import { config } from "@/api/common";
+import { LanguageSelect, Layout } from "@/components";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { selectIsAuthenticated, useAppSelector } from "@/store";
+import { Menu as MenuIcon } from "@mui/icons-material";
 import {
   AppBar,
   Box,
@@ -12,14 +16,10 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { Link as RouterLink, Navigate, Outlet, useLocation } from "react-router-dom";
-import { Menu as MenuIcon } from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
-import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { TestModeDisclaimer } from "@stustapay/components";
-import { config } from "@/api";
-import { LanguageSelect, Layout } from "@/components";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, Outlet, Link as RouterLink, useLocation } from "react-router-dom";
 
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
@@ -163,8 +163,8 @@ export const AuthenticatedRoot: React.FC = () => {
           <Toolbar />
           <Container maxWidth="lg" sx={{ padding: { xs: 0, md: 1, lg: 3 } }}>
             <TestModeDisclaimer
-              testMode={config.publicApiConfig.test_mode}
-              testModeMessage={config.publicApiConfig.test_mode_message}
+              testMode={config.apiConfig.test_mode}
+              testModeMessage={config.apiConfig.test_mode_message}
             />
             <React.Suspense fallback={<CircularProgress />}>
               <Outlet />

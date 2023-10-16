@@ -2,7 +2,7 @@ import { RootState, selectAuthToken } from "@/store";
 import type { BaseQueryApi, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { z } from "zod";
-import { Config as BackendConfig } from "./api";
+import { type Config as BackendConfig } from "./api";
 
 export const siteHost = window.location.host;
 export const siteProtocol = window.location.protocol;

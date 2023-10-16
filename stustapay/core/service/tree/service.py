@@ -68,8 +68,8 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
     event_id = await conn.fetchval(
         "insert into event (currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, "
         "bon_address, bon_title, customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban, "
-        "sepa_description, sepa_allowed_country_codes) "
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning id",
+        "sepa_description, sepa_allowed_country_codes, customer_portal_url) "
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning id",
         event.currency_identifier,
         event.sumup_topup_enabled,
         event.max_account_balance,
@@ -83,6 +83,7 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.sepa_sender_iban,
         event.sepa_description,
         event.sepa_allowed_country_codes,
+        event.customer_portal_url
     )
 
     node = await create_node(conn=conn, parent_id=parent_id, new_node=event, event_id=event_id)
@@ -118,7 +119,7 @@ class TreeService(DBService):
             "update event set currency_identifier = $2, sumup_topup_enabled = $3, max_account_balance = $4, "
             "   customer_portal_contact_email = $5, ust_id = $6, bon_issuer = $7, bon_address = $8, bon_title = $9, "
             "   sepa_enabled = $10, sepa_sender_name = $11, sepa_sender_iban = $12, sepa_description = $13, "
-            "   sepa_allowed_country_codes = $14 "
+            "   sepa_allowed_country_codes = $14, customer_portal_url = $15 "
             "where id = $1",
             event_id,
             event.currency_identifier,
@@ -134,6 +135,7 @@ class TreeService(DBService):
             event.sepa_sender_iban,
             event.sepa_description,
             event.sepa_allowed_country_codes,
+            event.customer_portal_url,
         )
         node = await fetch_node(conn=conn, node_id=node_id)
         assert node is not None

@@ -49,8 +49,9 @@ alter table user_tag
 create table event (
     id bigint primary key generated always as identity (start with 1000),
     currency_identifier varchar(255) not null,
-    sumup_topup_enabled bool not null,
     max_account_balance numeric not null,
+
+    sumup_topup_enabled bool not null,
 
     -- previous values in settings / no other place to put them yet
     ust_id text not null,
@@ -58,6 +59,7 @@ create table event (
     bon_address text not null,
     bon_title text not null,
 
+    customer_portal_url text not null,
     customer_portal_contact_email text not null,
 
     -- TODO: constraint other values to be set if sepa is enabled
@@ -71,7 +73,7 @@ create table event (
 insert into event (
     id, currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, bon_address, bon_title,
     customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban,
-    sepa_description, sepa_allowed_country_codes
+    sepa_description, sepa_allowed_country_codes, customer_portal_url
 ) overriding system value
 select
     0,
@@ -87,7 +89,8 @@ select
     (select value from config where key = 'customer_portal.sepa.sender_name'),
     (select value from config where key = 'customer_portal.sepa.sender_iban'),
     (select value from config where key = 'customer_portal.sepa.description'),
-    (select array(select json_array_elements_text(value::json)) from config where key = 'customer_portal.sepa.allowed_country_codes');
+    (select array(select json_array_elements_text(value::json)) from config where key = 'customer_portal.sepa.allowed_country_codes'),
+    ''; -- customer_portal_url
 
 alter table event alter column sepa_allowed_country_codes set not null;
 alter table event alter column sepa_description set not null;

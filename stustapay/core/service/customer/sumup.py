@@ -33,7 +33,7 @@ from stustapay.core.service.common.error import (
     NotFound,
     ServiceException,
 )
-from stustapay.core.service.config import ConfigService, get_currency_identifier
+from stustapay.core.service.config import get_currency_identifier
 from stustapay.core.service.order.booking import (
     BookingIdentifier,
     NewLineItem,
@@ -147,10 +147,9 @@ class SumupService(DBService):
     SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
     SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
 
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, config_service: ConfigService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
-        self.config_service = config_service
         self.logger = logging.getLogger("customer")
 
         self.sumup_reachable = True
@@ -163,7 +162,7 @@ class SumupService(DBService):
         }
 
     async def check_sumup_auth(self):
-        sumup_enabled = await self.config_service.is_sumup_topup_enabled()
+        sumup_enabled = self.cfg.customer_portal.sumup_config.enabled
         if not sumup_enabled:
             self.logger.info("Sumup is disabled via the config")
             return
@@ -292,7 +291,7 @@ class SumupService(DBService):
         )
 
     async def run_sumup_checkout_processing(self):
-        sumup_enabled = await self.config_service.is_sumup_topup_enabled()
+        sumup_enabled = self.cfg.customer_portal.sumup_config.enabled
         if not sumup_enabled or not self.sumup_reachable:
             self.logger.info("Sumup online topup not enabled, disabling sumup check state")
             return

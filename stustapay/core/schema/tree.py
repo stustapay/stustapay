@@ -94,7 +94,9 @@ class UpdateEvent(BaseModel):
     currency_identifier: str
     sumup_topup_enabled: bool
     max_account_balance: float
+    customer_portal_url: str
     customer_portal_contact_email: EmailStr
+
     ust_id: str
     bon_issuer: str
     bon_address: str

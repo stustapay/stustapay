@@ -510,6 +510,7 @@ class DatabaseSetup:
                     currency_identifier="EUR",
                     sumup_topup_enabled=True,
                     max_account_balance=150,
+                    customer_portal_url="http://localhost:4300",
                     customer_portal_contact_email="test@test.com",
                     ust_id="UST ID",
                     bon_issuer="Issuer",

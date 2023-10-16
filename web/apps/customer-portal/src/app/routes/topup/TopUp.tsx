@@ -1,19 +1,19 @@
-import * as React from "react";
-import { useGetCustomerQuery } from "@/api/customerApi";
-import { Loading } from "@stustapay/components";
-import { Trans, useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
-import { Link as RouterLink, Navigate } from "react-router-dom";
-import { Alert, AlertTitle, Box, Button, Grid, InputAdornment, LinearProgress, Link, Stack } from "@mui/material";
-import { Formik, FormikHelpers, Form } from "formik";
-import { toFormikValidationSchema } from "@stustapay/utils";
-import { z } from "zod";
+import { useCheckCheckoutMutation, useCreateCheckoutMutation, useGetCustomerQuery } from "@/api";
+import { useCurrencySymbol } from "@/hooks/useCurrencySymbol";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { useCreateCheckoutMutation, useUpdateCheckoutMutation } from "@/api/topupApi";
 import i18n from "@/i18n";
-import type { SumUpCard, SumUpResponseType } from "./SumUpCard";
 import { Cancel as CancelIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
+import { Alert, AlertTitle, Box, Button, Grid, InputAdornment, LinearProgress, Link, Stack } from "@mui/material";
+import { Loading } from "@stustapay/components";
 import { FormNumericInput } from "@stustapay/form-components";
+import { toFormikValidationSchema } from "@stustapay/utils";
+import { Form, Formik, FormikHelpers } from "formik";
+import * as React from "react";
+import { Trans, useTranslation } from "react-i18next";
+import { Navigate, Link as RouterLink } from "react-router-dom";
+import { toast } from "react-toastify";
+import { z } from "zod";
+import type { SumUpCard, SumUpResponseType } from "./SumUpCard";
 
 const TopUpSchema = z.object({
   amount: z.number().int(i18n.t("topup.errorAmountMustBeIntegral")).positive(i18n.t("topup.errorAmountGreaterZero")),
@@ -78,10 +78,11 @@ export const TopUp: React.FC = () => {
   const { t, i18n } = useTranslation();
 
   const config = usePublicConfig();
+  const currencySymbol = useCurrencySymbol();
 
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
   const [createCheckout] = useCreateCheckoutMutation();
-  const [updateCheckout] = useUpdateCheckoutMutation();
+  const [checkCheckout] = useCheckCheckoutMutation();
 
   const sumupCard = React.useRef<any | undefined>(undefined);
   const handleSumupCardResp = React.useRef<any | undefined>(undefined);
@@ -107,7 +108,7 @@ export const TopUp: React.FC = () => {
 
       if (type === "error" || type === "success") {
         console.log("updating checkout");
-        updateCheckout({ checkoutId: state.checkoutId })
+        checkCheckout({ checkCheckoutPayload: { checkout_id: state.checkoutId } })
           .unwrap()
           .then((resp) => {
             console.log("update checkout returned with resp", resp);
@@ -133,7 +134,7 @@ export const TopUp: React.FC = () => {
     handleSumupCardLoad.current = () => {
       console.log("sumup card loaded");
     };
-  }, [updateCheckout, dispatch, state]);
+  }, [checkCheckout, dispatch, state]);
 
   React.useEffect(() => {
     if (state.stage !== "sumup") {
@@ -154,7 +155,7 @@ export const TopUp: React.FC = () => {
       sumupCard.current = SumUpCard.mount(config);
       // sumupCard.current = SumUpCardMock.mount(config);
     }
-  }, [config, state, i18n, updateCheckout, dispatch]);
+  }, [config, state, i18n, checkCheckout, dispatch]);
 
   if (!config.sumup_topup_enabled) {
     toast.error(t("topup.sumupTopupDisabled"));
@@ -172,7 +173,7 @@ export const TopUp: React.FC = () => {
 
   const onSubmit = (values: FormVal, { setSubmitting }: FormikHelpers<FormVal>) => {
     setSubmitting(true);
-    createCheckout(values)
+    createCheckout({ createCheckoutPayload: values })
       .unwrap()
       .then((checkout) => {
         console.log("created checkout with reference", checkout);
@@ -206,7 +207,7 @@ export const TopUp: React.FC = () => {
                     variant="outlined"
                     formik={formik}
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">{config.currency_symbol}</InputAdornment>,
+                      endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment>,
                     }}
                   />
                   {formik.isSubmitting && <LinearProgress />}

@@ -1,14 +1,14 @@
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useGetCustomerQuery } from "@/api/customerApi";
-import { Link, Alert, Grid, Paper, Stack, Typography, AlertTitle } from "@mui/material";
-import { Loading } from "@stustapay/components";
-import * as React from "react";
-import { toast } from "react-toastify";
-import { useTranslation, Trans } from "react-i18next";
+import { useGetCustomerQuery } from "@/api";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
-import { OrderList } from "./OrderList";
-import { formatUserTagUid } from "@stustapay/models";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { Alert, AlertTitle, Grid, Link, Paper, Stack, Typography } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { formatUserTagUid } from "@stustapay/models";
+import * as React from "react";
+import { Trans, useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { OrderList } from "./OrderList";
 
 export const Index: React.FC = () => {
   const { t } = useTranslation();

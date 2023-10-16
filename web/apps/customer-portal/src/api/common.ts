@@ -1,12 +1,12 @@
+import { type CustomerPortalApiConfig } from "@/api";
+import { RootState, selectAuthToken } from "@/store";
 import type { BaseQueryApi, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { RootState, selectAuthToken } from "@/store";
-import { PublicCustomerApiConfig } from "@/api";
 import { z } from "zod";
 
-export const siteHost = window.location.host;
+const siteHost = window.location.host;
 
-export const prepareAuthHeaders = (
+const prepareAuthHeaders = (
   headers: Headers,
   { getState }: Pick<BaseQueryApi, "getState" | "extra" | "endpoint" | "type" | "forced">
 ) => {
@@ -17,32 +17,33 @@ export const prepareAuthHeaders = (
   return headers;
 };
 
-export const ClientConfigSchema = z.object({
+const ClientConfigSchema = z.object({
   customerApiEndpoint: z.string(),
 });
 
-export type ClientConfig = z.infer<typeof ClientConfigSchema>;
+type ClientConfig = z.infer<typeof ClientConfigSchema>;
 
 export interface Config {
   customerApiBaseUrl: string;
-  publicApiConfig: PublicCustomerApiConfig;
+  apiConfig: CustomerPortalApiConfig;
 }
 
 export let config: Config;
 
-const generateConfig = (clientConfig: ClientConfig, publicApiConfig: PublicCustomerApiConfig): Config => {
+const generateConfig = (clientConfig: ClientConfig, publicApiConfig: CustomerPortalApiConfig): Config => {
   return {
     ...clientConfig,
     customerApiBaseUrl: clientConfig.customerApiEndpoint,
-    publicApiConfig: publicApiConfig,
+    apiConfig: publicApiConfig,
   };
 };
 
-const fetchPublicCustomerApiConfig = async (clientConfig: ClientConfig): Promise<PublicCustomerApiConfig> => {
-  const resp = await fetch(`${clientConfig.customerApiEndpoint}/public_customer_config`);
+const fetchPublicCustomerApiConfig = async (clientConfig: ClientConfig): Promise<CustomerPortalApiConfig> => {
+  const baseUrl = encodeURIComponent(window.location.origin);
+  const resp = await fetch(`${clientConfig.customerApiEndpoint}/config?base_url=${baseUrl}`);
   const respJson = await resp.json();
   // TODO: validation
-  return respJson as PublicCustomerApiConfig;
+  return respJson as CustomerPortalApiConfig;
 };
 
 export const fetchConfig = async (): Promise<Config> => {

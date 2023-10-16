@@ -1,9 +1,7 @@
-import * as React from "react";
 import { useGetCustomerQuery, useUpdateCustomerInfoDonateAllMutation, useUpdateCustomerInfoMutation } from "@/api";
-import { Loading } from "@stustapay/components";
-import { Trans, useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
-import { Link as RouterLink, Navigate, useNavigate } from "react-router-dom";
+import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
+import { useCurrencySymbol } from "@/hooks/useCurrencySymbol";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 import {
   Alert,
   Button,
@@ -17,13 +15,16 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { Formik, FormikHelpers } from "formik";
+import { Loading } from "@stustapay/components";
+import { FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { z } from "zod";
+import { Formik, FormikHelpers } from "formik";
 import iban from "iban";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
-import { FormTextField, FormNumericInput } from "@stustapay/form-components";
+import * as React from "react";
+import { Trans, useTranslation } from "react-i18next";
+import { Navigate, Link as RouterLink, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 export const PayoutInfo: React.FC = () => {
   const { t } = useTranslation();
@@ -36,6 +37,7 @@ export const PayoutInfo: React.FC = () => {
   const [updateCustomerDonateAll] = useUpdateCustomerInfoDonateAllMutation();
 
   const formatCurrency = useCurrencyFormatter();
+  const currencySymbol = useCurrencySymbol();
 
   if (isCustomerLoading || (!customer && !customerError)) {
     return <Loading />;
@@ -54,7 +56,7 @@ export const PayoutInfo: React.FC = () => {
           message: t("payout.ibanNotValid"),
         });
       }
-      if (!config.allowed_country_codes.includes(val.substring(0, 2))) {
+      if (!config.allowed_country_codes?.includes(val.substring(0, 2))) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: t("payout.countryCodeNotSupported"),
@@ -180,7 +182,7 @@ export const PayoutInfo: React.FC = () => {
                   variant="outlined"
                   formik={formik}
                   InputProps={{
-                    endAdornment: <InputAdornment position="end">{config.currency_symbol}</InputAdornment>,
+                    endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment>,
                   }}
                 />
                 <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
