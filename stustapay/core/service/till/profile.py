@@ -17,16 +17,17 @@ from stustapay.core.service.user import AuthService
 from stustapay.framework.database import Connection
 
 
+async def _get_profile(*, conn: Connection, node: Node, profile_id: int) -> Optional[TillProfile]:
+    # TODO: TREE visibility
+    return await conn.fetch_maybe_one(
+        TillProfile, "select * from till_profile_with_allowed_roles where id = $1", profile_id
+    )
+
+
 class TillProfileService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
-
-    @staticmethod
-    async def _get_profile(*, conn: Connection, profile_id: int) -> Optional[TillProfile]:
-        return await conn.fetch_maybe_one(
-            TillProfile, "select * from till_profile_with_allowed_roles where id = $1", profile_id
-        )
 
     @staticmethod
     async def _update_allowed_profile_roles(*, conn: Connection, profile_id: int, role_names: list[str]):
@@ -44,6 +45,7 @@ class TillProfileService(DBService):
     @requires_user([Privilege.till_management])
     @requires_node()
     async def create_profile(self, *, conn: Connection, node: Node, profile: NewTillProfile) -> TillProfile:
+        # TODO: TREE visibility
         profile_id = await conn.fetchval(
             "insert into till_profile (node_id, name, description, allow_top_up, allow_cash_out, "
             "allow_ticket_sale, layout_id) "
@@ -62,28 +64,31 @@ class TillProfileService(DBService):
             conn=conn, profile_id=profile_id, role_names=profile.allowed_role_names
         )
 
-        resulting_profile = await self._get_profile(conn=conn, profile_id=profile_id)
+        resulting_profile = await _get_profile(conn=conn, node=node, profile_id=profile_id)
         assert resulting_profile is not None
         return resulting_profile
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
-    async def list_profiles(self, *, conn: Connection) -> list[TillProfile]:
-        return await conn.fetch_many(TillProfile, "select * from till_profile_with_allowed_roles")
+    async def list_profiles(self, *, conn: Connection, node: Node) -> list[TillProfile]:
+        return await conn.fetch_many(
+            TillProfile, "select * from till_profile_with_allowed_roles where node_id = any($1)", node.ids_to_event_node
+        )
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
-    async def get_profile(self, *, conn: Connection, profile_id: int) -> Optional[TillProfile]:
-        return await self._get_profile(conn=conn, profile_id=profile_id)
+    async def get_profile(self, *, conn: Connection, node: Node, profile_id: int) -> Optional[TillProfile]:
+        return await _get_profile(conn=conn, node=node, profile_id=profile_id)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
     async def update_profile(
-        self, *, conn: Connection, profile_id: int, profile: NewTillProfile
+        self, *, conn: Connection, node: Node, profile_id: int, profile: NewTillProfile
     ) -> Optional[TillProfile]:
+        # TODO: TREE visibility
         p_id = await conn.fetchval(
             "update till_profile set name = $2, description = $3, allow_top_up = $4, allow_cash_out = $5, "
             "   allow_ticket_sale = $6, layout_id = $7 "
@@ -104,7 +109,7 @@ class TillProfileService(DBService):
             conn=conn, profile_id=profile_id, role_names=profile.allowed_role_names
         )
 
-        resulting_profile = await self._get_profile(conn=conn, profile_id=profile_id)
+        resulting_profile = await _get_profile(conn=conn, node=node, profile_id=profile_id)
         assert resulting_profile is not None
         return resulting_profile
 
@@ -112,6 +117,7 @@ class TillProfileService(DBService):
     @requires_user([Privilege.till_management])
     @requires_node()
     async def delete_profile(self, *, conn: Connection, till_profile_id: int) -> bool:
+        # TODO: TREE visibility
         result = await conn.execute(
             "delete from till_profile where id = $1",
             till_profile_id,

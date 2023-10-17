@@ -34,6 +34,7 @@ from stustapay.core.service.till.common import create_till, fetch_till
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.till.register import TillRegisterService
+from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.user import AuthService, list_user_roles
 from stustapay.framework.database import Connection
 
@@ -56,24 +57,28 @@ class TillService(DBService):
     @requires_user([Privilege.till_management])
     @requires_node()
     async def create_till(self, *, conn: Connection, node: Node, till: NewTill) -> Till:
+        # TODO: TREE visibility
         return await create_till(conn=conn, node_id=node.id, till=till)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
-    async def list_tills(self, *, conn: Connection) -> list[Till]:
-        return await conn.fetch_many(Till, "select * from till_with_cash_register")
+    async def list_tills(self, *, node: Node, conn: Connection) -> list[Till]:
+        return await conn.fetch_many(
+            Till, "select * from till_with_cash_register where node_id = any($1)", node.ids_to_event_node
+        )
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
-    async def get_till(self, *, conn: Connection, till_id: int) -> Optional[Till]:
-        return await fetch_till(conn=conn, till_id=till_id)
+    async def get_till(self, *, conn: Connection, node: Node, till_id: int) -> Optional[Till]:
+        return await fetch_till(conn=conn, node=node, till_id=till_id)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
-    async def update_till(self, *, conn: Connection, till_id: int, till: NewTill) -> Optional[Till]:
+    async def update_till(self, *, conn: Connection, node: Node, till_id: int, till: NewTill) -> Optional[Till]:
+        # TODO: TREE visibility
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5 "
             "where id = $1 returning id",
@@ -86,12 +91,13 @@ class TillService(DBService):
         if row is None:
             return None
 
-        return await fetch_till(conn=conn, till_id=till_id)
+        return await fetch_till(conn=conn, node=node, till_id=till_id)
 
     @with_db_transaction
     @requires_user([Privilege.till_management])
     @requires_node()
     async def delete_till(self, *, conn: Connection, till_id: int) -> bool:
+        # TODO: TREE visibility
         result = await conn.execute(
             "delete from till where id = $1",
             till_id,
@@ -100,6 +106,7 @@ class TillService(DBService):
 
     @with_db_transaction
     async def register_terminal(self, *, conn: Connection, registration_uuid: str) -> TerminalRegistrationSuccess:
+        # TODO: TREE visibility
         till = await conn.fetch_maybe_one(Till, "select * from till where registration_uuid = $1", registration_uuid)
         if till is None:
             raise AccessDenied("Invalid registration uuid")
@@ -118,6 +125,7 @@ class TillService(DBService):
     @requires_user([Privilege.till_management])
     @requires_node()
     async def logout_terminal_id(self, *, conn: Connection, till_id: int) -> bool:
+        # TODO: TREE visibility
         id_ = await conn.fetchval(
             "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1 returning id",
             till_id,
@@ -129,6 +137,7 @@ class TillService(DBService):
     @with_db_transaction
     @requires_terminal()
     async def logout_terminal(self, *, conn: Connection, current_terminal: Terminal):
+        # TODO: TREE visibility
         await conn.fetchval(
             "update till set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1",
             current_terminal.till.id,
@@ -138,6 +147,7 @@ class TillService(DBService):
     @requires_user([Privilege.till_management])
     @requires_node()
     async def force_logout_user(self, *, conn: Connection, till_id: int):
+        # TODO: TREE visibility
         result = await conn.fetchval(
             "update till set active_user_id = null, active_user_role_id = null where id = $1 returning id",
             till_id,
@@ -291,6 +301,8 @@ class TillService(DBService):
     @with_db_transaction
     @requires_terminal()
     async def get_terminal_config(self, *, conn: Connection, current_terminal: Terminal) -> Optional[TerminalConfig]:
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
         profile = await conn.fetch_one(
             TillProfile,
             "select * from till_profile_with_allowed_roles tp where id = $1",
@@ -340,7 +352,7 @@ class TillService(DBService):
 
         secrets = TerminalSecrets(sumup_affiliate_key=sumup_key, user_tag_secret=user_tag_secret)
 
-        available_roles = await list_user_roles(conn=conn)
+        available_roles = await list_user_roles(conn=conn, node=node)
 
         return TerminalConfig(
             id=current_terminal.till.id,
@@ -362,11 +374,14 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def get_customer(self, *, conn: Connection, customer_tag_uid: int) -> Account:
+    async def get_customer(self, *, conn: Connection, current_terminal: Terminal, customer_tag_uid: int) -> Account:
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
         customer = await conn.fetch_maybe_one(
             Account,
-            "select * from account_with_history a where a.user_tag_uid = $1",
+            "select * from account_with_history a where a.user_tag_uid = $1 and node_id = any($2)",
             customer_tag_uid,
+            node.ids_to_event_node,
         )
         if customer is None:
             raise InvalidArgument(f"Customer with tag uid {format_user_tag_uid(customer_tag_uid)} does not exist")

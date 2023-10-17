@@ -6,6 +6,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
+from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import (
     CASHIER_ROLE_NAME,
@@ -28,6 +29,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument, NotFound
+from stustapay.core.service.tree.common import fetch_node
 from stustapay.framework.database import Connection
 
 
@@ -36,8 +38,14 @@ class UserLoginSuccess(BaseModel):
     token: str
 
 
-async def list_user_roles(*, conn: Connection) -> list[UserRole]:
-    return await conn.fetch_many(UserRole, "select * from user_role_with_privileges")
+async def list_user_roles(*, conn: Connection, node: Node) -> list[UserRole]:
+    return await conn.fetch_many(
+        UserRole, "select * from user_role_with_privileges where node_id = any($1)", node.ids_to_root
+    )
+
+
+async def _get_user_role(*, conn: Connection, role_id: int) -> Optional[UserRole]:
+    return await conn.fetch_maybe_one(UserRole, "select * from user_role_with_privileges where id = $1", role_id)
 
 
 class UserService(DBService):
@@ -53,20 +61,17 @@ class UserService(DBService):
     def _check_password(self, password: str, hashed_password: str) -> bool:
         return self.pwd_context.verify(password, hashed_password)
 
-    @staticmethod
-    async def _get_user_role(*, conn: Connection, role_id: int) -> Optional[UserRole]:
-        return await conn.fetch_maybe_one(UserRole, "select * from user_role_with_privileges where id = $1", role_id)
-
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
-    async def list_user_roles(self, *, conn: Connection) -> list[UserRole]:
-        return await list_user_roles(conn=conn)
+    async def list_user_roles(self, *, conn: Connection, node: Node) -> list[UserRole]:
+        return await list_user_roles(conn=conn, node=node)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
     async def create_user_role(self, *, conn: Connection, node: Node, new_role: NewUserRole) -> UserRole:
+        # TODO: TREE visibility
         role_id = await conn.fetchval(
             "insert into user_role (node_id, name, is_privileged) values ($1, $2, $3) returning id",
             node.id,
@@ -79,7 +84,7 @@ class UserService(DBService):
             )
 
         assert role_id is not None
-        role = await self._get_user_role(conn=conn, role_id=role_id)
+        role = await _get_user_role(conn=conn, role_id=role_id)
         assert role is not None
         return role
 
@@ -89,7 +94,8 @@ class UserService(DBService):
     async def update_user_role_privileges(
         self, *, conn: Connection, role_id: int, is_privileged: bool, privileges: list[Privilege]
     ) -> UserRole:
-        role = await self._get_user_role(conn=conn, role_id=role_id)
+        # TODO: TREE visibility
+        role = await _get_user_role(conn=conn, role_id=role_id)
         if role is None:
             raise NotFound(element_typ="user_role", element_id=str(role))
 
@@ -101,7 +107,7 @@ class UserService(DBService):
                 "insert into user_role_to_privilege (role_id, privilege) values ($1, $2)", role_id, privilege.name
             )
 
-        role = await self._get_user_role(conn=conn, role_id=role_id)
+        role = await _get_user_role(conn=conn, role_id=role_id)
         assert role is not None
         return role
 
@@ -109,6 +115,7 @@ class UserService(DBService):
     @requires_user([Privilege.user_management])
     @requires_node()
     async def delete_user_role(self, *, conn: Connection, role_id: int) -> bool:
+        # TODO: TREE visibility
         result = await conn.execute(
             "delete from user_role where id = $1",
             role_id,
@@ -117,6 +124,7 @@ class UserService(DBService):
 
     @staticmethod
     async def _update_user_roles(*, conn: Connection, user_id: int, role_names: list[str], delete_before_insert=False):
+        # TODO: TREE visibility
         if delete_before_insert:
             await conn.execute("delete from user_to_role where user_id = $1", user_id)
 
@@ -136,6 +144,7 @@ class UserService(DBService):
         creating_user_id: Optional[int],
         password: Optional[str] = None,
     ) -> User:
+        # TODO: TREE visibility
         hashed_password = None
         if password:
             hashed_password = self._hash_password(password)
@@ -181,6 +190,7 @@ class UserService(DBService):
         new_user: NewUser,
         password: Optional[str] = None,
     ) -> User:
+        # TODO: TREE visibility
         return await self._create_user(
             conn=conn, creating_user_id=None, node_id=node_id, new_user=new_user, password=password
         )
@@ -197,6 +207,7 @@ class UserService(DBService):
         new_user: NewUser,
         password: Optional[str] = None,
     ) -> User:
+        # TODO: TREE visibility
         return await self._create_user(
             conn=conn, creating_user_id=current_user.id, node_id=node.id, new_user=new_user, password=password
         )
@@ -211,6 +222,7 @@ class UserService(DBService):
     @with_db_transaction
     @requires_terminal([Privilege.user_management])
     async def create_user_terminal(self, *, conn: Connection, current_user: CurrentUser, new_user: NewUser) -> User:
+        # TODO: TREE visibility
         if await self._contains_privileged_roles(conn=conn, role_names=new_user.role_names):
             raise AccessDenied("Cannot promote users to privileged roles on a terminal")
 
@@ -220,9 +232,13 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_terminal([Privilege.user_management])
-    async def update_user_roles_terminal(self, *, conn: Connection, user_tag_uid: int, role_names: list[str]) -> User:
+    async def update_user_roles_terminal(self, *, conn: Connection, current_terminal: Terminal, user_tag_uid: int, role_names: list[str]) -> User:
+        # TODO: TREE visibility
         if await self._contains_privileged_roles(conn=conn, role_names=role_names):
             raise AccessDenied("Cannot promote users to privileged roles on a terminal")
+
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
 
         user_id = await conn.fetchval("select id from usr where user_tag_uid = $1", user_tag_uid)
         if user_id is None:
@@ -230,7 +246,7 @@ class UserService(DBService):
 
         await self._update_user_roles(conn=conn, user_id=user_id, role_names=role_names, delete_before_insert=True)
 
-        return await self._get_user(conn=conn, user_id=user_id)
+        return await self._get_user(conn=conn, node=node, user_id=user_id)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
@@ -238,6 +254,7 @@ class UserService(DBService):
     async def create_user_with_tag(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, new_user: NewUser
     ) -> User:
+        # TODO: TREE visibility
         """
         Create a user at a Terminal, where a name and the user tag must be provided
         If a user with the given tag already exists, this user is returned, without updating the name
@@ -264,8 +281,9 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
-    async def promote_to_cashier(self, *, conn: Connection, user_id: int) -> User:
-        user = await self._get_user(conn=conn, user_id=user_id)
+    async def promote_to_cashier(self, *, conn: Connection, node: Node, user_id: int) -> User:
+        # TODO: TREE visibility
+        user = await self._get_user(conn=conn, node=node, user_id=user_id)
         if user is None:
             raise NotFound(element_typ="user", element_id=str(user_id))
 
@@ -273,13 +291,14 @@ class UserService(DBService):
             return user
 
         user.role_names.append(CASHIER_ROLE_NAME)
-        return await self._update_user(conn=conn, user_id=user.id, user=user)
+        return await self._update_user(conn=conn, node=node, user_id=user.id, user=user)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
-    async def promote_to_finanzorga(self, *, conn: Connection, user_id: int) -> User:
-        user = await self._get_user(conn=conn, user_id=user_id)
+    async def promote_to_finanzorga(self, *, conn: Connection, node: Node, user_id: int) -> User:
+        # TODO: TREE visibility
+        user = await self._get_user(conn=conn, node=node, user_id=user_id)
         if user is None:
             raise NotFound(element_typ="user", element_id=str(user_id))
 
@@ -287,17 +306,20 @@ class UserService(DBService):
             return user
 
         user.role_names.append(FINANZORGA_ROLE_NAME)
-        return await self._update_user(conn=conn, user_id=user.id, user=user)
+        return await self._update_user(conn=conn, node= node, user_id=user.id, user=user)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
-    async def list_users(self, *, conn: Connection) -> list[User]:
-        return await conn.fetch_many(User, "select * from user_with_roles")
+    async def list_users(self, *, conn: Connection, node: Node) -> list[User]:
+        return await conn.fetch_many(User, "select * from user_with_roles where node_id = any($1)", node.ids_to_root)
 
     @staticmethod
-    async def _get_user(*, conn: Connection, user_id: int) -> User:
-        user = await conn.fetch_maybe_one(User, "select * from user_with_roles where id = $1", user_id)
+    async def _get_user(*, conn: Connection, node: Node, user_id: int) -> User:
+        # TODO: TREE visibility
+        user = await conn.fetch_maybe_one(
+            User, "select * from user_with_roles where id = $1 and node_id = any($2)", user_id, node.ids_to_root
+        )
         if user is None:
             raise NotFound(element_typ="user", element_id=str(user_id))
         return user
@@ -305,10 +327,10 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
-    async def get_user(self, *, conn: Connection, user_id: int) -> Optional[User]:
-        return await self._get_user(conn=conn, user_id=user_id)
+    async def get_user(self, *, conn: Connection, node: Node, user_id: int) -> Optional[User]:
+        return await self._get_user(conn=conn, node=node, user_id=user_id)
 
-    async def _update_user(self, *, conn: Connection, user_id: int, user: NewUser) -> User:
+    async def _update_user(self, *, conn: Connection, node: Node, user_id: int, user: NewUser) -> User:
         row = await conn.fetchrow(
             "update usr "
             "set login = $2, description = $3, display_name = $4, user_tag_uid = $5 "
@@ -324,29 +346,32 @@ class UserService(DBService):
 
         await self._update_user_roles(conn=conn, user_id=user_id, role_names=user.role_names, delete_before_insert=True)
 
-        return await self._get_user(conn=conn, user_id=user_id)
+        return await self._get_user(conn=conn, node=node, user_id=user_id)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
-    async def update_user_roles(self, *, conn: Connection, user_id: int, role_names: list[str]) -> Optional[User]:
+    async def update_user_roles(self, *, conn: Connection, node: Node, user_id: int, role_names: list[str]) -> Optional[User]:
+        # TODO: TREE visibility
         found = await conn.fetchval("select true from usr where id = $1", user_id)
         if not found:
             raise NotFound(element_typ="user", element_id=str(user_id))
 
         await self._update_user_roles(conn=conn, user_id=user_id, role_names=role_names, delete_before_insert=True)
-        return await self._get_user(conn=conn, user_id=user_id)
+        return await self._get_user(conn=conn, node=node, user_id=user_id)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
-    async def update_user(self, *, conn: Connection, user_id: int, user: UserWithoutId) -> Optional[User]:
-        return await self._update_user(conn=conn, user_id=user_id, user=user)
+    async def update_user(self, *, conn: Connection, node: Node, user_id: int, user: UserWithoutId) -> Optional[User]:
+        # TODO: TREE visibility
+        return await self._update_user(conn=conn, node=node, user_id=user_id, user=user)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
     async def delete_user(self, *, conn: Connection, user_id: int) -> bool:
+        # TODO: TREE visibility
         result = await conn.execute(
             "delete from usr where id = $1",
             user_id,
@@ -355,6 +380,7 @@ class UserService(DBService):
 
     @with_db_transaction
     async def login_user(self, *, conn: Connection, username: str, password: str) -> UserLoginSuccess:
+        # TODO: TREE visibility
         row = await conn.fetchrow(
             "select * from usr where login = $1",
             username,
@@ -379,6 +405,7 @@ class UserService(DBService):
     async def change_password(
         self, *, conn: Connection, current_user: CurrentUser, old_password: str, new_password: str
     ):
+        # TODO: TREE visibility
         old_password_hashed = await conn.fetchval("select password from usr where id = $1", current_user.id)
         assert old_password_hashed is not None
         if not self._check_password(old_password, old_password_hashed):
@@ -391,6 +418,7 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user()
     async def logout_user(self, *, conn: Connection, current_user: User, token: str) -> bool:
+        # TODO: TREE visibility
         token_payload = self.auth_service.decode_user_jwt_payload(token)
         assert token_payload is not None
         assert current_user.id == token_payload.user_id

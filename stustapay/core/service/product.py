@@ -25,37 +25,40 @@ from stustapay.core.service.common.error import ServiceException
 from stustapay.framework.database import Connection
 
 
-async def fetch_product(*, conn: Connection, product_id: int) -> Optional[Product]:
+async def fetch_product(*, conn: Connection, node: Node, product_id: int) -> Optional[Product]:
     return await conn.fetch_maybe_one(
-        Product, "select * from product_with_tax_and_restrictions where id = $1", product_id
+        Product,
+        "select * from product_with_tax_and_restrictions where id = $1 and node_id = any($2)",
+        product_id,
+        node.ids_to_event_node,
     )
 
 
-async def fetch_constant_product(*, conn: Connection, product_id: int) -> Product:
-    product = await fetch_product(conn=conn, product_id=product_id)
+async def fetch_constant_product(*, conn: Connection, node: Node, product_id: int) -> Product:
+    product = await fetch_product(conn=conn, node=node, product_id=product_id)
     if product is None:
         raise RuntimeError("no product found in database")
     return product
 
 
-async def fetch_discount_product(*, conn: Connection) -> Product:
-    return await fetch_constant_product(conn=conn, product_id=DISCOUNT_PRODUCT_ID)
+async def fetch_discount_product(*, conn: Connection, node: Node) -> Product:
+    return await fetch_constant_product(conn=conn, node=node, product_id=DISCOUNT_PRODUCT_ID)
 
 
-async def fetch_top_up_product(*, conn: Connection) -> Product:
-    return await fetch_constant_product(conn=conn, product_id=TOP_UP_PRODUCT_ID)
+async def fetch_top_up_product(*, conn: Connection, node: Node) -> Product:
+    return await fetch_constant_product(conn=conn, node=node, product_id=TOP_UP_PRODUCT_ID)
 
 
-async def fetch_pay_out_product(*, conn: Connection) -> Product:
-    return await fetch_constant_product(conn=conn, product_id=PAY_OUT_PRODUCT_ID)
+async def fetch_pay_out_product(*, conn: Connection, node: Node) -> Product:
+    return await fetch_constant_product(conn=conn, node=node, product_id=PAY_OUT_PRODUCT_ID)
 
 
-async def fetch_money_transfer_product(*, conn: Connection) -> Product:
-    return await fetch_constant_product(conn=conn, product_id=MONEY_TRANSFER_PRODUCT_ID)
+async def fetch_money_transfer_product(*, conn: Connection, node: Node) -> Product:
+    return await fetch_constant_product(conn=conn, node=node, product_id=MONEY_TRANSFER_PRODUCT_ID)
 
 
-async def fetch_money_difference_product(*, conn: Connection) -> Product:
-    return await fetch_constant_product(conn=conn, product_id=MONEY_DIFFERENCE_PRODUCT_ID)
+async def fetch_money_difference_product(*, conn: Connection, node: Node) -> Product:
+    return await fetch_constant_product(conn=conn, node=node, product_id=MONEY_DIFFERENCE_PRODUCT_ID)
 
 
 class ProductIsLockedException(ServiceException):
@@ -72,6 +75,7 @@ class ProductService(DBService):
     @requires_user([Privilege.product_management])
     @requires_node()
     async def create_product(self, *, conn: Connection, node: Node, product: NewProduct) -> Product:
+        # TODO: TREE visibility
         product_id = await conn.fetchval(
             "insert into product "
             "(node_id, name, price, tax_name, target_account_id, fixed_price, price_in_vouchers, is_locked, "
@@ -96,27 +100,32 @@ class ProductService(DBService):
 
         if product_id is None:
             raise RuntimeError("product should have been created")
-        created_product = await fetch_product(conn=conn, product_id=product_id)
+        created_product = await fetch_product(conn=conn, node=node, product_id=product_id)
         assert created_product is not None
         return created_product
 
     @with_db_transaction
     @requires_user()
     @requires_node()
-    async def list_products(self, *, conn: Connection) -> list[Product]:
-        return await conn.fetch_many(Product, "select * from product_with_tax_and_restrictions")
+    async def list_products(self, *, conn: Connection, node: Node) -> list[Product]:
+        return await conn.fetch_many(
+            Product, "select * from product_with_tax_and_restrictions where node_id = any($1)", node.ids_to_event_node
+        )
 
     @with_db_transaction
     @requires_user()
     @requires_node()
-    async def get_product(self, *, conn: Connection, product_id: int) -> Optional[Product]:
-        return await fetch_product(conn=conn, product_id=product_id)
+    async def get_product(self, *, conn: Connection, node: Node, product_id: int) -> Optional[Product]:
+        return await fetch_product(conn=conn, node=node, product_id=product_id)
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
     @requires_node()
-    async def update_product(self, *, conn: Connection, product_id: int, product: NewProduct) -> Optional[Product]:
-        current_product = await fetch_product(conn=conn, product_id=product_id)
+    async def update_product(
+        self, *, conn: Connection, node: Node, product_id: int, product: NewProduct
+    ) -> Optional[Product]:
+        # TODO: TREE visibility
+        current_product = await fetch_product(conn=conn, node=node, product_id=product_id)
         if current_product is None:
             return None
 
@@ -159,12 +168,13 @@ class ProductService(DBService):
                 "insert into product_restriction (id, restriction) values ($1, $2)", product_id, restriction.name
             )
 
-        return await fetch_product(conn=conn, product_id=product_id)
+        return await fetch_product(conn=conn, node=node, product_id=product_id)
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
     @requires_node()
     async def delete_product(self, *, conn: Connection, product_id: int) -> bool:
+        # TODO: TREE visibility
         result = await conn.execute(
             "delete from product where id = $1",
             product_id,

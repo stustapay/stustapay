@@ -28,7 +28,7 @@ async def get_system_account_for_node(*, conn: Connection, node: Node, account_t
         Account,
         "select * from account_with_history where type = $1 and node_id = any($2)",
         account_type.value,
-        node.parent_ids + [node.id],
+        node.ids_to_event_node,
     )
 
 

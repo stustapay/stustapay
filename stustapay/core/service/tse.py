@@ -15,8 +15,8 @@ from stustapay.core.service.common.error import NotFound
 from stustapay.framework.database import Connection
 
 
-async def list_tses(conn: Connection) -> list[Tse]:
-    return await conn.fetch_many(Tse, "select * from tse")
+async def list_tses(conn: Connection, node: Node) -> list[Tse]:
+    return await conn.fetch_many(Tse, "select * from tse where node_id = any($1)", node.ids_to_event_node)
 
 
 class TseService(DBService):
@@ -29,6 +29,7 @@ class TseService(DBService):
     # @requires_user([Privilege.tse_management])
     @requires_node()
     async def create_tse(self, *, conn: Connection, node: Node, new_tse: NewTse) -> Tse:
+        # TODO: TREE visibility
         tse_id = await conn.fetchval(
             "insert into tse (node_id, name, serial, ws_url, ws_timeout, password, status) "
             "values ($1, $2, $3, $4, $5, $6, 'new') returning id",
@@ -46,6 +47,7 @@ class TseService(DBService):
     @requires_node()
     # @requires_user([Privilege.tse_management])
     async def update_tse(self, *, conn: Connection, tse_id: int, updated_tse: UpdateTse) -> Tse:
+        # TODO: TREE visibility
         tse_id = await conn.fetchval(
             "update tse set name = $1, ws_timeout = $2, ws_url = $3, password = $4 where id = $5 returning id",
             updated_tse.name,
@@ -62,5 +64,5 @@ class TseService(DBService):
     @requires_user([Privilege.account_management])  # TODO: tse_management
     @requires_node()
     # @requires_user([Privilege.tse_management])
-    async def list_tses(self, *, conn: Connection) -> list[Tse]:
-        return await list_tses(conn=conn)
+    async def list_tses(self, *, conn: Connection, node: Node) -> list[Tse]:
+        return await list_tses(conn=conn, node=node)
