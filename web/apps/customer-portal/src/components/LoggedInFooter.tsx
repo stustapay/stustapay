@@ -1,4 +1,4 @@
-import { useGetCustomerQuery } from "@/api/customerApi";
+import { useGetCustomerQuery } from "@/api";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Link } from "@mui/material";
 import { formatUserTagUid } from "@stustapay/models";

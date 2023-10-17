@@ -1,5 +1,5 @@
 import { Node } from "@/api";
-import { findNode, useNodeTree } from "@/api/nodes";
+import { findNode, useTreeForCurrentUser } from "@/api/nodes";
 import { nodeUrlBaseRegex } from "@/app/routes";
 import {
   extendExpandedNodes,
@@ -14,6 +14,7 @@ import {
   ChevronRight as ChevronRightIcon,
   ExpandMore as ExpandMoreIcon,
   Folder as FolderIcon,
+  Event as EventIcon,
 } from "@mui/icons-material";
 import { TreeView } from "@mui/lab";
 import * as React from "react";
@@ -22,14 +23,14 @@ import { NavigationTreeItem } from "./NavigationTreeItem";
 import { NodeMenu } from "./NodeMenu";
 
 const getNavigationTreeItemLabel = (node: Node) => {
-  // if (node.type === "event") {
-  //   return EventIcon;
-  // }
+  if (node.event) {
+    return EventIcon;
+  }
   return FolderIcon;
 };
 
 export const NavigationTree: React.FC = () => {
-  const { root: tree } = useNodeTree();
+  const tree = useTreeForCurrentUser();
   const location = useLocation();
   const expanded = useAppSelector(selectExpandedNodes);
   const selected = useAppSelector(selectSelectedNodes);

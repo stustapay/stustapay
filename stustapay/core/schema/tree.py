@@ -68,6 +68,8 @@ class Node(BaseModel):
     event: Optional[Event]
     path: str
     parent_ids: list[int]
+    event_node_id: Optional[int]
+    parents_until_event_node: Optional[list[int]]
     allowed_objects_at_node: list[ObjectType]
     # what results from transitive restrictions from nodes above
     computed_allowed_objects_at_node: list[ObjectType]
@@ -76,12 +78,25 @@ class Node(BaseModel):
     computed_allowed_objects_in_subtree: list[ObjectType]
     children: list["Node"]
 
+    @property
+    def ids_to_root(self) -> list[int]:
+        return self.parent_ids + [self.id]
+
+    @property
+    def ids_to_event_node(self) -> list[int] | None:
+        if self.parents_until_event_node is None:
+            return None
+
+        return self.parents_until_event_node + [self.id]
+
 
 class UpdateEvent(BaseModel):
     currency_identifier: str
     sumup_topup_enabled: bool
     max_account_balance: float
+    customer_portal_url: str
     customer_portal_contact_email: EmailStr
+
     ust_id: str
     bon_issuer: str
     bon_address: str

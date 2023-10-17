@@ -9,12 +9,8 @@ from pydantic import BaseModel
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import (
-    ACCOUNT_CASH_ENTRY,
-    ACCOUNT_CASH_EXIT,
-    ACCOUNT_CASH_SALE_SOURCE,
-    ACCOUNT_SALE_EXIT,
-    ACCOUNT_SUMUP,
     Account,
+    AccountType,
     get_source_account,
     get_target_account,
 )
@@ -51,7 +47,10 @@ from stustapay.core.schema.ticket import Ticket
 from stustapay.core.schema.till import VIRTUAL_TILL_ID, Till
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
-from stustapay.core.service.account import get_account_by_id
+from stustapay.core.service.account import (
+    get_account_by_id,
+    get_system_account_for_node,
+)
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
@@ -72,7 +71,7 @@ from stustapay.core.service.product import (
 )
 from stustapay.core.service.till.common import fetch_till
 from stustapay.core.service.transaction import book_transaction
-from stustapay.core.service.tree.common import fetch_event_node_for_node
+from stustapay.core.service.tree.common import fetch_event_node_for_node, fetch_node
 from stustapay.framework.database import Connection
 
 from .booking import BookingIdentifier, NewLineItem, book_order
@@ -446,21 +445,29 @@ class OrderService(DBService):
             )
         ]
 
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
+        cash_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_entry)
+        cash_topup_acc = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.cash_topup_source
+        )
+        sumup_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sumup_entry)
+
         if pending_top_up.payment_method == PaymentMethod.cash:
             bookings = {
                 BookingIdentifier(
-                    source_account_id=ACCOUNT_CASH_SALE_SOURCE,
+                    source_account_id=cash_topup_acc.id,
                     target_account_id=pending_top_up.customer_account_id,
                 ): pending_top_up.amount,
                 BookingIdentifier(
-                    source_account_id=ACCOUNT_CASH_ENTRY,
+                    source_account_id=cash_entry_acc.id,
                     target_account_id=current_user.cashier_account_id,
                 ): pending_top_up.amount,
             }
         elif pending_top_up.payment_method == PaymentMethod.sumup:
             bookings = {
                 BookingIdentifier(
-                    source_account_id=ACCOUNT_SUMUP,
+                    source_account_id=sumup_entry_acc.id,
                     target_account_id=pending_top_up.customer_account_id,
                 ): pending_top_up.amount
             }
@@ -668,12 +675,16 @@ class OrderService(DBService):
             for line_item in pending_sale.line_items
         ]
 
+        node = await fetch_node(conn=conn, node_id=till.node_id)
+        assert node is not None
+        sale_exit_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sale_exit)
+
         # combine booking based on (source, target) -> amount
         bookings: Dict[BookingIdentifier, float] = defaultdict(lambda: 0.0)
         for line_item in pending_sale.line_items:
             product = line_item.product
-            source_acc_id = get_source_account(OrderType.sale, product, pending_sale.customer_account_id)
-            target_acc_id = get_target_account(OrderType.sale, product, pending_sale.customer_account_id)
+            source_acc_id = get_source_account(OrderType.sale, pending_sale.customer_account_id)
+            target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
             bookings[BookingIdentifier(source_account_id=source_acc_id, target_account_id=target_acc_id)] += float(
                 line_item.total_price
             )
@@ -695,7 +706,7 @@ class OrderService(DBService):
                 conn=conn,
                 order_id=order_info.id,
                 source_account_id=pending_sale.customer_account_id,
-                target_account_id=ACCOUNT_SALE_EXIT,
+                target_account_id=sale_exit_acc.id,
                 voucher_amount=pending_sale.used_vouchers,
             )
 
@@ -999,12 +1010,19 @@ class OrderService(DBService):
             )
         ]
 
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
+        cash_topup_acc = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.cash_topup_source
+        )
+        cash_exit_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_exit)
+
         prepared_bookings: Dict[BookingIdentifier, float] = {
             BookingIdentifier(
-                source_account_id=pending_pay_out.customer_account_id, target_account_id=ACCOUNT_CASH_SALE_SOURCE
+                source_account_id=pending_pay_out.customer_account_id, target_account_id=cash_topup_acc.id
             ): -pending_pay_out.amount,
             BookingIdentifier(
-                source_account_id=current_user.cashier_account_id, target_account_id=ACCOUNT_CASH_EXIT
+                source_account_id=current_user.cashier_account_id, target_account_id=cash_exit_acc.id
             ): -pending_pay_out.amount,
         }
 
@@ -1254,29 +1272,38 @@ class OrderService(DBService):
             if line_item.product.id != TOP_UP_PRODUCT_ID:
                 total_ticket_price += line_item.total_price
 
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
+        cash_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_entry)
+        cash_topup_acc = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.cash_topup_source
+        )
+        sumup_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sumup_entry)
+        sale_exit_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sale_exit)
+
         prepared_bookings: dict[BookingIdentifier, float] = {}
         if pending_ticket_sale.payment_method == PaymentMethod.cash:
             prepared_bookings[
                 BookingIdentifier(
-                    source_account_id=ACCOUNT_CASH_ENTRY, target_account_id=current_user.cashier_account_id
+                    source_account_id=cash_entry_acc.id, target_account_id=current_user.cashier_account_id
                 )
             ] = pending_ticket_sale.total_price
             prepared_bookings[
-                BookingIdentifier(source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=ACCOUNT_SALE_EXIT)
+                BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=sale_exit_acc.id)
             ] = total_ticket_price
             for customer_account_id in customers.keys():
                 topup_amount = customers[customer_account_id][0]
                 prepared_bookings[
-                    BookingIdentifier(source_account_id=ACCOUNT_CASH_SALE_SOURCE, target_account_id=customer_account_id)
+                    BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=customer_account_id)
                 ] = topup_amount
         elif pending_ticket_sale.payment_method == PaymentMethod.sumup:
             prepared_bookings[
-                BookingIdentifier(source_account_id=ACCOUNT_SUMUP, target_account_id=ACCOUNT_SALE_EXIT)
+                BookingIdentifier(source_account_id=sumup_entry_acc.id, target_account_id=sale_exit_acc.id)
             ] = total_ticket_price
             for customer_account_id in customers.keys():
                 topup_amount = customers[customer_account_id][0]
                 prepared_bookings[
-                    BookingIdentifier(source_account_id=ACCOUNT_SUMUP, target_account_id=customer_account_id)
+                    BookingIdentifier(source_account_id=sumup_entry_acc.id, target_account_id=customer_account_id)
                 ] = topup_amount
         else:
             raise InvalidArgument("Invalid payment method")

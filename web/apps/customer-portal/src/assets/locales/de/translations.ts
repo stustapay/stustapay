@@ -26,6 +26,12 @@ export const translations: NestedPartialAsStrings<Translations> = {
     en: "English",
     de: "Deutsch",
   },
+  nav: {
+    payout: "Auszahlung",
+    topup: "Aufladung",
+    agb: "AGB",
+    faq: "FAQ",
+  },
   balance: "Guthaben",
   tagUid: "Bändchen-Chip ID",
   vouchers: "Getränkemarken",

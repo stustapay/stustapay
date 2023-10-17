@@ -1,4 +1,4 @@
-import { UserTagDetail } from "@/api";
+import { UserTagDetailRead } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -8,13 +8,13 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
 export interface UserTagTableProps {
-  userTags: UserTagDetail[];
+  userTags: UserTagDetailRead[];
 }
 
 export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
   const { t } = useTranslation();
 
-  const columns: GridColDef<UserTagDetail>[] = [
+  const columns: GridColDef<UserTagDetailRead>[] = [
     {
       field: "user_tag_uid_hex",
       headerName: t("userTag.uid") as string,

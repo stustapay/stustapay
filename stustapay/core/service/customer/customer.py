@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from schwifty import IBAN
 
 from stustapay.core.config import Config
-from stustapay.core.schema.config import PublicConfig
 from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
@@ -25,11 +24,14 @@ from stustapay.core.service.tree.common import fetch_event_node_for_node
 from stustapay.framework.database import Connection
 
 
-class PublicCustomerApiConfig(PublicConfig):
+class CustomerPortalApiConfig(BaseModel):
+    test_mode: bool
+    test_mode_message: str
     data_privacy_url: str
     contact_email: str
     about_page_url: str
     payout_enabled: bool
+    sumup_topup_enabled: bool
     allowed_country_codes: Optional[list[str]]
 
 
@@ -52,9 +54,7 @@ class CustomerService(DBService):
         self.config_service = config_service
         self.logger = logging.getLogger("customer")
 
-        self.sumup = SumupService(
-            db_pool=db_pool, config=config, auth_service=auth_service, config_service=config_service
-        )
+        self.sumup = SumupService(db_pool=db_pool, config=config, auth_service=auth_service)
         self.payout = PayoutService(
             db_pool=db_pool, config=config, auth_service=auth_service, config_service=config_service
         )
@@ -186,5 +186,23 @@ class CustomerService(DBService):
             round(current_customer.balance, 2),
         )
 
-    async def get_public_customer_api_config(self) -> PublicConfig:
-        return await self.config_service.get_public_config()
+    @with_db_transaction
+    async def get_api_config(self, *, conn: Connection, base_url: str) -> CustomerPortalApiConfig:
+        node_id = await conn.fetchval(
+            "select n.id from node n join event e on n.event_id = e.id where e.customer_portal_url = $1", base_url
+        )
+        if node_id is None:
+            raise InvalidArgument("Invalid customer portal configuration")
+        node = await fetch_event_node_for_node(conn=conn, node_id=node_id)
+        assert node is not None
+        assert node.event is not None
+        return CustomerPortalApiConfig(
+            test_mode=self.cfg.core.test_mode,
+            test_mode_message=self.cfg.core.test_mode_message,
+            about_page_url="",
+            allowed_country_codes=node.event.sepa_allowed_country_codes,
+            contact_email=node.event.customer_portal_contact_email,
+            data_privacy_url="",
+            payout_enabled=node.event.sepa_enabled,
+            sumup_topup_enabled=self.cfg.customer_portal.sumup_config.enabled and node.event.sumup_topup_enabled,
+        )

@@ -1,8 +1,7 @@
 import { TreeItem, treeItemClasses, TreeItemProps } from "@mui/lab";
 import * as React from "react";
-import { Box, IconButton, styled, SvgIconProps, Typography, useTheme } from "@mui/material";
+import { Box, styled, SvgIconProps, Typography, useTheme } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { Add as AddIcon } from "@mui/icons-material";
 
 declare module "react" {
   interface CSSProperties {

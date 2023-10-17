@@ -1,7 +1,7 @@
 import { useLoginMutation } from "@/api";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
-import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, Typography } from "@mui/material";
+import { Stack, Avatar, Button, Container, CssBaseline, LinearProgress, Typography } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
@@ -55,7 +55,7 @@ export const Login: React.FC = () => {
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Stack alignItems="center" justifyContent="center">
         <Avatar sx={{ margin: 1, backgroundColor: "primary.main" }}>
           <LockOutlinedIcon />
         </Avatar>
@@ -68,40 +68,42 @@ export const Login: React.FC = () => {
           validationSchema={toFormikValidationSchema(validationSchema)}
         >
           {(formik) => (
-            <Form onSubmit={formik.handleSubmit}>
-              <input type="hidden" name="remember" value="true" />
-              <FormTextField
-                variant="outlined"
-                autoFocus
-                type="text"
-                label={t("auth.username")}
-                name="username"
-                formik={formik}
-              />
+            <Form onSubmit={formik.handleSubmit} style={{ width: "100%" }}>
+              <Stack spacing={2}>
+                <input type="hidden" name="remember" value="true" />
+                <FormTextField
+                  variant="outlined"
+                  autoFocus
+                  type="text"
+                  label={t("auth.username")}
+                  name="username"
+                  formik={formik}
+                />
 
-              <FormTextField
-                variant="outlined"
-                type="password"
-                name="password"
-                label={t("auth.password")}
-                formik={formik}
-              />
+                <FormTextField
+                  variant="outlined"
+                  type="password"
+                  name="password"
+                  label={t("auth.password")}
+                  formik={formik}
+                />
 
-              {formik.isSubmitting && <LinearProgress />}
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                color="primary"
-                disabled={formik.isSubmitting}
-                sx={{ mt: 1 }}
-              >
-                {t("auth.login")}
-              </Button>
+                {formik.isSubmitting && <LinearProgress />}
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  disabled={formik.isSubmitting}
+                  sx={{ mt: 1 }}
+                >
+                  {t("auth.login")}
+                </Button>
+              </Stack>
             </Form>
           )}
         </Formik>
-      </Box>
+      </Stack>
     </Container>
   );
 };

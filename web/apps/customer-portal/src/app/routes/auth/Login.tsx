@@ -1,16 +1,16 @@
-import React from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
-import { Form, Formik, FormikHelpers } from "formik";
-import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, Typography, Stack } from "@mui/material";
-import { FormTextField } from "@stustapay/form-components";
-import { z } from "zod";
+import { useLoginMutation } from "@/api/authApi";
+import { ReactComponent as PinUidHowToImg } from "@/assets/img/pin_uid_howto.svg";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
-import { useLoginMutation } from "@/api/authApi";
+import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, Stack, Typography } from "@mui/material";
+import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { toast } from "react-toastify";
+import { Form, Formik, FormikHelpers } from "formik";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { ReactComponent as PinUidHowToImg } from "@/assets/img/pin_uid_howto.svg";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const validationSchema = z.object({
   userTagUid: z.string(),
@@ -53,7 +53,7 @@ export const Login: React.FC = () => {
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Stack alignItems="center" justifyContent="center">
         <Avatar sx={{ margin: 1, backgroundColor: "primary.main" }}>
           <LockOutlinedIcon />
         </Avatar>
@@ -66,7 +66,7 @@ export const Login: React.FC = () => {
           validationSchema={toFormikValidationSchema(validationSchema)}
         >
           {(formik) => (
-            <Form onSubmit={formik.handleSubmit}>
+            <Form onSubmit={formik.handleSubmit} style={{ width: "100%" }}>
               <Stack spacing={2}>
                 <input type="hidden" name="remember" value="true" />
 
@@ -115,7 +115,7 @@ export const Login: React.FC = () => {
             marginTop: "-1em",
           }}
         />
-      </Box>
+      </Stack>
     </Container>
   );
 };

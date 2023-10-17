@@ -37,7 +37,7 @@ from stustapay.core.schema.user import (
     NewUser,
     UserTag,
 )
-from stustapay.core.service.account import AccountService
+from stustapay.core.service.account import AccountService, get_system_account_for_node
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.product import ProductService
@@ -112,6 +112,7 @@ class BaseTestCase(TestCase):
         event_node = await fetch_event_node_for_node(conn=self.db_conn, node_id=self.node_id)
         assert event_node is not None
         assert event_node.event is not None
+        self.node = event_node
         self.event = event_node.event
 
         await self.db_conn.execute(
@@ -201,6 +202,14 @@ class BaseTestCase(TestCase):
 
     async def _assert_account_balance(self, account_id: int, expected_balance: float):
         balance = await self._get_account_balance(account_id=account_id)
+        self.assertEqual(expected_balance, balance)
+
+    async def _get_system_account_balance(self, account_type: AccountType):
+        account = await get_system_account_for_node(conn=self.db_conn, node=self.node, account_type=account_type)
+        return account.balance
+
+    async def _assert_system_account_balance(self, account_type: AccountType, expected_balance: float):
+        balance = await self._get_system_account_balance(account_type=account_type)
         self.assertEqual(expected_balance, balance)
 
     async def asyncTearDown(self) -> None:

@@ -1,5 +1,6 @@
-import { config, PublicCustomerApiConfig } from "@/api";
+import { CustomerPortalApiConfig } from "@/api";
+import { config } from "@/api/common";
 
-export const usePublicConfig = (): PublicCustomerApiConfig => {
-  return config.publicApiConfig;
+export const usePublicConfig = (): CustomerPortalApiConfig => {
+  return config.apiConfig;
 };

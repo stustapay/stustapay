@@ -14,7 +14,7 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi==0.100.0",
+    "fastapi==0.103.2",
     "typer==0.9.0",
     "python-multipart==0.0.6",
     "uvicorn[standard]==0.22.0",
@@ -30,7 +30,7 @@ dependencies = [
     "asn1crypto==1.5.1",
     "ecdsa==0.18.0",
     "dateutils==0.6.12",
-    "pydantic[email]~=2.0",
+    "pydantic[email]==2.4",
 ]
 
 [project.scripts]

@@ -8,7 +8,7 @@ from stustapay.core.http.context import ContextCustomerService
 from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.service.customer.customer import (
     CustomerBank,
-    PublicCustomerApiConfig,
+    CustomerPortalApiConfig,
 )
 
 router = APIRouter(
@@ -59,8 +59,9 @@ async def update_customer_info_donate_all(
     await customer_service.update_customer_info_donate_all(token=token)
 
 
-@router.get("/public_customer_config", summary="get customer config", response_model=PublicCustomerApiConfig)
+@router.get("/config", summary="get customer customer portal config", response_model=CustomerPortalApiConfig)
 async def get_customer_config(
     customer_service: ContextCustomerService,
+    base_url: str,
 ):
-    return await customer_service.get_public_customer_api_config()
+    return await customer_service.get_api_config(base_url=base_url)

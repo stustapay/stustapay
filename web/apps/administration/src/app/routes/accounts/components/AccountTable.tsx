@@ -1,4 +1,4 @@
-import { Account } from "@/api";
+import { AccountRead } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { useCurrencyFormatter } from "@/hooks";
 import { Link } from "@mui/material";
@@ -9,14 +9,14 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
 export interface AccountTableProps {
-  accounts: Account[];
+  accounts: AccountRead[];
 }
 
 export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
   const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
 
-  const columns: GridColDef<Account>[] = [
+  const columns: GridColDef<AccountRead>[] = [
     {
       field: "name",
       headerName: t("account.name") as string,

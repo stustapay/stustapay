@@ -1,7 +1,6 @@
 import { useGetAccountQuery } from "@/api";
 import { AccountRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
-import { Alert, AlertTitle } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -31,13 +30,7 @@ export const AccountDetail: React.FC = () => {
 
   if (account.type === "private") {
     return <CustomerAccountDetail account={account} />;
-  } else if (account.type === "virtual" || account.type === "internal") {
+  } else {
     return <SystemAccountDetail account={account} />;
   }
-
-  return (
-    <Alert severity="error">
-      <AlertTitle>Unknown account type {account.type}</AlertTitle>
-    </Alert>
-  );
 };

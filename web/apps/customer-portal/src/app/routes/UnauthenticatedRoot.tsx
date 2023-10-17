@@ -1,10 +1,10 @@
-import * as React from "react";
-import { Link as RouterLink, Outlet } from "react-router-dom";
-import { AppBar, Box, Button, CircularProgress, Container, CssBaseline, Toolbar, Typography } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { TestModeDisclaimer } from "@stustapay/components";
-import { config } from "@/api";
+import { config } from "@/api/common";
 import { LanguageSelect, Layout } from "@/components";
+import { AppBar, Box, Button, CircularProgress, Container, CssBaseline, Toolbar, Typography } from "@mui/material";
+import { TestModeDisclaimer } from "@stustapay/components";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Outlet, Link as RouterLink } from "react-router-dom";
 
 export const UnauthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
@@ -38,8 +38,8 @@ export const UnauthenticatedRoot: React.FC = () => {
           <Toolbar />
           <Container maxWidth="lg" sx={{ padding: { xs: 0, md: 1, lg: 3 } }}>
             <TestModeDisclaimer
-              testMode={config.publicApiConfig.test_mode}
-              testModeMessage={config.publicApiConfig.test_mode_message}
+              testMode={config.apiConfig.test_mode}
+              testModeMessage={config.apiConfig.test_mode_message}
             />
             <React.Suspense fallback={<CircularProgress />}>
               <Outlet />

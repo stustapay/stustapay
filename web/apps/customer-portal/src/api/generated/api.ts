@@ -34,7 +34,7 @@ const injectedRtkApi = api
         invalidatesTags: ["base"],
       }),
       getCustomerConfig: build.query<GetCustomerConfigApiResponse, GetCustomerConfigApiArg>({
-        query: () => ({ url: `/public_customer_config` }),
+        query: (queryArg) => ({ url: `/config`, params: { base_url: queryArg.baseUrl } }),
         providesTags: ["base"],
       }),
       createCheckout: build.mutation<CreateCheckoutApiResponse, CreateCheckoutApiArg>({
@@ -65,8 +65,10 @@ export type UpdateCustomerInfoApiArg = {
 };
 export type UpdateCustomerInfoDonateAllApiResponse = unknown;
 export type UpdateCustomerInfoDonateAllApiArg = void;
-export type GetCustomerConfigApiResponse = /** status 200 Successful Response */ PublicCustomerApiConfig;
-export type GetCustomerConfigApiArg = void;
+export type GetCustomerConfigApiResponse = /** status 200 Successful Response */ CustomerPortalApiConfig;
+export type GetCustomerConfigApiArg = {
+  baseUrl: string;
+};
 export type CreateCheckoutApiResponse = /** status 200 Successful Response */ CreateCheckoutResponse;
 export type CreateCheckoutApiArg = {
   createCheckoutPayload: CreateCheckoutPayload;
@@ -75,15 +77,29 @@ export type CheckCheckoutApiResponse = /** status 200 Successful Response */ Che
 export type CheckCheckoutApiArg = {
   checkCheckoutPayload: CheckCheckoutPayload;
 };
-export type AccountType = "virtual" | "internal" | "private";
+export type AccountType =
+  | "private"
+  | "sale_exit"
+  | "cash_entry"
+  | "cash_exit"
+  | "cash_topup_source"
+  | "cash_imbalance"
+  | "cash_vault"
+  | "sumup_entry"
+  | "sumup_online_entry"
+  | "transport"
+  | "cashier"
+  | "voucher_create";
 export type ProductRestriction = "under_16" | "under_18";
 export type UserTagHistoryEntry = {
   user_tag_uid: number;
   account_id: number;
   comment?: string | null;
   mapping_was_valid_until: string;
+  user_tag_uid_hex: string | null;
 };
 export type Customer = {
+  node_id: number;
   id: number;
   type: AccountType;
   name: string | null;
@@ -101,6 +117,7 @@ export type Customer = {
   payout_error: string | null;
   payout_run_id: number | null;
   payout_export: boolean | null;
+  user_tag_uid_hex: string | null;
 };
 export type LoginResponse = {
   customer: Customer;
@@ -137,14 +154,15 @@ export type Product = {
   price: number | null;
   fixed_price: boolean;
   price_in_vouchers?: number | null;
-  price_per_voucher?: number | null;
   tax_name: string;
   restrictions: ProductRestriction[];
   is_locked: boolean;
   is_returnable: boolean;
   target_account_id?: number | null;
+  node_id: number;
   id: number;
   tax_rate: number;
+  price_per_voucher?: number | null;
 };
 export type LineItem = {
   quantity: number;
@@ -154,6 +172,7 @@ export type LineItem = {
   tax_rate: number;
   item_id: number;
   total_tax: number;
+  total_price: number;
 };
 export type OrderWithBon = {
   id: number;
@@ -172,6 +191,7 @@ export type OrderWithBon = {
   line_items: LineItem[];
   bon_generated: boolean | null;
   bon_output_file: string | null;
+  customer_tag_uid_hex: string | null;
 };
 export type CustomerBank = {
   iban: string;
@@ -179,16 +199,15 @@ export type CustomerBank = {
   email: string;
   donation?: number;
 };
-export type PublicCustomerApiConfig = {
+export type CustomerPortalApiConfig = {
   test_mode: boolean;
   test_mode_message: string;
-  sumup_topup_enabled: boolean;
-  currency_symbol: string;
-  currency_identifier: string;
-  contact_email: string;
   data_privacy_url: string;
+  contact_email: string;
   about_page_url: string;
-  allowed_country_codes: string[];
+  payout_enabled: boolean;
+  sumup_topup_enabled: boolean;
+  allowed_country_codes: string[] | null;
 };
 export type CreateCheckoutResponse = {
   checkout_id: string;

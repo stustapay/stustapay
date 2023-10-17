@@ -9,6 +9,7 @@ import {
   PointOfSale as PointOfSaleIcon,
   Shield as ShieldIcon,
   ShoppingCart as ShoppingCartIcon,
+  HistoryEdu as HistoryEduIcon,
 } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -82,6 +83,10 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
   if (node.allowed_objects_at_node.includes("tse")) {
     const id = `/node/${node.id}/tses`;
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tse.tses")} labelIcon={ShieldIcon} />);
+  }
+  if (node.allowed_objects_at_node.includes("till")) {
+    const id = `/node/${node.id}/dsfinvk`;
+    items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("dsfinvk")} labelIcon={HistoryEduIcon} />);
   }
 
   return <>{items}</>;

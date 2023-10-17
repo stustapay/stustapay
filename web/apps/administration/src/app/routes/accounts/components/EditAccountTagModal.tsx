@@ -1,4 +1,4 @@
-import { Account, useUpdateTagUidMutation } from "@/api";
+import { AccountRead, useUpdateTagUidMutation } from "@/api";
 import { useCurrentNode } from "@/hooks";
 import {
   Button,
@@ -28,7 +28,7 @@ const FormSchema = z.object({
 type FormValues = z.infer<typeof FormSchema>;
 
 export interface EditAccountTagModalProps {
-  account: Account;
+  account: AccountRead;
   open: boolean;
   handleClose: () => void;
 }

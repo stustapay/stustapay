@@ -11,7 +11,7 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import ACCOUNT_SUMUP_CUSTOMER_TOPUP
+from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.customer import (
     Customer,
     CustomerCheckout,
@@ -20,6 +20,7 @@ from stustapay.core.schema.customer import (
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.till import VIRTUAL_TILL_ID
 from stustapay.core.schema.user import format_user_tag_uid
+from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -32,14 +33,14 @@ from stustapay.core.service.common.error import (
     NotFound,
     ServiceException,
 )
-from stustapay.core.service.config import ConfigService, get_currency_identifier
+from stustapay.core.service.config import get_currency_identifier
 from stustapay.core.service.order.booking import (
     BookingIdentifier,
     NewLineItem,
     book_order,
 )
 from stustapay.core.service.product import fetch_top_up_product
-from stustapay.core.service.tree.common import fetch_event_node_for_node
+from stustapay.core.service.tree.common import fetch_event_node_for_node, fetch_node
 from stustapay.framework.database import Connection
 
 
@@ -146,10 +147,9 @@ class SumupService(DBService):
     SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
     SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
 
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, config_service: ConfigService):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
-        self.config_service = config_service
         self.logger = logging.getLogger("customer")
 
         self.sumup_reachable = True
@@ -162,7 +162,7 @@ class SumupService(DBService):
         }
 
     async def check_sumup_auth(self):
-        sumup_enabled = await self.config_service.is_sumup_topup_enabled()
+        sumup_enabled = self.cfg.customer_portal.sumup_config.enabled
         if not sumup_enabled:
             self.logger.info("Sumup is disabled via the config")
             return
@@ -235,14 +235,18 @@ class SumupService(DBService):
     @staticmethod
     async def _process_topup(conn: Connection, checkout: SumupCheckout):
         top_up_product = await fetch_top_up_product(conn=conn)
-        customer_account_id = await conn.fetchval(
-            "select customer_account_id from customer_sumup_checkout where checkout_reference = $1",
+        row = await conn.fetchval(
+            "select c.customer_account_id, a.node_id "
+            "from customer_sumup_checkout c join account a on c.customer_account_id = a.id "
+            "where checkout_reference = $1",
             checkout.checkout_reference,
         )
-        if customer_account_id is None:
+        if row is None:
             raise InvalidArgument(
                 f"Inconsistency detected: checkout not found. Reference: {checkout.checkout_reference}"
             )
+        customer_account_id = row["customer_account_id"]
+        node_id = row["node_id"]
 
         line_items = [
             NewLineItem(
@@ -254,9 +258,15 @@ class SumupService(DBService):
             )
         ]
 
+        node = await fetch_node(conn=conn, node_id=node_id)
+        assert node is not None
+        sumup_online_entry = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.sumup_online_entry
+        )
+
         bookings = {
             BookingIdentifier(
-                source_account_id=ACCOUNT_SUMUP_CUSTOMER_TOPUP, target_account_id=customer_account_id
+                source_account_id=sumup_online_entry.id, target_account_id=customer_account_id
             ): checkout.amount
         }
 
@@ -281,7 +291,7 @@ class SumupService(DBService):
         )
 
     async def run_sumup_checkout_processing(self):
-        sumup_enabled = await self.config_service.is_sumup_topup_enabled()
+        sumup_enabled = self.cfg.customer_portal.sumup_config.enabled
         if not sumup_enabled or not self.sumup_reachable:
             self.logger.info("Sumup online topup not enabled, disabling sumup check state")
             return

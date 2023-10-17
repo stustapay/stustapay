@@ -3,7 +3,8 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import ACCOUNT_CASH_VAULT, Account
+from stustapay.core.schema.account import Account, AccountType
+from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.till import (
     CashRegister,
     CashRegisterStocking,
@@ -14,6 +15,7 @@ from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.account import (
     get_account_by_id,
+    get_system_account_for_node,
     get_transport_account_by_tag_uid,
 )
 from stustapay.core.service.auth import AuthService
@@ -28,6 +30,7 @@ from stustapay.core.service.common.decorators import (
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.order.booking import BookingIdentifier, book_money_transfer
 from stustapay.core.service.transaction import book_transaction
+from stustapay.core.service.tree.common import fetch_node
 from stustapay.framework.database import Connection
 
 
@@ -215,6 +218,7 @@ class TillRegisterService(DBService):
         *,
         conn: Connection,
         current_user: CurrentUser,
+        current_terminal: Terminal,
         stocking_id: int,
         cashier_tag_uid: int,
         cash_register_id: int,
@@ -241,10 +245,14 @@ class TillRegisterService(DBService):
 
         await conn.fetchval("update usr set cash_register_id = $1 where id = $2", cash_register_id, user_id)
 
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
+        cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
+
         await book_transaction(
             conn=conn,
             description=f"cash register stock up using template: {register_stocking.name}",
-            source_account_id=ACCOUNT_CASH_VAULT,
+            source_account_id=cash_vault_acc.id,
             target_account_id=cashier_account_id,
             amount=register_stocking.total,
             conducting_user_id=current_user.id,
@@ -308,7 +316,13 @@ class TillRegisterService(DBService):
     @with_retryable_db_transaction()
     @requires_terminal([Privilege.cashier_management])
     async def modify_transport_account_balance(
-        self, *, conn: Connection, current_user: CurrentUser, orga_tag_uid: int, amount: float
+        self,
+        *,
+        conn: Connection,
+        current_user: CurrentUser,
+        current_terminal: Terminal,
+        orga_tag_uid: int,
+        amount: float,
     ):
         transport_account = await get_transport_account_by_tag_uid(conn=conn, orga_tag_uid=orga_tag_uid)
         if transport_account is None:
@@ -319,10 +333,14 @@ class TillRegisterService(DBService):
                 f"Insufficient balance on transport account. Current balance is {transport_account.balance}."
             )
 
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
+        cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
+
         await book_transaction(
             conn=conn,
             description="transport account balance modification",
-            source_account_id=ACCOUNT_CASH_VAULT,
+            source_account_id=cash_vault_acc.id,
             target_account_id=transport_account.id,
             amount=amount,
             conducting_user_id=current_user.id,
