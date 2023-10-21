@@ -1,4 +1,4 @@
-import { Event, useUpdateEventMutation } from "@/api";
+import { PublicEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -14,13 +14,16 @@ const CustomerPortalSettingsSchema = z.object({
 
 type CustomerPortalSettings = z.infer<typeof CustomerPortalSettingsSchema>;
 
-export const TabCustomerPortal: React.FC<{ nodeId: number; event: Event }> = ({ nodeId, event }) => {
+export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: PublicEventSettings }> = ({
+  nodeId,
+  eventSettings,
+}) => {
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
 
   const handleSubmit = (values: CustomerPortalSettings, { setSubmitting }: FormikHelpers<CustomerPortalSettings>) => {
     setSubmitting(true);
-    updateEvent({ nodeId: nodeId, updateEvent: { ...event, ...values } })
+    updateEvent({ nodeId: nodeId, updateEvent: { ...eventSettings, ...values } })
       .unwrap()
       .then(() => {
         setSubmitting(false);
@@ -33,7 +36,7 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; event: Event }> = ({ 
   };
   return (
     <Formik
-      initialValues={event as CustomerPortalSettings} // TODO: figure out a way of not needing to cast this
+      initialValues={eventSettings as CustomerPortalSettings} // TODO: figure out a way of not needing to cast this
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(CustomerPortalSettingsSchema)}
     >

@@ -1,12 +1,19 @@
-import { selectTicketAll, useDeleteTicketMutation, useListTicketsQuery } from "@/api";
-import { ProductRoutes, TicketRoutes } from "@/app/routes";
+import {
+  Ticket,
+  selectTaxRateById,
+  selectTicketAll,
+  useDeleteTicketMutation,
+  useListTaxRatesQuery,
+  useListTicketsQuery,
+  useUpdateTicketMutation,
+} from "@/api";
+import { TicketRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Link } from "@mui/material";
+import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
+import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { Ticket } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -26,6 +33,8 @@ export const TicketList: React.FC = () => {
       }),
     }
   );
+  const { data: taxRates } = useListTaxRatesQuery({ nodeId: currentNode.id });
+  const [updateTicket] = useUpdateTicketMutation();
   const [deleteTicket] = useDeleteTicketMutation();
 
   const [ticketToDelete, setTicketToDelete] = React.useState<number | null>(null);
@@ -37,6 +46,10 @@ export const TicketList: React.FC = () => {
     setTicketToDelete(ticketId);
   };
 
+  const handleLockTicket = (ticket: Ticket) => {
+    updateTicket({ nodeId: currentNode.id, ticketId: ticket.id, newTicket: { ...ticket, is_locked: true } });
+  };
+
   const handleConfirmDeleteTicket: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && ticketToDelete !== null) {
       deleteTicket({ nodeId: currentNode.id, ticketId: ticketToDelete })
@@ -44,6 +57,23 @@ export const TicketList: React.FC = () => {
         .catch(() => undefined);
     }
     setTicketToDelete(null);
+  };
+
+  const renderTaxRate = (id: number) => {
+    if (!taxRates) {
+      return "";
+    }
+
+    const tax = selectTaxRateById(taxRates, id);
+    if (!tax) {
+      return "";
+    }
+
+    return (
+      <Tooltip title={tax.description}>
+        <span>{(tax.rate * 100).toFixed(0)} %</span>
+      </Tooltip>
+    );
   };
 
   const columns: GridColDef<Ticket>[] = [
@@ -58,19 +88,9 @@ export const TicketList: React.FC = () => {
       ),
     },
     {
-      field: "description",
-      headerName: t("ticket.description") as string,
-      flex: 1,
-    },
-    {
-      field: "product_id",
-      headerName: t("ticket.product") as string,
-      renderCell: (params) => (
-        <Link component={RouterLink} to={ProductRoutes.detail(params.row.product_id)}>
-          {params.row.product_name}
-        </Link>
-      ),
-      minWidth: 150,
+      field: "is_locked",
+      headerName: t("ticket.isLocked") as string,
+      type: "boolean",
     },
     {
       field: "price",
@@ -85,13 +105,19 @@ export const TicketList: React.FC = () => {
       valueFormatter: ({ value }) => formatCurrency(value),
     },
     {
+      field: "tax_rate_id",
+      headerName: t("ticket.taxRate") as string,
+      align: "right",
+      renderCell: (params) => renderTaxRate(params.row.tax_rate_id),
+    },
+    {
       field: "total_price",
       headerName: t("ticket.totalPrice") as string,
       type: "number",
       valueFormatter: ({ value }) => formatCurrency(value),
     },
     {
-      field: "restriction",
+      field: "restrictions",
       headerName: t("ticket.restriction") as string,
       width: 150,
     },
@@ -106,6 +132,13 @@ export const TicketList: React.FC = () => {
           color="primary"
           label={t("edit")}
           onClick={() => navigate(TicketRoutes.edit(params.row.id))}
+        />,
+        <GridActionsCellItem
+          icon={<LockIcon />}
+          color="primary"
+          disabled={params.row.is_locked}
+          label={t("ticket.lock")}
+          onClick={() => handleLockTicket(params.row)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}

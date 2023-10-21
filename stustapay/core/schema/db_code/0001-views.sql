@@ -190,27 +190,24 @@ create view product_with_tax_and_restrictions as
         p.*,
         -- price_in_vouchers is never 0 due to constraint product_price_in_vouchers_not_zero
         p.price / p.price_in_vouchers               as price_per_voucher,
-        tax.rate                                    as tax_rate,
+        t.name                                      as tax_name,
+        t.rate                                      as tax_rate,
         coalesce(pr.restrictions, '{}'::text array) as restrictions
     from
         product p
-        join tax on p.tax_name = tax.name
+        join tax_rate t on p.tax_rate_id = t.id
         left join (
             select r.id, array_agg(r.restriction) as restrictions from product_restriction r group by r.id
-                  ) pr on pr.id = p.id;
+        ) pr on pr.id = p.id;
 
-create view ticket_with_product as
+create view ticket as
     select
-        t.*,
-        p.name                            as product_name,
-        p.price,
-        p.tax_name,
-        p.tax_rate,
-        p.target_account_id               as product_target_account_id,
-        t.initial_top_up_amount + p.price as total_price
+        p.*,
+        ptm.initial_top_up_amount,
+        ptm.initial_top_up_amount + p.price as total_price
     from
-        ticket t
-        join product_with_tax_and_restrictions p on t.product_id = p.id;
+        product_with_tax_and_restrictions p
+        join product_ticket_metadata ptm on p.ticket_metadata_id = ptm.id;
 
 create view till_button_with_products as
     select

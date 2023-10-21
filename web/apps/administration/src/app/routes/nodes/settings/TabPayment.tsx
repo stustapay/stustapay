@@ -1,4 +1,4 @@
-import { Event, useUpdateEventMutation } from "@/api";
+import { PublicEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, FormControl, FormLabel, LinearProgress, Stack } from "@mui/material";
 import { FormSelect, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -20,13 +20,16 @@ const PaymentSettingsSchema = z.object({
 
 type PaymentSettings = z.infer<typeof PaymentSettingsSchema>;
 
-export const TabPayment: React.FC<{ nodeId: number; event: Event }> = ({ nodeId, event }) => {
+export const TabPayment: React.FC<{ nodeId: number; eventSettings: PublicEventSettings }> = ({
+  nodeId,
+  eventSettings,
+}) => {
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
 
   const handleSubmit = (values: PaymentSettings, { setSubmitting }: FormikHelpers<PaymentSettings>) => {
     setSubmitting(true);
-    updateEvent({ nodeId: nodeId, updateEvent: { ...event, ...values } })
+    updateEvent({ nodeId: nodeId, updateEvent: { ...eventSettings, ...values } })
       .unwrap()
       .then(() => {
         setSubmitting(false);
@@ -40,7 +43,7 @@ export const TabPayment: React.FC<{ nodeId: number; event: Event }> = ({ nodeId,
 
   return (
     <Formik
-      initialValues={event as PaymentSettings} // TODO: figure out a way of not needing to cast this
+      initialValues={eventSettings as PaymentSettings} // TODO: figure out a way of not needing to cast this
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(PaymentSettingsSchema)}
     >

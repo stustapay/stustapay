@@ -30,14 +30,9 @@ class CoreConfig(BaseModel):
     test_mode_message: str = ""
     secret_key: str
     jwt_token_algorithm: str = "HS256"
-    sumup_affiliate_key: str = "unset"
 
-
-class SumupConfig(BaseModel):
-    enabled: bool = False
-    api_key: str = ""
-    merchant_code: str = ""
-    max_check_interval: int = 300
+    sumup_enabled: bool = False
+    sumup_max_check_interval: int = 300
 
 
 class CustomerPortalApiConfig(HTTPServerConfig):
@@ -45,10 +40,6 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     host: str = "localhost"
     port: int = 8082
     base_bon_url: str
-    data_privacy_url: str
-    about_page_url: str
-
-    sumup_config: SumupConfig = SumupConfig()
 
 
 class BonConfig(BaseModel):

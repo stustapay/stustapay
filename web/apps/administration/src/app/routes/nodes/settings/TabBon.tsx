@@ -1,4 +1,4 @@
-import { Event, useUpdateEventMutation } from "@/api";
+import { PublicEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -16,13 +16,13 @@ const BonSettingsSchema = z.object({
 
 type BonSettings = z.infer<typeof BonSettingsSchema>;
 
-export const TabBon: React.FC<{ nodeId: number; event: Event }> = ({ nodeId, event }) => {
+export const TabBon: React.FC<{ nodeId: number; eventSettings: PublicEventSettings }> = ({ nodeId, eventSettings }) => {
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
 
   const handleSubmit = (values: BonSettings, { setSubmitting }: FormikHelpers<BonSettings>) => {
     setSubmitting(true);
-    updateEvent({ nodeId: nodeId, updateEvent: { ...event, ...values } })
+    updateEvent({ nodeId: nodeId, updateEvent: { ...eventSettings, ...values } })
       .unwrap()
       .then(() => {
         setSubmitting(false);
@@ -36,7 +36,7 @@ export const TabBon: React.FC<{ nodeId: number; event: Event }> = ({ nodeId, eve
 
   return (
     <Formik
-      initialValues={event as BonSettings} // TODO: figure out a way of not needing to cast this
+      initialValues={eventSettings as BonSettings} // TODO: figure out a way of not needing to cast this
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(BonSettingsSchema)}
     >

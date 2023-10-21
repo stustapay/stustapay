@@ -4,7 +4,7 @@ import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
 export type TaxRateSelectProps = Omit<
-  SelectProps<TaxRate, string, false>,
+  SelectProps<TaxRate, number, false>,
   "options" | "formatOption" | "multiple" | "getOptionKey"
 >;
 
@@ -24,7 +24,7 @@ export const TaxRateSelect: React.FC<TaxRateSelectProps> = (props) => {
     <Select
       multiple={false}
       options={taxRates}
-      getOptionKey={(taxRate: TaxRate) => taxRate.name}
+      getOptionKey={(taxRate: TaxRate) => taxRate.id}
       formatOption={(taxRate: TaxRate) => `${taxRate.description} (${taxRate.rate * 100}%)`}
       {...props}
     />

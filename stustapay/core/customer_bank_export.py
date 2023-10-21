@@ -49,10 +49,12 @@ async def _export_customer_payouts(
             assert event_node.event is not None
             if payout_run_id is None:
                 payout_run_id, number_of_payouts = await create_payout_run(
-                    conn=conn, node_id=event_node.id, created_by=created_by, max_payout_sum=max_payout_sum
+                    conn=conn, event_node_id=event_node.id, created_by=created_by, max_payout_sum=max_payout_sum
                 )
             else:
-                number_of_payouts = await get_number_of_payouts(conn=conn, payout_run_id=payout_run_id)
+                number_of_payouts = await get_number_of_payouts(
+                    conn=conn, event_node_id=event_node.id, payout_run_id=payout_run_id
+                )
 
             if number_of_payouts == 0:
                 logging.warning("No customers with bank data found. Nothing to export.")

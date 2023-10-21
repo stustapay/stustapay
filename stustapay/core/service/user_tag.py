@@ -68,12 +68,14 @@ class UserTagService(DBService):
     async def create_user_tag_secret(
         self, *, conn: Connection, node: Node, new_secret: NewUserTagSecret
     ) -> UserTagSecret:
+        # TODO: TREE visibility
         return await create_user_tag_secret(conn=conn, node_id=node.id, secret=new_secret)
 
     @with_db_transaction
     @requires_user([Privilege.account_management])
     @requires_node()
     async def get_user_tag_detail(self, *, conn: Connection, user_tag_uid: int) -> Optional[UserTagDetail]:
+        # TODO: TREE visibility
         return await conn.fetch_maybe_one(
             UserTagDetail, "select * from user_tag_with_history utwh where user_tag_uid = $1", user_tag_uid
         )
@@ -84,6 +86,7 @@ class UserTagService(DBService):
     async def update_user_tag_comment(
         self, *, conn: Connection, current_user: CurrentUser, user_tag_uid: int, comment: str
     ) -> UserTagDetail:
+        # TODO: TREE visibility
         ret = await conn.fetchval(
             "update user_tag set comment = $1 where uid = $2 returning uid", comment, user_tag_uid
         )
@@ -99,7 +102,7 @@ class UserTagService(DBService):
     @with_db_transaction
     @requires_user([Privilege.account_management])
     @requires_node()
-    async def find_user_tags(self, *, conn: Connection, search_term: str) -> list[UserTagDetail]:
+    async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
         value_as_int = None
         if re.match("^[A-Fa-f0-9]+$", search_term):
             value_as_int = int(search_term, base=16)
@@ -108,7 +111,9 @@ class UserTagService(DBService):
         # order to do hex conversion in postgres, therefore loosing one bit of information as bigint is in64 not uint64
         return await conn.fetch_many(
             UserTagDetail,
-            "select * from user_tag_with_history where to_hex(user_tag_uid::bigint) like $1 or user_tag_uid = $2",
+            "select * from user_tag_with_history "
+            "where to_hex(user_tag_uid::bigint) like $1 or user_tag_uid = $2 and node_id = any($3)",
             f"%{search_term.lower()}%",
             value_as_int,
+            node.ids_to_event_node,
         )

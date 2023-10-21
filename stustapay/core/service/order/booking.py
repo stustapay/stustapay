@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel
 
 from stustapay.core.schema.order import OrderType, PaymentMethod
+from stustapay.core.schema.tree import Node
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.product import fetch_money_transfer_product
 from stustapay.core.service.transaction import book_transaction
@@ -37,8 +38,7 @@ class NewLineItem(BaseModel):
     quantity: int
     product_id: int
     product_price: float
-    tax_name: str
-    tax_rate: float
+    tax_rate_id: int
 
 
 @dataclass
@@ -51,20 +51,20 @@ class OrderInfo:
 async def book_money_transfer(
     *,
     conn: Connection,
+    node: Node,
     originating_user_id: int,
     cash_register_id: int,
     bookings: dict[BookingIdentifier, float],
     amount: float,
     till_id: int,
 ) -> OrderInfo:
-    transfer_product = await fetch_money_transfer_product(conn=conn)
+    transfer_product = await fetch_money_transfer_product(conn=conn, node=node)
     line_items = [
         NewLineItem(
             quantity=1,
             product_id=transfer_product.id,
             product_price=amount,
-            tax_name=transfer_product.tax_name,
-            tax_rate=transfer_product.tax_rate,
+            tax_rate_id=transfer_product.tax_rate_id,
         )
     ]
 
@@ -119,15 +119,16 @@ async def book_order(
 
     for i, line_item in enumerate(line_items):
         await conn.fetchval(
-            "insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate) "
-            "select $1, $2, $3, $4, $5, $6, t.rate "
-            "from tax t where t.name = $6",
+            "insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_rate_id, "
+            "   tax_name, tax_rate) "
+            "select $1, $2, $3, $4, $5, $6, t.name, t.rate "
+            "from tax_rate t where t.id = $6",
             order_id,
             i,
             line_item.product_id,
             line_item.product_price,
             line_item.quantity,
-            line_item.tax_name,
+            line_item.tax_rate_id,
         )
     await book_prepared_bookings(conn=conn, order_id=order_id, bookings=bookings)
     return OrderInfo(id=order_id, uuid=uuid, booked_at=booked_at)

@@ -20,6 +20,7 @@ from stustapay.core.config import (
 )
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.tax_rate import NewTaxRate
 from stustapay.core.schema.till import (
     NewCashRegister,
     NewCashRegisterStocking,
@@ -41,6 +42,7 @@ from stustapay.core.service.account import AccountService, get_system_account_fo
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
 from stustapay.core.service.till import TillService
 from stustapay.core.service.tree.common import fetch_event_node_for_node
 from stustapay.core.service.user import UserService
@@ -140,6 +142,11 @@ class BaseTestCase(TestCase):
             config=self.test_config,
             auth_service=self.auth_service,
         )
+        self.tax_rate_service = TaxRateService(
+            db_pool=self.db_pool,
+            config=self.test_config,
+            auth_service=self.auth_service,
+        )
 
         self.admin_tag_uid = await self.db_conn.fetchval(
             "insert into user_tag (node_id, uid) values ($1, 13131313) returning uid", self.node_id
@@ -190,6 +197,11 @@ class BaseTestCase(TestCase):
         self.cashier = await self.user_service.get_user(token=self.admin_token, user_id=self.cashier.id)
 
         self.cashier_token = (await self.user_service.login_user(username=self.cashier.login, password="rolf")).token
+
+        self.tax_rate_none = await fetch_tax_rate_none(conn=self.db_conn, node=event_node)
+        self.tax_rate_ust = await self.tax_rate_service.create_tax_rate(
+            token=self.admin_token, node_id=self.node_id, tax_rate=NewTaxRate(name="ust", description="", rate=0.19)
+        )
 
         # create tmp folder for tests which handle files
         self.tmp_dir_obj = tempfile.TemporaryDirectory()
@@ -266,7 +278,7 @@ class TerminalTestCase(BaseTestCase):
             product=NewProduct(
                 name="Helles",
                 price=3,
-                tax_name="ust",
+                tax_rate_id=self.tax_rate_ust.id,
                 is_locked=True,
                 fixed_price=True,
                 restrictions=[],

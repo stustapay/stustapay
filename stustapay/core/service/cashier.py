@@ -5,9 +5,11 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core.config import Config
+from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.till import VIRTUAL_TILL_ID
+from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege, User
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -17,8 +19,6 @@ from stustapay.core.service.common.decorators import (
 )
 from stustapay.framework.database import Connection
 
-from ..schema.account import AccountType
-from ..schema.tree import Node
 from .account import get_system_account_for_node
 from .common.error import NotFound, ServiceException
 from .order.booking import (
@@ -48,6 +48,83 @@ class CloseOutResult(BaseModel):
     imbalance: float
 
 
+async def _book_imbalance_order(
+    *,
+    conn: Connection,
+    current_user: CurrentUser,
+    node: Node,
+    cashier_account_id: int,
+    cash_register_id: int,
+    imbalance: float,
+) -> OrderInfo:
+    difference_product = await fetch_money_difference_product(conn=conn, node=node)
+    line_items = [
+        NewLineItem(
+            quantity=1,
+            product_id=difference_product.id,
+            product_price=imbalance,
+            tax_rate_id=difference_product.tax_rate_id,
+        )
+    ]
+
+    cash_imbalance_acc = await get_system_account_for_node(
+        conn=conn, node=node, account_type=AccountType.cash_imbalance
+    )
+
+    bookings: dict[BookingIdentifier, float] = {
+        BookingIdentifier(source_account_id=cashier_account_id, target_account_id=cash_imbalance_acc.id): -imbalance,
+    }
+
+    return await book_order(
+        conn=conn,
+        payment_method=PaymentMethod.cash,
+        order_type=OrderType.money_transfer_imbalance,
+        till_id=VIRTUAL_TILL_ID,
+        cashier_id=current_user.id,
+        line_items=line_items,
+        bookings=bookings,
+        cash_register_id=cash_register_id,
+    )
+
+
+async def _book_money_transfer_close_out_start(
+    *, conn: Connection, current_user: CurrentUser, node: Node, cash_register_id: int, amount: float
+) -> OrderInfo:
+    return await book_money_transfer(
+        conn=conn,
+        node=node,
+        originating_user_id=current_user.id,
+        cash_register_id=cash_register_id,
+        amount=amount,
+        till_id=VIRTUAL_TILL_ID,
+        bookings={},
+    )
+
+
+async def _book_money_transfer_cash_vault_order(
+    *,
+    conn: Connection,
+    current_user: CurrentUser,
+    node: Node,
+    cashier_account_id: int,
+    cash_register_id: int,
+    amount: float,
+) -> OrderInfo:
+    cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
+    bookings: dict[BookingIdentifier, float] = {
+        BookingIdentifier(source_account_id=cashier_account_id, target_account_id=cash_vault_acc.id): amount,
+    }
+    return await book_money_transfer(
+        conn=conn,
+        node=node,
+        originating_user_id=current_user.id,
+        cash_register_id=cash_register_id,
+        amount=-amount,
+        bookings=bookings,
+        till_id=VIRTUAL_TILL_ID,
+    )
+
+
 class CashierService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -56,16 +133,16 @@ class CashierService(DBService):
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
     @requires_node()
-    async def list_cashiers(self, *, conn: Connection) -> list[Cashier]:
-        # TODO: tree scope
-        return await conn.fetch_many(Cashier, "select * from cashier")
+    async def list_cashiers(self, *, conn: Connection, node: Node) -> list[Cashier]:
+        return await conn.fetch_many(Cashier, "select * from cashier where node_id = any($1)", node.ids_to_event_node)
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
     @requires_node()
-    async def get_cashier(self, *, conn: Connection, cashier_id: int) -> Optional[Cashier]:
-        # TODO: tree scope
-        return await conn.fetch_maybe_one(Cashier, "select * from cashier where id = $1", cashier_id)
+    async def get_cashier(self, *, conn: Connection, node: Node, cashier_id: int) -> Optional[Cashier]:
+        return await conn.fetch_maybe_one(
+            Cashier, "select * from cashier where id = $1 and node_id = any($2)", cashier_id, node.ids_to_event_node
+        )
 
     @staticmethod
     async def _get_cashier_shift(conn: Connection, cashier_id: int, shift_id: int) -> Optional[CashierShift]:
@@ -76,10 +153,12 @@ class CashierService(DBService):
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
     @requires_node()
-    async def get_cashier_shifts(self, *, conn: Connection, current_user: User, cashier_id: int) -> list[CashierShift]:
+    async def get_cashier_shifts(
+        self, *, conn: Connection, current_user: User, node: Node, cashier_id: int
+    ) -> list[CashierShift]:
         # TODO: tree scope
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_user=current_user, cashier_id=cashier_id
+            conn=conn, current_user=current_user, node=node, cashier_id=cashier_id
         )
         if not cashier:
             raise NotFound(element_typ="cashier", element_id=cashier_id)
@@ -104,9 +183,11 @@ class CashierService(DBService):
         self,
         *,
         conn: Connection,
+        node: Node,
         cashier_id: int,
         shift_id: Optional[int] = None,
     ) -> Optional[CashierShiftStats]:
+        # TODO: TREE visibility
         shift_end = None
         if shift_id is None:
             shift_start = await self._get_current_cashier_shift_start(conn=conn, cashier_id=cashier_id)
@@ -138,89 +219,11 @@ class CashierService(DBService):
             )
         stats = CashierShiftStats(booked_products=[])
         for row in rows:
-            product = await fetch_product(conn=conn, product_id=row["product_id"])
+            product = await fetch_product(conn=conn, node=node, product_id=row["product_id"])
             if product is None:
                 continue
             stats.booked_products.append(CashierShiftStats.ProductStats(product=product, quantity=row["quantity"]))
         return stats
-
-    @staticmethod
-    async def _book_imbalance_order(
-        *,
-        conn: Connection,
-        current_user: CurrentUser,
-        node: Node,
-        cashier_account_id: int,
-        cash_register_id: int,
-        imbalance: float,
-    ) -> OrderInfo:
-        difference_product = await fetch_money_difference_product(conn=conn)
-        line_items = [
-            NewLineItem(
-                quantity=1,
-                product_id=difference_product.id,
-                product_price=imbalance,
-                tax_name=difference_product.tax_name,
-                tax_rate=difference_product.tax_rate,
-            )
-        ]
-
-        cash_imbalance_acc = await get_system_account_for_node(
-            conn=conn, node=node, account_type=AccountType.cash_imbalance
-        )
-
-        bookings: dict[BookingIdentifier, float] = {
-            BookingIdentifier(
-                source_account_id=cashier_account_id, target_account_id=cash_imbalance_acc.id
-            ): -imbalance,
-        }
-
-        return await book_order(
-            conn=conn,
-            payment_method=PaymentMethod.cash,
-            order_type=OrderType.money_transfer_imbalance,
-            till_id=VIRTUAL_TILL_ID,
-            cashier_id=current_user.id,
-            line_items=line_items,
-            bookings=bookings,
-            cash_register_id=cash_register_id,
-        )
-
-    @staticmethod
-    async def _book_money_transfer_close_out_start(
-        *, conn: Connection, current_user: CurrentUser, cash_register_id: int, amount: float
-    ) -> OrderInfo:
-        return await book_money_transfer(
-            conn=conn,
-            originating_user_id=current_user.id,
-            cash_register_id=cash_register_id,
-            amount=amount,
-            till_id=VIRTUAL_TILL_ID,
-            bookings={},
-        )
-
-    @staticmethod
-    async def _book_money_transfer_cash_vault_order(
-        *,
-        conn: Connection,
-        current_user: CurrentUser,
-        node: Node,
-        cashier_account_id: int,
-        cash_register_id: int,
-        amount: float,
-    ) -> OrderInfo:
-        cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
-        bookings: dict[BookingIdentifier, float] = {
-            BookingIdentifier(source_account_id=cashier_account_id, target_account_id=cash_vault_acc.id): amount,
-        }
-        return await book_money_transfer(
-            conn=conn,
-            originating_user_id=current_user.id,
-            cash_register_id=cash_register_id,
-            amount=-amount,
-            bookings=bookings,
-            till_id=VIRTUAL_TILL_ID,
-        )
 
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
@@ -228,8 +231,9 @@ class CashierService(DBService):
     async def close_out_cashier(
         self, *, conn: Connection, current_user: CurrentUser, node: Node, cashier_id: int, close_out: CloseOut
     ) -> CloseOutResult:
+        # TODO: TREE visibility
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_user=current_user, cashier_id=cashier_id
+            conn=conn, current_user=current_user, node=node, cashier_id=cashier_id
         )
         if cashier.cash_register_id is None:
             raise InvalidCloseOutException("Cashier does not have a cash register")
@@ -250,15 +254,16 @@ class CashierService(DBService):
         imbalance = close_out.actual_cash_drawer_balance - expected_balance
 
         # first we transfer all money to the virtual till via a tse signed order
-        await self._book_money_transfer_close_out_start(
+        await _book_money_transfer_close_out_start(
             conn=conn,
             current_user=current_user,
+            node=node,
             cash_register_id=cashier.cash_register_id,
             amount=expected_balance,
         )
 
         # then we book two orders, one to track the imbalance, on to transfer the money to the cash vault
-        order_info = await self._book_money_transfer_cash_vault_order(
+        order_info = await _book_money_transfer_cash_vault_order(
             conn=conn,
             current_user=current_user,
             node=node,
@@ -266,7 +271,7 @@ class CashierService(DBService):
             cash_register_id=cashier.cash_register_id,
             amount=close_out.actual_cash_drawer_balance,
         )
-        imbalance_order_info = await self._book_imbalance_order(
+        imbalance_order_info = await _book_imbalance_order(
             conn=conn,
             current_user=current_user,
             node=node,

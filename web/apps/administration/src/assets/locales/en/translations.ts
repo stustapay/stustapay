@@ -183,9 +183,11 @@ export const translations = {
   },
   ticket: {
     name: "Name",
-    description: "Description",
     product: "Product",
     price: "Price",
+    isLocked: "Locked",
+    lock: "Lock Ticket",
+    taxRate: "Tax Rate",
     totalPrice: "Total Price",
     initialTopUpAmount: "Initial top up amount",
     restriction: "Restriction",

@@ -1,5 +1,5 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
-from stustapay.core.schema.tax_rate import NewTaxRate, TaxRateWithoutName
+from stustapay.core.schema.tax_rate import NewTaxRate
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.tax_rate import TaxRateService
 
@@ -16,7 +16,7 @@ class TaxRateServiceTest(BaseTestCase):
 
     async def test_basic_tax_rate_workflow(self):
         tax_rates = await self.tax_rate_service.list_tax_rates(token=self.admin_token)
-        self.assertEqual(len(tax_rates), 4)
+        start_num_tax_rates = len(tax_rates)
 
         tax_rate = await self.tax_rate_service.create_tax_rate(
             token=self.admin_token, tax_rate=NewTaxRate(name="krass", rate=0.5, description="Krasse UST")
@@ -30,18 +30,18 @@ class TaxRateServiceTest(BaseTestCase):
 
         updated_tax_rate = await self.tax_rate_service.update_tax_rate(
             token=self.admin_token,
-            tax_rate_name=tax_rate.name,
-            tax_rate=TaxRateWithoutName(rate=0.6, description="Noch Krassere UST"),
+            tax_rate_id=tax_rate.id,
+            tax_rate=NewTaxRate(name="krass", rate=0.6, description="Noch Krassere UST"),
         )
         self.assertEqual(updated_tax_rate.rate, 0.6)
         self.assertEqual(updated_tax_rate.description, "Noch Krassere UST")
 
         tax_rates = await self.tax_rate_service.list_tax_rates(token=self.admin_token)
-        self.assertEqual(len(tax_rates), 5)
+        self.assertEqual(len(tax_rates), start_num_tax_rates + 1)
         self.assertTrue(updated_tax_rate in tax_rates)
 
         with self.assertRaises(AccessDenied):
-            await self.tax_rate_service.delete_tax_rate(token=self.cashier_token, tax_rate_name=tax_rate.name)
+            await self.tax_rate_service.delete_tax_rate(token=self.cashier_token, tax_rate_id=tax_rate.id)
 
-        deleted = await self.tax_rate_service.delete_tax_rate(token=self.admin_token, tax_rate_name=tax_rate.name)
+        deleted = await self.tax_rate_service.delete_tax_rate(token=self.admin_token, tax_rate_id=tax_rate.id)
         self.assertTrue(deleted)

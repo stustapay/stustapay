@@ -3,7 +3,7 @@ import { TicketRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
-import { TicketSchema } from "@stustapay/models";
+import { NewTicketSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
@@ -30,7 +30,7 @@ export const TicketUpdate: React.FC = () => {
       submitLabel={t("update")}
       successRoute={TicketRoutes.detail(ticket.id)}
       initialValues={ticket}
-      validationSchema={TicketSchema}
+      validationSchema={NewTicketSchema}
       onSubmit={(t) => updateTicket({ nodeId: currentNode.id, ticketId: ticket.id, newTicket: t })}
       form={TicketForm}
     />

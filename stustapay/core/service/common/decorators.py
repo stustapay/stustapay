@@ -275,21 +275,28 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
                 if not any([p in user_privileges for p in logged_in_user.privileges]):
                     raise AccessDenied(f"user does not have any of the required privileges: {user_privileges}")
 
-            if "current_user" in signature(func).parameters:
+            signature_params = signature(func).parameters
+
+            if "current_user" in signature_params:
                 kwargs["current_user"] = logged_in_user
             elif "current_user" in kwargs:
                 kwargs.pop("current_user")
 
-            if "current_terminal" in signature(func).parameters:
+            if "current_terminal" in signature_params:
                 kwargs["current_terminal"] = terminal
             elif "current_terminal" in kwargs:
                 kwargs.pop("current_terminal")
 
-            if "token" not in signature(func).parameters and "token" in kwargs:
+            if "token" not in signature_params and "token" in kwargs:
                 kwargs.pop("token")
 
-            if "conn" not in signature(func).parameters:
+            if "conn" not in signature_params:
                 kwargs.pop("conn")
+
+            if "node" in signature_params:
+                node = await fetch_node(conn=conn, node_id=terminal.till.node_id)
+                assert node is not None
+                kwargs["node"] = node
 
             return await func(self, **kwargs)
 

@@ -7,8 +7,8 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.healthcheck import run_healthcheck
+from stustapay.core.schema.tse import Tse
 from stustapay.core.service.common.dbhook import DBHook
-from stustapay.core.service.tse import list_tses
 from stustapay.framework.database import Connection, create_db_pool
 
 from .config import get_tse_handler
@@ -53,7 +53,7 @@ class SignatureProcessor:
 
             # initialize the TSE wrappers
             async with self.db_pool.acquire() as conn:
-                tses_in_db = await list_tses(conn=conn)
+                tses_in_db = await conn.fetch_many(Tse, "select * from tse")
                 for tse_in_db in tses_in_db:
                     factory = get_tse_handler(tse_in_db)
                     tse = TSEWrapper(name=tse_in_db.name, factory_function=factory)

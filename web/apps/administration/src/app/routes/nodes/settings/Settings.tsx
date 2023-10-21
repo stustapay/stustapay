@@ -1,4 +1,4 @@
-import { useCurrentEvent, useCurrentNode } from "@/hooks";
+import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Tab } from "@mui/material";
 import * as React from "react";
@@ -14,7 +14,7 @@ export const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState("general");
   const { currentNode } = useCurrentNode();
   // TODO: remove the following line
-  const { event } = useCurrentEvent();
+  const { eventSettings } = useCurrentEventSettings();
 
   return (
     <TabContext value={activeTab}>
@@ -29,16 +29,16 @@ export const Settings: React.FC = () => {
           </TabList>
         </Box>
         <TabPanel value="general">
-          <TabGeneral nodeId={currentNode.id} event={event} />
+          <TabGeneral nodeId={currentNode.id} eventSettings={eventSettings} />
         </TabPanel>
         <TabPanel value="customerPortal">
-          <TabCustomerPortal nodeId={currentNode.id} event={event} />
+          <TabCustomerPortal nodeId={currentNode.id} eventSettings={eventSettings} />
         </TabPanel>
         <TabPanel value="payment">
-          <TabPayment nodeId={currentNode.id} event={event} />
+          <TabPayment nodeId={currentNode.id} eventSettings={eventSettings} />
         </TabPanel>
         <TabPanel value="bon">
-          <TabBon nodeId={currentNode.id} event={event} />
+          <TabBon nodeId={currentNode.id} eventSettings={eventSettings} />
         </TabPanel>
         <TabPanel value="email">
           <TabMail />

@@ -1,4 +1,5 @@
 import {
+  Ticket,
   selectTicketById,
   selectTillButtonById,
   useDeleteTillLayoutMutation,
@@ -13,7 +14,7 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, List, ListItem, ListItemText, Paper, Tab } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { Ticket, TillButton } from "@stustapay/models";
+import { TillButton } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";

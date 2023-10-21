@@ -6,6 +6,7 @@ import os
 import typing
 import unittest
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass
 from io import StringIO
 
 from dateutil.parser import parse
@@ -16,9 +17,9 @@ from stustapay.core.customer_bank_export import (
     export_customer_payouts,
 )
 from stustapay.core.schema.config import SEPAConfig
-from stustapay.core.schema.customer import Customer
+from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
-from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.common.error import (
     AccessDenied,
@@ -39,58 +40,35 @@ from stustapay.core.service.order.order import fetch_order
 from stustapay.tests.common import TerminalTestCase
 
 
+@dataclass
+class TestCustomer:
+    account_id: int
+    uid: int
+    pin: str
+    balance: float
+
+
 class CustomerServiceTest(TerminalTestCase):
-    async def asyncSetUp(self) -> None:
-        await super().asyncSetUp()
-
-        self.customer_service = CustomerService(
-            db_pool=self.db_pool,
-            config=self.test_config,
-            auth_service=self.auth_service,
-            config_service=self.config_service,
-        )
-
-        self.uid = 1234
-        self.pin = "pin"
-        self.balance = 120
-
-        self.bon_path = "test_bon.pdf"
-        self.currency_identifier = self.event.currency_identifier
-        self.contact_email = self.event.customer_portal_contact_email
-
-        await self.db_conn.execute(
-            "insert into user_tag (node_id, uid, pin) values ($1, $2, $3)",
-            self.node_id,
-            self.uid,
-            self.pin,
-        )
-
-        self.account_id = await self.db_conn.fetchval(
-            "insert into account (node_id, user_tag_uid, balance, type) values ($1, $2, $3, $4) returning id",
-            self.node_id,
-            self.uid,
-            self.balance,
-            "private",
-        )
-
-        product1 = await self.product_service.create_product(
+    async def _create_order_with_bon(self) -> tuple[Order, str, TestCustomer]:
+        test_customer = await self._create_test_customer()
+        product1: Product = await self.product_service.create_product(
             token=self.admin_token,
             product=NewProduct(
                 name="Bier",
                 price=5.0,
-                tax_name="ust",
+                tax_rate_id=self.tax_rate_ust.id,
                 restrictions=[],
                 is_locked=True,
                 is_returnable=False,
                 fixed_price=True,
             ),
         )
-        product2 = await self.product_service.create_product(
+        product2: Product = await self.product_service.create_product(
             token=self.admin_token,
             product=NewProduct(
                 name="Pfand",
                 price=2.0,
-                tax_name="none",
+                tax_rate_id=self.tax_rate_none.id,
                 restrictions=[],
                 is_locked=True,
                 is_returnable=False,
@@ -103,15 +81,13 @@ class CustomerServiceTest(TerminalTestCase):
                 quantity=1,
                 product_id=product1.id,
                 product_price=product1.price,
-                tax_name=product1.tax_name,
-                tax_rate=product1.tax_rate,
+                tax_rate_id=product1.tax_rate_id,
             ),
             NewLineItem(
                 quantity=1,
                 product_id=product2.id,
                 product_price=product2.price,
-                tax_name=product2.tax_name,
-                tax_rate=product2.tax_rate,
+                tax_rate_id=product2.tax_rate_id,
             ),
         ]
 
@@ -123,20 +99,56 @@ class CustomerServiceTest(TerminalTestCase):
             till_id=self.till.id,
             line_items=line_items,
             bookings={},
-            customer_account_id=self.account_id,
+            customer_account_id=test_customer.account_id,
         )
 
-        self.order = await fetch_order(conn=self.db_conn, order_id=booking.id)
-        assert self.order is not None
+        order = await fetch_order(conn=self.db_conn, order_id=booking.id)
+        assert order is not None
 
+        bon_path = "test_bon.pdf"
         await self.db_conn.execute(
             "insert into bon (id, generated, generated_at, output_file) overriding system value "
             "values ($1, $2, $3, $4)",
-            self.order.id,
+            order.id,
             True,
             parse("2023-01-01 15:35:02 UTC+1"),
-            self.bon_path,
+            bon_path,
         )
+        return order, bon_path, test_customer
+
+    async def _create_test_customer(self) -> TestCustomer:
+        uid = 1234
+        pin = "pin"
+        balance = 120
+        await self.db_conn.execute(
+            "insert into user_tag (node_id, uid, pin) values ($1, $2, $3)",
+            self.node_id,
+            uid,
+            pin,
+        )
+
+        account_id = await self.db_conn.fetchval(
+            "insert into account (node_id, user_tag_uid, balance, type) values ($1, $2, $3, $4) returning id",
+            self.node_id,
+            uid,
+            balance,
+            "private",
+        )
+
+        return TestCustomer(account_id=account_id, pin="pin", uid=1234, balance=120)
+
+    async def asyncSetUp(self) -> None:
+        await super().asyncSetUp()
+
+        self.customer_service = CustomerService(
+            db_pool=self.db_pool,
+            config=self.test_config,
+            auth_service=self.auth_service,
+            config_service=self.config_service,
+        )
+
+        self.currency_identifier = self.event.currency_identifier
+        self.contact_email = self.event.customer_portal_contact_email
 
         self.customers = [
             {
@@ -253,7 +265,7 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(total_sum, group_sum)
 
     async def test_get_number_of_payouts(self):
-        result = await get_number_of_payouts(self.db_conn, None)
+        result = await get_number_of_payouts(self.db_conn, event_node_id=self.node_id)
         self.assertEqual(result, len(self.customers_to_transfer))
 
     async def test_get_customer_bank_data(self):
@@ -272,7 +284,7 @@ class CustomerServiceTest(TerminalTestCase):
 
         # create payout run
         payout_run_id, number_of_payouts = await create_payout_run(
-            self.db_conn, node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
+            self.db_conn, event_node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
         )
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
 
@@ -286,7 +298,7 @@ class CustomerServiceTest(TerminalTestCase):
 
     async def test_csv_export(self):
         payout_run_id, number_of_payouts = await create_payout_run(
-            self.db_conn, node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
+            self.db_conn, event_node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
         )
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
 
@@ -309,7 +321,6 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(len(rows), len(self.customers_to_transfer))
 
         for row, customer in zip(rows, self.customers_to_transfer):
-            print(row, customer)
             self.assertEqual(row["beneficiary_name"], customer["account_name"])
             self.assertEqual(row["iban"], customer["iban"])
             self.assertEqual(float(row["amount"]), round(customer["balance"] - customer["donation"], 2))
@@ -328,7 +339,7 @@ class CustomerServiceTest(TerminalTestCase):
     async def test_sepa_export(self):
         execution_date = datetime.date.today()
         payout_run_id, number_of_payouts = await create_payout_run(
-            self.db_conn, node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
+            self.db_conn, event_node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
         )
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
         customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id)
@@ -414,17 +425,17 @@ class CustomerServiceTest(TerminalTestCase):
             )
 
     async def test_auth_customer(self):
-        # test login_customer
-        auth = await self.customer_service.login_customer(uid=self.uid, pin=self.pin)
+        test_customer = await self._create_test_customer()
+        auth = await self.customer_service.login_customer(uid=test_customer.uid, pin=test_customer.pin)
         self.assertIsNotNone(auth)
-        self.assertEqual(auth.customer.id, self.account_id)
-        self.assertEqual(auth.customer.balance, self.balance)
+        self.assertEqual(auth.customer.id, test_customer.account_id)
+        self.assertEqual(auth.customer.balance, test_customer.balance)
 
         # test get_customer with correct token
         result = await self.customer_service.get_customer(token=auth.token)
         self.assertIsNotNone(result)
-        self.assertEqual(result.id, self.account_id)
-        self.assertEqual(result.balance, self.balance)
+        self.assertEqual(result.id, test_customer.account_id)
+        self.assertEqual(result.balance, test_customer.balance)
 
         # test get_customer with wrong token, should raise Unauthorized error
         with self.assertRaises(Unauthorized):
@@ -437,33 +448,35 @@ class CustomerServiceTest(TerminalTestCase):
 
         # test wrong pin
         with self.assertRaises(AccessDenied):
-            await self.customer_service.login_customer(uid=self.uid, pin="wrong")
+            await self.customer_service.login_customer(uid=test_customer.uid, pin="wrong")
 
     async def test_get_orders_with_bon(self):
+        order, bon_path, test_customer = await self._create_order_with_bon()
         # test get_orders_with_bon with wrong token, should raise Unauthorized error
         with self.assertRaises(Unauthorized):
             await self.customer_service.get_orders_with_bon(token="wrong")
 
         # login
-        result = await self.customer_service.login_customer(uid=self.uid, pin=self.pin)  # type: ignore
-        self.assertIsNotNone(result)
+        login_result = await self.customer_service.login_customer(uid=test_customer.uid, pin=test_customer.pin)
+        self.assertIsNotNone(login_result)
 
         # test get_orders_with_bon
-        result = await self.customer_service.get_orders_with_bon(token=result.token)
+        result: list[OrderWithBon] = await self.customer_service.get_orders_with_bon(token=login_result.token)
         self.assertIsNotNone(result)
 
-        self.assertEqual(Order(**result[0].model_dump()), self.order)
+        order_with_bon = result[0]
+        self.assertEqual(order_with_bon.id, order.id)
 
         # test bon data
-        self.assertTrue(result[0].bon_generated)
+        self.assertTrue(order_with_bon.bon_generated)
         self.assertEqual(
-            result[0].bon_output_file,
-            self.test_config.customer_portal.base_bon_url.format(bon_output_file=self.bon_path),
+            order_with_bon.bon_output_file,
+            self.test_config.customer_portal.base_bon_url.format(bon_output_file=bon_path),
         )
 
     async def test_update_customer_info(self):
-        # login
-        auth = await self.customer_service.login_customer(uid=self.uid, pin=self.pin)
+        test_customer = await self._create_test_customer()
+        auth = await self.customer_service.login_customer(uid=test_customer.uid, pin=test_customer.pin)
         self.assertIsNotNone(auth)
 
         valid_IBAN = "DE89370400440532013000"
@@ -483,8 +496,8 @@ class CustomerServiceTest(TerminalTestCase):
         # test if get_customer returns the updated data
         result = await self.customer_service.get_customer(token=auth.token)
         self.assertIsNotNone(result)
-        self.assertEqual(result.id, self.account_id)
-        self.assertEqual(result.balance, self.balance)
+        self.assertEqual(result.id, test_customer.account_id)
+        self.assertEqual(result.balance, test_customer.balance)
         self.assertEqual(result.iban, valid_IBAN)
         self.assertEqual(result.account_name, account_name)
         self.assertEqual(result.email, email)
@@ -522,7 +535,9 @@ class CustomerServiceTest(TerminalTestCase):
             )
 
         # test more donation than balance
-        customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email=email, donation=self.balance + 1)
+        customer_bank = CustomerBank(
+            iban=valid_IBAN, account_name=account_name, email=email, donation=test_customer.balance + 1
+        )
         with self.assertRaises(InvalidArgument):
             await self.customer_service.update_customer_info(
                 token=auth.token,
@@ -552,7 +567,7 @@ class CustomerServiceTest(TerminalTestCase):
         )
 
         # check if dry run successful and no database entry created
-        self.assertEqual(await get_number_of_payouts(self.db_conn, 1), 0)
+        self.assertEqual(await get_number_of_payouts(self.db_conn, event_node_id=self.node_id, payout_run_id=1), 0)
 
         output_path = self.tmp_dir / "test_export2"
         output_path.mkdir(parents=True, exist_ok=True)

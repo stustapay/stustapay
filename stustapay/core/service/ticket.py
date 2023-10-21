@@ -13,11 +13,17 @@ from stustapay.core.service.common.decorators import (
     requires_user,
     with_db_transaction,
 )
+from stustapay.core.service.common.error import NotFound
 from stustapay.framework.database import Connection
 
 
-async def fetch_ticket(*, conn: Connection, ticket_id: int) -> Optional[Ticket]:
-    return await conn.fetch_maybe_one(Ticket, "select * from ticket_with_product where id = $1", ticket_id)
+async def fetch_ticket(*, conn: Connection, node: Node, ticket_id: int) -> Optional[Ticket]:
+    return await conn.fetch_maybe_one(
+        Ticket,
+        "select * from ticket where id = $1 and node_id = any($2)",
+        ticket_id,
+        node.ids_to_event_node,
+    )
 
 
 class TicketService(DBService):
@@ -29,64 +35,93 @@ class TicketService(DBService):
     @requires_user([Privilege.product_management])
     @requires_node()
     async def create_ticket(self, *, conn: Connection, node: Node, ticket: NewTicket) -> Ticket:
+        # TODO: TREE visibility
+        ticket_metadata_id = await conn.fetchval(
+            "insert into product_ticket_metadata (initial_top_up_amount) values ($1) returning id",
+            ticket.initial_top_up_amount,
+        )
+
+        assert ticket_metadata_id is not None
         ticket_id = await conn.fetchval(
-            "insert into ticket "
-            "(node_id, name, description, product_id, initial_top_up_amount, restriction) "
-            "values ($1, $2, $3, $4, $5, $6) "
+            "insert into product "
+            "(node_id, name, price, tax_rate_id, target_account_id, fixed_price, price_in_vouchers, is_locked, "
+            "is_returnable, ticket_metadata_id, type) "
+            "values ($1, $2, $3, $4, null, true, null, $5, false, $6, 'ticket') "
             "returning id",
             node.id,
             ticket.name,
-            ticket.description,
-            ticket.product_id,
-            ticket.initial_top_up_amount,
-            ticket.restriction.name if ticket.restriction is not None else None,
+            ticket.price,
+            ticket.tax_rate_id,
+            ticket.is_locked,
+            ticket_metadata_id,
         )
 
-        if ticket_id is None:
-            raise RuntimeError("ticket should have been created")
-        created_ticket = await fetch_ticket(conn=conn, ticket_id=ticket_id)
+        for restriction in ticket.restrictions:
+            await conn.execute(
+                "insert into product_restriction (id, restriction) values ($1, $2)", ticket_id, restriction.name
+            )
+
+        created_ticket = await fetch_ticket(conn=conn, node=node, ticket_id=ticket_id)
         assert created_ticket is not None
         return created_ticket
 
     @with_db_transaction
     @requires_user()
     @requires_node()
-    async def list_tickets(self, *, conn: Connection) -> list[Ticket]:
-        return await conn.fetch_many(Ticket, "select * from ticket_with_product")
+    async def list_tickets(self, *, conn: Connection, node: Node) -> list[Ticket]:
+        return await conn.fetch_many(Ticket, "select * from ticket where node_id = any($1)", node.ids_to_event_node)
 
     @with_db_transaction
     @requires_user()
     @requires_node()
-    async def get_ticket(self, *, conn: Connection, ticket_id: int) -> Optional[Ticket]:
-        return await fetch_ticket(conn=conn, ticket_id=ticket_id)
+    async def get_ticket(self, *, conn: Connection, node: Node, ticket_id: int) -> Optional[Ticket]:
+        return await fetch_ticket(conn=conn, node=node, ticket_id=ticket_id)
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
     @requires_node()
-    async def update_ticket(self, *, conn: Connection, ticket_id: int, ticket: NewTicket) -> Optional[Ticket]:
-        row = await conn.fetchrow(
-            "update ticket set name = $2, description = $3, product_id = $4, initial_top_up_amount = $5, "
-            "   restriction = $6 "
-            "where id = $1 "
-            "returning id",
+    async def update_ticket(self, *, conn: Connection, node: Node, ticket_id: int, ticket: NewTicket) -> Ticket:
+        # TODO: TREE visibility
+        ticket_metadata_id = await conn.fetchval(
+            "select ticket_metadata_id from product where type = 'ticket' and id = $1 and node_id = any($2)",
+            ticket_id,
+            node.ids_to_event_node,
+        )
+        if ticket_metadata_id is None:
+            raise NotFound(element_typ="ticket", element_id=ticket_id)
+
+        await conn.execute(
+            "update product_ticket_metadata set initial_top_up_amount = $1 where id = $2",
+            ticket.initial_top_up_amount,
+            ticket_metadata_id,
+        )
+        await conn.execute(
+            "update product set name = $2, is_locked = $3, price = $4, tax_rate_id = $5 where id = $1",
             ticket_id,
             ticket.name,
-            ticket.description,
-            ticket.product_id,
-            ticket.initial_top_up_amount,
-            ticket.restriction.name if ticket.restriction is not None else None,
+            ticket.is_locked,
+            ticket.price,
+            ticket.tax_rate_id,
         )
-        if row is None:
-            return None
+        await conn.execute("delete from product_restriction where id = $1", ticket_id)
+        for restriction in ticket.restrictions:
+            await conn.execute(
+                "insert into product_restriction (id, restriction) values ($1, $2)", ticket_id, restriction.name
+            )
 
-        return await fetch_ticket(conn=conn, ticket_id=ticket_id)
+        updated_ticket = await fetch_ticket(conn=conn, node=node, ticket_id=ticket_id)
+        assert updated_ticket is not None
+        return updated_ticket
 
     @with_db_transaction
     @requires_user([Privilege.product_management])
     @requires_node()
     async def delete_ticket(self, *, conn: Connection, ticket_id: int) -> bool:
+        # TODO: TREE visibility
+        ticket_metadata_id = await conn.fetchval("select ticket_metadata_id from product where id = $1", ticket_id)
         result = await conn.execute(
-            "delete from ticket where id = $1",
+            "delete from product where id = $1",
             ticket_id,
         )
+        await conn.execute("delete from product_ticket_metadata where id = $1", ticket_metadata_id)
         return result != "DELETE 0"

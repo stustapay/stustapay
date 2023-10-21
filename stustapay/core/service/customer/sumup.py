@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import traceback
 import uuid
 from datetime import datetime, timedelta, timezone
 from functools import wraps
@@ -19,6 +18,7 @@ from stustapay.core.schema.customer import (
 )
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.till import VIRTUAL_TILL_ID
+from stustapay.core.schema.tree import RestrictedEventSettings
 from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
@@ -33,14 +33,16 @@ from stustapay.core.service.common.error import (
     NotFound,
     ServiceException,
 )
-from stustapay.core.service.config import get_currency_identifier
 from stustapay.core.service.order.booking import (
     BookingIdentifier,
     NewLineItem,
     book_order,
 )
 from stustapay.core.service.product import fetch_top_up_product
-from stustapay.core.service.tree.common import fetch_event_node_for_node, fetch_node
+from stustapay.core.service.tree.common import (
+    fetch_node,
+    fetch_restricted_event_settings_for_node,
+)
 from stustapay.framework.database import Connection
 
 
@@ -138,6 +140,14 @@ def requires_sumup_enabled(func):
     return wrapper
 
 
+def _get_sumup_auth_headers(event: RestrictedEventSettings) -> dict:
+    return {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {event.sumup_api_key}",
+    }
+
+
 class SumupService(DBService):
     SUMUP_BASE_URL = "https://api.sumup.com"
     SUMUP_API_URL = f"{SUMUP_BASE_URL}/v0.1"
@@ -154,24 +164,15 @@ class SumupService(DBService):
 
         self.sumup_reachable = True
 
-    async def _get_sumup_auth_headers(self) -> dict:
-        return {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.cfg.customer_portal.sumup_config.api_key}",
-        }
-
-    async def check_sumup_auth(self):
-        sumup_enabled = self.cfg.customer_portal.sumup_config.enabled
+    async def check_sumup_auth(self, event: RestrictedEventSettings):
+        sumup_enabled = event.is_sumup_topup_enabled(self.cfg.core)
         if not sumup_enabled:
             self.logger.info("Sumup is disabled via the config")
             return
 
         self.logger.info("Checking if the configured sumup api key is valid")
-        sumup_url = (
-            f"{self.SUMUP_API_URL}/merchants/{self.cfg.customer_portal.sumup_config.merchant_code}/payment-methods"
-        )
-        async with aiohttp.ClientSession(trust_env=True, headers=await self._get_sumup_auth_headers()) as session:
+        sumup_url = f"{self.SUMUP_API_URL}/merchants/{event.sumup_merchant_code}/payment-methods"
+        async with aiohttp.ClientSession(trust_env=True, headers=_get_sumup_auth_headers(event)) as session:
             try:
                 async with session.get(sumup_url, timeout=2) as response:
                     if not response.ok:
@@ -180,16 +181,18 @@ class SumupService(DBService):
                         )
                         return
             except Exception:  # pylint: disable=bare-except
-                self.logger.error(f"Sumup API error {traceback.print_exc()}")
+                self.logger.exception("Sumup API error")
                 return
 
         self.logger.info("Successfully validated the sumup api key")
         self.sumup_reachable = True
 
-    async def _create_sumup_checkout(self, *, checkout: SumupCreateCheckout) -> SumupCheckout:
-        async with aiohttp.ClientSession(trust_env=True, headers=await self._get_sumup_auth_headers()) as session:
+    async def _create_sumup_checkout(
+        self, *, event: RestrictedEventSettings, checkout: SumupCreateCheckout
+    ) -> SumupCheckout:
+        async with aiohttp.ClientSession(trust_env=True, headers=_get_sumup_auth_headers(event)) as session:
             try:
-                payload = checkout.json()
+                payload = checkout.model_dump()
                 async with session.post(self.SUMUP_CHECKOUT_URL, data=payload, timeout=2) as response:
                     if not response.ok:
                         self.logger.error(
@@ -205,8 +208,8 @@ class SumupService(DBService):
 
         return SumupCheckout.model_validate(response_json)
 
-    async def _get_checkout(self, *, checkout_id: str) -> SumupCheckout:
-        async with aiohttp.ClientSession(trust_env=True, headers=await self._get_sumup_auth_headers()) as session:
+    async def _get_checkout(self, *, event: RestrictedEventSettings, checkout_id: str) -> SumupCheckout:
+        async with aiohttp.ClientSession(trust_env=True, headers=_get_sumup_auth_headers(event)) as session:
             try:
                 async with session.get(f"{self.SUMUP_CHECKOUT_URL}/{checkout_id}", timeout=2) as response:
                     if not response.ok:
@@ -234,7 +237,6 @@ class SumupService(DBService):
 
     @staticmethod
     async def _process_topup(conn: Connection, checkout: SumupCheckout):
-        top_up_product = await fetch_top_up_product(conn=conn)
         row = await conn.fetchval(
             "select c.customer_account_id, a.node_id "
             "from customer_sumup_checkout c join account a on c.customer_account_id = a.id "
@@ -245,21 +247,21 @@ class SumupService(DBService):
             raise InvalidArgument(
                 f"Inconsistency detected: checkout not found. Reference: {checkout.checkout_reference}"
             )
-        customer_account_id = row["customer_account_id"]
         node_id = row["node_id"]
+        node = await fetch_node(conn=conn, node_id=node_id)
+        assert node is not None
+        top_up_product = await fetch_top_up_product(conn=conn, node=node)
+        customer_account_id = row["customer_account_id"]
 
         line_items = [
             NewLineItem(
                 quantity=1,
                 product_id=top_up_product.id,
                 product_price=checkout.amount,
-                tax_rate=top_up_product.tax_rate,
-                tax_name=top_up_product.tax_name,
+                tax_rate_id=top_up_product.tax_rate_id,
             )
         ]
 
-        node = await fetch_node(conn=conn, node_id=node_id)
-        assert node is not None
         sumup_online_entry = await get_system_account_for_node(
             conn=conn, node=node, account_type=AccountType.sumup_online_entry
         )
@@ -291,7 +293,7 @@ class SumupService(DBService):
         )
 
     async def run_sumup_checkout_processing(self):
-        sumup_enabled = self.cfg.customer_portal.sumup_config.enabled
+        sumup_enabled = self.cfg.core.sumup_enabled
         if not sumup_enabled or not self.sumup_reachable:
             self.logger.info("Sumup online topup not enabled, disabling sumup check state")
             return
@@ -326,7 +328,12 @@ class SumupService(DBService):
 
     async def _update_checkout_status(self, conn: Connection, checkout_id: str) -> SumupCheckoutStatus:
         stored_checkout = await self._get_db_checkout(conn=conn, checkout_id=checkout_id)
-        sumup_checkout = await self._get_checkout(checkout_id=stored_checkout.id)
+        customer_account_node_id = await conn.fetchval(
+            "select node_id from account where id = $1", stored_checkout.customer_account_id
+        )
+        assert customer_account_node_id is not None
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=customer_account_node_id)
+        sumup_checkout = await self._get_checkout(event=event_settings, checkout_id=stored_checkout.id)
 
         if stored_checkout.status != SumupCheckoutStatus.PENDING:
             return stored_checkout.status
@@ -348,7 +355,7 @@ class SumupService(DBService):
             check_interval = 0
         else:
             check_interval = min(
-                self.cfg.customer_portal.sumup_config.max_check_interval,
+                self.cfg.core.sumup_max_check_interval,
                 int(round(2.5 * stored_checkout.check_interval)),
             )
 
@@ -382,25 +389,13 @@ class SumupService(DBService):
     @requires_customer
     @requires_sumup_enabled
     async def create_checkout(self, *, conn: Connection, current_customer: Customer, amount: float) -> SumupCheckout:
-        # TODO: tree
-        event_node = await fetch_event_node_for_node(conn=conn, node_id=1)
-        assert event_node is not None
-        assert event_node.event is not None
-        # check if pending checkout already exists
-        # if await conn.fetchval(
-        #     "select exists(select * from customer_sumup_checkout where customer_account_id = $1 and status = $2)",
-        #     current_customer.id,
-        #     SumupCheckoutStatus.PENDING.name,
-        # ):
-        #     raise PendingCheckoutAlreadyExists("an online topup is already in progress for this customer")
-
-        currency_identifier = await get_currency_identifier(conn=conn)
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)
 
         # check amount
         if amount <= 0:
             raise InvalidArgument("Must top up more than 0€")
 
-        max_account_balance = event_node.event.max_account_balance
+        max_account_balance = event_settings.max_account_balance
         if amount != int(amount):
             raise InvalidArgument("Cent amounts are not allowed")
         if amount > max_account_balance - current_customer.balance:
@@ -417,11 +412,12 @@ class SumupService(DBService):
         create_checkout = SumupCreateCheckout(
             checkout_reference=checkout_reference,
             amount=amount,
-            currency=currency_identifier,
-            merchant_code=self.cfg.customer_portal.sumup_config.merchant_code,
+            currency=event_settings.currency_identifier,
+            merchant_code=event_settings.sumup_merchant_code,
+            # TODO: HARDCODED
             description=f"StuStaCulum 2023 Online TopUp {format_user_tag_uid(current_customer.user_tag_uid)} {checkout_reference}",
         )
-        checkout_response = await self._create_sumup_checkout(checkout=create_checkout)
+        checkout_response = await self._create_sumup_checkout(event=event_settings, checkout=create_checkout)
 
         await conn.execute(
             "insert into customer_sumup_checkout ("

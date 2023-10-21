@@ -1,4 +1,5 @@
 import {
+  Product,
   selectProductAll,
   selectTaxRateById,
   useCreateProductMutation,
@@ -18,7 +19,6 @@ import {
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { Product } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -49,12 +49,12 @@ export const ProductList: React.FC = () => {
     return <Loading />;
   }
 
-  const renderTaxRate = (name: string) => {
+  const renderTaxRate = (id: number) => {
     if (!taxRates) {
       return "";
     }
 
-    const tax = selectTaxRateById(taxRates, name);
+    const tax = selectTaxRateById(taxRates, id);
     if (!tax) {
       return "";
     }
@@ -65,6 +65,7 @@ export const ProductList: React.FC = () => {
       </Tooltip>
     );
   };
+
   const handleLockProduct = (product: Product) => {
     updateProduct({ nodeId: currentNode.id, productId: product.id, newProduct: { ...product, is_locked: true } });
   };
@@ -124,10 +125,10 @@ export const ProductList: React.FC = () => {
       type: "number",
     },
     {
-      field: "tax_rate",
+      field: "tax_rate_id",
       headerName: t("product.taxRate") as string,
       align: "right",
-      renderCell: (params) => renderTaxRate(params.row.tax_name),
+      renderCell: (params) => renderTaxRate(params.row.tax_rate_id),
     },
     {
       field: "restrictions",
