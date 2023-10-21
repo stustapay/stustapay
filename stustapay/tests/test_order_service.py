@@ -1,6 +1,7 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import uuid
 
+from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import (
     Button,
     CompletedTicketSale,
@@ -13,13 +14,7 @@ from stustapay.core.schema.order import (
     PaymentMethod,
     PendingSale,
 )
-from stustapay.core.schema.product import (
-    TICKET_PRODUCT_ID,
-    TICKET_U16_PRODUCT_ID,
-    TICKET_U18_PRODUCT_ID,
-    NewProduct,
-    ProductRestriction,
-)
+from stustapay.core.schema.product import NewProduct, ProductRestriction
 from stustapay.core.schema.ticket import NewTicket
 from stustapay.core.schema.till import (
     NewCashRegister,
@@ -49,7 +44,6 @@ from stustapay.core.service.product import ProductService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
 
-from ..core.schema.account import AccountType
 from .common import TerminalTestCase
 
 START_BALANCE = 100
@@ -84,7 +78,7 @@ class OrderLogicTest(TerminalTestCase):
                 name="Helles 0,5l",
                 price=3,
                 fixed_price=True,
-                tax_name="ust",
+                tax_rate_id=self.tax_rate_ust.id,
                 target_account_id=None,
                 price_in_vouchers=1,
                 is_locked=True,
@@ -98,7 +92,7 @@ class OrderLogicTest(TerminalTestCase):
                 name="Helles 1l",
                 price=5,
                 fixed_price=True,
-                tax_name="ust",
+                tax_rate_id=self.tax_rate_ust.id,
                 target_account_id=None,
                 price_in_vouchers=2,
                 is_locked=True,
@@ -112,7 +106,7 @@ class OrderLogicTest(TerminalTestCase):
                 name="Pfand",
                 price=2,
                 fixed_price=True,
-                tax_name="none",
+                tax_rate_id=self.tax_rate_none.id,
                 target_account_id=None,
                 is_locked=True,
                 is_returnable=True,
@@ -133,24 +127,35 @@ class OrderLogicTest(TerminalTestCase):
         )
         self.ticket = await self.ticket_service.create_ticket(
             token=self.admin_token,
-            ticket=NewTicket(name="Eintritt mit 8€", product_id=TICKET_PRODUCT_ID, initial_top_up_amount=8),
+            ticket=NewTicket(
+                name="Eintritt mit 8€",
+                price=12,
+                tax_rate_id=self.tax_rate_none.id,
+                initial_top_up_amount=8,
+                restrictions=[],
+                is_locked=True,
+            ),
         )
         self.ticket_u18 = await self.ticket_service.create_ticket(
             token=self.admin_token,
             ticket=NewTicket(
                 name="Eintritt U18",
-                product_id=TICKET_U18_PRODUCT_ID,
+                price=12,
+                tax_rate_id=self.tax_rate_none.id,
                 initial_top_up_amount=8,
-                restriction=ProductRestriction.under_18,
+                is_locked=True,
+                restrictions=[ProductRestriction.under_18],
             ),
         )
         self.ticket_u16 = await self.ticket_service.create_ticket(
             token=self.admin_token,
             ticket=NewTicket(
                 name="Eintritt U16",
-                product_id=TICKET_U16_PRODUCT_ID,
+                price=12,
+                tax_rate_id=self.tax_rate_none.id,
                 initial_top_up_amount=0,
-                restriction=ProductRestriction.under_16,
+                is_locked=True,
+                restrictions=[ProductRestriction.under_16],
             ),
         )
 
@@ -744,9 +749,9 @@ class OrderLogicTest(TerminalTestCase):
             expected_balance=cash_drawer_start_balance + completed_ticket.total_price,
         )
         expected_line_items = {
-            TICKET_PRODUCT_ID: 2,
-            TICKET_U18_PRODUCT_ID: 1,
-            TICKET_U16_PRODUCT_ID: 1,
+            self.ticket.id: 2,
+            self.ticket_u18.id: 1,
+            self.ticket_u16.id: 1,
         }
         for product_id, quantity in expected_line_items.items():
             items = [line_item for line_item in completed_ticket.line_items if line_item.product.id == product_id]

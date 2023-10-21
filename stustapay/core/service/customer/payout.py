@@ -32,16 +32,22 @@ from stustapay.core.service.tree.common import fetch_event_node_for_node
 from stustapay.framework.database import Connection
 
 
-async def get_number_of_payouts(conn: Connection, payout_run_id: Optional[int]) -> int:
+async def get_number_of_payouts(conn: Connection, event_node_id: int, payout_run_id: int | None = None) -> int:
     if payout_run_id is None:
-        return await conn.fetchval("select count(*) from payout where payout_run_id is null")
-    return await conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id)
+        return await conn.fetchval(
+            "select count(*) from payout where payout_run_id is null and node_id = $1", event_node_id
+        )
+    return await conn.fetchval(
+        "select count(*) from payout where payout_run_id = $1 and node_id = $2", payout_run_id, event_node_id
+    )
 
 
-async def create_payout_run(conn: Connection, node_id: int, created_by: str, max_payout_sum: float) -> tuple[int, int]:
+async def create_payout_run(
+    conn: Connection, event_node_id: int, created_by: str, max_payout_sum: float
+) -> tuple[int, int]:
     payout_run_id = await conn.fetchval(
         "insert into payout_run (node_id, created_at, created_by) values ($1, now(), $2) returning id",
-        node_id,
+        event_node_id,
         created_by,
     )
 
@@ -53,12 +59,16 @@ async def create_payout_run(conn: Connection, node_id: int, created_by: str, max
         "        set payout_run_id = $1 "
         "    where c.customer_account_id in ( "
         "        select customer_account_id from ( "
-        "            select customer_account_id, SUM(balance) OVER (order by customer_account_id rows between unbounded preceding and current row) as running_total from payout p where p.payout_run_id is null "
+        "           select "
+        "               customer_account_id, "
+        "               sum(balance) over (order by customer_account_id rows between unbounded preceding and current row) as running_total "
+        "           from payout p where p.payout_run_id is null and p.node_id = $3 "
         "        ) as agr where running_total <= $2"
         "    ) returning 1"
         ") select count(*) from scheduled_payouts",
         payout_run_id,
         max_payout_sum,
+        event_node_id,
     )
     return payout_run_id, number_of_payouts
 
@@ -253,7 +263,7 @@ class PayoutService(DBService):
     ) -> PayoutRunWithStats:
         run_id, _ = await create_payout_run(
             conn=conn,
-            node_id=node.id,
+            event_node_id=node.id,
             created_by=current_user.login,
             max_payout_sum=new_payout_run.max_payout_sum,
         )

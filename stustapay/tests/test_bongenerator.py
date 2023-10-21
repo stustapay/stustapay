@@ -5,7 +5,7 @@ import uuid
 from stustapay.bon.bon import BonConfig, BonTemplateContext, TaxRateAggregation
 from stustapay.bon.pdflatex import OrderWithTse, render_template
 from stustapay.core.schema.order import LineItem, OrderType, PaymentMethod
-from stustapay.core.schema.product import Product
+from stustapay.core.schema.product import Product, ProductType
 
 from .common import BaseTestCase
 
@@ -30,17 +30,17 @@ class BonGeneratorTest(BaseTestCase):
                 signature_status="done",
                 line_items=[
                     LineItem(
-                        product_id=0,
                         quantity=2,
-                        order_id=1,
                         item_id=0,
                         product=Product(
                             node_id=self.node_id,
                             name="Helles 1.0l",
                             price=5.00,
+                            tax_rate_id=1,
                             tax_name="ust",
                             tax_rate=0.19,
                             id=0,
+                            type=ProductType.user_defined,
                             fixed_price=True,
                             is_locked=True,
                             is_returnable=False,
@@ -48,45 +48,45 @@ class BonGeneratorTest(BaseTestCase):
                         ),
                         product_price=5.00,
                         total_tax=1.90,
-                        total_price=10.0,
+                        tax_rate_id=1,
                         tax_name="ust",
                         tax_rate=0.19,
                     ),
                     LineItem(
-                        product_id=9,
                         quantity=1,
-                        order_id=1,
                         item_id=2,
                         product=Product(
                             node_id=self.node_id,
                             name="Weißwurst",
                             price=2.0,
+                            tax_rate_id=1,
                             tax_name="eust",
                             tax_rate=0.07,
                             id=9,
+                            type=ProductType.user_defined,
                             fixed_price=True,
                             is_locked=True,
                             is_returnable=False,
                             restrictions=[],
                         ),
                         product_price=2.0,
+                        tax_rate_id=1,
                         total_tax=0.14,
-                        total_price=2.00,
                         tax_name="eust",
                         tax_rate=0.07,
                     ),
                     LineItem(
-                        product_id=10,
                         quantity=2,
-                        order_id=1,
                         item_id=1,
                         product=Product(
                             node_id=self.node_id,
                             name="Pfand",
                             price=2.00,
+                            tax_rate_id=1,
                             tax_name="none",
                             tax_rate=0.0,
                             id=10,
+                            type=ProductType.user_defined,
                             fixed_price=True,
                             is_returnable=False,
                             is_locked=True,
@@ -94,7 +94,7 @@ class BonGeneratorTest(BaseTestCase):
                         ),
                         product_price=2.00,
                         total_tax=0.00,
-                        total_price=4.00,
+                        tax_rate_id=1,
                         tax_name="none",
                         tax_rate=0.00,
                     ),

@@ -18,6 +18,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.framework.database import Connection
+
 from .account import get_system_account_for_node
 from .common.error import NotFound, ServiceException
 from .order.booking import (
@@ -62,8 +63,7 @@ async def _book_imbalance_order(
             quantity=1,
             product_id=difference_product.id,
             product_price=imbalance,
-            tax_name=difference_product.tax_name,
-            tax_rate=difference_product.tax_rate,
+            tax_rate_id=difference_product.tax_rate_id,
         )
     ]
 
@@ -88,10 +88,11 @@ async def _book_imbalance_order(
 
 
 async def _book_money_transfer_close_out_start(
-    *, conn: Connection, current_user: CurrentUser, cash_register_id: int, amount: float
+    *, conn: Connection, current_user: CurrentUser, node: Node, cash_register_id: int, amount: float
 ) -> OrderInfo:
     return await book_money_transfer(
         conn=conn,
+        node=node,
         originating_user_id=current_user.id,
         cash_register_id=cash_register_id,
         amount=amount,
@@ -115,6 +116,7 @@ async def _book_money_transfer_cash_vault_order(
     }
     return await book_money_transfer(
         conn=conn,
+        node=node,
         originating_user_id=current_user.id,
         cash_register_id=cash_register_id,
         amount=-amount,
@@ -151,10 +153,12 @@ class CashierService(DBService):
     @with_db_transaction
     @requires_user([Privilege.cashier_management])
     @requires_node()
-    async def get_cashier_shifts(self, *, conn: Connection, current_user: User, cashier_id: int) -> list[CashierShift]:
+    async def get_cashier_shifts(
+        self, *, conn: Connection, current_user: User, node: Node, cashier_id: int
+    ) -> list[CashierShift]:
         # TODO: tree scope
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_user=current_user, cashier_id=cashier_id
+            conn=conn, current_user=current_user, node=node, cashier_id=cashier_id
         )
         if not cashier:
             raise NotFound(element_typ="cashier", element_id=cashier_id)
@@ -229,7 +233,7 @@ class CashierService(DBService):
     ) -> CloseOutResult:
         # TODO: TREE visibility
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_user=current_user, cashier_id=cashier_id
+            conn=conn, current_user=current_user, node=node, cashier_id=cashier_id
         )
         if cashier.cash_register_id is None:
             raise InvalidCloseOutException("Cashier does not have a cash register")
@@ -253,6 +257,7 @@ class CashierService(DBService):
         await _book_money_transfer_close_out_start(
             conn=conn,
             current_user=current_user,
+            node=node,
             cash_register_id=cashier.cash_register_id,
             amount=expected_balance,
         )

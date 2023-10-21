@@ -10,10 +10,6 @@ from stustapay.core.service.common.error import NotFound
 from stustapay.framework.database import Connection
 
 
-async def get_currency_identifier(*, conn: Connection) -> str:
-    return await conn.fetchval("select value from config where key = 'currency.identifier' limit 1")
-
-
 class ConfigService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -23,7 +19,7 @@ class ConfigService(DBService):
         return PublicConfig(
             test_mode=self.cfg.core.test_mode,
             test_mode_message=self.cfg.core.test_mode_message,
-            sumup_topup_enabled_globally=self.cfg.customer_portal.sumup_config.enabled,
+            sumup_topup_enabled_globally=self.cfg.core.sumup_enabled,
         )
 
     @with_db_transaction

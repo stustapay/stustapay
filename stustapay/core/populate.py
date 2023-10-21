@@ -12,6 +12,7 @@ from stustapay.core.schema.till import NewCashRegister, NewTill
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
 from stustapay.core.service.till.register import create_cash_register
 from stustapay.core.service.till.till import create_till
+from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.user_tag import create_user_tag_secret, create_user_tags
 from stustapay.framework.database import create_db_pool
 
@@ -105,13 +106,15 @@ async def create_cash_registers(config: Config, node_id: int, n_registers: int, 
     try:
         async with db_pool.acquire() as conn:
             async with conn.transaction():
+                node = await fetch_node(conn=conn, node_id=node_id)
+                assert node is not None
                 for i in range(n_registers):
                     register_name = name_format.format(i=i + 1)
                     logger.info(f"Creating cash register: '{register_name}'")
 
                     if not dry_run:
                         await create_cash_register(
-                            conn=conn, node_id=node_id, new_register=NewCashRegister(name=register_name)
+                            conn=conn, node=node, new_register=NewCashRegister(name=register_name)
                         )
     finally:
         await db_pool.close()

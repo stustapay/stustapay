@@ -50,8 +50,6 @@ class Api:
             db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service
         )
 
-        await customer_service.sumup.check_sumup_auth()
-
         context = Context(
             config=self.cfg,
             db_pool=db_pool,

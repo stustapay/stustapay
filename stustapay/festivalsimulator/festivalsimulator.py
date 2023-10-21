@@ -48,8 +48,8 @@ class Simulator:
         self.logger = logging.getLogger(__name__)
         self.config = config
 
-        self.base_url = self.config.terminalserver.base_url
-        self.admin_url = self.config.administration.base_url
+        self.terminal_api_base_url = self.config.terminalserver.base_url
+        self.admin_api_base_url = self.config.administration.base_url
         self.bookings_per_second = bookings_per_second
         self.admin_tag_uid = None
         self.n_tills_total = None
@@ -145,7 +145,7 @@ class Simulator:
             till_id,
         )
 
-        async with aiohttp.ClientSession(base_url=self.base_url) as client:
+        async with aiohttp.ClientSession(base_url=self.terminal_api_base_url) as client:
             async with client.post(
                 "/auth/register_terminal", json={"registration_uuid": str(registration_uuid)}
             ) as resp:
@@ -163,7 +163,7 @@ class Simulator:
 
     @with_db_pool
     async def voucher_granting(self, db_pool: asyncpg.Pool):
-        async with aiohttp.ClientSession(base_url=self.admin_url) as client:
+        async with aiohttp.ClientSession(base_url=self.admin_api_base_url) as client:
             while True:
                 rows = await db_pool.fetch("select * from account where user_tag_uid is not null")
                 if len(rows) == 0:  # no tickets were sold yet
@@ -197,7 +197,7 @@ class Simulator:
         self, db_pool: asyncpg.Pool, terminal: Terminal, cashier_tag_uid: int, stock_up: bool = False
     ) -> bool:
         stocking_id = await db_pool.fetchval("select id from cash_register_stocking limit 1")
-        async with aiohttp.ClientSession(base_url=self.base_url, headers=terminal.get_headers()) as client:
+        async with aiohttp.ClientSession(base_url=self.terminal_api_base_url, headers=terminal.get_headers()) as client:
             async with client.post(
                 "/user/login", json={"user_tag": {"uid": self.admin_tag_uid}, "user_role_id": ADMIN_ROLE_ID}
             ) as resp:
@@ -230,7 +230,12 @@ class Simulator:
             async with client.post(
                 "/user/login", json={"user_tag": {"uid": cashier_tag_uid}, "user_role_id": CASHIER_ROLE_ID}
             ) as resp:
-                assert resp.status == 200
+                if resp.status != 200:
+                    self.logger.critical(
+                        f"Failed to login {cashier_tag_uid} as cashier on terminal {terminal.till.name}. "
+                        f"{await resp.text()}"
+                    )
+                    return False
 
             return True
 
@@ -265,7 +270,7 @@ class Simulator:
         return terminals
 
     async def _preform_cashier_close_out(self, cashier_id: int) -> bool:
-        async with aiohttp.ClientSession(base_url=self.admin_url) as client:
+        async with aiohttp.ClientSession(base_url=self.admin_api_base_url) as client:
             self.logger.info(f"Closing out cashier with id {cashier_id = }")
             async with client.get(f"/cashiers/{cashier_id}", headers=self.admin_headers) as resp:
                 if resp.status != 200:
@@ -296,7 +301,7 @@ class Simulator:
 
     async def perform_cashier_shift_change(self, db_pool: asyncpg.Pool, terminal: Terminal, perform_close_out=False):
         with self.cashier_lock:
-            async with aiohttp.ClientSession(base_url=self.base_url) as client:
+            async with aiohttp.ClientSession(base_url=self.terminal_api_base_url) as client:
                 async with client.get("/user", headers=terminal.get_headers()) as resp:
                     if resp.status != 200:
                         self.logger.warning(
@@ -330,7 +335,7 @@ class Simulator:
                 db_pool=db_pool, till_ids=[row["id"] for row in rows], stock_up=True
             )
 
-        async with aiohttp.ClientSession(base_url=self.base_url) as client:
+        async with aiohttp.ClientSession(base_url=self.terminal_api_base_url) as client:
             while True:
                 terminal = random.choice(terminals)
                 self.sleep()
@@ -371,7 +376,7 @@ class Simulator:
                 db_pool=db_pool, till_ids=[row["id"] for row in rows], stock_up=True
             )
 
-        async with aiohttp.ClientSession(base_url=self.base_url) as client:
+        async with aiohttp.ClientSession(base_url=self.terminal_api_base_url) as client:
             while True:
                 terminal = random.choice(terminals)
                 self.sleep_topup()
@@ -420,7 +425,7 @@ class Simulator:
                 till_ids=[row["id"] for row in rows],
             )
 
-        async with aiohttp.ClientSession(base_url=self.base_url) as client:
+        async with aiohttp.ClientSession(base_url=self.terminal_api_base_url) as client:
             while True:
                 terminal: Terminal = random.choice(terminals)
                 self.sleep()
@@ -459,7 +464,7 @@ class Simulator:
                     await self.perform_cashier_shift_change(db_pool=db_pool, terminal=terminal, perform_close_out=False)
 
     async def login_admin(self) -> str:
-        async with aiohttp.ClientSession(base_url=self.admin_url) as client:
+        async with aiohttp.ClientSession(base_url=self.admin_api_base_url) as client:
             async with client.post("/auth/login", json={"username": "admin", "password": "admin"}) as resp:
                 if resp.status != 200:
                     raise RuntimeError("Error trying to log in admin user")

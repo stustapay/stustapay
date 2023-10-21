@@ -14,7 +14,7 @@ export const NewProductSchema = z.object({
   restrictions: z.array(ProductRestrictionSchema),
   is_locked: z.boolean(),
   is_returnable: z.boolean(),
-  tax_name: z.string().min(1),
+  tax_rate_id: z.number().int(),
 });
 export type NewProduct = z.infer<typeof NewProductSchema>;
 

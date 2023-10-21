@@ -3,10 +3,70 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
+from stustapay.core.config import CoreConfig
 from stustapay.core.schema.config import SEPAConfig
 
 ROOT_NODE_ID = 0
 INITIAL_EVENT_NODE_ID = 1
+
+
+class _BaseEvent(BaseModel):
+    currency_identifier: str
+    max_account_balance: float
+
+    sumup_topup_enabled: bool = False
+    sumup_payment_enabled: bool = False
+
+    customer_portal_url: str
+    customer_portal_about_page_url: str
+    customer_portal_data_privacy_url: str
+    customer_portal_contact_email: EmailStr
+
+    ust_id: str
+    bon_issuer: str
+    bon_address: str
+    bon_title: str
+
+    sepa_enabled: bool
+    sepa_sender_name: str
+    sepa_sender_iban: str
+    sepa_description: str
+    sepa_allowed_country_codes: list[str]
+
+    def is_sumup_topup_enabled(self, cfg: CoreConfig):
+        return self.sumup_topup_enabled and cfg.sumup_enabled
+
+    def is_sumup_payment_enabled(self, cfg: CoreConfig):
+        return self.sumup_payment_enabled and cfg.sumup_enabled
+
+    @property
+    def sepa_config(self) -> SEPAConfig | None:
+        if not self.sepa_enabled:
+            return None
+        return SEPAConfig(
+            sender_name=self.sepa_sender_name,
+            sender_iban=self.sepa_sender_iban,
+            description=self.sepa_description,
+            allowed_country_codes=self.sepa_allowed_country_codes,
+        )
+
+
+class _RestrictedEventMetadata(BaseModel):
+    sumup_api_key: str = ""
+    sumup_affiliate_key: str = ""
+    sumup_merchant_code: str = ""
+
+
+class UpdateEvent(_BaseEvent, _RestrictedEventMetadata):
+    pass
+
+
+class PublicEventSettings(_BaseEvent):
+    pass
+
+
+class RestrictedEventSettings(_BaseEvent, _RestrictedEventMetadata):
+    pass
 
 
 class ObjectType(enum.Enum):
@@ -25,34 +85,6 @@ class ObjectType(enum.Enum):
 ALL_OBJECT_TYPES = [e for e in ObjectType]
 
 
-class Event(BaseModel):
-    id: int
-    currency_identifier: str
-    sumup_topup_enabled: bool
-    max_account_balance: float
-    customer_portal_contact_email: EmailStr
-    ust_id: str
-    bon_issuer: str
-    bon_address: str
-    bon_title: str
-    sepa_enabled: bool
-    sepa_sender_name: str
-    sepa_sender_iban: str
-    sepa_description: str
-    sepa_allowed_country_codes: list[str]
-
-    @property
-    def sepa_config(self) -> SEPAConfig | None:
-        if not self.sepa_enabled:
-            return None
-        return SEPAConfig(
-            sender_name=self.sepa_sender_name,
-            sender_iban=self.sepa_sender_iban,
-            description=self.sepa_description,
-            allowed_country_codes=self.sepa_allowed_country_codes,
-        )
-
-
 class NewNode(BaseModel):
     name: str
     description: str
@@ -65,7 +97,7 @@ class Node(BaseModel):
     parent: int
     name: str
     description: str
-    event: Optional[Event]
+    event: Optional[PublicEventSettings]
     path: str
     parent_ids: list[int]
     event_node_id: Optional[int]
@@ -88,25 +120,6 @@ class Node(BaseModel):
             return None
 
         return self.parents_until_event_node + [self.id]
-
-
-class UpdateEvent(BaseModel):
-    currency_identifier: str
-    sumup_topup_enabled: bool
-    max_account_balance: float
-    customer_portal_url: str
-    customer_portal_contact_email: EmailStr
-
-    ust_id: str
-    bon_issuer: str
-    bon_address: str
-    bon_title: str
-
-    sepa_enabled: bool
-    sepa_sender_name: str
-    sepa_sender_iban: str
-    sepa_description: str
-    sepa_allowed_country_codes: list[str]
 
 
 class NewEvent(NewNode, UpdateEvent):

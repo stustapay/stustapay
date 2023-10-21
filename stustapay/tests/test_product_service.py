@@ -16,23 +16,24 @@ class ProductServiceTest(BaseTestCase):
 
     async def test_basic_product_workflow(self):
         product = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="Test Product", price=3, tax_name="ust")
+            token=self.admin_token, product=NewProduct(name="Test Product", price=3, tax_rate_id=self.tax_rate_ust.id)
         )
         self.assertEqual(product.name, "Test Product")
 
         with self.assertRaises(AccessDenied):
             await self.product_service.create_product(
-                token=self.cashier_token, product=NewProduct(name="Test Product", price=3, tax_name="ust")
+                token=self.cashier_token,
+                product=NewProduct(name="Test Product", price=3, tax_rate_id=self.tax_rate_ust.id),
             )
 
         updated_product = await self.product_service.update_product(
             token=self.admin_token,
             product_id=product.id,
-            product=NewProduct(name="Updated Test Product", price=4, tax_name="eust"),
+            product=NewProduct(name="Updated Test Product", price=4, tax_rate_id=self.tax_rate_none.id),
         )
         self.assertEqual(updated_product.name, "Updated Test Product")
         self.assertEqual(updated_product.price, 4)
-        self.assertEqual(updated_product.tax_name, "eust")
+        self.assertEqual(updated_product.tax_name, self.tax_rate_none.name)
 
         products = await self.product_service.list_products(token=self.admin_token)
         self.assertEqual(len(list(filter(lambda p: p.name == "Updated Test Product", products))), 1)

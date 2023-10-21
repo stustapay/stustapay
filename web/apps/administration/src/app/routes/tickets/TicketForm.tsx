@@ -1,5 +1,5 @@
 import { NewTicket } from "@/api";
-import { ProductSelect, RestrictionSelect } from "@/components/features";
+import { RestrictionSelect, TaxRateSelect } from "@/components/features";
 import { useCurrencySymbol } from "@/hooks";
 import { InputAdornment } from "@mui/material";
 import { FormNumericInput, FormTextField } from "@stustapay/form-components";
@@ -16,29 +16,39 @@ export function TicketForm<T extends NewTicket>(props: TicketFormProps<T>) {
   return (
     <>
       <FormTextField autoFocus name="name" label={t("ticket.name")} formik={props} />
-      <FormTextField name="description" label={t("ticket.description")} formik={props} />
       <FormNumericInput
         name="price"
+        label={t("ticket.price")}
+        formik={props}
+        disabled={values.is_locked}
+        InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
+      />
+      <FormNumericInput
+        name="initial_top_up_amount"
+        disabled={values.is_locked}
         label={t("ticket.initialTopUpAmount")}
         InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
         formik={props}
       />
 
-      <ProductSelect
-        label={t("ticket.product")}
-        value={values.product_id}
-        onChange={(value) => setFieldValue("product_id", value)}
-        error={touched.product_id && !!errors.product_id}
-        helperText={(touched.product_id && errors.product_id) as string}
+      <TaxRateSelect
+        name="tax_rate_id"
+        label={t("product.taxRate")}
+        disabled={values.is_locked}
+        error={touched.tax_rate_id && !!errors.tax_rate_id}
+        helperText={(touched.tax_rate_id && errors.tax_rate_id) as string}
+        onChange={(value) => setFieldValue("tax_rate_id", value)}
+        value={values.tax_rate_id}
       />
 
       <RestrictionSelect
         label={t("ticket.restriction")}
-        value={(values.restriction == null ? null : [values.restriction]) as any} // TODO: proper typing
         multiple={false}
-        onChange={(value) => setFieldValue("restriction", value.length > 0 ? value[0] : null)}
-        error={touched.restriction && !!errors.restriction}
-        helperText={(touched.restriction && errors.restriction) as string}
+        value={values.restrictions.length > 0 ? values.restrictions[0] : null}
+        disabled={values.is_locked}
+        onChange={(value) => setFieldValue("restrictions", [value])}
+        error={touched.restrictions && !!errors.restrictions}
+        helperText={(touched.restrictions && errors.restrictions) as string}
       />
     </>
   );

@@ -254,7 +254,9 @@ class TillRegisterService(DBService):
         cash_register_id: int,
     ) -> bool:
         # TODO: TREE visibility
-        register_stocking = await _get_cash_register_stocking(conn=conn, stocking_id=stocking_id)
+        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        assert node is not None
+        register_stocking = await _get_cash_register_stocking(conn=conn, node=node, stocking_id=stocking_id)
         if register_stocking is None:
             raise InvalidArgument("cash register stocking template does not exist")
 
@@ -296,6 +298,7 @@ class TillRegisterService(DBService):
         self,
         *,
         conn: Connection,
+        node: Node,
         current_user: CurrentUser,
         cashier_tag_uid: int,
         amount: float,
@@ -338,6 +341,7 @@ class TillRegisterService(DBService):
         # till_id is the till of the cashier, not the finanzorga!
         await book_money_transfer(
             conn=conn,
+            node=node,
             originating_user_id=current_user.id,
             till_id=row["till_id"],
             bookings=bookings,

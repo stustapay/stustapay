@@ -17,7 +17,7 @@ alter table product add constraint product_not_fixed_or_price
 alter table product add constraint product_price_in_vouchers_not_zero
     check ( price_in_vouchers <> 0 );
 
-alter table ticket add constraint initial_top_up_is_positive
+alter table product_ticket_metadata add constraint initial_top_up_is_positive
     check (initial_top_up_amount >= 0);
 
 alter table cash_register_stocking add constraint non_negative_stockings
@@ -212,16 +212,20 @@ create or replace function check_till_layout_contains_tickets_of_unique_restrict
 ) returns boolean as
 $$
 <<locals>> declare
-    restriction_type            text;
+    restrictions            text[];
     n_current_tickets_in_layout int;
 begin
     select
-        t.restriction
-    into locals.restriction_type
+        t.restrictions
+    into locals.restrictions
     from
         ticket t
     where
-            t.id = check_till_layout_contains_tickets_of_unique_restrictions.ticket_id;
+        t.id = check_till_layout_contains_tickets_of_unique_restrictions.ticket_id;
+
+    if array_length(locals.restrictions, 1) > 1 then
+        raise 'ticket in till layout has more than one restriction set';
+    end if;
 
     select
         count(*)
@@ -232,7 +236,7 @@ begin
     where
             t.id != check_till_layout_contains_tickets_of_unique_restrictions.ticket_id
         and tltt.layout_id = check_till_layout_contains_tickets_of_unique_restrictions.layout_id
-        and (t.restriction = locals.restriction_type or (t.restriction is null and locals.restriction_type is null));
+        and (t.restrictions = locals.restrictions);
 
     return locals.n_current_tickets_in_layout < 1;
 end

@@ -284,8 +284,13 @@ $$
     new_cash_register_id      bigint;
     new_cash_register_balance numeric;
     new_order_id              bigint;
+    tax_rate_none_id          bigint;
 begin
     NEW.active_cash_register_id := null;
+
+    select t.id into locals.tax_rate_none_id
+    from tax_rate t join node n on t.node_id = n.event_node_id
+    where n.id = NEW.node_id and t.name = 'none';
 
     if NEW.active_user_id is not null then
         select
@@ -313,10 +318,10 @@ begin
             returning id into locals.new_order_id;
 
             insert into line_item (
-                order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate
+                order_id, item_id, product_id, product_price, quantity, tax_rate_id, tax_name, tax_rate
             )
             values (
-                locals.new_order_id, 0, 7, locals.new_cash_register_balance, 1, 'none', 0
+                locals.new_order_id, 0, 7, locals.new_cash_register_balance, 1, locals.tax_rate_none_id, 'none', 0
             );
             NEW.active_cash_register_id := locals.new_cash_register_id;
         end if;
@@ -344,10 +349,10 @@ begin
             returning id into locals.old_order_id;
 
             insert into line_item (
-                order_id, item_id, product_id, product_price, quantity, tax_name, tax_rate
+                order_id, item_id, product_id, product_price, quantity, tax_rate_id, tax_name, tax_rate
             )
             values (
-                locals.old_order_id, 0, 7, -locals.old_cash_register_balance, 1, 'none', 0
+                locals.old_order_id, 0, 7, -locals.old_cash_register_balance, 1, locals.tax_rate_none_id, 'none', 0
             );
         end if;
     end if;

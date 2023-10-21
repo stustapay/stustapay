@@ -232,7 +232,9 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_terminal([Privilege.user_management])
-    async def update_user_roles_terminal(self, *, conn: Connection, current_terminal: Terminal, user_tag_uid: int, role_names: list[str]) -> User:
+    async def update_user_roles_terminal(
+        self, *, conn: Connection, current_terminal: Terminal, user_tag_uid: int, role_names: list[str]
+    ) -> User:
         # TODO: TREE visibility
         if await self._contains_privileged_roles(conn=conn, role_names=role_names):
             raise AccessDenied("Cannot promote users to privileged roles on a terminal")
@@ -306,7 +308,7 @@ class UserService(DBService):
             return user
 
         user.role_names.append(FINANZORGA_ROLE_NAME)
-        return await self._update_user(conn=conn, node= node, user_id=user.id, user=user)
+        return await self._update_user(conn=conn, node=node, user_id=user.id, user=user)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
@@ -351,7 +353,9 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
-    async def update_user_roles(self, *, conn: Connection, node: Node, user_id: int, role_names: list[str]) -> Optional[User]:
+    async def update_user_roles(
+        self, *, conn: Connection, node: Node, user_id: int, role_names: list[str]
+    ) -> Optional[User]:
         # TODO: TREE visibility
         found = await conn.fetchval("select true from usr where id = $1", user_id)
         if not found:

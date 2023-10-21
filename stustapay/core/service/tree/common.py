@@ -1,10 +1,9 @@
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.service.common.error import NotFound
 from stustapay.framework.database import Connection
 
 
 async def fetch_node(conn: Connection, node_id: int) -> Node | None:
-    # TODO: currently children are not fetched
     node = await conn.fetch_maybe_one(
         Node, "select n.*, '{}'::json array as children from node_with_allowed_objects n where n.id = $1", node_id
     )
@@ -66,5 +65,16 @@ async def get_tree_for_current_user(conn: Connection, user_node_id: int) -> Node
 
 
 async def fetch_event_node_for_node(conn: Connection, node_id: int) -> Node | None:
-    # TODO: tree, for now we expect the nodes to be used to be actual events
-    return await fetch_node(conn=conn, node_id=node_id)
+    event_node_id = await conn.fetchval("select event_node_id from node where id = $1", node_id)
+    if event_node_id is None:
+        raise NotFound(element_typ="node", element_id=node_id)
+    return await fetch_node(conn=conn, node_id=event_node_id)
+
+
+async def fetch_restricted_event_settings_for_node(conn: Connection, node_id: int) -> RestrictedEventSettings:
+    event_node_id = await conn.fetchval("select event_node_id from node where id = $1", node_id)
+    if event_node_id is None:
+        raise NotFound(element_typ="node", element_id=node_id)
+    return await conn.fetch_one(
+        RestrictedEventSettings, "select * from event e join node n on n.event_id = e.id where n.id = $1", event_node_id
+    )

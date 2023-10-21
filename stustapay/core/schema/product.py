@@ -3,19 +3,20 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-DISCOUNT_PRODUCT_ID = 1
-TOP_UP_PRODUCT_ID = 2
-PAY_OUT_PRODUCT_ID = 3
-TICKET_PRODUCT_ID = 4
-TICKET_U18_PRODUCT_ID = 5
-TICKET_U16_PRODUCT_ID = 6
-MONEY_TRANSFER_PRODUCT_ID = 7
-MONEY_DIFFERENCE_PRODUCT_ID = 8
-
 
 class ProductRestriction(enum.Enum):
     under_16 = "under_16"
     under_18 = "under_18"
+
+
+class ProductType(enum.Enum):
+    discount = "discount"
+    topup = "topup"
+    payout = "payout"
+    money_transfer = "money_transfer"
+    imbalance = "imbalance"
+    user_defined = "user_defined"
+    ticket = "ticket"
 
 
 class NewProduct(BaseModel):
@@ -23,7 +24,7 @@ class NewProduct(BaseModel):
     price: Optional[float]
     fixed_price: bool = True
     price_in_vouchers: Optional[int] = None
-    tax_name: str
+    tax_rate_id: int
     restrictions: list[ProductRestriction] = []
     is_locked: bool = False
     is_returnable: bool = False
@@ -34,8 +35,10 @@ class NewProduct(BaseModel):
 class Product(NewProduct):
     node_id: int
     id: int
+    tax_name: str
     tax_rate: float
     fixed_price: bool
+    type: ProductType
     price_per_voucher: Optional[float] = None
     restrictions: list[ProductRestriction]
     is_locked: bool

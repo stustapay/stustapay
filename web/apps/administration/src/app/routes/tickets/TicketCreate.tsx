@@ -9,10 +9,11 @@ import { TicketForm } from "./TicketForm";
 
 const initialValues: NewTicket = {
   name: "",
-  description: "",
+  price: 0,
+  tax_rate_id: null as unknown as number,
   initial_top_up_amount: 0,
-  product_id: null as unknown as number, // to force a non selected initial value
-  restriction: null,
+  is_locked: false,
+  restrictions: [],
 };
 
 export const TicketCreate: React.FC = () => {

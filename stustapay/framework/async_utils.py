@@ -1,5 +1,6 @@
 import asyncio
 import threading
+import traceback
 from functools import wraps
 
 from stustapay.framework.database import create_db_pool
@@ -25,8 +26,14 @@ class AsyncThread:
         self.future = None
 
     def start(self):
+        async def runner():
+            try:
+                await self.callable()
+            except:  # pylint: disable=bare-except
+                traceback.print_exc()
+
         self.thread.start()
-        self.future = asyncio.run_coroutine_threadsafe(self.callable(), self.loop)
+        self.future = asyncio.run_coroutine_threadsafe(runner(), self.loop)
 
     def join(self):
         self.thread.join()

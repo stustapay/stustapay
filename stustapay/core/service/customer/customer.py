@@ -168,7 +168,7 @@ class CustomerService(DBService):
             "select payout_run_id from customer_info where customer_account_id = $1",
             current_customer.id,
         )
-        if payout_id != None:
+        if payout_id is not None:
             raise InvalidArgument(
                 "Your account is already scheduled for the next payout, so updates are no longer possible."
             )
@@ -199,10 +199,10 @@ class CustomerService(DBService):
         return CustomerPortalApiConfig(
             test_mode=self.cfg.core.test_mode,
             test_mode_message=self.cfg.core.test_mode_message,
-            about_page_url="",
+            about_page_url=node.event.customer_portal_about_page_url,
             allowed_country_codes=node.event.sepa_allowed_country_codes,
             contact_email=node.event.customer_portal_contact_email,
-            data_privacy_url="",
+            data_privacy_url=node.event.customer_portal_data_privacy_url,
             payout_enabled=node.event.sepa_enabled,
-            sumup_topup_enabled=self.cfg.customer_portal.sumup_config.enabled and node.event.sumup_topup_enabled,
+            sumup_topup_enabled=self.cfg.core.sumup_enabled and node.event.sumup_topup_enabled,
         )

@@ -16,10 +16,10 @@ import {
   TillLayout,
   TillProfile,
   Tse,
+  UserRead,
   UserRole,
   UserTagDetailRead,
   api as generatedApi,
-  UserRead,
 } from "./generated/api";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
@@ -62,7 +62,6 @@ const configAdaptor = createEntityAdapter<ConfigEntry>({
 const orderAdapter = createEntityAdapter<Order>({ sortComparer: (a, b) => b.id - a.id });
 
 const taxRateAdapter = createEntityAdapter<TaxRate>({
-  selectId: (taxRate) => taxRate.name,
   sortComparer: (a, b) => a.name.localeCompare(b.name),
 });
 
@@ -129,7 +128,7 @@ export const api = generatedApi.enhanceEndpoints({
       providesTags: (result) => generateCacheKeys("tax-rates", result),
     },
     getTaxRate: {
-      providesTags: (result, error, arg) => [{ type: "tax-rates", id: arg.taxRateName }],
+      providesTags: (result, error, arg) => [{ type: "tax-rates", id: arg.taxRateId }],
     },
     listTickets: {
       providesTags: (result) => generateCacheKeys("tickets", result),

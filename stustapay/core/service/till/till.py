@@ -34,7 +34,10 @@ from stustapay.core.service.till.common import create_till, fetch_till
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.till.register import TillRegisterService
-from stustapay.core.service.tree.common import fetch_node
+from stustapay.core.service.tree.common import (
+    fetch_node,
+    fetch_restricted_event_settings_for_node,
+)
 from stustapay.core.service.user import AuthService, list_user_roles
 from stustapay.framework.database import Connection
 
@@ -300,9 +303,10 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_terminal()
-    async def get_terminal_config(self, *, conn: Connection, current_terminal: Terminal) -> Optional[TerminalConfig]:
-        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
-        assert node is not None
+    async def get_terminal_config(
+        self, *, conn: Connection, current_terminal: Terminal, node: Node
+    ) -> Optional[TerminalConfig]:
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         profile = await conn.fetch_one(
             TillProfile,
             "select * from till_profile_with_allowed_roles tp where id = $1",
@@ -348,7 +352,7 @@ class TillService(DBService):
         )
         sumup_key = ""
         if profile.allow_ticket_sale or profile.allow_top_up:
-            sumup_key = self.cfg.core.sumup_affiliate_key
+            sumup_key = event_settings.sumup_affiliate_key
 
         secrets = TerminalSecrets(sumup_affiliate_key=sumup_key, user_tag_secret=user_tag_secret)
 

@@ -10,7 +10,7 @@ import { ProductForm } from "./ProductForm";
 const initialValues: NewProduct = {
   name: "",
   price: 0,
-  tax_name: "none",
+  tax_rate_id: null as unknown as number,
   fixed_price: true,
   price_in_vouchers: 0,
   restrictions: [],

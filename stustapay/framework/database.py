@@ -271,6 +271,7 @@ class SchemaRevision:
 
 async def _apply_db_code(conn: asyncpg.Connection, code_path: Path):
     for code_file in sorted(code_path.glob("*.sql")):
+        logger.info(f"Applying database code file {code_file.name}")
         code = code_file.read_text("utf-8")
         await conn.execute(code)
 

@@ -13,8 +13,8 @@ admin_cli = typer.Typer()
 
 
 @admin_cli.command()
-def add_user(ctx: typer.Context):
-    asyncio.run(admin.add_user(config=ctx.obj.config))
+def add_user(ctx: typer.Context, node_id: int):
+    asyncio.run(admin.add_user(config=ctx.obj.config, node_id=node_id))
 
 
 @admin_cli.command()

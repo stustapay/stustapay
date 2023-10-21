@@ -3,15 +3,7 @@ from typing import Optional
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.product import (
-    DISCOUNT_PRODUCT_ID,
-    MONEY_DIFFERENCE_PRODUCT_ID,
-    MONEY_TRANSFER_PRODUCT_ID,
-    PAY_OUT_PRODUCT_ID,
-    TOP_UP_PRODUCT_ID,
-    NewProduct,
-    Product,
-)
+from stustapay.core.schema.product import NewProduct, Product, ProductType
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
@@ -34,31 +26,36 @@ async def fetch_product(*, conn: Connection, node: Node, product_id: int) -> Opt
     )
 
 
-async def fetch_constant_product(*, conn: Connection, node: Node, product_id: int) -> Product:
-    product = await fetch_product(conn=conn, node=node, product_id=product_id)
+async def fetch_constant_product(*, conn: Connection, node: Node, product_type: ProductType) -> Product:
+    product = await conn.fetch_maybe_one(
+        Product,
+        "select * from product_with_tax_and_restrictions where type = $1 and node_id = any($2)",
+        product_type.name,
+        node.ids_to_event_node,
+    )
     if product is None:
         raise RuntimeError("no product found in database")
     return product
 
 
 async def fetch_discount_product(*, conn: Connection, node: Node) -> Product:
-    return await fetch_constant_product(conn=conn, node=node, product_id=DISCOUNT_PRODUCT_ID)
+    return await fetch_constant_product(conn=conn, node=node, product_type=ProductType.discount)
 
 
 async def fetch_top_up_product(*, conn: Connection, node: Node) -> Product:
-    return await fetch_constant_product(conn=conn, node=node, product_id=TOP_UP_PRODUCT_ID)
+    return await fetch_constant_product(conn=conn, node=node, product_type=ProductType.topup)
 
 
 async def fetch_pay_out_product(*, conn: Connection, node: Node) -> Product:
-    return await fetch_constant_product(conn=conn, node=node, product_id=PAY_OUT_PRODUCT_ID)
+    return await fetch_constant_product(conn=conn, node=node, product_type=ProductType.payout)
 
 
 async def fetch_money_transfer_product(*, conn: Connection, node: Node) -> Product:
-    return await fetch_constant_product(conn=conn, node=node, product_id=MONEY_TRANSFER_PRODUCT_ID)
+    return await fetch_constant_product(conn=conn, node=node, product_type=ProductType.money_transfer)
 
 
 async def fetch_money_difference_product(*, conn: Connection, node: Node) -> Product:
-    return await fetch_constant_product(conn=conn, node=node, product_id=MONEY_DIFFERENCE_PRODUCT_ID)
+    return await fetch_constant_product(conn=conn, node=node, product_type=ProductType.imbalance)
 
 
 class ProductIsLockedException(ServiceException):
@@ -78,14 +75,14 @@ class ProductService(DBService):
         # TODO: TREE visibility
         product_id = await conn.fetchval(
             "insert into product "
-            "(node_id, name, price, tax_name, target_account_id, fixed_price, price_in_vouchers, is_locked, "
-            "is_returnable) "
-            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9) "
+            "(node_id, name, price, tax_rate_id, target_account_id, fixed_price, price_in_vouchers, is_locked, "
+            "is_returnable, type) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'user_defined') "
             "returning id",
             node.id,
             product.name,
             product.price,
-            product.tax_name,
+            product.tax_rate_id,
             product.target_account_id,
             product.fixed_price,
             product.price_in_vouchers,
@@ -98,8 +95,7 @@ class ProductService(DBService):
                 "insert into product_restriction (id, restriction) values ($1, $2)", product_id, restriction.name
             )
 
-        if product_id is None:
-            raise RuntimeError("product should have been created")
+        assert product_id is not None
         created_product = await fetch_product(conn=conn, node=node, product_id=product_id)
         assert created_product is not None
         return created_product
@@ -136,7 +132,7 @@ class ProductService(DBService):
                     current_product.fixed_price != product.fixed_price,
                     current_product.price_in_vouchers != product.price_in_vouchers,
                     current_product.target_account_id != product.target_account_id,
-                    current_product.tax_name != product.tax_name,
+                    current_product.tax_rate_id != product.tax_rate_id,
                     current_product.restrictions != product.restrictions,
                     current_product.is_locked != product.is_locked,
                     current_product.is_returnable != product.is_returnable,
@@ -145,14 +141,14 @@ class ProductService(DBService):
                 raise ProductIsLockedException()
 
         row = await conn.fetchrow(
-            "update product set name = $2, price = $3, tax_name = $4, target_account_id = $5, fixed_price = $6, "
+            "update product set name = $2, price = $3, tax_rate_id = $4, target_account_id = $5, fixed_price = $6, "
             "price_in_vouchers = $7, is_locked = $8, is_returnable = $9 "
             "where id = $1 "
             "returning id",
             product_id,
             product.name,
             product.price,
-            product.tax_name,
+            product.tax_rate_id,
             product.target_account_id,
             product.fixed_price,
             product.price_in_vouchers,

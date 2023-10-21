@@ -1,11 +1,10 @@
-import { selectTaxRateAll, useDeleteTaxRateMutation, useListTaxRatesQuery } from "@/api";
+import { TaxRate, selectTaxRateAll, useDeleteTaxRateMutation, useListTaxRatesQuery } from "@/api";
 import { TaxRateRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { TaxRate } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -26,18 +25,18 @@ export const TaxRateList: React.FC = () => {
   );
   const [deleteTaxRate] = useDeleteTaxRateMutation();
 
-  const [taxRateToDelete, setTaxRateToDelete] = React.useState<string | null>(null);
+  const [taxRateToDelete, setTaxRateToDelete] = React.useState<number | null>(null);
   if (isLoading) {
     return <Loading />;
   }
 
-  const openConfirmDeleteDialog = (taxRateName: string) => {
-    setTaxRateToDelete(taxRateName);
+  const openConfirmDeleteDialog = (taxRateId: number) => {
+    setTaxRateToDelete(taxRateId);
   };
 
   const handleConfirmDeleteTaxRate: ConfirmDialogCloseHandler = (reason) => {
     if (reason === "confirm" && taxRateToDelete !== null) {
-      deleteTaxRate({ nodeId: currentNode.id, taxRateName: taxRateToDelete })
+      deleteTaxRate({ nodeId: currentNode.id, taxRateId: taxRateToDelete })
         .unwrap()
         .catch(() => undefined);
     }
@@ -73,13 +72,13 @@ export const TaxRateList: React.FC = () => {
           icon={<EditIcon />}
           color="primary"
           label={t("edit")}
-          onClick={() => navigate(TaxRateRoutes.edit(params.row.name))}
+          onClick={() => navigate(TaxRateRoutes.edit(params.row.id))}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
           color="error"
           label={t("delete")}
-          onClick={() => openConfirmDeleteDialog(params.row.name)}
+          onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
     },

@@ -18,9 +18,11 @@ from stustapay.framework.database import Connection
 
 
 async def _get_profile(*, conn: Connection, node: Node, profile_id: int) -> Optional[TillProfile]:
-    # TODO: TREE visibility
     return await conn.fetch_maybe_one(
-        TillProfile, "select * from till_profile_with_allowed_roles where id = $1", profile_id
+        TillProfile,
+        "select * from till_profile_with_allowed_roles where id = $1 and node_id = any($2)",
+        profile_id,
+        node.ids_to_event_node,
     )
 
 

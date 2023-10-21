@@ -140,21 +140,21 @@ const injectedRtkApi = api
         invalidatesTags: ["tax-rates"],
       }),
       getTaxRate: build.query<GetTaxRateApiResponse, GetTaxRateApiArg>({
-        query: (queryArg) => ({ url: `/tax-rates/${queryArg.taxRateName}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({ url: `/tax-rates/${queryArg.taxRateId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["tax-rates"],
       }),
       updateTaxRate: build.mutation<UpdateTaxRateApiResponse, UpdateTaxRateApiArg>({
         query: (queryArg) => ({
-          url: `/tax-rates/${queryArg.taxRateName}`,
+          url: `/tax-rates/${queryArg.taxRateId}`,
           method: "POST",
-          body: queryArg.taxRateWithoutName,
+          body: queryArg.newTaxRate,
           params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["tax-rates"],
       }),
       deleteTaxRate: build.mutation<DeleteTaxRateApiResponse, DeleteTaxRateApiArg>({
         query: (queryArg) => ({
-          url: `/tax-rates/${queryArg.taxRateName}`,
+          url: `/tax-rates/${queryArg.taxRateId}`,
           method: "DELETE",
           params: { node_id: queryArg.nodeId },
         }),
@@ -736,7 +736,7 @@ export type DeleteUserRoleApiArg = {
   userRoleId: number;
   nodeId?: number | null;
 };
-export type ListTaxRatesApiResponse = /** status 200 Successful Response */ NormalizedListTaxRateStr;
+export type ListTaxRatesApiResponse = /** status 200 Successful Response */ NormalizedListTaxRateInt;
 export type ListTaxRatesApiArg = {
   nodeId?: number | null;
 };
@@ -747,18 +747,18 @@ export type CreateTaxRateApiArg = {
 };
 export type GetTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type GetTaxRateApiArg = {
-  taxRateName: string;
+  taxRateId: number;
   nodeId?: number | null;
 };
 export type UpdateTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type UpdateTaxRateApiArg = {
-  taxRateName: string;
+  taxRateId: number;
   nodeId?: number | null;
-  taxRateWithoutName: TaxRateWithoutName;
+  newTaxRate: NewTaxRate;
 };
 export type DeleteTaxRateApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTaxRateApiArg = {
-  taxRateName: string;
+  taxRateId: number;
   nodeId?: number | null;
 };
 export type LoginApiResponse = /** status 200 Successful Response */ LoginResponseRead;
@@ -1130,19 +1130,22 @@ export type UpdateEventApiArg = {
   updateEvent: UpdateEvent;
 };
 export type ProductRestriction = "under_16" | "under_18";
+export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
   name: string;
   price: number | null;
   fixed_price: boolean;
   price_in_vouchers?: number | null;
-  tax_name: string;
+  tax_rate_id: number;
   restrictions: ProductRestriction[];
   is_locked: boolean;
   is_returnable: boolean;
   target_account_id?: number | null;
   node_id: number;
   id: number;
+  tax_name: string;
   tax_rate: number;
+  type: ProductType;
   price_per_voucher?: number | null;
 };
 export type NormalizedListProductInt = {
@@ -1164,7 +1167,7 @@ export type NewProduct = {
   price: number | null;
   fixed_price?: boolean;
   price_in_vouchers?: number | null;
-  tax_name: string;
+  tax_rate_id: number;
   restrictions?: ProductRestriction[];
   is_locked?: boolean;
   is_returnable?: boolean;
@@ -1253,23 +1256,20 @@ export type UpdateUserRolePrivilegesPayload = {
   privileges: Privilege[];
 };
 export type TaxRate = {
+  name: string;
   rate: number;
   description: string;
-  name: string;
+  id: number;
   node_id: number;
 };
-export type NormalizedListTaxRateStr = {
-  ids: string[];
+export type NormalizedListTaxRateInt = {
+  ids: number[];
   entities: {
     [key: string]: TaxRate;
   };
 };
 export type NewTaxRate = {
-  rate: number;
-  description: string;
   name: string;
-};
-export type TaxRateWithoutName = {
   rate: number;
   description: string;
 };
@@ -1583,6 +1583,7 @@ export type LineItem = {
   quantity: number;
   product: Product;
   product_price: number;
+  tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
   item_id: number;
@@ -1592,6 +1593,7 @@ export type LineItemRead = {
   quantity: number;
   product: Product;
   product_price: number;
+  tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
   item_id: number;
@@ -1641,6 +1643,7 @@ export type PendingLineItem = {
   quantity: number;
   product: Product;
   product_price: number;
+  tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
 };
@@ -1648,6 +1651,7 @@ export type PendingLineItemRead = {
   quantity: number;
   product: Product;
   product_price: number;
+  tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
   total_price: number;
@@ -1763,14 +1767,16 @@ export type ProductSoldStats = {
   price: number | null;
   fixed_price: boolean;
   price_in_vouchers?: number | null;
-  tax_name: string;
+  tax_rate_id: number;
   restrictions: ProductRestriction[];
   is_locked: boolean;
   is_returnable: boolean;
   target_account_id?: number | null;
   node_id: number;
   id: number;
+  tax_name: string;
   tax_rate: number;
+  type: ProductType;
   price_per_voucher?: number | null;
   quantity_sold: number;
 };
@@ -1787,14 +1793,13 @@ export type ProductStats2 = {
 };
 export type Ticket = {
   name: string;
-  description?: string | null;
-  product_id: number;
+  price: number;
+  tax_rate_id: number;
+  restrictions: ProductRestriction[];
+  is_locked: boolean;
   initial_top_up_amount: number;
-  restriction?: ProductRestriction | null;
   node_id: number;
   id: number;
-  product_name: string;
-  price: number;
   tax_name: string;
   tax_rate: number;
   total_price: number;
@@ -1807,10 +1812,11 @@ export type NormalizedListTicketInt = {
 };
 export type NewTicket = {
   name: string;
-  description?: string | null;
-  product_id: number;
+  price: number;
+  tax_rate_id: number;
+  restrictions: ProductRestriction[];
+  is_locked: boolean;
   initial_top_up_amount: number;
-  restriction?: ProductRestriction | null;
 };
 export type UserTagAccountAssociation = {
   account_id: number;
@@ -1927,11 +1933,14 @@ export type CreateSepaXmlPayload = {
   execution_date: string;
   batch_size?: number | null;
 };
-export type Event = {
-  id: number;
+export type PublicEventSettings = {
   currency_identifier: string;
-  sumup_topup_enabled: boolean;
   max_account_balance: number;
+  sumup_topup_enabled?: boolean;
+  sumup_payment_enabled?: boolean;
+  customer_portal_url: string;
+  customer_portal_about_page_url: string;
+  customer_portal_data_privacy_url: string;
   customer_portal_contact_email: string;
   ust_id: string;
   bon_issuer: string;
@@ -1959,9 +1968,11 @@ export type Node = {
   parent: number;
   name: string;
   description: string;
-  event: Event | null;
+  event: PublicEventSettings | null;
   path: string;
   parent_ids: number[];
+  event_node_id: number | null;
+  parents_until_event_node: number[] | null;
   allowed_objects_at_node: ObjectType[];
   computed_allowed_objects_at_node: ObjectType[];
   allowed_objects_in_subtree: ObjectType[];
@@ -1969,9 +1980,16 @@ export type Node = {
   children: Node[];
 };
 export type UpdateEvent = {
+  sumup_api_key?: string;
+  sumup_affiliate_key?: string;
+  sumup_merchant_code?: string;
   currency_identifier: string;
-  sumup_topup_enabled: boolean;
   max_account_balance: number;
+  sumup_topup_enabled?: boolean;
+  sumup_payment_enabled?: boolean;
+  customer_portal_url: string;
+  customer_portal_about_page_url: string;
+  customer_portal_data_privacy_url: string;
   customer_portal_contact_email: string;
   ust_id: string;
   bon_issuer: string;

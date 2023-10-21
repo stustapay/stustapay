@@ -4,11 +4,8 @@ from typing import Optional
 
 from stustapay.core.config import Config
 from stustapay.core.database import apply_revisions, reset_schema
-from stustapay.core.schema.product import (
-    TICKET_PRODUCT_ID,
-    NewProduct,
-    ProductRestriction,
-)
+from stustapay.core.schema.product import NewProduct, ProductRestriction
+from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 from stustapay.core.schema.ticket import NewTicket
 from stustapay.core.schema.till import (
     NewCashRegister,
@@ -30,8 +27,10 @@ from stustapay.core.schema.user import CASHIER_ROLE_NAME, NewUser
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
+from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.tree.service import create_event, create_node
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import UserService
@@ -101,13 +100,14 @@ async def _create_beverage_tills(
     till_service: TillService,
     n_cocktail_tills: int,
     n_beer_tills: int,
+    tax_rate_ust: TaxRate,
 ):
     beer_products = [
         NewProduct(
             name="Helles 1.0l",
             price=5,
             price_in_vouchers=2,
-            tax_name="ust",
+            tax_rate_id=tax_rate_ust.id,
             is_locked=True,
             restrictions=[ProductRestriction.under_16],
         ),
@@ -115,7 +115,7 @@ async def _create_beverage_tills(
             name="Helles 0.5l",
             price=2,
             price_in_vouchers=1,
-            tax_name="ust",
+            tax_rate_id=tax_rate_ust.id,
             is_locked=True,
             restrictions=[ProductRestriction.under_16],
         ),
@@ -123,7 +123,7 @@ async def _create_beverage_tills(
             name="Weißbier 1.0l",
             price=5,
             price_in_vouchers=2,
-            tax_name="ust",
+            tax_rate_id=tax_rate_ust.id,
             is_locked=True,
             restrictions=[ProductRestriction.under_16],
         ),
@@ -131,7 +131,7 @@ async def _create_beverage_tills(
             name="Weißbier 0.5l",
             price=3,
             price_in_vouchers=1,
-            tax_name="ust",
+            tax_rate_id=tax_rate_ust.id,
             is_locked=True,
             restrictions=[ProductRestriction.under_16],
         ),
@@ -139,7 +139,7 @@ async def _create_beverage_tills(
             name="Radler 1.0l",
             price=5,
             price_in_vouchers=2,
-            tax_name="ust",
+            tax_rate_id=tax_rate_ust.id,
             is_locked=True,
             restrictions=[ProductRestriction.under_16],
         ),
@@ -147,7 +147,7 @@ async def _create_beverage_tills(
             name="Radler 0.5l",
             price=3,
             price_in_vouchers=1,
-            tax_name="ust",
+            tax_rate_id=tax_rate_ust.id,
             is_locked=True,
             restrictions=[ProductRestriction.under_16],
         ),
@@ -155,7 +155,7 @@ async def _create_beverage_tills(
             name="Russ 1.0l",
             price=5,
             price_in_vouchers=2,
-            tax_name="ust",
+            tax_rate_id=tax_rate_ust.id,
             is_locked=True,
             restrictions=[ProductRestriction.under_16],
         ),
@@ -163,7 +163,7 @@ async def _create_beverage_tills(
             name="Russ 0.5l",
             price=3,
             price_in_vouchers=1,
-            tax_name="ust",
+            tax_rate_id=tax_rate_ust.id,
             is_locked=True,
             restrictions=[ProductRestriction.under_16],
         ),
@@ -171,7 +171,7 @@ async def _create_beverage_tills(
             name="Limonade 1.0l",
             price=4,
             price_in_vouchers=2,
-            tax_name="ust",
+            tax_rate_id=tax_rate_ust.id,
             is_locked=True,
         ),
     ]
@@ -180,16 +180,19 @@ async def _create_beverage_tills(
             name="Whiskey 1.0l",
             price=20,
             price_in_vouchers=10,
-            tax_name="ust",
+            tax_rate_id=tax_rate_ust.id,
             is_locked=True,
             restrictions=[ProductRestriction.under_16, ProductRestriction.under_18],
         ),
     ]
+    node = await fetch_node(conn=conn, node_id=event_node_id)
+    assert node is not None
+    tax_none = await fetch_tax_rate_none(conn=conn, node=node)
     deposit_product = await product_service.create_product(
         conn=conn,
         node_id=event_node_id,
         token=admin_token,
-        product=NewProduct(name="Pfand", price=2, is_locked=True, is_returnable=True, tax_name="none"),
+        product=NewProduct(name="Pfand", price=2, is_locked=True, is_returnable=True, tax_rate_id=tax_none.id),
     )
     deposit_button = await till_service.layout.create_button(
         conn=conn,
@@ -296,12 +299,20 @@ async def _create_ticket_tills(
     till_service: TillService,
     ticket_service: TicketService,
     n_tills: int,
+    tax_rate_ust: TaxRate,
 ):
     ticket = await ticket_service.create_ticket(
         conn=conn,
         node_id=event_node_id,
         token=admin_token,
-        ticket=NewTicket(name="Eintritt", product_id=TICKET_PRODUCT_ID, initial_top_up_amount=0),
+        ticket=NewTicket(
+            name="Eintritt",
+            price=12,
+            tax_rate_id=tax_rate_ust.id,
+            initial_top_up_amount=0,
+            is_locked=True,
+            restrictions=[],
+        ),
     )
     layout = await till_service.layout.create_layout(
         conn=conn,
@@ -398,7 +409,7 @@ class DatabaseSetup:
 
         self.db_pool = None
 
-    async def _create_tills(self, conn: Connection, admin_token: str, n_tills: int):
+    async def _create_tills(self, conn: Connection, admin_token: str, n_tills: int, tax_rate_ust: TaxRate):
         assert self.db_pool is not None
         auth_service = AuthService(db_pool=self.db_pool, config=self.config)
         till_service = TillService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
@@ -414,6 +425,7 @@ class DatabaseSetup:
             till_service=till_service,
             n_cocktail_tills=self.n_cocktail_tills,
             n_beer_tills=self.n_beer_tills,
+            tax_rate_ust=tax_rate_ust,
         )
         await _create_topup_tills(
             conn=conn,
@@ -429,6 +441,7 @@ class DatabaseSetup:
             ticket_service=ticket_service,
             till_service=till_service,
             n_tills=self.n_entry_tills,
+            tax_rate_ust=tax_rate_ust,
         )
         for i in range(n_tills):
             await till_service.register.create_cash_register(
@@ -487,6 +500,7 @@ class DatabaseSetup:
 
         auth_service = AuthService(db_pool=self.db_pool, config=self.config)
         user_service = UserService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
+        tax_service = TaxRateService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
 
         async with self.db_pool.acquire() as conn:
             simulated_folder_node = await create_node(
@@ -511,6 +525,8 @@ class DatabaseSetup:
                     sumup_topup_enabled=True,
                     max_account_balance=150,
                     customer_portal_url="http://localhost:4300",
+                    customer_portal_about_page_url="http://localhost:4300/about",
+                    customer_portal_data_privacy_url="http://localhost:4300/privacy",
                     customer_portal_contact_email="test@test.com",
                     ust_id="UST ID",
                     bon_issuer="Issuer",
@@ -563,6 +579,12 @@ class DatabaseSetup:
             )
             assert admin_login is not None
             admin_token = admin_login.token
-            await self._create_tills(conn=conn, admin_token=admin_token, n_tills=n_tills)
+            tax_rate_ust = await tax_service.create_tax_rate(
+                conn=conn,
+                token=admin_token,
+                node_id=self.event_node_id,
+                tax_rate=NewTaxRate(name="ust", description="Umsatzsteuer", rate=0.19),
+            )
+            await self._create_tills(conn=conn, admin_token=admin_token, n_tills=n_tills, tax_rate_ust=tax_rate_ust)
             await self._create_cashiers(conn=conn, user_service=user_service, n_cashiers=n_cashiers)
             await self._create_tse(conn=conn, admin_token=admin_token)

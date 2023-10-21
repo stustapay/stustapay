@@ -16,9 +16,9 @@ from stustapay.core.customer_bank_export import (
     export_customer_payouts,
 )
 from stustapay.core.schema.config import SEPAConfig
-from stustapay.core.schema.customer import Customer
-from stustapay.core.schema.order import Order, OrderType, PaymentMethod
-from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.customer import Customer, OrderWithBon
+from stustapay.core.schema.order import OrderType, PaymentMethod
+from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.common.error import (
     AccessDenied,
@@ -73,24 +73,24 @@ class CustomerServiceTest(TerminalTestCase):
             "private",
         )
 
-        product1 = await self.product_service.create_product(
+        product1: Product = await self.product_service.create_product(
             token=self.admin_token,
             product=NewProduct(
                 name="Bier",
                 price=5.0,
-                tax_name="ust",
+                tax_rate_id=self.tax_rate_ust.id,
                 restrictions=[],
                 is_locked=True,
                 is_returnable=False,
                 fixed_price=True,
             ),
         )
-        product2 = await self.product_service.create_product(
+        product2: Product = await self.product_service.create_product(
             token=self.admin_token,
             product=NewProduct(
                 name="Pfand",
                 price=2.0,
-                tax_name="none",
+                tax_rate_id=self.tax_rate_none.id,
                 restrictions=[],
                 is_locked=True,
                 is_returnable=False,
@@ -103,15 +103,13 @@ class CustomerServiceTest(TerminalTestCase):
                 quantity=1,
                 product_id=product1.id,
                 product_price=product1.price,
-                tax_name=product1.tax_name,
-                tax_rate=product1.tax_rate,
+                tax_rate_id=product1.tax_rate_id,
             ),
             NewLineItem(
                 quantity=1,
                 product_id=product2.id,
                 product_price=product2.price,
-                tax_name=product2.tax_name,
-                tax_rate=product2.tax_rate,
+                tax_rate_id=product2.tax_rate_id,
             ),
         ]
 
@@ -253,7 +251,7 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(total_sum, group_sum)
 
     async def test_get_number_of_payouts(self):
-        result = await get_number_of_payouts(self.db_conn, None)
+        result = await get_number_of_payouts(self.db_conn, event_node_id=self.node_id)
         self.assertEqual(result, len(self.customers_to_transfer))
 
     async def test_get_customer_bank_data(self):
@@ -272,7 +270,7 @@ class CustomerServiceTest(TerminalTestCase):
 
         # create payout run
         payout_run_id, number_of_payouts = await create_payout_run(
-            self.db_conn, node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
+            self.db_conn, event_node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
         )
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
 
@@ -286,7 +284,7 @@ class CustomerServiceTest(TerminalTestCase):
 
     async def test_csv_export(self):
         payout_run_id, number_of_payouts = await create_payout_run(
-            self.db_conn, node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
+            self.db_conn, event_node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
         )
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
 
@@ -309,7 +307,6 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(len(rows), len(self.customers_to_transfer))
 
         for row, customer in zip(rows, self.customers_to_transfer):
-            print(row, customer)
             self.assertEqual(row["beneficiary_name"], customer["account_name"])
             self.assertEqual(row["iban"], customer["iban"])
             self.assertEqual(float(row["amount"]), round(customer["balance"] - customer["donation"], 2))
@@ -328,7 +325,7 @@ class CustomerServiceTest(TerminalTestCase):
     async def test_sepa_export(self):
         execution_date = datetime.date.today()
         payout_run_id, number_of_payouts = await create_payout_run(
-            self.db_conn, node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
+            self.db_conn, event_node_id=self.node_id, created_by="Test", max_payout_sum=50000.0
         )
         self.assertEqual(number_of_payouts, len(self.customers_to_transfer))
         customers_bank_data = await get_customer_bank_data(self.db_conn, payout_run_id)
@@ -445,19 +442,20 @@ class CustomerServiceTest(TerminalTestCase):
             await self.customer_service.get_orders_with_bon(token="wrong")
 
         # login
-        result = await self.customer_service.login_customer(uid=self.uid, pin=self.pin)  # type: ignore
-        self.assertIsNotNone(result)
+        login_result = await self.customer_service.login_customer(uid=self.uid, pin=self.pin)  # type: ignore
+        self.assertIsNotNone(login_result)
 
         # test get_orders_with_bon
-        result = await self.customer_service.get_orders_with_bon(token=result.token)
+        result: list[OrderWithBon] = await self.customer_service.get_orders_with_bon(token=login_result.token)
         self.assertIsNotNone(result)
 
-        self.assertEqual(Order(**result[0].model_dump()), self.order)
+        order_with_bon = result[0]
+        self.assertEqual(order_with_bon.id, self.order.id)
 
         # test bon data
-        self.assertTrue(result[0].bon_generated)
+        self.assertTrue(order_with_bon.bon_generated)
         self.assertEqual(
-            result[0].bon_output_file,
+            order_with_bon.bon_output_file,
             self.test_config.customer_portal.base_bon_url.format(bon_output_file=self.bon_path),
         )
 
@@ -552,7 +550,7 @@ class CustomerServiceTest(TerminalTestCase):
         )
 
         # check if dry run successful and no database entry created
-        self.assertEqual(await get_number_of_payouts(self.db_conn, 1), 0)
+        self.assertEqual(await get_number_of_payouts(self.db_conn, event_node_id=self.node_id, payout_run_id=1), 0)
 
         output_path = self.tmp_dir / "test_export2"
         output_path.mkdir(parents=True, exist_ok=True)

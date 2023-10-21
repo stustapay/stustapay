@@ -149,6 +149,7 @@ class PendingLineItem(BaseModel):
     product: Product
     # the following members are also in Product, but maybe they were updated in the meantime
     product_price: float
+    tax_rate_id: int
     tax_name: str
     tax_rate: float
 

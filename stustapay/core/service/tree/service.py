@@ -62,14 +62,38 @@ async def _create_system_accounts(conn: Connection, node_id: int):
     )
 
 
+async def _create_system_tax_rates(conn: Connection, node_id: int):
+    await conn.execute(
+        "insert into tax_rate (name, rate, description, node_id) values ('none', 0, 'No Tax', $1)",
+        node_id,
+    )
+
+
+async def _create_system_products(conn: Connection, node_id: int):
+    tax_rate_none_id = await conn.fetchval("select id from tax_rate where node_id = $1", node_id)
+    await conn.execute(
+        "insert into product (type, name, price, fixed_price, is_locked, tax_rate_id, node_id) values "
+        "('discount', 'Rabatt', null, false, true, $1, $2), "
+        "('topup', 'Aufladen', null, false, true, $1, $2), "
+        "('payout', 'Auszahlen', null, false, true, $1, $2), "
+        "('money_transfer', 'Geldtransit', null, false, true, $1, $2),"
+        "('imbalance', 'DifferenzSollIst', null, false, true, $1, $2)",
+        tax_rate_none_id,
+        node_id,
+    )
+
+
 async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Node:
     # TODO: tree, create all needed resources, e.g. global accounts which have to and should
     #  only exist at an event node
     event_id = await conn.fetchval(
         "insert into event (currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, "
         "bon_address, bon_title, customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban, "
-        "sepa_description, sepa_allowed_country_codes, customer_portal_url) "
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning id",
+        "sepa_description, sepa_allowed_country_codes, customer_portal_url, customer_portal_about_page_url, "
+        "customer_portal_data_privacy_url, sumup_payment_enabled, sumup_api_key, sumup_affiliate_key, "
+        "sumup_merchant_code) "
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) "
+        "returning id",
         event.currency_identifier,
         event.sumup_topup_enabled,
         event.max_account_balance,
@@ -84,10 +108,18 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.sepa_description,
         event.sepa_allowed_country_codes,
         event.customer_portal_url,
+        event.customer_portal_about_page_url,
+        event.customer_portal_data_privacy_url,
+        event.sumup_payment_enabled,
+        event.sumup_api_key,
+        event.sumup_affiliate_key,
+        event.sumup_merchant_code,
     )
 
     node = await create_node(conn=conn, parent_id=parent_id, new_node=event, event_id=event_id)
     await _create_system_accounts(conn=conn, node_id=node.id)
+    await _create_system_tax_rates(conn=conn, node_id=node.id)
+    await _create_system_products(conn=conn, node_id=node.id)
     return node
 
 
@@ -119,7 +151,9 @@ class TreeService(DBService):
             "update event set currency_identifier = $2, sumup_topup_enabled = $3, max_account_balance = $4, "
             "   customer_portal_contact_email = $5, ust_id = $6, bon_issuer = $7, bon_address = $8, bon_title = $9, "
             "   sepa_enabled = $10, sepa_sender_name = $11, sepa_sender_iban = $12, sepa_description = $13, "
-            "   sepa_allowed_country_codes = $14, customer_portal_url = $15 "
+            "   sepa_allowed_country_codes = $14, customer_portal_url = $15, customer_portal_about_page_url = $16,"
+            "   customer_portal_data_privacy_url = $17, sumup_payment_enabled = $18, sumup_api_key = $19, "
+            "   sumup_affiliate_key = $20, sumup_merchant_code = $21 "
             "where id = $1",
             event_id,
             event.currency_identifier,
@@ -136,6 +170,12 @@ class TreeService(DBService):
             event.sepa_description,
             event.sepa_allowed_country_codes,
             event.customer_portal_url,
+            event.customer_portal_about_page_url,
+            event.customer_portal_data_privacy_url,
+            event.sumup_payment_enabled,
+            event.sumup_api_key,
+            event.sumup_affiliate_key,
+            event.sumup_merchant_code,
         )
         node = await fetch_node(conn=conn, node_id=node_id)
         assert node is not None
