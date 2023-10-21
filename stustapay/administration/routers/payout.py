@@ -35,7 +35,9 @@ async def create_payout_run(
     new_payout_run: NewPayoutRun,
     node_id: Optional[int] = None,
 ):
-    return await customer_service.payout.create_payout_run(token=token, new_payout_run=new_payout_run, event_node_id=node_id)
+    return await customer_service.payout.create_payout_run(
+        token=token, new_payout_run=new_payout_run, event_node_id=node_id
+    )
 
 
 @router.get("/pending-payout-detail", response_model=PendingPayoutDetail)

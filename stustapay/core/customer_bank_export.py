@@ -13,6 +13,7 @@ from stustapay.core.service.customer.payout import (
     get_number_of_payouts,
 )
 from stustapay.framework.database import create_db_pool
+
 from . import database
 from .config import Config
 from .service.common.error import InvalidArgument
