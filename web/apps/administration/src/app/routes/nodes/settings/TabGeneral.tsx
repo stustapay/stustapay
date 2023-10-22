@@ -1,4 +1,4 @@
-import { PublicEventSettings, useUpdateEventMutation } from "@/api";
+import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -16,7 +16,7 @@ const GeneralSettingsSchema = z.object({
 
 type GeneralSettings = z.infer<typeof GeneralSettingsSchema>;
 
-export const TabGeneral: React.FC<{ nodeId: number; eventSettings: PublicEventSettings }> = ({
+export const TabGeneral: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
   nodeId,
   eventSettings,
 }) => {

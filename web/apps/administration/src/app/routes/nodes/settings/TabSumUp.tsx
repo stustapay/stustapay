@@ -1,6 +1,6 @@
 import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
-import { FormTextField } from "@stustapay/form-components";
+import { FormSwitch, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -8,28 +8,31 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
 
-const BonSettingsSchema = z.object({
-  bon_title: z.string(),
-  bon_issuer: z.string(),
-  bon_address: z.string(),
+const SumUpSettingsSchema = z.object({
+  sumup_topup_enabled: z.boolean(),
+  sumup_payment_enabled: z.boolean(),
+  sumup_api_key: z.string(),
+  sumup_affiliate_key: z.string(),
+  sumup_merchant_code: z.string(),
 });
 
-type BonSettings = z.infer<typeof BonSettingsSchema>;
+type SumUpSettings = z.infer<typeof SumUpSettingsSchema>;
 
-export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
+export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
   nodeId,
   eventSettings,
 }) => {
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
 
-  const handleSubmit = (values: BonSettings, { setSubmitting }: FormikHelpers<BonSettings>) => {
+  const handleSubmit = (values: SumUpSettings, { setSubmitting, resetForm }: FormikHelpers<SumUpSettings>) => {
     setSubmitting(true);
     updateEvent({ nodeId: nodeId, updateEvent: { ...eventSettings, ...values } })
       .unwrap()
       .then(() => {
         setSubmitting(false);
         toast.success(t("settings.updateEventSucessful"));
+        resetForm();
       })
       .catch((err) => {
         setSubmitting(false);
@@ -39,16 +42,23 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
 
   return (
     <Formik
-      initialValues={eventSettings as BonSettings} // TODO: figure out a way of not needing to cast this
+      initialValues={eventSettings as SumUpSettings} // TODO: figure out a way of not needing to cast this
       onSubmit={handleSubmit}
-      validationSchema={toFormikValidationSchema(BonSettingsSchema)}
+      validationSchema={toFormikValidationSchema(SumUpSettingsSchema)}
     >
       {(formik) => (
         <Form onSubmit={formik.handleSubmit}>
           <Stack spacing={2}>
-            <FormTextField label={t("settings.bon.title")} name="bon_title" formik={formik} />
-            <FormTextField label={t("settings.bon.issuer")} name="bon_issuer" formik={formik} />
-            <FormTextField label={t("settings.bon.address")} name="bon_address" formik={formik} />
+            <FormSwitch label={t("settings.sumup.sumup_topup_enabled")} name="sumup_topup_enabled" formik={formik} />
+            <FormSwitch
+              label={t("settings.sumup.sumup_payment_enabled")}
+              name="sumup_payment_enabled"
+              formik={formik}
+            />
+            <FormTextField label={t("settings.sumup.sumup_affiliate_key")} name="sumup_affiliate_key" formik={formik} />
+            <FormTextField label={t("settings.sumup.sumup_api_key")} name="sumup_api_key" formik={formik} />
+            <FormTextField label={t("settings.sumup.sumup_merchant_code")} name="sumup_merchant_code" formik={formik} />
+
             {formik.isSubmitting && <LinearProgress />}
             <Button
               type="submit"

@@ -1,7 +1,7 @@
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.tree import NewEvent, NewNode, Node, ObjectType
+from stustapay.core.schema.tree import NewEvent, NewNode, Node, ObjectType, RestrictedEventSettings
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -11,7 +11,11 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import NotFound
-from stustapay.core.service.tree.common import fetch_node, get_tree_for_current_user
+from stustapay.core.service.tree.common import (
+    fetch_node,
+    get_tree_for_current_user,
+    fetch_restricted_event_settings_for_node,
+)
 from stustapay.framework.database import Connection
 
 
@@ -185,3 +189,9 @@ class TreeService(DBService):
     @requires_user()
     async def get_tree_for_current_user(self, *, conn: Connection, current_user: CurrentUser) -> Node:
         return await get_tree_for_current_user(conn=conn, user_node_id=current_user.node_id)
+
+    @with_db_transaction
+    @requires_user()
+    @requires_node()
+    async def get_restricted_event_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:
+        return await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
