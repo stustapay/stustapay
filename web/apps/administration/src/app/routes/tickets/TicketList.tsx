@@ -9,7 +9,7 @@ import {
 } from "@/api";
 import { TicketRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -36,6 +36,7 @@ export const TicketList: React.FC = () => {
   const { data: taxRates } = useListTaxRatesQuery({ nodeId: currentNode.id });
   const [updateTicket] = useUpdateTicketMutation();
   const [deleteTicket] = useDeleteTicketMutation();
+  const renderNode = useRenderNode();
 
   const [ticketToDelete, setTicketToDelete] = React.useState<number | null>(null);
   if (isTicketsLoading) {
@@ -120,6 +121,12 @@ export const TicketList: React.FC = () => {
       field: "restrictions",
       headerName: t("ticket.restriction") as string,
       width: 150,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
     {
       field: "actions",

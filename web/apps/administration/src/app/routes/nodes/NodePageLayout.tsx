@@ -75,14 +75,16 @@ export const NodePageLayout: React.FC = () => {
           iconPosition="start"
           to={`${nodeUrl}/payout-runs`}
         />
-        <Tab
-          label={t("nodes.settings")}
-          component={RouterLink}
-          value={`${nodeUrl}/settings`}
-          icon={<SettingsIcon />}
-          iconPosition="start"
-          to={`${nodeUrl}/settings`}
-        />
+        {node.event != null && (
+          <Tab
+            label={t("nodes.settings")}
+            component={RouterLink}
+            value={`${nodeUrl}/settings`}
+            icon={<SettingsIcon />}
+            iconPosition="start"
+            to={`${nodeUrl}/settings`}
+          />
+        )}
       </Tabs>
       <Box sx={{ mt: 2 }}>
         <Outlet />

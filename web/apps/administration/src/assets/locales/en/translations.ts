@@ -33,6 +33,9 @@ export const translations = {
   tillProfiles: "Till Profiles",
   registerStockings: "Cash Register Stockings",
   registers: "Cash Registers",
+  common: {
+    definedAtNode: "Node",
+  },
   nodes: {
     overview: "Overview",
     statistics: "Stats",

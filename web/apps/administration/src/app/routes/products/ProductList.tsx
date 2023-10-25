@@ -22,7 +22,7 @@ import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useCurrencyFormatter, useCurrentNode } from "src/hooks";
+import { useCurrencyFormatter, useCurrentNode, useRenderNode } from "src/hooks";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation();
@@ -43,6 +43,7 @@ export const ProductList: React.FC = () => {
   const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
   const [updateProduct] = useUpdateProductMutation();
+  const renderNode = useRenderNode();
 
   const [productToDelete, setProductToDelete] = React.useState<number | null>(null);
   if (isProductsLoading || isTaxRatesLoading) {
@@ -135,6 +136,12 @@ export const ProductList: React.FC = () => {
       headerName: t("product.restrictions") as string,
       valueFormatter: ({ value }) => value.join(", "),
       width: 150,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
     {
       field: "actions",

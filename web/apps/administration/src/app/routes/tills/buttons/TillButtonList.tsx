@@ -1,7 +1,7 @@
 import { selectTillButtonAll, useDeleteTillButtonMutation, useListTillButtonsQuery } from "@/api";
 import { TillButtonsRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
+import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -25,6 +25,7 @@ export const TillButtonList: React.FC = () => {
     }
   );
   const [deleteButton] = useDeleteTillButtonMutation();
+  const renderNode = useRenderNode();
 
   const [buttonToDelete, setButtonToDelete] = React.useState<number | null>(null);
   if (isLoading) {
@@ -55,6 +56,12 @@ export const TillButtonList: React.FC = () => {
       headerName: t("button.price") as string,
       type: "number",
       valueFormatter: ({ value }) => `${value} €`,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
     {
       field: "actions",

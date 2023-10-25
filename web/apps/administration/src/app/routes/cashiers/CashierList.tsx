@@ -1,7 +1,7 @@
 import { CashierRead, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@/api";
 import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode, useRenderNode } from "@/hooks";
 import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -47,6 +47,7 @@ export const CashierList: React.FC = () => {
     }
   );
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
+  const renderNode = useRenderNode();
 
   if (isCashiersLoading || isTillsLoading) {
     return <Loading />;
@@ -115,6 +116,12 @@ export const CashierList: React.FC = () => {
       type: "number",
       valueFormatter: ({ value }) => formatCurrency(value),
       width: 150,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
   ];
 

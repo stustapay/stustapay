@@ -7,7 +7,7 @@ import {
 } from "@/api";
 import { TillProfileRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
+import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -34,6 +34,7 @@ export const TillProfileList: React.FC = () => {
   );
   const { data: layouts, isLoading: isLayoutsLoading } = useListTillLayoutsQuery({ nodeId: currentNode.id });
   const [deleteTillProfile] = useDeleteTillProfileMutation();
+  const renderNode = useRenderNode();
 
   const [profileToDelete, setProfileToDelete] = React.useState<number | null>(null);
   if (isTillsLoading || isLayoutsLoading) {
@@ -110,6 +111,12 @@ export const TillProfileList: React.FC = () => {
       headerName: t("profile.layout") as string,
       flex: 0.5,
       renderCell: (params) => renderLayout(params.row.layout_id),
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
     {
       field: "actions",

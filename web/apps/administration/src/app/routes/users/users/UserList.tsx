@@ -1,7 +1,7 @@
 import { selectUserAll, useDeleteUserMutation, useListUsersQuery, UserRead } from "@/api";
 import { UserRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
+import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -27,6 +27,7 @@ export const UserList: React.FC = () => {
   );
   const [deleteUser] = useDeleteUserMutation();
   const [userToDelete, setUserToDelete] = React.useState<number | null>(null);
+  const renderNode = useRenderNode();
 
   if (isLoading) {
     return <Loading />;
@@ -75,6 +76,12 @@ export const UserList: React.FC = () => {
     {
       field: "role_names",
       headerName: t("user.roles") as string,
+      flex: 1,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
       flex: 1,
     },
     {
