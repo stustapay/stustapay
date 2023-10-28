@@ -32,7 +32,7 @@ class TicketService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.product_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def create_ticket(self, *, conn: Connection, node: Node, ticket: NewTicket) -> Ticket:
         # TODO: TREE visibility
@@ -78,7 +78,7 @@ class TicketService(DBService):
         return await fetch_ticket(conn=conn, node=node, ticket_id=ticket_id)
 
     @with_db_transaction
-    @requires_user([Privilege.product_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_ticket(self, *, conn: Connection, node: Node, ticket_id: int, ticket: NewTicket) -> Ticket:
         # TODO: TREE visibility
@@ -114,7 +114,7 @@ class TicketService(DBService):
         return updated_ticket
 
     @with_db_transaction
-    @requires_user([Privilege.product_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def delete_ticket(self, *, conn: Connection, ticket_id: int) -> bool:
         # TODO: TREE visibility

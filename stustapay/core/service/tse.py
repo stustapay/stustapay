@@ -25,8 +25,7 @@ class TseService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])  # TODO: tse_management
-    # @requires_user([Privilege.tse_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def create_tse(self, *, conn: Connection, node: Node, new_tse: NewTse) -> Tse:
         # TODO: TREE visibility
@@ -43,9 +42,8 @@ class TseService(DBService):
         return await conn.fetch_one(Tse, "select * from tse where id = $1", tse_id)
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])  # TODO: tse_management
+    @requires_user([Privilege.node_administration])
     @requires_node()
-    # @requires_user([Privilege.tse_management])
     async def update_tse(self, *, conn: Connection, tse_id: int, updated_tse: UpdateTse) -> Tse:
         # TODO: TREE visibility
         tse_id = await conn.fetchval(
@@ -61,8 +59,7 @@ class TseService(DBService):
         return await conn.fetch_one(Tse, "select * from tse where id = $1", tse_id)
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])  # TODO: tse_management
+    @requires_user([Privilege.node_administration])
     @requires_node()
-    # @requires_user([Privilege.tse_management])
     async def list_tses(self, *, conn: Connection, node: Node) -> list[Tse]:
         return await list_tses(conn=conn, node=node)

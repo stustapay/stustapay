@@ -69,7 +69,7 @@ class ProductService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.product_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def create_product(self, *, conn: Connection, node: Node, product: NewProduct) -> Product:
         # TODO: TREE visibility
@@ -115,7 +115,7 @@ class ProductService(DBService):
         return await fetch_product(conn=conn, node=node, product_id=product_id)
 
     @with_db_transaction
-    @requires_user([Privilege.product_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_product(
         self, *, conn: Connection, node: Node, product_id: int, product: NewProduct
@@ -167,7 +167,7 @@ class ProductService(DBService):
         return await fetch_product(conn=conn, node=node, product_id=product_id)
 
     @with_db_transaction
-    @requires_user([Privilege.product_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def delete_product(self, *, conn: Connection, product_id: int) -> bool:
         # TODO: TREE visibility

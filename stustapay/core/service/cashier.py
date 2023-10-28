@@ -18,7 +18,6 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.framework.database import Connection
-
 from .account import get_system_account_for_node
 from .common.error import NotFound, ServiceException
 from .order.booking import (
@@ -131,13 +130,13 @@ class CashierService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.cashier_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_cashiers(self, *, conn: Connection, node: Node) -> list[Cashier]:
         return await conn.fetch_many(Cashier, "select * from cashier where node_id = any($1)", node.ids_to_event_node)
 
     @with_db_transaction
-    @requires_user([Privilege.cashier_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_cashier(self, *, conn: Connection, node: Node, cashier_id: int) -> Optional[Cashier]:
         return await conn.fetch_maybe_one(
@@ -151,7 +150,7 @@ class CashierService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.cashier_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_cashier_shifts(
         self, *, conn: Connection, current_user: User, node: Node, cashier_id: int
@@ -177,7 +176,7 @@ class CashierService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.cashier_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_cashier_shift_stats(
         self,
@@ -226,7 +225,7 @@ class CashierService(DBService):
         return stats
 
     @with_db_transaction
-    @requires_user([Privilege.cashier_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def close_out_cashier(
         self, *, conn: Connection, current_user: CurrentUser, node: Node, cashier_id: int, close_out: CloseOut

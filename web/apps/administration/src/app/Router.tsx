@@ -93,7 +93,7 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/products",
-        element: <PrivilegeGuard privilege="product_management" />,
+        element: <PrivilegeGuard privilege="node_administration" />,
         children: [
           {
             index: true,
@@ -115,7 +115,7 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/tickets",
-        element: <PrivilegeGuard privilege="product_management" />,
+        element: <PrivilegeGuard privilege="node_administration" />,
         children: [
           {
             index: true,
@@ -137,7 +137,7 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/cashiers",
-        element: <PrivilegeGuard privilege="cashier_management" />,
+        element: <PrivilegeGuard privilege="node_administration" />,
         children: [
           {
             index: true,
@@ -159,7 +159,7 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/tax-rates",
-        element: <PrivilegeGuard privilege="tax_rate_management" />,
+        element: <PrivilegeGuard privilege="node_administration" />,
         children: [
           {
             index: true,
@@ -178,7 +178,7 @@ const router = createBrowserRouter([
       {
         path: "node/:nodeId/tills",
         element: (
-          <PrivilegeGuard privilege="till_management">
+          <PrivilegeGuard privilege="node_administration">
             <TillPageLayout />
           </PrivilegeGuard>
         ),
@@ -276,7 +276,7 @@ const router = createBrowserRouter([
       {
         path: "node/:nodeId/accounts",
         element: (
-          <PrivilegeGuard privilege="account_management">
+          <PrivilegeGuard privilege="node_administration">
             <AccountPageLayout />
           </PrivilegeGuard>
         ),
@@ -299,7 +299,7 @@ const router = createBrowserRouter([
       {
         path: "node/:nodeId/user-tags",
         element: (
-          <PrivilegeGuard privilege="account_management">
+          <PrivilegeGuard privilege="node_administration">
             <UserTagPageLayout />
           </PrivilegeGuard>
         ),
@@ -316,7 +316,7 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/orders",
-        element: <PrivilegeGuard privilege="order_management" />,
+        element: <PrivilegeGuard privilege="node_administration" />,
         children: [
           {
             index: true,
@@ -372,10 +372,7 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/tses",
-        element: (
-          // <PrivilegeGuard privilege="tse_management"/>
-          <PrivilegeGuard privilege="till_management" />
-        ),
+        element: <PrivilegeGuard privilege="node_administration" />,
         children: [
           {
             index: true,

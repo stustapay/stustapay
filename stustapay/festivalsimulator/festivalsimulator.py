@@ -15,7 +15,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.till import Till
-from stustapay.core.schema.user import ADMIN_ROLE_ID, CASHIER_ROLE_ID
+from stustapay.core.schema.user import ADMIN_ROLE_ID
 from stustapay.framework.async_utils import AsyncThread, with_db_pool
 from stustapay.framework.database import create_db_pool
 
@@ -228,7 +228,7 @@ class Simulator:
                     assert resp.status == 200
 
             async with client.post(
-                "/user/login", json={"user_tag": {"uid": cashier_tag_uid}, "user_role_id": CASHIER_ROLE_ID}
+                "/user/login", json={"user_tag": {"uid": cashier_tag_uid}, "user_role_id": self.cashier_role_id}
             ) as resp:
                 if resp.status != 200:
                     self.logger.critical(
@@ -485,6 +485,9 @@ class Simulator:
                 "admin",
                 self.event_node_id,
             )
+        )
+        self.cashier_role_id = await db_pool.fetchval(
+            "select id from user_role where name = 'cashier' and node_id = $1", self.event_node_id
         )
         self.admin_token = await self.login_admin()
         self.admin_headers = {"Authorization": f"Bearer {self.admin_token}"}

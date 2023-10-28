@@ -333,24 +333,6 @@ create view order_value_with_bon as
         order_value o
         left join bon b on (o.id = b.id);
 
-create view till_profile_with_allowed_roles as
-    select
-        p.*,
-        coalesce(roles.role_ids, '{}'::bigint array) as allowed_role_ids,
-        coalesce(roles.role_names, '{}'::text array) as allowed_role_names
-    from
-        till_profile p
-        left join (
-            select
-                a.profile_id,
-                array_agg(ur.id)   as role_ids,
-                array_agg(ur.name) as role_names
-            from
-                allowed_user_roles_for_till_profile a
-                join user_role ur on a.role_id = ur.id
-            group by a.profile_id
-        ) roles on roles.profile_id = p.id;
-
 -- TODO: this view will be monstrous, as it needs to do the transitive calculation of allowed objects at a tree
 create view node_with_allowed_objects as
     with allowed_at_node_as_list as (

@@ -15,6 +15,7 @@ class TicketServiceTest(BaseTestCase):
         )
 
     async def test_basic_ticket_workflow(self):
+        cashier, cashier_role, cashier_token = await self.create_chashier()
         ticket = await self.ticket_service.create_ticket(
             token=self.admin_token,
             ticket=NewTicket(
@@ -30,7 +31,7 @@ class TicketServiceTest(BaseTestCase):
 
         with self.assertRaises(AccessDenied):
             await self.ticket_service.create_ticket(
-                token=self.cashier_token,
+                token=cashier_token,
                 ticket=NewTicket(
                     name="Updated Test Ticket",
                     price=12,
@@ -61,7 +62,7 @@ class TicketServiceTest(BaseTestCase):
         self.assertEqual(len(list(filter(lambda p: p.name == "Updated Test Ticket", tickets))), 1)
 
         with self.assertRaises(AccessDenied):
-            await self.ticket_service.delete_ticket(token=self.cashier_token, ticket_id=ticket.id)
+            await self.ticket_service.delete_ticket(token=cashier_token, ticket_id=ticket.id)
 
         deleted = await self.ticket_service.delete_ticket(token=self.admin_token, ticket_id=ticket.id)
         self.assertTrue(deleted)

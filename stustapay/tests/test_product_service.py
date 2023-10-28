@@ -15,6 +15,7 @@ class ProductServiceTest(BaseTestCase):
         )
 
     async def test_basic_product_workflow(self):
+        cashier, cashier_role, cashier_token = await self.create_chashier()
         product = await self.product_service.create_product(
             token=self.admin_token, product=NewProduct(name="Test Product", price=3, tax_rate_id=self.tax_rate_ust.id)
         )
@@ -22,7 +23,7 @@ class ProductServiceTest(BaseTestCase):
 
         with self.assertRaises(AccessDenied):
             await self.product_service.create_product(
-                token=self.cashier_token,
+                token=cashier_token,
                 product=NewProduct(name="Test Product", price=3, tax_rate_id=self.tax_rate_ust.id),
             )
 
@@ -39,7 +40,7 @@ class ProductServiceTest(BaseTestCase):
         self.assertEqual(len(list(filter(lambda p: p.name == "Updated Test Product", products))), 1)
 
         with self.assertRaises(AccessDenied):
-            await self.product_service.delete_product(token=self.cashier_token, product_id=product.id)
+            await self.product_service.delete_product(token=cashier_token, product_id=product.id)
 
         deleted = await self.product_service.delete_product(token=self.admin_token, product_id=product.id)
         self.assertTrue(deleted)

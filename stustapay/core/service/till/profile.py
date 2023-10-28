@@ -12,7 +12,6 @@ from stustapay.core.service.common.decorators import (
     requires_user,
     with_db_transaction,
 )
-from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.user import AuthService
 from stustapay.framework.database import Connection
 
@@ -20,7 +19,7 @@ from stustapay.framework.database import Connection
 async def _get_profile(*, conn: Connection, node: Node, profile_id: int) -> Optional[TillProfile]:
     return await conn.fetch_maybe_one(
         TillProfile,
-        "select * from till_profile_with_allowed_roles where id = $1 and node_id = any($2)",
+        "select * from till_profile where id = $1 and node_id = any($2)",
         profile_id,
         node.ids_to_event_node,
     )
@@ -31,20 +30,8 @@ class TillProfileService(DBService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
 
-    @staticmethod
-    async def _update_allowed_profile_roles(*, conn: Connection, profile_id: int, role_names: list[str]):
-        for role_name in role_names:
-            role_id = await conn.fetchval("select id from user_role where name = $1", role_name)
-            if role_id is None:
-                raise InvalidArgument(f"User role '{role_name}' does not exist")
-            await conn.execute(
-                "insert into allowed_user_roles_for_till_profile (profile_id, role_id) values ($1, $2)",
-                profile_id,
-                role_id,
-            )
-
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def create_profile(self, *, conn: Connection, node: Node, profile: NewTillProfile) -> TillProfile:
         # TODO: TREE visibility
@@ -62,30 +49,26 @@ class TillProfileService(DBService):
             profile.layout_id,
         )
 
-        await self._update_allowed_profile_roles(
-            conn=conn, profile_id=profile_id, role_names=profile.allowed_role_names
-        )
-
         resulting_profile = await _get_profile(conn=conn, node=node, profile_id=profile_id)
         assert resulting_profile is not None
         return resulting_profile
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_profiles(self, *, conn: Connection, node: Node) -> list[TillProfile]:
         return await conn.fetch_many(
-            TillProfile, "select * from till_profile_with_allowed_roles where node_id = any($1)", node.ids_to_event_node
+            TillProfile, "select * from till_profile where node_id = any($1)", node.ids_to_event_node
         )
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_profile(self, *, conn: Connection, node: Node, profile_id: int) -> Optional[TillProfile]:
         return await _get_profile(conn=conn, node=node, profile_id=profile_id)
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_profile(
         self, *, conn: Connection, node: Node, profile_id: int, profile: NewTillProfile
@@ -106,17 +89,12 @@ class TillProfileService(DBService):
         if p_id is None:
             return None
 
-        await conn.execute("delete from allowed_user_roles_for_till_profile where profile_id = $1", profile_id)
-        await self._update_allowed_profile_roles(
-            conn=conn, profile_id=profile_id, role_names=profile.allowed_role_names
-        )
-
         resulting_profile = await _get_profile(conn=conn, node=node, profile_id=profile_id)
         assert resulting_profile is not None
         return resulting_profile
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def delete_profile(self, *, conn: Connection, till_profile_id: int) -> bool:
         # TODO: TREE visibility

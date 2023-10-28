@@ -26,10 +26,6 @@ from stustapay.core.schema.till import (
 )
 from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
-    ADMIN_ROLE_NAME,
-    CASHIER_ROLE_ID,
-    CASHIER_ROLE_NAME,
-    FINANZORGA_ROLE_NAME,
     UserTag,
 )
 from stustapay.core.service.account import AccountService
@@ -43,7 +39,6 @@ from stustapay.core.service.order.order import (
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
-
 from .common import TerminalTestCase
 
 START_BALANCE = 100
@@ -52,6 +47,7 @@ START_BALANCE = 100
 class OrderLogicTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
+        assert self.cashier.user_tag_uid is not None
         self.product_service = ProductService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )
@@ -177,7 +173,6 @@ class OrderLogicTest(TerminalTestCase):
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
-                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
         self.till = await self.till_service.update_till(
@@ -189,9 +184,7 @@ class OrderLogicTest(TerminalTestCase):
             ),
         )
         # add customer
-        self.customer_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 1234) returning uid", self.node_id
-        )
+        self.customer_uid = await self.create_random_user_tag()
         self.customer_account_id = await self.db_conn.fetchval(
             "insert into account (node_id, user_tag_uid, type, balance) values ($1, $2, 'private', $3) returning id",
             self.node_id,
@@ -207,7 +200,7 @@ class OrderLogicTest(TerminalTestCase):
         )
         await self._login_supervised_user(user_tag_uid=self.admin_tag_uid, user_role_id=ADMIN_ROLE_ID)
 
-        await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=CASHIER_ROLE_ID)
+        await self._login_supervised_user(user_tag_uid=self.cashier.user_tag_uid, user_role_id=self.cashier_role.id)
 
     async def test_basic_sale_flow(self):
         z_nr_start = await self.db_conn.fetchval("select z_nr from till where id = $1", self.till.id)
@@ -390,7 +383,7 @@ class OrderLogicTest(TerminalTestCase):
             uuid=uuid.uuid4(),
             buttons=[
                 Button(till_button_id=self.beer_button.id, quantity=3),
-                Button(till_button_id=self.beer_product_full.id, quantity=1),
+                Button(till_button_id=self.beer_button_full.id, quantity=1),
             ],
             customer_tag_uid=self.customer_uid,
         )
@@ -433,7 +426,6 @@ class OrderLogicTest(TerminalTestCase):
                 allow_top_up=False,
                 allow_cash_out=False,
                 allow_ticket_sale=False,
-                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
         self.till.active_profile_id = profile.id
@@ -523,7 +515,6 @@ class OrderLogicTest(TerminalTestCase):
                 allow_top_up=False,
                 allow_cash_out=False,
                 allow_ticket_sale=False,
-                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
         self.till.active_profile_id = profile.id
@@ -605,7 +596,6 @@ class OrderLogicTest(TerminalTestCase):
                 allow_top_up=False,
                 allow_cash_out=False,
                 allow_ticket_sale=False,
-                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
         self.till.active_profile_id = profile.id

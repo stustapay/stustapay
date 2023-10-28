@@ -35,7 +35,7 @@ class TaxRateService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.tax_rate_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def create_tax_rate(self, *, conn: Connection, node: Node, tax_rate: NewTaxRate) -> TaxRate:
         # TODO: TREE visibility
@@ -63,7 +63,7 @@ class TaxRateService(DBService):
         return await _fetch_tax_rate(conn=conn, node=node, tax_rate_id=tax_rate_id)
 
     @with_db_transaction
-    @requires_user([Privilege.tax_rate_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_tax_rate(self, *, conn: Connection, node: Node, tax_rate_id: int, tax_rate: NewTaxRate) -> TaxRate:
         # TODO: TREE visibility
@@ -83,7 +83,7 @@ class TaxRateService(DBService):
         return updated_tax
 
     @with_db_transaction
-    @requires_user([Privilege.tax_rate_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def delete_tax_rate(self, *, conn: Connection, tax_rate_id: int) -> bool:
         # TODO: TREE visibility

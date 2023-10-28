@@ -1226,16 +1226,9 @@ export type UpdateUserPayload = {
   user_tag_uid_hex?: string | null;
 };
 export type Privilege =
-  | "account_management"
-  | "cashier_management"
-  | "config_management"
-  | "product_management"
-  | "tax_rate_management"
+  | "node_administration"
   | "user_management"
-  | "till_management"
-  | "order_management"
-  | "festival_overview"
-  | "tse_management"
+  | "cash_transport"
   | "terminal_login"
   | "supervised_terminal_login"
   | "can_book_orders"
@@ -1384,7 +1377,6 @@ export type TillProfile = {
   allow_top_up: boolean;
   allow_cash_out: boolean;
   allow_ticket_sale: boolean;
-  allowed_role_names: string[];
   node_id: number;
   id: number;
 };
@@ -1401,7 +1393,6 @@ export type NewTillProfile = {
   allow_top_up: boolean;
   allow_cash_out: boolean;
   allow_ticket_sale: boolean;
-  allowed_role_names: string[];
 };
 export type TillButton = {
   name: string;

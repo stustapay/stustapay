@@ -57,14 +57,14 @@ class TillService(DBService):
         self.register = TillRegisterService(db_pool, config, auth_service)
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def create_till(self, *, conn: Connection, node: Node, till: NewTill) -> Till:
         # TODO: TREE visibility
         return await create_till(conn=conn, node_id=node.id, till=till)
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_tills(self, *, node: Node, conn: Connection) -> list[Till]:
         return await conn.fetch_many(
@@ -72,13 +72,13 @@ class TillService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_till(self, *, conn: Connection, node: Node, till_id: int) -> Optional[Till]:
         return await fetch_till(conn=conn, node=node, till_id=till_id)
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_till(self, *, conn: Connection, node: Node, till_id: int, till: NewTill) -> Optional[Till]:
         # TODO: TREE visibility
@@ -97,7 +97,7 @@ class TillService(DBService):
         return await fetch_till(conn=conn, node=node, till_id=till_id)
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def delete_till(self, *, conn: Connection, till_id: int) -> bool:
         # TODO: TREE visibility
@@ -125,7 +125,7 @@ class TillService(DBService):
         return TerminalRegistrationSuccess(till=till, token=token)
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def logout_terminal_id(self, *, conn: Connection, till_id: int) -> bool:
         # TODO: TREE visibility
@@ -147,7 +147,7 @@ class TillService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def force_logout_user(self, *, conn: Connection, till_id: int):
         # TODO: TREE visibility
@@ -164,7 +164,6 @@ class TillService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: Terminal,
         current_user: CurrentUser,
         user_tag: UserTag,
     ) -> list[UserRole]:
@@ -179,14 +178,11 @@ class TillService(DBService):
             "from user_role_with_privileges urwp "
             "join user_to_role urt on urwp.id = urt.role_id "
             "join usr on urt.user_id = usr.id "
-            "join allowed_user_roles_for_till_profile aurftp on urt.role_id = aurftp.role_id "
             "where usr.user_tag_uid = $1 "
-            "   and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges)) "
-            "   and aurftp.profile_id = $4",
+            "   and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges)) ",
             user_tag.uid,
             Privilege.terminal_login.name,
             Privilege.supervised_terminal_login.name,
-            current_terminal.till.active_profile_id,
         )
         if len(available_roles) == 0:
             raise AccessDenied(
@@ -235,14 +231,6 @@ class TillService(DBService):
         user_id = await conn.fetchval("select usr.id from usr where user_tag_uid = $1", user_tag.uid)
         assert user_id is not None
 
-        is_role_allowed = await conn.fetchval(
-            "select true from allowed_user_roles_for_till_profile where role_id = $1 and profile_id = $2",
-            user_role_id,
-            current_terminal.till.active_profile_id,
-        )
-        if not is_role_allowed:
-            raise AccessDenied("This till does not allow login with this role")
-
         t_id = await conn.fetchval(
             "update till set active_user_id = $1, active_user_role_id = $2 where id = $3 returning id",
             user_id,
@@ -276,7 +264,7 @@ class TillService(DBService):
     @requires_terminal()
     async def get_user_info(self, *, conn: Connection, current_user: CurrentUser, user_tag_uid: int) -> UserInfo:
         if (
-            Privilege.cashier_management not in current_user.privileges
+            Privilege.node_administration not in current_user.privileges
             and Privilege.user_management not in current_user.privileges
             and user_tag_uid != current_user.user_tag_uid
         ):
@@ -309,7 +297,7 @@ class TillService(DBService):
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         profile = await conn.fetch_one(
             TillProfile,
-            "select * from till_profile_with_allowed_roles tp where id = $1",
+            "select * from till_profile tp where id = $1",
             current_terminal.till.active_profile_id,
         )
         layout_has_tickets = await conn.fetchval(

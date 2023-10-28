@@ -2,13 +2,17 @@
 
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.till import NewTillProfile
-from stustapay.core.schema.user import ADMIN_ROLE_NAME, NewUser, NewUserRole, Privilege
+from stustapay.core.schema.user import NewUser, NewUserRole, Privilege
 from stustapay.core.service.common.error import AccessDenied
 
 from .common import TerminalTestCase
 
 
 class AccountServiceTest(TerminalTestCase):
+    async def asyncSetUp(self) -> None:
+        await super().asyncSetUp()
+        assert self.cashier.user_tag_uid is not None
+
     async def test_switch_user_tag(self):
         user_tag_uid = 1887
         new_user_tag_uid = 1999
@@ -69,12 +73,11 @@ class AccountServiceTest(TerminalTestCase):
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
-                allowed_role_names=[ADMIN_ROLE_NAME, "test-role"],
             ),
         )
 
         # after updating the cashier roles we need to log out and log in with the new role
-        await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=voucher_role.id)
+        await self._login_supervised_user(user_tag_uid=self.cashier.user_tag_uid, user_role_id=voucher_role.id)
 
         volunteer_tag = await self.db_conn.fetchval(
             "insert into user_tag (node_id, uid) values ($1, 1337) returning uid", self.node_id
@@ -130,7 +133,6 @@ class AccountServiceTest(TerminalTestCase):
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
-                allowed_role_names=[ADMIN_ROLE_NAME, "test-role"],
             ),
         )
 
@@ -140,7 +142,7 @@ class AccountServiceTest(TerminalTestCase):
             role_names=[voucher_role.name],
         )
         # after updating the cashier roles we need to log out and log in with the new role
-        await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=voucher_role.id)
+        await self._login_supervised_user(user_tag_uid=self.cashier.user_tag_uid, user_role_id=voucher_role.id)
 
         volunteer_tag = await self.db_conn.fetchval(
             "insert into user_tag (node_id, uid) values ($1, 1337) returning uid", self.node_id

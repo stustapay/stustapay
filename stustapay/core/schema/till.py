@@ -38,7 +38,6 @@ class NewTillProfile(BaseModel):
     allow_top_up: bool
     allow_cash_out: bool
     allow_ticket_sale: bool
-    allowed_role_names: list[str]
 
 
 class TillProfile(NewTillProfile):

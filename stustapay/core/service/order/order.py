@@ -73,7 +73,6 @@ from stustapay.core.service.till.common import fetch_till
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from stustapay.framework.database import Connection
-
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
@@ -236,7 +235,7 @@ class OrderService(DBService):
             return
 
     @with_db_transaction
-    @requires_user([Privilege.order_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def register_for_order_updates(self, conn: Connection) -> Subscription:
         del conn  # unused
@@ -1367,7 +1366,7 @@ class OrderService(DBService):
         return await conn.fetch_many(Order, "select * from order_value where cashier_id = $1", current_user.id)
 
     @with_db_transaction
-    @requires_user([Privilege.order_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_orders(self, *, conn: Connection, customer_account_id: Optional[int] = None) -> list[Order]:
         if customer_account_id is not None:
@@ -1378,13 +1377,13 @@ class OrderService(DBService):
             return await conn.fetch_many(Order, "select * from order_value")
 
     @with_db_transaction
-    @requires_user([Privilege.order_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_orders_by_till(self, *, conn: Connection, till_id: int) -> list[Order]:
         return await conn.fetch_many(Order, "select * from order_value where till_id = $1", till_id)
 
     @with_db_transaction
-    @requires_user([Privilege.order_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)

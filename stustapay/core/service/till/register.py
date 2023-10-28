@@ -91,7 +91,7 @@ class TillRegisterService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_cash_register_stockings_admin(self, *, conn: Connection, node: Node) -> list[CashRegisterStocking]:
         return await _list_cash_register_stockings(conn=conn, node=node)
@@ -106,7 +106,7 @@ class TillRegisterService(DBService):
         return await _list_cash_register_stockings(conn=conn, node=node)
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def create_cash_register_stockings(
         self, *, conn: Connection, node: Node, stocking: NewCashRegisterStocking
@@ -141,7 +141,7 @@ class TillRegisterService(DBService):
         return updated
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_cash_register_stockings(
         self, *, conn: Connection, node: Node, stocking_id: int, stocking: NewCashRegisterStocking
@@ -177,7 +177,7 @@ class TillRegisterService(DBService):
         return updated
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def delete_cash_register_stockings(self, *, conn: Connection, stocking_id: int):
         # TODO: TREE visibility
@@ -188,7 +188,7 @@ class TillRegisterService(DBService):
         return result != "DELETE 0"
 
     @with_db_transaction
-    @requires_terminal([Privilege.till_management])
+    @requires_terminal([Privilege.node_administration])
     async def list_cash_registers_terminal(
         self, *, conn: Connection, current_terminal: Terminal, hide_assigned_registers=False
     ) -> list[CashRegister]:
@@ -198,7 +198,7 @@ class TillRegisterService(DBService):
         return await _list_cash_registers(conn=conn, node=node, hide_assigned_registers=hide_assigned_registers)
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_cash_registers_admin(
         self, *, conn: Connection, node: Node, hide_assigned_registers=False
@@ -206,7 +206,7 @@ class TillRegisterService(DBService):
         return await _list_cash_registers(conn=conn, node=node, hide_assigned_registers=hide_assigned_registers)
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def create_cash_register(
         self, *, conn: Connection, node: Node, new_register: NewCashRegister
@@ -215,7 +215,7 @@ class TillRegisterService(DBService):
         return await create_cash_register(conn=conn, node=node, new_register=new_register)
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_cash_register(
         self, *, conn: Connection, node: Node, register_id: int, register: NewCashRegister
@@ -231,7 +231,7 @@ class TillRegisterService(DBService):
         return r
 
     @with_db_transaction
-    @requires_user([Privilege.till_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def delete_cash_register(self, *, conn: Connection, register_id: int):
         # TODO: TREE visibility
@@ -242,7 +242,7 @@ class TillRegisterService(DBService):
         return result != "DELETE 0"
 
     @with_retryable_db_transaction()
-    @requires_terminal([Privilege.cashier_management])
+    @requires_terminal([Privilege.node_administration])
     async def stock_up_cash_register(
         self,
         *,
@@ -293,7 +293,7 @@ class TillRegisterService(DBService):
         return True
 
     @with_retryable_db_transaction()
-    @requires_terminal([Privilege.cashier_management])
+    @requires_terminal([Privilege.cash_transport])
     async def modify_cashier_account_balance(
         self,
         *,
@@ -350,7 +350,7 @@ class TillRegisterService(DBService):
         )
 
     @with_retryable_db_transaction()
-    @requires_terminal([Privilege.cashier_management])
+    @requires_terminal([Privilege.cash_transport])
     async def modify_transport_account_balance(
         self,
         *,
@@ -443,7 +443,7 @@ class TillRegisterService(DBService):
         return reg
 
     @with_retryable_db_transaction()
-    @requires_user([Privilege.cashier_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def transfer_cash_register_admin(
         self, *, conn: Connection, node: Node, source_cashier_id: int, target_cashier_id: int

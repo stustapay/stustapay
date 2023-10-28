@@ -1,4 +1,5 @@
 import {
+  TillProfile,
   selectTillLayoutById,
   selectTillProfileAll,
   useDeleteTillProfileMutation,
@@ -12,7 +13,6 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { TillProfile } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
@@ -98,13 +98,6 @@ export const TillProfileList: React.FC = () => {
       headerName: t("profile.allowCashOut") as string,
       type: "boolean",
       width: 120,
-    },
-    {
-      field: "allowed_role_names",
-      headerName: t("profile.allowedUserRoles") as string,
-      type: "string",
-      flex: 1,
-      valueFormatter: ({ value }) => value.join(", "),
     },
     {
       field: "layout",
