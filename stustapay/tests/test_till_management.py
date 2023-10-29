@@ -20,6 +20,7 @@ from stustapay.core.service.cashier import (
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.order import OrderService
+
 from .common import TerminalTestCase
 
 
@@ -162,7 +163,7 @@ class TillManagementTest(TerminalTestCase):
             "join till t on o.till_id = t.id "
             "where o.payment_method = 'cash' and t.node_id = any($1) "
             "group by o.till_id",
-            self.event_node.ids_to_event_node
+            self.event_node.ids_to_event_node,
         )
         self.assertIsNot(0, len(balances))
         for balance in balances:
