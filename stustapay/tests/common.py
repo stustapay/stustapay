@@ -1,9 +1,9 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
-import asyncio
 import logging
 import os
 import random
 import secrets
+import threading
 from pathlib import Path
 from unittest import IsolatedAsyncioTestCase as TestCase
 
@@ -86,20 +86,24 @@ TEST_CONFIG = Config(
 )
 
 
+test_database_lock = threading.Lock()
+schema_is_applied = False
+
+
 async def get_test_db() -> Pool:
     """
     get a connection pool to the test database
     """
-    cfg = get_test_db_config()
-    pool = await create_db_pool(cfg=cfg)
+    global schema_is_applied  # pylint: disable=global-statement
+    with test_database_lock:
+        pool = await create_db_pool(cfg=TEST_CONFIG.database, n_connections=2)
 
-    await database.reset_schema(pool)
-    await database.apply_revisions(pool)
+        if not schema_is_applied:
+            await database.reset_schema(pool)
+            await database.apply_revisions(pool)
+            schema_is_applied = True
 
-    return pool
-
-
-testing_lock = asyncio.Lock()
+        return pool
 
 
 class Cashier(User):
@@ -183,7 +187,7 @@ class BaseTestCase(TestCase):
         finanzorga_user: User = await self.user_service.create_user_no_auth(
             node_id=self.node_id,
             new_user=NewUser(
-                login="Finanzorga",
+                login=f"Finanzorga {secrets.token_hex(16)}",
                 description="",
                 role_names=[finanzorga_role.name, cashier_role_name]
                 if cashier_role_name is not None
@@ -196,7 +200,6 @@ class BaseTestCase(TestCase):
         return finanzorga, finanzorga_role
 
     async def asyncSetUp(self) -> None:
-        await testing_lock.acquire()
         self.db_pool = await get_test_db()
         self.db_conn: Connection = await self.db_pool.acquire()
 
@@ -270,7 +273,7 @@ class BaseTestCase(TestCase):
         self.admin_user = await self.user_service.create_user_no_auth(
             node_id=self.node_id,
             new_user=NewUser(
-                login="test-admin-user",
+                login=f"test-admin-user {secrets.token_hex(16)}",
                 description="",
                 role_names=[ADMIN_ROLE_NAME],
                 display_name="Admin",
@@ -308,8 +311,6 @@ class BaseTestCase(TestCase):
         await super().asyncTearDown()
         await self.db_conn.close()
         await self.db_pool.close()
-
-        testing_lock.release()
 
 
 class TerminalTestCase(BaseTestCase):
@@ -400,8 +401,6 @@ class TerminalTestCase(BaseTestCase):
             stocking=NewCashRegisterStocking(name="My fancy stocking"),
         )
         self.cashier, self.cashier_role, self.cashier_token = await self.create_cashier()
-        assert self.cashier.user_tag_uid is not None
-        assert self.cashier.cashier_account_id is not None
         await self.till_service.register.stock_up_cash_register(
             token=self.terminal_token,
             cashier_tag_uid=self.cashier.user_tag_uid,

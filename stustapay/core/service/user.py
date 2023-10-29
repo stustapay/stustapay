@@ -335,7 +335,9 @@ class UserService(DBService):
         self, *, conn: Connection, node: Node, user_id: int, role_names: list[str]
     ) -> Optional[User]:
         # TODO: TREE visibility
-        found = await conn.fetchval("select true from usr where id = $1", user_id)
+        found = await conn.fetchval(
+            "select true from usr where id = $1 and node_id = any($2)", user_id, node.ids_to_root
+        )
         if not found:
             raise NotFound(element_typ="user", element_id=str(user_id))
 

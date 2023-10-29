@@ -8,7 +8,6 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
 from stustapay.core.schema.order import OrderType, PaymentMethod
-from stustapay.core.schema.till import VIRTUAL_TILL_ID
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege, User
 from stustapay.core.service.common.dbservice import DBService
@@ -18,7 +17,6 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.framework.database import Connection
-
 from .account import get_system_account_for_node
 from .common.error import NotFound, ServiceException
 from .order.booking import (
@@ -29,6 +27,7 @@ from .order.booking import (
     book_order,
 )
 from .product import fetch_money_difference_product, fetch_product
+from .till.common import fetch_virtual_till
 from .user import AuthService
 
 
@@ -74,12 +73,13 @@ async def _book_imbalance_order(
     bookings: dict[BookingIdentifier, float] = {
         BookingIdentifier(source_account_id=cashier_account_id, target_account_id=cash_imbalance_acc.id): -imbalance,
     }
+    virtual_till = await fetch_virtual_till(conn=conn, node=node)
 
     return await book_order(
         conn=conn,
         payment_method=PaymentMethod.cash,
         order_type=OrderType.money_transfer_imbalance,
-        till_id=VIRTUAL_TILL_ID,
+        till_id=virtual_till.id,
         cashier_id=current_user.id,
         line_items=line_items,
         bookings=bookings,
@@ -90,13 +90,14 @@ async def _book_imbalance_order(
 async def _book_money_transfer_close_out_start(
     *, conn: Connection, current_user: CurrentUser, node: Node, cash_register_id: int, amount: float
 ) -> OrderInfo:
+    virtual_till = await fetch_virtual_till(conn=conn, node=node)
     return await book_money_transfer(
         conn=conn,
         node=node,
         originating_user_id=current_user.id,
         cash_register_id=cash_register_id,
         amount=amount,
-        till_id=VIRTUAL_TILL_ID,
+        till_id=virtual_till.id,
         bookings={},
     )
 
@@ -114,6 +115,7 @@ async def _book_money_transfer_cash_vault_order(
     bookings: dict[BookingIdentifier, float] = {
         BookingIdentifier(source_account_id=cashier_account_id, target_account_id=cash_vault_acc.id): amount,
     }
+    virtual_till = await fetch_virtual_till(conn=conn, node=node)
     return await book_money_transfer(
         conn=conn,
         node=node,
@@ -121,7 +123,7 @@ async def _book_money_transfer_cash_vault_order(
         cash_register_id=cash_register_id,
         amount=-amount,
         bookings=bookings,
-        till_id=VIRTUAL_TILL_ID,
+        till_id=virtual_till.id,
     )
 
 
@@ -296,8 +298,9 @@ class CashierService(DBService):
             close_out.closing_out_user_id,
         )
 
+        virtual_till = await fetch_virtual_till(conn=conn, node=node)
         await conn.execute("update usr set cash_register_id = null where id = $1", cashier.id)
-        await conn.execute("update till set z_nr = z_nr + 1 where id = $1", VIRTUAL_TILL_ID)
+        await conn.execute("update till set z_nr = z_nr + 1 where id = $1", virtual_till.id)
         # correct the actual balance to rule out any floating point errors / representation errors
         await conn.execute("update account set balance = 0 where id = $1", cashier.cashier_account_id)
 

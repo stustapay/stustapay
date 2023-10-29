@@ -77,7 +77,7 @@ class TillProfileService(DBService):
         p_id = await conn.fetchval(
             "update till_profile set name = $2, description = $3, allow_top_up = $4, allow_cash_out = $5, "
             "   allow_ticket_sale = $6, layout_id = $7 "
-            "where id = $1 returning id ",
+            "where id = $1 and node_id = any($8) returning id ",
             profile_id,
             profile.name,
             profile.description,
@@ -85,6 +85,7 @@ class TillProfileService(DBService):
             profile.allow_cash_out,
             profile.allow_ticket_sale,
             profile.layout_id,
+            node.ids_to_event_node,
         )
         if p_id is None:
             return None

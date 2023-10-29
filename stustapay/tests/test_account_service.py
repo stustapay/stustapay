@@ -9,10 +9,6 @@ from .common import TerminalTestCase
 
 
 class AccountServiceTest(TerminalTestCase):
-    async def asyncSetUp(self) -> None:
-        await super().asyncSetUp()
-        assert self.cashier.user_tag_uid is not None
-
     async def test_switch_user_tag(self):
         user_tag_uid = await self.create_random_user_tag()
         new_user_tag_uid = await self.create_random_user_tag()

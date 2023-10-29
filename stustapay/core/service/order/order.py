@@ -43,7 +43,7 @@ from stustapay.core.schema.order import (
 from stustapay.core.schema.product import Product, ProductRestriction, ProductType
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.ticket import Ticket
-from stustapay.core.schema.till import VIRTUAL_TILL_ID, Till
+from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
 from stustapay.core.service.account import (
@@ -66,11 +66,10 @@ from stustapay.core.service.product import (
     fetch_product,
     fetch_top_up_product,
 )
-from stustapay.core.service.till.common import fetch_till
+from stustapay.core.service.till.common import fetch_virtual_till
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from stustapay.framework.database import Connection
-
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
@@ -784,13 +783,12 @@ class OrderService(DBService):
                 for b in new_sale.products
             ],
         )
-        till = await fetch_till(conn=conn, node=node, till_id=VIRTUAL_TILL_ID)
-        assert till is not None
+        virtual_till = await fetch_virtual_till(conn=conn, node=node)
         completed_sale = await self._book_sale(
             conn=conn,
             event_settings=event_settings,
             node=node,
-            till=till,
+            till=virtual_till,
             current_user=current_user,
             new_sale=internal_new_sale,
         )
@@ -824,7 +822,8 @@ class OrderService(DBService):
         order = await fetch_order(conn=conn, order_id=order_id)
         if order is None:
             raise InvalidArgument("Order does not exist")
-        await self._cancel_sale(conn=conn, current_user=current_user, order_id=order_id, till_id=VIRTUAL_TILL_ID)
+        virtual_till = await fetch_virtual_till(conn=conn, node=node)
+        await self._cancel_sale(conn=conn, current_user=current_user, order_id=order_id, till_id=virtual_till.id)
 
         assert order.customer_tag_uid is not None
 
@@ -915,8 +914,9 @@ class OrderService(DBService):
     @with_retryable_db_transaction()
     @requires_user([Privilege.can_book_orders])
     @requires_node()
-    async def cancel_sale_admin(self, *, conn: Connection, current_user: CurrentUser, order_id: int):
-        await self._cancel_sale(conn=conn, till_id=VIRTUAL_TILL_ID, current_user=current_user, order_id=order_id)
+    async def cancel_sale_admin(self, *, conn: Connection, node: Node, current_user: CurrentUser, order_id: int):
+        virtual_till = await fetch_virtual_till(conn=conn, node=node)
+        await self._cancel_sale(conn=conn, till_id=virtual_till.id, current_user=current_user, order_id=order_id)
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])

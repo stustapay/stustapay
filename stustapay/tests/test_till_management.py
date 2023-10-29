@@ -20,7 +20,6 @@ from stustapay.core.service.cashier import (
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.order import OrderService
-
 from .common import TerminalTestCase
 
 
@@ -63,9 +62,15 @@ class TillManagementTest(TerminalTestCase):
         self.assertTrue(deleted)
 
     async def test_stock_up_cashier(self):
-        n_orders_start = await self.db_conn.fetchval(
-            "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
-        )
+        async def get_num_orders(order_type: OrderType) -> int:
+            return await self.db_conn.fetchval(
+                "select count(*) from ordr o join till t on o.till_id = t.id "
+                "where order_type = $1 and t.node_id = any($2)",
+                order_type.name,
+                self.event_node.ids_to_event_node,
+            )
+
+        n_orders_start = await get_num_orders(OrderType.money_transfer)
 
         cashier_tag_uid = await self.create_random_user_tag()
         cashier = await self.user_service.create_user_no_auth(
@@ -94,17 +99,13 @@ class TillManagementTest(TerminalTestCase):
         await self._assert_system_account_balance(AccountType.cash_vault, -stocking.total)
 
         # before logging in we did not produce a money transfer order
-        n_orders = await self.db_conn.fetchval(
-            "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
-        )
+        n_orders = await get_num_orders(OrderType.money_transfer)
         self.assertEqual(n_orders_start, n_orders)
 
         await self._login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=self.cashier_role.id)
 
         # after logging in we've got a money transfer order to be signed
-        n_orders = await self.db_conn.fetchval(
-            "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
-        )
+        n_orders = await get_num_orders(OrderType.money_transfer)
         self.assertEqual(n_orders_start + 1, n_orders)
 
         # we don't have any bookings but we simulate a close out
@@ -132,9 +133,7 @@ class TillManagementTest(TerminalTestCase):
             )
 
         await self.till_service.logout_user(token=self.terminal_token)
-        n_orders = await self.db_conn.fetchval(
-            "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
-        )
+        n_orders = await get_num_orders(OrderType.money_transfer)
         self.assertEqual(n_orders_start + 2, n_orders)
 
         close_out_result = await self.cashier_service.close_out_cashier(
@@ -151,21 +150,19 @@ class TillManagementTest(TerminalTestCase):
         await self._assert_account_balance(account_id=cashier.cashier_account_id, expected_balance=0)
         shifts = await self.cashier_service.get_cashier_shifts(token=self.admin_token, cashier_id=cashier.id)
         self.assertEqual(len(shifts), 1)
-        n_orders = await self.db_conn.fetchval(
-            "select count(*) from ordr where order_type = $1", OrderType.money_transfer.name
-        )
+        n_orders = await get_num_orders(OrderType.money_transfer)
         self.assertEqual(n_orders_start + 4, n_orders)
-        n_orders = await self.db_conn.fetchval(
-            "select count(*) from ordr where order_type = $1", OrderType.money_transfer_imbalance.name
-        )
+        n_orders = await get_num_orders(OrderType.money_transfer_imbalance)
         self.assertEqual(1, n_orders)
         # the sum of cash order values at all tills should be 0 as we closed out the tills
         balances = await self.db_conn.fetch(
             "select o.till_id, sum(li.total_price) as till_balance "
             "from line_item li "
             "join ordr o on li.order_id = o.id "
-            "where o.payment_method = 'cash' "
-            "group by o.till_id"
+            "join till t on o.till_id = t.id "
+            "where o.payment_method = 'cash' and t.node_id = any($1) "
+            "group by o.till_id",
+            self.event_node.ids_to_event_node
         )
         self.assertIsNot(0, len(balances))
         for balance in balances:

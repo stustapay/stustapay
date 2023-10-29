@@ -5,8 +5,6 @@ from pydantic import BaseModel
 
 from stustapay.core.schema.user import UserWithoutId
 
-VIRTUAL_TILL_ID = 1
-
 
 class NewTillButton(BaseModel):
     name: str

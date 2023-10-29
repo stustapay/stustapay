@@ -17,7 +17,6 @@ from stustapay.core.schema.customer import (
     SumupCheckoutStatus,
 )
 from stustapay.core.schema.order import OrderType, PaymentMethod
-from stustapay.core.schema.till import VIRTUAL_TILL_ID
 from stustapay.core.schema.tree import RestrictedEventSettings
 from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.account import get_system_account_for_node
@@ -39,6 +38,7 @@ from stustapay.core.service.order.booking import (
     book_order,
 )
 from stustapay.core.service.product import fetch_top_up_product
+from stustapay.core.service.till.common import fetch_virtual_till
 from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
@@ -272,13 +272,14 @@ class SumupService(DBService):
             ): checkout.amount
         }
 
+        virtual_till = await fetch_virtual_till(conn=conn, node=node)
         await book_order(
             conn=conn,
             uuid=checkout.checkout_reference,
             order_type=OrderType.top_up,
             payment_method=PaymentMethod.sumup_online,
             cashier_id=None,
-            till_id=VIRTUAL_TILL_ID,
+            till_id=virtual_till.id,
             customer_account_id=customer_account_id,
             line_items=line_items,
             bookings=bookings,

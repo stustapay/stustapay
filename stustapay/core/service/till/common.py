@@ -29,3 +29,9 @@ async def fetch_till(*, conn: Connection, node: Node, till_id: int) -> Optional[
         till_id,
         node.ids_to_event_node,
     )
+
+
+async def fetch_virtual_till(*, conn: Connection, node: Node) -> Till:
+    return await conn.fetch_one(
+        Till, "select * from till_with_cash_register where is_virtual and node_id = any($1)", node.ids_to_event_node
+    )

@@ -13,7 +13,6 @@ from stustapay.core.service.customer.payout import (
     get_number_of_payouts,
 )
 from stustapay.framework.database import create_db_pool
-
 from . import database
 from .config import Config
 from .service.common.error import InvalidArgument
@@ -37,7 +36,7 @@ async def _export_customer_payouts(
     payout_run_id: Optional[int],
     output_path: Optional[Path],
     max_payout_sum: float,
-):
+) -> int:
     if output_path is None:
         output_path = Path.cwd()
     execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
@@ -59,7 +58,7 @@ async def _export_customer_payouts(
             if number_of_payouts == 0:
                 logging.warning("No customers with bank data found. Nothing to export.")
                 await conn.execute("rollback")
-                return
+                return payout_run_id
 
             max_export_items_per_batch = max_export_items_per_batch or number_of_payouts
             currency_ident = event_node.event.currency_identifier
@@ -102,6 +101,7 @@ async def _export_customer_payouts(
         f"Exported payouts of {number_of_payouts} customers into {max_export_items_per_batch} files named "
         f"{SEPA_PATH.format(payout_run_id, 'x')} and {CSV_PATH.format(payout_run_id)}"
     )
+    return payout_run_id
 
 
 async def export_customer_payouts(
@@ -114,11 +114,14 @@ async def export_customer_payouts(
     max_transactions_per_batch: Optional[int] = None,
     payout_run_id: Optional[int] = None,
     output_path: Optional[Path] = None,
-):
+) -> int:
+    """
+    returns: payout_run_id
+    """
     db_pool = await create_db_pool(config.database)
     try:
         await database.check_revision_version(db_pool)
-        await _export_customer_payouts(
+        return await _export_customer_payouts(
             db_pool=db_pool,
             execution_date=execution_date,
             created_by=created_by,

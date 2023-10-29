@@ -1,4 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+import secrets
+
 from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     ADMIN_ROLE_NAME,
@@ -21,7 +23,7 @@ class UserServiceTest(TerminalTestCase):
         self.admin = await self.user_service.create_user_no_auth(
             node_id=self.node_id,
             new_user=NewUser(
-                login="terminal_admin",
+                login=f"terminal_admin {secrets.token_hex()}",
                 description="",
                 role_names=[ADMIN_ROLE_NAME],
                 user_tag_uid=admin_tag_uid,
