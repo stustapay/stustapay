@@ -113,7 +113,7 @@ class TillLayoutService(DBService):
     async def create_layout(self, *, conn: Connection, node: Node, layout: NewTillLayout) -> TillLayout:
         # TODO: TREE visibility
         till_layout_id = await conn.fetchval(
-            "insert into till_layout (node_id, name, description) " "values ($1, $2, $3) returning id",
+            "insert into till_layout (node_id, name, description) values ($1, $2, $3) returning id",
             node.id,
             layout.name,
             layout.description,

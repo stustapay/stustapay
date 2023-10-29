@@ -15,7 +15,7 @@ class TicketServiceTest(BaseTestCase):
         )
 
     async def test_basic_ticket_workflow(self):
-        cashier, cashier_role, cashier_token = await self.create_chashier()
+        _, _, cashier_token = await self.create_cashier()
         ticket = await self.ticket_service.create_ticket(
             token=self.admin_token,
             ticket=NewTicket(

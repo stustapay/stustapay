@@ -3,11 +3,13 @@ import copy
 import csv
 import datetime
 import os
+import tempfile
 import typing
 import unittest
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from io import StringIO
+from pathlib import Path
 
 from dateutil.parser import parse
 
@@ -117,15 +119,9 @@ class CustomerServiceTest(TerminalTestCase):
         return order, bon_path, test_customer
 
     async def _create_test_customer(self) -> TestCustomer:
-        uid = 1234
         pin = "pin"
         balance = 120
-        await self.db_conn.execute(
-            "insert into user_tag (node_id, uid, pin) values ($1, $2, $3)",
-            self.node_id,
-            uid,
-            pin,
-        )
+        uid = await self.create_random_user_tag(pin=pin)
 
         account_id = await self.db_conn.fetchval(
             "insert into account (node_id, user_tag_uid, balance, type) values ($1, $2, $3, $4) returning id",
@@ -135,10 +131,14 @@ class CustomerServiceTest(TerminalTestCase):
             "private",
         )
 
-        return TestCustomer(account_id=account_id, pin="pin", uid=1234, balance=120)
+        return TestCustomer(account_id=account_id, pin=pin, uid=uid, balance=120)
 
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
+
+        # create tmp folder for tests which handle files
+        self.tmp_dir_obj = tempfile.TemporaryDirectory()
+        self.tmp_dir = Path(self.tmp_dir_obj.name)
 
         self.customer_service = CustomerService(
             db_pool=self.db_pool,
@@ -186,14 +186,14 @@ class CustomerServiceTest(TerminalTestCase):
 
         self.sepa_config = self.event.sepa_config
 
+    async def asyncTearDown(self) -> None:
+        await super().asyncTearDown()
+        # delete tmp folder for tests which handle files with all its content
+        self.tmp_dir_obj.cleanup()
+
     async def _add_customers(self, data: list[dict]) -> None:
         for idx, customer in enumerate(data):
-            await self.db_conn.execute(
-                "insert into user_tag (node_id, uid, pin) values ($1, $2, $3)",
-                self.node_id,
-                customer["uid"],
-                customer["pin"],
-            )
+            await self.create_random_user_tag(pin=customer["pin"])
 
             await self.db_conn.execute(
                 "insert into account (id, node_id, user_tag_uid, balance, type) "

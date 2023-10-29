@@ -4,10 +4,10 @@ import logging
 import os
 import random
 import secrets
-import tempfile
 from pathlib import Path
 from unittest import IsolatedAsyncioTestCase as TestCase
 
+import asyncpg
 from asyncpg.pool import Pool
 
 from stustapay.core import database
@@ -21,7 +21,7 @@ from stustapay.core.config import (
     TerminalApiConfig,
 )
 from stustapay.core.schema.account import AccountType
-from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.product import NewProduct, ProductRestriction
 from stustapay.core.schema.tax_rate import NewTaxRate
 from stustapay.core.schema.till import (
     NewCashRegister,
@@ -31,16 +31,16 @@ from stustapay.core.schema.till import (
     NewTillLayout,
     NewTillProfile,
 )
-from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, ALL_OBJECT_TYPES
+from stustapay.core.schema.tree import ALL_OBJECT_TYPES, ROOT_NODE_ID, NewEvent
 from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     ADMIN_ROLE_NAME,
     NewUser,
-    UserTag,
-    User,
     NewUserRole,
     Privilege,
+    User,
     UserRole,
+    UserTag,
 )
 from stustapay.core.service.account import AccountService, get_system_account_for_node
 from stustapay.core.service.auth import AuthService
@@ -107,21 +107,26 @@ class BaseTestCase(TestCase):
         super().__init__(*args, **kwargs)
         logging.basicConfig(level=log_level)
 
-    async def create_random_user_tag(self) -> int:
+    async def create_random_user_tag(
+        self, *, pin: str | None = None, restriction: ProductRestriction | None = None
+    ) -> int:
         while True:
             uid = random.randint(1, 2**32 - 1)
             try:
                 user_tag_uid = await self.db_conn.fetchval(
-                    "insert into user_tag (node_id, uid, secret_id) values ($1, $2, $3) returning uid",
+                    "insert into user_tag (node_id, uid, secret_id, restriction, pin) values ($1, $2, $3, $4, $5) "
+                    "returning uid",
                     self.node_id,
                     uid,
                     self.user_tag_secret_id,
+                    restriction.name if restriction is not None else None,
+                    pin,
                 )
                 return user_tag_uid
-            except:
+            except asyncpg.DataError:
                 pass
 
-    async def create_chashier(self) -> tuple[User, UserRole, str]:
+    async def create_cashier(self) -> tuple[User, UserRole, str]:
         cashier_role: UserRole = await self.user_service.create_user_role(
             token=self.admin_token,
             node_id=self.node_id,
@@ -227,7 +232,7 @@ class BaseTestCase(TestCase):
             self.node_id,
         )
 
-        self.test_config = Config.model_validate(TEST_CONFIG)
+        self.test_config = TEST_CONFIG
 
         self.auth_service = AuthService(db_pool=self.db_pool, config=self.test_config)
         self.user_service = UserService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
@@ -251,9 +256,7 @@ class BaseTestCase(TestCase):
             auth_service=self.auth_service,
         )
 
-        self.admin_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 13131313) returning uid", self.node_id
-        )
+        self.admin_tag_uid = await self.create_random_user_tag()
         self.admin_user = await self.user_service.create_user_no_auth(
             node_id=self.node_id,
             new_user=NewUser(
@@ -274,10 +277,6 @@ class BaseTestCase(TestCase):
             token=self.admin_token, node_id=self.node_id, tax_rate=NewTaxRate(name="ust", description="", rate=0.19)
         )
 
-        # create tmp folder for tests which handle files
-        self.tmp_dir_obj = tempfile.TemporaryDirectory()
-        self.tmp_dir = Path(self.tmp_dir_obj.name)
-
     async def _get_account_balance(self, account_id: int) -> float:
         account = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
         self.assertIsNotNone(account)
@@ -296,13 +295,11 @@ class BaseTestCase(TestCase):
         self.assertEqual(expected_balance, balance)
 
     async def asyncTearDown(self) -> None:
+        await super().asyncTearDown()
         await self.db_conn.close()
         await self.db_pool.close()
 
         testing_lock.release()
-
-        # delete tmp folder for tests which handle files with all its content
-        self.tmp_dir_obj.cleanup()
 
 
 class TerminalTestCase(BaseTestCase):
@@ -328,11 +325,7 @@ class TerminalTestCase(BaseTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
 
-        self.customer_tag_uid = int(
-            await self.db_conn.fetchval(
-                "insert into user_tag (node_id, uid) values ($1, $2) returning uid", self.node_id, 12345676
-            )
-        )
+        self.customer_tag_uid = await self.create_random_user_tag()
         await self.db_conn.execute(
             "insert into account (node_id, user_tag_uid, type, balance) values ($1, $2, $3, 100)",
             self.node_id,
@@ -396,7 +389,7 @@ class TerminalTestCase(BaseTestCase):
             token=self.admin_token,
             stocking=NewCashRegisterStocking(name="My fancy stocking"),
         )
-        self.cashier, self.cashier_role, self.cashier_token = await self.create_chashier()
+        self.cashier, self.cashier_role, self.cashier_token = await self.create_cashier()
         assert self.cashier.user_tag_uid is not None
         await self.till_service.register.stock_up_cash_register(
             token=self.terminal_token,

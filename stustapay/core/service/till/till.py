@@ -222,7 +222,7 @@ class TillService(DBService):
 
         returns the newly logged-in User if successful
         """
-        available_roles = await self.check_user_login(  # pylint: disable=missing-kwoa
+        available_roles = await self.check_user_login(  # pylint: disable=missing-kwoa,unexpected-keyword-arg
             conn=conn, current_terminal=current_terminal, user_tag=user_tag
         )
         if not any(x.id == user_role_id for x in available_roles):

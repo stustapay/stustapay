@@ -23,7 +23,7 @@ from stustapay.core.schema.tree import (
     ObjectType,
 )
 from stustapay.core.schema.tse import NewTse, TseType
-from stustapay.core.schema.user import NewUser, NewUserRole, UserRole, Privilege
+from stustapay.core.schema.user import NewUser, NewUserRole, Privilege, UserRole
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.product import ProductService

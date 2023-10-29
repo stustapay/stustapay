@@ -73,6 +73,7 @@ from stustapay.core.service.till.common import fetch_till
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from stustapay.framework.database import Connection
+
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService

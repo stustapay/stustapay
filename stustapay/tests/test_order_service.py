@@ -24,10 +24,7 @@ from stustapay.core.schema.till import (
     NewTillLayout,
     NewTillProfile,
 )
-from stustapay.core.schema.user import (
-    ADMIN_ROLE_ID,
-    UserTag,
-)
+from stustapay.core.schema.user import ADMIN_ROLE_ID, UserTag
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.order import NotEnoughVouchersException, OrderService
@@ -39,6 +36,7 @@ from stustapay.core.service.order.order import (
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
+
 from .common import TerminalTestCase
 
 START_BALANCE = 100
@@ -617,9 +615,7 @@ class OrderLogicTest(TerminalTestCase):
         cash_entry_start_balance = await self._get_system_account_balance(account_type=AccountType.cash_entry)
         sale_exit_start_balance = await self._get_system_account_balance(account_type=AccountType.cash_exit)
 
-        unused_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 12345) returning uid", self.node_id
-        )
+        unused_tag_uid = await self.create_random_user_tag()
 
         new_scan = NewTicketScan(customer_tag_uids=[unused_tag_uid])
         scan_result = await self.order_service.check_ticket_scan(token=self.terminal_token, new_ticket_scan=new_scan)
@@ -661,9 +657,7 @@ class OrderLogicTest(TerminalTestCase):
     async def test_ticket_flow_with_initial_topup_sumup(self):
         sumup_start_balance = await self._get_system_account_balance(account_type=AccountType.sumup_entry)
         sale_exit_start_balance = await self._get_system_account_balance(account_type=AccountType.sale_exit)
-        unused_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 12345) returning uid", self.node_id
-        )
+        unused_tag_uid = await self.create_random_user_tag()
 
         new_scan = NewTicketScan(customer_tag_uids=[unused_tag_uid])
         scan_result = await self.order_service.check_ticket_scan(token=self.terminal_token, new_ticket_scan=new_scan)
@@ -701,20 +695,10 @@ class OrderLogicTest(TerminalTestCase):
         cash_entry_start_balance = await self._get_system_account_balance(account_type=AccountType.cash_entry)
         sale_exit_start_balance = await self._get_system_account_balance(account_type=AccountType.sale_exit)
 
-        tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 12345) returning uid", self.node_id
-        )
-        tag2_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 12346) returning uid", self.node_id
-        )
-        u18_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid, restriction) values ($1, 12347, 'under_18') returning uid",
-            self.node_id,
-        )
-        u16_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid, restriction) values ($1, 12348, 'under_16') returning uid",
-            self.node_id,
-        )
+        tag_uid = await self.create_random_user_tag()
+        tag2_uid = await self.create_random_user_tag()
+        u18_tag_uid = await self.create_random_user_tag(restriction=ProductRestriction.under_18)
+        u16_tag_uid = await self.create_random_user_tag(restriction=ProductRestriction.under_16)
 
         new_ticket = NewTicketSale(
             uuid=uuid.uuid4(),

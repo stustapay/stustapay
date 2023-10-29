@@ -1,7 +1,13 @@
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.tree import NewEvent, NewNode, Node, ObjectType, RestrictedEventSettings
+from stustapay.core.schema.tree import (
+    NewEvent,
+    NewNode,
+    Node,
+    ObjectType,
+    RestrictedEventSettings,
+)
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -13,8 +19,8 @@ from stustapay.core.service.common.decorators import (
 from stustapay.core.service.common.error import NotFound
 from stustapay.core.service.tree.common import (
     fetch_node,
-    get_tree_for_current_user,
     fetch_restricted_event_settings_for_node,
+    get_tree_for_current_user,
 )
 from stustapay.framework.database import Connection
 

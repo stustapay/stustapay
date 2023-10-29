@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTreeService
-from stustapay.core.schema.tree import Node, UpdateEvent, RestrictedEventSettings
+from stustapay.core.schema.tree import Node, RestrictedEventSettings, UpdateEvent
 
 router = APIRouter(
     prefix="/tree",

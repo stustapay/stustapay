@@ -3,9 +3,9 @@ from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     ADMIN_ROLE_NAME,
     NewUser,
-    UserTag,
     NewUserRole,
     UserRole,
+    UserTag,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.tests.common import TerminalTestCase

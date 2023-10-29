@@ -15,7 +15,7 @@ class TaxRateServiceTest(BaseTestCase):
         )
 
     async def test_basic_tax_rate_workflow(self):
-        cashier, cashier_role, cashier_token = await self.create_chashier()
+        _, _, cashier_token = await self.create_cashier()
         tax_rates = await self.tax_rate_service.list_tax_rates(token=self.admin_token)
         start_num_tax_rates = len(tax_rates)
 
