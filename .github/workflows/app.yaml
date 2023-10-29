@@ -1,0 +1,59 @@
+name: App
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    paths:
+    - "app/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: get java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: build with gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: assemble
+          build-root-directory: app/
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app debug build
+          # release variant: ./app/app/build/outputs/apk/release/app-release-unsigned.apk
+          path: ./app/app/build/outputs/apk/debug/app-debug.apk
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: get java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: test with gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test
+          build-root-directory: app/
+
+      - name: lint with gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: lint
+          build-root-directory: app/
+
+      - name: Upload lint report
+        uses: actions/upload-artifact@v3
+        with:
+          name: app lint-report
+          path: ./app/app/build/reports/lint-results-debug.html
