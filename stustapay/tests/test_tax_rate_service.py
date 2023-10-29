@@ -15,6 +15,7 @@ class TaxRateServiceTest(BaseTestCase):
         )
 
     async def test_basic_tax_rate_workflow(self):
+        _, _, cashier_token = await self.create_cashier()
         tax_rates = await self.tax_rate_service.list_tax_rates(token=self.admin_token)
         start_num_tax_rates = len(tax_rates)
 
@@ -25,7 +26,7 @@ class TaxRateServiceTest(BaseTestCase):
 
         with self.assertRaises(AccessDenied):
             await self.tax_rate_service.create_tax_rate(
-                token=self.cashier_token, tax_rate=NewTaxRate(name="Krasse UST", rate=0.5, description="Krasse UST")
+                token=cashier_token, tax_rate=NewTaxRate(name="Krasse UST", rate=0.5, description="Krasse UST")
             )
 
         updated_tax_rate = await self.tax_rate_service.update_tax_rate(
@@ -41,7 +42,7 @@ class TaxRateServiceTest(BaseTestCase):
         self.assertTrue(updated_tax_rate in tax_rates)
 
         with self.assertRaises(AccessDenied):
-            await self.tax_rate_service.delete_tax_rate(token=self.cashier_token, tax_rate_id=tax_rate.id)
+            await self.tax_rate_service.delete_tax_rate(token=cashier_token, tax_rate_id=tax_rate.id)
 
         deleted = await self.tax_rate_service.delete_tax_rate(token=self.admin_token, tax_rate_id=tax_rate.id)
         self.assertTrue(deleted)

@@ -7,7 +7,7 @@ import {
   TillRoutes,
   TillStockingsRoutes,
 } from "@/app/routes";
-import { PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
+import { Folder as FolderIcon, Gamepad as GamepadIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
@@ -62,18 +62,24 @@ export const TillPageLayout: React.FC = () => {
         <Tab
           label={t("profile.profiles")}
           component={RouterLink}
+          icon={<FolderIcon />}
+          iconPosition="start"
           value={TillProfileRoutes.list()}
           to={TillProfileRoutes.list()}
         />
         <Tab
           label={t("layout.layouts")}
           component={RouterLink}
+          icon={<FolderIcon />}
+          iconPosition="start"
           value={TillLayoutRoutes.list()}
           to={TillLayoutRoutes.list()}
         />
         <Tab
           label={t("button.buttons")}
           component={RouterLink}
+          icon={<GamepadIcon />}
+          iconPosition="start"
           value={TillButtonsRoutes.list()}
           to={TillButtonsRoutes.list()}
         />

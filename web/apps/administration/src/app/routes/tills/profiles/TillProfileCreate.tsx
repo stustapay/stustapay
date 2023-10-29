@@ -1,8 +1,8 @@
-import { useCreateTillProfileMutation } from "@/api";
+import { NewTillProfile, useCreateTillProfileMutation } from "@/api";
 import { TillProfileRoutes } from "@/app/routes";
 import { CreateLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { NewTillProfile, NewTillProfileSchema } from "@stustapay/models";
+import { NewTillProfileSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { TillProfileForm } from "./TillProfileForm";
@@ -14,7 +14,6 @@ const initialValues: NewTillProfile = {
   allow_cash_out: false,
   allow_top_up: false,
   allow_ticket_sale: false,
-  allowed_role_names: [],
 };
 
 export const TillProfileCreate: React.FC = () => {

@@ -32,8 +32,9 @@ alter table till add constraint user_requires_role
 alter table till add constraint registration_or_session_uuid_null
     check ((registration_uuid is null) != (session_uuid is null));
 
+-- TODO: constraint that we can have only one virtual till per event
 alter table till add constraint virtual_till_cannot_be_registered
-    check ((id = 1 and session_uuid is null) or id != 1);
+    check ((is_virtual and session_uuid is null) or not is_virtual);
 
 alter table ordr add constraint only_cancel_orders_can_reference_orders
     check ((order_type != 'cancel_sale') = (cancels_order is null));

@@ -1,5 +1,5 @@
 import { NewTillProfile } from "@/api";
-import { RoleSelect, TillLayoutSelect } from "@/components/features";
+import { TillLayoutSelect } from "@/components/features";
 import { Checkbox, FormControlLabel, FormGroup } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
@@ -35,14 +35,6 @@ export function TillProfileForm<T extends NewTillProfile>(props: TillProfileForm
           label={t("profile.allowTicketSale")}
         />
       </FormGroup>
-
-      <RoleSelect
-        label={t("profile.allowedUserRoles")}
-        error={touched.allowed_role_names && !!errors.allowed_role_names}
-        helperText={(touched.allowed_role_names && errors.allowed_role_names) as string}
-        onChange={(value) => setFieldValue("allowed_role_names", value)}
-        value={values.allowed_role_names}
-      />
 
       <TillLayoutSelect
         name="layout"

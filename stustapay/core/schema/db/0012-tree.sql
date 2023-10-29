@@ -281,6 +281,53 @@ alter table line_item alter column tax_rate_id set not null;
 alter table tax_rate drop constraint tax_pkey;
 alter table tax_rate add constraint tax_rate_pkey primary key (id);
 
+-- we cannot drop this yet as it would break login in admin
+-- alter table usr drop constraint usr_login_key;
+alter table till_button drop constraint till_button_name_key;
+alter table till_layout drop constraint till_layout_name_key;
+alter table till_profile drop constraint till_profile_name_key;
+alter table till drop constraint till_name_key;
+alter table cash_register_stocking drop constraint cash_register_stocking_name_unique;
+alter table cash_register drop constraint cash_register_name_unique;
+
+alter table till add column is_virtual bool default false;
+update till set is_virtual = true where id = 1;  -- set is_virtual flag for initial hard coded virtual till
+
+drop table allowed_user_roles_for_till_profile;
+
+insert into privilege (name) values ('node_administration'), ('cash_transport');
+
+insert into user_role_to_privilege (role_id, privilege)
+values
+    (0, 'node_administration'),  -- admin role
+    (1, 'node_administration'),  -- finanzorga role
+    (1, 'cash_transport');  -- finanzorga role
+
+delete from user_role_to_privilege where
+    privilege = 'account_management' or
+    privilege = 'cashier_management' or
+    privilege = 'config_management' or
+    privilege = 'product_management' or
+    privilege = 'tax_rate_management' or
+    privilege = 'till_management' or
+    privilege = 'order_management' or
+    privilege = 'festival_overview';
+
+delete from privilege
+where
+    name = 'account_management' or
+    name = 'cashier_management' or
+    name = 'config_management' or
+    name = 'product_management' or
+    name = 'tax_rate_management' or
+    name = 'till_management' or
+    name = 'order_management' or
+    name = 'festival_overview';
+
+alter table user_role drop constraint user_role_name_key;
+-- TODO: make user role name unique in tree
+update user_role set node_id = 0 where name = 'admin';
+
 create table product_type (
     name varchar(255) not null primary key
 );

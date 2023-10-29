@@ -5,13 +5,6 @@ from pydantic import BaseModel, computed_field
 
 ADMIN_ROLE_ID = 0
 ADMIN_ROLE_NAME = "admin"
-FINANZORGA_ROLE_ID = 1
-FINANZORGA_ROLE_NAME = "finanzorga"
-CASHIER_ROLE_ID = 2
-CASHIER_ROLE_NAME = "cashier"
-STANDLEITER_ROLE_ID = 3
-INFOZELT_ROLE_ID = 4
-INFOZELT_ROLE_NAME = "infozelt helfer"
 
 
 def format_user_tag_uid(uid: Optional[int]) -> Optional[str]:
@@ -27,18 +20,11 @@ class UserTag(BaseModel):
 
 class Privilege(enum.Enum):
     # general management privileges
-    account_management = "account_management"
-    cashier_management = "cashier_management"
-    config_management = "config_management"
-    product_management = "product_management"
-    tax_rate_management = "tax_rate_management"
+    node_administration = "node_administration"
     user_management = "user_management"
-    till_management = "till_management"
-    order_management = "order_management"
-    festival_overview = "festival_overview"
-    tse_management = "tse_management"
 
     # festival workflow privileges
+    cash_transport = "cash_transport"
     terminal_login = "terminal_login"
     supervised_terminal_login = "supervised_terminal_login"
 

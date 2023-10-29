@@ -5,8 +5,6 @@ from pydantic import BaseModel
 
 from stustapay.core.schema.user import UserWithoutId
 
-VIRTUAL_TILL_ID = 1
-
 
 class NewTillButton(BaseModel):
     name: str
@@ -38,7 +36,6 @@ class NewTillProfile(BaseModel):
     allow_top_up: bool
     allow_cash_out: bool
     allow_ticket_sale: bool
-    allowed_role_names: list[str]
 
 
 class TillProfile(NewTillProfile):

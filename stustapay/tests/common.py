@@ -1,11 +1,13 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
-import asyncio
 import logging
 import os
-import tempfile
+import random
+import secrets
+import threading
 from pathlib import Path
 from unittest import IsolatedAsyncioTestCase as TestCase
 
+import asyncpg
 from asyncpg.pool import Pool
 
 from stustapay.core import database
@@ -19,7 +21,7 @@ from stustapay.core.config import (
     TerminalApiConfig,
 )
 from stustapay.core.schema.account import AccountType
-from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.product import NewProduct, ProductRestriction
 from stustapay.core.schema.tax_rate import NewTaxRate
 from stustapay.core.schema.till import (
     NewCashRegister,
@@ -29,13 +31,15 @@ from stustapay.core.schema.till import (
     NewTillLayout,
     NewTillProfile,
 )
+from stustapay.core.schema.tree import ALL_OBJECT_TYPES, ROOT_NODE_ID, NewEvent
 from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     ADMIN_ROLE_NAME,
-    CASHIER_ROLE_ID,
-    CASHIER_ROLE_NAME,
-    FINANZORGA_ROLE_NAME,
     NewUser,
+    NewUserRole,
+    Privilege,
+    User,
+    UserRole,
     UserTag,
 )
 from stustapay.core.service.account import AccountService, get_system_account_for_node
@@ -44,7 +48,7 @@ from stustapay.core.service.config import ConfigService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
 from stustapay.core.service.till import TillService
-from stustapay.core.service.tree.common import fetch_event_node_for_node
+from stustapay.core.service.tree.service import create_event
 from stustapay.core.service.user import UserService
 from stustapay.core.service.user_tag import UserTagService
 from stustapay.framework.database import Connection, create_db_pool
@@ -76,28 +80,39 @@ TEST_CONFIG = Config(
     customer_portal=CustomerPortalApiConfig(
         base_url="http://localhost:8082",
         base_bon_url="https://bon.stustapay.de/{bon_output_file}",
-        data_privacy_url="https://stustapay.de/datenschutz",
-        about_page_url="https://stustapay.de/impressum",
     ),
     bon=BonConfig(output_folder=Path("tmp")),
     database=get_test_db_config(),
 )
 
 
+test_database_lock = threading.Lock()
+schema_is_applied = False
+
+
 async def get_test_db() -> Pool:
     """
     get a connection pool to the test database
     """
-    cfg = get_test_db_config()
-    pool = await create_db_pool(cfg=cfg)
+    global schema_is_applied  # pylint: disable=global-statement
+    with test_database_lock:
+        pool = await create_db_pool(cfg=TEST_CONFIG.database, n_connections=2)
 
-    await database.reset_schema(pool)
-    await database.apply_revisions(pool)
+        if not schema_is_applied:
+            await database.reset_schema(pool)
+            await database.apply_revisions(pool)
+            schema_is_applied = True
 
-    return pool
+        return pool
 
 
-testing_lock = asyncio.Lock()
+class Cashier(User):
+    cashier_account_id: int
+    user_tag_uid: int
+
+
+class Finanzorga(Cashier):
+    transport_account_id: int
 
 
 class BaseTestCase(TestCase):
@@ -105,26 +120,132 @@ class BaseTestCase(TestCase):
         super().__init__(*args, **kwargs)
         logging.basicConfig(level=log_level)
 
+    async def create_random_user_tag(
+        self, *, pin: str | None = None, restriction: ProductRestriction | None = None
+    ) -> int:
+        while True:
+            uid = random.randint(1, 2**32 - 1)
+            try:
+                user_tag_uid = await self.db_conn.fetchval(
+                    "insert into user_tag (node_id, uid, secret_id, restriction, pin) values ($1, $2, $3, $4, $5) "
+                    "returning uid",
+                    self.node_id,
+                    uid,
+                    self.user_tag_secret_id,
+                    restriction.name if restriction is not None else None,
+                    pin,
+                )
+                return int(user_tag_uid)
+            except asyncpg.DataError:
+                pass
+
+    async def create_cashier(self) -> tuple[Cashier, UserRole, str]:
+        cashier_role: UserRole = await self.user_service.create_user_role(
+            token=self.admin_token,
+            node_id=self.node_id,
+            new_role=NewUserRole(
+                name="cashier",
+                is_privileged=False,
+                privileges=[Privilege.can_book_orders, Privilege.supervised_terminal_login],
+            ),
+        )
+        cashier_tag_uid = await self.create_random_user_tag()
+        cashier_user: User = await self.user_service.create_user_no_auth(
+            node_id=self.node_id,
+            new_user=NewUser(
+                login=f"test-cashier-user-{secrets.token_hex(16)}",
+                user_tag_uid=cashier_tag_uid,
+                description="",
+                role_names=[cashier_role.name],
+                display_name="Cashier",
+            ),
+            password="rolf",
+        )
+        cashier = Cashier.model_validate(cashier_user.model_dump())
+        cashier_token = (await self.user_service.login_user(username=cashier.login, password="rolf")).token
+
+        return cashier, cashier_role, cashier_token
+
+    async def create_finanzorga(self, cashier_role_name: str | None = None) -> tuple[Finanzorga, UserRole]:
+        finanzorga_tag_uid = await self.create_random_user_tag()
+        finanzorga_role = await self.user_service.create_user_role(
+            token=self.admin_token,
+            node_id=self.node_id,
+            new_role=NewUserRole(
+                name="finanzorga",
+                is_privileged=True,
+                privileges=[
+                    Privilege.node_administration,
+                    Privilege.terminal_login,
+                    Privilege.user_management,
+                    Privilege.grant_free_tickets,
+                    Privilege.grant_vouchers,
+                    Privilege.cash_transport,
+                ],
+            ),
+        )
+        finanzorga_user: User = await self.user_service.create_user_no_auth(
+            node_id=self.node_id,
+            new_user=NewUser(
+                login=f"Finanzorga {secrets.token_hex(16)}",
+                description="",
+                role_names=[finanzorga_role.name, cashier_role_name]
+                if cashier_role_name is not None
+                else [finanzorga_role.name],
+                user_tag_uid=finanzorga_tag_uid,
+                display_name="Finanzorga",
+            ),
+        )
+        finanzorga = Finanzorga.model_validate(finanzorga_user.model_dump())
+        return finanzorga, finanzorga_role
+
     async def asyncSetUp(self) -> None:
-        await testing_lock.acquire()
         self.db_pool = await get_test_db()
         self.db_conn: Connection = await self.db_pool.acquire()
 
-        self.node_id = 1
-        event_node = await fetch_event_node_for_node(conn=self.db_conn, node_id=self.node_id)
-        assert event_node is not None
-        assert event_node.event is not None
-        self.node = event_node
-        self.event = event_node.event
+        self.event_node = await create_event(
+            conn=self.db_conn,
+            parent_id=ROOT_NODE_ID,
+            event=NewEvent(
+                name=secrets.token_hex(16),
+                description="",
+                customer_portal_url="http://localhost:4300",
+                customer_portal_contact_email="test@test.support.test.com",
+                customer_portal_about_page_url="",
+                customer_portal_data_privacy_url="",
+                currency_identifier="EUR",
+                sepa_enabled=True,
+                sepa_sender_name="Event Foobar",
+                sepa_description="foobar {user_tag_uid}",
+                sepa_sender_iban="DE89370400440532013000",
+                sepa_allowed_country_codes=["DE"],
+                allowed_objects_at_node=ALL_OBJECT_TYPES,
+                allowed_objects_in_subtree=ALL_OBJECT_TYPES,
+                bon_title="",
+                bon_issuer="",
+                bon_address="",
+                max_account_balance=150,
+                sumup_topup_enabled=False,
+                sumup_payment_enabled=False,
+                sumup_affiliate_key="",
+                sumup_api_key="",
+                sumup_merchant_code="",
+                ust_id="",
+            ),
+        )
+        self.node_id = self.event_node.id
+        self.node = self.event_node
+        assert self.event_node.event is not None
+        self.event = self.event_node.event
 
-        await self.db_conn.execute(
-            "insert into user_tag_secret (node_id, id, key0, key1) overriding system value values "
-            "($1, 0, decode('000102030405060708090a0b0c0d0e0f', 'hex'), decode('000102030405060708090a0b0c0d0e0f', 'hex')) "
-            "on conflict do nothing",
+        self.user_tag_secret_id = await self.db_conn.fetchval(
+            "insert into user_tag_secret (node_id, key0, key1) overriding system value values "
+            "($1, decode('000102030405060708090a0b0c0d0e0f', 'hex'), decode('000102030405060708090a0b0c0d0e0f', 'hex')) "
+            "returning id",
             self.node_id,
         )
 
-        self.test_config = Config.model_validate(TEST_CONFIG)
+        self.test_config = TEST_CONFIG
 
         self.auth_service = AuthService(db_pool=self.db_pool, config=self.test_config)
         self.user_service = UserService(db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service)
@@ -148,13 +269,11 @@ class BaseTestCase(TestCase):
             auth_service=self.auth_service,
         )
 
-        self.admin_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 13131313) returning uid", self.node_id
-        )
+        self.admin_tag_uid = await self.create_random_user_tag()
         self.admin_user = await self.user_service.create_user_no_auth(
             node_id=self.node_id,
             new_user=NewUser(
-                login="test-admin-user",
+                login=f"test-admin-user {secrets.token_hex(16)}",
                 description="",
                 role_names=[ADMIN_ROLE_NAME],
                 display_name="Admin",
@@ -165,47 +284,11 @@ class BaseTestCase(TestCase):
         self.admin_token = (await self.user_service.login_user(username=self.admin_user.login, password="rolf")).token
         # TODO: tree, this has to be replaced as soon as we have proper tree visibility rules
         self.global_admin_token = self.admin_token
-        self.finanzorga_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 1313131313) returning uid", self.node_id
-        )
-        self.finanzorga_user = await self.user_service.create_user_no_auth(
-            node_id=self.node_id,
-            new_user=NewUser(
-                login="test-finanzorga-user",
-                description="",
-                role_names=[FINANZORGA_ROLE_NAME],
-                display_name="Finanzorga",
-                user_tag_uid=self.finanzorga_tag_uid,
-            ),
-            password="rolf",
-        )
-        self.cashier_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 54321) returning uid", self.node_id
-        )
-        self.cashier = await self.user_service.create_user_no_auth(
-            node_id=self.node_id,
-            new_user=NewUser(
-                login="test-cashier-user",
-                user_tag_uid=self.cashier_tag_uid,
-                description="",
-                role_names=[],
-                display_name="Cashier",
-            ),
-            password="rolf",
-        )
-        await self.user_service.promote_to_cashier(token=self.admin_token, user_id=self.cashier.id)
-        self.cashier = await self.user_service.get_user(token=self.admin_token, user_id=self.cashier.id)
 
-        self.cashier_token = (await self.user_service.login_user(username=self.cashier.login, password="rolf")).token
-
-        self.tax_rate_none = await fetch_tax_rate_none(conn=self.db_conn, node=event_node)
+        self.tax_rate_none = await fetch_tax_rate_none(conn=self.db_conn, node=self.event_node)
         self.tax_rate_ust = await self.tax_rate_service.create_tax_rate(
             token=self.admin_token, node_id=self.node_id, tax_rate=NewTaxRate(name="ust", description="", rate=0.19)
         )
-
-        # create tmp folder for tests which handle files
-        self.tmp_dir_obj = tempfile.TemporaryDirectory()
-        self.tmp_dir = Path(self.tmp_dir_obj.name)
 
     async def _get_account_balance(self, account_id: int) -> float:
         account = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
@@ -225,13 +308,9 @@ class BaseTestCase(TestCase):
         self.assertEqual(expected_balance, balance)
 
     async def asyncTearDown(self) -> None:
+        await super().asyncTearDown()
         await self.db_conn.close()
         await self.db_pool.close()
-
-        testing_lock.release()
-
-        # delete tmp folder for tests which handle files with all its content
-        self.tmp_dir_obj.cleanup()
 
 
 class TerminalTestCase(BaseTestCase):
@@ -257,11 +336,7 @@ class TerminalTestCase(BaseTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
 
-        self.customer_tag_uid = int(
-            await self.db_conn.fetchval(
-                "insert into user_tag (node_id, uid) values ($1, $2) returning uid", self.node_id, 12345676
-            )
-        )
+        self.customer_tag_uid = await self.create_random_user_tag()
         await self.db_conn.execute(
             "insert into account (node_id, user_tag_uid, type, balance) values ($1, $2, $3, 100)",
             self.node_id,
@@ -303,7 +378,6 @@ class TerminalTestCase(BaseTestCase):
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
-                allowed_role_names=[ADMIN_ROLE_NAME, FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
             ),
         )
         self.till = await self.till_service.create_till(
@@ -326,11 +400,12 @@ class TerminalTestCase(BaseTestCase):
             token=self.admin_token,
             stocking=NewCashRegisterStocking(name="My fancy stocking"),
         )
+        self.cashier, self.cashier_role, self.cashier_token = await self.create_cashier()
         await self.till_service.register.stock_up_cash_register(
             token=self.terminal_token,
-            cashier_tag_uid=self.cashier_tag_uid,
+            cashier_tag_uid=self.cashier.user_tag_uid,
             stocking_id=self.stocking.id,
             cash_register_id=self.register.id,
         )
         # log in the cashier user
-        await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=CASHIER_ROLE_ID)
+        await self._login_supervised_user(user_tag_uid=self.cashier.user_tag_uid, user_role_id=self.cashier_role.id)

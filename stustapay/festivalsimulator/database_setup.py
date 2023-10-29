@@ -2,6 +2,8 @@
 import logging
 from typing import Optional
 
+import asyncpg
+
 from stustapay.core.config import Config
 from stustapay.core.database import apply_revisions, reset_schema
 from stustapay.core.schema.product import NewProduct, ProductRestriction
@@ -23,7 +25,7 @@ from stustapay.core.schema.tree import (
     ObjectType,
 )
 from stustapay.core.schema.tse import NewTse, TseType
-from stustapay.core.schema.user import CASHIER_ROLE_NAME, NewUser
+from stustapay.core.schema.user import NewUser, NewUserRole, Privilege, UserRole
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.product import ProductService
@@ -233,7 +235,6 @@ async def _create_beverage_tills(
         profile=NewTillProfile(
             name="Bierkasse",
             description="",
-            allowed_role_names=["admin", "finanzorga", "cashier"],
             allow_top_up=False,
             allow_cash_out=False,
             allow_ticket_sale=False,
@@ -273,7 +274,6 @@ async def _create_beverage_tills(
         profile=NewTillProfile(
             name="Cocktailkasse",
             description="",
-            allowed_role_names=["admin", "finanzorga", "cashier"],
             allow_top_up=False,
             allow_cash_out=False,
             allow_ticket_sale=False,
@@ -331,7 +331,6 @@ async def _create_ticket_tills(
         profile=NewTillProfile(
             name="Eintrittskasse",
             description="",
-            allowed_role_names=["admin", "finanzorga", "cashier"],
             allow_top_up=False,
             allow_cash_out=False,
             allow_ticket_sale=True,
@@ -370,7 +369,6 @@ async def _create_topup_tills(
         profile=NewTillProfile(
             name="Aufladekasse",
             description="",
-            allowed_role_names=["admin", "finanzorga", "cashier"],
             allow_top_up=True,
             allow_cash_out=True,
             allow_ticket_sale=False,
@@ -407,7 +405,7 @@ class DatabaseSetup:
 
         self.event_node_id: int = None  # type: ignore # initialized at the start of run()
 
-        self.db_pool = None
+        self.db_pool: asyncpg.Pool | None = None
 
     async def _create_tills(self, conn: Connection, admin_token: str, n_tills: int, tax_rate_ust: TaxRate):
         assert self.db_pool is not None
@@ -454,8 +452,18 @@ class DatabaseSetup:
             stocking=NewCashRegisterStocking(name="Stocking", euro20=2, euro10=1),
         )
 
-    async def _create_cashiers(self, conn: Connection, user_service: UserService, n_cashiers: int):
+    async def _create_cashiers(self, conn: Connection, user_service: UserService, admin_token: str, n_cashiers: int):
         logger.info(f"Creating {n_cashiers} cashiers")
+        cashier_role: UserRole = await user_service.create_user_role(
+            con=conn,
+            token=admin_token,
+            node_id=self.event_node_id,
+            new_role=NewUserRole(
+                name="cashier",
+                is_privileged=False,
+                privileges=[Privilege.supervised_terminal_login, Privilege.can_book_orders],
+            ),
+        )
         for i in range(n_cashiers):
             cashier_tag_uid = await conn.fetchval(
                 "insert into user_tag (node_id, uid) values ($1, $2) returning uid",
@@ -468,7 +476,7 @@ class DatabaseSetup:
                 new_user=NewUser(
                     login=f"Cashier {i}",
                     display_name=f"Cashier {i}",
-                    role_names=[CASHIER_ROLE_NAME],
+                    role_names=[cashier_role.name],
                     user_tag_uid=cashier_tag_uid,
                 ),
             )
@@ -586,5 +594,7 @@ class DatabaseSetup:
                 tax_rate=NewTaxRate(name="ust", description="Umsatzsteuer", rate=0.19),
             )
             await self._create_tills(conn=conn, admin_token=admin_token, n_tills=n_tills, tax_rate_ust=tax_rate_ust)
-            await self._create_cashiers(conn=conn, user_service=user_service, n_cashiers=n_cashiers)
+            await self._create_cashiers(
+                conn=conn, user_service=user_service, admin_token=admin_token, n_cashiers=n_cashiers
+            )
             await self._create_tse(conn=conn, admin_token=admin_token)

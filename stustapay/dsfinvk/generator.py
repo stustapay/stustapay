@@ -2,7 +2,7 @@ import contextlib
 import logging
 import time
 from decimal import Decimal
-from typing import Dict
+from typing import no_type_check
 
 from dateutil import parser
 
@@ -57,8 +57,8 @@ class Generator:
         self.c = Collection()
         self.simulate = simulate
         self.starttime = time.monotonic()
-        self.GV_SUMME: Dict = dict()  # aufsummierte Geschäftsvorfalltypen
-        self.systemconfig: Dict = dict()
+        self.GV_SUMME: dict = dict()  # aufsummierte Geschäftsvorfalltypen
+        self.systemconfig: dict = dict()
         self.PLZ = ""
         self.Street = ""
         self.City = ""
@@ -127,7 +127,7 @@ class Generator:
             return
 
     #######################################################################################################################################
-
+    @no_type_check
     async def einzelaufzeichnungsmodul(self, conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID):
         self.GV_SUMME = {
             "MehrzweckgutscheinKauf": {1: BNU(), 2: BNU(), 5: BNU(), 1337: BNU()},
@@ -146,39 +146,39 @@ class Generator:
         # alle orders für diese Kasse und Abschluss abfragen:
         for row in await conn.fetch(
             """
-                        select
-                            ordr.id,
-                            ordr.payment_method,
-                            ordr.cash_register_id,
-                            ordr.cancels_order,
-                            tse_signature.tse_start,
-                            tse_signature.tse_end,
-                            tse_signature.tse_id,
-                            tse_signature.tse_transaction,
-                            tse_signature.transaction_process_type,
-                            tse_signature.tse_signaturenr,
-                            tse_signature.transaction_process_data,
-                            tse_signature.tse_signature,
-                            ordr.cashier_id,
-                            ordr.customer_account_id,
-                            ordr.order_type,
-                            ordr.item_count,
-                            tse_signature.signature_status,
-                            tse_signature.result_message,
-                            order_value.total_price,
-                            order_value.line_items
-                        from
-                            ordr
-                        join
-                            tse_signature on ordr.id=tse_signature.id
-                        join
-                            order_value on ordr.id=order_value.id
-                        where
-                            ordr.till_id = $1
-                            and ordr.z_nr = $2
-                        order by
-                            ordr.id
-                        """,
+            select
+                ordr.id,
+                ordr.payment_method,
+                ordr.cash_register_id,
+                ordr.cancels_order,
+                tse_signature.tse_start,
+                tse_signature.tse_end,
+                tse_signature.tse_id,
+                tse_signature.tse_transaction,
+                tse_signature.transaction_process_type,
+                tse_signature.tse_signaturenr,
+                tse_signature.transaction_process_data,
+                tse_signature.tse_signature,
+                ordr.cashier_id,
+                ordr.customer_account_id,
+                ordr.order_type,
+                ordr.item_count,
+                tse_signature.signature_status,
+                tse_signature.result_message,
+                order_value.total_price,
+                order_value.line_items
+            from
+                ordr
+            join
+                tse_signature on ordr.id=tse_signature.id
+            join
+                order_value on ordr.id=order_value.id
+            where
+                ordr.till_id = $1
+                and ordr.z_nr = $2
+            order by
+                ordr.id
+            """,
             Z_KASSE_ID,
             Z_NR,
         ):
@@ -360,6 +360,7 @@ class Generator:
         return
 
     ########################################################################################################################################
+    @no_type_check
     async def stammdatenmodul(self, conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID):
         ### cashpointclosing.csv ###
         a = Stamm_Abschluss()
@@ -464,7 +465,8 @@ class Generator:
         if len(tses) == 1:
             # Fall, dass wir nur eine TSE für diese Kasse haben: Einfach
             row = await conn.fetchrow(
-                "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, tse.public_key, tse.certificate from till join tse on till.tse_id = tse.id where till.id = $1",
+                "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, tse.public_key, tse.certificate "
+                "from till join tse on till.tse_id = tse.id where till.id = $1",
                 Z_KASSE_ID,
             )
 
@@ -573,6 +575,7 @@ class Generator:
         return
 
     ############################################################################################################
+    @no_type_check
     async def kassenabschlussmodul(self, conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID):
         paymentmethods = await conn.fetch(
             "select payment_method from line_item join ordr on line_item.order_id=ordr.id where ordr.till_id = $1 and ordr.z_nr = $2 group by payment_method",

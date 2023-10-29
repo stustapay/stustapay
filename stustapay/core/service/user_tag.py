@@ -63,7 +63,7 @@ class UserTagService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def create_user_tag_secret(
         self, *, conn: Connection, node: Node, new_secret: NewUserTagSecret
@@ -72,7 +72,7 @@ class UserTagService(DBService):
         return await create_user_tag_secret(conn=conn, node_id=node.id, secret=new_secret)
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_user_tag_detail(self, *, conn: Connection, user_tag_uid: int) -> Optional[UserTagDetail]:
         # TODO: TREE visibility
@@ -81,7 +81,7 @@ class UserTagService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_user_tag_comment(
         self, *, conn: Connection, current_user: CurrentUser, user_tag_uid: int, comment: str
@@ -100,7 +100,7 @@ class UserTagService(DBService):
         return detail
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
         value_as_int = None

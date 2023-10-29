@@ -1,18 +1,11 @@
 import { z } from "zod";
 
 export const PrivilegeSchema = z.enum([
-  "account_management",
-  "cashier_management",
-  "config_management",
-  "product_management",
-  "tax_rate_management",
+  "node_administration",
   "user_management",
-  "till_management",
-  "order_management",
-  "festival_overview",
-  "tse_management",
 
   // festival workflow privileges
+  "cash_transport",
   "terminal_login",
   "supervised_terminal_login",
 

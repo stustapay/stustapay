@@ -9,8 +9,6 @@ from stustapay.core.config import Config
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import (
-    CASHIER_ROLE_NAME,
-    FINANZORGA_ROLE_NAME,
     CurrentUser,
     NewUser,
     NewUserRole,
@@ -123,14 +121,18 @@ class UserService(DBService):
         return result != "DELETE 0"
 
     @staticmethod
-    async def _update_user_roles(*, conn: Connection, user_id: int, role_names: list[str], delete_before_insert=False):
+    async def _update_user_roles(
+        *, conn: Connection, node: Node, user_id: int, role_names: list[str], delete_before_insert=False
+    ):
         # TODO: TREE visibility
         if delete_before_insert:
             await conn.execute("delete from user_to_role where user_id = $1", user_id)
 
         for role_name in role_names:
             # TODO: NODE_ID incorporate node_id
-            role_id = await conn.fetchval("select id from user_role where name = $1", role_name)
+            role_id = await conn.fetchval(
+                "select id from user_role where name = $1 and node_id = any($2)", role_name, node.ids_to_root
+            )
             if role_id is None:
                 raise InvalidArgument(f"User role with name '{role_name}' does not exist")
             await conn.execute("insert into user_to_role (user_id, role_id) values ($1, $2)", user_id, role_id)
@@ -139,7 +141,7 @@ class UserService(DBService):
         self,
         *,
         conn: Connection,
-        node_id: int,
+        node: Node,
         new_user: NewUser,
         creating_user_id: Optional[int],
         password: Optional[str] = None,
@@ -159,7 +161,7 @@ class UserService(DBService):
             # TODO: NODE_ID determine node id
             customer_account_id = await conn.fetchval(
                 "insert into account (node_id, user_tag_uid, type) values ($1, $2, 'private') returning id",
-                node_id,
+                node.id,
                 new_user.user_tag_uid,
             )
 
@@ -167,7 +169,7 @@ class UserService(DBService):
             "insert into usr (node_id, login, description, password, display_name, user_tag_uid, "
             "   created_by, customer_account_id) "
             "values ($1, $2, $3, $4, $5, $6, $7, $8) returning id",
-            node_id,
+            node.id,
             new_user.login,
             new_user.description,
             hashed_password,
@@ -177,7 +179,7 @@ class UserService(DBService):
             customer_account_id,
         )
 
-        await self._update_user_roles(conn=conn, user_id=user_id, role_names=new_user.role_names)
+        await self._update_user_roles(conn=conn, node=node, user_id=user_id, role_names=new_user.role_names)
 
         return await conn.fetch_one(User, "select * from user_with_roles where id = $1", user_id)
 
@@ -191,8 +193,10 @@ class UserService(DBService):
         password: Optional[str] = None,
     ) -> User:
         # TODO: TREE visibility
+        node = await fetch_node(conn=conn, node_id=node_id)
+        assert node is not None
         return await self._create_user(
-            conn=conn, creating_user_id=None, node_id=node_id, new_user=new_user, password=password
+            conn=conn, creating_user_id=None, node=node, new_user=new_user, password=password
         )
 
     @with_db_transaction
@@ -209,7 +213,7 @@ class UserService(DBService):
     ) -> User:
         # TODO: TREE visibility
         return await self._create_user(
-            conn=conn, creating_user_id=current_user.id, node_id=node.id, new_user=new_user, password=password
+            conn=conn, creating_user_id=current_user.id, node=node, new_user=new_user, password=password
         )
 
     @staticmethod
@@ -246,7 +250,9 @@ class UserService(DBService):
         if user_id is None:
             raise InvalidArgument(f"User with tag {user_tag_uid:X} not found")
 
-        await self._update_user_roles(conn=conn, user_id=user_id, role_names=role_names, delete_before_insert=True)
+        await self._update_user_roles(
+            conn=conn, node=node, user_id=user_id, role_names=role_names, delete_before_insert=True
+        )
 
         return await self._get_user(conn=conn, node=node, user_id=user_id)
 
@@ -278,37 +284,7 @@ class UserService(DBService):
             display_name=new_user.display_name,
             description=new_user.description,
         )
-        return await self._create_user(conn=conn, node_id=node.id, creating_user_id=current_user.id, new_user=user)
-
-    @with_db_transaction
-    @requires_user([Privilege.user_management])
-    @requires_node()
-    async def promote_to_cashier(self, *, conn: Connection, node: Node, user_id: int) -> User:
-        # TODO: TREE visibility
-        user = await self._get_user(conn=conn, node=node, user_id=user_id)
-        if user is None:
-            raise NotFound(element_typ="user", element_id=str(user_id))
-
-        if CASHIER_ROLE_NAME in user.role_names:
-            return user
-
-        user.role_names.append(CASHIER_ROLE_NAME)
-        return await self._update_user(conn=conn, node=node, user_id=user.id, user=user)
-
-    @with_db_transaction
-    @requires_user([Privilege.user_management])
-    @requires_node()
-    async def promote_to_finanzorga(self, *, conn: Connection, node: Node, user_id: int) -> User:
-        # TODO: TREE visibility
-        user = await self._get_user(conn=conn, node=node, user_id=user_id)
-        if user is None:
-            raise NotFound(element_typ="user", element_id=str(user_id))
-
-        if FINANZORGA_ROLE_NAME in user.role_names:
-            return user
-
-        user.role_names.append(FINANZORGA_ROLE_NAME)
-        return await self._update_user(conn=conn, node=node, user_id=user.id, user=user)
+        return await self._create_user(conn=conn, node=node, creating_user_id=current_user.id, new_user=user)
 
     @with_db_transaction
     @requires_user([Privilege.user_management])
@@ -346,7 +322,9 @@ class UserService(DBService):
         if row is None:
             raise NotFound(element_typ="user", element_id=str(user_id))
 
-        await self._update_user_roles(conn=conn, user_id=user_id, role_names=user.role_names, delete_before_insert=True)
+        await self._update_user_roles(
+            conn=conn, node=node, user_id=user_id, role_names=user.role_names, delete_before_insert=True
+        )
 
         return await self._get_user(conn=conn, node=node, user_id=user_id)
 
@@ -357,11 +335,16 @@ class UserService(DBService):
         self, *, conn: Connection, node: Node, user_id: int, role_names: list[str]
     ) -> Optional[User]:
         # TODO: TREE visibility
-        found = await conn.fetchval("select true from usr where id = $1", user_id)
+        found = await conn.fetchval(
+            "select true from usr where id = $1 and node_id = any($2)", user_id, node.ids_to_root
+        )
         if not found:
             raise NotFound(element_typ="user", element_id=str(user_id))
 
-        await self._update_user_roles(conn=conn, user_id=user_id, role_names=role_names, delete_before_insert=True)
+        # TODO: check if we are passing the correct node here
+        await self._update_user_roles(
+            conn=conn, node=node, user_id=user_id, role_names=role_names, delete_before_insert=True
+        )
         return await self._get_user(conn=conn, node=node, user_id=user_id)
 
     @with_db_transaction

@@ -1,7 +1,7 @@
 import { UserRole, selectUserRoleAll, useDeleteUserRoleMutation, useListUserRolesQuery } from "@/api";
 import { UserRoleRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
+import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -25,6 +25,7 @@ export const UserRoleList: React.FC = () => {
   );
   const [deleteUserRole] = useDeleteUserRoleMutation();
   const [userRoleToDelete, setUserRoleToDelete] = React.useState<number | null>(null);
+  const renderNode = useRenderNode();
 
   if (isLoading) {
     return <Loading />;
@@ -57,6 +58,12 @@ export const UserRoleList: React.FC = () => {
     {
       field: "privileges",
       headerName: t("userPrivileges") as string,
+      flex: 1,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
       flex: 1,
     },
     {

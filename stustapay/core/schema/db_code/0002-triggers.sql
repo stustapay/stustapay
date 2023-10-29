@@ -189,7 +189,7 @@ begin
         end if;
     end if;
     -- TODO: use a better privilege
-    if 'cashier_management' = any (locals.role_privileges) then
+    if 'cash_transport' = any (locals.role_privileges) then
         if locals.transport_account_id is null then
             insert into account (
                 node_id, type, name

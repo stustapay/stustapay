@@ -1,4 +1,4 @@
-import { PublicEventSettings, useUpdateEventMutation } from "@/api";
+import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -9,12 +9,13 @@ import { toast } from "react-toastify";
 import { z } from "zod";
 
 const CustomerPortalSettingsSchema = z.object({
+  customer_portal_url: z.string().url(),
   customer_portal_contact_email: z.string(),
 });
 
 type CustomerPortalSettings = z.infer<typeof CustomerPortalSettingsSchema>;
 
-export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: PublicEventSettings }> = ({
+export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
   nodeId,
   eventSettings,
 }) => {
@@ -43,6 +44,7 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Public
       {(formik) => (
         <Form onSubmit={formik.handleSubmit}>
           <Stack spacing={2}>
+            <FormTextField label={t("settings.customerPortal.baseUrl")} name="customer_portal_url" formik={formik} />
             <FormTextField
               label={t("settings.customerPortal.contact_email")}
               name="customer_portal_contact_email"

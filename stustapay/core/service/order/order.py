@@ -1,4 +1,3 @@
-import json
 import logging
 from collections import defaultdict
 from typing import Dict, Optional, Set
@@ -44,7 +43,7 @@ from stustapay.core.schema.order import (
 from stustapay.core.schema.product import Product, ProductRestriction, ProductType
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.ticket import Ticket
-from stustapay.core.schema.till import VIRTUAL_TILL_ID, Till
+from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
 from stustapay.core.service.account import (
@@ -52,7 +51,6 @@ from stustapay.core.service.account import (
     get_system_account_for_node,
 )
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_node,
@@ -62,14 +60,13 @@ from stustapay.core.service.common.decorators import (
     with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument, ServiceException
-from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.service.product import (
     fetch_discount_product,
     fetch_pay_out_product,
     fetch_product,
     fetch_top_up_product,
 )
-from stustapay.core.service.till.common import fetch_till
+from stustapay.core.service.till.common import fetch_virtual_till
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from stustapay.framework.database import Connection
@@ -211,42 +208,6 @@ class OrderService(DBService):
         self.auth_service = auth_service
         self.voucher_service = VoucherService(db_pool=db_pool, config=config, auth_service=auth_service)
         self.stats = OrderStatsService(db_pool=db_pool, config=config, auth_service=auth_service)
-
-        self.admin_order_update_queues: set[Subscription] = set()
-
-        self.order_hook: Optional[DBHook] = None
-
-    async def run(self):
-        self.order_hook = DBHook(pool=self.db_pool, channel="order", event_handler=self._handle_order_update)
-        await self.order_hook.run()
-
-    async def _propagate_order_update(self, order: Order):
-        for queue in self.admin_order_update_queues:
-            queue.queue.put_nowait(order)
-
-    async def _handle_order_update(self, payload: str):
-        try:
-            json_payload = json.loads(payload)
-            async with self.db_pool.acquire() as conn:
-                async with conn.transaction():
-                    order = await fetch_order(conn=conn, order_id=json_payload["order_id"])
-                    if order:
-                        await self._propagate_order_update(order=order)
-        except:  # pylint: disable=bare-except
-            return
-
-    @with_db_transaction
-    @requires_user([Privilege.order_management])
-    @requires_node()
-    async def register_for_order_updates(self, conn: Connection) -> Subscription:
-        del conn  # unused
-
-        def on_unsubscribe(subscription):
-            self.admin_order_update_queues.remove(subscription)
-
-        subscription = Subscription(on_unsubscribe)
-        self.admin_order_update_queues.add(subscription)
-        return subscription
 
     @staticmethod
     async def _get_products_from_buttons(
@@ -823,13 +784,12 @@ class OrderService(DBService):
                 for b in new_sale.products
             ],
         )
-        till = await fetch_till(conn=conn, node=node, till_id=VIRTUAL_TILL_ID)
-        assert till is not None
+        virtual_till = await fetch_virtual_till(conn=conn, node=node)
         completed_sale = await self._book_sale(
             conn=conn,
             event_settings=event_settings,
             node=node,
-            till=till,
+            till=virtual_till,
             current_user=current_user,
             new_sale=internal_new_sale,
         )
@@ -863,7 +823,8 @@ class OrderService(DBService):
         order = await fetch_order(conn=conn, order_id=order_id)
         if order is None:
             raise InvalidArgument("Order does not exist")
-        await self._cancel_sale(conn=conn, current_user=current_user, order_id=order_id, till_id=VIRTUAL_TILL_ID)
+        virtual_till = await fetch_virtual_till(conn=conn, node=node)
+        await self._cancel_sale(conn=conn, current_user=current_user, order_id=order_id, till_id=virtual_till.id)
 
         assert order.customer_tag_uid is not None
 
@@ -954,8 +915,9 @@ class OrderService(DBService):
     @with_retryable_db_transaction()
     @requires_user([Privilege.can_book_orders])
     @requires_node()
-    async def cancel_sale_admin(self, *, conn: Connection, current_user: CurrentUser, order_id: int):
-        await self._cancel_sale(conn=conn, till_id=VIRTUAL_TILL_ID, current_user=current_user, order_id=order_id)
+    async def cancel_sale_admin(self, *, conn: Connection, node: Node, current_user: CurrentUser, order_id: int):
+        virtual_till = await fetch_virtual_till(conn=conn, node=node)
+        await self._cancel_sale(conn=conn, till_id=virtual_till.id, current_user=current_user, order_id=order_id)
 
     @with_retryable_db_transaction()
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
@@ -1367,7 +1329,7 @@ class OrderService(DBService):
         return await conn.fetch_many(Order, "select * from order_value where cashier_id = $1", current_user.id)
 
     @with_db_transaction
-    @requires_user([Privilege.order_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_orders(self, *, conn: Connection, customer_account_id: Optional[int] = None) -> list[Order]:
         if customer_account_id is not None:
@@ -1378,13 +1340,13 @@ class OrderService(DBService):
             return await conn.fetch_many(Order, "select * from order_value")
 
     @with_db_transaction
-    @requires_user([Privilege.order_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_orders_by_till(self, *, conn: Connection, till_id: int) -> list[Order]:
         return await conn.fetch_many(Order, "select * from order_value where till_id = $1", till_id)
 
     @with_db_transaction
-    @requires_user([Privilege.order_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)

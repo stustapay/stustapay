@@ -62,7 +62,7 @@ class AccountService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_system_accounts(self, *, conn: Connection, node: Node) -> list[Account]:
         return await conn.fetch_many(
@@ -72,7 +72,7 @@ class AccountService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_account(self, *, conn: Connection, account_id: int) -> Account:
         # TODO: TREE visibility
@@ -82,14 +82,14 @@ class AccountService(DBService):
         return account
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_account_by_tag_uid(self, *, conn: Connection, user_tag_uid: int) -> Optional[Account]:
         # TODO: TREE visibility
         return await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def find_accounts(self, *, conn: Connection, node: Node, search_term: str) -> list[Account]:
         value_as_int = None
@@ -112,7 +112,7 @@ class AccountService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def disable_account(self, *, conn: Connection, account_id: int):
         # TODO: TREE visibility
@@ -121,7 +121,7 @@ class AccountService(DBService):
             raise NotFound(element_typ="account", element_id=str(account_id))
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_account_balance(
         self, *, conn: Connection, current_user: User, account_id: int, new_balance: float
@@ -153,7 +153,7 @@ class AccountService(DBService):
         # return True
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_account_vouchers(
         self, *, conn: Connection, current_user: User, node: Node, account_id: int, new_voucher_amount: int
@@ -266,7 +266,7 @@ class AccountService(DBService):
         return account
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def update_account_comment(self, *, conn: Connection, account_id: int, comment: str) -> Account:
         # TODO: TREE visibility
@@ -293,7 +293,7 @@ class AccountService(DBService):
         await conn.execute("update user_tag set comment = $2 where uid = $1", old_user_tag_uid, comment)
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def switch_account_tag_uid_admin(
         self, *, conn: Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
@@ -304,7 +304,7 @@ class AccountService(DBService):
         )
 
     @with_db_transaction
-    @requires_terminal([Privilege.account_management])
+    @requires_terminal([Privilege.node_administration])
     async def switch_account_tag_uid_terminal(
         self, *, conn: Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
     ):

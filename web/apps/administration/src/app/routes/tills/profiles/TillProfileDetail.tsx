@@ -9,7 +9,7 @@ import { ConfirmDialog, ConfirmDialogCloseHandler } from "@/components";
 import { DetailLayout } from "@/components/layouts";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Checkbox, Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
+import { Checkbox, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -81,14 +81,6 @@ export const TillProfileDetail: React.FC = () => {
           <ListItem>
             <Checkbox edge="end" checked={profile.allow_ticket_sale} disabled={true} sx={{ mr: 1 }} />
             <ListItemText primary={t("profile.allowTicketSale")} />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("profile.allowedUserRoles")}
-              secondary={profile.allowed_role_names.map((roleName) => (
-                <Chip key={roleName} variant="outlined" label={roleName} sx={{ mr: 1 }} />
-              ))}
-            />
           </ListItem>
           {layout && (
             <ListItem>

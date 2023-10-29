@@ -2,7 +2,7 @@
 
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.till import NewTillProfile
-from stustapay.core.schema.user import ADMIN_ROLE_NAME, NewUser, NewUserRole, Privilege
+from stustapay.core.schema.user import NewUser, NewUserRole, Privilege
 from stustapay.core.service.common.error import AccessDenied
 
 from .common import TerminalTestCase
@@ -10,12 +10,8 @@ from .common import TerminalTestCase
 
 class AccountServiceTest(TerminalTestCase):
     async def test_switch_user_tag(self):
-        user_tag_uid = 1887
-        new_user_tag_uid = 1999
-        await self.db_conn.execute("insert into user_tag (node_id, uid) values ($1, $2)", self.node_id, user_tag_uid)
-        await self.db_conn.execute(
-            "insert into user_tag (node_id, uid) values ($1, $2)", self.node_id, new_user_tag_uid
-        )
+        user_tag_uid = await self.create_random_user_tag()
+        new_user_tag_uid = await self.create_random_user_tag()
         user = await self.user_service.create_user_no_auth(
             node_id=self.node_id,
             new_user=NewUser(login="test-user", display_name="test-user", user_tag_uid=user_tag_uid, role_names=[]),
@@ -69,16 +65,13 @@ class AccountServiceTest(TerminalTestCase):
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
-                allowed_role_names=[ADMIN_ROLE_NAME, "test-role"],
             ),
         )
 
         # after updating the cashier roles we need to log out and log in with the new role
-        await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=voucher_role.id)
+        await self._login_supervised_user(user_tag_uid=self.cashier.user_tag_uid, user_role_id=voucher_role.id)
 
-        volunteer_tag = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 1337) returning uid", self.node_id
-        )
+        volunteer_tag = await self.create_random_user_tag()
         grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag)
 
         with self.assertRaises(AccessDenied):
@@ -130,7 +123,6 @@ class AccountServiceTest(TerminalTestCase):
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
-                allowed_role_names=[ADMIN_ROLE_NAME, "test-role"],
             ),
         )
 
@@ -140,11 +132,9 @@ class AccountServiceTest(TerminalTestCase):
             role_names=[voucher_role.name],
         )
         # after updating the cashier roles we need to log out and log in with the new role
-        await self._login_supervised_user(user_tag_uid=self.cashier_tag_uid, user_role_id=voucher_role.id)
+        await self._login_supervised_user(user_tag_uid=self.cashier.user_tag_uid, user_role_id=voucher_role.id)
 
-        volunteer_tag = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 1337) returning uid", self.node_id
-        )
+        volunteer_tag = await self.create_random_user_tag()
         grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag, initial_voucher_amount=3)
         success = await self.account_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)
         self.assertTrue(success)
@@ -152,10 +142,12 @@ class AccountServiceTest(TerminalTestCase):
         self.assertEqual(customer.vouchers, 3)
 
     async def test_account_comment_updates(self):
-        await self.db_conn.execute("insert into user_tag (node_id, uid) values ($1, 1)", self.node_id)
+        user_tag_uid = await self.create_random_user_tag()
         account_id = await self.db_conn.fetchval(
-            "insert into account(node_id, user_tag_uid, type, name) values ($1, 1, 'private', 'account-1') returning id",
+            "insert into account(node_id, user_tag_uid, type, name) "
+            "values ($1, $2, 'private', 'account-1') returning id",
             self.node_id,
+            user_tag_uid,
         )
 
         acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)

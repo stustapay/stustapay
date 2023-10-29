@@ -1,6 +1,6 @@
 import { AccountRead } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { formatUserTagUid } from "@stustapay/models";
@@ -15,6 +15,7 @@ export interface AccountTableProps {
 export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
   const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
+  const renderNode = useRenderNode();
 
   const columns: GridColDef<AccountRead>[] = [
     {
@@ -60,6 +61,12 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       headerName: t("account.vouchers") as string,
       type: "number",
       width: 200,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
   ];
 

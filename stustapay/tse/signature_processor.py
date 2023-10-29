@@ -1,7 +1,6 @@
 import asyncio
 import contextlib
 import logging
-from typing import Optional
 
 import asyncpg
 
@@ -21,7 +20,7 @@ class SignatureProcessor:
     def __init__(self, config: Config):
         self.config = config
         self.tses: dict[str, TSEWrapper] = {}
-        self.db_pool: Optional[asyncpg.Pool] = None
+        self.db_pool: asyncpg.Pool | None = None
         # contains event objects for each object that is waiting for new events.
 
     async def run(self) -> None:
@@ -75,6 +74,7 @@ class SignatureProcessor:
         await self.db_pool.close()
 
     async def handle_hook(self, payload):
+        assert self.db_pool is not None
         del payload  # unused
         LOGGER.info("tse_signature hook")
 

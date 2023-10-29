@@ -1,5 +1,6 @@
 import { UserTagDetailRead } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
+import { useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { formatUserTagUid } from "@stustapay/models";
@@ -13,6 +14,7 @@ export interface UserTagTableProps {
 
 export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
   const { t } = useTranslation();
+  const renderNode = useRenderNode();
 
   const columns: GridColDef<UserTagDetailRead>[] = [
     {
@@ -42,6 +44,12 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
     {
       field: "comment",
       headerName: t("userTag.comment") as string,
+      flex: 1,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
       flex: 1,
     },
   ];

@@ -4,6 +4,7 @@
 import collections
 import sys
 from collections import OrderedDict
+from typing import no_type_check
 
 from .fields import Field
 
@@ -15,6 +16,7 @@ class BaseTableMeta(type):
         del bases
         return collections.OrderedDict()
 
+    @no_type_check
     def __new__(mcls, name, bases, attrs):
         cls = super(BaseTableMeta, mcls).__new__(mcls, name, bases, attrs)
         fields = list(cls._fields) if hasattr(cls, "_fields") else []
@@ -28,6 +30,7 @@ class BaseTableMeta(type):
 
 
 class Model(metaclass=BaseTableMeta):
+    @no_type_check
     def __init__(self, **kwargs):
         self.data = OrderedDict([(f.name, f.default) for f in self._fields])  # pylint: disable=no-member
         for k, v in kwargs.items():

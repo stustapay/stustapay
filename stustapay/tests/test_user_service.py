@@ -1,11 +1,12 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+import secrets
+
 from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     ADMIN_ROLE_NAME,
-    CASHIER_ROLE_NAME,
-    FINANZORGA_ROLE_NAME,
-    INFOZELT_ROLE_NAME,
     NewUser,
+    NewUserRole,
+    UserRole,
     UserTag,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
@@ -16,19 +17,13 @@ class UserServiceTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
 
-        self.cashier_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 654321) returning uid", self.node_id
-        )
-        self.finanzorga_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 1337) returning uid", self.node_id
-        )
-        admin_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 12345) returning uid", self.node_id
-        )
+        self.cashier_uid = await self.create_random_user_tag()
+        self.finanzorga_uid = await self.create_random_user_tag()
+        admin_tag_uid = await self.create_random_user_tag()
         self.admin = await self.user_service.create_user_no_auth(
             node_id=self.node_id,
             new_user=NewUser(
-                login="terminal_admin",
+                login=f"terminal_admin {secrets.token_hex()}",
                 description="",
                 role_names=[ADMIN_ROLE_NAME],
                 user_tag_uid=admin_tag_uid,
@@ -47,36 +42,52 @@ class UserServiceTest(TerminalTestCase):
         await self.user_service.login_user(username=self.admin_user.login, password="asdf")
 
     async def test_user_creation(self):
-        cashier = await self.user_service.create_user_terminal(
+        user_tag_uid = await self.create_random_user_tag()
+        test_role1: UserRole = await self.user_service.create_user_role(
+            token=self.admin_token,
+            node_id=self.node_id,
+            new_role=NewUserRole(name="test-role-1", is_privileged=False, privileges=[]),
+        )
+        test_role2: UserRole = await self.user_service.create_user_role(
+            token=self.admin_token,
+            node_id=self.node_id,
+            new_role=NewUserRole(name="test-role-2", is_privileged=False, privileges=[]),
+        )
+        privileged_role: UserRole = await self.user_service.create_user_role(
+            token=self.admin_token,
+            node_id=self.node_id,
+            new_role=NewUserRole(name="privileged-role", is_privileged=True, privileges=[]),
+        )
+        user = await self.user_service.create_user_terminal(
             token=self.terminal_token,
             new_user=NewUser(
-                login="test-cashier", display_name="", user_tag_uid=self.cashier_uid, role_names=[CASHIER_ROLE_NAME]
+                login="test-cashier", display_name="", user_tag_uid=user_tag_uid, role_names=[test_role1.name]
             ),
         )
-        self.assertIsNotNone(cashier)
-        self.assertEqual(cashier.login, "test-cashier")
-        self.assertListEqual(cashier.role_names, [CASHIER_ROLE_NAME])
-        self.assertIsNotNone(cashier.cashier_account_id)
-        self.assertIsNone(cashier.transport_account_id)
-        self.assertEqual(cashier.user_tag_uid, self.cashier_uid)
+        self.assertIsNotNone(user)
+        self.assertEqual(user.login, "test-cashier")
+        self.assertListEqual(user.role_names, [test_role1.name])
+        self.assertIsNone(user.cashier_account_id)
+        self.assertIsNone(user.transport_account_id)
+        self.assertEqual(user.user_tag_uid, user_tag_uid)
         # Test creation if user already exists, then this should return an error
         with self.assertRaises(InvalidArgument):
             await self.user_service.create_user_terminal(
                 token=self.terminal_token,
                 new_user=NewUser(
-                    login="test-cashier", display_name="", user_tag_uid=self.cashier_uid, role_names=[CASHIER_ROLE_NAME]
+                    login="test-cashier", display_name="", user_tag_uid=user_tag_uid, role_names=[test_role2.name]
                 ),
             )
 
-        cashier = await self.user_service.update_user_roles_terminal(
+        user = await self.user_service.update_user_roles_terminal(
             token=self.terminal_token,
-            user_tag_uid=self.cashier_uid,
-            role_names=[INFOZELT_ROLE_NAME],
+            user_tag_uid=user_tag_uid,
+            role_names=[test_role2.name],
         )
-        self.assertIsNotNone(cashier)
-        self.assertListEqual(cashier.role_names, [INFOZELT_ROLE_NAME])
+        self.assertIsNotNone(user)
+        self.assertListEqual(user.role_names, [test_role2.name])
 
         with self.assertRaises(AccessDenied):
             await self.user_service.update_user_roles_terminal(
-                token=self.terminal_token, user_tag_uid=self.cashier_uid, role_names=[FINANZORGA_ROLE_NAME]
+                token=self.terminal_token, user_tag_uid=user_tag_uid, role_names=[privileged_role.name]
             )

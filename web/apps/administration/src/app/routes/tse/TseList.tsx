@@ -1,7 +1,7 @@
 import { Tse, selectTseAll, useListTsesQuery } from "@/api";
 import { TseRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
+import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -22,6 +22,8 @@ export const TseList: React.FC = () => {
       }),
     }
   );
+  const renderNode = useRenderNode();
+
   if (isTsesLoading) {
     return <Loading />;
   }
@@ -58,6 +60,12 @@ export const TseList: React.FC = () => {
     {
       field: "process_data_encoding",
       headerName: t("tse.processDataEncoding") as string,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
   ];
 

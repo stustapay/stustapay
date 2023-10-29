@@ -1,7 +1,15 @@
+import uuid
+
 import asyncpg
 
 from stustapay.core.config import Config
-from stustapay.core.schema.tree import NewEvent, NewNode, Node, ObjectType
+from stustapay.core.schema.tree import (
+    NewEvent,
+    NewNode,
+    Node,
+    ObjectType,
+    RestrictedEventSettings,
+)
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -11,7 +19,11 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import NotFound
-from stustapay.core.service.tree.common import fetch_node, get_tree_for_current_user
+from stustapay.core.service.tree.common import (
+    fetch_node,
+    fetch_restricted_event_settings_for_node,
+    get_tree_for_current_user,
+)
 from stustapay.framework.database import Connection
 
 
@@ -69,6 +81,26 @@ async def _create_system_tax_rates(conn: Connection, node_id: int):
     )
 
 
+async def _create_system_tills(conn: Connection, node_id: int):
+    virtual_till_layout_id = await conn.fetchval(
+        "insert into till_layout (name, description, node_id) values ('Virtual Till layout', '', $1) returning id",
+        node_id,
+    )
+    virtual_till_profile_id = await conn.fetchval(
+        "insert into till_profile (name, description, layout_id, node_id) "
+        "values ('Virtual Till layout', '', $1, $2) returning id",
+        virtual_till_layout_id,
+        node_id,
+    )
+    await conn.execute(
+        "insert into till (name, description, active_profile_id, node_id, registration_uuid, is_virtual) "
+        "values ('Virtual Till', '', $1, $2, $3, true)",
+        virtual_till_profile_id,
+        node_id,
+        uuid.uuid4(),
+    )
+
+
 async def _create_system_products(conn: Connection, node_id: int):
     tax_rate_none_id = await conn.fetchval("select id from tax_rate where node_id = $1", node_id)
     await conn.execute(
@@ -120,6 +152,7 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
     await _create_system_accounts(conn=conn, node_id=node.id)
     await _create_system_tax_rates(conn=conn, node_id=node.id)
     await _create_system_products(conn=conn, node_id=node.id)
+    await _create_system_tills(conn=conn, node_id=node.id)
     return node
 
 
@@ -185,3 +218,9 @@ class TreeService(DBService):
     @requires_user()
     async def get_tree_for_current_user(self, *, conn: Connection, current_user: CurrentUser) -> Node:
         return await get_tree_for_current_user(conn=conn, user_node_id=current_user.node_id)
+
+    @with_db_transaction
+    @requires_user()
+    @requires_node()
+    async def get_restricted_event_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:
+        return await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)

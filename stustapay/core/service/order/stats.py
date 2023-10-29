@@ -39,7 +39,7 @@ class OrderStatsService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.order_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_product_stats(
         self, *, conn: Connection, from_timestamp: Optional[datetime], to_timestamp: Optional[datetime]

@@ -1,6 +1,7 @@
 """
 errorcodes from the manual
 """
+from typing import Literal, NotRequired, TypedDict
 
 errors = {
     1: "JSON_CODE_COMMAND_UNKNOWN",
@@ -26,5 +27,33 @@ errors = {
 }
 
 
-def dnerror(code):
+Parameters = TypedDict("Parameters", {"SignatureAlgorithm": str})
+DeviceInfo = TypedDict("DeviceInfo", {"SerialNumber": str, "TimeFormat": str})
+
+TseSuccess = TypedDict(
+    "TseSuccess",
+    {
+        "Status": Literal["ok"],
+        "TransactionNumber": NotRequired[int],
+        "SerialNumber": NotRequired[str],
+        "SignatureCounter": NotRequired[int],
+        "Signature": NotRequired[str],
+        "LogTime": NotRequired[str],
+        "Parameters": NotRequired[Parameters],
+        "DeviceInfo": NotRequired[DeviceInfo],
+        "Name": NotRequired[str],
+        "Value": NotRequired[str],
+        "Length": NotRequired[int],
+        "ClientIDs": NotRequired[list],
+    },
+)
+TseError = TypedDict(
+    "TseError",
+    {"Status": Literal["error"], "Code": int, "Desc": str},
+)
+
+TseResponse = TseSuccess | TseError
+
+
+def dnerror(code) -> TseError:
     return {"Status": "error", "Code": code, "Desc": errors[code]}

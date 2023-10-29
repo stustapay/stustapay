@@ -15,7 +15,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.till import Till
-from stustapay.core.schema.user import ADMIN_ROLE_ID, CASHIER_ROLE_ID
+from stustapay.core.schema.user import ADMIN_ROLE_ID
 from stustapay.framework.async_utils import AsyncThread, with_db_pool
 from stustapay.framework.database import create_db_pool
 
@@ -51,10 +51,10 @@ class Simulator:
         self.terminal_api_base_url = self.config.terminalserver.base_url
         self.admin_api_base_url = self.config.administration.base_url
         self.bookings_per_second = bookings_per_second
-        self.admin_tag_uid = None
-        self.n_tills_total = None
+        self.admin_tag_uid: int | None = None
+        self.n_tills_total: int | None = None
 
-        self.start_time = None
+        self.start_time = datetime.now()
 
         self.counter_lock = threading.Lock()
         self.n_bookings = 0
@@ -228,7 +228,7 @@ class Simulator:
                     assert resp.status == 200
 
             async with client.post(
-                "/user/login", json={"user_tag": {"uid": cashier_tag_uid}, "user_role_id": CASHIER_ROLE_ID}
+                "/user/login", json={"user_tag": {"uid": cashier_tag_uid}, "user_role_id": self.cashier_role_id}
             ) as resp:
                 if resp.status != 200:
                     self.logger.critical(
@@ -474,7 +474,6 @@ class Simulator:
     async def initialize(self):
         db_pool = await create_db_pool(self.config.database, n_connections=1)
 
-        self.start_time = datetime.now()
         self.event_node_id = await db_pool.fetchval(
             "select id from node where event_id is not null and name = $1", "SSC-Test"
         )
@@ -485,6 +484,9 @@ class Simulator:
                 "admin",
                 self.event_node_id,
             )
+        )
+        self.cashier_role_id = await db_pool.fetchval(
+            "select id from user_role where name = 'cashier' and node_id = $1", self.event_node_id
         )
         self.admin_token = await self.login_admin()
         self.admin_headers = {"Authorization": f"Bearer {self.admin_token}"}

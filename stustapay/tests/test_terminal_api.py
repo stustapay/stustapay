@@ -1,14 +1,5 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
-from stustapay.core.schema.user import (
-    CASHIER_ROLE_ID,
-    CASHIER_ROLE_NAME,
-    FINANZORGA_ROLE_NAME,
-    INFOZELT_ROLE_ID,
-    CurrentUser,
-    NewUser,
-    UserRole,
-    UserTag,
-)
+from stustapay.core.schema.user import CurrentUser, UserRole, UserTag
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.tests.common import TerminalTestCase
 
@@ -16,35 +7,21 @@ from stustapay.tests.common import TerminalTestCase
 class TerminalAPiTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
-        self.finanzorga_tag_uid = await self.db_conn.fetchval(
-            "insert into user_tag (node_id, uid) values ($1, 12345) returning uid", self.node_id
-        )
-        self.finanzorga = await self.user_service.create_user_no_auth(
-            node_id=self.node_id,
-            new_user=NewUser(
-                login="Fianazorga",
-                description="",
-                role_names=[FINANZORGA_ROLE_NAME, CASHIER_ROLE_NAME],
-                user_tag_uid=self.finanzorga_tag_uid,
-                display_name="Finanzorga",
-            ),
-        )
-        await self.user_service.promote_to_finanzorga(token=self.admin_token, user_id=self.finanzorga.id)
-        self.finanzorga = await self.user_service.get_user(token=self.admin_token, user_id=self.finanzorga.id)
+        self.finanzorga, self.finanzorga_role = await self.create_finanzorga(cashier_role_name=self.cashier_role.name)
+        self.finanzorga_tag_uid = self.finanzorga.user_tag_uid
+        assert self.finanzorga_tag_uid is not None
 
     async def test_terminal_user_management(self):
         # Cashier cannot simply login
         with self.assertRaises(AccessDenied):
             await self.till_service.check_user_login(
-                token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid)
+                token=self.terminal_token, user_tag=UserTag(uid=self.cashier.user_tag_uid)
             )
         with self.assertRaises(AccessDenied):
             await self.till_service.login_user(
-                token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid), user_role_id=CASHIER_ROLE_ID
-            )
-        with self.assertRaises(AccessDenied):
-            await self.till_service.login_user(
-                token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid), user_role_id=INFOZELT_ROLE_ID
+                token=self.terminal_token,
+                user_tag=UserTag(uid=self.cashier.user_tag_uid),
+                user_role_id=self.cashier_role.id,
             )
 
         # Admins can login
@@ -59,14 +36,20 @@ class TerminalAPiTest(TerminalTestCase):
             self.assertEqual(role.name, orga.active_role_name)
             self.assertEqual(role.id, orga.active_role_id)
 
+        # log in finanzorga as supervisor
+        await self.till_service.login_user(
+            token=self.terminal_token,
+            user_tag=UserTag(uid=self.finanzorga_tag_uid),
+            user_role_id=self.finanzorga_role.id,
+        )
         # Now Cashiers can login
-        roles: list[UserRole] = await self.till_service.check_user_login(
-            token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid)
+        roles = await self.till_service.check_user_login(
+            token=self.terminal_token, user_tag=UserTag(uid=self.cashier.user_tag_uid)
         )
         self.assertEqual(1, len(roles))
         cashier_role = roles[0]
         cashier = await self.till_service.login_user(
-            token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid), user_role_id=cashier_role.id
+            token=self.terminal_token, user_tag=UserTag(uid=self.cashier.user_tag_uid), user_role_id=cashier_role.id
         )
         self.assertIsNotNone(cashier)
         self.assertEqual(cashier_role.name, cashier.active_role_name)
@@ -83,9 +66,11 @@ class TerminalAPiTest(TerminalTestCase):
 
         # non supervisors cannot login when a supervisor is logged in with a non-supervisor role
         await self.till_service.login_user(
-            token=self.terminal_token, user_tag=UserTag(uid=self.finanzorga_tag_uid), user_role_id=CASHIER_ROLE_ID
+            token=self.terminal_token, user_tag=UserTag(uid=self.finanzorga_tag_uid), user_role_id=self.cashier_role.id
         )
         with self.assertRaises(AccessDenied):
             await self.till_service.login_user(
-                token=self.terminal_token, user_tag=UserTag(uid=self.cashier_tag_uid), user_role_id=CASHIER_ROLE_ID
+                token=self.terminal_token,
+                user_tag=UserTag(uid=self.cashier.user_tag_uid),
+                user_role_id=self.cashier_role.id,
             )

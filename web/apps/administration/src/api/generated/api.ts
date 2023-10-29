@@ -662,6 +662,10 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}`, method: "POST", body: queryArg.updateEvent }),
         invalidatesTags: ["tree"],
       }),
+      getRestrictedEventSettings: build.query<GetRestrictedEventSettingsApiResponse, GetRestrictedEventSettingsApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/settings` }),
+        providesTags: ["tree"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1129,6 +1133,10 @@ export type UpdateEventApiArg = {
   nodeId: number;
   updateEvent: UpdateEvent;
 };
+export type GetRestrictedEventSettingsApiResponse = /** status 200 Successful Response */ RestrictedEventSettings;
+export type GetRestrictedEventSettingsApiArg = {
+  nodeId: number;
+};
 export type ProductRestriction = "under_16" | "under_18";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
@@ -1218,16 +1226,9 @@ export type UpdateUserPayload = {
   user_tag_uid_hex?: string | null;
 };
 export type Privilege =
-  | "account_management"
-  | "cashier_management"
-  | "config_management"
-  | "product_management"
-  | "tax_rate_management"
+  | "node_administration"
   | "user_management"
-  | "till_management"
-  | "order_management"
-  | "festival_overview"
-  | "tse_management"
+  | "cash_transport"
   | "terminal_login"
   | "supervised_terminal_login"
   | "can_book_orders"
@@ -1376,7 +1377,6 @@ export type TillProfile = {
   allow_top_up: boolean;
   allow_cash_out: boolean;
   allow_ticket_sale: boolean;
-  allowed_role_names: string[];
   node_id: number;
   id: number;
 };
@@ -1393,7 +1393,6 @@ export type NewTillProfile = {
   allow_top_up: boolean;
   allow_cash_out: boolean;
   allow_ticket_sale: boolean;
-  allowed_role_names: string[];
 };
 export type TillButton = {
   name: string;
@@ -2001,6 +2000,28 @@ export type UpdateEvent = {
   sepa_description: string;
   sepa_allowed_country_codes: string[];
 };
+export type RestrictedEventSettings = {
+  sumup_api_key?: string;
+  sumup_affiliate_key?: string;
+  sumup_merchant_code?: string;
+  currency_identifier: string;
+  max_account_balance: number;
+  sumup_topup_enabled?: boolean;
+  sumup_payment_enabled?: boolean;
+  customer_portal_url: string;
+  customer_portal_about_page_url: string;
+  customer_portal_data_privacy_url: string;
+  customer_portal_contact_email: string;
+  ust_id: string;
+  bon_issuer: string;
+  bon_address: string;
+  bon_title: string;
+  sepa_enabled: boolean;
+  sepa_sender_name: string;
+  sepa_sender_iban: string;
+  sepa_description: string;
+  sepa_allowed_country_codes: string[];
+};
 export const {
   useListProductsQuery,
   useLazyListProductsQuery,
@@ -2133,4 +2154,6 @@ export const {
   useGetTreeForCurrentUserQuery,
   useLazyGetTreeForCurrentUserQuery,
   useUpdateEventMutation,
+  useGetRestrictedEventSettingsQuery,
+  useLazyGetRestrictedEventSettingsQuery,
 } = injectedRtkApi;

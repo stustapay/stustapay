@@ -90,7 +90,7 @@ profile = "black"
 
 [tool.mypy]
 ignore_missing_imports = true
-# check_untyped_defs = true # TODO: enable ass soon as the checks would pass
+check_untyped_defs = true
 pretty = true
 plugins = [
     "pydantic.mypy"

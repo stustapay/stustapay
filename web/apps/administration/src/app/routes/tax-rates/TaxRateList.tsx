@@ -1,7 +1,7 @@
 import { TaxRate, selectTaxRateAll, useDeleteTaxRateMutation, useListTaxRatesQuery } from "@/api";
 import { TaxRateRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
+import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -24,6 +24,7 @@ export const TaxRateList: React.FC = () => {
     }
   );
   const [deleteTaxRate] = useDeleteTaxRateMutation();
+  const renderNode = useRenderNode();
 
   const [taxRateToDelete, setTaxRateToDelete] = React.useState<number | null>(null);
   if (isLoading) {
@@ -61,6 +62,12 @@ export const TaxRateList: React.FC = () => {
       type: "number",
       valueGetter: (params) => params.row.rate * 100,
       valueFormatter: ({ value }) => `${value.toFixed(2)} %`,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
     {
       field: "actions",

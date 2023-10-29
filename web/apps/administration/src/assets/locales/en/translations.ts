@@ -33,6 +33,9 @@ export const translations = {
   tillProfiles: "Till Profiles",
   registerStockings: "Cash Register Stockings",
   registers: "Cash Registers",
+  common: {
+    definedAtNode: "Node",
+  },
   nodes: {
     overview: "Overview",
     statistics: "Stats",
@@ -228,6 +231,7 @@ export const translations = {
     },
     customerPortal: {
       tabLabel: "Customer Portal",
+      baseUrl: "Base URL of Customer Portal",
       contact_email: "Contact E-Mail",
     },
     bon: {
@@ -236,10 +240,17 @@ export const translations = {
       address: "Bon address",
       title: "Bon title",
     },
-    payment: {
-      tabLabel: "Payment",
-      sumup_settings_title: "SumUp Settings",
-      payout_settings_title: "Payout Settings",
+    sumup: {
+      tabLabel: "SumUp",
+      sumup_payment_enabled: "SumUp Payment Enabled",
+      sumup_topup_enabled: "SumUp Top Up Enabled",
+      sumup_api_key: "SumUp API Key",
+      sumup_merchant_code: "SumUp Merchant Code",
+      sumup_affiliate_key: "SumUp Affiliate Key",
+    },
+    payout: {
+      tabLabel: "Payout",
+      sepa_enabled: "Payout enabled",
       sepa_sender_name: "SEPA sender name",
       sepa_sender_iban: "SEPA sender IBAN",
       sepa_description: "SEPA description",

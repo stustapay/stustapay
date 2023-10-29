@@ -3,11 +3,13 @@ import copy
 import csv
 import datetime
 import os
+import tempfile
 import typing
 import unittest
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from io import StringIO
+from pathlib import Path
 
 from dateutil.parser import parse
 
@@ -46,6 +48,18 @@ class TestCustomer:
     uid: int
     pin: str
     balance: float
+
+
+@dataclass
+class TestCustomerInfo:
+    uid: int
+    pin: str
+    balance: float
+    iban: str
+    account_name: str
+    email: str
+    donation: float
+    payout_export: bool
 
 
 class CustomerServiceTest(TerminalTestCase):
@@ -117,15 +131,9 @@ class CustomerServiceTest(TerminalTestCase):
         return order, bon_path, test_customer
 
     async def _create_test_customer(self) -> TestCustomer:
-        uid = 1234
         pin = "pin"
         balance = 120
-        await self.db_conn.execute(
-            "insert into user_tag (node_id, uid, pin) values ($1, $2, $3)",
-            self.node_id,
-            uid,
-            pin,
-        )
+        uid = await self.create_random_user_tag(pin=pin)
 
         account_id = await self.db_conn.fetchval(
             "insert into account (node_id, user_tag_uid, balance, type) values ($1, $2, $3, $4) returning id",
@@ -135,10 +143,14 @@ class CustomerServiceTest(TerminalTestCase):
             "private",
         )
 
-        return TestCustomer(account_id=account_id, pin="pin", uid=1234, balance=120)
+        return TestCustomer(account_id=account_id, pin=pin, uid=uid, balance=120)
 
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
+
+        # create tmp folder for tests which handle files
+        self.tmp_dir_obj = tempfile.TemporaryDirectory()
+        self.tmp_dir = Path(self.tmp_dir_obj.name)
 
         self.customer_service = CustomerService(
             db_pool=self.db_pool,
@@ -150,76 +162,64 @@ class CustomerServiceTest(TerminalTestCase):
         self.currency_identifier = self.event.currency_identifier
         self.contact_email = self.event.customer_portal_contact_email
 
-        self.customers = [
-            {
-                "uid": 12345 * (i + 1),
-                "pin": f"pin{i}",
-                "balance": 10.321 * i + 0.0012,
-                "iban": "DE89370400440532013000",
-                "account_name": f"Rolf{i}",
-                "email": "rolf@lol.de",
-                "donation": 1.0 * i,
-                "payout_export": True,
-            }
-            for i in range(10)
-        ]
-
-        # same amount of donation as balance
-        self.customers += [
-            {
-                "uid": 12345 * (10 + 1),
-                "pin": "pin10",
-                "balance": 10,
-                "iban": "DE89370400440532013000",
-                "account_name": "Rolf Vollspender",
-                "email": "rolf@lol.de",
-                "donation": 10,
-                "payout_export": True,
-            }
-        ]
-
-        await self._add_customers(self.customers)
+        self.customers = await self._generate_customers(n_customers=11)
 
         # first customer with uid 12345 should not be included as he has a balance of 0
         # last customer has same amount of donation as balance, thus should also not be included
         self.customers_to_transfer = self.customers[1:-1]
 
+        assert self.event.sepa_config is not None
         self.sepa_config = self.event.sepa_config
 
-    async def _add_customers(self, data: list[dict]) -> None:
-        for idx, customer in enumerate(data):
-            await self.db_conn.execute(
-                "insert into user_tag (node_id, uid, pin) values ($1, $2, $3)",
-                self.node_id,
-                customer["uid"],
-                customer["pin"],
-            )
+    async def asyncTearDown(self) -> None:
+        await super().asyncTearDown()
+        # delete tmp folder for tests which handle files with all its content
+        self.tmp_dir_obj.cleanup()
 
-            await self.db_conn.execute(
-                "insert into account (id, node_id, user_tag_uid, balance, type) "
-                "overriding system value values ($1, $2, $3, $4, $5)",
-                idx + 100,
+    async def _generate_customers(self, n_customers: int = 10) -> list[TestCustomerInfo]:
+        customers = []
+        for i in range(n_customers):
+            pin = f"pin{i}"
+            balance = 10.321 * i + 0.0012
+            iban = "DE89370400440532013000"
+            account_name = f"Rolf{i}"
+            email = "rolf@lol.de"
+            donation = balance if i == n_customers - 1 else 1.0 * i
+            payout_export = True
+            uid = await self.create_random_user_tag(pin=pin)
+
+            account_id = await self.db_conn.fetchval(
+                "insert into account (node_id, user_tag_uid, balance, type) "
+                "overriding system value values ($1, $2, $3, $4) returning id",
                 self.node_id,
-                customer["uid"],
-                customer["balance"],
+                uid,
+                balance,
                 "private",
             )
 
             await self.db_conn.execute(
                 "insert into customer_info (customer_account_id, iban, account_name, email, donation, payout_export) "
                 "values ($1, $2, $3, $4, $5, $6)",
-                idx + 100,
-                customer["iban"],
-                customer["account_name"],
-                customer["email"],
-                customer["donation"],
-                customer["payout_export"],
+                account_id,
+                iban,
+                account_name,
+                email,
+                donation,
+                payout_export,
             )
-
-            # update allowed country code config
-            await self.db_conn.execute(
-                "update config set value = '[\"DE\"]' where key = 'customer_portal.sepa.allowed_country_codes'",
+            customers.append(
+                TestCustomerInfo(
+                    uid=uid,
+                    pin=pin,
+                    donation=donation,
+                    balance=balance,
+                    iban=iban,
+                    email=email,
+                    account_name=account_name,
+                    payout_export=payout_export,
+                )
             )
+        return customers
 
     @typing.no_type_check  # mypy is not happy with the whole tree.find().text since the actual return is Optional
     def _check_sepa_xml(self, xml_file, customers, sepa_config: SEPAConfig):
@@ -240,26 +240,26 @@ class CustomerServiceTest(TerminalTestCase):
             # check amount
             self.assertEqual(
                 float(tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}Amt/{p}InstdAmt").text),
-                round(customer["balance"] - customer["donation"], 2),
+                round(customer.balance - customer.donation, 2),
             )
-            total_sum += round(customer["balance"] - customer["donation"], 2)
+            total_sum += round(customer.balance - customer.donation, 2)
 
             # check iban
             self.assertEqual(
                 tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}CdtrAcct/{p}Id/{p}IBAN").text,
-                customer["iban"],
+                customer.iban,
             )
 
             # check name
             self.assertEqual(
                 tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}Cdtr/{p}Nm").text,
-                customer["account_name"],
+                customer.account_name,
             )
 
             # check description
             self.assertEqual(
                 tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}RmtInf/{p}Ustrd").text,
-                sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer["uid"])),
+                sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer.uid)),
             )
 
         self.assertEqual(total_sum, group_sum)
@@ -272,15 +272,11 @@ class CustomerServiceTest(TerminalTestCase):
         def check_data(result: list[Payout], leng: int, ith: int = 0) -> None:
             self.assertEqual(len(result), leng)
             for result_customer, customer in zip(result, self.customers_to_transfer[ith * leng : (ith + 1) * leng]):
-                self.assertEqual(result_customer.iban, customer["iban"])
-                self.assertEqual(result_customer.account_name, customer["account_name"])
-                self.assertEqual(result_customer.email, customer["email"])
-                self.assertEqual(result_customer.user_tag_uid, customer["uid"])
-                self.assertEqual(result_customer.balance, customer["balance"] - customer["donation"])  # type: ignore
-
-        # check not existing payout run
-        result = await get_customer_bank_data(self.db_conn, 1)
-        self.assertEqual(len(result), 0)
+                self.assertEqual(result_customer.iban, customer.iban)
+                self.assertEqual(result_customer.account_name, customer.account_name)
+                self.assertEqual(result_customer.email, customer.email)
+                self.assertEqual(result_customer.user_tag_uid, customer.uid)
+                self.assertEqual(result_customer.balance, customer.balance - customer.donation)
 
         # create payout run
         payout_run_id, number_of_payouts = await create_payout_run(
@@ -290,7 +286,11 @@ class CustomerServiceTest(TerminalTestCase):
 
         self.assertEqual(
             number_of_payouts,
-            await self.db_conn.fetchval("select count(*) from payout where payout_run_id = $1", payout_run_id),
+            await self.db_conn.fetchval(
+                "select count(*) from payout where payout_run_id = $1 and node_id = any($2)",
+                payout_run_id,
+                self.event_node.ids_to_event_node,
+            ),
         )
 
         result = await get_customer_bank_data(self.db_conn, payout_run_id)
@@ -312,7 +312,7 @@ class CustomerServiceTest(TerminalTestCase):
             )
         )
 
-        export_sum = 0
+        export_sum = 0.0
 
         # read the csv back in
         csvfile = StringIO(csv_batches[0])
@@ -321,19 +321,23 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(len(rows), len(self.customers_to_transfer))
 
         for row, customer in zip(rows, self.customers_to_transfer):
-            self.assertEqual(row["beneficiary_name"], customer["account_name"])
-            self.assertEqual(row["iban"], customer["iban"])
-            self.assertEqual(float(row["amount"]), round(customer["balance"] - customer["donation"], 2))
+            self.assertEqual(row["beneficiary_name"], customer.account_name)
+            self.assertEqual(row["iban"], customer.iban)
+            self.assertEqual(float(row["amount"]), round(customer.balance - customer.donation, 2))
             self.assertEqual(row["currency"], self.currency_identifier)
             self.assertEqual(
                 row["reference"],
-                self.sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer["uid"])),
+                self.sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer.uid)),
             )
-            self.assertEqual(row["email"], customer["email"])
-            self.assertEqual(int(row["uid"]), customer["uid"])
+            self.assertEqual(row["email"], customer.email)
+            self.assertEqual(int(row["uid"]), customer.uid)
             export_sum += float(row["amount"])
 
-        sql_sum = float(await self.db_conn.fetchval("select sum(round(balance, 2)) from payout"))
+        sql_sum = float(
+            await self.db_conn.fetchval(
+                "select sum(round(balance, 2)) from payout where node_id = any($1)", self.event_node.ids_to_event_node
+            ),
+        )
         self.assertEqual(sql_sum, export_sum)
 
     async def test_sepa_export(self):
@@ -552,19 +556,18 @@ class CustomerServiceTest(TerminalTestCase):
         output_path = self.tmp_dir / "test_export"
         output_path.mkdir(parents=True, exist_ok=True)
 
-        await export_customer_payouts(
+        payout_run_id = await export_customer_payouts(
             config=self.test_config,
             event_node_id=self.node_id,
             created_by="test",
             dry_run=True,
             output_path=output_path,
         )
-        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(1))))
-        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(1, 1))))
-
-        self._check_sepa_xml(
-            os.path.join(output_path, SEPA_PATH.format(1, 1)), self.customers_to_transfer, self.sepa_config
-        )
+        csv_path = os.path.join(output_path, CSV_PATH.format(payout_run_id))
+        sepa_path = os.path.join(output_path, SEPA_PATH.format(payout_run_id, 1))
+        self.assertTrue(os.path.exists(csv_path))
+        self.assertTrue(os.path.exists(sepa_path))
+        self._check_sepa_xml(sepa_path, self.customers_to_transfer, self.sepa_config)
 
         # check if dry run successful and no database entry created
         self.assertEqual(await get_number_of_payouts(self.db_conn, event_node_id=self.node_id, payout_run_id=1), 0)
@@ -573,7 +576,7 @@ class CustomerServiceTest(TerminalTestCase):
         output_path.mkdir(parents=True, exist_ok=True)
 
         # test several batches
-        await export_customer_payouts(
+        payout_run_id_2 = await export_customer_payouts(
             config=self.test_config,
             created_by="Test",
             event_node_id=self.node_id,
@@ -581,44 +584,48 @@ class CustomerServiceTest(TerminalTestCase):
             max_transactions_per_batch=1,
             output_path=output_path,
         )
+        csv_path = os.path.join(output_path, CSV_PATH.format(payout_run_id_2))
+        self.assertTrue(os.path.exists(csv_path))
         for i in range(len(self.customers_to_transfer)):
-            self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(2, i + 1))))
+            sepa_path = os.path.join(output_path, SEPA_PATH.format(payout_run_id_2, i + 1))
+            self.assertTrue(os.path.exists(sepa_path))
             self._check_sepa_xml(
-                os.path.join(output_path, SEPA_PATH.format(2, i + 1)),
+                sepa_path,
                 self.customers_to_transfer[i : i + 1],
                 self.sepa_config,
             )
 
-        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(2))))
-
         # test non dry run
         output_path = self.tmp_dir / "test_export3"
         output_path.mkdir(parents=True, exist_ok=True)
-        await export_customer_payouts(
+        payout_run_id_3 = await export_customer_payouts(
             config=self.test_config,
             created_by="Test",
             event_node_id=self.node_id,
             dry_run=False,
             output_path=output_path,
         )
-        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(3, 1))))
-        self._check_sepa_xml(
-            os.path.join(output_path, SEPA_PATH.format(3, 1)), self.customers_to_transfer, self.sepa_config
-        )
-
-        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(3))))
+        csv_path = os.path.join(output_path, CSV_PATH.format(payout_run_id_3))
+        sepa_path = os.path.join(output_path, SEPA_PATH.format(payout_run_id_3, 1))
+        self.assertTrue(os.path.exists(csv_path))
+        self.assertTrue(os.path.exists(sepa_path))
+        self._check_sepa_xml(sepa_path, self.customers_to_transfer, self.sepa_config)
 
         # check that all customers in self.customers_to_transfer have payout_run_id set to 1 and rest null
-        customers = await self.db_conn.fetch_many(Customer, "select * from customer")
-        uid_to_transfer = [customer["uid"] for customer in self.customers_to_transfer]
+        customers = await self.db_conn.fetch_many(
+            Customer, "select * from customer where node_id = any($1)", self.event_node.ids_to_event_node
+        )
+        uid_to_transfer = [customer.uid for customer in self.customers_to_transfer]
         for customer in customers:
             if customer.user_tag_uid in uid_to_transfer:
-                self.assertEqual(customer.payout_run_id, 3)
+                self.assertEqual(customer.payout_run_id, payout_run_id_3)
             else:
                 self.assertIsNone(customer.payout_run_id)
 
         # test customer "Rolf1" can no longer be updated since they now have a payout run assigned
-        auth = await self.customer_service.login_customer(uid=(12345 * (1 + 1)), pin="pin1")
+        auth = await self.customer_service.login_customer(
+            uid=self.customers_to_transfer[0].uid, pin=self.customers_to_transfer[0].pin
+        )
         self.assertIsNotNone(auth)
         customer_bank = CustomerBank(
             iban="DE89370400440532013000", account_name="Rolf1 updated", email="lol@rolf.de", donation=2.0
@@ -639,9 +646,9 @@ class CustomerServiceTest(TerminalTestCase):
         output_path.mkdir(parents=True, exist_ok=True)
 
         num = 2
-        s = sum(customer["balance"] - customer["donation"] for customer in self.customers_to_transfer[:num])
+        s = sum(customer.balance - customer.donation for customer in self.customers_to_transfer[:num])
 
-        await export_customer_payouts(
+        payout_run_id = await export_customer_payouts(
             config=self.test_config,
             created_by="test",
             event_node_id=self.node_id,
@@ -650,10 +657,13 @@ class CustomerServiceTest(TerminalTestCase):
             max_payout_sum=s,
         )
 
-        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(1))))
-        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(1, 1))))
+        sepa_path = os.path.join(output_path, SEPA_PATH.format(payout_run_id, 1))
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(payout_run_id))))
+        self.assertTrue(os.path.exists(sepa_path))
         self._check_sepa_xml(
-            os.path.join(output_path, SEPA_PATH.format(1, 1)), self.customers_to_transfer[0:num], self.sepa_config
+            sepa_path,
+            self.customers_to_transfer[0:num],
+            self.sepa_config,
         )
 
     async def test_payout_runs(self):
@@ -661,15 +671,17 @@ class CustomerServiceTest(TerminalTestCase):
         output_path.mkdir(parents=True, exist_ok=True)
         os.makedirs(output_path, exist_ok=True)
 
-        uid_not_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[:2]]
+        uid_not_to_transfer = [customer.uid for customer in self.customers_to_transfer[:2]]
 
         await self.db_conn.execute(
             "update customer_info c set payout_export = false "
-            "from account_with_history a where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2)",
+            "from account_with_history a "
+            "where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2) and node_id = any($3)",
             *uid_not_to_transfer,
+            self.event_node.ids_to_event_node,
         )
 
-        await export_customer_payouts(
+        payout_run_id = await export_customer_payouts(
             config=self.test_config,
             created_by="test",
             event_node_id=self.node_id,
@@ -677,17 +689,19 @@ class CustomerServiceTest(TerminalTestCase):
             output_path=output_path,
         )
 
-        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(1))))
-        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(1, 1))))
-        self._check_sepa_xml(
-            os.path.join(output_path, SEPA_PATH.format(1, 1)), self.customers_to_transfer[2:], self.sepa_config
-        )
+        csv_path = os.path.join(output_path, CSV_PATH.format(payout_run_id))
+        sepa_path = os.path.join(output_path, SEPA_PATH.format(payout_run_id, 1))
+        self.assertTrue(os.path.exists(csv_path))
+        self.assertTrue(os.path.exists(sepa_path))
+        self._check_sepa_xml(sepa_path, self.customers_to_transfer[2:], self.sepa_config)
 
-        customers = await self.db_conn.fetch_many(Customer, "select * from customer")
-        uid_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[2:]]
+        customers = await self.db_conn.fetch_many(
+            Customer, "select * from customer where node_id = any($1)", self.event_node.ids_to_event_node
+        )
+        uid_to_transfer = [customer.uid for customer in self.customers_to_transfer[2:]]
         for customer in customers:
             if customer.user_tag_uid in uid_to_transfer:
-                self.assertEqual(customer.payout_run_id, 1)
+                self.assertEqual(customer.payout_run_id, payout_run_id)
             else:
                 self.assertIsNone(customer.payout_run_id)
 
@@ -695,32 +709,38 @@ class CustomerServiceTest(TerminalTestCase):
         await self.db_conn.execute(
             "update customer_info c set payout_export = true "
             "from account_with_history a "
-            "where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2)",
+            "where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2) and node_id = any($3)",
             *uid_not_to_transfer,
+            self.event_node.ids_to_event_node,
         )
 
         # but set customer 1 to an error
         await self.db_conn.execute(
             "update customer_info c set payout_error = 'some error' "
             "from account_with_history a "
-            "where a.id = c.customer_account_id and a.user_tag_uid = $1",
-            self.customers_to_transfer[0]["uid"],
+            "where a.id = c.customer_account_id and a.user_tag_uid = $1 and node_id = any($2)",
+            self.customers_to_transfer[0].uid,
+            self.event_node.ids_to_event_node,
         )
 
-        await export_customer_payouts(
+        payout_run_id_2 = await export_customer_payouts(
             config=self.test_config,
             created_by="test",
             dry_run=False,
             event_node_id=self.node_id,
             output_path=output_path,
         )
-        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(2))))
-        self.assertTrue(os.path.exists(os.path.join(output_path, SEPA_PATH.format(2, 1))))
-        self._check_sepa_xml(
-            os.path.join(output_path, SEPA_PATH.format(2, 1)), self.customers_to_transfer[1:2], self.sepa_config
-        )
+        sepa_path = os.path.join(output_path, SEPA_PATH.format(payout_run_id_2, 1))
+        self.assertTrue(os.path.exists(os.path.join(output_path, CSV_PATH.format(payout_run_id_2))))
+        self.assertTrue(os.path.exists(sepa_path))
+        self._check_sepa_xml(sepa_path, self.customers_to_transfer[1:2], self.sepa_config)
 
-        self.assertEqual(await self.db_conn.fetchval("select count(*) from customer where payout_run_id = 2"), 1)
+        n_customers = await self.db_conn.fetchval(
+            "select count(*) from customer where node_id = any($1) and payout_run_id = $2",
+            self.event_node.ids_to_event_node,
+            payout_run_id_2,
+        )
+        self.assertEqual(n_customers, 1)
 
 
 if __name__ == "__main__":

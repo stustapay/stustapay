@@ -1,7 +1,7 @@
 import { selectTillLayoutAll, useDeleteTillLayoutMutation, useListTillLayoutsQuery } from "@/api";
 import { TillLayoutRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
+import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -26,6 +26,7 @@ export const TillLayoutList: React.FC = () => {
     }
   );
   const [deleteTill] = useDeleteTillLayoutMutation();
+  const renderNode = useRenderNode();
 
   const [layoutToDelete, setLayoutToDelete] = React.useState<number | null>(null);
   if (isTillsLoading) {
@@ -60,6 +61,12 @@ export const TillLayoutList: React.FC = () => {
       field: "description",
       headerName: t("layout.description") as string,
       flex: 2,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
     {
       field: "actions",

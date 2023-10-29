@@ -1,7 +1,12 @@
 import { Order } from "@/api";
 import { OrderRoutes } from "@/app/routes";
 import { useCurrencyFormatter } from "@/hooks";
-import { Link } from "@mui/material";
+import {
+  AddCard as AddCardIcon,
+  ShoppingCart as ShoppingCartIcon,
+  ConfirmationNumber as TicketIcon,
+} from "@mui/icons-material";
+import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DataGridTitle } from "@stustapay/components";
 import { formatDate } from "@stustapay/utils";
@@ -12,6 +17,16 @@ import { Link as RouterLink } from "react-router-dom";
 export interface OrderListProps {
   orders: Order[];
 }
+
+const orderTypeToIcon: Record<string, React.ReactElement> = {
+  // "cancel_sale":,
+  // "money_transfer":,
+  // "money_transfer_imbalance":,
+  // "pay_out":,
+  sale: <ShoppingCartIcon />,
+  ticket: <TicketIcon />,
+  top_up: <AddCardIcon />,
+};
 
 export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
   const { t } = useTranslation();
@@ -32,6 +47,13 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
       field: "order_type",
       headerName: t("order.type") as string,
       width: 100,
+      renderCell: ({ row }) => {
+        const icon = orderTypeToIcon[row.order_type];
+        if (icon) {
+          return <Tooltip title={row.order_type}>{icon}</Tooltip>;
+        }
+        return row.order_type;
+      },
     },
     {
       field: "payment_method",

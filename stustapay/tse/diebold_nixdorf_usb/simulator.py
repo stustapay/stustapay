@@ -28,7 +28,7 @@ from asn1crypto.core import (
 )
 from fastapi import FastAPI, WebSocket
 
-from stustapay.tse.diebold_nixdorf_usb.errorcodes import dnerror
+from stustapay.tse.diebold_nixdorf_usb.protocol import TseResponse, TseSuccess, dnerror
 
 
 class SignatureAlgorithm_seq(Sequence):
@@ -130,8 +130,6 @@ class VirtualTSE:
         ]
 
     def parse_input(self, msgdata):
-        response = {}
-
         msg = json.loads(msgdata.strip("\x02").strip("\n").strip("\x03"))
 
         # extract command
@@ -178,8 +176,7 @@ class VirtualTSE:
         return response
 
     # transactions
-    def starttrans(self, msg):
-        response = {}
+    def starttrans(self, msg) -> TseResponse:
         # check if all Parameters are here
         if "ClientID" not in msg or "Password" not in msg:
             return dnerror(3)  # param missing
@@ -219,18 +216,19 @@ class VirtualTSE:
         self.transnr += 1
         self.current_transactions[msg["ClientID"]].add(self.transnr)
 
-        response["Status"] = "ok"
-        response["TransactionNumber"] = self.transnr
-        response["SerialNumber"] = self.serial
-        response["SignatureCounter"] = self.signctr
-        LogTime_datetime = datetime.now(timezone(timedelta(hours=2)))
-        response["Signature"] = self.generate_signature(msg, str(self.transnr), LogTime_datetime)
-        response["LogTime"] = LogTime_datetime.isoformat(timespec="seconds")
+        log_time = datetime.now(timezone(timedelta(hours=2)))
+        response: TseResponse = {
+            "Status": "ok",
+            "TransactionNumber": self.transnr,
+            "SerialNumber": self.serial,
+            "SignatureCounter": self.signctr,
+            "Signature": self.generate_signature(msg, str(self.transnr), log_time),
+            "LogTime": log_time.isoformat(timespec="seconds"),
+        }
 
         return response
 
-    def updatetrans(self, msg):
-        response = {}
+    def updatetrans(self, msg) -> TseResponse:
         # check if all Parameters are here
         if "ClientID" not in msg or "Password" not in msg or "TransactionNumber" not in msg:
             return dnerror(3)  # param missing
@@ -257,21 +255,20 @@ class VirtualTSE:
             # error this transaction was not started
             return dnerror(5017)
 
-        response["Status"] = "ok"
+        response: TseSuccess = {"Status": "ok"}
         if "Unsigned" in msg:
             if msg["Unsigned"] == "true":
                 return response  # do not create a signature
 
         self.signctr += 1
         response["SignatureCounter"] = self.signctr
-        LogTime_datetime = datetime.now(timezone(timedelta(hours=1)))
-        response["Signature"] = self.generate_signature(msg, str(self.transnr), LogTime_datetime)
-        response["LogTime"] = LogTime_datetime.isoformat(timespec="seconds")
+        log_time = datetime.now(timezone(timedelta(hours=1)))
+        response["Signature"] = self.generate_signature(msg, str(self.transnr), log_time)
+        response["LogTime"] = log_time.isoformat(timespec="seconds")
 
         return response
 
-    def finishtrans(self, msg):
-        response = {}
+    def finishtrans(self, msg) -> TseResponse:
         # check if all Parameters are here
         if "ClientID" not in msg or "Password" not in msg or "TransactionNumber" not in msg:
             return dnerror(3)  # param missing
@@ -306,19 +303,19 @@ class VirtualTSE:
                 while True:
                     time.sleep(1)
 
-        response["Status"] = "ok"
         self.signctr += 1
-        response["SignatureCounter"] = self.signctr
-
-        LogTime_datetime = datetime.now(timezone(timedelta(hours=1)))
-        response["Signature"] = self.generate_signature(msg, msg["TransactionNumber"], LogTime_datetime)
-        response["LogTime"] = LogTime_datetime.isoformat(timespec="seconds")
+        log_time = datetime.now(timezone(timedelta(hours=1)))
+        response: TseResponse = {
+            "Status": "ok",
+            "SignatureCounter": self.signctr,
+            "Signature": self.generate_signature(msg, msg["TransactionNumber"], log_time),
+            "LogTime": log_time.isoformat(timespec="seconds"),
+        }
 
         return response
 
     # management
-    def changepassword(self, msg):
-        response = {}
+    def changepassword(self, msg) -> TseResponse:
         # check if all Parameters are here
         if "UserID" not in msg or "NewPassword" not in msg or "OldPassword" not in msg:
             return dnerror(3)  # param missing
@@ -354,11 +351,9 @@ class VirtualTSE:
             self.password_timeadmin = newpw
 
         self.password_block_counter = 0
-        response["Status"] = "ok"
-        return response
+        return {"Status": "ok"}
 
-    def unblockuser(self, msg):
-        response = {}
+    def unblockuser(self, msg) -> TseResponse:
         # check if all Parameters are here
         if "UserID" not in msg or "NewPassword" not in msg or "Puk" not in msg:
             return dnerror(3)  # param missing
@@ -395,11 +390,9 @@ class VirtualTSE:
             self.password_timeadmin = newpw
         self.password_block_counter = 0
         self.puk_block_counter = 0
-        response["Status"] = "ok"
-        return response
+        return {"Status": "ok"}
 
-    def registerclientid(self, msg):
-        response = {}
+    def registerclientid(self, msg) -> TseResponse:
         # check if all Parameters are here
         if "ClientID" not in msg or "Password" not in msg:
             return dnerror(3)  # param missing
@@ -430,11 +423,9 @@ class VirtualTSE:
         self.current_transactions[msg["ClientID"]] = set()
 
         self.password_block_counter = 0
-        response["Status"] = "ok"
-        return response
+        return {"Status": "ok"}
 
-    def deregisterclientid(self, msg):
-        response = {}
+    def deregisterclientid(self, msg) -> TseResponse:
         # check if all Parameters are here
         if "ClientID" not in msg or "Password" not in msg:
             return dnerror(3)  # param missing
@@ -464,11 +455,10 @@ class VirtualTSE:
             return dnerror(5)
 
         self.password_block_counter = 0
-        response["Status"] = "ok"
-        return response
+        return {"Status": "ok"}
 
-    def getdevicestatus(self, msg):
-        response = {"Status": "ok", "Parameters": {"SignatureAlgorithm": "ecdsa-plain-SHA384"}}
+    def getdevicestatus(self, msg) -> TseResponse:
+        response: TseSuccess = {"Status": "ok", "Parameters": {"SignatureAlgorithm": "ecdsa-plain-SHA384"}}
         password = msg.get("Password")
         if password is not None:
             # check if blocked
@@ -483,11 +473,11 @@ class VirtualTSE:
             response["ClientIDs"] = sorted(self.current_transactions)
         return response
 
-    def getdeviceinfo(self, msg):
+    def getdeviceinfo(self, msg) -> TseResponse:
         del msg
         return {"Status": "ok", "DeviceInfo": {"SerialNumber": self.serial, "TimeFormat": "UnixTime"}}
 
-    def getdevicedata(self, msg):
+    def getdevicedata(self, msg) -> TseResponse:
         name = msg["Name"]
         encoding_format = msg.get("Format", "Hex")
 
@@ -507,7 +497,7 @@ class VirtualTSE:
 
         return {"Status": "ok", "Name": name, "Value": value_enc, "Length": len(value)}
 
-    def generate_signature(self, msg, TransactionNr, LogTime_datetime):
+    def generate_signature(self, msg, transaction_nr, log_time):
         signature: str = ""
 
         # simulate time required for signing process
@@ -564,7 +554,7 @@ class VirtualTSE:
         data["SerialNumber"] = sha256(self.public_key).digest()
         data["signatureAlgorithm"] = signaturealgorithm
         data["signatureCounter"] = self.signctr
-        data["LogTime"] = int(LogTime_datetime.timestamp())
+        data["LogTime"] = int(log_time.timestamp())
 
         # why use a propper ASN.1 SEQUENCE, when you can make it much more complicated?
         message = (

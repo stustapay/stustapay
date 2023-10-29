@@ -183,8 +183,7 @@ class PayoutService(DBService):
         self.config_service = config_service
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])  # TODO: payout_management
-    # @requires_user([Privilege.tse_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_pending_payout_detail(self, *, conn: Connection) -> PendingPayoutDetail:
         return await conn.fetch_one(
@@ -197,15 +196,13 @@ class PayoutService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])  # TODO: payout_management
-    # @requires_user([Privilege.tse_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_payout_run_payouts(self, *, conn: Connection, payout_run_id: int) -> list[Payout]:
         return await conn.fetch_many(Payout, "select * from payout where payout_run_id = $1", payout_run_id)
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])  # TODO: payout_management
-    # @requires_user([Privilege.tse_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_payout_run_csv(
         self, *, conn: Connection, node: Node, payout_run_id: int, batch_size: Optional[int]
@@ -226,8 +223,7 @@ class PayoutService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])  # TODO: payout_management
-    # @requires_user([Privilege.tse_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_payout_run_sepa_xml(
         self,
@@ -255,8 +251,7 @@ class PayoutService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])  # TODO: payout_management
-    # @requires_user([Privilege.tse_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def create_payout_run(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, new_payout_run: NewPayoutRun
@@ -270,8 +265,7 @@ class PayoutService(DBService):
         return await conn.fetch_one(PayoutRunWithStats, "select * from payout_run_with_stats where id = $1", run_id)
 
     @with_db_transaction
-    @requires_user([Privilege.account_management])  # TODO: payout_management
-    # @requires_user([Privilege.tse_management])
+    @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_payout_runs(self, *, conn: Connection) -> list[PayoutRunWithStats]:
         return await conn.fetch_many(PayoutRunWithStats, "select * from payout_run_with_stats")
