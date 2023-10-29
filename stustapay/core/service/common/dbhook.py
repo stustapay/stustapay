@@ -6,7 +6,7 @@ import asyncio
 import contextlib
 import inspect
 import logging
-from typing import Awaitable, Callable, Optional, Type, Union
+from typing import Awaitable, Callable, Optional, Union
 
 import asyncpg.exceptions
 
@@ -39,7 +39,7 @@ class DBHook:
         self.initial_run = initial_run
         self.timelimit = hook_timeout
 
-        self.events: asyncio.Queue[Union[str, Type[StopIteration]]] = asyncio.Queue(maxsize=2048)
+        self.events: asyncio.Queue[Union[str, StopIteration]] = asyncio.Queue(maxsize=2048)
         self.logger = logging.getLogger(__name__)
 
     @contextlib.asynccontextmanager
@@ -62,7 +62,7 @@ class DBHook:
         for _ in range(self.events.qsize()):
             self.events.get_nowait()
             self.events.task_done()
-        self.events.put_nowait(StopIteration)
+        self.events.put_nowait(StopIteration())
 
     async def run(self):
         while True:
@@ -76,8 +76,8 @@ class DBHook:
 
                     # handle events
                     while True:
-                        event = await self.events.get()
-                        if event is StopIteration:
+                        event: str | StopIteration = await self.events.get()
+                        if isinstance(event, StopIteration):
                             return
 
                         ret = await asyncio.wait_for(self.event_handler(event), self.timelimit)

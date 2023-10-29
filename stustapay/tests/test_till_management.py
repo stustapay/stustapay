@@ -28,6 +28,7 @@ class TillManagementTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
         assert self.cashier.user_tag_uid is not None
+        assert self.cashier.cashier_account_id is not None
 
         self.finanzorga, self.finanzorga_role = await self.create_finanzorga(cashier_role_name=self.cashier_role.name)
         self.finanzorga_tag_uid = self.finanzorga.user_tag_uid

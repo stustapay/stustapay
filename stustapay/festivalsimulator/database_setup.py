@@ -2,6 +2,8 @@
 import logging
 from typing import Optional
 
+import asyncpg
+
 from stustapay.core.config import Config
 from stustapay.core.database import apply_revisions, reset_schema
 from stustapay.core.schema.product import NewProduct, ProductRestriction
@@ -403,7 +405,7 @@ class DatabaseSetup:
 
         self.event_node_id: int = None  # type: ignore # initialized at the start of run()
 
-        self.db_pool = None
+        self.db_pool: asyncpg.Pool | None = None
 
     async def _create_tills(self, conn: Connection, admin_token: str, n_tills: int, tax_rate_ust: TaxRate):
         assert self.db_pool is not None

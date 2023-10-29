@@ -46,6 +46,8 @@ class OrderLogicTest(TerminalTestCase):
     async def asyncSetUp(self) -> None:
         await super().asyncSetUp()
         assert self.cashier.user_tag_uid is not None
+        assert self.cashier.cashier_account_id is not None
+
         self.product_service = ProductService(
             db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
         )

@@ -50,6 +50,18 @@ class TestCustomer:
     balance: float
 
 
+@dataclass
+class TestCustomerInfo:
+    uid: int
+    pin: str
+    balance: float
+    iban: str
+    account_name: str
+    email: str
+    donation: float
+    payout_export: bool
+
+
 class CustomerServiceTest(TerminalTestCase):
     async def _create_order_with_bon(self) -> tuple[Order, str, TestCustomer]:
         test_customer = await self._create_test_customer()
@@ -150,40 +162,13 @@ class CustomerServiceTest(TerminalTestCase):
         self.currency_identifier = self.event.currency_identifier
         self.contact_email = self.event.customer_portal_contact_email
 
-        self.customers = [
-            {
-                "uid": 12345 * (i + 1),
-                "pin": f"pin{i}",
-                "balance": 10.321 * i + 0.0012,
-                "iban": "DE89370400440532013000",
-                "account_name": f"Rolf{i}",
-                "email": "rolf@lol.de",
-                "donation": 1.0 * i,
-                "payout_export": True,
-            }
-            for i in range(10)
-        ]
-
-        # same amount of donation as balance
-        self.customers += [
-            {
-                "uid": 12345 * (10 + 1),
-                "pin": "pin10",
-                "balance": 10,
-                "iban": "DE89370400440532013000",
-                "account_name": "Rolf Vollspender",
-                "email": "rolf@lol.de",
-                "donation": 10,
-                "payout_export": True,
-            }
-        ]
-
-        await self._add_customers(self.customers)
+        self.customers = await self._generate_customers(n_customers=11)
 
         # first customer with uid 12345 should not be included as he has a balance of 0
         # last customer has same amount of donation as balance, thus should also not be included
         self.customers_to_transfer = self.customers[1:-1]
 
+        assert self.event.sepa_config is not None
         self.sepa_config = self.event.sepa_config
 
     async def asyncTearDown(self) -> None:
@@ -191,35 +176,50 @@ class CustomerServiceTest(TerminalTestCase):
         # delete tmp folder for tests which handle files with all its content
         self.tmp_dir_obj.cleanup()
 
-    async def _add_customers(self, data: list[dict]) -> None:
-        for idx, customer in enumerate(data):
-            await self.create_random_user_tag(pin=customer["pin"])
+    async def _generate_customers(self, n_customers: int = 10) -> list[TestCustomerInfo]:
+        customers = []
+        for i in range(n_customers):
+            pin = f"pin{i}"
+            balance = 10.321 * i + 0.0012
+            iban = "DE89370400440532013000"
+            account_name = f"Rolf{i}"
+            email = "rolf@lol.de"
+            donation = balance if i == n_customers - 1 else 1.0 * i
+            payout_export = True
+            uid = await self.create_random_user_tag(pin=pin)
 
-            await self.db_conn.execute(
-                "insert into account (id, node_id, user_tag_uid, balance, type) "
-                "overriding system value values ($1, $2, $3, $4, $5)",
-                idx + 100,
+            account_id = await self.db_conn.fetchval(
+                "insert into account (node_id, user_tag_uid, balance, type) "
+                "overriding system value values ($1, $2, $3, $4) returning id",
                 self.node_id,
-                customer["uid"],
-                customer["balance"],
+                uid,
+                balance,
                 "private",
             )
 
             await self.db_conn.execute(
                 "insert into customer_info (customer_account_id, iban, account_name, email, donation, payout_export) "
                 "values ($1, $2, $3, $4, $5, $6)",
-                idx + 100,
-                customer["iban"],
-                customer["account_name"],
-                customer["email"],
-                customer["donation"],
-                customer["payout_export"],
+                account_id,
+                iban,
+                account_name,
+                email,
+                donation,
+                payout_export,
             )
-
-            # update allowed country code config
-            await self.db_conn.execute(
-                "update config set value = '[\"DE\"]' where key = 'customer_portal.sepa.allowed_country_codes'",
+            customers.append(
+                TestCustomerInfo(
+                    uid=uid,
+                    pin=pin,
+                    donation=donation,
+                    balance=balance,
+                    iban=iban,
+                    email=email,
+                    account_name=account_name,
+                    payout_export=payout_export,
+                )
             )
+        return customers
 
     @typing.no_type_check  # mypy is not happy with the whole tree.find().text since the actual return is Optional
     def _check_sepa_xml(self, xml_file, customers, sepa_config: SEPAConfig):
@@ -240,26 +240,26 @@ class CustomerServiceTest(TerminalTestCase):
             # check amount
             self.assertEqual(
                 float(tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}Amt/{p}InstdAmt").text),
-                round(customer["balance"] - customer["donation"], 2),
+                round(customer.balance - customer.donation, 2),
             )
-            total_sum += round(customer["balance"] - customer["donation"], 2)
+            total_sum += round(customer.balance - customer.donation, 2)
 
             # check iban
             self.assertEqual(
                 tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}CdtrAcct/{p}Id/{p}IBAN").text,
-                customer["iban"],
+                customer.iban,
             )
 
             # check name
             self.assertEqual(
                 tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}Cdtr/{p}Nm").text,
-                customer["account_name"],
+                customer.account_name,
             )
 
             # check description
             self.assertEqual(
                 tree.find(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf[{i + 1}]/{p}RmtInf/{p}Ustrd").text,
-                sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer["uid"])),
+                sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer.uid)),
             )
 
         self.assertEqual(total_sum, group_sum)
@@ -272,11 +272,11 @@ class CustomerServiceTest(TerminalTestCase):
         def check_data(result: list[Payout], leng: int, ith: int = 0) -> None:
             self.assertEqual(len(result), leng)
             for result_customer, customer in zip(result, self.customers_to_transfer[ith * leng : (ith + 1) * leng]):
-                self.assertEqual(result_customer.iban, customer["iban"])
-                self.assertEqual(result_customer.account_name, customer["account_name"])
-                self.assertEqual(result_customer.email, customer["email"])
-                self.assertEqual(result_customer.user_tag_uid, customer["uid"])
-                self.assertEqual(result_customer.balance, customer["balance"] - customer["donation"])  # type: ignore
+                self.assertEqual(result_customer.iban, customer.iban)
+                self.assertEqual(result_customer.account_name, customer.account_name)
+                self.assertEqual(result_customer.email, customer.email)
+                self.assertEqual(result_customer.user_tag_uid, customer.uid)
+                self.assertEqual(result_customer.balance, customer.balance - customer.donation)
 
         # check not existing payout run
         result = await get_customer_bank_data(self.db_conn, 1)
@@ -312,7 +312,7 @@ class CustomerServiceTest(TerminalTestCase):
             )
         )
 
-        export_sum = 0
+        export_sum = 0.0
 
         # read the csv back in
         csvfile = StringIO(csv_batches[0])
@@ -321,16 +321,16 @@ class CustomerServiceTest(TerminalTestCase):
         self.assertEqual(len(rows), len(self.customers_to_transfer))
 
         for row, customer in zip(rows, self.customers_to_transfer):
-            self.assertEqual(row["beneficiary_name"], customer["account_name"])
-            self.assertEqual(row["iban"], customer["iban"])
-            self.assertEqual(float(row["amount"]), round(customer["balance"] - customer["donation"], 2))
+            self.assertEqual(row["beneficiary_name"], customer.account_name)
+            self.assertEqual(row["iban"], customer.iban)
+            self.assertEqual(float(row["amount"]), round(customer.balance - customer.donation, 2))
             self.assertEqual(row["currency"], self.currency_identifier)
             self.assertEqual(
                 row["reference"],
-                self.sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer["uid"])),
+                self.sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer.uid)),
             )
-            self.assertEqual(row["email"], customer["email"])
-            self.assertEqual(int(row["uid"]), customer["uid"])
+            self.assertEqual(row["email"], customer.email)
+            self.assertEqual(int(row["uid"]), customer.uid)
             export_sum += float(row["amount"])
 
         sql_sum = float(await self.db_conn.fetchval("select sum(round(balance, 2)) from payout"))
@@ -610,7 +610,7 @@ class CustomerServiceTest(TerminalTestCase):
 
         # check that all customers in self.customers_to_transfer have payout_run_id set to 1 and rest null
         customers = await self.db_conn.fetch_many(Customer, "select * from customer")
-        uid_to_transfer = [customer["uid"] for customer in self.customers_to_transfer]
+        uid_to_transfer = [customer.uid for customer in self.customers_to_transfer]
         for customer in customers:
             if customer.user_tag_uid in uid_to_transfer:
                 self.assertEqual(customer.payout_run_id, 3)
@@ -618,7 +618,9 @@ class CustomerServiceTest(TerminalTestCase):
                 self.assertIsNone(customer.payout_run_id)
 
         # test customer "Rolf1" can no longer be updated since they now have a payout run assigned
-        auth = await self.customer_service.login_customer(uid=(12345 * (1 + 1)), pin="pin1")
+        auth = await self.customer_service.login_customer(
+            uid=self.customers_to_transfer[0].uid, pin=self.customers_to_transfer[0].pin
+        )
         self.assertIsNotNone(auth)
         customer_bank = CustomerBank(
             iban="DE89370400440532013000", account_name="Rolf1 updated", email="lol@rolf.de", donation=2.0
@@ -639,7 +641,7 @@ class CustomerServiceTest(TerminalTestCase):
         output_path.mkdir(parents=True, exist_ok=True)
 
         num = 2
-        s = sum(customer["balance"] - customer["donation"] for customer in self.customers_to_transfer[:num])
+        s = sum(customer.balance - customer.donation for customer in self.customers_to_transfer[:num])
 
         await export_customer_payouts(
             config=self.test_config,
@@ -661,7 +663,7 @@ class CustomerServiceTest(TerminalTestCase):
         output_path.mkdir(parents=True, exist_ok=True)
         os.makedirs(output_path, exist_ok=True)
 
-        uid_not_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[:2]]
+        uid_not_to_transfer = [customer.uid for customer in self.customers_to_transfer[:2]]
 
         await self.db_conn.execute(
             "update customer_info c set payout_export = false "
@@ -684,7 +686,7 @@ class CustomerServiceTest(TerminalTestCase):
         )
 
         customers = await self.db_conn.fetch_many(Customer, "select * from customer")
-        uid_to_transfer = [customer["uid"] for customer in self.customers_to_transfer[2:]]
+        uid_to_transfer = [customer.uid for customer in self.customers_to_transfer[2:]]
         for customer in customers:
             if customer.user_tag_uid in uid_to_transfer:
                 self.assertEqual(customer.payout_run_id, 1)
@@ -704,7 +706,7 @@ class CustomerServiceTest(TerminalTestCase):
             "update customer_info c set payout_error = 'some error' "
             "from account_with_history a "
             "where a.id = c.customer_account_id and a.user_tag_uid = $1",
-            self.customers_to_transfer[0]["uid"],
+            self.customers_to_transfer[0].uid,
         )
 
         await export_customer_payouts(

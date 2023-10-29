@@ -21,13 +21,18 @@ def validate_files(filemap):
     tree = ET.parse(filemap["index.xml"])
     root = tree.getroot()
 
-    if root.find("./Version").text != "1.0":
+    version_node = root.find("./Version")
+    if version_node is None or version_node.text != "1.0":
         errors.append("index.xml version is not 1.0")
         return errors
 
     for media in root.findall("./Media"):
         for table in media.findall("./Table"):
-            url = table.find("./URL").text
+            url_node = table.find("./URL")
+            if url_node is None:
+                errors.append("Invalid xml structure in index.html")
+                continue
+            url = url_node.text
 
             if url not in filemap:
                 errors.append('File "{}" not found.'.format(url))

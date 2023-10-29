@@ -43,7 +43,7 @@ class TerminalAPiTest(TerminalTestCase):
             user_role_id=self.finanzorga_role.id,
         )
         # Now Cashiers can login
-        roles: list[UserRole] = await self.till_service.check_user_login(
+        roles = await self.till_service.check_user_login(
             token=self.terminal_token, user_tag=UserTag(uid=self.cashier.user_tag_uid)
         )
         self.assertEqual(1, len(roles))

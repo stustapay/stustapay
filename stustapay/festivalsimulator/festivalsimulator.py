@@ -51,10 +51,10 @@ class Simulator:
         self.terminal_api_base_url = self.config.terminalserver.base_url
         self.admin_api_base_url = self.config.administration.base_url
         self.bookings_per_second = bookings_per_second
-        self.admin_tag_uid = None
-        self.n_tills_total = None
+        self.admin_tag_uid: int | None = None
+        self.n_tills_total: int | None = None
 
-        self.start_time = None
+        self.start_time = datetime.now()
 
         self.counter_lock = threading.Lock()
         self.n_bookings = 0
@@ -474,7 +474,6 @@ class Simulator:
     async def initialize(self):
         db_pool = await create_db_pool(self.config.database, n_connections=1)
 
-        self.start_time = datetime.now()
         self.event_node_id = await db_pool.fetchval(
             "select id from node where event_id is not null and name = $1", "SSC-Test"
         )

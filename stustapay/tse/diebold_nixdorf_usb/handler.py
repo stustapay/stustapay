@@ -58,7 +58,8 @@ class DieboldNixdorfUSBTSE(TSEHandler):
     async def stop(self):
         # TODO cleanly cancel the background task
         self._stop.set()
-        await self.background_task
+        if self.background_task is not None:
+            await self.background_task
 
     async def get_device_data(self, name: str, *args, **kwargs) -> str:
         result = await self.request("GetDeviceData", Name=name, *args, **kwargs)
@@ -162,6 +163,7 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         msg_queue = asyncio.Queue[typing.Optional[aiohttp.WSMessage]]()
 
         async def receive_internal():
+            assert self._ws is not None
             async for msg in self._ws:
                 msg_queue.put_nowait(msg)
 

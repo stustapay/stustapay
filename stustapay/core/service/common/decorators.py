@@ -107,7 +107,7 @@ def requires_node():
                 Parameter("current_user", kind=Parameter.KEYWORD_ONLY, annotation=CurrentUser),
             )
             sig = sig.replace(parameters=new_parameters)
-            wrapper.__signature__ = sig
+            wrapper.__signature__ = sig  # type: ignore
 
         return wrapper
 
@@ -237,13 +237,13 @@ def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
                 )
 
             token = kwargs.get("token")
-            terminal = kwargs.get("current_terminal")
+            terminal: Terminal | None = kwargs.get("current_terminal")
             conn = kwargs["conn"]
             if terminal is None:
                 if self.__class__.__name__ == "AuthService":
-                    terminal: Terminal = await self.get_terminal_from_token(conn=conn, token=token)
+                    terminal = await self.get_terminal_from_token(conn=conn, token=token)
                 elif hasattr(self, "auth_service"):
-                    terminal: Terminal = await self.auth_service.get_terminal_from_token(conn=conn, token=token)
+                    terminal = await self.auth_service.get_terminal_from_token(conn=conn, token=token)
                 else:
                     raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 

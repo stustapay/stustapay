@@ -102,6 +102,15 @@ async def get_test_db() -> Pool:
 testing_lock = asyncio.Lock()
 
 
+class Cashier(User):
+    cashier_account_id: int
+    user_tag_uid: int
+
+
+class Finanzorga(Cashier):
+    transport_account_id: int
+
+
 class BaseTestCase(TestCase):
     def __init__(self, *args, log_level=logging.DEBUG, **kwargs):
         super().__init__(*args, **kwargs)
@@ -122,11 +131,11 @@ class BaseTestCase(TestCase):
                     restriction.name if restriction is not None else None,
                     pin,
                 )
-                return user_tag_uid
+                return int(user_tag_uid)
             except asyncpg.DataError:
                 pass
 
-    async def create_cashier(self) -> tuple[User, UserRole, str]:
+    async def create_cashier(self) -> tuple[Cashier, UserRole, str]:
         cashier_role: UserRole = await self.user_service.create_user_role(
             token=self.admin_token,
             node_id=self.node_id,
@@ -137,7 +146,7 @@ class BaseTestCase(TestCase):
             ),
         )
         cashier_tag_uid = await self.create_random_user_tag()
-        cashier = await self.user_service.create_user_no_auth(
+        cashier_user: User = await self.user_service.create_user_no_auth(
             node_id=self.node_id,
             new_user=NewUser(
                 login=f"test-cashier-user-{secrets.token_hex(16)}",
@@ -148,12 +157,12 @@ class BaseTestCase(TestCase):
             ),
             password="rolf",
         )
-        cashier = await self.user_service.get_user(token=self.admin_token, user_id=cashier.id)
-
+        cashier = Cashier.model_validate(cashier_user.model_dump())
         cashier_token = (await self.user_service.login_user(username=cashier.login, password="rolf")).token
+
         return cashier, cashier_role, cashier_token
 
-    async def create_finanzorga(self, cashier_role_name: str | None = None) -> tuple[User, UserRole]:
+    async def create_finanzorga(self, cashier_role_name: str | None = None) -> tuple[Finanzorga, UserRole]:
         finanzorga_tag_uid = await self.create_random_user_tag()
         finanzorga_role = await self.user_service.create_user_role(
             token=self.admin_token,
@@ -171,7 +180,7 @@ class BaseTestCase(TestCase):
                 ],
             ),
         )
-        finanzorga: User = await self.user_service.create_user_no_auth(
+        finanzorga_user: User = await self.user_service.create_user_no_auth(
             node_id=self.node_id,
             new_user=NewUser(
                 login="Finanzorga",
@@ -183,6 +192,7 @@ class BaseTestCase(TestCase):
                 display_name="Finanzorga",
             ),
         )
+        finanzorga = Finanzorga.model_validate(finanzorga_user.model_dump())
         return finanzorga, finanzorga_role
 
     async def asyncSetUp(self) -> None:
@@ -391,6 +401,7 @@ class TerminalTestCase(BaseTestCase):
         )
         self.cashier, self.cashier_role, self.cashier_token = await self.create_cashier()
         assert self.cashier.user_tag_uid is not None
+        assert self.cashier.cashier_account_id is not None
         await self.till_service.register.stock_up_cash_register(
             token=self.terminal_token,
             cashier_tag_uid=self.cashier.user_tag_uid,

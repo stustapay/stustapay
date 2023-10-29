@@ -1,4 +1,3 @@
-import json
 import logging
 from collections import defaultdict
 from typing import Dict, Optional, Set
@@ -52,7 +51,6 @@ from stustapay.core.service.account import (
     get_system_account_for_node,
 )
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbhook import DBHook
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_node,
@@ -62,7 +60,6 @@ from stustapay.core.service.common.decorators import (
     with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument, ServiceException
-from stustapay.core.service.common.notifications import Subscription
 from stustapay.core.service.product import (
     fetch_discount_product,
     fetch_pay_out_product,
@@ -211,42 +208,6 @@ class OrderService(DBService):
         self.auth_service = auth_service
         self.voucher_service = VoucherService(db_pool=db_pool, config=config, auth_service=auth_service)
         self.stats = OrderStatsService(db_pool=db_pool, config=config, auth_service=auth_service)
-
-        self.admin_order_update_queues: set[Subscription] = set()
-
-        self.order_hook: Optional[DBHook] = None
-
-    async def run(self):
-        self.order_hook = DBHook(pool=self.db_pool, channel="order", event_handler=self._handle_order_update)
-        await self.order_hook.run()
-
-    async def _propagate_order_update(self, order: Order):
-        for queue in self.admin_order_update_queues:
-            queue.queue.put_nowait(order)
-
-    async def _handle_order_update(self, payload: str):
-        try:
-            json_payload = json.loads(payload)
-            async with self.db_pool.acquire() as conn:
-                async with conn.transaction():
-                    order = await fetch_order(conn=conn, order_id=json_payload["order_id"])
-                    if order:
-                        await self._propagate_order_update(order=order)
-        except:  # pylint: disable=bare-except
-            return
-
-    @with_db_transaction
-    @requires_user([Privilege.node_administration])
-    @requires_node()
-    async def register_for_order_updates(self, conn: Connection) -> Subscription:
-        del conn  # unused
-
-        def on_unsubscribe(subscription):
-            self.admin_order_update_queues.remove(subscription)
-
-        subscription = Subscription(on_unsubscribe)
-        self.admin_order_update_queues.add(subscription)
-        return subscription
 
     @staticmethod
     async def _get_products_from_buttons(
