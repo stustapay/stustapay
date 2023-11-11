@@ -35,6 +35,8 @@ export const translations = {
   registers: "Cash Registers",
   common: {
     definedAtNode: "Node",
+    loadingError: "Errors while loading page",
+    configLoadFailed: "Something went wrong while loading the page configuration: {{what}}",
   },
   nodes: {
     overview: "Overview",
