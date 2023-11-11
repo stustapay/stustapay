@@ -9,15 +9,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
 
-const PayoutSettingsSchema = z.object({
-  sepa_enabled: z.boolean(),
-  sepa_sender_name: z.string(),
-  sepa_sender_iban: z.string(),
-  sepa_description: z.string(),
-  sepa_allowed_country_codes: z.array(z.string()).min(1),
-});
-
-type PayoutSettings = z.infer<typeof PayoutSettingsSchema>;
 
 export const TabPayout: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
   nodeId,
@@ -40,6 +31,21 @@ export const TabPayout: React.FC<{ nodeId: number; eventSettings: RestrictedEven
         toast.error(t("settings.updateEventFailed", { reason: err.error }));
       });
   };
+  const PayoutSettingsSchema = z.object({
+    sepa_enabled: z.boolean(),
+    sepa_sender_name: z.string(),
+    sepa_sender_iban: z.string().superRefine((val, ctx) => {
+        if (!iban.isValid(val)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: t("settings.payout.ibanNotValid"),
+          });
+        }
+      }),
+    sepa_description: z.string(),
+    sepa_allowed_country_codes: z.array(z.string()).min(1),
+  });
+  type PayoutSettings = z.infer<typeof PayoutSettingsSchema>;
 
   return (
     <Formik
