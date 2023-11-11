@@ -25,14 +25,13 @@ export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEvent
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
 
-  const handleSubmit = (values: SumUpSettings, { setSubmitting, resetForm }: FormikHelpers<SumUpSettings>) => {
+  const handleSubmit = (values: SumUpSettings, { setSubmitting }: FormikHelpers<SumUpSettings>) => {
     setSubmitting(true);
     updateEvent({ nodeId: nodeId, updateEvent: { ...eventSettings, ...values } })
       .unwrap()
       .then(() => {
         setSubmitting(false);
         toast.success(t("settings.updateEventSucessful"));
-        resetForm();
       })
       .catch((err) => {
         setSubmitting(false);
@@ -45,6 +44,7 @@ export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEvent
       initialValues={eventSettings as SumUpSettings} // TODO: figure out a way of not needing to cast this
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(SumUpSettingsSchema)}
+      enableReinitialize={true}
     >
       {(formik) => (
         <Form onSubmit={formik.handleSubmit}>

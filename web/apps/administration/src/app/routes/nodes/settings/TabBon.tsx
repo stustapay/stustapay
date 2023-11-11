@@ -42,6 +42,7 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
       initialValues={eventSettings as BonSettings} // TODO: figure out a way of not needing to cast this
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(BonSettingsSchema)}
+      enableReinitialize={true}
     >
       {(formik) => (
         <Form onSubmit={formik.handleSubmit}>

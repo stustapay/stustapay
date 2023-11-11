@@ -26,14 +26,13 @@ export const TabPayout: React.FC<{ nodeId: number; eventSettings: RestrictedEven
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
 
-  const handleSubmit = (values: PayoutSettings, { setSubmitting, resetForm }: FormikHelpers<PayoutSettings>) => {
+  const handleSubmit = (values: PayoutSettings, { setSubmitting }: FormikHelpers<PayoutSettings>) => {
     setSubmitting(true);
     updateEvent({ nodeId: nodeId, updateEvent: { ...eventSettings, ...values } })
       .unwrap()
       .then(() => {
         setSubmitting(false);
         toast.success(t("settings.updateEventSucessful"));
-        resetForm();
       })
       .catch((err) => {
         setSubmitting(false);
@@ -46,6 +45,7 @@ export const TabPayout: React.FC<{ nodeId: number; eventSettings: RestrictedEven
       initialValues={eventSettings as PayoutSettings} // TODO: figure out a way of not needing to cast this
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(PayoutSettingsSchema)}
+      enableReinitialize={true}
     >
       {(formik) => (
         <Form onSubmit={formik.handleSubmit}>

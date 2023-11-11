@@ -42,6 +42,7 @@ export const TabGeneral: React.FC<{ nodeId: number; eventSettings: RestrictedEve
       initialValues={eventSettings as GeneralSettings} // TODO: figure out a way of not needing to cast this
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(GeneralSettingsSchema)}
+      enableReinitialize={true}
     >
       {(formik) => (
         <Form onSubmit={formik.handleSubmit}>
