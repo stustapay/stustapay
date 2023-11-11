@@ -58,6 +58,7 @@ export const TabPayout: React.FC<{ nodeId: number; eventSettings: RestrictedEven
               label={t("settings.payout.sepa_allowed_country_codes")}
               multiple={true}
               name="sepa_allowed_country_codes"
+              checkboxes={true}
               formik={formik}
               options={Object.keys(iban.countries)}
               getOptionKey={(iban) => iban}
