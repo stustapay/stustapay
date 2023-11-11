@@ -55,7 +55,7 @@ class UserTagDetail(BaseModel):
     @computed_field  # type: ignore[misc]
     @property
     def user_tag_uid_hex(self) -> Optional[str]:
-        return hex(self.user_tag_uid) if self.user_tag_uid is not None else None
+        return format_user_tag_uid(self.user_tag_uid)
 
     comment: Optional[str] = None
     account_id: Optional[int] = None
@@ -69,7 +69,7 @@ class UserTagHistoryEntry(BaseModel):
     @computed_field  # type: ignore[misc]
     @property
     def user_tag_uid_hex(self) -> Optional[str]:
-        return hex(self.user_tag_uid)
+        return format_user_tag_uid(self.user_tag_uid)
 
     account_id: int
     comment: Optional[str] = None
