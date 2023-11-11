@@ -251,6 +251,7 @@ export const translations = {
     payout: {
       tabLabel: "Payout",
       sepa_enabled: "Payout enabled",
+      ibanNotValid: "IBAN is not valid",
       sepa_sender_name: "SEPA sender name",
       sepa_sender_iban: "SEPA sender IBAN",
       sepa_description: "SEPA description",
