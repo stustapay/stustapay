@@ -1,8 +1,8 @@
 import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
-import translationsEn from "./assets/locales/en/translations";
-import translationsDe from "./assets/locales/de/translations";
 import LanguageDetector from "i18next-browser-languagedetector";
+import { initReactI18next } from "react-i18next";
+import translationsDe from "./assets/locales/de/translations";
+import translationsEn from "./assets/locales/en/translations";
 
 export const defaultNS = "translations";
 
@@ -17,6 +17,7 @@ i18n
   .init({
     lng: "en",
     fallbackLng: "en",
+    ns: ["translations"],
     debug: true,
     defaultNS: defaultNS,
     resources: resources,

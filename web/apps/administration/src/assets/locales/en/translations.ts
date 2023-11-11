@@ -398,6 +398,11 @@ export const translations = {
     description: "Description",
     tagUid: "User Tag UID",
     noTagAssigned: "No Tag assigned",
+    changePassword: {
+      title: "Change password",
+      new_password: "New Password",
+      new_password_confirm: "Confirm New Password",
+    },
   },
   userRole: {
     name: "Name",

@@ -96,6 +96,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["users"],
       }),
+      changeUserPassword: build.mutation<ChangeUserPasswordApiResponse, ChangeUserPasswordApiArg>({
+        query: (queryArg) => ({
+          url: `/users/${queryArg.userId}/change-password`,
+          method: "POST",
+          body: queryArg.changeUserPasswordPayload,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["users"],
+      }),
       listUserRoles: build.query<ListUserRolesApiResponse, ListUserRolesApiArg>({
         query: (queryArg) => ({ url: `/user-roles`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["user-roles"],
@@ -720,6 +729,12 @@ export type DeleteUserApiArg = {
   userId: number;
   nodeId?: number | null;
 };
+export type ChangeUserPasswordApiResponse = /** status 200 Successful Response */ UserRead;
+export type ChangeUserPasswordApiArg = {
+  userId: number;
+  nodeId?: number | null;
+  changeUserPasswordPayload: ChangeUserPasswordPayload;
+};
 export type ListUserRolesApiResponse = /** status 200 Successful Response */ NormalizedListUserRoleInt;
 export type ListUserRolesApiArg = {
   nodeId?: number | null;
@@ -1224,6 +1239,9 @@ export type UpdateUserPayload = {
   role_names: string[];
   description?: string | null;
   user_tag_uid_hex?: string | null;
+};
+export type ChangeUserPasswordPayload = {
+  new_password: string;
 };
 export type Privilege =
   | "node_administration"
@@ -2037,6 +2055,7 @@ export const {
   useLazyGetUserQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useChangeUserPasswordMutation,
   useListUserRolesQuery,
   useLazyListUserRolesQuery,
   useCreateUserRoleMutation,

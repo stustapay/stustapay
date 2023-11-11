@@ -43,6 +43,12 @@ export const UserDetail: React.FC = () => {
     <DetailLayout
       title={user.login}
       actions={[
+        {
+          label: t("user.changePassword.title"),
+          onClick: () => navigate(UserRoutes.detailAction(userId, "change-password")),
+          color: "primary",
+          icon: <EditIcon />,
+        },
         { label: t("edit"), onClick: () => navigate(UserRoutes.edit(userId)), color: "primary", icon: <EditIcon /> },
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}

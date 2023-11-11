@@ -357,6 +357,24 @@ class UserService(DBService):
     @with_db_transaction
     @requires_user([Privilege.user_management])
     @requires_node()
+    async def change_user_password(
+        self, *, conn: Connection, node: Node, user_id: int, new_password: str
+    ) -> Optional[User]:
+        new_password_hashed = self._hash_password(new_password)
+
+        ret = await conn.execute(
+            "update usr set password = $2 where id = $1 and node_id = any($3) returning id",
+            user_id,
+            new_password_hashed,
+            node.ids_to_root,
+        )
+        if ret is None:
+            raise InvalidArgument(f"User not found")
+        return await self._get_user(conn=conn, node=node, user_id=user_id)
+
+    @with_db_transaction
+    @requires_user([Privilege.user_management])
+    @requires_node()
     async def delete_user(self, *, conn: Connection, user_id: int) -> bool:
         # TODO: TREE visibility
         result = await conn.execute(
