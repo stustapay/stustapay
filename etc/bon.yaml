@@ -1,6 +1,0 @@
-database:
-    dbname: "stustapay"
-
-bon:
-    # persistent storage location for all created bons
-    output_folder: "/tmp/stustapay_bons"
