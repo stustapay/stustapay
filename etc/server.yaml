@@ -15,15 +15,23 @@ administration:
   port: 8081
 
 core:
-  test_mode: false
-  test_mode_message: "awesome test instance"
+  test_mode: true
   secret_key: "very secret"
-  sumup_affiliate_key: "pretty secret"
 
 customer_portal:
   base_url: "http://localhost:8082"
   host: "localhost"
   port: 8082
   base_bon_url: "https://bon.stustapay.de/{bon_output_file}"
-  data_privacy_url: "https://stustapay.de/datenschutz"
-  about_page_url: "https://stustapay.de/impressum"
+
+bon:
+  output_folder: "/tmp/stustapay_bons"
+
+tses:
+  diebold_nixdorf_usb:
+    # simulated tse1
+    tse1:
+      ws_url: "ws://localhost:10001"
+      ws_timeout: 1
+      serial_number: "84ba2997f8fbf9d0feee48c7ba5812d6d1e37c33fdb11cdb06eb849b1336b1c7"
+      password: "12345"

@@ -18,6 +18,14 @@ Install the python requirements
 pip install -e '.[dev,test]'
 ```
 
+You should now have the `stustapay` command available.
+It includes all sub commands need for development and deployment.
+To start the API server for development use the our example config file in [`etc/server.yaml`](etc/server.yaml) and run:
+```shell
+stustapay -c etc/server.yaml -vvv simulate api --no-bon --no-tse
+```
+Run the [simulator](simulator.md) once to create the database scheme and some generate some test data.
+
 # Web UIs
 ### Dependencies
 For the backend we assume you have got stustapay core running with a database.
