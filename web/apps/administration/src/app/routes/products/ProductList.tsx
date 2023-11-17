@@ -141,7 +141,7 @@ export const ProductList: React.FC = () => {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
       valueFormatter: ({ value }) => renderNode(value),
-      flex: 1,
+      minWidth: 100,
     },
     {
       field: "actions",

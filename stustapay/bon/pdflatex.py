@@ -76,7 +76,6 @@ class BonConfig(BaseModel):
     issuer: str
     address: str
     ust_id: str
-    closing_texts: list[str]
 
 
 class TaxRateAggregation(BaseModel):
@@ -99,6 +98,7 @@ class OrderWithTse(Order):
     tse_time_format: Optional[str] = None
     tse_signature: Optional[str] = None
     tse_public_key: Optional[str] = None
+    node_id: int
 
     @computed_field  # type: ignore[misc]
     @property
@@ -115,7 +115,6 @@ class BonTemplateContext(BaseModel):
 
     tax_rate_aggregations: list[TaxRateAggregation]
 
-    closing_text: str
     config: BonConfig
 
 

@@ -8,7 +8,7 @@ from uuid import UUID
 
 from asyncpg.exceptions import PostgresError
 
-from stustapay.bon.bon import BonConfig, fetch_base_config, generate_bon
+from stustapay.bon.bon import BonConfig, generate_bon
 from stustapay.core.config import Config
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook
@@ -44,9 +44,6 @@ class Generator:
         # start all database connections and start the hook to listen for bon requests
         self.logger.info("Starting Bon Generator")
         self.pool = await create_db_pool(self.config.database)
-
-        async with self.pool.acquire() as conn:
-            self.bon_config = await fetch_base_config(conn=conn)
 
         # initial processing of pending bons
         await self.cleanup_pending_bons()
@@ -109,7 +106,7 @@ class Generator:
 
         # Generate the PDF and store the result back in the database
         self.logger.debug(f"Generating Bon for order {order_id}...")
-        success, msg = await generate_bon(conn=conn, config=self.bon_config, order_id=order_id, out_file=out_file)
+        success, msg = await generate_bon(conn=conn, order_id=order_id, out_file=out_file)
         self.logger.debug(f"Bon {order_id} generated with result {success}, {msg}")
         if success:
             await conn.execute(

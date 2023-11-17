@@ -675,6 +675,10 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/settings` }),
         providesTags: ["tree"],
       }),
+      generateTestBon: build.mutation<GenerateTestBonApiResponse, GenerateTestBonApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-bon`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1150,6 +1154,10 @@ export type UpdateEventApiArg = {
 };
 export type GetRestrictedEventSettingsApiResponse = /** status 200 Successful Response */ RestrictedEventSettings;
 export type GetRestrictedEventSettingsApiArg = {
+  nodeId: number;
+};
+export type GenerateTestBonApiResponse = /** status 200 Successful Response */ any;
+export type GenerateTestBonApiArg = {
   nodeId: number;
 };
 export type ProductRestriction = "under_16" | "under_18";
@@ -2175,4 +2183,5 @@ export const {
   useUpdateEventMutation,
   useGetRestrictedEventSettingsQuery,
   useLazyGetRestrictedEventSettingsQuery,
+  useGenerateTestBonMutation,
 } = injectedRtkApi;

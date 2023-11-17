@@ -15,6 +15,7 @@ class BonGeneratorTest(BaseTestCase):
         context = BonTemplateContext(
             order=OrderWithTse(
                 id=1,
+                node_id=self.node_id,
                 uuid=uuid.uuid4(),
                 total_price=16.00,
                 total_tax=1.23,
@@ -128,9 +129,7 @@ class BonGeneratorTest(BaseTestCase):
                 issuer="!§$%&//()=?/*-+#'@€_-µ<>|^¬°²³[\"üäö;,:.",
                 address="\\Musterstraße\t66\n12345 Musterstädt\n\n\nSTUSTA",
                 ust_id="DE123456789",
-                closing_texts=["\0🍕"],
             ),
-            closing_text="foobar",
         )
 
         rendered = await render_template("bon.tex", context=context)

@@ -16,6 +16,7 @@ export const translations = {
   edit: "Edit",
   delete: "Delete",
   copy: "Copy",
+  save: "Save",
   update: "Update",
   logout: "Logout",
   login: "Login",
@@ -241,6 +242,7 @@ export const translations = {
       issuer: "Bon issuer",
       address: "Bon address",
       title: "Bon title",
+      previewBon: "Preview Bon",
     },
     sumup: {
       tabLabel: "SumUp",

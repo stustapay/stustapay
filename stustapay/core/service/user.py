@@ -369,7 +369,7 @@ class UserService(DBService):
             node.ids_to_root,
         )
         if ret is None:
-            raise InvalidArgument(f"User not found")
+            raise InvalidArgument("User not found")
         return await self._get_user(conn=conn, node=node, user_id=user_id)
 
     @with_db_transaction

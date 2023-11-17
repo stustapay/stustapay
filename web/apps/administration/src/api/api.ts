@@ -20,6 +20,7 @@ import {
   UserRole,
   UserTagDetailRead,
   api as generatedApi,
+  GenerateTestBonApiArg,
 } from "./generated/api";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
@@ -165,6 +166,17 @@ export const api = generatedApi.enhanceEndpoints({
     },
     listPayoutRuns: {
       providesTags: (result) => generateCacheKeys("payouts", result),
+    },
+    generateTestBon: {
+      query: (queryArg: GenerateTestBonApiArg) => ({
+        url: `/tree/events/${queryArg.nodeId}/generate-test-bon`,
+        method: "POST",
+        responseHandler: async (resp: Response) => {
+          const blob = await resp.blob();
+          return window.URL.createObjectURL(blob);
+        },
+      }),
+      invalidatesTags: [],
     },
   },
 });
