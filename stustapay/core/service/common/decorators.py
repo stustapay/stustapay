@@ -1,9 +1,9 @@
 import asyncio
-from functools import wraps
-from inspect import Parameter, signature
 import logging
 import random
-from typing import Awaitable, Callable, Optional, TypeVar, Union, overload
+from functools import wraps
+from inspect import Parameter, signature
+from typing import Awaitable, Callable, Optional, TypeVar, overload
 
 import asyncpg.exceptions
 
