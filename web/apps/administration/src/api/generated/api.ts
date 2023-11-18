@@ -1958,6 +1958,7 @@ export type CreateSepaXmlPayload = {
   execution_date: string;
   batch_size?: number | null;
 };
+export type Language = "en-US" | "de-DE";
 export type PublicEventSettings = {
   currency_identifier: string;
   max_account_balance: number;
@@ -1976,6 +1977,13 @@ export type PublicEventSettings = {
   sepa_sender_iban: string;
   sepa_description: string;
   sepa_allowed_country_codes: string[];
+  translation_texts?: {
+    [key: string]: {
+      [key: string]: string;
+    };
+  };
+  id: number;
+  languages: Language[];
 };
 export type ObjectType =
   | "user"
@@ -2025,6 +2033,11 @@ export type UpdateEvent = {
   sepa_sender_iban: string;
   sepa_description: string;
   sepa_allowed_country_codes: string[];
+  translation_texts?: {
+    [key: string]: {
+      [key: string]: string;
+    };
+  };
 };
 export type RestrictedEventSettings = {
   sumup_api_key?: string;
@@ -2047,6 +2060,13 @@ export type RestrictedEventSettings = {
   sepa_sender_iban: string;
   sepa_description: string;
   sepa_allowed_country_codes: string[];
+  translation_texts?: {
+    [key: string]: {
+      [key: string]: string;
+    };
+  };
+  id: number;
+  languages: Language[];
 };
 export const {
   useListProductsQuery,

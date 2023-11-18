@@ -10,6 +10,7 @@ from schwifty import IBAN
 
 from stustapay.core.config import Config
 from stustapay.core.schema.customer import Customer, OrderWithBon
+from stustapay.core.schema.tree import Language
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -33,6 +34,7 @@ class CustomerPortalApiConfig(BaseModel):
     payout_enabled: bool
     sumup_topup_enabled: bool
     allowed_country_codes: Optional[list[str]]
+    translation_texts: dict[Language, dict[str, str]]
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -205,4 +207,5 @@ class CustomerService(DBService):
             data_privacy_url=node.event.customer_portal_data_privacy_url,
             payout_enabled=node.event.sepa_enabled,
             sumup_topup_enabled=self.cfg.core.sumup_enabled and node.event.sumup_topup_enabled,
+            translation_texts=node.event.translation_texts,
         )

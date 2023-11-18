@@ -1,6 +1,6 @@
 import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
-import { FormTextField } from "@stustapay/form-components";
+import { FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -24,6 +24,7 @@ export const TabGeneral: React.FC<{ nodeId: number; eventSettings: RestrictedEve
   const [updateEvent] = useUpdateEventMutation();
 
   const handleSubmit = (values: GeneralSettings, { setSubmitting }: FormikHelpers<GeneralSettings>) => {
+    console.log("foobar");
     setSubmitting(true);
     updateEvent({ nodeId: nodeId, updateEvent: { ...eventSettings, ...values } })
       .unwrap()
@@ -52,7 +53,7 @@ export const TabGeneral: React.FC<{ nodeId: number; eventSettings: RestrictedEve
               name="currency_identifier"
               formik={formik}
             />
-            <FormTextField
+            <FormNumericInput
               label={t("settings.general.max_account_balance")}
               name="max_account_balance"
               formik={formik}
@@ -61,6 +62,7 @@ export const TabGeneral: React.FC<{ nodeId: number; eventSettings: RestrictedEve
             {formik.isSubmitting && <LinearProgress />}
             <Button
               type="submit"
+              onClick={() => formik.handleSubmit()}
               color="primary"
               variant="contained"
               disabled={formik.isSubmitting || Object.keys(formik.touched).length === 0}
