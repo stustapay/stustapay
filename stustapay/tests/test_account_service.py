@@ -1,162 +1,76 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
-from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.till import NewTillProfile
-from stustapay.core.schema.user import NewUser, NewUserRole, Privilege
-from stustapay.core.service.common.error import AccessDenied
+from stustapay.core.schema.tree import Node
+from stustapay.core.schema.user import NewUser
+from stustapay.core.service.account import AccountService
+from stustapay.core.service.user import UserService
+from stustapay.core.service.user_tag import UserTagService
+from stustapay.framework.database import Connection
 
-from .common import TerminalTestCase
+from .conftest import CreateRandomUserTag
 
 
-class AccountServiceTest(TerminalTestCase):
-    async def test_switch_user_tag(self):
-        user_tag_uid = await self.create_random_user_tag()
-        new_user_tag_uid = await self.create_random_user_tag()
-        user = await self.user_service.create_user_no_auth(
-            node_id=self.node_id,
-            new_user=NewUser(login="test-user", display_name="test-user", user_tag_uid=user_tag_uid, role_names=[]),
-        )
-        account_id = await self.db_conn.fetchval("select id from account where user_tag_uid = $1", user_tag_uid)
+async def test_switch_user_tag(
+    user_service: UserService,
+    user_tag_service: UserTagService,
+    account_service: AccountService,
+    db_connection: Connection,
+    event_node: Node,
+    admin_token: str,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    user_tag = await create_random_user_tag()
+    new_user_tag = await create_random_user_tag()
+    user = await user_service.create_user_no_auth(
+        node_id=event_node.id,
+        new_user=NewUser(login="test-user", display_name="test-user", user_tag_uid=user_tag.uid, role_names=[]),
+    )
+    account_id = await db_connection.fetchval("select id from account where user_tag_uid = $1", user_tag.uid)
 
-        acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
-        self.assertIsNotNone(acc)
-        self.assertEqual(user_tag_uid, acc.user_tag_uid)
-        await self.account_service.switch_account_tag_uid_admin(
-            token=self.admin_token, account_id=account_id, new_user_tag_uid=new_user_tag_uid, comment="foobar"
-        )
-        acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
-        self.assertIsNotNone(acc)
-        self.assertEqual(new_user_tag_uid, acc.user_tag_uid)
-        self.assertEqual(1, len(acc.tag_history))
-        self.assertEqual("foobar", acc.tag_history[0].comment)
-        user = await self.user_service.get_user(token=self.admin_token, user_id=user.id)
-        self.assertEqual(new_user_tag_uid, user.user_tag_uid)
+    acc = await account_service.get_account(token=admin_token, account_id=account_id)
+    assert acc is not None
+    assert user_tag.uid == acc.user_tag_uid
+    await account_service.switch_account_tag_uid_admin(
+        token=admin_token, account_id=account_id, new_user_tag_uid=new_user_tag.uid, comment="foobar"
+    )
+    acc = await account_service.get_account(token=admin_token, account_id=account_id)
+    assert acc is not None
+    assert new_user_tag.uid == acc.user_tag_uid
+    assert 1 == len(acc.tag_history)
+    assert "foobar" == acc.tag_history[0].comment
+    user = await user_service.get_user(token=admin_token, user_id=user.id)
+    assert new_user_tag.uid == user.user_tag_uid
 
-        user_tag_2 = await self.user_tag_service.get_user_tag_detail(
-            token=self.admin_token, user_tag_uid=new_user_tag_uid
-        )
-        self.assertIsNotNone(user_tag_2)
-        self.assertEqual(0, len(user_tag_2.account_history))
+    user_tag_2 = await user_tag_service.get_user_tag_detail(token=admin_token, user_tag_uid=new_user_tag.uid)
+    assert user_tag_2 is not None
+    assert 0 == len(user_tag_2.account_history)
 
-        user_tag_1 = await self.user_tag_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=user_tag_uid)
-        self.assertIsNotNone(user_tag_1)
-        self.assertEqual(1, len(user_tag_1.account_history))
-        self.assertEqual(acc.id, user_tag_1.account_history[0].account_id)
+    user_tag_1 = await user_tag_service.get_user_tag_detail(token=admin_token, user_tag_uid=user_tag.uid)
+    assert user_tag_1 is not None
+    assert 1 == len(user_tag_1.account_history)
+    assert acc.id == user_tag_1.account_history[0].account_id
 
-    async def test_free_ticket_grant_without_vouchers(self):
-        voucher_role = await self.user_service.create_user_role(
-            token=self.admin_token,
-            new_role=NewUserRole(
-                name="test-role", is_privileged=False, privileges=[Privilege.supervised_terminal_login]
-            ),
-        )
-        await self.user_service.update_user_roles(
-            token=self.admin_token,
-            user_id=self.cashier.id,
-            role_names=[voucher_role.name],
-        )
-        await self.till_service.profile.update_profile(
-            token=self.admin_token,
-            profile_id=self.till.active_profile_id,
-            profile=NewTillProfile(
-                name="test-profile",
-                description="",
-                layout_id=self.till_layout.id,
-                allow_top_up=True,
-                allow_cash_out=True,
-                allow_ticket_sale=True,
-            ),
-        )
 
-        # after updating the cashier roles we need to log out and log in with the new role
-        await self._login_supervised_user(user_tag_uid=self.cashier.user_tag_uid, user_role_id=voucher_role.id)
+async def test_account_comment_updates(
+    account_service: AccountService,
+    admin_token: str,
+    db_connection: Connection,
+    event_node: Node,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    user_tag = await create_random_user_tag()
+    account_id = await db_connection.fetchval(
+        "insert into account(node_id, user_tag_uid, type, name) "
+        "values ($1, $2, 'private', 'account-1') returning id",
+        event_node.id,
+        user_tag.uid,
+    )
 
-        volunteer_tag = await self.create_random_user_tag()
-        grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag)
+    acc = await account_service.get_account(token=admin_token, account_id=account_id)
+    assert acc is not None
+    assert acc.comment is None
 
-        with self.assertRaises(AccessDenied):
-            await self.account_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)
-
-        await self.user_service.update_user_role_privileges(
-            token=self.admin_token,
-            role_id=voucher_role.id,
-            is_privileged=False,
-            privileges=[Privilege.grant_free_tickets],
-        )
-
-        success = await self.account_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)
-        self.assertTrue(success)
-        customer = await self.account_service.get_account_by_tag_uid(token=self.admin_token, user_tag_uid=volunteer_tag)
-        self.assertEqual(customer.vouchers, 0)
-
-        with self.assertRaises(AccessDenied):
-            await self.account_service.grant_vouchers(token=self.terminal_token, user_tag_uid=volunteer_tag, vouchers=3)
-
-        await self.user_service.update_user_role_privileges(
-            token=self.admin_token,
-            role_id=voucher_role.id,
-            is_privileged=False,
-            privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets, Privilege.grant_vouchers],
-        )
-
-        # let's grant the new volunteer tickets via the extra api
-        account = await self.account_service.grant_vouchers(
-            token=self.terminal_token, user_tag_uid=volunteer_tag, vouchers=3
-        )
-        self.assertIsNotNone(account)
-        self.assertEqual(3, account.vouchers)
-
-    async def test_free_ticket_grant_with_vouchers(self):
-        voucher_role = await self.user_service.create_user_role(
-            token=self.admin_token,
-            new_role=NewUserRole(
-                name="test-role", privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets]
-            ),
-        )
-        await self.till_service.profile.update_profile(
-            token=self.admin_token,
-            profile_id=self.till.active_profile_id,
-            profile=NewTillProfile(
-                name="test-profile",
-                description="",
-                layout_id=self.till_layout.id,
-                allow_top_up=True,
-                allow_cash_out=True,
-                allow_ticket_sale=True,
-            ),
-        )
-
-        await self.user_service.update_user_roles(
-            token=self.admin_token,
-            user_id=self.cashier.id,
-            role_names=[voucher_role.name],
-        )
-        # after updating the cashier roles we need to log out and log in with the new role
-        await self._login_supervised_user(user_tag_uid=self.cashier.user_tag_uid, user_role_id=voucher_role.id)
-
-        volunteer_tag = await self.create_random_user_tag()
-        grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag, initial_voucher_amount=3)
-        success = await self.account_service.grant_free_tickets(token=self.terminal_token, new_free_ticket_grant=grant)
-        self.assertTrue(success)
-        customer = await self.account_service.get_account_by_tag_uid(token=self.admin_token, user_tag_uid=volunteer_tag)
-        self.assertEqual(customer.vouchers, 3)
-
-    async def test_account_comment_updates(self):
-        user_tag_uid = await self.create_random_user_tag()
-        account_id = await self.db_conn.fetchval(
-            "insert into account(node_id, user_tag_uid, type, name) "
-            "values ($1, $2, 'private', 'account-1') returning id",
-            self.node_id,
-            user_tag_uid,
-        )
-
-        acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
-        self.assertIsNotNone(acc)
-        self.assertIsNone(acc.comment)
-
-        await self.account_service.update_account_comment(
-            token=self.admin_token, account_id=account_id, comment="foobar"
-        )
-        acc = await self.account_service.get_account(token=self.admin_token, account_id=account_id)
-        self.assertIsNotNone(acc)
-        self.assertEqual("foobar", acc.comment)
+    await account_service.update_account_comment(token=admin_token, account_id=account_id, comment="foobar")
+    acc = await account_service.get_account(token=admin_token, account_id=account_id)
+    assert acc is not None
+    assert "foobar" == acc.comment

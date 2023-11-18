@@ -2,25 +2,21 @@
 
 from stustapay.core.service.user_tag import UserTagService
 
-from .common import TerminalTestCase
+from .conftest import CreateRandomUserTag
 
 
-class UserTagServiceTest(TerminalTestCase):
-    async def asyncSetUp(self) -> None:
-        await super().asyncSetUp()
+async def test_user_tag_comment_updates(
+    user_tag_service: UserTagService,
+    admin_token: str,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    user_tag = await create_random_user_tag()
 
-        self.user_tag_service = UserTagService(
-            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
-        )
+    user_tag_detail = await user_tag_service.get_user_tag_detail(token=admin_token, user_tag_uid=user_tag.uid)
+    assert user_tag_detail is not None
+    assert user_tag_detail.comment is None
 
-    async def test_user_tag_comment_updates(self):
-        await self.db_conn.execute("insert into user_tag (node_id, uid) values ($1, 1)", self.node_id)
-
-        user_tag_detail = await self.user_tag_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
-        self.assertIsNotNone(user_tag_detail)
-        self.assertIsNone(user_tag_detail.comment)
-
-        await self.user_tag_service.update_user_tag_comment(token=self.admin_token, user_tag_uid=1, comment="foobar")
-        user_tag_detail = await self.user_tag_service.get_user_tag_detail(token=self.admin_token, user_tag_uid=1)
-        self.assertIsNotNone(user_tag_detail)
-        self.assertEqual("foobar", user_tag_detail.comment)
+    await user_tag_service.update_user_tag_comment(token=admin_token, user_tag_uid=user_tag.uid, comment="foobar")
+    user_tag_detail = await user_tag_service.get_user_tag_detail(token=admin_token, user_tag_uid=user_tag.uid)
+    assert user_tag_detail is not None
+    assert "foobar" == user_tag_detail.comment

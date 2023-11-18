@@ -1,46 +1,43 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+import pytest
+
 from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.product import ProductService
 
-from .common import BaseTestCase
+from .conftest import Cashier
 
 
-class ProductServiceTest(BaseTestCase):
-    async def asyncSetUp(self) -> None:
-        await super().asyncSetUp()
+async def test_basic_product_workflow(
+    product_service: ProductService, tax_rate_ust: TaxRate, tax_rate_none: TaxRate, admin_token: str, cashier: Cashier
+):
+    product = await product_service.create_product(
+        token=admin_token, product=NewProduct(name="Test Product", price=3, tax_rate_id=tax_rate_ust.id)
+    )
 
-        self.product_service = ProductService(
-            db_pool=self.db_pool, config=self.test_config, auth_service=self.auth_service
+    assert product.name == "Test Product"
+
+    with pytest.raises(AccessDenied):
+        await product_service.create_product(
+            token=cashier.token,
+            product=NewProduct(name="Test Product", price=3, tax_rate_id=tax_rate_ust.id),
         )
 
-    async def test_basic_product_workflow(self):
-        _, _, cashier_token = await self.create_cashier()
-        product = await self.product_service.create_product(
-            token=self.admin_token, product=NewProduct(name="Test Product", price=3, tax_rate_id=self.tax_rate_ust.id)
-        )
-        self.assertEqual(product.name, "Test Product")
+    updated_product = await product_service.update_product(
+        token=admin_token,
+        product_id=product.id,
+        product=NewProduct(name="Updated Test Product", price=4, tax_rate_id=tax_rate_none.id),
+    )
+    assert updated_product.name == "Updated Test Product"
+    assert updated_product.price == 4
+    assert updated_product.tax_name == tax_rate_none.name
 
-        with self.assertRaises(AccessDenied):
-            await self.product_service.create_product(
-                token=cashier_token,
-                product=NewProduct(name="Test Product", price=3, tax_rate_id=self.tax_rate_ust.id),
-            )
+    products = await product_service.list_products(token=admin_token)
+    assert len(list(filter(lambda p: p.name == "Updated Test Product", products))) == 1
 
-        updated_product = await self.product_service.update_product(
-            token=self.admin_token,
-            product_id=product.id,
-            product=NewProduct(name="Updated Test Product", price=4, tax_rate_id=self.tax_rate_none.id),
-        )
-        self.assertEqual(updated_product.name, "Updated Test Product")
-        self.assertEqual(updated_product.price, 4)
-        self.assertEqual(updated_product.tax_name, self.tax_rate_none.name)
+    with pytest.raises(AccessDenied):
+        await product_service.delete_product(token=cashier.token, product_id=product.id)
 
-        products = await self.product_service.list_products(token=self.admin_token)
-        self.assertEqual(len(list(filter(lambda p: p.name == "Updated Test Product", products))), 1)
-
-        with self.assertRaises(AccessDenied):
-            await self.product_service.delete_product(token=cashier_token, product_id=product.id)
-
-        deleted = await self.product_service.delete_product(token=self.admin_token, product_id=product.id)
-        self.assertTrue(deleted)
+    deleted = await product_service.delete_product(token=admin_token, product_id=product.id)
+    assert deleted
