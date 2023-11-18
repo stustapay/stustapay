@@ -80,7 +80,7 @@ class TillService(DBService):
     @with_db_transaction
     @requires_user([Privilege.node_administration])
     @requires_node()
-    async def update_till(self, *, conn: Connection, node: Node, till_id: int, till: NewTill) -> Optional[Till]:
+    async def update_till(self, *, conn: Connection, node: Node, till_id: int, till: NewTill) -> Till:
         # TODO: TREE visibility
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5 "
@@ -92,9 +92,11 @@ class TillService(DBService):
             till.active_profile_id,
         )
         if row is None:
-            return None
+            raise NotFound(element_typ="till", element_id=till_id)
 
-        return await fetch_till(conn=conn, node=node, till_id=till_id)
+        updated_till = await fetch_till(conn=conn, node=node, till_id=till_id)
+        assert updated_till is not None
+        return updated_till
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
@@ -239,9 +241,11 @@ class TillService(DBService):
         )
         assert t_id is not None
         # instead of manually redoing the necessary queries we simply reuse the normal auth decorator
-        return await self.get_current_user(  # pylint: disable=missing-kwoa,unexpected-keyword-arg
+        current_user = await self.get_current_user(  # pylint: disable=missing-kwoa,unexpected-keyword-arg
             conn=conn, token=token
         )
+        assert current_user is not None
+        return current_user
 
     @with_db_transaction
     @requires_terminal()

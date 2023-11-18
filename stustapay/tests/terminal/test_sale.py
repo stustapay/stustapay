@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import pytest
 
 from stustapay.core.schema.account import AccountType
-from stustapay.core.schema.order import Button, NewSale, Order, OrderType, PendingSale
+from stustapay.core.schema.order import Button, NewSale, OrderType, PendingSale
 from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import (
@@ -174,7 +174,7 @@ async def test_basic_sale_flow(
     assert pending_sale.new_balance == START_BALANCE - pending_sale.total_price
     completed_sale = await order_service.book_sale(token=terminal_token, new_sale=new_sale)
     assert completed_sale is not None
-    order: Order = await order_service.get_order(token=admin_token, order_id=completed_sale.id)
+    order = await order_service.get_order(token=admin_token, order_id=completed_sale.id)
     assert order is not None
     await assert_system_account_balance(
         account_type=AccountType.sale_exit,
@@ -496,6 +496,7 @@ async def test_cashier_close_out(
     )
 
     cashier_info = await cashier_service.get_cashier(token=admin_token, cashier_id=cashier.id)
+    assert cashier_info is not None
     actual_balance = 458.2
     with pytest.raises(InvalidCloseOutException):
         await cashier_service.close_out_cashier(

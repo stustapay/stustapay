@@ -13,7 +13,7 @@ from stustapay.core.service.common.decorators import (
     requires_user,
     with_db_transaction,
 )
-from stustapay.core.service.common.error import ServiceException
+from stustapay.core.service.common.error import NotFound, ServiceException
 from stustapay.framework.database import Connection
 
 
@@ -117,13 +117,11 @@ class ProductService(DBService):
     @with_db_transaction
     @requires_user([Privilege.node_administration])
     @requires_node()
-    async def update_product(
-        self, *, conn: Connection, node: Node, product_id: int, product: NewProduct
-    ) -> Optional[Product]:
+    async def update_product(self, *, conn: Connection, node: Node, product_id: int, product: NewProduct) -> Product:
         # TODO: TREE visibility
         current_product = await fetch_product(conn=conn, node=node, product_id=product_id)
         if current_product is None:
-            return None
+            raise NotFound(element_typ="product", element_id=product_id)
 
         if current_product.is_locked:
             if any(
@@ -164,7 +162,9 @@ class ProductService(DBService):
                 "insert into product_restriction (id, restriction) values ($1, $2)", product_id, restriction.name
             )
 
-        return await fetch_product(conn=conn, node=node, product_id=product_id)
+        updated_product = await fetch_product(conn=conn, node=node, product_id=product_id)
+        assert updated_product is not None
+        return updated_product
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])

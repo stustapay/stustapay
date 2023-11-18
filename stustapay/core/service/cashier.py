@@ -238,6 +238,7 @@ class CashierService(DBService):
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_user=current_user, node=node, cashier_id=cashier_id
         )
+        assert cashier is not None
         if cashier.cash_register_id is None:
             raise InvalidCloseOutException("Cashier does not have a cash register")
         expected_balance = cashier.cash_drawer_balance

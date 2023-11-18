@@ -45,11 +45,13 @@ async def update_product(
     product_service: ContextProductService,
     node_id: Optional[int] = None,
 ):
-    product = await product_service.update_product(token=token, product_id=product_id, product=product, node_id=node_id)
-    if product is None:
+    created_product = await product_service.update_product(
+        token=token, product_id=product_id, product=product, node_id=node_id
+    )
+    if created_product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    return product
+    return created_product
 
 
 @router.delete("/{product_id}")

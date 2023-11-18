@@ -1,6 +1,6 @@
 from functools import wraps
 from inspect import Parameter, signature
-from typing import Optional
+from typing import Awaitable, Callable, Optional, TypeVar
 
 import asyncpg.exceptions
 
@@ -9,8 +9,10 @@ from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.common.error import AccessDenied, Unauthorized
 from stustapay.core.service.tree.common import fetch_node
 
+R = TypeVar("R")
 
-def with_db_connection(func):
+
+def with_db_connection(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaitable[R]]:
     @wraps(func)
     async def wrapper(self, **kwargs):
         if "conn" in kwargs:
@@ -22,7 +24,7 @@ def with_db_connection(func):
     return wrapper
 
 
-def with_db_transaction(func):
+def with_db_transaction(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaitable[R]]:
     @wraps(func)
     async def wrapper(self, **kwargs):
         if "conn" in kwargs:
@@ -35,8 +37,8 @@ def with_db_transaction(func):
     return wrapper
 
 
-def with_retryable_db_transaction(n_retries=3):
-    def f(func):
+def with_retryable_db_transaction(n_retries=3) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
+    def f(func: Callable[..., Awaitable[R]]):
         @wraps(func)
         async def wrapper(self, **kwargs):
             current_retries = n_retries
@@ -63,12 +65,12 @@ def with_retryable_db_transaction(n_retries=3):
     return f
 
 
-def requires_node():
+def requires_node() -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
     """
     This makes a node_id: int parameter optional by reading it from the current users topmost node if not passed.
     """
 
-    def f(func):
+    def f(func: Callable[..., Awaitable[R]]):
         original_signature = signature(func)
 
         @wraps(func)
@@ -114,14 +116,16 @@ def requires_node():
     return f
 
 
-def requires_user(privileges: Optional[list[Privilege]] = None):
+def requires_user(
+    privileges: Optional[list[Privilege]] = None,
+) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
     """
     Check if a user is logged in via a user jwt token and has ALL provided privileges.
     If the current_user is already know from a previous authentication, it can be used the check the privileges
     Sets the arguments current_user in the wrapped function
     """
 
-    def f(func):
+    def f(func: Callable[..., Awaitable[R]]):
         @wraps(func)
         async def wrapper(self, **kwargs):
             if "token" not in kwargs and "current_user" not in kwargs:
@@ -169,7 +173,7 @@ def requires_user(privileges: Optional[list[Privilege]] = None):
     return f
 
 
-def requires_customer(func):
+def requires_customer(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaitable[R]]:
     """
     Check if a customer is logged in via a customer jwt token
     If the current_customer is already know from a previous authentication, it can be used the check the privileges
@@ -217,14 +221,16 @@ def requires_customer(func):
     return wrapper
 
 
-def requires_terminal(user_privileges: Optional[list[Privilege]] = None):
+def requires_terminal(
+    user_privileges: Optional[list[Privilege]] = None,
+) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
     """
     Check if a terminal is logged in via a provided terminal jwt token
     Further, if privileges are provided, checks if a user is logged in and if it has ALL provided privileges
     Sets the arguments current_terminal and current_user in the wrapped function
     """
 
-    def f(func):
+    def f(func: Callable[..., Awaitable[R]]):
         @wraps(func)
         async def wrapper(self, **kwargs):
             if "token" not in kwargs and "current_terminal" not in kwargs:

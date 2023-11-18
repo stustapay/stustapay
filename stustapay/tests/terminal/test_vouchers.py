@@ -57,6 +57,7 @@ async def test_free_ticket_grant_with_vouchers(
     success = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
     assert success
     customer = await account_service.get_account_by_tag_uid(token=admin_token, user_tag_uid=volunteer_tag.uid)
+    assert customer is not None
     assert customer.vouchers == 3
 
 
@@ -113,6 +114,7 @@ async def test_free_ticket_grant_without_vouchers(
     success = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
     assert success
     customer = await account_service.get_account_by_tag_uid(token=admin_token, user_tag_uid=volunteer_tag.uid)
+    assert customer is not None
     assert customer.vouchers == 0
 
     with pytest.raises(AccessDenied):
