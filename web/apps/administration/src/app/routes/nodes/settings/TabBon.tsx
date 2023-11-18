@@ -1,8 +1,10 @@
-import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
+import { RestrictedEventSettings, useGenerateTestBonMutation, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
+import { LoadingButton } from "@mui/lab";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
+import { Receipt as ReceiptIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -22,6 +24,7 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
 }) => {
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
+  const [previewBon, { isLoading: bonPreviewGenerating }] = useGenerateTestBonMutation();
 
   const handleSubmit = (values: BonSettings, { setSubmitting }: FormikHelpers<BonSettings>) => {
     setSubmitting(true);
@@ -37,30 +40,58 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
       });
   };
 
+  const openBonPreview = async () => {
+    try {
+      console.log("starting bon preview");
+      const resp = await previewBon({
+        nodeId,
+      });
+      const pdfUrl = (resp as any).data;
+      if (pdfUrl === undefined) {
+        toast.error("Error generating bon preview");
+      }
+      window.open(pdfUrl);
+    } catch {
+      toast.error("Error generating bon preview");
+    }
+  };
+
   return (
-    <Formik
-      initialValues={eventSettings as BonSettings} // TODO: figure out a way of not needing to cast this
-      onSubmit={handleSubmit}
-      validationSchema={toFormikValidationSchema(BonSettingsSchema)}
-    >
-      {(formik) => (
-        <Form onSubmit={formik.handleSubmit}>
-          <Stack spacing={2}>
-            <FormTextField label={t("settings.bon.title")} name="bon_title" formik={formik} />
-            <FormTextField label={t("settings.bon.issuer")} name="bon_issuer" formik={formik} />
-            <FormTextField label={t("settings.bon.address")} name="bon_address" formik={formik} />
-            {formik.isSubmitting && <LinearProgress />}
-            <Button
-              type="submit"
-              color="primary"
-              variant="contained"
-              disabled={formik.isSubmitting || Object.keys(formik.touched).length === 0}
-            >
-              {t("save")}
-            </Button>
-          </Stack>
-        </Form>
-      )}
-    </Formik>
+    <>
+      <Formik
+        initialValues={eventSettings as BonSettings} // TODO: figure out a way of not needing to cast this
+        onSubmit={handleSubmit}
+        validationSchema={toFormikValidationSchema(BonSettingsSchema)}
+        enableReinitialize={true}
+      >
+        {(formik) => (
+          <Form onSubmit={formik.handleSubmit}>
+            <Stack spacing={2}>
+              <FormTextField label={t("settings.bon.title")} name="bon_title" formik={formik} />
+              <FormTextField label={t("settings.bon.issuer")} name="bon_issuer" formik={formik} />
+              <FormTextField label={t("settings.bon.address")} name="bon_address" formik={formik} />
+              {formik.isSubmitting && <LinearProgress />}
+              <Button
+                type="submit"
+                color="primary"
+                variant="contained"
+                disabled={formik.isSubmitting || Object.keys(formik.touched).length === 0}
+              >
+                {t("save")}
+              </Button>
+            </Stack>
+          </Form>
+        )}
+      </Formik>
+      <LoadingButton
+        variant="contained"
+        onClick={openBonPreview}
+        loading={bonPreviewGenerating}
+        startIcon={<ReceiptIcon />}
+        loadingPosition="start"
+      >
+        {t("settings.bon.previewBon")}
+      </LoadingButton>
+    </>
   );
 };

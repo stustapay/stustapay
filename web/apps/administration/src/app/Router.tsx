@@ -43,6 +43,7 @@ import {
   UserDetail,
   UserList,
   UserPageLayout,
+  UserPasswordChange,
   UserRoleCreate,
   UserRoleList,
   UserRoleUpdate,
@@ -363,6 +364,10 @@ const router = createBrowserRouter([
           {
             path: ":userId/edit",
             element: <UserUpdate />,
+          },
+          {
+            path: ":userId/change-password",
+            element: <UserPasswordChange />,
           },
           {
             path: ":userId",

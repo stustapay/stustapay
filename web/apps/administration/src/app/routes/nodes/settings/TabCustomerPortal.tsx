@@ -40,6 +40,7 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
       initialValues={eventSettings as CustomerPortalSettings} // TODO: figure out a way of not needing to cast this
       onSubmit={handleSubmit}
       validationSchema={toFormikValidationSchema(CustomerPortalSettingsSchema)}
+      enableReinitialize={true}
     >
       {(formik) => (
         <Form onSubmit={formik.handleSubmit}>

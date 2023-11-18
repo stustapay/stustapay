@@ -54,8 +54,10 @@ export function Select<Option, Key extends number | string, Multiple extends boo
   );
 
   const optionToString = React.useCallback(
-    (option: Option) => {
-      if (typeof option === "string" && formatOption === undefined) {
+    (option: Option | undefined) => {
+      if (option === undefined) {
+        return "";
+      } else if (typeof option === "string" && formatOption === undefined) {
         return option;
       } else {
         if (!formatOption) {
@@ -98,7 +100,7 @@ export function Select<Option, Key extends number | string, Multiple extends boo
       <InputLabel id="roleSelectLabel">{label}</InputLabel>
       <MuiSelect
         labelId="roleSelectLabel"
-        value={value === null ? "" : value}
+        value={value == null ? "" : value}
         multiple={multiple}
         onChange={handleChange}
         renderValue={renderValue as any} // TODO: figure out how to get proper typing here

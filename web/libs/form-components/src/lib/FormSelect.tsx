@@ -13,6 +13,7 @@ export function FormSelect<Values, Option, Key extends string | number, Multiple
 }: FormSelectProps<Values, Option, Key, Multiple>) {
   const handleChange = (value: unknown) => {
     formik.setFieldValue(name, value);
+    formik.setFieldTouched(name);
   };
 
   return (

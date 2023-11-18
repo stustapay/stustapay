@@ -1,5 +1,7 @@
-import json
-import random
+import tempfile
+import uuid
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -11,16 +13,11 @@ from stustapay.bon.pdflatex import (
     pdflatex,
     render_template,
 )
+from stustapay.core.schema.order import LineItem, OrderType, PaymentMethod
+from stustapay.core.schema.product import Product, ProductType
+from stustapay.core.schema.tree import RestrictedEventSettings
+from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from stustapay.framework.database import Connection
-
-
-async def fetch_base_config(conn: Connection) -> BonConfig:
-    title = await conn.fetchval("select value from config where key = 'bon.title'")
-    issuer = await conn.fetchval("select value from config where key = 'bon.issuer'")
-    address = await conn.fetchval("select value from config where key = 'bon.addr'")
-    ust_id = await conn.fetchval("select value from config where key = 'ust_id'")
-    closing_texts = json.loads(await conn.fetchval("select value from config where key = 'bon.closing_texts'"))
-    return BonConfig(title=title, issuer=issuer, address=address, ust_id=ust_id, closing_texts=closing_texts)
 
 
 async def render_receipt(context: BonTemplateContext, out_file: Path) -> tuple[bool, str]:
@@ -36,7 +33,8 @@ async def fetch_order(*, conn: Connection, order_id: int) -> Optional[OrderWithT
         "   sig.*, "
         "   tse.hashalgo as tse_hashalgo, "
         "   tse.time_format as tse_time_format, "
-        "   tse.public_key as tse_public_key "
+        "   tse.public_key as tse_public_key, "
+        "   t.node_id as node_id "
         "from order_value o "
         "join tse_signature sig on sig.id = o.id "
         "join till t on o.till_id = t.id "
@@ -46,10 +44,149 @@ async def fetch_order(*, conn: Connection, order_id: int) -> Optional[OrderWithT
     )
 
 
-async def generate_bon(conn: Connection, config: BonConfig, order_id: int, out_file: Path) -> tuple[bool, str]:
+@dataclass
+class DummyBon:
+    pdf: bytes | None
+    error: str | None
+
+
+async def generate_dummy_bon(node_id: int, event: RestrictedEventSettings) -> DummyBon:
+    """Generate a dummy bon for the given event and return the pdf as bytes"""
+    ctx = BonTemplateContext(
+        order=OrderWithTse(
+            id=1,
+            node_id=node_id,
+            uuid=uuid.uuid4(),
+            total_price=16.00,
+            total_tax=1.23,
+            total_no_tax=14.77,
+            booked_at=datetime.fromisoformat("2023-04-24T14:46:54.550316"),
+            payment_method=PaymentMethod.tag,
+            order_type=OrderType.sale,
+            cashier_id=0,
+            till_id=0,
+            cancels_order=None,
+            customer_tag_uid=None,
+            customer_account_id=0,
+            signature_status="done",
+            line_items=[
+                LineItem(
+                    quantity=2,
+                    item_id=0,
+                    product=Product(
+                        node_id=node_id,
+                        name="Helles 1.0l",
+                        price=5.00,
+                        tax_rate_id=1,
+                        tax_name="ust",
+                        tax_rate=0.19,
+                        id=0,
+                        type=ProductType.user_defined,
+                        fixed_price=True,
+                        is_locked=True,
+                        is_returnable=False,
+                        restrictions=[],
+                    ),
+                    product_price=5.00,
+                    total_tax=1.90,
+                    tax_rate_id=1,
+                    tax_name="ust",
+                    tax_rate=0.19,
+                ),
+                LineItem(
+                    quantity=1,
+                    item_id=2,
+                    product=Product(
+                        node_id=node_id,
+                        name="Weißwurst",
+                        price=2.0,
+                        tax_rate_id=1,
+                        tax_name="eust",
+                        tax_rate=0.07,
+                        id=9,
+                        type=ProductType.user_defined,
+                        fixed_price=True,
+                        is_locked=True,
+                        is_returnable=False,
+                        restrictions=[],
+                    ),
+                    product_price=2.0,
+                    tax_rate_id=1,
+                    total_tax=0.14,
+                    tax_name="eust",
+                    tax_rate=0.07,
+                ),
+                LineItem(
+                    quantity=2,
+                    item_id=1,
+                    product=Product(
+                        node_id=node_id,
+                        name="Pfand",
+                        price=2.00,
+                        tax_rate_id=1,
+                        tax_name="none",
+                        tax_rate=0.0,
+                        id=10,
+                        type=ProductType.user_defined,
+                        fixed_price=True,
+                        is_returnable=False,
+                        is_locked=True,
+                        restrictions=[],
+                    ),
+                    product_price=2.00,
+                    total_tax=0.00,
+                    tax_rate_id=1,
+                    tax_name="none",
+                    tax_rate=0.00,
+                ),
+            ],
+        ),
+        tax_rate_aggregations=[
+            TaxRateAggregation(
+                tax_name="none",
+                tax_rate=0.00,
+                total_price=4.0000,
+                total_tax=0.0000,
+                total_no_tax=4.00,
+            ),
+            TaxRateAggregation(
+                tax_name="eust",
+                tax_rate=0.07,
+                total_price=2.00,
+                total_tax=0.14,
+                total_no_tax=1.86,
+            ),
+            TaxRateAggregation(
+                tax_name="ust",
+                tax_rate=0.19,
+                total_price=10.00,
+                total_tax=1.90,
+                total_no_tax=8.10,
+            ),
+        ],
+        config=BonConfig(
+            title=event.bon_title,
+            issuer=event.bon_issuer,
+            address=event.bon_address,
+            ust_id=event.ust_id,
+        ),
+    )
+    with tempfile.NamedTemporaryFile() as out_file:
+        out_file_path = Path(out_file.name)
+        success, error_msg = await render_receipt(context=ctx, out_file=out_file_path)
+        if not success:
+            return DummyBon(pdf=None, error=error_msg)
+        content = out_file_path.read_bytes()
+        return DummyBon(pdf=content, error=None)
+
+
+async def generate_bon(conn: Connection, order_id: int, out_file: Path) -> tuple[bool, str]:
     order = await fetch_order(conn=conn, order_id=order_id)
     if order is None:
         return False, "could not fetch order"
+
+    event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=order.node_id)
+    config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
 
     aggregations = await conn.fetch_many(
         TaxRateAggregation,
@@ -62,7 +199,5 @@ async def generate_bon(conn: Connection, config: BonConfig, order_id: int, out_f
     if len(aggregations) == 0:
         return False, "could not fetch aggregated tax rates"
 
-    context = BonTemplateContext(
-        order=order, config=config, tax_rate_aggregations=aggregations, closing_text=random.choice(config.closing_texts)
-    )
+    context = BonTemplateContext(order=order, config=config, tax_rate_aggregations=aggregations)
     return await render_receipt(context=context, out_file=out_file)

@@ -16,6 +16,7 @@ export const translations = {
   edit: "Edit",
   delete: "Delete",
   copy: "Copy",
+  save: "Save",
   update: "Update",
   logout: "Logout",
   login: "Login",
@@ -35,6 +36,8 @@ export const translations = {
   registers: "Cash Registers",
   common: {
     definedAtNode: "Node",
+    loadingError: "Errors while loading page",
+    configLoadFailed: "Something went wrong while loading the page configuration: {{what}}",
   },
   nodes: {
     overview: "Overview",
@@ -239,6 +242,7 @@ export const translations = {
       issuer: "Bon issuer",
       address: "Bon address",
       title: "Bon title",
+      previewBon: "Preview Bon",
     },
     sumup: {
       tabLabel: "SumUp",
@@ -397,6 +401,11 @@ export const translations = {
     description: "Description",
     tagUid: "User Tag UID",
     noTagAssigned: "No Tag assigned",
+    changePassword: {
+      title: "Change password",
+      new_password: "New Password",
+      new_password_confirm: "Confirm New Password",
+    },
   },
   userRole: {
     name: "Name",

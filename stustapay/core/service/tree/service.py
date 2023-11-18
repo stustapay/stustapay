@@ -2,6 +2,7 @@ import uuid
 
 import asyncpg
 
+from stustapay.bon.bon import generate_dummy_bon
 from stustapay.core.config import Config
 from stustapay.core.schema.tree import (
     NewEvent,
@@ -10,7 +11,7 @@ from stustapay.core.schema.tree import (
     ObjectType,
     RestrictedEventSettings,
 )
-from stustapay.core.schema.user import CurrentUser
+from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -18,7 +19,7 @@ from stustapay.core.service.common.decorators import (
     requires_user,
     with_db_transaction,
 )
-from stustapay.core.service.common.error import NotFound
+from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
@@ -162,19 +163,19 @@ class TreeService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user()  # TODO: privilege
+    @requires_user(privileges=[Privilege.node_administration])
     @requires_node()
     async def create_node(self, conn: Connection, node: Node, new_node: NewNode) -> Node:
         return await create_node(conn=conn, parent_id=node.id, new_node=new_node)
 
     @with_db_transaction
-    @requires_user()  # TODO: privilege
+    @requires_user(privileges=[Privilege.node_administration])
     @requires_node()
     async def create_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
         return await create_event(conn=conn, parent_id=node.id, event=event)
 
     @with_db_transaction
-    @requires_user()  # TODO: privilege
+    @requires_user(privileges=[Privilege.node_administration])  # TODO: privilege
     async def update_event(self, conn: Connection, node_id: int, event: NewEvent) -> Node:
         event_id = await conn.fetchval("select event_id from node where id = $1", node_id)
         if event_id is None:
@@ -220,7 +221,19 @@ class TreeService(DBService):
         return await get_tree_for_current_user(conn=conn, user_node_id=current_user.node_id)
 
     @with_db_transaction
-    @requires_user()
+    @requires_user(privileges=[Privilege.node_administration])
     @requires_node()
     async def get_restricted_event_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:
         return await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+
+    @with_db_transaction
+    @requires_user(privileges=[Privilege.node_administration])
+    @requires_node()
+    async def generate_test_bon(self, *, conn: Connection, node: Node) -> bytes:
+        if node.event_node_id is None:
+            raise InvalidArgument("Cannot generate bon for a node not associated with an event")
+        event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+        dummy_bon = await generate_dummy_bon(node_id=node.event_node_id, event=event)
+        if dummy_bon.error is not None or dummy_bon.pdf is None:
+            raise InvalidArgument(f"Error while generating dummy bon: {dummy_bon.error}")
+        return dummy_bon.pdf

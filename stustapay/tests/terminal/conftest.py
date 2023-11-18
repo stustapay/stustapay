@@ -1,0 +1,285 @@
+# pylint: disable=redefined-outer-name
+import secrets
+from dataclasses import dataclass
+from typing import Awaitable, Protocol
+
+import pytest
+
+from stustapay.core.schema.account import AccountType
+from stustapay.core.schema.till import (
+    CashRegister,
+    CashRegisterStocking,
+    NewCashRegister,
+    NewCashRegisterStocking,
+    NewTill,
+    NewTillLayout,
+    NewTillProfile,
+    Till,
+)
+from stustapay.core.schema.tree import Node
+from stustapay.core.schema.user import (
+    ADMIN_ROLE_ID,
+    NewUser,
+    NewUserRole,
+    Privilege,
+    User,
+    UserRole,
+    UserTag,
+)
+from stustapay.core.service.account import AccountService, get_system_account_for_node
+from stustapay.core.service.till import TillService
+from stustapay.core.service.user import UserService
+from stustapay.framework.database import Connection
+
+from ..conftest import Cashier, CreateRandomUserTag
+from ..conftest import UserTag as TestUserTag
+
+START_BALANCE = 100
+
+
+@pytest.fixture
+async def terminal_token(
+    till_service: TillService,
+    till: Till,
+    admin_tag: TestUserTag,
+) -> str:
+    terminal_token = (await till_service.register_terminal(registration_uuid=till.registration_uuid)).token
+    await till_service.login_user(token=terminal_token, user_tag=UserTag(uid=admin_tag.uid), user_role_id=ADMIN_ROLE_ID)
+    return terminal_token
+
+
+@pytest.fixture
+async def cash_register(till_service: TillService, admin_token: str, event_node: Node) -> CashRegister:
+    return await till_service.register.create_cash_register(
+        node_id=event_node.id, token=admin_token, new_register=NewCashRegister(name="Lade")
+    )
+
+
+@pytest.fixture
+async def cash_register_stocking(till_service: TillService, admin_token: str, event_node: Node) -> CashRegisterStocking:
+    return await till_service.register.create_cash_register_stockings(
+        node_id=event_node.id,
+        token=admin_token,
+        stocking=NewCashRegisterStocking(name="My fancy stocking"),
+    )
+
+
+class LoginSupervisedUser(Protocol):
+    def __call__(self, user_tag_uid: int, user_role_id: int, terminal_token: str = ...) -> Awaitable:
+        ...
+
+
+@pytest.fixture
+async def login_supervised_user(
+    till_service: TillService,
+    terminal_token: str,
+    admin_user: tuple[User, str],
+) -> LoginSupervisedUser:
+    async def func(user_tag_uid: int, user_role_id: int, terminal_token: str = terminal_token):
+        await till_service.logout_user(token=terminal_token)
+        await till_service.login_user(
+            token=terminal_token, user_tag=UserTag(uid=admin_user[0].user_tag_uid), user_role_id=ADMIN_ROLE_ID
+        )
+        await till_service.login_user(
+            token=terminal_token, user_tag=UserTag(uid=user_tag_uid), user_role_id=user_role_id
+        )
+
+    return func
+
+
+class AssignCashRegister(Protocol):
+    def __call__(self, cashier: Cashier) -> Awaitable:
+        ...
+
+
+@pytest.fixture
+async def assign_cash_register(
+    cash_register: CashRegister,
+    cash_register_stocking: CashRegisterStocking,
+    till_service: TillService,
+    terminal_token: str,
+    admin_tag: TestUserTag,
+) -> AssignCashRegister:
+    async def func(cashier: Cashier):
+        await till_service.login_user(
+            token=terminal_token, user_tag=UserTag(uid=admin_tag.uid), user_role_id=ADMIN_ROLE_ID
+        )
+        await till_service.register.stock_up_cash_register(
+            token=terminal_token,
+            cashier_tag_uid=cashier.user_tag_uid,
+            stocking_id=cash_register_stocking.id,
+            cash_register_id=cash_register.id,
+        )
+
+    return func
+
+
+class GetAccountBalance(Protocol):
+    def __call__(self, account_id: int) -> Awaitable[float]:
+        ...
+
+
+@pytest.fixture
+async def get_account_balance(account_service: AccountService, admin_token: str):
+    async def func(account_id: int) -> float:
+        account = await account_service.get_account(token=admin_token, account_id=account_id)
+        assert account is not None
+        return account.balance
+
+    return func
+
+
+class AssertAccountBalance(Protocol):
+    def __call__(self, account_id: int, expected_balance: float) -> Awaitable:
+        ...
+
+
+@pytest.fixture
+async def assert_account_balance(get_account_balance: GetAccountBalance):
+    async def func(account_id: int, expected_balance: float):
+        balance = await get_account_balance(account_id=account_id)
+        assert expected_balance == balance
+
+    return func
+
+
+class GetSystemAccountBalance(Protocol):
+    def __call__(self, account_type: AccountType) -> Awaitable[float]:
+        ...
+
+
+@pytest.fixture
+async def get_system_account_balance(db_connection: Connection, event_node: Node) -> GetSystemAccountBalance:
+    async def func(account_type: AccountType):
+        account = await get_system_account_for_node(conn=db_connection, node=event_node, account_type=account_type)
+        return account.balance
+
+    return func
+
+
+class AssertSystemAccountBalance(Protocol):
+    def __call__(self, account_type: AccountType, expected_balance: float) -> Awaitable:
+        ...
+
+
+@pytest.fixture
+async def assert_system_account_balance(
+    get_system_account_balance: GetSystemAccountBalance,
+) -> AssertSystemAccountBalance:
+    async def func(account_type: AccountType, expected_balance: float):
+        balance = await get_system_account_balance(account_type=account_type)
+        assert expected_balance == balance
+
+    return func
+
+
+@dataclass
+class Customer:
+    tag: TestUserTag
+    account_id: int
+
+
+@pytest.fixture
+async def customer(
+    create_random_user_tag: CreateRandomUserTag, db_connection: Connection, event_node: Node
+) -> Customer:
+    customer_tag = await create_random_user_tag()
+    customer_account_id = await db_connection.fetchval(
+        "insert into account (node_id, user_tag_uid, type, balance) values ($1, $2, 'private', $3) returning id",
+        event_node.id,
+        customer_tag.uid,
+        START_BALANCE,
+    )
+    return Customer(tag=customer_tag, account_id=customer_account_id)
+
+
+class Finanzorga(Cashier):
+    transport_account_id: int
+    finanzorga_role: UserRole
+
+
+@pytest.fixture
+async def finanzorga(
+    user_service: UserService,
+    event_node: Node,
+    cashier: Cashier,
+    admin_token: str,
+    create_random_user_tag: CreateRandomUserTag,
+) -> Finanzorga:
+    finanzorga_tag = await create_random_user_tag()
+    finanzorga_role = await user_service.create_user_role(
+        token=admin_token,
+        node_id=event_node.id,
+        new_role=NewUserRole(
+            name="finanzorga",
+            is_privileged=True,
+            privileges=[
+                Privilege.node_administration,
+                Privilege.terminal_login,
+                Privilege.user_management,
+                Privilege.grant_free_tickets,
+                Privilege.grant_vouchers,
+                Privilege.cash_transport,
+            ],
+        ),
+    )
+    finanzorga_user: User = await user_service.create_user_no_auth(
+        node_id=event_node.id,
+        new_user=NewUser(
+            login=f"Finanzorga {secrets.token_hex(16)}",
+            description="",
+            role_names=[finanzorga_role.name, cashier.cashier_role.name],
+            user_tag_uid=finanzorga_tag.uid,
+            display_name="Finanzorga",
+        ),
+    )
+    finanzorga_dump = finanzorga_user.model_dump()
+    finanzorga_dump.update(
+        {"finanzorga_role": finanzorga_role, "cashier_role": cashier.cashier_role, "token": cashier.token}
+    )
+    finanzorga = Finanzorga.model_validate(finanzorga_dump)
+    return finanzorga
+
+
+class CreateTerminalToken(Protocol):
+    def __call__(self) -> Awaitable[str]:
+        ...
+
+
+@pytest.fixture
+async def create_terminal_token(
+    till_service: TillService, admin_tag: TestUserTag, admin_token: str, event_node: Node
+) -> CreateTerminalToken:
+    async def func():
+        till_layout = await till_service.layout.create_layout(
+            token=admin_token,
+            node_id=event_node.id,
+            layout=NewTillLayout(name=secrets.token_hex(16), description="", button_ids=[]),
+        )
+        till_profile = await till_service.profile.create_profile(
+            token=admin_token,
+            node_id=event_node.id,
+            profile=NewTillProfile(
+                name=secrets.token_hex(16),
+                description="",
+                layout_id=till_layout.id,
+                allow_top_up=True,
+                allow_cash_out=True,
+                allow_ticket_sale=True,
+            ),
+        )
+        till = await till_service.create_till(
+            token=admin_token,
+            node_id=event_node.id,
+            till=NewTill(
+                name=secrets.token_hex(16),
+                active_profile_id=till_profile.id,
+            ),
+        )
+        terminal_token = (await till_service.register_terminal(registration_uuid=till.registration_uuid)).token
+        await till_service.login_user(
+            token=terminal_token, user_tag=UserTag(uid=admin_tag.uid), user_role_id=ADMIN_ROLE_ID
+        )
+        return terminal_token
+
+    return func

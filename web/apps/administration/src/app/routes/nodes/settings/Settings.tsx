@@ -3,6 +3,7 @@ import { useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Alert, AlertTitle, Box, Tab } from "@mui/material";
 import { Loading } from "@stustapay/components";
+import { useQueryVar } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { TabBon } from "./TabBon";
@@ -14,9 +15,8 @@ import { TabSumUp } from "./TabSumUp";
 
 export const Settings: React.FC = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = React.useState("general");
+  const [activeTab, setActiveTab] = useQueryVar("tab", "general");
   const { currentNode } = useCurrentNode();
-  // TODO: remove the following line
   const { data: eventSettings, isLoading, error } = useGetRestrictedEventSettingsQuery({ nodeId: currentNode.id });
 
   if (isLoading || (!eventSettings && !error)) {

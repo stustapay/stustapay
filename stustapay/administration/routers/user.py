@@ -99,6 +99,26 @@ async def update_user(
     return user
 
 
+class ChangeUserPasswordPayload(BaseModel):
+    new_password: str
+
+
+@user_router.post("/{user_id}/change-password", response_model=User)
+async def change_user_password(
+    user_id: int,
+    payload: ChangeUserPasswordPayload,
+    token: CurrentAuthToken,
+    user_service: ContextUserService,
+    node_id: Optional[int] = None,
+):
+    return await user_service.change_user_password(
+        token=token,
+        user_id=user_id,
+        node_id=node_id,
+        new_password=payload.new_password,
+    )
+
+
 @user_router.delete("/{user_id}")
 async def delete_user(
     user_id: int, token: CurrentAuthToken, user_service: ContextUserService, node_id: Optional[int] = None

@@ -39,6 +39,7 @@ stustapay = "stustapay.cli.main:main"
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-asyncio",
     "pytest-cov",
 ]
 dev = [
@@ -102,6 +103,7 @@ source = [
 ]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 minversion = "6.0"
 testpaths = [
     "stustapay.tests",

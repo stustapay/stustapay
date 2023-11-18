@@ -19,6 +19,7 @@ export const RoleSelect: React.FC<RoleSelectProps> = (props) => {
       }),
     }
   );
+  console.log("roles", roles);
 
   return (
     <Select
