@@ -13,7 +13,7 @@ from stustapay.core.schema.terminal import (
     UserTagSecret,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile, UserInfo
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import (
     CurrentUser,
     Privilege,
@@ -58,7 +58,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def create_till(self, *, conn: Connection, node: Node, till: NewTill) -> Till:
         # TODO: TREE visibility
         return await create_till(conn=conn, node_id=node.id, till=till)
@@ -79,7 +79,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def update_till(self, *, conn: Connection, node: Node, till_id: int, till: NewTill) -> Till:
         # TODO: TREE visibility
         row = await conn.fetchrow(
@@ -100,7 +100,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def delete_till(self, *, conn: Connection, till_id: int) -> bool:
         # TODO: TREE visibility
         result = await conn.execute(
@@ -128,7 +128,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def logout_terminal_id(self, *, conn: Connection, till_id: int) -> bool:
         # TODO: TREE visibility
         id_ = await conn.fetchval(
@@ -150,7 +150,7 @@ class TillService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def force_logout_user(self, *, conn: Connection, till_id: int):
         # TODO: TREE visibility
         result = await conn.fetchval(

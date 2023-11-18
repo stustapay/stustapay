@@ -9,7 +9,7 @@ from stustapay.core.schema.till import (
     TillButton,
     TillLayout,
 )
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -38,7 +38,7 @@ class TillLayoutService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def create_button(self, *, conn: Connection, node: Node, button: NewTillButton) -> TillButton:
         # TODO: TREE visibility
         row = await conn.fetchrow(
@@ -78,7 +78,7 @@ class TillLayoutService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def update_button(self, *, conn: Connection, button_id: int, button: NewTillButton) -> TillButton:
         # TODO: TREE visibility
         row = await conn.fetchrow(
@@ -99,7 +99,7 @@ class TillLayoutService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def delete_button(self, *, conn: Connection, button_id: int) -> bool:
         # TODO: TREE visibility
         result = await conn.execute(
@@ -110,7 +110,7 @@ class TillLayoutService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def create_layout(self, *, conn: Connection, node: Node, layout: NewTillLayout) -> TillLayout:
         # TODO: TREE visibility
         till_layout_id = await conn.fetchval(
@@ -159,7 +159,7 @@ class TillLayoutService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def update_layout(
         self, *, conn: Connection, node: Node, layout_id: int, layout: NewTillLayout
     ) -> Optional[TillLayout]:
@@ -198,7 +198,7 @@ class TillLayoutService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def delete_layout(self, *, conn: Connection, layout_id: int) -> bool:
         # TODO: TREE visibility
         result = await conn.execute(

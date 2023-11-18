@@ -41,6 +41,26 @@ class AccessDenied(ServiceException):
         return self.msg
 
 
+class ResourceNotAllowed(ServiceException):
+    id = "ResourceNotAllowed"
+
+    def __init__(self, msg: str):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
+class EventRequired(ServiceException):
+    id = "EventRequired"
+
+    def __init__(self, msg: str):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 class Unauthorized(ServiceException):
     id = "Unauthorized"
 

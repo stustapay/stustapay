@@ -4,7 +4,7 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.till import NewTillProfile, TillProfile
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -32,7 +32,7 @@ class TillProfileService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def create_profile(self, *, conn: Connection, node: Node, profile: NewTillProfile) -> TillProfile:
         # TODO: TREE visibility
         profile_id = await conn.fetchval(
@@ -69,7 +69,7 @@ class TillProfileService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def update_profile(
         self, *, conn: Connection, node: Node, profile_id: int, profile: NewTillProfile
     ) -> Optional[TillProfile]:
@@ -96,7 +96,7 @@ class TillProfileService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def delete_profile(self, *, conn: Connection, till_profile_id: int) -> bool:
         # TODO: TREE visibility
         result = await conn.execute(

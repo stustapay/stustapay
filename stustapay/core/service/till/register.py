@@ -11,7 +11,7 @@ from stustapay.core.schema.till import (
     NewCashRegister,
     NewCashRegisterStocking,
 )
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.account import (
     get_account_by_id,
@@ -107,7 +107,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def create_cash_register_stockings(
         self, *, conn: Connection, node: Node, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
@@ -142,7 +142,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def update_cash_register_stockings(
         self, *, conn: Connection, node: Node, stocking_id: int, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
@@ -178,7 +178,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def delete_cash_register_stockings(self, *, conn: Connection, stocking_id: int):
         # TODO: TREE visibility
         result = await conn.execute(
@@ -207,7 +207,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def create_cash_register(
         self, *, conn: Connection, node: Node, new_register: NewCashRegister
     ) -> CashRegister:
@@ -216,7 +216,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def update_cash_register(
         self, *, conn: Connection, node: Node, register_id: int, register: NewCashRegister
     ) -> CashRegister:
@@ -232,7 +232,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction
     @requires_user([Privilege.node_administration])
-    @requires_node()
+    @requires_node(object_types=[ObjectType.till])
     async def delete_cash_register(self, *, conn: Connection, register_id: int):
         # TODO: TREE visibility
         result = await conn.execute(

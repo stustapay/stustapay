@@ -5,8 +5,14 @@ from typing import Awaitable, Callable, Optional, TypeVar
 import asyncpg.exceptions
 
 from stustapay.core.schema.terminal import Terminal
+from stustapay.core.schema.tree import ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege
-from stustapay.core.service.common.error import AccessDenied, Unauthorized
+from stustapay.core.service.common.error import (
+    AccessDenied,
+    EventRequired,
+    ResourceNotAllowed,
+    Unauthorized,
+)
 from stustapay.core.service.tree.common import fetch_node
 
 R = TypeVar("R")
@@ -65,7 +71,9 @@ def with_retryable_db_transaction(n_retries=3) -> Callable[[Callable[..., Awaita
     return f
 
 
-def requires_node() -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
+def requires_node(
+    object_types: list[ObjectType] | None = None, event_only: bool = False
+) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
     """
     This makes a node_id: int parameter optional by reading it from the current users topmost node if not passed.
     """
@@ -95,6 +103,14 @@ def requires_node() -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awa
             node = await fetch_node(conn=conn, node_id=node_id)
             if node is None:
                 raise RuntimeError(f"Node with id {node_id} does not exist")
+
+            if object_types is not None:
+                forbidden = list(filter(lambda obj: obj in node.computed_forbidden_objects_at_node, object_types))
+                if len(forbidden) != 0:
+                    raise ResourceNotAllowed(f'The resources: "{forbidden}" are not allowed at node {node.name}')
+            if event_only and node.event_node_id is None:
+                raise EventRequired("This operation is only allowed for nodes within events")
+
             if "node" in original_signature.parameters:
                 kwargs["node"] = node
 
@@ -117,7 +133,7 @@ def requires_node() -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awa
 
 
 def requires_user(
-    privileges: Optional[list[Privilege]] = None,
+    privileges: list[Privilege] | None = None,
 ) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
     """
     Check if a user is logged in via a user jwt token and has ALL provided privileges.
