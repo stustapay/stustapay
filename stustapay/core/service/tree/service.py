@@ -28,17 +28,17 @@ from stustapay.core.service.tree.common import (
 from stustapay.framework.database import Connection
 
 
-async def _update_allowed_objects_in_subtree(conn: Connection, node_id: int, allowed: list[ObjectType]):
+async def _update_forbidden_objects_in_subtree(conn: Connection, node_id: int, allowed: list[ObjectType]):
     for t in allowed:
         await conn.execute(
-            "insert into allowed_objects_in_subtree_at_node (object_name, node_id) values ($1, $2)", t.value, node_id
+            "insert into forbidden_objects_in_subtree_at_node (object_name, node_id) values ($1, $2)", t.value, node_id
         )
 
 
-async def _update_allowed_objects_at_node(conn: Connection, node_id: int, allowed: list[ObjectType]):
+async def _update_forbidden_objects_at_node(conn: Connection, node_id: int, allowed: list[ObjectType]):
     for t in allowed:
         await conn.execute(
-            "insert into allowed_objects_at_node (object_name, node_id) values ($1, $2)", t.value, node_id
+            "insert into forbidden_objects_at_node (object_name, node_id) values ($1, $2)", t.value, node_id
         )
 
 
@@ -50,9 +50,9 @@ async def create_node(conn: Connection, parent_id: int, new_node: NewNode, event
         new_node.description,
         event_id,
     )
-    await _update_allowed_objects_at_node(conn=conn, node_id=new_node_id, allowed=new_node.allowed_objects_at_node)
-    await _update_allowed_objects_in_subtree(
-        conn=conn, node_id=new_node_id, allowed=new_node.allowed_objects_in_subtree
+    await _update_forbidden_objects_at_node(conn=conn, node_id=new_node_id, allowed=new_node.forbidden_objects_at_node)
+    await _update_forbidden_objects_in_subtree(
+        conn=conn, node_id=new_node_id, allowed=new_node.forbidden_objects_in_subtree
     )
     result = await fetch_node(conn=conn, node_id=new_node_id)
     assert result is not None
