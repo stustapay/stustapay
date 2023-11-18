@@ -76,6 +76,25 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+
+    openApiGenerate {
+        generatorName.set("kotlin")
+        inputSpec.set("../api/terminalserver.json")
+        outputDir.set("$projectDir/api")
+        skipValidateSpec.set(true)
+        configOptions.set([
+                library: "jvm-ktor",
+                serializationLibrary: "kotlinx_serialization",
+                packageName: "de.stustapay.api",
+                omitGradleWrapper: "true"
+        ])
+    }
+
+    sourceSets {
+        main {
+            kotlin.srcDirs = ['api/src/main/kotlin']
+        }
+    }
 }
 
 
