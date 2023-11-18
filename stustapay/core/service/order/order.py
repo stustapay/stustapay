@@ -320,7 +320,7 @@ class OrderService(DBService):
             raise CustomerNotFound(uid=customer_tag_uid)
         return customer
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_topup(
         self,
@@ -376,7 +376,7 @@ class OrderService(DBService):
             new_balance=new_balance,
         )
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_topup(
         self,
@@ -530,7 +530,7 @@ class OrderService(DBService):
 
         return order
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_sale(
         self, *, conn: Connection, current_terminal: Terminal, node: Node, new_sale: NewSale
@@ -568,7 +568,7 @@ class OrderService(DBService):
             buttons=new_sale.buttons,
         )
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_sale_products(
         self,
@@ -701,7 +701,7 @@ class OrderService(DBService):
 
         return completed_order
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_sale(
         self,
@@ -754,7 +754,7 @@ class OrderService(DBService):
             buttons=new_sale.buttons,
         )
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_user([Privilege.can_book_orders])
     @requires_node()
     async def book_sale_products(
@@ -808,7 +808,7 @@ class OrderService(DBService):
             products=new_sale.products,
         )
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_user([Privilege.can_book_orders])
     @requires_node()
     async def edit_sale_products(
@@ -903,7 +903,7 @@ class OrderService(DBService):
                 transaction["vouchers"],
             )
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def cancel_sale(
         self, *, conn: Connection, current_terminal: Terminal, current_user: CurrentUser, order_id: int
@@ -912,14 +912,14 @@ class OrderService(DBService):
             conn=conn, till_id=current_terminal.till.id, current_user=current_user, order_id=order_id
         )
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_user([Privilege.can_book_orders])
     @requires_node()
     async def cancel_sale_admin(self, *, conn: Connection, node: Node, current_user: CurrentUser, order_id: int):
         virtual_till = await fetch_virtual_till(conn=conn, node=node)
         await self._cancel_sale(conn=conn, till_id=virtual_till.id, current_user=current_user, order_id=order_id)
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_pay_out(
         self, *, conn: Connection, current_terminal: Terminal, new_pay_out: NewPayOut
@@ -958,7 +958,7 @@ class OrderService(DBService):
             new_balance=new_balance,
         )
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_pay_out(
         self,
@@ -1024,7 +1024,7 @@ class OrderService(DBService):
             till_id=current_terminal.till.id,
         )
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_ticket_scan(
         self, *, conn: Connection, current_terminal: Terminal, new_ticket_scan: NewTicketScan
@@ -1077,7 +1077,7 @@ class OrderService(DBService):
 
         return TicketScanResult(scanned_tickets=scanned_tickets)
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_ticket_sale(
         self,
@@ -1201,7 +1201,7 @@ class OrderService(DBService):
 
         return oldest_customer[0]
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def book_ticket_sale(
         self,
@@ -1315,7 +1315,7 @@ class OrderService(DBService):
             till_id=current_terminal.till.id,
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def show_order(self, *, conn: Connection, current_user: User, order_id: int) -> Optional[Order]:
         order = await fetch_order(conn=conn, order_id=order_id)
@@ -1323,12 +1323,12 @@ class OrderService(DBService):
             return order
         return None
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_terminal([Privilege.can_book_orders])
     async def list_orders_terminal(self, *, conn: Connection, current_user: User) -> list[Order]:
         return await conn.fetch_many(Order, "select * from order_value where cashier_id = $1", current_user.id)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_orders(self, *, conn: Connection, customer_account_id: Optional[int] = None) -> list[Order]:
@@ -1339,13 +1339,13 @@ class OrderService(DBService):
         else:
             return await conn.fetch_many(Order, "select * from order_value")
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_orders_by_till(self, *, conn: Connection, till_id: int) -> list[Order]:
         return await conn.fetch_many(Order, "select * from order_value where till_id = $1", till_id)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:

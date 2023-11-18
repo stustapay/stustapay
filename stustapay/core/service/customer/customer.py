@@ -98,12 +98,12 @@ class CustomerService(DBService):
         )
         return result != "DELETE 0"
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_customer
     async def get_customer(self, *, current_customer: Customer) -> Optional[Customer]:
         return current_customer
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_customer
     async def get_orders_with_bon(self, *, conn: Connection, current_customer: Customer) -> list[OrderWithBon]:
         orders_with_bon = await conn.fetch_many(
@@ -188,7 +188,7 @@ class CustomerService(DBService):
             round(current_customer.balance, 2),
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     async def get_api_config(self, *, conn: Connection, base_url: str) -> CustomerPortalApiConfig:
         node_id = await conn.fetchval(
             "select n.id from node n join event e on n.event_id = e.id where e.customer_portal_url = $1", base_url

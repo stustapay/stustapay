@@ -58,7 +58,7 @@ class TseService(DBService):
             raise NotFound(element_typ="tse", element_id=str(tse_id))
         return await conn.fetch_one(Tse, "select * from tse where id = $1", tse_id)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_tses(self, *, conn: Connection, node: Node) -> list[Tse]:

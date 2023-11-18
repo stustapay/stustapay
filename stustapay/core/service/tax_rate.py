@@ -50,13 +50,13 @@ class TaxRateService(DBService):
         assert tax is not None
         return tax
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user()
     @requires_node()
     async def list_tax_rates(self, *, conn: Connection, node: Node) -> list[TaxRate]:
         return await conn.fetch_many(TaxRate, "select * from tax_rate where node_id = any($1)", node.ids_to_event_node)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user()
     @requires_node()
     async def get_tax_rate(self, *, conn: Connection, node: Node, tax_rate_id: int) -> Optional[TaxRate]:

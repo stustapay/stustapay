@@ -94,7 +94,7 @@ async def load_tags(
 
             if not dry_run:
                 async with db_pool.acquire() as conn:
-                    async with conn.transaction():
+                    async with conn.transaction(isolation="serializable"):
                         await create_user_tags(conn=conn, node_id=node_id, tags=tags)
 
     finally:
@@ -105,7 +105,7 @@ async def create_cash_registers(config: Config, node_id: int, n_registers: int, 
     db_pool = await create_db_pool(config.database)
     try:
         async with db_pool.acquire() as conn:
-            async with conn.transaction():
+            async with conn.transaction(isolation="serializable"):
                 node = await fetch_node(conn=conn, node_id=node_id)
                 assert node is not None
                 for i in range(n_registers):
@@ -124,7 +124,7 @@ async def create_tills(config: Config, node_id: int, n_tills: int, name_format: 
     db_pool = await create_db_pool(config.database)
     try:
         async with db_pool.acquire() as conn:
-            async with conn.transaction():
+            async with conn.transaction(isolation="serializable"):
                 for i in range(n_tills):
                     till_name = name_format.format(i=i + 1)
                     logger.info(f"Creating till: '{till_name}'")

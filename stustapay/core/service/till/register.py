@@ -90,13 +90,13 @@ class TillRegisterService(DBService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_cash_register_stockings_admin(self, *, conn: Connection, node: Node) -> list[CashRegisterStocking]:
         return await _list_cash_register_stockings(conn=conn, node=node)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_terminal()
     async def list_cash_register_stockings_terminal(
         self, *, conn: Connection, current_terminal: Terminal
@@ -187,7 +187,7 @@ class TillRegisterService(DBService):
         )
         return result != "DELETE 0"
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_terminal([Privilege.node_administration])
     async def list_cash_registers_terminal(
         self, *, conn: Connection, current_terminal: Terminal, hide_assigned_registers=False
@@ -197,7 +197,7 @@ class TillRegisterService(DBService):
         assert node is not None
         return await _list_cash_registers(conn=conn, node=node, hide_assigned_registers=hide_assigned_registers)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_cash_registers_admin(
@@ -241,7 +241,7 @@ class TillRegisterService(DBService):
         )
         return result != "DELETE 0"
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_terminal([Privilege.node_administration])
     async def stock_up_cash_register(
         self,
@@ -292,7 +292,7 @@ class TillRegisterService(DBService):
         )
         return True
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_terminal([Privilege.cash_transport])
     async def modify_cashier_account_balance(
         self,
@@ -349,7 +349,7 @@ class TillRegisterService(DBService):
             amount=amount,
         )
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_terminal([Privilege.cash_transport])
     async def modify_transport_account_balance(
         self,
@@ -442,7 +442,7 @@ class TillRegisterService(DBService):
         assert reg is not None
         return reg
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def transfer_cash_register_admin(
@@ -453,7 +453,7 @@ class TillRegisterService(DBService):
             conn=conn, node=node, source_cashier_id=source_cashier_id, target_cashier_id=target_cashier_id
         )
 
-    @with_retryable_db_transaction()
+    @with_retryable_db_transaction(read_only=False)
     @requires_terminal()
     async def transfer_cash_register_terminal(
         self, *, conn: Connection, current_terminal: Terminal, source_cashier_tag_uid: int, target_cashier_tag_uid: int

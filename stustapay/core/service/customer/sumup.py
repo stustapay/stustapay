@@ -320,7 +320,7 @@ class SumupService(DBService):
                             continue
 
                         self.logger.debug(f"checking pending checkout {pending_checkout.checkout_reference}")
-                        async with conn.transaction():
+                        async with conn.transaction(isolation="serializable"):
                             status = await self._update_checkout_status(conn=conn, checkout_id=pending_checkout.id)
                             if status != SumupCheckoutStatus.PENDING:
                                 self.logger.info(f"Sumup checkout {pending_checkout.id} updated to status {status}")
@@ -373,7 +373,7 @@ class SumupService(DBService):
 
         return sumup_checkout.status
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_customer
     @requires_sumup_enabled
     async def check_checkout(

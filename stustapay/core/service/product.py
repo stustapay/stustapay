@@ -100,7 +100,7 @@ class ProductService(DBService):
         assert created_product is not None
         return created_product
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user()
     @requires_node()
     async def list_products(self, *, conn: Connection, node: Node) -> list[Product]:
@@ -108,7 +108,7 @@ class ProductService(DBService):
             Product, "select * from product_with_tax_and_restrictions where node_id = any($1)", node.ids_to_event_node
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user()
     @requires_node()
     async def get_product(self, *, conn: Connection, node: Node, product_id: int) -> Optional[Product]:

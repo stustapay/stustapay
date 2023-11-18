@@ -59,7 +59,7 @@ class UserService(DBService):
     def _check_password(self, password: str, hashed_password: str) -> bool:
         return self.pwd_context.verify(password, hashed_password)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.user_management])
     @requires_node()
     async def list_user_roles(self, *, conn: Connection, node: Node) -> list[UserRole]:
@@ -286,7 +286,7 @@ class UserService(DBService):
         )
         return await self._create_user(conn=conn, node=node, creating_user_id=current_user.id, new_user=user)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.user_management])
     @requires_node()
     async def list_users(self, *, conn: Connection, node: Node) -> list[User]:
@@ -302,7 +302,7 @@ class UserService(DBService):
             raise NotFound(element_typ="user", element_id=str(user_id))
         return user
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.user_management])
     @requires_node()
     async def get_user(self, *, conn: Connection, node: Node, user_id: int) -> Optional[User]:

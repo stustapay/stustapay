@@ -67,7 +67,7 @@ class Generator:
                 self.worker_id,
             )
             for row in missing_bons:
-                async with conn.transaction():
+                async with conn.transaction(isoloation="serializable"):
                     await self.process_bon(conn=conn, order_id=row["id"], order_uuid=row["uuid"])
             self.logger.info("Finished generating left-over bons")
 
@@ -80,7 +80,7 @@ class Generator:
                 return
 
             async with self.pool.acquire() as conn:
-                async with conn.transaction():
+                async with conn.transaction(isolation="serializable"):
                     order_uuid = await conn.fetchval("select uuid from ordr where id = $1", bon_id)
                     assert order_uuid is not None
                     await self.process_bon(conn=conn, order_id=bon_id, order_uuid=order_uuid)

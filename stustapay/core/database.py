@@ -34,14 +34,14 @@ async def check_revision_version(db_pool: asyncpg.Pool):
 
 async def reset_schema(db_pool: asyncpg.Pool):
     async with db_pool.acquire() as conn:
-        async with conn.transaction():
+        async with conn.transaction(isolation="serializable"):
             await conn.execute("drop schema public cascade")
             await conn.execute("create schema public")
 
 
 async def add_data(db_pool: asyncpg.Pool, sql_file: str, data_path: Path = DATA_PATH):
     async with db_pool.acquire() as conn:
-        async with conn.transaction():
+        async with conn.transaction(isolation="serializable"):
             data = data_path.joinpath(sql_file)
             content = data.read_text("utf-8")
             logger.info(f"Applying test data {data}")
