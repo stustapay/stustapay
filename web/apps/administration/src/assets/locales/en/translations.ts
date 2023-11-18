@@ -237,6 +237,16 @@ export const translations = {
       baseUrl: "Base URL of Customer Portal",
       contact_email: "Contact E-Mail",
     },
+    agb: {
+      tabLabel: "AGB",
+      preview: "Show Preview",
+      content: "AGB (in markdown formatting)",
+    },
+    faq: {
+      tabLabel: "FAQ",
+      preview: "Show Preview",
+      content: "FAQ (in markdown formatting)",
+    },
     bon: {
       tabLabel: "Bon",
       issuer: "Bon issuer",

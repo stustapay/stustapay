@@ -10,6 +10,11 @@ ROOT_NODE_ID = 0
 INITIAL_EVENT_NODE_ID = 1
 
 
+class Language(enum.Enum):
+    en_US = "en-US"
+    de_DE = "de-DE"
+
+
 class _BaseEvent(BaseModel):
     currency_identifier: str
     max_account_balance: float
@@ -32,6 +37,9 @@ class _BaseEvent(BaseModel):
     sepa_sender_iban: str
     sepa_description: str
     sepa_allowed_country_codes: list[str]
+
+    # map of lang_code -> [text type -> text content]
+    translation_texts: dict[Language, dict[str, str]] = {}
 
     def is_sumup_topup_enabled(self, cfg: CoreConfig):
         return self.sumup_topup_enabled and cfg.sumup_enabled
@@ -62,11 +70,13 @@ class UpdateEvent(_BaseEvent, _RestrictedEventMetadata):
 
 
 class PublicEventSettings(_BaseEvent):
-    pass
+    id: int
+    languages: list[Language]
 
 
 class RestrictedEventSettings(_BaseEvent, _RestrictedEventMetadata):
-    pass
+    id: int
+    languages: list[Language]
 
 
 class ObjectType(enum.Enum):

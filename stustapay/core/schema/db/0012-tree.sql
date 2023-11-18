@@ -77,6 +77,21 @@ create table event (
     sepa_allowed_country_codes text[]
 );
 
+create table language (
+    code varchar(5) not null primary key
+);
+
+insert into language (code) values
+('en-US'), ('de-DE');
+
+create table translation_text (
+    event_id bigint not null references event(id),
+    lang_code varchar(5) not null references language(code),
+    type text not null,
+    content text not null,
+    primary key (event_id, lang_code, type)
+);
+
 insert into event (
     id, currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, bon_address, bon_title,
     customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban,

@@ -11,6 +11,7 @@ export interface FormNumericInputProps<Values>
 export function FormNumericInput<Values>({ formik, name, ...props }: FormNumericInputProps<Values>) {
   const handleChange = (value: number | null) => {
     formik.setFieldValue(name, value);
+    formik.setFieldTouched(name);
   };
 
   return (

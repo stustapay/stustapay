@@ -333,6 +333,7 @@ class Connection(asyncpg.Connection):
 
 async def init_connection(conn: Connection):
     await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
+    await conn.set_type_codec("jsonb", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
 
 
 async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:

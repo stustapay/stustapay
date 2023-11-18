@@ -148,6 +148,15 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.sumup_affiliate_key,
         event.sumup_merchant_code,
     )
+    for lang_code, translation in event.translation_texts.items():
+        for text_type, content in translation.items():
+            await conn.execute(
+                "insert into translation_text (event_id, lang_code, type, content) values ($1, $2, $3, $4)",
+                event_id,
+                lang_code.value,
+                text_type,
+                content,
+            )
 
     node = await create_node(conn=conn, parent_id=parent_id, new_node=event, event_id=event_id)
     await _create_system_accounts(conn=conn, node_id=node.id)
@@ -211,6 +220,16 @@ class TreeService(DBService):
             event.sumup_affiliate_key,
             event.sumup_merchant_code,
         )
+        await conn.execute("delete from translation_text where event_id = $1", event_id)
+        for lang_code, translation in event.translation_texts.items():
+            for text_type, content in translation.items():
+                await conn.execute(
+                    "insert into translation_text (event_id, lang_code, type, content) values ($1, $2, $3, $4)",
+                    event_id,
+                    lang_code.value,
+                    text_type,
+                    content,
+                )
         node = await fetch_node(conn=conn, node_id=node_id)
         assert node is not None
         return node

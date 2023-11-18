@@ -1,6 +1,26 @@
-from stustapay.core.schema.tree import Node, RestrictedEventSettings
+from pydantic import BaseModel
+
+from stustapay.core.schema.tree import Language, Node, RestrictedEventSettings
 from stustapay.core.service.common.error import NotFound
 from stustapay.framework.database import Connection
+
+
+class TranslationText(BaseModel):
+    lang_code: Language
+    type: str
+    content: str
+
+
+async def _fetch_translation_textx(conn: Connection, event_id: int) -> dict[Language, dict[str, str]]:
+    texts = await conn.fetch_many(
+        TranslationText, "select lang_code, type, content from translation_text where event_id = $1", event_id
+    )
+    result: dict[Language, dict[str, str]] = {}
+    for text in texts:
+        if text.lang_code not in result:
+            result[text.lang_code] = {}
+        result[text.lang_code][text.type] = text.content
+    return result
 
 
 async def fetch_node(conn: Connection, node_id: int) -> Node | None:
@@ -9,7 +29,8 @@ async def fetch_node(conn: Connection, node_id: int) -> Node | None:
     )
     if node is None:
         return None
-
+    if node.event is not None:
+        node.event.translation_texts = await _fetch_translation_textx(conn=conn, event_id=node.event.id)
     node_map: dict[int, Node] = {node.id: node}
 
     children = await conn.fetch_many(
@@ -20,6 +41,8 @@ async def fetch_node(conn: Connection, node_id: int) -> Node | None:
         f"{node.path}/%",
     )
     for child in children:
+        if child.event is not None:
+            child.event.translation_texts = await _fetch_translation_textx(conn=conn, event_id=child.event.id)
         node_map[child.parent].children.append(child)
         node_map[child.id] = child
 
@@ -75,6 +98,10 @@ async def fetch_restricted_event_settings_for_node(conn: Connection, node_id: in
     event_node_id = await conn.fetchval("select event_node_id from node where id = $1", node_id)
     if event_node_id is None:
         raise NotFound(element_typ="node", element_id=node_id)
-    return await conn.fetch_one(
-        RestrictedEventSettings, "select * from event e join node n on n.event_id = e.id where n.id = $1", event_node_id
+    settings = await conn.fetch_one(
+        RestrictedEventSettings,
+        "select e.* from event_with_translations e join node n on n.event_id = e.id where n.id = $1",
+        event_node_id,
     )
+    settings.translation_texts = await _fetch_translation_textx(conn=conn, event_id=settings.id)
+    return settings

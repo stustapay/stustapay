@@ -1,36 +1,17 @@
-import translations from "@/assets/locales/en/translations";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Container, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-
-const SingleQALayout = ({ translationPrefix }: { translationPrefix: string }) => {
-  const { t } = useTranslation(undefined, { keyPrefix: "faq" });
-  return (
-    <Box
-      sx={{
-        borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-        width: "100%",
-      }}
-    >
-      <Typography variant="h5" gutterBottom>
-        {t(`${translationPrefix}.question` as any)}
-      </Typography>
-
-      <Typography
-        variant="body1"
-        sx={{
-          textAlign: "justify",
-        }}
-        gutterBottom
-      >
-        {t(`${translationPrefix}.answer` as any)}
-      </Typography>
-    </Box>
-  );
-};
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export const Faq: React.FC = () => {
+  const config = usePublicConfig();
+  const { i18n } = useTranslation();
+
+  const faqContent = config.translation_texts[i18n.language]?.["faq"] ?? "";
+
   return (
     <Container component="main" maxWidth="md">
       <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -43,9 +24,7 @@ export const Faq: React.FC = () => {
         >
           FAQs
         </Typography>
-        {Object.keys(translations.faq).map((key) => (
-          <SingleQALayout translationPrefix={key} key={key} />
-        ))}
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{faqContent}</ReactMarkdown>
       </Box>
     </Container>
   );

@@ -333,6 +333,16 @@ create view order_value_with_bon as
         order_value o
         left join bon b on (o.id = b.id);
 
+create view event_with_translations as
+    select
+        e.*,
+        '{}'::json as translations_texts,
+        (
+            select array_agg(language.code)
+            from language
+        ) as languages
+    from event e;
+
 -- TODO: this view will be monstrous, as it needs to do the transitive calculation of allowed objects at a tree
 create view node_with_allowed_objects as
     with allowed_at_node_as_list as (
@@ -344,15 +354,15 @@ create view node_with_allowed_objects as
         from allowed_objects_in_subtree_at_node
         group by node_id
     ), event_as_json as (
-        select id, row_to_json(event) as json_row
-        from event
+        select id, row_to_json(event_with_translations) as json_row
+        from event_with_translations
     )
     select
         n.*,
         coalesce(obj_at.object_names, '{}'::varchar(255) array) as allowed_objects_at_node,
         coalesce(obj_at.object_names, '{}'::varchar(255) array) as computed_allowed_objects_at_node,
         coalesce(obj_tree.object_names, '{}'::varchar(255) array) as allowed_objects_in_subtree,
-        coalesce(obj_tree.object_names , '{}'::varchar(255) array)as computed_allowed_objects_in_subtree,
+        coalesce(obj_tree.object_names , '{}'::varchar(255) array) as computed_allowed_objects_in_subtree,
         ev.json_row as event
     from node n
     left join allowed_at_node_as_list obj_at on n.id = obj_at.node_id
