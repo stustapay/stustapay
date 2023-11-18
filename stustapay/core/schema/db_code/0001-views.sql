@@ -343,28 +343,88 @@ create view event_with_translations as
         ) as languages
     from event e;
 
+create view _forbidden_at_node as
+    with forbidden_at_node_as_list as (
+        select node_id, array_agg(object_name)::varchar(255) array as object_names
+        from forbidden_objects_at_node
+        group by node_id
+    ), forbidden_in_tree_as_list as (
+        select node_id, array_agg(object_name)::varchar(255) array as object_names
+        from forbidden_objects_in_subtree_at_node
+        group by node_id
+    )
+    select
+        n.id as node_id,
+        coalesce(obj_at.object_names, '{}'::varchar(255) array) as forbidden_objects_at_node,
+        coalesce(obj_tree.object_names, '{}'::varchar(255) array) as forbidden_objects_in_subtree
+    from node n
+    left join forbidden_at_node_as_list obj_at on n.id = obj_at.node_id
+    left join forbidden_in_tree_as_list obj_tree on n.id = obj_tree.node_id;
+
+create view _forbidden_at_node_computed as
+    with recursive graph (
+        node_id, depth, path, cycle, computed_forbidden_at_node, computed_forbidden_in_subtree, forbidden_at_node,
+        forbidden_in_subtree
+    ) as (
+        -- base case: start at the requested node
+        select
+            0::bigint, -- root node ID
+            1,
+            '{0}'::bigint[],
+            false,
+            '{}'::varchar(255) array,
+            '{}'::varchar(255) array,
+            '{}'::varchar(255) array,
+            '{}'::varchar(255) array
+        union all
+        -- add the node's children result set (find the parents for all so-far evaluated nodes)
+        select
+            node.id,
+            g.depth + 1,
+            g.path || node.parent,
+            node.id = any(g.path),
+            (g.computed_forbidden_in_subtree || fan.forbidden_objects_at_node)::varchar(255) array,
+            (g.computed_forbidden_in_subtree || fan.forbidden_objects_in_subtree)::varchar(255) array,
+            fan.forbidden_objects_at_node,
+            fan.forbidden_objects_in_subtree
+        from
+            graph g
+            join node on g.node_id = node.parent
+            join _forbidden_at_node fan ON node.id = fan.node_id
+        where
+            node.id != 0
+            and not g.cycle
+    )
+    select
+        g.node_id,
+        g.computed_forbidden_in_subtree,
+        g.computed_forbidden_at_node,
+        g.forbidden_in_subtree,
+        g.forbidden_at_node
+    from graph g;
+
 -- TODO: this view will be monstrous, as it needs to do the transitive calculation of allowed objects at a tree
 create view node_with_allowed_objects as
-    with allowed_at_node_as_list as (
-        select node_id, array_agg(object_name) as object_names
-        from allowed_objects_at_node
-        group by node_id
-    ), allowed_in_tree_as_list as (
-        select node_id, array_agg(object_name) as object_names
-        from allowed_objects_in_subtree_at_node
-        group by node_id
-    ), event_as_json as (
+    with event_as_json as (
         select id, row_to_json(event_with_translations) as json_row
         from event_with_translations
     )
     select
         n.*,
-        coalesce(obj_at.object_names, '{}'::varchar(255) array) as allowed_objects_at_node,
-        coalesce(obj_at.object_names, '{}'::varchar(255) array) as computed_allowed_objects_at_node,
-        coalesce(obj_tree.object_names, '{}'::varchar(255) array) as allowed_objects_in_subtree,
-        coalesce(obj_tree.object_names , '{}'::varchar(255) array) as computed_allowed_objects_in_subtree,
+        fan.forbidden_at_node as forbidden_objects_at_node,
+        case
+            when n.event_node_id is null
+            then
+                fan.computed_forbidden_at_node || '{"ticket", "product", "tax_rate", "till", "user_tag", "account"}'::varchar(255) array
+            else case when n.event_id is null then
+                fan.computed_forbidden_at_node || '{"user_tag", "account", "tse"}'::varchar(255) array
+            else
+                fan.computed_forbidden_at_node
+            end
+        end as computed_forbidden_objects_at_node,
+        fan.forbidden_in_subtree as forbidden_objects_in_subtree,
+        fan.computed_forbidden_in_subtree as computed_forbidden_objects_in_subtree,
         ev.json_row as event
     from node n
-    left join allowed_at_node_as_list obj_at on n.id = obj_at.node_id
-    left join allowed_in_tree_as_list obj_tree on n.id = obj_tree.node_id
+    join _forbidden_at_node_computed fan on n.id = fan.node_id
     left join event_as_json ev on n.event_id = ev.id

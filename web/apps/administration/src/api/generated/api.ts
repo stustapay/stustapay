@@ -1991,11 +1991,11 @@ export type ObjectType =
   | "ticket"
   | "till"
   | "user_role"
-  | "account"
   | "order"
-  | "user_tags"
   | "tax_rate"
-  | "tse";
+  | "user_tag"
+  | "tse"
+  | "account";
 export type Node = {
   id: number;
   parent: number;
@@ -2006,10 +2006,10 @@ export type Node = {
   parent_ids: number[];
   event_node_id: number | null;
   parents_until_event_node: number[] | null;
-  allowed_objects_at_node: ObjectType[];
-  computed_allowed_objects_at_node: ObjectType[];
-  allowed_objects_in_subtree: ObjectType[];
-  computed_allowed_objects_in_subtree: ObjectType[];
+  forbidden_objects_at_node: ObjectType[];
+  computed_forbidden_objects_at_node: ObjectType[];
+  forbidden_objects_in_subtree: ObjectType[];
+  computed_forbidden_objects_in_subtree: ObjectType[];
   children: Node[];
 };
 export type UpdateEvent = {

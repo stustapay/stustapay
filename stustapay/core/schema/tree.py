@@ -85,11 +85,10 @@ class ObjectType(enum.Enum):
     ticket = "ticket"
     till = "till"
     user_role = "user_role"
-    account = "account"
-    order = "order"
-    user_tags = "user_tags"
     tax_rate = "tax_rate"
+    user_tag = "user_tag"
     tse = "tse"
+    account = "account"
 
 
 ALL_OBJECT_TYPES = [e for e in ObjectType]
@@ -98,8 +97,8 @@ ALL_OBJECT_TYPES = [e for e in ObjectType]
 class NewNode(BaseModel):
     name: str
     description: str
-    allowed_objects_at_node: list[ObjectType]
-    allowed_objects_in_subtree: list[ObjectType]
+    forbidden_objects_at_node: list[ObjectType] = []
+    forbidden_objects_in_subtree: list[ObjectType] = []
 
 
 class Node(BaseModel):
@@ -112,12 +111,12 @@ class Node(BaseModel):
     parent_ids: list[int]
     event_node_id: Optional[int]
     parents_until_event_node: Optional[list[int]]
-    allowed_objects_at_node: list[ObjectType]
+    forbidden_objects_at_node: list[ObjectType]
     # what results from transitive restrictions from nodes above
-    computed_allowed_objects_at_node: list[ObjectType]
-    allowed_objects_in_subtree: list[ObjectType]
+    computed_forbidden_objects_at_node: list[ObjectType]
+    forbidden_objects_in_subtree: list[ObjectType]
     # what results from transitive restrictions from nodes above
-    computed_allowed_objects_in_subtree: list[ObjectType]
+    computed_forbidden_objects_in_subtree: list[ObjectType]
     children: list["Node"]
 
     @property

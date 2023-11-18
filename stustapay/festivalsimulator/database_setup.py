@@ -17,13 +17,7 @@ from stustapay.core.schema.till import (
     NewTillLayout,
     NewTillProfile,
 )
-from stustapay.core.schema.tree import (
-    ALL_OBJECT_TYPES,
-    ROOT_NODE_ID,
-    NewEvent,
-    NewNode,
-    ObjectType,
-)
+from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, NewNode, ObjectType
 from stustapay.core.schema.tse import NewTse, TseType
 from stustapay.core.schema.user import NewUser, NewUserRole, Privilege, UserRole
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
@@ -546,8 +540,6 @@ class DatabaseSetup:
                 new_node=NewNode(
                     name="SIMULATOR",
                     description="",
-                    allowed_objects_at_node=[ObjectType.user, ObjectType.user_role],
-                    allowed_objects_in_subtree=[ObjectType.user, ObjectType.user_role],
                 ),
             )
             event_node = await create_event(
@@ -556,8 +548,6 @@ class DatabaseSetup:
                 event=NewEvent(
                     name="SSC-Test",
                     description="",
-                    allowed_objects_at_node=ALL_OBJECT_TYPES,
-                    allowed_objects_in_subtree=ALL_OBJECT_TYPES,
                     currency_identifier="EUR",
                     sumup_topup_enabled=True,
                     max_account_balance=150,
@@ -565,6 +555,9 @@ class DatabaseSetup:
                     customer_portal_about_page_url="http://localhost:4300/about",
                     customer_portal_data_privacy_url="http://localhost:4300/privacy",
                     customer_portal_contact_email="test@test.com",
+                    forbidden_objects_in_subtree=[
+                        ObjectType.ticket,
+                    ],
                     ust_id="UST ID",
                     bon_issuer="Issuer",
                     bon_address="Address",
@@ -582,8 +575,6 @@ class DatabaseSetup:
                 new_node=NewNode(
                     name="Bierteam",
                     description="",
-                    allowed_objects_at_node=ALL_OBJECT_TYPES,
-                    allowed_objects_in_subtree=ALL_OBJECT_TYPES,
                 ),
             )
             await create_node(
@@ -592,8 +583,6 @@ class DatabaseSetup:
                 new_node=NewNode(
                     name="Weißbierinsel",
                     description="",
-                    allowed_objects_at_node=ALL_OBJECT_TYPES,
-                    allowed_objects_in_subtree=ALL_OBJECT_TYPES,
                 ),
             )
             await create_node(
@@ -602,8 +591,6 @@ class DatabaseSetup:
                 new_node=NewNode(
                     name="Cocktailstand",
                     description="",
-                    allowed_objects_at_node=ALL_OBJECT_TYPES,
-                    allowed_objects_in_subtree=ALL_OBJECT_TYPES,
                 ),
             )
             self.event_node_id = event_node.id
