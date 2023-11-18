@@ -30,13 +30,11 @@ def with_db_connection(func: Callable[..., Awaitable[R]]) -> Callable[..., Await
 @overload
 def with_db_transaction(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaitable[R]]:
     """Case without arguments"""
-    ...
 
 
 @overload
 def with_db_transaction(read_only: bool) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
     """Case with arguments"""
-    ...
 
 
 def with_db_transaction(read_only):
