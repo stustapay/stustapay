@@ -15,6 +15,7 @@ from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.ticket import NewTicket, Ticket
 from stustapay.core.schema.till import NewTillLayout, NewTillProfile, Till, TillLayout
+from stustapay.core.schema.tree import Node
 from stustapay.core.service.order.order import OrderService, TillPermissionException
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
@@ -42,11 +43,13 @@ async def sale_tickets(
     ticket_service: TicketService,
     till_service: TillService,
     admin_token: str,
+    event_node: Node,
     tax_rate_none: TaxRate,
     till_layout: TillLayout,
 ) -> SaleTickets:
     ticket = await ticket_service.create_ticket(
         token=admin_token,
+        node_id=event_node.id,
         ticket=NewTicket(
             name="Eintritt mit 8€",
             price=12,
@@ -58,6 +61,7 @@ async def sale_tickets(
     )
     ticket_u18 = await ticket_service.create_ticket(
         token=admin_token,
+        node_id=event_node.id,
         ticket=NewTicket(
             name="Eintritt U18",
             price=12,
@@ -69,6 +73,7 @@ async def sale_tickets(
     )
     ticket_u16 = await ticket_service.create_ticket(
         token=admin_token,
+        node_id=event_node.id,
         ticket=NewTicket(
             name="Eintritt U16",
             price=12,
@@ -80,6 +85,7 @@ async def sale_tickets(
     )
     await till_service.layout.update_layout(
         token=admin_token,
+        node_id=event_node.id,
         layout_id=till_layout.id,
         layout=NewTillLayout(
             button_ids=[],
@@ -104,6 +110,7 @@ async def test_only_ticket_till_profiles_can_sell_tickets(
     customer: Customer,
     terminal_token: str,
     cashier: Cashier,
+    event_node: Node,
     login_supervised_user: LoginSupervisedUser,
     assign_cash_register: AssignCashRegister,
 ):
@@ -111,6 +118,7 @@ async def test_only_ticket_till_profiles_can_sell_tickets(
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     profile = await till_service.profile.create_profile(
         token=admin_token,
+        node_id=event_node.id,
         profile=NewTillProfile(
             name="profile2",
             description="",
@@ -121,7 +129,7 @@ async def test_only_ticket_till_profiles_can_sell_tickets(
         ),
     )
     till.active_profile_id = profile.id
-    await till_service.update_till(token=admin_token, till_id=till.id, till=till)
+    await till_service.update_till(token=admin_token, node_id=event_node.id, till_id=till.id, till=till)
 
     with pytest.raises(TillPermissionException):
         new_ticket_sale = NewTicketSale(

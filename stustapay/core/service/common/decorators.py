@@ -1,11 +1,12 @@
 from functools import wraps
 from inspect import Parameter, signature
+from itertools import chain
 from typing import Awaitable, Callable, Optional, TypeVar
 
 import asyncpg.exceptions
 
 from stustapay.core.schema.terminal import Terminal
-from stustapay.core.schema.tree import ObjectType
+from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.common.error import (
     AccessDenied,
@@ -14,6 +15,7 @@ from stustapay.core.service.common.error import (
     Unauthorized,
 )
 from stustapay.core.service.tree.common import fetch_node
+from stustapay.framework.database import Connection
 
 R = TypeVar("R")
 
@@ -79,8 +81,6 @@ def requires_node(
     """
 
     def f(func: Callable[..., Awaitable[R]]):
-        original_signature = signature(func)
-
         @wraps(func)
         async def wrapper(self, **kwargs):
             # TODO: Tree node sanity checks for this logic
@@ -90,19 +90,16 @@ def requires_node(
                     "with_db_transaction needs to be put before this decorator"
                 )
             conn = kwargs["conn"]
-            node_id = kwargs.pop("node_id", None)
-            if node_id is None:
-                current_user: CurrentUser | None = kwargs.get("current_user")
-                if current_user is None:
-                    raise RuntimeError(
-                        "Neither node_id was passed as an argument, nor a current_user was provided. "
-                        "Cannot set current tree node."
-                    )
-                node_id = current_user.node_id
 
-            node = await fetch_node(conn=conn, node_id=node_id)
+            node: Node | None = kwargs.pop("node", None)
+            node_id = kwargs.pop("node_id", None)
+            if node is None and node_id is None:
+                raise RuntimeError("No node_id was passed as an argument. Cannot set current tree node.")
+
             if node is None:
-                raise RuntimeError(f"Node with id {node_id} does not exist")
+                node = await fetch_node(conn=conn, node_id=node_id)
+                if node is None:
+                    raise RuntimeError(f"Node with id {node_id} does not exist")
 
             if object_types is not None:
                 forbidden = list(filter(lambda obj: obj in node.computed_forbidden_objects_at_node, object_types))
@@ -111,21 +108,10 @@ def requires_node(
             if event_only and node.event_node_id is None:
                 raise EventRequired("This operation is only allowed for nodes within events")
 
-            if "node" in original_signature.parameters:
+            if "node" in signature(func).parameters:
                 kwargs["node"] = node
 
-            if "current_user" not in original_signature.parameters:
-                kwargs.pop("current_user")
-
             return await func(self, **kwargs)
-
-        if "current_user" not in original_signature.parameters:
-            sig = signature(func)
-            new_parameters = tuple(sig.parameters.values()) + (
-                Parameter("current_user", kind=Parameter.KEYWORD_ONLY, annotation=CurrentUser),
-            )
-            sig = sig.replace(parameters=new_parameters)
-            wrapper.__signature__ = sig  # type: ignore
 
         return wrapper
 
@@ -134,6 +120,7 @@ def requires_node(
 
 def requires_user(
     privileges: list[Privilege] | None = None,
+    node_required: bool = True,
 ) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
     """
     Check if a user is logged in via a user jwt token and has ALL provided privileges.
@@ -142,6 +129,8 @@ def requires_user(
     """
 
     def f(func: Callable[..., Awaitable[R]]):
+        original_signature = signature(func)
+
         @wraps(func)
         async def wrapper(self, **kwargs):
             if "token" not in kwargs and "current_user" not in kwargs:
@@ -154,35 +143,62 @@ def requires_user(
                 )
 
             token = kwargs.get("token")
-            user = kwargs.get("current_user")
-            conn = kwargs["conn"]
+            user: CurrentUser | None = kwargs.get("current_user")
+            conn: Connection = kwargs["conn"]
             if user is None:
                 if self.__class__.__name__ == "AuthService":
                     user = await self.get_user_from_token(conn=conn, token=token)
                 elif hasattr(self, "auth_service"):
                     user = await self.auth_service.get_user_from_token(conn=conn, token=token)
                 else:
-                    raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
+                    raise RuntimeError("requires_user needs self.auth_service to be a AuthService instance")
 
             if user is None:
                 raise Unauthorized("invalid user token")
 
-            if privileges:
-                if not any([p in privileges for p in user.privileges]):
-                    raise AccessDenied(f"user does not have any of the required privileges: {privileges}")
+            if node_required:
+                node: Node | None = kwargs.get("node")
+                if node is None:
+                    raise RuntimeError("requires_user needs requires_node to be placed before it")
+                role_privileges = await conn.fetch(
+                    "select privileges "
+                    "from user_to_role utr join user_role_with_privileges urwp on utr.role_id = urwp.id "
+                    "where utr.node_id = any($1) and urwp.node_id = any($1) and utr.user_id = $2",
+                    node.ids_to_root,
+                    user.id,
+                )
+                user_privileges = set(chain.from_iterable(row["privileges"] for row in role_privileges))
+                user.privileges = list(user_privileges)
 
-            if "current_user" in signature(func).parameters:
+                if privileges:
+                    if not any([p.value in user_privileges for p in privileges]):
+                        raise AccessDenied(f"user does not have any of the required privileges: {privileges}")
+
+            if "current_user" in original_signature.parameters:
                 kwargs["current_user"] = user
+
             elif "current_user" in kwargs:
                 kwargs.pop("current_user")
 
-            if "token" not in signature(func).parameters and "token" in kwargs:
+            if "token" not in original_signature.parameters and "token" in kwargs:
                 kwargs.pop("token")
 
-            if "conn" not in signature(func).parameters:
+            if "conn" not in original_signature.parameters:
                 kwargs.pop("conn")
 
+            if node_required:
+                if "node" not in original_signature.parameters:
+                    kwargs.pop("node")
+
             return await func(self, **kwargs)
+
+        if node_required and "node" not in original_signature.parameters:
+            sig = signature(func)
+            new_parameters = tuple(sig.parameters.values()) + (
+                Parameter("node", kind=Parameter.KEYWORD_ONLY, annotation=Node),
+            )
+            sig = sig.replace(parameters=new_parameters)
+            wrapper.__signature__ = sig  # type: ignore
 
         return wrapper
 

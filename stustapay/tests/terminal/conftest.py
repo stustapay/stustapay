@@ -120,9 +120,9 @@ class GetAccountBalance(Protocol):
 
 
 @pytest.fixture
-async def get_account_balance(account_service: AccountService, admin_token: str):
+async def get_account_balance(account_service: AccountService, event_node: Node, admin_token: str):
     async def func(account_id: int) -> float:
-        account = await account_service.get_account(token=admin_token, account_id=account_id)
+        account = await account_service.get_account(token=admin_token, node_id=event_node.id, account_id=account_id)
         assert account is not None
         return account.balance
 

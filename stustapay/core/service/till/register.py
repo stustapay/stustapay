@@ -91,8 +91,8 @@ class TillRegisterService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def list_cash_register_stockings_admin(self, *, conn: Connection, node: Node) -> list[CashRegisterStocking]:
         return await _list_cash_register_stockings(conn=conn, node=node)
 
@@ -106,8 +106,8 @@ class TillRegisterService(DBService):
         return await _list_cash_register_stockings(conn=conn, node=node)
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
     async def create_cash_register_stockings(
         self, *, conn: Connection, node: Node, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
@@ -141,8 +141,8 @@ class TillRegisterService(DBService):
         return updated
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
     async def update_cash_register_stockings(
         self, *, conn: Connection, node: Node, stocking_id: int, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
@@ -177,8 +177,8 @@ class TillRegisterService(DBService):
         return updated
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
     async def delete_cash_register_stockings(self, *, conn: Connection, stocking_id: int):
         # TODO: TREE visibility
         result = await conn.execute(
@@ -198,16 +198,16 @@ class TillRegisterService(DBService):
         return await _list_cash_registers(conn=conn, node=node, hide_assigned_registers=hide_assigned_registers)
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def list_cash_registers_admin(
         self, *, conn: Connection, node: Node, hide_assigned_registers=False
     ) -> list[CashRegister]:
         return await _list_cash_registers(conn=conn, node=node, hide_assigned_registers=hide_assigned_registers)
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
     async def create_cash_register(
         self, *, conn: Connection, node: Node, new_register: NewCashRegister
     ) -> CashRegister:
@@ -215,8 +215,8 @@ class TillRegisterService(DBService):
         return await create_cash_register(conn=conn, node=node, new_register=new_register)
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
     async def update_cash_register(
         self, *, conn: Connection, node: Node, register_id: int, register: NewCashRegister
     ) -> CashRegister:
@@ -231,8 +231,8 @@ class TillRegisterService(DBService):
         return r
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
     async def delete_cash_register(self, *, conn: Connection, register_id: int):
         # TODO: TREE visibility
         result = await conn.execute(
@@ -443,8 +443,8 @@ class TillRegisterService(DBService):
         return reg
 
     @with_retryable_db_transaction()
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def transfer_cash_register_admin(
         self, *, conn: Connection, node: Node, source_cashier_id: int, target_cashier_id: int
     ) -> CashRegister:

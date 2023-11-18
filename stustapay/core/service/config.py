@@ -23,12 +23,12 @@ class ConfigService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
+    @requires_user(privileges=[Privilege.node_administration], node_required=False)
     async def list_config_entries(self, *, conn: Connection) -> list[ConfigEntry]:
         return await conn.fetch_many(ConfigEntry, "select * from config")
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
+    @requires_user(privileges=[Privilege.node_administration], node_required=False)
     async def set_config_entry(self, *, conn: Connection, entry: ConfigEntry) -> ConfigEntry:
         fetched_entry = await conn.fetch_maybe_one(
             ConfigEntry, "update config set value = $2 where key = $1 returning key, value", entry.key, entry.value

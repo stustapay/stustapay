@@ -10,6 +10,7 @@ from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 
+from ...core.schema.tree import Node
 from .conftest import LoginSupervisedUser
 
 
@@ -20,6 +21,7 @@ async def test_free_ticket_grant_with_vouchers(
     terminal_token: str,
     admin_token: str,
     cashier: Cashier,
+    event_node: Node,
     till: Till,
     till_layout: TillLayout,
     login_supervised_user: LoginSupervisedUser,
@@ -27,12 +29,14 @@ async def test_free_ticket_grant_with_vouchers(
 ):
     voucher_role = await user_service.create_user_role(
         token=admin_token,
+        node_id=event_node.id,
         new_role=NewUserRole(
             name="test-role", privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets]
         ),
     )
     await till_service.profile.update_profile(
         token=admin_token,
+        node_id=event_node.id,
         profile_id=till.active_profile_id,
         profile=NewTillProfile(
             name="test-profile",
@@ -46,6 +50,7 @@ async def test_free_ticket_grant_with_vouchers(
 
     await user_service.update_user_roles(
         token=admin_token,
+        node_id=event_node.id,
         user_id=cashier.id,
         role_names=[voucher_role.name],
     )
@@ -56,7 +61,9 @@ async def test_free_ticket_grant_with_vouchers(
     grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag.uid, initial_voucher_amount=3)
     success = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
     assert success
-    customer = await account_service.get_account_by_tag_uid(token=admin_token, user_tag_uid=volunteer_tag.uid)
+    customer = await account_service.get_account_by_tag_uid(
+        token=admin_token, node_id=event_node.id, user_tag_uid=volunteer_tag.uid
+    )
     assert customer is not None
     assert customer.vouchers == 3
 
@@ -68,6 +75,7 @@ async def test_free_ticket_grant_without_vouchers(
     terminal_token: str,
     admin_token: str,
     cashier: Cashier,
+    event_node: Node,
     till: Till,
     till_layout: TillLayout,
     login_supervised_user: LoginSupervisedUser,
@@ -75,15 +83,18 @@ async def test_free_ticket_grant_without_vouchers(
 ):
     voucher_role = await user_service.create_user_role(
         token=admin_token,
+        node_id=event_node.id,
         new_role=NewUserRole(name="test-role", is_privileged=False, privileges=[Privilege.supervised_terminal_login]),
     )
     await user_service.update_user_roles(
         token=admin_token,
+        node_id=event_node.id,
         user_id=cashier.id,
         role_names=[voucher_role.name],
     )
     await till_service.profile.update_profile(
         token=admin_token,
+        node_id=event_node.id,
         profile_id=till.active_profile_id,
         profile=NewTillProfile(
             name="test-profile",
@@ -106,6 +117,7 @@ async def test_free_ticket_grant_without_vouchers(
 
     await user_service.update_user_role_privileges(
         token=admin_token,
+        node_id=event_node.id,
         role_id=voucher_role.id,
         is_privileged=False,
         privileges=[Privilege.grant_free_tickets],
@@ -113,7 +125,9 @@ async def test_free_ticket_grant_without_vouchers(
 
     success = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
     assert success
-    customer = await account_service.get_account_by_tag_uid(token=admin_token, user_tag_uid=volunteer_tag.uid)
+    customer = await account_service.get_account_by_tag_uid(
+        token=admin_token, node_id=event_node.id, user_tag_uid=volunteer_tag.uid
+    )
     assert customer is not None
     assert customer.vouchers == 0
 
@@ -122,6 +136,7 @@ async def test_free_ticket_grant_without_vouchers(
 
     await user_service.update_user_role_privileges(
         token=admin_token,
+        node_id=event_node.id,
         role_id=voucher_role.id,
         is_privileged=False,
         privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets, Privilege.grant_vouchers],

@@ -69,8 +69,8 @@ class ProductService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.product], event_only=True)
+    @requires_user([Privilege.node_administration])
     async def create_product(self, *, conn: Connection, node: Node, product: NewProduct) -> Product:
         product_id = await conn.fetchval(
             "insert into product "
@@ -100,22 +100,22 @@ class ProductService(DBService):
         return created_product
 
     @with_db_transaction
-    @requires_user()
     @requires_node(event_only=True)
+    @requires_user()
     async def list_products(self, *, conn: Connection, node: Node) -> list[Product]:
         return await conn.fetch_many(
             Product, "select * from product_with_tax_and_restrictions where node_id = any($1)", node.ids_to_event_node
         )
 
     @with_db_transaction
-    @requires_user()
     @requires_node(event_only=True)
+    @requires_user()
     async def get_product(self, *, conn: Connection, node: Node, product_id: int) -> Optional[Product]:
         return await fetch_product(conn=conn, node=node, product_id=product_id)
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.product], event_only=True)
+    @requires_user([Privilege.node_administration])
     async def update_product(self, *, conn: Connection, node: Node, product_id: int, product: NewProduct) -> Product:
         current_product = await fetch_product(conn=conn, node=node, product_id=product_id)
         if current_product is None:
@@ -165,8 +165,8 @@ class ProductService(DBService):
         return updated_product
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.product], event_only=True)
+    @requires_user([Privilege.node_administration])
     async def delete_product(self, *, conn: Connection, node: Node, product_id: int) -> bool:
         result = await conn.execute(
             "delete from product where id = $1 and node_id = any($2)", product_id, node.ids_to_event_node

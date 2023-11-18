@@ -30,7 +30,6 @@ from stustapay.core.schema.till import (
     TillProfile,
 )
 from stustapay.core.schema.tree import (
-    ALL_OBJECT_TYPES,
     ROOT_NODE_ID,
     NewEvent,
     Node,
@@ -137,8 +136,6 @@ async def event_node(db_connection: Connection) -> Node:
             sepa_description="foobar {user_tag_uid}",
             sepa_sender_iban="DE89370400440532013000",
             sepa_allowed_country_codes=["DE"],
-            allowed_objects_at_node=ALL_OBJECT_TYPES,
-            allowed_objects_in_subtree=ALL_OBJECT_TYPES,
             bon_title="",
             bon_issuer="",
             bon_address="",
@@ -286,11 +283,10 @@ async def admin_tag(
 async def admin_user(
     user_service: UserService,
     admin_tag: UserTag,
-    event_node: Node,
 ) -> tuple[User, str]:
     password = "rolf"
     admin_user = await user_service.create_user_no_auth(
-        node_id=event_node.id,
+        node_id=ROOT_NODE_ID,
         new_user=NewUser(
             login=f"test-admin-user {secrets.token_hex(16)}",
             description="",

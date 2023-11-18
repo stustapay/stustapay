@@ -31,8 +31,8 @@ class TillProfileService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
     async def create_profile(self, *, conn: Connection, node: Node, profile: NewTillProfile) -> TillProfile:
         # TODO: TREE visibility
         profile_id = await conn.fetchval(
@@ -54,22 +54,22 @@ class TillProfileService(DBService):
         return resulting_profile
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def list_profiles(self, *, conn: Connection, node: Node) -> list[TillProfile]:
         return await conn.fetch_many(
             TillProfile, "select * from till_profile where node_id = any($1)", node.ids_to_event_node
         )
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def get_profile(self, *, conn: Connection, node: Node, profile_id: int) -> Optional[TillProfile]:
         return await _get_profile(conn=conn, node=node, profile_id=profile_id)
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
     async def update_profile(
         self, *, conn: Connection, node: Node, profile_id: int, profile: NewTillProfile
     ) -> Optional[TillProfile]:
@@ -95,8 +95,8 @@ class TillProfileService(DBService):
         return resulting_profile
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
     async def delete_profile(self, *, conn: Connection, till_profile_id: int) -> bool:
         # TODO: TREE visibility
         result = await conn.execute(

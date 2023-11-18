@@ -110,6 +110,7 @@ async def order_with_bon(
     db_connection: Connection,
     product_service: ProductService,
     test_customer: TestCustomer,
+    event_node: Node,
     admin_token: str,
     tax_rate_ust: TaxRate,
     tax_rate_none: TaxRate,
@@ -118,6 +119,7 @@ async def order_with_bon(
 ) -> tuple[Order, str, TestCustomer]:
     product1: Product = await product_service.create_product(
         token=admin_token,
+        node_id=event_node.id,
         product=NewProduct(
             name="Bier",
             price=5.0,
@@ -130,6 +132,7 @@ async def order_with_bon(
     )
     product2: Product = await product_service.create_product(
         token=admin_token,
+        node_id=event_node.id,
         product=NewProduct(
             name="Pfand",
             price=2.0,

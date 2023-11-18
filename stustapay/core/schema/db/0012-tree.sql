@@ -241,6 +241,9 @@ alter table user_tag_secret alter column node_id drop default;
 alter table usr add column node_id bigint not null references node(id) default 1;
 alter table usr alter column node_id drop default;
 
+alter table user_to_role add column node_id bigint not null references node(id) default 1;
+alter table user_to_role alter column node_id drop default;
+
 -- TODO: add synthetic numeric primary key to tax table
 alter table tax rename to tax_rate;
 alter table tax_rate add column id bigint not null generated always as identity (start with 1000) unique;
@@ -353,8 +356,13 @@ create index on product (type, node_id);
 insert into account_type (name)
 values
 ('sale_exit'),
-('cash_entry'), ('cash_exit'), ('cash_topup_source'), ('cash_imbalance'), ('cash_vault'),
-('sumup_entry'), ('sumup_online_entry'),
+('cash_entry'),
+('cash_exit'),
+('cash_topup_source'),
+('cash_imbalance'),
+('cash_vault'),
+('sumup_entry'),
+('sumup_online_entry'),
 ('transport'), -- also a cash based account
 ('cashier'), -- also a cash based account
 ('voucher_create');
