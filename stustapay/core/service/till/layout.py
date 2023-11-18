@@ -17,6 +17,7 @@ from stustapay.core.service.common.decorators import (
     requires_user,
     with_db_transaction,
 )
+from stustapay.core.service.common.error import NotFound
 from stustapay.core.service.user import AuthService
 from stustapay.framework.database import Connection
 
@@ -78,7 +79,7 @@ class TillLayoutService(DBService):
     @with_db_transaction
     @requires_user([Privilege.node_administration])
     @requires_node()
-    async def update_button(self, *, conn: Connection, button_id: int, button: NewTillButton) -> Optional[TillButton]:
+    async def update_button(self, *, conn: Connection, button_id: int, button: NewTillButton) -> TillButton:
         # TODO: TREE visibility
         row = await conn.fetchrow(
             "update till_button set name = $2 where id = $1 returning id, name",
@@ -86,7 +87,7 @@ class TillLayoutService(DBService):
             button.name,
         )
         if row is None:
-            return None
+            raise NotFound(element_typ="button", element_id=button_id)
         await conn.execute("delete from till_button_product where button_id = $1", button_id)
         for product_id in button.product_ids:
             await conn.execute(

@@ -81,7 +81,7 @@ async def update_user(
     user_service: ContextUserService,
     node_id: Optional[int] = None,
 ):
-    user = await user_service.update_user(
+    updated_user = await user_service.update_user(
         token=token,
         user_id=user_id,
         user=NewUser(
@@ -93,10 +93,10 @@ async def update_user(
         ),
         node_id=node_id,
     )
-    if user is None:
+    if updated_user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    return user
+    return updated_user
 
 
 class ChangeUserPasswordPayload(BaseModel):

@@ -45,11 +45,11 @@ async def update_till(
     till_service: ContextTillService,
     node_id: Optional[int] = None,
 ):
-    till = await till_service.update_till(token=token, till_id=till_id, till=till, node_id=node_id)
-    if till is None:
+    updated_till = await till_service.update_till(token=token, till_id=till_id, till=till, node_id=node_id)
+    if updated_till is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    return till
+    return updated_till
 
 
 @router.post("/{till_id}/logout")

@@ -38,8 +38,9 @@ async def test_switch_user_tag(
     assert new_user_tag.uid == acc.user_tag_uid
     assert 1 == len(acc.tag_history)
     assert "foobar" == acc.tag_history[0].comment
-    user = await user_service.get_user(token=admin_token, user_id=user.id)
-    assert new_user_tag.uid == user.user_tag_uid
+    user_info = await user_service.get_user(token=admin_token, user_id=user.id)
+    assert user_info is not None
+    assert new_user_tag.uid == user_info.user_tag_uid
 
     user_tag_2 = await user_tag_service.get_user_tag_detail(token=admin_token, user_tag_uid=new_user_tag.uid)
     assert user_tag_2 is not None
