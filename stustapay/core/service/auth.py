@@ -64,7 +64,7 @@ class AuthService(DBService):
         encoded_jwt = jwt.encode(to_encode, self.cfg.core.secret_key, algorithm=self.cfg.core.jwt_token_algorithm)
         return encoded_jwt
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     async def get_user_from_token(self, *, conn: Connection, token: str) -> Optional[CurrentUser]:
         token_payload = self.decode_user_jwt_payload(token)
         if token_payload is None:
@@ -79,7 +79,7 @@ class AuthService(DBService):
             token_payload.session_id,
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     async def get_customer_from_token(self, *, conn: Connection, token: str) -> Optional[Customer]:
         token_payload = self.decode_customer_jwt_payload(token)
         if token_payload is None:
@@ -109,7 +109,7 @@ class AuthService(DBService):
         encoded_jwt = jwt.encode(to_encode, self.cfg.core.secret_key, algorithm=self.cfg.core.jwt_token_algorithm)
         return encoded_jwt
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     async def get_terminal_from_token(self, *, conn: Connection, token: str) -> Optional[Terminal]:
         token_payload = self.decode_terminal_jwt_payload(token)
         if token_payload is None:

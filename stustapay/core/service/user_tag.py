@@ -71,7 +71,7 @@ class UserTagService(DBService):
         # TODO: TREE visibility
         return await create_user_tag_secret(conn=conn, node_id=node.id, secret=new_secret)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_user_tag_detail(self, *, conn: Connection, user_tag_uid: int) -> Optional[UserTagDetail]:
@@ -99,7 +99,7 @@ class UserTagService(DBService):
         assert detail is not None
         return detail
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:

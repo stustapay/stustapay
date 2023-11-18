@@ -15,6 +15,7 @@ from stustapay.core.service.common.decorators import (
     requires_node,
     requires_user,
     with_db_transaction,
+    with_retryable_db_transaction,
 )
 from stustapay.framework.database import Connection
 
@@ -133,13 +134,13 @@ class CashierService(DBService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_cashiers(self, *, conn: Connection, node: Node) -> list[Cashier]:
         return await conn.fetch_many(Cashier, "select * from cashier where node_id = any($1)", node.ids_to_event_node)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_cashier(self, *, conn: Connection, node: Node, cashier_id: int) -> Optional[Cashier]:
@@ -153,7 +154,7 @@ class CashierService(DBService):
             CashierShift, "select * from cashier_shift where cashier_id = $1 and id = $2", cashier_id, shift_id
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_cashier_shifts(
@@ -179,7 +180,7 @@ class CashierService(DBService):
             cashier_id,
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_cashier_shift_stats(
@@ -228,7 +229,7 @@ class CashierService(DBService):
             stats.booked_products.append(CashierShiftStats.ProductStats(product=product, quantity=row["quantity"]))
         return stats
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def close_out_cashier(

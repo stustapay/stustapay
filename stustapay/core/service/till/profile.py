@@ -53,7 +53,7 @@ class TillProfileService(DBService):
         assert resulting_profile is not None
         return resulting_profile
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def list_profiles(self, *, conn: Connection, node: Node) -> list[TillProfile]:
@@ -61,7 +61,7 @@ class TillProfileService(DBService):
             TillProfile, "select * from till_profile where node_id = any($1)", node.ids_to_event_node
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user([Privilege.node_administration])
     @requires_node()
     async def get_profile(self, *, conn: Connection, node: Node, profile_id: int) -> Optional[TillProfile]:

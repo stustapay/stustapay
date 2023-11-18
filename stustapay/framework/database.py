@@ -282,7 +282,7 @@ async def apply_revisions(
     revisions = SchemaRevision.revisions_from_dir(revision_path)
 
     async with db_pool.acquire() as conn:
-        async with conn.transaction():
+        async with conn.transaction(isolation="serializable"):
             await conn.execute(f"create table if not exists {REVISION_TABLE} (version text not null primary key)")
 
             curr_revision = await conn.fetchval(f"select version from {REVISION_TABLE} limit 1")

@@ -43,7 +43,7 @@ async def _export_customer_payouts(
     execution_date = execution_date or datetime.date.today() + datetime.timedelta(days=2)
 
     async with db_pool.acquire() as conn:
-        async with conn.transaction():
+        async with conn.transaction(isolation="serializable"):
             event_node = await fetch_event_node_for_node(conn=conn, node_id=event_node_id)
             assert event_node is not None
             assert event_node.event is not None
