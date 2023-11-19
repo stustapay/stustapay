@@ -28,6 +28,7 @@ from stustapay.core.service.common.decorators import (
     requires_terminal,
     requires_user,
     with_db_transaction,
+    with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.till.common import create_till, fetch_till
@@ -63,7 +64,7 @@ class TillService(DBService):
         # TODO: TREE visibility
         return await create_till(conn=conn, node_id=node.id, till=till)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def list_tills(self, *, node: Node, conn: Connection) -> list[Till]:
@@ -71,7 +72,7 @@ class TillService(DBService):
             Till, "select * from till_with_cash_register where node_id = any($1)", node.ids_to_event_node
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_till(self, *, conn: Connection, node: Node, till_id: int) -> Optional[Till]:
@@ -109,7 +110,7 @@ class TillService(DBService):
         )
         return result != "DELETE 0"
 
-    @with_db_transaction
+    @with_retryable_db_transaction(read_only=False)
     async def register_terminal(self, *, conn: Connection, registration_uuid: str) -> TerminalRegistrationSuccess:
         # TODO: TREE visibility
         till = await conn.fetch_maybe_one(Till, "select * from till where registration_uuid = $1", registration_uuid)
@@ -160,7 +161,7 @@ class TillService(DBService):
         if result is None:
             raise InvalidArgument("till does not exist")
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_terminal()
     async def check_user_login(
         self,
@@ -203,7 +204,7 @@ class TillService(DBService):
 
         return available_roles
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_terminal()
     async def login_user(
         self,
@@ -247,7 +248,7 @@ class TillService(DBService):
         assert current_user is not None
         return current_user
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_terminal()
     async def get_current_user(self, *, current_user: Optional[CurrentUser]) -> Optional[CurrentUser]:
         return current_user
@@ -264,7 +265,7 @@ class TillService(DBService):
             current_terminal.till.id,
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_terminal()
     async def get_user_info(self, *, conn: Connection, current_user: CurrentUser, user_tag_uid: int) -> UserInfo:
         if (
@@ -293,7 +294,7 @@ class TillService(DBService):
             raise InvalidArgument(f"There is no user registered for tag {format_user_tag_uid(user_tag_uid)}")
         return info
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_terminal()
     async def get_terminal_config(
         self, *, conn: Connection, current_terminal: Terminal, node: Node
@@ -368,7 +369,7 @@ class TillService(DBService):
             test_mode_message=self.cfg.core.test_mode_message,
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_terminal()
     async def get_customer(self, *, conn: Connection, current_terminal: Terminal, customer_tag_uid: int) -> Account:
         node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)

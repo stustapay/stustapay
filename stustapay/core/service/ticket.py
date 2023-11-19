@@ -64,13 +64,13 @@ class TicketService(DBService):
         assert created_ticket is not None
         return created_ticket
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user()
     async def list_tickets(self, *, conn: Connection, node: Node) -> list[Ticket]:
         return await conn.fetch_many(Ticket, "select * from ticket where node_id = any($1)", node.ids_to_event_node)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user()
     async def get_ticket(self, *, conn: Connection, node: Node, ticket_id: int) -> Optional[Ticket]:

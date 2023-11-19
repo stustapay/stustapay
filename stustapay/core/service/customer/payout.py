@@ -182,7 +182,7 @@ class PayoutService(DBService):
         self.auth_service = auth_service
         self.config_service = config_service
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_pending_payout_detail(self, *, conn: Connection) -> PendingPayoutDetail:
@@ -195,13 +195,13 @@ class PayoutService(DBService):
             "where c.payout_run_id is null and c.customer_account_id is not null",
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_payout_run_payouts(self, *, conn: Connection, payout_run_id: int) -> list[Payout]:
         return await conn.fetch_many(Payout, "select * from payout where payout_run_id = $1", payout_run_id)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_payout_run_csv(
@@ -222,7 +222,7 @@ class PayoutService(DBService):
             batch_size=batch_size,
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_payout_run_sepa_xml(
@@ -264,7 +264,7 @@ class PayoutService(DBService):
         )
         return await conn.fetch_one(PayoutRunWithStats, "select * from payout_run_with_stats where id = $1", run_id)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def list_payout_runs(self, *, conn: Connection) -> list[PayoutRunWithStats]:

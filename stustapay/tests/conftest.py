@@ -290,6 +290,7 @@ async def admin_user(
     admin_tag: UserTag,
 ) -> tuple[User, str]:
     root_node = await fetch_node(conn=db_connection, node_id=ROOT_NODE_ID)
+    assert root_node is not None
     password = "rolf"
     admin_user = await user_service.create_user_no_auth(
         node_id=ROOT_NODE_ID,

@@ -236,12 +236,12 @@ class TreeService(DBService):
         assert updated_node is not None
         return updated_node
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user(node_required=False)
     async def get_tree_for_current_user(self, *, conn: Connection, current_user: CurrentUser) -> Node:
         return await get_tree_for_current_user(conn=conn, user_node_id=current_user.node_id)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
     async def get_restricted_event_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:

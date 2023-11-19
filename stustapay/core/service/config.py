@@ -22,7 +22,7 @@ class ConfigService(DBService):
             sumup_topup_enabled_globally=self.cfg.core.sumup_enabled,
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_user(privileges=[Privilege.node_administration], node_required=False)
     async def list_config_entries(self, *, conn: Connection) -> list[ConfigEntry]:
         return await conn.fetch_many(ConfigEntry, "select * from config")

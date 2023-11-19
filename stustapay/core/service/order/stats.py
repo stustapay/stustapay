@@ -38,7 +38,7 @@ class OrderStatsService(DBService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_product_stats(

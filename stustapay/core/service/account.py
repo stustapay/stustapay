@@ -61,7 +61,7 @@ class AccountService(DBService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def list_system_accounts(self, *, conn: Connection, node: Node) -> list[Account]:
@@ -71,7 +71,7 @@ class AccountService(DBService):
             node.ids_to_event_node,
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_account(self, *, conn: Connection, account_id: int) -> Account:
@@ -81,14 +81,14 @@ class AccountService(DBService):
             raise NotFound(element_typ="account", element_id=str(account_id))
         return account
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_account_by_tag_uid(self, *, conn: Connection, user_tag_uid: int) -> Optional[Account]:
         # TODO: TREE visibility
         return await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def find_accounts(self, *, conn: Connection, node: Node, search_term: str) -> list[Account]:
@@ -152,7 +152,7 @@ class AccountService(DBService):
         #     return False
         # return True
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def update_account_vouchers(

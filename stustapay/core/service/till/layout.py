@@ -57,7 +57,7 @@ class TillLayoutService(DBService):
 
         return await conn.fetch_one(TillButton, "select * from till_button_with_products where id = $1", button_id)
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def list_buttons(self, *, node: Node, conn: Connection) -> list[TillButton]:
@@ -65,7 +65,7 @@ class TillLayoutService(DBService):
             TillButton, "select * from till_button_with_products where node_id = any($1)", node.ids_to_event_node
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_button(self, *, conn: Connection, node: Node, button_id: int) -> Optional[TillButton]:
@@ -141,7 +141,7 @@ class TillLayoutService(DBService):
         assert till_layout is not None
         return till_layout
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def list_layouts(self, *, conn: Connection, node: Node) -> list[TillLayout]:
@@ -151,7 +151,7 @@ class TillLayoutService(DBService):
             node.ids_to_event_node,
         )
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_layout(self, *, conn: Connection, node: Node, layout_id: int) -> Optional[TillLayout]:

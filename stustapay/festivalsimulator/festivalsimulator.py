@@ -201,7 +201,8 @@ class Simulator:
             async with client.post(
                 "/user/login", json={"user_tag": {"uid": self.admin_tag_uid}, "user_role_id": ADMIN_ROLE_ID}
             ) as resp:
-                assert resp.status == 200
+                if resp.status != 200:
+                    raise RuntimeError(f"Error logging in admin {resp.status = }, payload = {await resp.text()}")
 
             has_cash_register = await db_pool.fetchval(
                 "select exists (select from usr where user_tag_uid = $1 and cash_register_id is not null)",
