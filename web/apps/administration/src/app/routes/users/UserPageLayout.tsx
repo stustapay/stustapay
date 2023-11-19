@@ -29,6 +29,14 @@ export const UserPageLayout: React.FC = () => {
     return <Loading />;
   }
 
+  if (node.computed_forbidden_objects_at_node.includes("user_role")) {
+    return (
+      <Box sx={{ mt: 2 }}>
+        <Outlet />
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <Tabs value={getActiveTab(location.pathname)} sx={{ borderBottom: 1, borderColor: "divider" }} aria-label="Users">

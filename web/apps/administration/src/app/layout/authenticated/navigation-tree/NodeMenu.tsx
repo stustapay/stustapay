@@ -45,6 +45,12 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
       />
     );
   }
+
+  {
+    const id = `/node/${node.id}/user-to-roles`;
+    items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("userToRoles")} labelIcon={PersonIcon} />);
+  }
+
   if (!node.computed_forbidden_objects_at_node.includes("tax_rate")) {
     const id = `/node/${node.id}/tax-rates`;
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("taxRates")} labelIcon={PercentIcon} />);

@@ -413,16 +413,12 @@ create view node_with_allowed_objects as
         n.*,
         fan.forbidden_at_node as forbidden_objects_at_node,
         case
-            when n.event_node_id is null
-            then -- nodes above event nodes
+            when n.event_node_id is null then -- nodes above event nodes
                 fan.computed_forbidden_at_node || '{"ticket", "product", "tax_rate", "till", "user_tag", "account"}'::varchar(255) array
-            else case when n.event_id is null then -- event node
-                fan.computed_forbidden_at_node || '{"user_tag", "account", "tse"}'::varchar(255) array
-            else case when n.event_node_id is not null and n.event_node_id != n.id then
-                fan.computed_forbidden_at_node || '{"user_role"}'::varchar(255) array
+            when n.event_node_id is not null and n.event_node_id != n.id then -- nodes blow event node
+                fan.computed_forbidden_at_node || '{"user_role", "user_tag", "account", "tse"}'::varchar(255) array
             else
                 fan.computed_forbidden_at_node
-            end end
         end as computed_forbidden_objects_at_node,
         fan.forbidden_in_subtree as forbidden_objects_in_subtree,
         fan.computed_forbidden_in_subtree as computed_forbidden_objects_in_subtree,

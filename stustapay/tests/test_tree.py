@@ -161,7 +161,14 @@ async def test_object_rules(tree_service: TreeService, admin_token: str):
     assert list_equals([ObjectType.till], sub_node.forbidden_objects_at_node)
     assert list_equals([ObjectType.user_role], sub_node.forbidden_objects_in_subtree)
     assert list_equals(
-        [ObjectType.till, ObjectType.ticket, ObjectType.tse, ObjectType.account, ObjectType.user_tag],
+        [
+            ObjectType.till,
+            ObjectType.ticket,
+            ObjectType.tse,
+            ObjectType.account,
+            ObjectType.user_tag,
+            ObjectType.user_role,
+        ],
         sub_node.computed_forbidden_objects_at_node,
     )
     assert list_equals([ObjectType.ticket, ObjectType.user_role], sub_node.computed_forbidden_objects_in_subtree)

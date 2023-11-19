@@ -67,14 +67,6 @@ export const UserDetail: React.FC = () => {
               secondary={user.user_tag_uid_hex ? formatUserTagUid(user.user_tag_uid_hex) : t("user.noTagAssigned")}
             />
           </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("user.roles")}
-              secondary={user.role_names.map((role) => (
-                <Chip variant="outlined" sx={{ mr: 1 }} key={role} label={role} />
-              ))}
-            />
-          </ListItem>
         </List>
       </Paper>
       <ConfirmDialog

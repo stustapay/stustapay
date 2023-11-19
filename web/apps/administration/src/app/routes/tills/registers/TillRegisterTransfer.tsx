@@ -90,7 +90,8 @@ export const TillRegisterTransfer: React.FC = () => {
                 label={t("register.transferTargetCashier")}
                 value={values.target_cashier_id}
                 onChange={(newVal) => setFieldValue("target_cashier_id", newVal)}
-                filterRole="cashier"
+                // TODO: reenable filter for cashiers
+                // filterRole="cashier"
                 error={touched.target_cashier_id && !!errors.target_cashier_id}
                 helperText={(touched.target_cashier_id && errors.target_cashier_id) as string}
               />

@@ -1,16 +1,16 @@
 import { Select, SelectProps } from "@stustapay/components";
 import { FormikProps } from "formik";
 
-export type FormSelectProps<Values, Option, Key extends string | number, Multiple extends boolean> = {
+export type FormSelectProps<Values, Option, Multiple extends boolean> = {
   name: string;
   formik: FormikProps<Values>;
-} & Omit<SelectProps<Option, Key, Multiple>, "onChange" | "error" | "helperText" | "value">;
+} & Omit<SelectProps<Option, Multiple>, "onChange" | "error" | "helperText" | "value">;
 
-export function FormSelect<Values, Option, Key extends string | number, Multiple extends boolean>({
+export function FormSelect<Values, Option, Multiple extends boolean>({
   formik,
   name,
   ...props
-}: FormSelectProps<Values, Option, Key, Multiple>) {
+}: FormSelectProps<Values, Option, Multiple>) {
   const handleChange = (value: unknown) => {
     formik.setFieldValue(name, value);
     formik.setFieldTouched(name);
@@ -18,7 +18,6 @@ export function FormSelect<Values, Option, Key extends string | number, Multiple
 
   return (
     <Select
-      name={name}
       variant={props.variant ?? "standard"}
       fullWidth={props.fullWidth ?? true}
       onChange={handleChange}

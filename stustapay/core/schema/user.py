@@ -46,6 +46,15 @@ class UserRole(NewUserRole):
     node_id: int
 
 
+class NewUserToRole(BaseModel):
+    user_id: int
+    role_id: int
+
+
+class UserToRole(NewUserToRole):
+    node_id: int
+
+
 class CheckLoginResult(BaseModel):
     user_tag: UserTag
     roles: list[UserRole]
@@ -60,7 +69,6 @@ class NewUser(BaseModel):
     login: str
     display_name: str
     user_tag_uid: Optional[int] = None
-    role_names: list[str]
     description: Optional[str] = None
 
 

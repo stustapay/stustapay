@@ -3,6 +3,7 @@ export const addTagTypes = [
   "products",
   "users",
   "user-roles",
+  "user-to-roles",
   "tax-rates",
   "auth",
   "tills",
@@ -134,6 +135,28 @@ const injectedRtkApi = api
           params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["user-roles"],
+      }),
+      listUserToRole: build.query<ListUserToRoleApiResponse, ListUserToRoleApiArg>({
+        query: (queryArg) => ({ url: `/user-to-roles`, params: { node_id: queryArg.nodeId } }),
+        providesTags: ["user-to-roles"],
+      }),
+      associatedUserToRole: build.mutation<AssociatedUserToRoleApiResponse, AssociatedUserToRoleApiArg>({
+        query: (queryArg) => ({
+          url: `/user-to-roles`,
+          method: "POST",
+          body: queryArg.newUserToRole,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["user-to-roles"],
+      }),
+      deassociatedUserToRole: build.mutation<DeassociatedUserToRoleApiResponse, DeassociatedUserToRoleApiArg>({
+        query: (queryArg) => ({
+          url: `/user-to-roles`,
+          method: "DELETE",
+          body: queryArg.newUserToRole,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["user-to-roles"],
       }),
       listTaxRates: build.query<ListTaxRatesApiResponse, ListTaxRatesApiArg>({
         query: (queryArg) => ({ url: `/tax-rates`, params: { node_id: queryArg.nodeId } }),
@@ -710,54 +733,68 @@ export type DeleteProductApiArg = {
 };
 export type ListUsersApiResponse = /** status 200 Successful Response */ NormalizedListUserInt;
 export type ListUsersApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateUserApiResponse = /** status 200 Successful Response */ UserRead;
 export type CreateUserApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   createUserPayload: CreateUserPayload;
 };
 export type GetUserApiResponse = /** status 200 Successful Response */ UserRead;
 export type GetUserApiArg = {
   userId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type UpdateUserApiResponse = /** status 200 Successful Response */ UserRead;
 export type UpdateUserApiArg = {
   userId: number;
-  nodeId?: number | null;
+  nodeId: number;
   updateUserPayload: UpdateUserPayload;
 };
 export type DeleteUserApiResponse = /** status 200 Successful Response */ any;
 export type DeleteUserApiArg = {
   userId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type ChangeUserPasswordApiResponse = /** status 200 Successful Response */ UserRead;
 export type ChangeUserPasswordApiArg = {
   userId: number;
-  nodeId?: number | null;
+  nodeId: number;
   changeUserPasswordPayload: ChangeUserPasswordPayload;
 };
 export type ListUserRolesApiResponse = /** status 200 Successful Response */ NormalizedListUserRoleInt;
 export type ListUserRolesApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateUserRoleApiResponse = /** status 200 Successful Response */ UserRole;
 export type CreateUserRoleApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newUserRole: NewUserRole;
 };
 export type UpdateUserRoleApiResponse = /** status 200 Successful Response */ UserRole;
 export type UpdateUserRoleApiArg = {
   userRoleId: number;
-  nodeId?: number | null;
+  nodeId: number;
   updateUserRolePrivilegesPayload: UpdateUserRolePrivilegesPayload;
 };
 export type DeleteUserRoleApiResponse = /** status 200 Successful Response */ any;
 export type DeleteUserRoleApiArg = {
   userRoleId: number;
-  nodeId?: number | null;
+  nodeId: number;
+};
+export type ListUserToRoleApiResponse = /** status 200 Successful Response */ UserToRole[];
+export type ListUserToRoleApiArg = {
+  nodeId: number;
+};
+export type AssociatedUserToRoleApiResponse = /** status 200 Successful Response */ UserToRole;
+export type AssociatedUserToRoleApiArg = {
+  nodeId: number;
+  newUserToRole: NewUserToRole;
+};
+export type DeassociatedUserToRoleApiResponse = /** status 200 Successful Response */ any;
+export type DeassociatedUserToRoleApiArg = {
+  nodeId: number;
+  newUserToRole: NewUserToRole;
 };
 export type ListTaxRatesApiResponse = /** status 200 Successful Response */ NormalizedListTaxRateInt;
 export type ListTaxRatesApiArg = {
@@ -1208,7 +1245,6 @@ export type User = {
   login: string;
   display_name: string;
   user_tag_uid?: number | null;
-  role_names: string[];
   description?: string | null;
   node_id: number;
   transport_account_id?: number | null;
@@ -1219,7 +1255,6 @@ export type UserRead = {
   login: string;
   display_name: string;
   user_tag_uid?: number | null;
-  role_names: string[];
   description?: string | null;
   node_id: number;
   transport_account_id?: number | null;
@@ -1236,7 +1271,6 @@ export type NormalizedListUserInt = {
 export type CreateUserPayload = {
   login: string;
   display_name: string;
-  role_names: string[];
   description?: string | null;
   user_tag_uid_hex?: string | null;
   password?: string | null;
@@ -1244,7 +1278,6 @@ export type CreateUserPayload = {
 export type UpdateUserPayload = {
   login: string;
   display_name: string;
-  role_names: string[];
   description?: string | null;
   user_tag_uid_hex?: string | null;
 };
@@ -1281,6 +1314,15 @@ export type NewUserRole = {
 export type UpdateUserRolePrivilegesPayload = {
   is_privileged: boolean;
   privileges: Privilege[];
+};
+export type UserToRole = {
+  user_id: number;
+  role_id: number;
+  node_id: number;
+};
+export type NewUserToRole = {
+  user_id: number;
+  role_id: number;
 };
 export type TaxRate = {
   name: string;
@@ -1991,10 +2033,10 @@ export type ObjectType =
   | "ticket"
   | "till"
   | "user_role"
-  | "order"
   | "tax_rate"
   | "user_tag"
   | "tse"
+  | "order"
   | "account";
 export type Node = {
   id: number;
@@ -2089,6 +2131,10 @@ export const {
   useCreateUserRoleMutation,
   useUpdateUserRoleMutation,
   useDeleteUserRoleMutation,
+  useListUserToRoleQuery,
+  useLazyListUserToRoleQuery,
+  useAssociatedUserToRoleMutation,
+  useDeassociatedUserToRoleMutation,
   useListTaxRatesQuery,
   useLazyListTaxRatesQuery,
   useCreateTaxRateMutation,

@@ -7,13 +7,13 @@ from stustapay.core.schema.user import (
     CurrentUser,
     NewUser,
     NewUserRole,
+    NewUserToRole,
     UserRole,
     UserTag,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
-from stustapay.tests.common import list_equals
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 from stustapay.tests.terminal.conftest import Finanzorga
 
@@ -31,21 +31,21 @@ async def test_user_creation(
         node_id=event_node.id,
         new_role=NewUserRole(name="test-role-1", is_privileged=False, privileges=[]),
     )
-    test_role2: UserRole = await user_service.create_user_role(
-        token=admin_token,
-        node_id=event_node.id,
-        new_role=NewUserRole(name="test-role-2", is_privileged=False, privileges=[]),
-    )
     user = await user_service.create_user_terminal(
         token=terminal_token,
         node_id=event_node.id,
-        new_user=NewUser(
-            login="test-cashier", display_name="", user_tag_uid=user_tag.uid, role_names=[test_role1.name]
+        new_user=NewUser(login="test-cashier", display_name="", user_tag_uid=user_tag.uid),
+    )
+    await user_service.associate_user_to_role(
+        token=admin_token,
+        node_id=event_node.id,
+        new_user_to_role=NewUserToRole(
+            user_id=user.id,
+            role_id=test_role1.id,
         ),
     )
     assert user is not None
     assert user.login == "test-cashier"
-    assert list_equals(user.role_names, [test_role1.name])
     assert user.cashier_account_id is None
     assert user.transport_account_id is None
     assert user.user_tag_uid == user_tag.uid
@@ -54,18 +54,8 @@ async def test_user_creation(
         await user_service.create_user_terminal(
             token=terminal_token,
             node_id=event_node.id,
-            new_user=NewUser(
-                login="test-cashier", display_name="", user_tag_uid=user_tag.uid, role_names=[test_role2.name]
-            ),
+            new_user=NewUser(login="test-cashier", display_name="", user_tag_uid=user_tag.uid),
         )
-
-    user = await user_service.update_user_roles_terminal(
-        token=terminal_token,
-        user_tag_uid=user_tag.uid,
-        role_names=[test_role2.name],
-    )
-    assert user is not None
-    assert list_equals(user.role_names, [test_role2.name])
 
     # TODO: re-enable check once tree visibility rules are properly implemented for terminal api
     # privileged_role: UserRole = await user_service.create_user_role(

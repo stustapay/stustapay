@@ -3,10 +3,7 @@ import { useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
-export type TillLayoutSelectProps = Omit<
-  SelectProps<TillLayout, number, false>,
-  "options" | "formatOption" | "multiple" | "getOptionKey"
->;
+export type TillLayoutSelectProps = Omit<SelectProps<TillLayout, false>, "options" | "formatOption" | "multiple">;
 
 export const TillLayoutSelect: React.FC<TillLayoutSelectProps> = (props) => {
   const { currentNode } = useCurrentNode();
@@ -20,13 +17,5 @@ export const TillLayoutSelect: React.FC<TillLayoutSelectProps> = (props) => {
     }
   );
 
-  return (
-    <Select
-      multiple={false}
-      options={layouts}
-      getOptionKey={(layout: TillLayout) => layout.id}
-      formatOption={(layout: TillLayout) => layout.name}
-      {...props}
-    />
-  );
+  return <Select multiple={false} options={layouts} formatOption={(layout: TillLayout) => layout.name} {...props} />;
 };

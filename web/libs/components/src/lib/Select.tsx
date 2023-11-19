@@ -1,24 +1,11 @@
-import {
-  Box,
-  Checkbox,
-  Chip,
-  FormControl,
-  FormControlProps,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select as MuiSelect,
-  SelectProps as MuiSelectProps,
-  SelectChangeEvent,
-} from "@mui/material";
+import { Checkbox, FormControlProps, Autocomplete, TextField, AutocompleteProps } from "@mui/material";
 import * as React from "react";
 
-export type SelectProps<Option, Key extends number | string, Multiple extends boolean> = {
-  value: Multiple extends true ? Key[] | null : Key | null;
+export type SelectProps<Option, Multiple extends boolean> = {
+  value: Multiple extends true ? Option[] | null : Option | null;
   options: Option[];
   formatOption: Option extends string ? ((v: Option) => string) | undefined : (v: Option) => string;
-  onChange: (value: Multiple extends true ? Key[] : Key) => void;
-  getOptionKey: (option: Option) => Key;
+  onChange: (value: Multiple extends true ? Option[] | null : Option | null) => void;
   multiple: Multiple;
   label: string;
   checkboxes?: boolean;
@@ -27,9 +14,12 @@ export type SelectProps<Option, Key extends number | string, Multiple extends bo
   margin?: FormControlProps["margin"] | "normal";
   helperText?: string;
   error?: boolean;
-} & Omit<MuiSelectProps, "renderValue" | "onChange" | "value" | "multiple" | "labelId" | "margin">;
+} & Omit<
+  AutocompleteProps<Option, Multiple, false, false>,
+  "onChange" | "value" | "multiple" | "renderInput" | "getOptionLabel"
+>;
 
-export function Select<Option, Key extends number | string, Multiple extends boolean>({
+export function Select<Option, Multiple extends boolean>({
   value,
   options,
   label,
@@ -38,17 +28,15 @@ export function Select<Option, Key extends number | string, Multiple extends boo
   error,
   checkboxes,
   formatOption,
-  getOptionKey,
   multiple,
   chips,
   helperText,
   onChange,
   ...props
-}: SelectProps<Option, Key, Multiple>) {
+}: SelectProps<Option, Multiple>) {
   const handleChange = React.useCallback(
-    (evt: SelectChangeEvent<unknown>) => {
-      const newVal = evt.target.value;
-      onChange(newVal as any); // TODO: typing
+    (event: any, newValue: SelectProps<Option, Multiple>["value"]) => {
+      onChange(newValue);
     },
     [onChange]
   );
@@ -69,51 +57,45 @@ export function Select<Option, Key extends number | string, Multiple extends boo
     [formatOption]
   );
 
-  const optionFromKey = React.useCallback(
-    (key: Key): Option => {
-      return options.find((option) => getOptionKey(option) === key)!;
-    },
-    [options, getOptionKey]
-  );
-
-  const renderValue = React.useMemo(() => {
-    if (multiple) {
-      if (chips) {
-        return (v: Key[]): React.ReactNode => (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-            {v.map((v) => {
-              const option = optionFromKey(v);
-              return <Chip key={v} label={optionToString(option)} />;
-            })}
-          </Box>
-        );
-      } else {
-        return (val: Key[]) => val.map((v) => optionToString(optionFromKey(v))).join(", ");
-      }
-    } else {
-      return (v: Key) => optionToString(optionFromKey(v));
-    }
-  }, [chips, multiple, optionToString, optionFromKey]);
-
   return (
-    <FormControl fullWidth variant={"standard" ?? variant} margin={margin} error={error}>
-      <InputLabel id="roleSelectLabel">{label}</InputLabel>
-      <MuiSelect
-        labelId="roleSelectLabel"
-        value={value == null ? "" : value}
-        multiple={multiple}
-        onChange={handleChange}
-        renderValue={renderValue as any} // TODO: figure out how to get proper typing here
-        {...props}
-      >
-        {options.map((option) => (
-          <MenuItem key={getOptionKey(option)} value={getOptionKey(option)}>
-            {multiple && checkboxes && <Checkbox checked={((value ?? []) as Key[]).includes(getOptionKey(option))} />}
-            {optionToString(option)}
-          </MenuItem>
-        ))}
-      </MuiSelect>
-      {helperText && <FormHelperText sx={{ ml: 0 }}>{helperText}</FormHelperText>}
-    </FormControl>
+    <Autocomplete
+      multiple={multiple}
+      value={value as any}
+      onChange={handleChange as any}
+      options={options}
+      getOptionLabel={optionToString}
+      renderOption={(props, option, { selected }) => (
+        <li {...props}>
+          {multiple && checkboxes && <Checkbox checked={selected} />}
+          {optionToString(option)}
+        </li>
+      )}
+      renderInput={(params) => (
+        <TextField variant={variant ?? "standard"} label={label} error={error} margin={margin} {...params} />
+      )}
+      {...props}
+    />
   );
+
+  // return (
+  //   <FormControl fullWidth variant={"standard" ?? variant} margin={margin} error={error}>
+  //     <InputLabel id="roleSelectLabel">{label}</InputLabel>
+  //     <MuiSelect
+  //       labelId="roleSelectLabel"
+  //       value={value == null ? "" : value}
+  //       multiple={multiple}
+  //       onChange={handleChange}
+  //       renderValue={renderValue as any} // TODO: figure out how to get proper typing here
+  //       {...props}
+  //     >
+  //       {options.map((option) => (
+  //         <MenuItem key={getOptionKey(option)} value={getOptionKey(option)}>
+  //           {multiple && checkboxes && <Checkbox checked={((value ?? []) as Key[]).includes(getOptionKey(option))} />}
+  //           {optionToString(option)}
+  //         </MenuItem>
+  //       ))}
+  //     </MuiSelect>
+  //     {helperText && <FormHelperText sx={{ ml: 0 }}>{helperText}</FormHelperText>}
+  //   </FormControl>
+  // );
 }

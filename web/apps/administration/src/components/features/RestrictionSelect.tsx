@@ -3,8 +3,8 @@ import { Select, SelectProps } from "@stustapay/components";
 import { ProductRestrictions } from "@stustapay/models";
 
 export type RestrictionSelectProps<Multiple extends boolean> = Omit<
-  SelectProps<ProductRestriction, ProductRestriction, Multiple>,
-  "options" | "formatOption" | "getOptionKey"
+  SelectProps<ProductRestriction, Multiple>,
+  "options" | "formatOption"
 >;
 
 export function RestrictionSelect<Multiple extends boolean>(props: RestrictionSelectProps<Multiple>) {
@@ -12,7 +12,6 @@ export function RestrictionSelect<Multiple extends boolean>(props: RestrictionSe
     <Select
       checkboxes={true}
       options={ProductRestrictions}
-      getOptionKey={(restriction: ProductRestriction) => restriction}
       formatOption={(restriction: ProductRestriction) => restriction}
       {...props}
     />

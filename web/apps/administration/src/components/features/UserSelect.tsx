@@ -5,10 +5,11 @@ import { getUserName } from "@stustapay/models";
 import * as React from "react";
 
 export type UserSelectProps = {
-  filterRole?: string;
-} & Omit<SelectProps<User, number, false>, "options" | "formatOption" | "multiple" | "getOptionKey">;
+  value: number;
+  onChange: (userId: number) => void;
+} & Omit<SelectProps<User, false>, "options" | "formatOption" | "multiple" | "value" | "onChange">;
 
-export const UserSelect: React.FC<UserSelectProps> = ({ filterRole, ...props }) => {
+export const UserSelect: React.FC<UserSelectProps> = ({ value, onChange, ...props }) => {
   const { currentNode } = useCurrentNode();
   const { users } = useListUsersQuery(
     { nodeId: currentNode.id },
@@ -20,20 +21,26 @@ export const UserSelect: React.FC<UserSelectProps> = ({ filterRole, ...props }) 
     }
   );
 
-  const filteredUsers = React.useMemo(() => {
-    if (!filterRole) {
-      return users;
-    }
+  const handleChange = React.useCallback(
+    (user: User | null) => {
+      if (user != null) {
+        onChange(user.id);
+      }
+    },
+    [onChange]
+  );
 
-    return users.filter((user) => user.role_names.includes(filterRole));
-  }, [users, filterRole]);
+  const selectedUser = React.useMemo(() => {
+    return users.find((u) => u.id === value) ?? null;
+  }, [value, users]);
 
   return (
     <Select
       multiple={false}
-      options={filteredUsers}
-      getOptionKey={(user: User) => user.id}
+      value={selectedUser}
+      options={users}
       formatOption={getUserName}
+      onChange={handleChange}
       {...props}
     />
   );

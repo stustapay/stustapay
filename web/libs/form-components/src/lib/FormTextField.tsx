@@ -16,7 +16,7 @@ export function FormTextField<Values>({ formik, name, ...props }: FormTextFieldP
       fullWidth={props.fullWidth ?? true}
       onChange={formik.handleChange}
       onBlur={formik.handleBlur}
-      value={(formik.values as any)[name]}
+      value={(formik.values as any)[name] ?? ""}
       error={(formik.touched as any)[name] && !!(formik.errors as any)[name]}
       helperText={(formik.touched as any)[name] && (formik.errors as any)[name]}
       {...props}

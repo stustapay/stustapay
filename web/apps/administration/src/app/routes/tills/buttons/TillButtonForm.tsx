@@ -25,8 +25,10 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
     onChange(productIds.filter((pId) => pId !== productId));
   };
 
-  const addProduct = (productId: number) => {
-    onChange([...productIds, productId]);
+  const addProduct = (product: Product | null) => {
+    if (product != null) {
+      onChange([...productIds, product.id]);
+    }
   };
 
   return (
