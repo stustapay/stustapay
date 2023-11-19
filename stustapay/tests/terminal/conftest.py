@@ -21,6 +21,7 @@ from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     NewUser,
     NewUserRole,
+    NewUserToRole,
     Privilege,
     User,
     UserRole,
@@ -120,9 +121,9 @@ class GetAccountBalance(Protocol):
 
 
 @pytest.fixture
-async def get_account_balance(account_service: AccountService, admin_token: str):
+async def get_account_balance(account_service: AccountService, event_node: Node, admin_token: str):
     async def func(account_id: int) -> float:
-        account = await account_service.get_account(token=admin_token, account_id=account_id)
+        account = await account_service.get_account(token=admin_token, node_id=event_node.id, account_id=account_id)
         assert account is not None
         return account.balance
 
@@ -228,12 +229,23 @@ async def finanzorga(
         new_user=NewUser(
             login=f"Finanzorga {secrets.token_hex(16)}",
             description="",
-            role_names=[finanzorga_role.name, cashier.cashier_role.name],
             user_tag_uid=finanzorga_tag.uid,
             display_name="Finanzorga",
         ),
     )
-    finanzorga_dump = finanzorga_user.model_dump()
+    await user_service.associate_user_to_role(
+        token=admin_token,
+        node_id=event_node.id,
+        new_user_to_role=NewUserToRole(role_id=finanzorga_role.id, user_id=finanzorga_user.id),
+    )
+    await user_service.associate_user_to_role(
+        token=admin_token,
+        node_id=event_node.id,
+        new_user_to_role=NewUserToRole(role_id=cashier.cashier_role.id, user_id=finanzorga_user.id),
+    )
+    updated_user = await user_service.get_user(token=admin_token, node_id=event_node.id, user_id=finanzorga_user.id)
+    assert updated_user is not None
+    finanzorga_dump = updated_user.model_dump()
     finanzorga_dump.update(
         {"finanzorga_role": finanzorga_role, "cashier_role": cashier.cashier_role, "token": cashier.token}
     )

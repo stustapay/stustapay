@@ -3,10 +3,7 @@ import { useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
-export type ProductSelectProps = Omit<
-  SelectProps<Product, number, false>,
-  "options" | "formatOption" | "multiple" | "getOptionKey"
->;
+export type ProductSelectProps = Omit<SelectProps<Product, false>, "options" | "formatOption" | "multiple">;
 
 export const ProductSelect: React.FC<ProductSelectProps> = (props) => {
   const { currentNode } = useCurrentNode();
@@ -24,7 +21,6 @@ export const ProductSelect: React.FC<ProductSelectProps> = (props) => {
     <Select
       multiple={false}
       options={products}
-      getOptionKey={(product: Product) => product.id}
       formatOption={(product) => `${product.name} (${product.price})€`}
       {...props}
     />

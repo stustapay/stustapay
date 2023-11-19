@@ -63,8 +63,8 @@ class UserTagService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def create_user_tag_secret(
         self, *, conn: Connection, node: Node, new_secret: NewUserTagSecret
     ) -> UserTagSecret:
@@ -72,8 +72,8 @@ class UserTagService(DBService):
         return await create_user_tag_secret(conn=conn, node_id=node.id, secret=new_secret)
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def get_user_tag_detail(self, *, conn: Connection, user_tag_uid: int) -> Optional[UserTagDetail]:
         # TODO: TREE visibility
         return await conn.fetch_maybe_one(
@@ -81,10 +81,10 @@ class UserTagService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def update_user_tag_comment(
-        self, *, conn: Connection, current_user: CurrentUser, user_tag_uid: int, comment: str
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, user_tag_uid: int, comment: str
     ) -> UserTagDetail:
         # TODO: TREE visibility
         ret = await conn.fetchval(
@@ -94,14 +94,14 @@ class UserTagService(DBService):
             raise InvalidArgument(f"User tag {format_user_tag_uid(user_tag_uid)} does not exist")
 
         detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_user=current_user, user_tag_uid=user_tag_uid
+            conn=conn, node_id=node.id, current_user=current_user, user_tag_uid=user_tag_uid
         )
         assert detail is not None
         return detail
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
         value_as_int = None
         if re.match("^[A-Fa-f0-9]+$", search_term):

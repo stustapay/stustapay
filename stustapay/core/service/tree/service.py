@@ -172,23 +172,25 @@ class TreeService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_user(privileges=[Privilege.node_administration])
     @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
     async def create_node(self, conn: Connection, node: Node, new_node: NewNode) -> Node:
         return await create_node(conn=conn, parent_id=node.id, new_node=new_node)
 
     @with_db_transaction
-    @requires_user(privileges=[Privilege.node_administration])
     @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
     async def create_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
         return await create_event(conn=conn, parent_id=node.id, event=event)
 
     @with_db_transaction
-    @requires_user(privileges=[Privilege.node_administration])  # TODO: privilege
-    async def update_event(self, conn: Connection, node_id: int, event: NewEvent) -> Node:
-        event_id = await conn.fetchval("select event_id from node where id = $1", node_id)
+    @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
+    async def update_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
+        # TODO: privilege
+        event_id = await conn.fetchval("select event_id from node where id = $1", node.id)
         if event_id is None:
-            raise NotFound(element_typ="event", element_id=node_id)
+            raise NotFound(element_typ="event", element_id=node.id)
 
         await conn.fetchval(
             "update event set currency_identifier = $2, sumup_topup_enabled = $3, max_account_balance = $4, "
@@ -230,24 +232,24 @@ class TreeService(DBService):
                     text_type,
                     content,
                 )
-        node = await fetch_node(conn=conn, node_id=node_id)
-        assert node is not None
-        return node
+        updated_node = await fetch_node(conn=conn, node_id=node.id)
+        assert updated_node is not None
+        return updated_node
 
     @with_db_transaction(read_only=True)
-    @requires_user()
+    @requires_user(node_required=False)
     async def get_tree_for_current_user(self, *, conn: Connection, current_user: CurrentUser) -> Node:
         return await get_tree_for_current_user(conn=conn, user_node_id=current_user.node_id)
 
     @with_db_transaction(read_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
     @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
     async def get_restricted_event_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:
         return await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
 
     @with_db_transaction
-    @requires_user(privileges=[Privilege.node_administration])
     @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
     async def generate_test_bon(self, *, conn: Connection, node: Node) -> bytes:
         if node.event_node_id is None:
             raise InvalidArgument("Cannot generate bon for a node not associated with an event")

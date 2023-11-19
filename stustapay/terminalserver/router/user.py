@@ -79,13 +79,6 @@ class UpdateUserPayload(BaseModel):
     role_names: list[str]
 
 
-@router.post("/update-user-roles", summary="Update roles of a given user", response_model=User)
-async def create_finanzorga(token: CurrentAuthToken, user_service: ContextUserService, payload: UpdateUserPayload):
-    return await user_service.update_user_roles_terminal(
-        token=token, user_tag_uid=payload.user_tag_uid, role_names=payload.role_names
-    )
-
-
 @router.post("/grant-free-ticket", summary="grant a free ticket, e.g. to a volunteer", response_model=Account)
 async def grant_free_ticket(
     grant: NewFreeTicketGrant,

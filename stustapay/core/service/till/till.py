@@ -13,7 +13,7 @@ from stustapay.core.schema.terminal import (
     UserTagSecret,
 )
 from stustapay.core.schema.till import NewTill, Till, TillProfile, UserInfo
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import (
     CurrentUser,
     Privilege,
@@ -58,29 +58,29 @@ class TillService(DBService):
         self.register = TillRegisterService(db_pool, config, auth_service)
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    @requires_node()
     async def create_till(self, *, conn: Connection, node: Node, till: NewTill) -> Till:
         # TODO: TREE visibility
         return await create_till(conn=conn, node_id=node.id, till=till)
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def list_tills(self, *, node: Node, conn: Connection) -> list[Till]:
         return await conn.fetch_many(
             Till, "select * from till_with_cash_register where node_id = any($1)", node.ids_to_event_node
         )
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def get_till(self, *, conn: Connection, node: Node, till_id: int) -> Optional[Till]:
         return await fetch_till(conn=conn, node=node, till_id=till_id)
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    @requires_node()
     async def update_till(self, *, conn: Connection, node: Node, till_id: int, till: NewTill) -> Till:
         # TODO: TREE visibility
         row = await conn.fetchrow(
@@ -100,8 +100,8 @@ class TillService(DBService):
         return updated_till
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    @requires_node()
     async def delete_till(self, *, conn: Connection, till_id: int) -> bool:
         # TODO: TREE visibility
         result = await conn.execute(
@@ -128,8 +128,8 @@ class TillService(DBService):
         return TerminalRegistrationSuccess(till=till, token=token)
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    @requires_node()
     async def logout_terminal_id(self, *, conn: Connection, till_id: int) -> bool:
         # TODO: TREE visibility
         id_ = await conn.fetchval(
@@ -150,8 +150,8 @@ class TillService(DBService):
         )
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    @requires_node()
     async def force_logout_user(self, *, conn: Connection, till_id: int):
         # TODO: TREE visibility
         result = await conn.fetchval(

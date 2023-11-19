@@ -755,8 +755,8 @@ class OrderService(DBService):
         )
 
     @with_retryable_db_transaction(read_only=False)
-    @requires_user([Privilege.can_book_orders])
     @requires_node()
+    @requires_user([Privilege.can_book_orders])
     async def book_sale_products(
         self,
         *,
@@ -809,8 +809,8 @@ class OrderService(DBService):
         )
 
     @with_retryable_db_transaction(read_only=False)
-    @requires_user([Privilege.can_book_orders])
     @requires_node()
+    @requires_user([Privilege.can_book_orders])
     async def edit_sale_products(
         self,
         *,
@@ -913,8 +913,8 @@ class OrderService(DBService):
         )
 
     @with_retryable_db_transaction(read_only=False)
-    @requires_user([Privilege.can_book_orders])
     @requires_node()
+    @requires_user([Privilege.can_book_orders])
     async def cancel_sale_admin(self, *, conn: Connection, node: Node, current_user: CurrentUser, order_id: int):
         virtual_till = await fetch_virtual_till(conn=conn, node=node)
         await self._cancel_sale(conn=conn, till_id=virtual_till.id, current_user=current_user, order_id=order_id)
@@ -1329,8 +1329,8 @@ class OrderService(DBService):
         return await conn.fetch_many(Order, "select * from order_value where cashier_id = $1", current_user.id)
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def list_orders(self, *, conn: Connection, customer_account_id: Optional[int] = None) -> list[Order]:
         if customer_account_id is not None:
             return await conn.fetch_many(
@@ -1340,13 +1340,13 @@ class OrderService(DBService):
             return await conn.fetch_many(Order, "select * from order_value")
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def list_orders_by_till(self, *, conn: Connection, till_id: int) -> list[Order]:
         return await conn.fetch_many(Order, "select * from order_value where till_id = $1", till_id)
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)

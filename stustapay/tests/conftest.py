@@ -30,16 +30,16 @@ from stustapay.core.schema.till import (
     TillProfile,
 )
 from stustapay.core.schema.tree import (
-    ALL_OBJECT_TYPES,
     ROOT_NODE_ID,
     NewEvent,
     Node,
     RestrictedEventSettings,
 )
 from stustapay.core.schema.user import (
-    ADMIN_ROLE_NAME,
+    ADMIN_ROLE_ID,
     NewUser,
     NewUserRole,
+    NewUserToRole,
     Privilege,
     User,
     UserRole,
@@ -53,9 +53,12 @@ from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
-from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
+from stustapay.core.service.tree.common import (
+    fetch_node,
+    fetch_restricted_event_settings_for_node,
+)
 from stustapay.core.service.tree.service import TreeService, create_event
-from stustapay.core.service.user import UserService
+from stustapay.core.service.user import UserService, associate_user_to_role
 from stustapay.core.service.user_tag import UserTagService
 from stustapay.framework.database import Connection, DatabaseConfig, create_db_pool
 
@@ -137,8 +140,6 @@ async def event_node(db_connection: Connection) -> Node:
             sepa_description="foobar {user_tag_uid}",
             sepa_sender_iban="DE89370400440532013000",
             sepa_allowed_country_codes=["DE"],
-            allowed_objects_at_node=ALL_OBJECT_TYPES,
-            allowed_objects_in_subtree=ALL_OBJECT_TYPES,
             bon_title="",
             bon_issuer="",
             bon_address="",
@@ -284,21 +285,27 @@ async def admin_tag(
 
 @pytest.fixture
 async def admin_user(
+    db_connection: Connection,
     user_service: UserService,
     admin_tag: UserTag,
-    event_node: Node,
 ) -> tuple[User, str]:
+    root_node = await fetch_node(conn=db_connection, node_id=ROOT_NODE_ID)
+    assert root_node is not None
     password = "rolf"
     admin_user = await user_service.create_user_no_auth(
-        node_id=event_node.id,
+        node_id=ROOT_NODE_ID,
         new_user=NewUser(
             login=f"test-admin-user {secrets.token_hex(16)}",
             description="",
-            role_names=[ADMIN_ROLE_NAME],
             display_name="Admin",
             user_tag_uid=admin_tag.uid,
         ),
         password=password,
+    )
+    await associate_user_to_role(
+        conn=db_connection,
+        node=root_node,
+        new_user_to_role=NewUserToRole(user_id=admin_user.id, role_id=ADMIN_ROLE_ID),
     )
     return admin_user, password
 
@@ -332,6 +339,7 @@ class Cashier(User):
 
 @pytest.fixture
 async def cashier(
+    db_connection: Connection,
     admin_token: str,
     event_node: Node,
     user_service: UserService,
@@ -353,13 +361,19 @@ async def cashier(
             login=f"test-cashier-user-{secrets.token_hex(16)}",
             user_tag_uid=cashier_tag.uid,
             description="",
-            role_names=[cashier_role.name],
             display_name="Cashier",
         ),
         password="rolf",
     )
-    cashier_token = (await user_service.login_user(username=cashier_user.login, password="rolf")).token
-    cashier_as_dict = cashier_user.model_dump()
+    await associate_user_to_role(
+        conn=db_connection,
+        node=event_node,
+        new_user_to_role=NewUserToRole(user_id=cashier_user.id, role_id=cashier_role.id),
+    )
+    updated_cashier = await user_service.get_user(token=admin_token, node_id=event_node.id, user_id=cashier_user.id)
+    assert updated_cashier is not None
+    cashier_token = (await user_service.login_user(username=updated_cashier.login, password="rolf")).token
+    cashier_as_dict = updated_cashier.model_dump()
     cashier_as_dict.update({"token": cashier_token, "cashier_role": cashier_role})
     cashier = Cashier.model_validate(cashier_as_dict)
 

@@ -129,13 +129,13 @@ create or replace function user_to_role_updated() returns trigger
     language plpgsql as
 $$
 <<locals>> declare
-    user_node_id         bigint;
-    user_node_parents    bigint[];
-    event_node_id        bigint;
-    role_privileges      text[];
-    user_login           text;
-    cashier_account_id   bigint;
-    transport_account_id bigint;
+    user_node_id          bigint;
+    user_is_outside_event bool;
+    event_node_id         bigint;
+    role_privileges       text[];
+    user_login            text;
+    cashier_account_id    bigint;
+    transport_account_id  bigint;
 begin
     select
         ur.privileges
@@ -147,20 +147,20 @@ begin
 
     select
         u.node_id,
-        n.parent_ids
-    into locals.user_node_id, locals.user_node_parents
+        n.event_node_id is null
+    into locals.user_node_id, locals.user_is_outside_event
     from
         usr u
     join node n on u.node_id = n.id
     where
         u.id = NEW.user_id;
 
-    select id into locals.event_node_id
+    select node.event_node_id into locals.event_node_id
     from node
-    where event_id is not null and (id = locals.user_node_id or id = any(locals.user_node_parents));
+    where node.id = NEW.node_id;
 
     -- TODO: this will not create cashier / transport accounts for users defined above event nodes (which makes sense)
-    if locals.event_node_id is null then
+    if locals.event_node_id is null or locals.user_is_outside_event then
         return NEW;
     end if;
 

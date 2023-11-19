@@ -6,7 +6,7 @@ import pytest
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import NewPayOut, NewTopUp, PaymentMethod
 from stustapay.core.schema.till import NewTillProfile, Till, TillLayout
-from stustapay.core.schema.tree import RestrictedEventSettings
+from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.order.order import (
@@ -167,6 +167,7 @@ async def test_only_topup_till_profiles_can_topup(
     till_service: TillService,
     order_service: OrderService,
     admin_token: str,
+    event_node: Node,
     till_layout: TillLayout,
     till: Till,
     terminal_token: str,
@@ -177,6 +178,7 @@ async def test_only_topup_till_profiles_can_topup(
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     profile = await till_service.profile.create_profile(
         token=admin_token,
+        node_id=event_node.id,
         profile=NewTillProfile(
             name="profile2",
             description="",
@@ -187,7 +189,7 @@ async def test_only_topup_till_profiles_can_topup(
         ),
     )
     till.active_profile_id = profile.id
-    await till_service.update_till(token=admin_token, till_id=till.id, till=till)
+    await till_service.update_till(token=admin_token, node_id=event_node.id, till_id=till.id, till=till)
 
     with pytest.raises(TillPermissionException):
         new_topup = NewTopUp(
@@ -248,6 +250,7 @@ async def test_only_payout_till_profiles_can_payout(
     till: Till,
     till_layout: TillLayout,
     customer: Customer,
+    event_node: Node,
     terminal_token: str,
     cashier: Cashier,
     login_supervised_user: LoginSupervisedUser,
@@ -255,6 +258,7 @@ async def test_only_payout_till_profiles_can_payout(
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     profile = await till_service.profile.create_profile(
         token=admin_token,
+        node_id=event_node.id,
         profile=NewTillProfile(
             name="profile2",
             description="",
@@ -265,7 +269,7 @@ async def test_only_payout_till_profiles_can_payout(
         ),
     )
     till.active_profile_id = profile.id
-    await till_service.update_till(token=admin_token, till_id=till.id, till=till)
+    await till_service.update_till(token=admin_token, node_id=event_node.id, till_id=till.id, till=till)
 
     with pytest.raises(TillPermissionException):
         new_pay_out = NewPayOut(

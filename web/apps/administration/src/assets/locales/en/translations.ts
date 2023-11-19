@@ -34,6 +34,7 @@ export const translations = {
   tillProfiles: "Till Profiles",
   registerStockings: "Cash Register Stockings",
   registers: "Cash Registers",
+  userToRoles: "User to Roles",
   common: {
     definedAtNode: "Node",
     loadingError: "Errors while loading page",
@@ -404,6 +405,7 @@ export const translations = {
   deleteUser: "Delete User",
   deleteUserDescription: "Confirm user deletion",
   user: {
+    user: "User",
     users: "Users",
     roles: "Roles",
     login: "Login",
@@ -427,6 +429,13 @@ export const translations = {
     privileges: "Privileges",
     delete: "Delete user role",
     deleteDescription: "Confirm user role deletion",
+  },
+  userToRole: {
+    user: "User",
+    role: "Role",
+    create: "Associate a user to a role for node {{node}}",
+    deleteAssociation: "Remove Role association",
+    deleteAssociationDescription: "Remove association",
   },
   tse: {
     tses: "TSE",

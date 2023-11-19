@@ -16,9 +16,8 @@ export const LanguageDropdown: React.FC<LanguageDropdownProps> = ({ value, onCha
       label={t("settings.language")}
       multiple={false}
       value={value}
-      onChange={onChange}
+      onChange={(val) => (val != null ? onChange : null)}
       options={eventSettings.languages}
-      getOptionKey={(option: Language) => option}
       formatOption={(option: Language) => option}
     />
   );

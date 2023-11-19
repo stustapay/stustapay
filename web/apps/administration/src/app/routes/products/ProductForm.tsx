@@ -67,7 +67,6 @@ export function ProductForm<T extends NewProduct>(props: ProductFormProps<T>) {
       )}
 
       <TaxRateSelect
-        name="tax_rate_id"
         label={t("product.taxRate")}
         disabled={values.is_locked}
         error={touched.tax_rate_id && !!errors.tax_rate_id}

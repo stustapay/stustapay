@@ -2,10 +2,7 @@ import { Select, SelectProps } from "@stustapay/components";
 import { Privilege, PrivilegeSchema } from "@stustapay/models";
 import * as React from "react";
 
-export type PrivilegeSelectProps = Omit<
-  SelectProps<Privilege, Privilege, true>,
-  "options" | "formatOption" | "multiple" | "getOptionKey"
->;
+export type PrivilegeSelectProps = Omit<SelectProps<Privilege, true>, "options" | "formatOption" | "multiple">;
 
 export const PrivilegeSelect: React.FC<PrivilegeSelectProps> = (props) => {
   return (
@@ -14,7 +11,6 @@ export const PrivilegeSelect: React.FC<PrivilegeSelectProps> = (props) => {
       checkboxes={true}
       chips={true}
       options={PrivilegeSchema.options}
-      getOptionKey={(privilege: Privilege) => privilege}
       formatOption={(privilege: Privilege) => privilege}
       {...props}
     />

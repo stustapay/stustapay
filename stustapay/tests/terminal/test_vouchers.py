@@ -3,13 +3,14 @@ import pytest
 
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.till import NewTillProfile, Till, TillLayout
-from stustapay.core.schema.user import NewUserRole, Privilege
+from stustapay.core.schema.user import NewUserRole, NewUserToRole, Privilege
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 
+from ...core.schema.tree import Node
 from .conftest import LoginSupervisedUser
 
 
@@ -20,6 +21,7 @@ async def test_free_ticket_grant_with_vouchers(
     terminal_token: str,
     admin_token: str,
     cashier: Cashier,
+    event_node: Node,
     till: Till,
     till_layout: TillLayout,
     login_supervised_user: LoginSupervisedUser,
@@ -27,12 +29,14 @@ async def test_free_ticket_grant_with_vouchers(
 ):
     voucher_role = await user_service.create_user_role(
         token=admin_token,
+        node_id=event_node.id,
         new_role=NewUserRole(
             name="test-role", privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets]
         ),
     )
     await till_service.profile.update_profile(
         token=admin_token,
+        node_id=event_node.id,
         profile_id=till.active_profile_id,
         profile=NewTillProfile(
             name="test-profile",
@@ -44,10 +48,13 @@ async def test_free_ticket_grant_with_vouchers(
         ),
     )
 
-    await user_service.update_user_roles(
+    await user_service.associate_user_to_role(
         token=admin_token,
-        user_id=cashier.id,
-        role_names=[voucher_role.name],
+        node_id=event_node.id,
+        new_user_to_role=NewUserToRole(
+            user_id=cashier.id,
+            role_id=voucher_role.id,
+        ),
     )
     # after updating the cashier roles we need to log out and log in with the new role
     await login_supervised_user(cashier.user_tag_uid, voucher_role.id)
@@ -56,7 +63,9 @@ async def test_free_ticket_grant_with_vouchers(
     grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag.uid, initial_voucher_amount=3)
     success = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
     assert success
-    customer = await account_service.get_account_by_tag_uid(token=admin_token, user_tag_uid=volunteer_tag.uid)
+    customer = await account_service.get_account_by_tag_uid(
+        token=admin_token, node_id=event_node.id, user_tag_uid=volunteer_tag.uid
+    )
     assert customer is not None
     assert customer.vouchers == 3
 
@@ -68,6 +77,7 @@ async def test_free_ticket_grant_without_vouchers(
     terminal_token: str,
     admin_token: str,
     cashier: Cashier,
+    event_node: Node,
     till: Till,
     till_layout: TillLayout,
     login_supervised_user: LoginSupervisedUser,
@@ -75,15 +85,20 @@ async def test_free_ticket_grant_without_vouchers(
 ):
     voucher_role = await user_service.create_user_role(
         token=admin_token,
+        node_id=event_node.id,
         new_role=NewUserRole(name="test-role", is_privileged=False, privileges=[Privilege.supervised_terminal_login]),
     )
-    await user_service.update_user_roles(
+    await user_service.associate_user_to_role(
         token=admin_token,
-        user_id=cashier.id,
-        role_names=[voucher_role.name],
+        node_id=event_node.id,
+        new_user_to_role=NewUserToRole(
+            user_id=cashier.id,
+            role_id=voucher_role.id,
+        ),
     )
     await till_service.profile.update_profile(
         token=admin_token,
+        node_id=event_node.id,
         profile_id=till.active_profile_id,
         profile=NewTillProfile(
             name="test-profile",
@@ -106,6 +121,7 @@ async def test_free_ticket_grant_without_vouchers(
 
     await user_service.update_user_role_privileges(
         token=admin_token,
+        node_id=event_node.id,
         role_id=voucher_role.id,
         is_privileged=False,
         privileges=[Privilege.grant_free_tickets],
@@ -113,7 +129,9 @@ async def test_free_ticket_grant_without_vouchers(
 
     success = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
     assert success
-    customer = await account_service.get_account_by_tag_uid(token=admin_token, user_tag_uid=volunteer_tag.uid)
+    customer = await account_service.get_account_by_tag_uid(
+        token=admin_token, node_id=event_node.id, user_tag_uid=volunteer_tag.uid
+    )
     assert customer is not None
     assert customer.vouchers == 0
 
@@ -122,6 +140,7 @@ async def test_free_ticket_grant_without_vouchers(
 
     await user_service.update_user_role_privileges(
         token=admin_token,
+        node_id=event_node.id,
         role_id=voucher_role.id,
         is_privileged=False,
         privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets, Privilege.grant_vouchers],

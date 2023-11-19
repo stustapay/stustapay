@@ -46,6 +46,7 @@ export const TillRegistersRoutes = new RouteBuilder("tills/registers");
 export const TillStockingsRoutes = new RouteBuilder("tills/stockings");
 export const UserRoutes = new RouteBuilder("users");
 export const UserRoleRoutes = new RouteBuilder("users/roles");
+export const UserToRoleRoutes = new RouteBuilder("user-to-roles");
 export const TicketRoutes = new RouteBuilder("tickets");
 export const CashierRoutes = new RouteBuilder("cashiers");
 export const ProductRoutes = new RouteBuilder("products");

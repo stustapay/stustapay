@@ -4,7 +4,7 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -35,10 +35,9 @@ class TaxRateService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.tax_rate], event_only=True)
     @requires_user([Privilege.node_administration])
-    @requires_node()
     async def create_tax_rate(self, *, conn: Connection, node: Node, tax_rate: NewTaxRate) -> TaxRate:
-        # TODO: TREE visibility
         tax_rate_id = await conn.fetchval(
             "insert into tax_rate (node_id, name, rate, description) values ($1, $2, $3, $4) returning id",
             node.id,
@@ -51,22 +50,21 @@ class TaxRateService(DBService):
         return tax
 
     @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
     @requires_user()
-    @requires_node()
     async def list_tax_rates(self, *, conn: Connection, node: Node) -> list[TaxRate]:
         return await conn.fetch_many(TaxRate, "select * from tax_rate where node_id = any($1)", node.ids_to_event_node)
 
     @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
     @requires_user()
-    @requires_node()
     async def get_tax_rate(self, *, conn: Connection, node: Node, tax_rate_id: int) -> Optional[TaxRate]:
         return await _fetch_tax_rate(conn=conn, node=node, tax_rate_id=tax_rate_id)
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.tax_rate], event_only=True)
     @requires_user([Privilege.node_administration])
-    @requires_node()
     async def update_tax_rate(self, *, conn: Connection, node: Node, tax_rate_id: int, tax_rate: NewTaxRate) -> TaxRate:
-        # TODO: TREE visibility
         tax_id = await conn.fetchval(
             "update tax_rate set name = $1, rate = $2, description = $3 "
             "where id = $4 and node_id = any($5) returning id",
@@ -83,12 +81,10 @@ class TaxRateService(DBService):
         return updated_tax
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.tax_rate], event_only=True)
     @requires_user([Privilege.node_administration])
-    @requires_node()
-    async def delete_tax_rate(self, *, conn: Connection, tax_rate_id: int) -> bool:
-        # TODO: TREE visibility
+    async def delete_tax_rate(self, *, conn: Connection, node: Node, tax_rate_id: int) -> bool:
         result = await conn.execute(
-            "delete from tax_rate where id = $1",
-            tax_rate_id,
+            "delete from tax_rate where id = $1 and node_id = any($2)", tax_rate_id, node.ids_to_event_node
         )
         return result != "DELETE 0"

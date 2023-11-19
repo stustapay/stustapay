@@ -16,7 +16,6 @@ from stustapay.core.service.common.decorators import (
     requires_terminal,
     requires_user,
     with_db_transaction,
-    with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.transaction import book_transaction
@@ -63,8 +62,8 @@ class AccountService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def list_system_accounts(self, *, conn: Connection, node: Node) -> list[Account]:
         return await conn.fetch_many(
             Account,
@@ -73,8 +72,8 @@ class AccountService(DBService):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def get_account(self, *, conn: Connection, account_id: int) -> Account:
         # TODO: TREE visibility
         account = await get_account_by_id(conn=conn, account_id=account_id)
@@ -83,15 +82,15 @@ class AccountService(DBService):
         return account
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def get_account_by_tag_uid(self, *, conn: Connection, user_tag_uid: int) -> Optional[Account]:
         # TODO: TREE visibility
         return await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def find_accounts(self, *, conn: Connection, node: Node, search_term: str) -> list[Account]:
         value_as_int = None
         if re.match("^[A-Fa-f0-9]+$", search_term):
@@ -113,8 +112,8 @@ class AccountService(DBService):
         )
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def disable_account(self, *, conn: Connection, account_id: int):
         # TODO: TREE visibility
         row = await conn.fetchval("update account set user_tag_uid = null where id = $1 returning id", account_id)
@@ -122,8 +121,8 @@ class AccountService(DBService):
             raise NotFound(element_typ="account", element_id=str(account_id))
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def update_account_balance(
         self, *, conn: Connection, current_user: User, account_id: int, new_balance: float
     ) -> bool:
@@ -153,9 +152,9 @@ class AccountService(DBService):
         #     return False
         # return True
 
-    @with_retryable_db_transaction(read_only=False)
-    @requires_user([Privilege.node_administration])
+    @with_db_transaction(read_only=True)
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def update_account_vouchers(
         self, *, conn: Connection, current_user: User, node: Node, account_id: int, new_voucher_amount: int
     ) -> bool:
@@ -267,8 +266,8 @@ class AccountService(DBService):
         return account
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def update_account_comment(self, *, conn: Connection, account_id: int, comment: str) -> Account:
         # TODO: TREE visibility
         ret = await conn.fetchval("update account set comment = $1 where id = $2 returning id", comment, account_id)
@@ -294,8 +293,8 @@ class AccountService(DBService):
         await conn.execute("update user_tag set comment = $2 where uid = $1", old_user_tag_uid, comment)
 
     @with_db_transaction
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def switch_account_tag_uid_admin(
         self, *, conn: Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
     ):

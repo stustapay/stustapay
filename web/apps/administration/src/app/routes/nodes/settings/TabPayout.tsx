@@ -9,7 +9,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
 
-
 export const TabPayout: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
   nodeId,
   eventSettings,
@@ -34,13 +33,13 @@ export const TabPayout: React.FC<{ nodeId: number; eventSettings: RestrictedEven
     sepa_enabled: z.boolean(),
     sepa_sender_name: z.string(),
     sepa_sender_iban: z.string().superRefine((val, ctx) => {
-        if (!iban.isValid(val)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: t("settings.payout.ibanNotValid"),
-          });
-        }
-      }),
+      if (!iban.isValid(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t("settings.payout.ibanNotValid"),
+        });
+      }
+    }),
     sepa_description: z.string(),
     sepa_allowed_country_codes: z.array(z.string()).min(1),
   });
@@ -67,7 +66,6 @@ export const TabPayout: React.FC<{ nodeId: number; eventSettings: RestrictedEven
               checkboxes={true}
               formik={formik}
               options={Object.keys(iban.countries)}
-              getOptionKey={(iban) => iban}
               formatOption={(iban) => iban}
             />
 

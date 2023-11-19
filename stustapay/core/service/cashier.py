@@ -8,7 +8,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
 from stustapay.core.schema.order import OrderType, PaymentMethod
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege, User
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
@@ -135,14 +135,14 @@ class CashierService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def list_cashiers(self, *, conn: Connection, node: Node) -> list[Cashier]:
         return await conn.fetch_many(Cashier, "select * from cashier where node_id = any($1)", node.ids_to_event_node)
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def get_cashier(self, *, conn: Connection, node: Node, cashier_id: int) -> Optional[Cashier]:
         return await conn.fetch_maybe_one(
             Cashier, "select * from cashier where id = $1 and node_id = any($2)", cashier_id, node.ids_to_event_node
@@ -155,8 +155,8 @@ class CashierService(DBService):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def get_cashier_shifts(
         self, *, conn: Connection, current_user: User, node: Node, cashier_id: int
     ) -> list[CashierShift]:
@@ -181,8 +181,8 @@ class CashierService(DBService):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_user([Privilege.node_administration])
     @requires_node()
+    @requires_user([Privilege.node_administration])
     async def get_cashier_shift_stats(
         self,
         *,
@@ -230,8 +230,8 @@ class CashierService(DBService):
         return stats
 
     @with_retryable_db_transaction()
+    @requires_node(object_types=[ObjectType.user])
     @requires_user([Privilege.node_administration])
-    @requires_node()
     async def close_out_cashier(
         self, *, conn: Connection, current_user: CurrentUser, node: Node, cashier_id: int, close_out: CloseOut
     ) -> CloseOutResult:

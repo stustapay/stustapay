@@ -234,11 +234,11 @@ export const CashierCloseOut: React.FC = () => {
             </TableContainer>
             <Paper sx={{ mt: 2, p: 3 }}>
               <UserSelect
-                name="closingOutUserId"
                 label={t("closeOut.closingOutUser")}
                 value={formik.values.closingOutUserId}
                 onBlur={formik.handleBlur}
-                filterRole="finanzorga"
+                // TODO: readd filter once roles are again propagated with users
+                // filterRole="finanzorga"
                 onChange={(val) => formik.setFieldValue("closingOutUserId", val)}
                 error={formik.touched.closingOutUserId && !!formik.errors.closingOutUserId}
                 helperText={(formik.touched.closingOutUserId && formik.errors.closingOutUserId) as string}

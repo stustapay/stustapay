@@ -172,7 +172,7 @@ class Simulator:
 
                 r = random.choice([(row["id"], row["vouchers"]) for row in rows])
                 async with client.post(
-                    f"/accounts/{r[0]}/update-voucher-amount",
+                    f"/accounts/{r[0]}/update-voucher-amount?node_id={self.event_node_id}",
                     json={"new_voucher_amount": r[1] + random.randint(1, 8)},
                     headers=self.admin_headers,
                 ) as resp:
@@ -273,7 +273,9 @@ class Simulator:
     async def _preform_cashier_close_out(self, cashier_id: int) -> bool:
         async with aiohttp.ClientSession(base_url=self.admin_api_base_url) as client:
             self.logger.info(f"Closing out cashier with id {cashier_id = }")
-            async with client.get(f"/cashiers/{cashier_id}", headers=self.admin_headers) as resp:
+            async with client.get(
+                f"/cashiers/{cashier_id}?node_id={self.event_node_id}", headers=self.admin_headers
+            ) as resp:
                 if resp.status != 200:
                     self.logger.info(
                         f"Failed to get cashier detail for {cashier_id = }, {resp.status = } payload = {await resp.json()}"
@@ -292,7 +294,9 @@ class Simulator:
                 "closing_out_user_id": random.randint(1, 5),  # one of 5 finanzorgas
             }
             async with client.post(
-                f"/cashiers/{cashier_id}/close-out", json=payload, headers=self.admin_headers
+                f"/cashiers/{cashier_id}/close-out?node_id={self.event_node_id}",
+                json=payload,
+                headers=self.admin_headers,
             ) as resp:
                 if resp.status != 200:
                     self.logger.warning(f"Closing out cashier failed: {resp.status = }, payload = {await resp.json()}")

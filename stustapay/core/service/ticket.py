@@ -4,7 +4,7 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.ticket import NewTicket, Ticket
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -32,10 +32,9 @@ class TicketService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.ticket], event_only=True)
     @requires_user([Privilege.node_administration])
-    @requires_node()
     async def create_ticket(self, *, conn: Connection, node: Node, ticket: NewTicket) -> Ticket:
-        # TODO: TREE visibility
         ticket_metadata_id = await conn.fetchval(
             "insert into product_ticket_metadata (initial_top_up_amount) values ($1) returning id",
             ticket.initial_top_up_amount,
@@ -66,22 +65,21 @@ class TicketService(DBService):
         return created_ticket
 
     @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
     @requires_user()
-    @requires_node()
     async def list_tickets(self, *, conn: Connection, node: Node) -> list[Ticket]:
         return await conn.fetch_many(Ticket, "select * from ticket where node_id = any($1)", node.ids_to_event_node)
 
     @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
     @requires_user()
-    @requires_node()
     async def get_ticket(self, *, conn: Connection, node: Node, ticket_id: int) -> Optional[Ticket]:
         return await fetch_ticket(conn=conn, node=node, ticket_id=ticket_id)
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.ticket], event_only=True)
     @requires_user([Privilege.node_administration])
-    @requires_node()
     async def update_ticket(self, *, conn: Connection, node: Node, ticket_id: int, ticket: NewTicket) -> Ticket:
-        # TODO: TREE visibility
         ticket_metadata_id = await conn.fetchval(
             "select ticket_metadata_id from product where type = 'ticket' and id = $1 and node_id = any($2)",
             ticket_id,
@@ -114,11 +112,17 @@ class TicketService(DBService):
         return updated_ticket
 
     @with_db_transaction
+    @requires_node(object_types=[ObjectType.ticket], event_only=True)
     @requires_user([Privilege.node_administration])
-    @requires_node()
-    async def delete_ticket(self, *, conn: Connection, ticket_id: int) -> bool:
-        # TODO: TREE visibility
-        ticket_metadata_id = await conn.fetchval("select ticket_metadata_id from product where id = $1", ticket_id)
+    async def delete_ticket(self, *, conn: Connection, node: Node, ticket_id: int) -> bool:
+        ticket_metadata_id = await conn.fetchval(
+            "select ticket_metadata_id from product where id = $1 and node_id = any($2)",
+            ticket_id,
+            node.ids_to_event_node,
+        )
+        if ticket_metadata_id is None:
+            raise NotFound(element_typ="ticket", element_id=ticket_id)
+
         result = await conn.execute(
             "delete from product where id = $1",
             ticket_id,
