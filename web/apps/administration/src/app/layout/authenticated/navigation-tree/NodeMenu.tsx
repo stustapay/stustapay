@@ -4,7 +4,6 @@ import {
   AddShoppingCart as AddShoppingCartIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
   Nfc as NfcIcon,
-  Percent as PercentIcon,
   Person as PersonIcon,
   PointOfSale as PointOfSaleIcon,
   Shield as ShieldIcon,
@@ -51,10 +50,6 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("userToRoles")} labelIcon={PersonIcon} />);
   }
 
-  if (!node.computed_forbidden_objects_at_node.includes("tax_rate")) {
-    const id = `/node/${node.id}/tax-rates`;
-    items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("taxRates")} labelIcon={PercentIcon} />);
-  }
   if (!node.computed_forbidden_objects_at_node.includes("product")) {
     const id = `/node/${node.id}/products`;
     items.push(

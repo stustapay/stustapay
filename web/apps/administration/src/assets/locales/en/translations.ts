@@ -175,6 +175,7 @@ export const translations = {
   },
   overview: {
     title: "Overview",
+    createEvent: "Create new event under this node",
     fromTimestamp: "From",
     toTimestamp: "To",
     mostSoldProducts: "Most sold products",
@@ -229,6 +230,8 @@ export const translations = {
     localConfig: "Local settings",
     general: {
       tabLabel: "General",
+      name: "Name",
+      description: "Description",
       ust_id: "UST ID",
       max_account_balance: "Max account balance",
       currency_identifier: "Currency Identifier",
@@ -237,6 +240,8 @@ export const translations = {
       tabLabel: "Customer Portal",
       baseUrl: "Base URL of Customer Portal",
       contact_email: "Contact E-Mail",
+      data_privacy_url: "Data privacy URL",
+      about_page_url: "About page URL",
     },
     agb: {
       tabLabel: "AGB",

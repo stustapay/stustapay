@@ -1,16 +1,21 @@
 import { FormControl, FormControlLabel, FormHelperText, Switch, SwitchProps } from "@mui/material";
 import { FormikProps } from "formik";
 
-export interface FormSwitchProps<Values>
+export interface FormSwitchProps<Name extends string, Values>
   extends Omit<SwitchProps, "value" | "onChange" | "onBlur" | "error" | "helperText"> {
   label: string;
-  name: string;
+  name: Name;
   formik: FormikProps<Values>;
 }
 
-// TODO: figure out how to introduce strong typing such that the name must be a key valid for those formik props
-export function FormSwitch<Values>({ formik, label, name, ...props }: FormSwitchProps<Values>) {
-  const helperText = (formik.touched as any)[name] && (formik.errors as any)[name];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function FormSwitch<Name extends string, Values extends Partial<Record<Name, any>>>({
+  formik,
+  label,
+  name,
+  ...props
+}: FormSwitchProps<Name, Values>) {
+  const helperText = (formik.touched[name] && formik.errors[name]) as string | undefined;
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     formik.setFieldValue(name, event.target.checked, true);
@@ -18,10 +23,10 @@ export function FormSwitch<Values>({ formik, label, name, ...props }: FormSwitch
   };
 
   return (
-    <FormControl error={(formik.touched as any)[name] && !!(formik.errors as any)[name]}>
+    <FormControl error={formik.touched[name] && !!formik.errors[name]}>
       <FormControlLabel
         label={label}
-        control={<Switch name={name} onChange={handleChange} checked={(formik.values as any)[name]} {...props} />}
+        control={<Switch name={name} onChange={handleChange} checked={formik.values[name]} {...props} />}
       />
       {helperText && <FormHelperText>{helperText}</FormHelperText>}
     </FormControl>

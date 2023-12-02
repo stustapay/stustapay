@@ -2,7 +2,12 @@ from fastapi import APIRouter, Response
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTreeService
-from stustapay.core.schema.tree import Node, RestrictedEventSettings, UpdateEvent
+from stustapay.core.schema.tree import (
+    NewEvent,
+    Node,
+    RestrictedEventSettings,
+    UpdateEvent,
+)
 
 router = APIRouter(
     prefix="/tree",
@@ -14,6 +19,13 @@ router = APIRouter(
 @router.get("/")
 async def get_tree_for_current_user(token: CurrentAuthToken, tree_service: ContextTreeService) -> Node:
     return await tree_service.get_tree_for_current_user(token=token)
+
+
+@router.post("/nodes/{node_id}/create-event")
+async def create_event(
+    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, payload: NewEvent
+) -> Node:
+    return await tree_service.create_event(token=token, node_id=node_id, event=payload)
 
 
 @router.post("/events/{node_id}")

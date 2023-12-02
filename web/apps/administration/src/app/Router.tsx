@@ -5,7 +5,7 @@ import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
 import { Login, Logout, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
-import { FestivalOverview, MoneyOverview, NodePageLayout, Settings, SettingsLegacy } from "./routes/nodes";
+import { EventCreate, NodeOverview, MoneyOverview, NodePageLayout, NodeSettings, SettingsLegacy } from "./routes/nodes";
 import { OrderDetail, OrderList, SaleEdit } from "./routes/orders";
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
 import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
@@ -70,7 +70,7 @@ const router = createBrowserRouter([
         path: "node/:nodeId",
         element: <NodePageLayout />,
         children: [
-          { index: true, element: <FestivalOverview /> },
+          { index: true, element: <NodeOverview /> },
           { path: "stats", element: <MoneyOverview /> },
           {
             path: "settings-legacy",
@@ -78,7 +78,7 @@ const router = createBrowserRouter([
           },
           {
             path: "settings",
-            element: <Settings />,
+            element: <NodeSettings />,
           },
           {
             path: "payout-runs",
@@ -92,7 +92,27 @@ const router = createBrowserRouter([
             path: "payout-runs/:payoutRunId",
             element: <PayoutRunDetail />,
           },
+          {
+            path: "tax-rates",
+            element: <TaxRateList />,
+          },
+          {
+            path: "tax-rates/new",
+            element: <TaxRateCreate />,
+          },
+          {
+            path: "tax-rates/:taxRateId/edit",
+            element: <TaxRateUpdate />,
+          },
         ],
+      },
+      {
+        path: "node/:nodeId/create-event",
+        element: (
+          <PrivilegeGuard privilege="node_administration">
+            <EventCreate />
+          </PrivilegeGuard>
+        ),
       },
       {
         path: "node/:nodeId/products",
@@ -157,24 +177,6 @@ const router = createBrowserRouter([
           {
             path: ":cashierId/shifts/:shiftId",
             element: <CashierShiftDetail />,
-          },
-        ],
-      },
-      {
-        path: "node/:nodeId/tax-rates",
-        element: <PrivilegeGuard privilege="node_administration" />,
-        children: [
-          {
-            index: true,
-            element: <TaxRateList />,
-          },
-          {
-            path: "new",
-            element: <TaxRateCreate />,
-          },
-          {
-            path: ":taxRateName/edit",
-            element: <TaxRateUpdate />,
           },
         ],
       },

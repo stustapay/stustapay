@@ -10,3 +10,4 @@ export * from "./ticket";
 export * from "./till";
 export * from "./tse";
 export * from "./user";
+export * from "./currency";

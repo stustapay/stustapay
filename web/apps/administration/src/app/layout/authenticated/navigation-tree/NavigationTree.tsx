@@ -71,16 +71,16 @@ export const NavigationTree: React.FC = () => {
     }
   }, [location, tree, setSelected, dispatch]);
 
-  const renderTree = (rootNode: Node) => (
+  const renderTree = (node: Node) => (
     <NavigationTreeItem
-      key={rootNode.id}
-      nodeId={`/node/${rootNode.id}`}
-      to={`/node/${rootNode.id}`}
-      labelText={rootNode.name}
-      labelIcon={getNavigationTreeItemLabel(rootNode)}
+      key={node.id}
+      nodeId={`/node/${node.id}`}
+      to={`/node/${node.id}`}
+      labelText={node.name}
+      labelIcon={getNavigationTreeItemLabel(node)}
     >
-      <NodeMenu node={rootNode} />
-      {Array.isArray(rootNode.children) ? rootNode.children.map((node) => renderTree(node)) : null}
+      <NodeMenu node={node} />
+      {Array.isArray(node.children) ? node.children.map((node) => renderTree(node)) : null}
     </NavigationTreeItem>
   );
 
@@ -95,7 +95,6 @@ export const NavigationTree: React.FC = () => {
       onNodeSelect={handleSelect}
       sx={{ flexGrow: 1, overflowX: "auto" }}
     >
-      {/* we do not explicitly display the root node */}
       {renderTree(tree)}
     </TreeView>
   );

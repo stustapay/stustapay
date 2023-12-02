@@ -3,20 +3,31 @@ import { Button, LinearProgress, Stack } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { Form, Formik, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import { Receipt as ReceiptIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
 
-const BonSettingsSchema = z.object({
+export const BonSettingsSchema = z.object({
   bon_title: z.string(),
   bon_issuer: z.string(),
   bon_address: z.string(),
 });
 
-type BonSettings = z.infer<typeof BonSettingsSchema>;
+export type BonSettings = z.infer<typeof BonSettingsSchema>;
+
+export const BonSettingsForm: React.FC<FormikProps<BonSettings>> = (formik) => {
+  const { t } = useTranslation();
+  return (
+    <>
+      <FormTextField label={t("settings.bon.title")} name="bon_title" formik={formik} />
+      <FormTextField label={t("settings.bon.issuer")} name="bon_issuer" formik={formik} />
+      <FormTextField label={t("settings.bon.address")} name="bon_address" formik={formik} />
+    </>
+  );
+};
 
 export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
   nodeId,
@@ -67,9 +78,7 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
         {(formik) => (
           <Form onSubmit={formik.handleSubmit}>
             <Stack spacing={2}>
-              <FormTextField label={t("settings.bon.title")} name="bon_title" formik={formik} />
-              <FormTextField label={t("settings.bon.issuer")} name="bon_issuer" formik={formik} />
-              <FormTextField label={t("settings.bon.address")} name="bon_address" formik={formik} />
+              <BonSettingsForm {...formik} />
               {formik.isSubmitting && <LinearProgress />}
               <Button
                 type="submit"

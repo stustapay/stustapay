@@ -1,17 +1,21 @@
 import { NumericInput, NumericInputProps } from "@stustapay/components";
 import { FormikProps } from "formik";
 
-export interface FormNumericInputProps<Values>
+export interface FormNumericInputProps<Name extends string, Values>
   extends Omit<NumericInputProps, "value" | "onChange" | "error" | "helperText"> {
-  name: string;
+  name: Name;
   formik: FormikProps<Values>;
 }
 
-// TODO: figure out how to introduce strong typing such that the name must be a key valid for those formik props
-export function FormNumericInput<Values>({ formik, name, ...props }: FormNumericInputProps<Values>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function FormNumericInput<Name extends string, Values extends Partial<Record<Name, any>>>({
+  formik,
+  name,
+  ...props
+}: FormNumericInputProps<Name, Values>) {
   const handleChange = (value: number | null) => {
-    formik.setFieldValue(name, value);
-    formik.setFieldTouched(name);
+    formik.setFieldValue(name, value, true);
+    formik.setFieldTouched(name, true, false);
   };
 
   return (
@@ -20,9 +24,9 @@ export function FormNumericInput<Values>({ formik, name, ...props }: FormNumeric
       variant={props.variant ?? "standard"}
       fullWidth={props.fullWidth ?? true}
       onChange={handleChange}
-      value={(formik.values as any)[name]}
-      error={(formik.touched as any)[name] && !!(formik.errors as any)[name]}
-      helperText={(formik.touched as any)[name] && (formik.errors as any)[name]}
+      value={formik.values[name]}
+      error={formik.touched[name] && !!formik.errors[name]}
+      helperText={(formik.touched[name] && formik.errors[name]) as string}
       {...props}
     />
   );
