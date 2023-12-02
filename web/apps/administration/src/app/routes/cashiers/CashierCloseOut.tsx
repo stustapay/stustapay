@@ -176,7 +176,7 @@ export const CashierCloseOut: React.FC = () => {
                   <TableRow>
                     <TableCell align="right">{t("closeOut.bill10Euro")}</TableCell>
                     <TableCell>
-                      <FormNumericInput fullWidth name="bill10Eur0" formik={formik} />
+                      <FormNumericInput fullWidth name="bill10Euro" formik={formik} />
                     </TableCell>
                     <TableCell align="right">= {formatCurrency(formik.values.bill10Euro * 10)}</TableCell>
                   </TableRow>

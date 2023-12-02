@@ -2,18 +2,44 @@ import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
-import { Form, Formik, FormikHelpers } from "formik";
+import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
 
-const CustomerPortalSettingsSchema = z.object({
+export const CustomerPortalSettingsSchema = z.object({
   customer_portal_url: z.string().url(),
   customer_portal_contact_email: z.string(),
+  customer_portal_about_page_url: z.string().url(),
+  customer_portal_data_privacy_url: z.string().url(),
 });
 
-type CustomerPortalSettings = z.infer<typeof CustomerPortalSettingsSchema>;
+export type CustomerPortalSettings = z.infer<typeof CustomerPortalSettingsSchema>;
+
+export const CustomerPortalSettingsForm: React.FC<FormikProps<CustomerPortalSettings>> = (formik) => {
+  const { t } = useTranslation();
+  return (
+    <>
+      <FormTextField label={t("settings.customerPortal.baseUrl")} name="customer_portal_url" formik={formik} />
+      <FormTextField
+        label={t("settings.customerPortal.contact_email")}
+        name="customer_portal_contact_email"
+        formik={formik}
+      />
+      <FormTextField
+        label={t("settings.customerPortal.about_page_url")}
+        name="customer_portal_about_page_url"
+        formik={formik}
+      />
+      <FormTextField
+        label={t("settings.customerPortal.data_privacy_url")}
+        name="customer_portal_data_privacy_url"
+        formik={formik}
+      />
+    </>
+  );
+};
 
 export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
   nodeId,
@@ -45,13 +71,7 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
       {(formik) => (
         <Form onSubmit={formik.handleSubmit}>
           <Stack spacing={2}>
-            <FormTextField label={t("settings.customerPortal.baseUrl")} name="customer_portal_url" formik={formik} />
-            <FormTextField
-              label={t("settings.customerPortal.contact_email")}
-              name="customer_portal_contact_email"
-              formik={formik}
-            />
-
+            <CustomerPortalSettingsForm {...formik} />
             {formik.isSubmitting && <LinearProgress />}
             <Button
               type="submit"

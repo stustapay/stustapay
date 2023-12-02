@@ -1,14 +1,18 @@
 import { TextField, TextFieldProps } from "@mui/material";
 import { FormikProps } from "formik";
 
-export interface FormTextFieldProps<Values>
+export interface FormTextFieldProps<Name extends string, Values>
   extends Omit<TextFieldProps, "value" | "onChange" | "onBlur" | "error" | "helperText"> {
-  name: string;
+  name: Name;
   formik: FormikProps<Values>;
 }
 
-// TODO: figure out how to introduce strong typing such that the name must be a key valid for those formik props
-export function FormTextField<Values>({ formik, name, ...props }: FormTextFieldProps<Values>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function FormTextField<Name extends string, Values extends Partial<Record<Name, any>>>({
+  formik,
+  name,
+  ...props
+}: FormTextFieldProps<Name, Values>) {
   return (
     <TextField
       name={name}
@@ -16,9 +20,9 @@ export function FormTextField<Values>({ formik, name, ...props }: FormTextFieldP
       fullWidth={props.fullWidth ?? true}
       onChange={formik.handleChange}
       onBlur={formik.handleBlur}
-      value={(formik.values as any)[name] ?? ""}
-      error={(formik.touched as any)[name] && !!(formik.errors as any)[name]}
-      helperText={(formik.touched as any)[name] && (formik.errors as any)[name]}
+      value={formik.values[name] ?? ""}
+      error={formik.touched[name] && !!formik.errors[name]}
+      helperText={(formik.touched[name] && formik.errors[name]) as string}
       {...props}
     />
   );

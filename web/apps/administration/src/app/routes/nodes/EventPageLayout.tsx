@@ -1,15 +1,16 @@
-import { useNode } from "@/api";
+import { Node } from "@/api";
+import { TaxRateRoutes } from "@/app/routes";
 import {
   Dashboard as DashboardIcon,
   Leaderboard as LeaderboardIcon,
+  Money as MoneyIcon,
+  Percent as PercentIcon,
   Settings as SettingsIcon,
 } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
-import { EventPageLayout } from "./EventPageLayout";
+import { Outlet, Link as RouterLink, useLocation } from "react-router-dom";
 
 const getActiveTab = (nodeId: number, location: string) => {
   if (location.startsWith(`/node/${nodeId}/stats`)) {
@@ -18,27 +19,21 @@ const getActiveTab = (nodeId: number, location: string) => {
   if (location.startsWith(`/node/${nodeId}/settings`)) {
     return `/node/${nodeId}/settings`;
   }
+  if (location.startsWith(`/node/${nodeId}/settings-legacy`)) {
+    return `/node/${nodeId}/settings-legacy`;
+  }
+  if (location.startsWith(`/node/${nodeId}/payout-runs`)) {
+    return `/node/${nodeId}/payout-runs`;
+  }
+  if (location.startsWith(`/node/${nodeId}/tax-rates`)) {
+    return `/node/${nodeId}/tax-rates`;
+  }
   return `/node/${nodeId}`;
 };
 
-export const NodePageLayout: React.FC = () => {
+export const EventPageLayout: React.FC<{ node: Node }> = ({ node }) => {
   const { t } = useTranslation();
   const location = useLocation();
-  const { nodeId } = useParams();
-  const { node } = useNode({ nodeId: Number(nodeId) });
-
-  if (!nodeId) {
-    // TODO: return error page / redirect
-    return null;
-  }
-
-  if (!node) {
-    return <Loading />;
-  }
-
-  if (node.event != null) {
-    return <EventPageLayout node={node} />;
-  }
   const nodeUrl = `/node/${node.id}`;
 
   return (
@@ -56,16 +51,30 @@ export const NodePageLayout: React.FC = () => {
           iconPosition="start"
           to={nodeUrl}
         />
-        {node.event_node_id != null && (
-          <Tab
-            label={t("nodes.statistics")}
-            component={RouterLink}
-            value={`${nodeUrl}/stats`}
-            icon={<LeaderboardIcon />}
-            iconPosition="start"
-            to={`${nodeUrl}/stats`}
-          />
-        )}
+        <Tab
+          label={t("nodes.statistics")}
+          component={RouterLink}
+          value={`${nodeUrl}/stats`}
+          icon={<LeaderboardIcon />}
+          iconPosition="start"
+          to={`${nodeUrl}/stats`}
+        />
+        <Tab
+          label="Tax Rates"
+          component={RouterLink}
+          value={TaxRateRoutes.list()}
+          icon={<PercentIcon />}
+          iconPosition="start"
+          to={TaxRateRoutes.list()}
+        />
+        <Tab
+          label="Payouts"
+          component={RouterLink}
+          value={`${nodeUrl}/payout-runs`}
+          icon={<MoneyIcon />}
+          iconPosition="start"
+          to={`${nodeUrl}/payout-runs`}
+        />
         <Tab
           label={t("nodes.settings")}
           component={RouterLink}

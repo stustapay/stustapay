@@ -1,5 +1,5 @@
 import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
-import { Button, LinearProgress, Stack } from "@mui/material";
+import { Button, InputAdornment, LinearProgress, Stack } from "@mui/material";
 import { FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
@@ -7,9 +7,11 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import { CurrencyIdentifierSelect } from "@/components/features";
+import { CurrencyIdentifierSchema, getCurrencySymbolForIdentifier } from "@stustapay/models";
 
 const GeneralSettingsSchema = z.object({
-  currency_identifier: z.literal("EUR"),
+  currency_identifier: CurrencyIdentifierSchema,
   max_account_balance: z.number(),
   ust_id: z.string(),
 });
@@ -48,14 +50,23 @@ export const TabGeneral: React.FC<{ nodeId: number; eventSettings: RestrictedEve
       {(formik) => (
         <Form onSubmit={formik.handleSubmit}>
           <Stack spacing={2}>
-            <FormTextField
+            <CurrencyIdentifierSelect
               label={t("settings.general.currency_identifier")}
-              name="currency_identifier"
-              formik={formik}
+              value={formik.values.currency_identifier}
+              onChange={(val) => formik.setFieldValue("currency_identifier", val)}
+              error={formik.touched.currency_identifier && !!formik.errors.currency_identifier}
+              helperText={(formik.touched.currency_identifier && formik.errors.currency_identifier) as string}
             />
             <FormNumericInput
               label={t("settings.general.max_account_balance")}
               name="max_account_balance"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {getCurrencySymbolForIdentifier(formik.values.currency_identifier)}
+                  </InputAdornment>
+                ),
+              }}
               formik={formik}
             />
             <FormTextField label={t("settings.general.ust_id")} name="ust_id" formik={formik} />

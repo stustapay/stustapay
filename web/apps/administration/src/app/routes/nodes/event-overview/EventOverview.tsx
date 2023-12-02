@@ -8,7 +8,7 @@ import { ProductStatsCard } from "./ProductStatsCard";
 import { DepositStatsCard } from "./DepositStatsCard";
 import { VoucherStatsCard } from "./VoucherStatsCard";
 
-export const FestivalOverview: React.FC = () => {
+export const EventOverview: React.FC = () => {
   const { t } = useTranslation();
   const [fromTimestamp, setFromTimestamp] = React.useState<DateTime | undefined>(undefined);
   const [toTimestamp, setToTimestamp] = React.useState<DateTime | undefined>(undefined);
