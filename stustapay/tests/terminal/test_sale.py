@@ -179,6 +179,8 @@ async def test_basic_sale_flow(
     assert pending_sale.old_balance == START_BALANCE
     assert pending_sale.item_count == 2
     assert len(pending_sale.line_items) == 2
+    assert sale_products.beer_product.price is not None
+    assert sale_products.deposit_product.price is not None
     assert pending_sale.total_price == 2 * sale_products.beer_product.price + 2 * sale_products.deposit_product.price
     assert pending_sale.new_balance == START_BALANCE - pending_sale.total_price
     completed_sale = await order_service.book_sale(token=terminal_token, new_sale=new_sale)
@@ -236,6 +238,7 @@ async def test_returnable_products(
         token=terminal_token,
         new_sale=new_sale,
     )
+    assert sale_products.deposit_product.price is not None
     assert pending_sale.total_price == -sale_products.deposit_product.price
 
 
@@ -253,6 +256,8 @@ async def test_basic_sale_flow_with_deposit(
 ):
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     # this test also checks if we can temporarily go below 0 balance due to different account bookings
+    assert sale_products.beer_product.price is not None
+    assert sale_products.deposit_product.price is not None
     start_balance = sale_products.beer_product.price * 5.0 - sale_products.deposit_product.price / 2.0
     await db_connection.execute("update account set balance = $1 where id = $2", start_balance, customer.account_id)
     sale_exit_start_balance = await get_system_account_balance(AccountType.sale_exit)
@@ -315,6 +320,7 @@ async def test_basic_sale_flow_with_only_deposit_return(
     assert pending_sale.old_balance == START_BALANCE
     # our initial order gets aggregated into one line item for beer and one for deposit
     assert len(pending_sale.line_items) == 1
+    assert sale_products.deposit_product.price is not None
     assert pending_sale.total_price == -3 * sale_products.deposit_product.price
     assert pending_sale.new_balance == START_BALANCE - pending_sale.total_price
     completed_sale = await order_service.book_sale(token=terminal_token, new_sale=new_sale)
@@ -337,6 +343,7 @@ async def test_deposit_returns_cannot_exceed_account_limit(
 ):
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     max_limit = event.max_account_balance
+    assert sale_products.deposit_product.price is not None
     n_deposits = int(max_limit / sale_products.deposit_product.price) + 3
     new_sale = NewSale(
         uuid=uuid.uuid4(),
@@ -375,6 +382,7 @@ async def test_basic_sale_flow_with_vouchers(
         new_sale=new_sale,
     )
     assert pending_sale.old_balance == 100
+    assert sale_products.deposit_product.price is not None
     assert pending_sale.new_balance == 100 - sale_products.deposit_product.price * 3
     assert pending_sale.item_count == 3  # rabatt + bier + pfand
     assert len(pending_sale.line_items) == 3
@@ -409,6 +417,8 @@ async def test_basic_sale_flow_with_fixed_vouchers(
     )
     assert 3 == pending_sale.used_vouchers
     assert 0 == pending_sale.new_voucher_balance
+    assert sale_products.beer_product_full.price is not None
+    assert sale_products.deposit_product.price is not None
     assert sale_products.beer_product_full.price + sale_products.deposit_product.price * 4 == pending_sale.total_price
 
     new_sale.used_vouchers = 4
@@ -423,6 +433,7 @@ async def test_basic_sale_flow_with_fixed_vouchers(
         new_sale=new_sale,
     )
 
+    assert sale_products.beer_product.price is not None
     assert (
         sale_products.beer_product_full.price
         + sale_products.deposit_product.price * 4

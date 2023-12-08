@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, computed_field
 
 from stustapay.core.config import CoreConfig
 from stustapay.core.schema.config import SEPAConfig
-from stustapay.core.schema.user import UserRole, Privilege
+from stustapay.core.schema.user import Privilege, UserRole
 
 ROOT_NODE_ID = 0
 INITIAL_EVENT_NODE_ID = 1
@@ -140,7 +140,7 @@ class NewEvent(NewNode, UpdateEvent):
 
 class NodeSeenByUser(Node):
     roles_at_node: list[UserRole]
-    children: list["NodeSeenByUser"]
+    children: list["NodeSeenByUser"]  # type: ignore
 
     @computed_field  # type: ignore[misc]
     @property

@@ -1,6 +1,11 @@
 from pydantic import BaseModel
 
-from stustapay.core.schema.tree import Language, Node, RestrictedEventSettings, NodeSeenByUser
+from stustapay.core.schema.tree import (
+    Language,
+    Node,
+    NodeSeenByUser,
+    RestrictedEventSettings,
+)
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.common.error import NotFound
 from stustapay.framework.database import Connection

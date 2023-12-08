@@ -10,6 +10,7 @@ from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
+
 from .conftest import LoginSupervisedUser
 
 

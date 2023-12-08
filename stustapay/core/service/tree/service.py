@@ -8,9 +8,9 @@ from stustapay.core.schema.tree import (
     NewEvent,
     NewNode,
     Node,
+    NodeSeenByUser,
     ObjectType,
     RestrictedEventSettings,
-    NodeSeenByUser,
 )
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService

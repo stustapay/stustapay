@@ -5,9 +5,9 @@ from stustapay.core.http.context import ContextTreeService
 from stustapay.core.schema.tree import (
     NewEvent,
     Node,
+    NodeSeenByUser,
     RestrictedEventSettings,
     UpdateEvent,
-    NodeSeenByUser,
 )
 
 router = APIRouter(
