@@ -8,8 +8,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 import { TillRegisterForm } from "./TillRegisterForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
-export const TillRegisterUpdate: React.FC = () => {
+export const TillRegisterUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { registerId } = useParams();
@@ -43,4 +44,4 @@ export const TillRegisterUpdate: React.FC = () => {
       form={TillRegisterForm}
     />
   );
-};
+});

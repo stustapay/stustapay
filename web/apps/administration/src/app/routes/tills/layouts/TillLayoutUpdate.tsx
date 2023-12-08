@@ -7,8 +7,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 import { TillLayoutChange } from "./TillLayoutChange";
+import { withPrivilegeGuard } from "@/app/layout";
 
-export const TillLayoutUpdate: React.FC = () => {
+export const TillLayoutUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { layoutId } = useParams();
   const { currentNode } = useCurrentNode();
@@ -36,4 +37,4 @@ export const TillLayoutUpdate: React.FC = () => {
       onSubmit={(layout) => updateLayout({ nodeId: currentNode.id, layoutId: layout.id, newTillLayout: layout })}
     />
   );
-};
+});

@@ -18,6 +18,7 @@ import { CurrencyIdentifierSchema, getCurrencySymbolForIdentifier } from "@stust
 import { CurrencyIdentifierSelect } from "@/components/features";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const GeneralFormSchema = z.object({
   name: z.string(),
@@ -128,7 +129,7 @@ const steps = [generalFormStep, customerPortalFormStep, sumupFormStep, bonFormSt
 
 type FormValues = GeneralFormValues & SumUpSettings & BonSettings & CustomerPortalSettings & PayoutSettings;
 
-export const EventCreate: React.FC = () => {
+export const EventCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
   const [createEvent] = useCreateEventMutation();
@@ -146,4 +147,4 @@ export const EventCreate: React.FC = () => {
       <StepperForm steps={steps} onSubmit={handleSubmit} />
     </Container>
   );
-};
+});

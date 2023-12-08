@@ -1190,7 +1190,7 @@ export type PayoutRunSepaXmlExportApiArg = {
   nodeId?: number | null;
   createSepaXmlPayload: CreateSepaXmlPayload;
 };
-export type GetTreeForCurrentUserApiResponse = /** status 200 Successful Response */ Node;
+export type GetTreeForCurrentUserApiResponse = /** status 200 Successful Response */ NodeSeenByUserRead;
 export type GetTreeForCurrentUserApiArg = void;
 export type CreateEventApiResponse = /** status 200 Successful Response */ Node;
 export type CreateEventApiArg = {
@@ -2051,6 +2051,41 @@ export type ObjectType =
   | "tse"
   | "order"
   | "account";
+export type NodeSeenByUser = {
+  id: number;
+  parent: number;
+  name: string;
+  description: string;
+  event: PublicEventSettings | null;
+  path: string;
+  parent_ids: number[];
+  event_node_id: number | null;
+  parents_until_event_node: number[] | null;
+  forbidden_objects_at_node: ObjectType[];
+  computed_forbidden_objects_at_node: ObjectType[];
+  forbidden_objects_in_subtree: ObjectType[];
+  computed_forbidden_objects_in_subtree: ObjectType[];
+  children: NodeSeenByUser[];
+  roles_at_node: UserRole[];
+};
+export type NodeSeenByUserRead = {
+  id: number;
+  parent: number;
+  name: string;
+  description: string;
+  event: PublicEventSettings | null;
+  path: string;
+  parent_ids: number[];
+  event_node_id: number | null;
+  parents_until_event_node: number[] | null;
+  forbidden_objects_at_node: ObjectType[];
+  computed_forbidden_objects_at_node: ObjectType[];
+  forbidden_objects_in_subtree: ObjectType[];
+  computed_forbidden_objects_in_subtree: ObjectType[];
+  children: NodeSeenByUserRead[];
+  roles_at_node: UserRole[];
+  privileges_at_node: Privilege[];
+};
 export type Node = {
   id: number;
   parent: number;

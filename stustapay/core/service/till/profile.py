@@ -55,7 +55,7 @@ class TillProfileService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user()
     async def list_profiles(self, *, conn: Connection, node: Node) -> list[TillProfile]:
         return await conn.fetch_many(
             TillProfile, "select * from till_profile where node_id = any($1)", node.ids_to_event_node
@@ -63,7 +63,7 @@ class TillProfileService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user()
     async def get_profile(self, *, conn: Connection, node: Node, profile_id: int) -> Optional[TillProfile]:
         return await _get_profile(conn=conn, node=node, profile_id=profile_id)
 

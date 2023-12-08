@@ -6,6 +6,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useCreateTicketMutation } from "../../../api";
 import { TicketForm } from "./TicketForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const initialValues: NewTicket = {
   name: "",
@@ -16,7 +17,7 @@ const initialValues: NewTicket = {
   restrictions: [],
 };
 
-export const TicketCreate: React.FC = () => {
+export const TicketCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createTicket] = useCreateTicketMutation();
@@ -32,4 +33,4 @@ export const TicketCreate: React.FC = () => {
       form={TicketForm}
     />
   );
-};
+});

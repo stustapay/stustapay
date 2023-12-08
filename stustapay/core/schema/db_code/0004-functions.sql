@@ -104,3 +104,39 @@ $$ language sql
     stable
     security invoker
     set search_path = "$user", public;
+
+create or replace function node_with_user_roles(
+    user_id bigint
+)
+returns table (
+    id bigint,
+    parent bigint,
+    name text,
+    description text,
+    event_id bigint,
+    path text,
+    parent_ids bigint array,
+    event_node_id bigint,
+    parents_until_event_node bigint array,
+    forbidden_objects_at_node varchar(255) array,
+    computed_forbidden_objects_at_node varchar(255) array,
+    forbidden_objects_in_subtree varchar(255) array,
+    computed_forbidden_objects_in_subtree varchar(255) array,
+    event json,
+    roles_at_node json
+)
+as
+$$
+select
+    n.*,
+    coalesce((select json_agg(roles) from (
+        select r.*
+        from user_to_role utr
+        join user_role_with_privileges r on utr.role_id = r.id
+        where (utr.node_id = any(n.parent_ids) or utr.node_id = n.id) and utr.user_id = node_with_user_roles.user_id
+    ) roles), '[]'::json) as roles_at_node
+from node_with_allowed_objects n
+$$ language sql
+    stable
+    security invoker
+    set search_path = "$user", public;

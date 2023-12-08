@@ -6,12 +6,13 @@ import { NewTillRegister, NewTillRegisterSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { TillRegisterForm } from "./TillRegisterForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const initialValues: NewTillRegister = {
   name: "",
 };
 
-export const TillRegisterCreate: React.FC = () => {
+export const TillRegisterCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createRegister] = useCreateRegisterMutation();
@@ -27,4 +28,4 @@ export const TillRegisterCreate: React.FC = () => {
       form={TillRegisterForm}
     />
   );
-};
+});

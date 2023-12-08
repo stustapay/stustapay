@@ -1,4 +1,5 @@
 import { useChangeUserPasswordMutation } from "@/api";
+import { withPrivilegeGuard } from "@/app/layout";
 import { UserRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
@@ -48,7 +49,7 @@ const initialValues: PasswordChange = {
   new_password_confirm: "",
 };
 
-export const UserPasswordChange: React.FC = () => {
+export const UserPasswordChange: React.FC = withPrivilegeGuard("user_management", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { userId } = useParams();
@@ -71,4 +72,4 @@ export const UserPasswordChange: React.FC = () => {
       form={UserUpdateForm}
     />
   );
-};
+});

@@ -1,4 +1,5 @@
 import { selectTillRegisterById, useListCashRegistersAdminQuery, useTransferRegisterMutation } from "@/api";
+import { withPrivilegeGuard } from "@/app/layout";
 import { TillRegistersRoutes } from "@/app/routes";
 import { UserSelect } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
@@ -17,7 +18,7 @@ const TillTransferSchema = z.object({
 
 type FormValues = z.infer<typeof TillTransferSchema>;
 
-export const TillRegisterTransfer: React.FC = () => {
+export const TillRegisterTransfer: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { currentNode } = useCurrentNode();
@@ -113,4 +114,4 @@ export const TillRegisterTransfer: React.FC = () => {
       )}
     </Paper>
   );
-};
+});

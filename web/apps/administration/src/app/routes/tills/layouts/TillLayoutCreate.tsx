@@ -4,6 +4,7 @@ import { NewTillLayout, NewTillLayoutSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { TillLayoutChange } from "./TillLayoutChange";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const initialValues: NewTillLayout = {
   name: "",
@@ -12,7 +13,7 @@ const initialValues: NewTillLayout = {
   ticket_ids: null,
 };
 
-export const TillLayoutCreate: React.FC = () => {
+export const TillLayoutCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createLayout] = useCreateTillLayoutMutation();
@@ -26,4 +27,4 @@ export const TillLayoutCreate: React.FC = () => {
       onSubmit={(layout) => createLayout({ nodeId: currentNode.id, newTillLayout: layout })}
     />
   );
-};
+});

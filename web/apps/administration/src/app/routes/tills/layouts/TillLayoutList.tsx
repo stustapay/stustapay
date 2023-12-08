@@ -1,7 +1,7 @@
 import { selectTillLayoutAll, useDeleteTillLayoutMutation, useListTillLayoutsQuery } from "@/api";
 import { TillLayoutRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode, useRenderNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -14,6 +14,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 export const TillLayoutList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const canManageNode = useCurrentUserHasPrivilege(TillLayoutRoutes.privilege);
   const navigate = useNavigate();
 
   const { layouts, isLoading: isTillsLoading } = useListTillLayoutsQuery(
@@ -68,7 +69,10 @@ export const TillLayoutList: React.FC = () => {
       valueFormatter: ({ value }) => renderNode(value),
       flex: 1,
     },
-    {
+  ];
+
+  if (canManageNode) {
+    columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
@@ -87,8 +91,8 @@ export const TillLayoutList: React.FC = () => {
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
-    },
-  ];
+    });
+  }
 
   return (
     <ListLayout title={t("layout.layouts")} routes={TillLayoutRoutes}>

@@ -1,7 +1,7 @@
 import { selectUserAll, useDeleteUserMutation, useListUsersQuery, UserRead } from "@/api";
 import { UserRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode, useRenderNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -14,6 +14,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 export const UserList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const canManageUsers = useCurrentUserHasPrivilege(UserRoutes.privilege);
   const navigate = useNavigate();
 
   const { users, isLoading } = useListUsersQuery(
@@ -84,7 +85,10 @@ export const UserList: React.FC = () => {
       valueFormatter: ({ value }) => renderNode(value),
       flex: 1,
     },
-    {
+  ];
+
+  if (canManageUsers) {
+    columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
@@ -103,8 +107,8 @@ export const UserList: React.FC = () => {
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
-    },
-  ];
+    });
+  }
 
   return (
     <ListLayout title={t("users")} routes={UserRoutes}>

@@ -207,7 +207,9 @@ def requires_user(
 
                 if privileges:
                     if not any([p.value in user_privileges for p in privileges]):
-                        raise AccessDenied(f"user does not have any of the required privileges: {privileges}")
+                        raise AccessDenied(
+                            f"user does not have any of the required privileges: {[p.value for p in privileges]}"
+                        )
 
             if "current_user" in original_signature.parameters:
                 kwargs["current_user"] = user

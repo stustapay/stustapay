@@ -9,20 +9,20 @@ import {
 } from "@/api";
 import { UserRoleRoutes, UserRoutes, UserToRoleRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode, useRenderNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
+import { Delete as DeleteIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { formatUserTagUid, getUserName } from "@stustapay/models";
+import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 
 export const UserToRoleList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const navigate = useNavigate();
+  const canManageNode = useCurrentUserHasPrivilege(UserToRoleRoutes.privilege);
 
   const { data: userToRoles, isLoading } = useListUserToRoleQuery({ nodeId: currentNode.id });
   const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
@@ -99,7 +99,10 @@ export const UserToRoleList: React.FC = () => {
       valueFormatter: ({ value }) => renderNode(value),
       flex: 1,
     },
-    {
+  ];
+
+  if (canManageNode) {
+    columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
@@ -112,8 +115,8 @@ export const UserToRoleList: React.FC = () => {
           onClick={() => openConfirmDeleteDialog(params.row)}
         />,
       ],
-    },
-  ];
+    });
+  }
 
   return (
     <ListLayout title={t("userToRoles")} routes={UserToRoleRoutes}>

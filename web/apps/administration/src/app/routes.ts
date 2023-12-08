@@ -1,4 +1,7 @@
+import { Privilege } from "@/api";
+
 export interface IRouteBuilder {
+  readonly privilege: Privilege;
   list: () => string;
   add: () => string;
   detail: (id?: string | number) => string;
@@ -9,7 +12,10 @@ export interface IRouteBuilder {
 export const nodeUrlBaseRegex = /^\/node\/(?<nodeId>[\d]+)/;
 
 class RouteBuilder implements IRouteBuilder {
-  constructor(private resourceUrl: string) {}
+  constructor(
+    private resourceUrl: string,
+    public privilege: Privilege
+  ) {}
 
   public base = () => {
     const match = window.location.pathname.match(nodeUrlBaseRegex);
@@ -37,21 +43,21 @@ class RouteBuilder implements IRouteBuilder {
   };
 }
 
-export const AccountRoutes = new RouteBuilder("accounts");
-export const TillRoutes = new RouteBuilder("tills");
-export const TillLayoutRoutes = new RouteBuilder("tills/layouts");
-export const TillProfileRoutes = new RouteBuilder("tills/profiles");
-export const TillButtonsRoutes = new RouteBuilder("tills/buttons");
-export const TillRegistersRoutes = new RouteBuilder("tills/registers");
-export const TillStockingsRoutes = new RouteBuilder("tills/stockings");
-export const UserRoutes = new RouteBuilder("users");
-export const UserRoleRoutes = new RouteBuilder("users/roles");
-export const UserToRoleRoutes = new RouteBuilder("user-to-roles");
-export const TicketRoutes = new RouteBuilder("tickets");
-export const CashierRoutes = new RouteBuilder("cashiers");
-export const ProductRoutes = new RouteBuilder("products");
-export const TaxRateRoutes = new RouteBuilder("tax-rates");
-export const UserTagRoutes = new RouteBuilder("user-tags");
-export const OrderRoutes = new RouteBuilder("orders");
-export const TseRoutes = new RouteBuilder("tses");
-export const PayoutRunRoutes = new RouteBuilder("payout-runs");
+export const AccountRoutes = new RouteBuilder("accounts", "node_administration");
+export const TillRoutes = new RouteBuilder("tills", "node_administration");
+export const TillLayoutRoutes = new RouteBuilder("tills/layouts", "node_administration");
+export const TillProfileRoutes = new RouteBuilder("tills/profiles", "node_administration");
+export const TillButtonsRoutes = new RouteBuilder("tills/buttons", "node_administration");
+export const TillRegistersRoutes = new RouteBuilder("tills/registers", "node_administration");
+export const TillStockingsRoutes = new RouteBuilder("tills/stockings", "node_administration");
+export const UserRoutes = new RouteBuilder("users", "user_management");
+export const UserRoleRoutes = new RouteBuilder("users/roles", "user_management");
+export const UserToRoleRoutes = new RouteBuilder("user-to-roles", "node_administration");
+export const TicketRoutes = new RouteBuilder("tickets", "node_administration");
+export const CashierRoutes = new RouteBuilder("cashiers", "node_administration");
+export const ProductRoutes = new RouteBuilder("products", "node_administration");
+export const TaxRateRoutes = new RouteBuilder("tax-rates", "node_administration");
+export const UserTagRoutes = new RouteBuilder("user-tags", "node_administration");
+export const OrderRoutes = new RouteBuilder("orders", "node_administration");
+export const TseRoutes = new RouteBuilder("tses", "node_administration");
+export const PayoutRunRoutes = new RouteBuilder("payout-runs", "node_administration");

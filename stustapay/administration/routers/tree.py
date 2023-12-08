@@ -5,6 +5,7 @@ from stustapay.core.http.context import ContextTreeService
 from stustapay.core.schema.tree import (
     NewEvent,
     Node,
+    NodeSeenByUser,
     RestrictedEventSettings,
     UpdateEvent,
 )
@@ -17,7 +18,7 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_tree_for_current_user(token: CurrentAuthToken, tree_service: ContextTreeService) -> Node:
+async def get_tree_for_current_user(token: CurrentAuthToken, tree_service: ContextTreeService) -> NodeSeenByUser:
     return await tree_service.get_tree_for_current_user(token=token)
 
 

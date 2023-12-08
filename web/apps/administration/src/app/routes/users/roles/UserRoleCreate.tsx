@@ -6,6 +6,7 @@ import { NewUserRole, NewUserRoleSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { UserRoleForm } from "./UserRoleForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const initialValues: NewUserRole = {
   name: "",
@@ -13,7 +14,7 @@ const initialValues: NewUserRole = {
   privileges: [],
 };
 
-export const UserRoleCreate: React.FC = () => {
+export const UserRoleCreate: React.FC = withPrivilegeGuard("user_management", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createUserRole] = useCreateUserRoleMutation();
@@ -29,4 +30,4 @@ export const UserRoleCreate: React.FC = () => {
       form={UserRoleForm}
     />
   );
-};
+});

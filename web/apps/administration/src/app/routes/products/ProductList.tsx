@@ -22,11 +22,12 @@ import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useCurrencyFormatter, useCurrentNode, useRenderNode } from "src/hooks";
+import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const canManageNode = useCurrentUserHasPrivilege(ProductRoutes.privilege);
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
@@ -143,7 +144,10 @@ export const ProductList: React.FC = () => {
       valueFormatter: ({ value }) => renderNode(value),
       minWidth: 100,
     },
-    {
+  ];
+
+  if (canManageNode) {
+    columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
@@ -176,8 +180,8 @@ export const ProductList: React.FC = () => {
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
-    },
-  ];
+    });
+  }
 
   return (
     <ListLayout title={t("products")} routes={ProductRoutes}>

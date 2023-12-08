@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CommonActionLayout } from "./CommonActionLayout";
 import { LayoutAction } from "./types";
+import { useCurrentUserHasPrivilege } from "@/hooks";
 
 export interface ListLayoutProps {
   title: string;
@@ -16,15 +17,16 @@ export interface ListLayoutProps {
 export const ListLayout: React.FC<ListLayoutProps> = ({ title, children, routes, additionalActions = [] }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const hasPrivilege = useCurrentUserHasPrivilege(routes?.privilege);
 
   const actions = React.useMemo(() => {
     const a: LayoutAction[] = [];
-    if (routes) {
+    if (routes && hasPrivilege) {
       a.push({ label: t("add"), onClick: () => navigate(routes.add()), color: "primary", icon: <AddIcon /> });
     }
 
     return [...a, ...additionalActions];
-  }, [navigate, t, additionalActions, routes]);
+  }, [navigate, t, additionalActions, routes, hasPrivilege]);
 
   return (
     <CommonActionLayout title={title} actions={actions}>

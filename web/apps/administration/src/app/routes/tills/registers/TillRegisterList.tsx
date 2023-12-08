@@ -9,7 +9,7 @@ import {
 } from "@/api";
 import { CashierRoutes, TillRegistersRoutes, TillRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -22,6 +22,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 export const TillRegisterList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const canManageNode = useCurrentUserHasPrivilege(TillRegistersRoutes.privilege);
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
@@ -113,7 +114,10 @@ export const TillRegisterList: React.FC = () => {
       valueFormatter: ({ value }) => formatCurrency(value),
       width: 200,
     },
-    {
+  ];
+
+  if (canManageNode) {
+    columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
@@ -139,8 +143,8 @@ export const TillRegisterList: React.FC = () => {
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
-    },
-  ];
+    });
+  }
 
   return (
     <ListLayout title={t("register.registers")} routes={TillRegistersRoutes}>

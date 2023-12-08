@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { FormikProps } from "formik";
 import { UserSelect, RoleSelect } from "@/components/features";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const NewUserToRoleSchema = z.object({
   user_id: z.number().int(),
@@ -40,7 +41,7 @@ const initialValues: NewUserToRole = {
   role_id: undefined as unknown as number, // to circument typescript,
 };
 
-export const UserToRoleCreate: React.FC = () => {
+export const UserToRoleCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createUserToRole] = useAssociatedUserToRoleMutation();
@@ -56,4 +57,4 @@ export const UserToRoleCreate: React.FC = () => {
       form={UserToRoleCreateForm}
     />
   );
-};
+});

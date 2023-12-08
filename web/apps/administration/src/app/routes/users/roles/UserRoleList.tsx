@@ -1,7 +1,7 @@
 import { UserRole, selectUserRoleAll, useDeleteUserRoleMutation, useListUserRolesQuery } from "@/api";
 import { UserRoleRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode, useRenderNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 export const UserRoleList: React.FC = () => {
   const { t } = useTranslation();
+  const canManageUsers = useCurrentUserHasPrivilege(UserRoleRoutes.privilege);
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
 
@@ -66,7 +67,10 @@ export const UserRoleList: React.FC = () => {
       valueFormatter: ({ value }) => renderNode(value),
       flex: 1,
     },
-    {
+  ];
+
+  if (canManageUsers) {
+    columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
@@ -85,8 +89,8 @@ export const UserRoleList: React.FC = () => {
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
-    },
-  ];
+    });
+  }
 
   return (
     <ListLayout title={t("userRoles")} routes={UserRoleRoutes}>

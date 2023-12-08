@@ -6,6 +6,7 @@ import { NewTillRegisterStocking, NewTillRegisterStockingSchema } from "@stustap
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { TillRegisterStockingForm } from "./TillRegisterStockingForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const initialValues: NewTillRegisterStocking = {
   name: "",
@@ -26,7 +27,7 @@ const initialValues: NewTillRegisterStocking = {
   variable_in_euro: 0,
 };
 
-export const TillRegisterStockingCreate: React.FC = () => {
+export const TillRegisterStockingCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createStocking] = useCreateRegisterStockingMutation();
@@ -42,4 +43,4 @@ export const TillRegisterStockingCreate: React.FC = () => {
       form={TillRegisterStockingForm}
     />
   );
-};
+});

@@ -6,6 +6,7 @@ import { NewTill, NewTillSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { TillForm } from "./TillForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const initialValues: NewTill = {
   name: "",
@@ -15,7 +16,7 @@ const initialValues: NewTill = {
   active_shift: undefined,
 };
 
-export const TillCreate: React.FC = () => {
+export const TillCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createTill] = useCreateTillMutation();
@@ -31,4 +32,4 @@ export const TillCreate: React.FC = () => {
       form={TillForm}
     />
   );
-};
+});

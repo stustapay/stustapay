@@ -8,8 +8,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { UserUpdateForm } from "./UserUpdateForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
-export const UserUpdate: React.FC = () => {
+export const UserUpdate: React.FC = withPrivilegeGuard("user_management", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { userId } = useParams();
@@ -35,4 +36,4 @@ export const UserUpdate: React.FC = () => {
       form={UserUpdateForm}
     />
   );
-};
+});

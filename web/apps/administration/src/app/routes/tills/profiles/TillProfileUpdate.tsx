@@ -8,8 +8,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 import { TillProfileForm } from "./TillProfileForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
-export const TillProfileUpdate: React.FC = () => {
+export const TillProfileUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { profileId } = useParams();
@@ -39,4 +40,4 @@ export const TillProfileUpdate: React.FC = () => {
       form={TillProfileForm}
     />
   );
-};
+});

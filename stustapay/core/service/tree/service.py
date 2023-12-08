@@ -8,6 +8,7 @@ from stustapay.core.schema.tree import (
     NewEvent,
     NewNode,
     Node,
+    NodeSeenByUser,
     ObjectType,
     RestrictedEventSettings,
 )
@@ -238,8 +239,8 @@ class TreeService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_user(node_required=False)
-    async def get_tree_for_current_user(self, *, conn: Connection, current_user: CurrentUser) -> Node:
-        return await get_tree_for_current_user(conn=conn, user_node_id=current_user.node_id)
+    async def get_tree_for_current_user(self, *, conn: Connection, current_user: CurrentUser) -> NodeSeenByUser:
+        return await get_tree_for_current_user(conn=conn, current_user=current_user)
 
     @with_db_transaction(read_only=True)
     @requires_node()

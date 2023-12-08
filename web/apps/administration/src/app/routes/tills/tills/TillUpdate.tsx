@@ -8,8 +8,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 import { TillForm } from "./TillForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
-export const TillUpdate: React.FC = () => {
+export const TillUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { tillId } = useParams();
   const { currentNode } = useCurrentNode();
@@ -35,4 +36,4 @@ export const TillUpdate: React.FC = () => {
       onSubmit={(t) => updateTill({ nodeId: currentNode.id, tillId: till.id, newTill: t })}
     />
   );
-};
+});

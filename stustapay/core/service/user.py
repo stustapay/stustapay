@@ -26,6 +26,7 @@ from stustapay.core.service.common.decorators import (
     requires_terminal,
     requires_user,
     with_db_transaction,
+    with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.tree.common import fetch_node
@@ -98,7 +99,7 @@ class UserService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.user_management])
+    @requires_user()
     async def list_user_roles(self, *, conn: Connection, node: Node) -> list[UserRole]:
         return await list_user_roles(conn=conn, node=node)
 
@@ -277,7 +278,7 @@ class UserService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.user_management])
+    @requires_user()
     async def list_users(self, *, conn: Connection, node: Node) -> list[User]:
         return await conn.fetch_many(User, "select * from user_with_roles where node_id = any($1)", node.ids_to_root)
 
@@ -351,7 +352,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_node()
-    @requires_user([Privilege.user_management])  # TODO: correcty?
+    @requires_user()
     async def list_user_to_roles(self, *, conn: Connection, node: Node) -> list[UserToRole]:
         return await conn.fetch_many(UserToRole, "select * from user_to_role where node_id = any($1)", node.ids_to_root)
 
@@ -414,7 +415,7 @@ class UserService(DBService):
 
         await conn.execute("update usr set password = $2 where id = $1", current_user.id, new_password_hashed)
 
-    @with_db_transaction
+    @with_retryable_db_transaction()
     @requires_user(node_required=False)
     async def logout_user(self, *, conn: Connection, current_user: User, token: str) -> bool:
         # TODO: TREE visibility

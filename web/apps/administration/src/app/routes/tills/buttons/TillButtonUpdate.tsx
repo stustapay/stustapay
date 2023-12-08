@@ -8,8 +8,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 import { TillButtonForm } from "./TillButtonForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
-export const TillButtonUpdate: React.FC = () => {
+export const TillButtonUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { buttonId } = useParams();
@@ -39,4 +40,4 @@ export const TillButtonUpdate: React.FC = () => {
       form={TillButtonForm}
     />
   );
-};
+});
