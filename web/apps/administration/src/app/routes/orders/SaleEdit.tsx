@@ -8,8 +8,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { LineItemEdit } from "./LineItemEdit";
+import { withPrivilegeGuard } from "@/app/layout";
 
-export const SaleEdit: React.FC = () => {
+export const SaleEdit: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { orderId } = useParams();
@@ -72,4 +73,4 @@ export const SaleEdit: React.FC = () => {
       </Paper>
     </Stack>
   );
-};
+});

@@ -59,7 +59,7 @@ class TillLayoutService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user()
     async def list_buttons(self, *, node: Node, conn: Connection) -> list[TillButton]:
         return await conn.fetch_many(
             TillButton, "select * from till_button_with_products where node_id = any($1)", node.ids_to_event_node
@@ -67,7 +67,7 @@ class TillLayoutService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user()
     async def get_button(self, *, conn: Connection, node: Node, button_id: int) -> Optional[TillButton]:
         return await conn.fetch_maybe_one(
             TillButton,
@@ -143,7 +143,7 @@ class TillLayoutService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user()
     async def list_layouts(self, *, conn: Connection, node: Node) -> list[TillLayout]:
         return await conn.fetch_many(
             TillLayout,
@@ -153,7 +153,7 @@ class TillLayoutService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user()
     async def get_layout(self, *, conn: Connection, node: Node, layout_id: int) -> Optional[TillLayout]:
         return await _fetch_till_layout(conn=conn, node=node, layout_id=layout_id)
 

@@ -12,8 +12,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 import { TillRegisterStockingForm } from "./TillRegisterStockingForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
-export const TillRegisterStockingUpdate: React.FC = () => {
+export const TillRegisterStockingUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { stockingId } = useParams();
@@ -47,4 +48,4 @@ export const TillRegisterStockingUpdate: React.FC = () => {
       form={TillRegisterStockingForm}
     />
   );
-};
+});

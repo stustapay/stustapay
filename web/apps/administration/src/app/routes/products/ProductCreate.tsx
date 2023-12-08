@@ -6,6 +6,7 @@ import { NewProduct, NewProductSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { ProductForm } from "./ProductForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const initialValues: NewProduct = {
   name: "",
@@ -18,7 +19,7 @@ const initialValues: NewProduct = {
   is_returnable: false,
 };
 
-export const ProductCreate: React.FC = () => {
+export const ProductCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createProduct] = useCreateProductMutation();
@@ -34,4 +35,4 @@ export const ProductCreate: React.FC = () => {
       form={ProductForm}
     />
   );
-};
+});

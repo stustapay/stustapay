@@ -1,7 +1,7 @@
 import { selectTillRegisterStockingAll, useDeleteRegisterStockingMutation, useListRegisterStockingsQuery } from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -14,6 +14,7 @@ export const TillRegisterStockingList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { currentNode } = useCurrentNode();
+  const canManageNode = useCurrentUserHasPrivilege(TillStockingsRoutes.privilege);
   const formatCurrency = useCurrencyFormatter();
 
   const { stockings, isLoading } = useListRegisterStockingsQuery(
@@ -57,7 +58,10 @@ export const TillRegisterStockingList: React.FC = () => {
       type: "number",
       valueFormatter: ({ value }) => formatCurrency(value),
     },
-    {
+  ];
+
+  if (canManageNode) {
+    columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
@@ -76,8 +80,8 @@ export const TillRegisterStockingList: React.FC = () => {
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
-    },
-  ];
+    });
+  }
 
   return (
     <ListLayout title={t("register.stockings")} routes={TillStockingsRoutes}>

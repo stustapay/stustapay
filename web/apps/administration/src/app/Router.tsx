@@ -108,15 +108,10 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/create-event",
-        element: (
-          <PrivilegeGuard privilege="node_administration">
-            <EventCreate />
-          </PrivilegeGuard>
-        ),
+        element: <EventCreate />,
       },
       {
         path: "node/:nodeId/products",
-        element: <PrivilegeGuard privilege="node_administration" />,
         children: [
           {
             index: true,
@@ -138,7 +133,6 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/tickets",
-        element: <PrivilegeGuard privilege="node_administration" />,
         children: [
           {
             index: true,
@@ -182,11 +176,7 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/tills",
-        element: (
-          <PrivilegeGuard privilege="node_administration">
-            <TillPageLayout />
-          </PrivilegeGuard>
-        ),
+        element: <TillPageLayout />,
         children: [
           {
             index: true,
@@ -321,7 +311,6 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/orders",
-        element: <PrivilegeGuard privilege="node_administration" />,
         children: [
           {
             index: true,
@@ -339,11 +328,7 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/users",
-        element: (
-          <PrivilegeGuard privilege="user_management">
-            <UserPageLayout />
-          </PrivilegeGuard>
-        ),
+        element: <UserPageLayout />,
         children: [
           {
             index: true,
@@ -381,7 +366,6 @@ const router = createBrowserRouter([
       },
       {
         path: "node/:nodeId/user-to-roles",
-        element: <PrivilegeGuard privilege="user_management" />,
         children: [
           {
             index: true,

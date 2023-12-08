@@ -6,6 +6,7 @@ import { NewUser, NewUserSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { UserCreateForm } from "./UserCreateForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const initialValues: NewUser = {
   login: "",
@@ -15,7 +16,7 @@ const initialValues: NewUser = {
   role_names: [],
 };
 
-export const UserCreate: React.FC = () => {
+export const UserCreate: React.FC = withPrivilegeGuard("user_management", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createUser] = useCreateUserMutation();
@@ -31,4 +32,4 @@ export const UserCreate: React.FC = () => {
       form={UserCreateForm}
     />
   );
-};
+});

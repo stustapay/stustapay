@@ -66,15 +66,17 @@ class TillService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user()
     async def list_tills(self, *, node: Node, conn: Connection) -> list[Till]:
         return await conn.fetch_many(
-            Till, "select * from till_with_cash_register where node_id = any($1)", node.ids_to_event_node
+            Till,
+            "select * from till_with_cash_register where node_id = any($1) and not is_virtual",
+            node.ids_to_event_node,
         )
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user()
     async def get_till(self, *, conn: Connection, node: Node, till_id: int) -> Optional[Till]:
         return await fetch_till(conn=conn, node=node, till_id=till_id)
 

@@ -7,6 +7,7 @@ from stustapay.core.schema.tree import (
     Node,
     RestrictedEventSettings,
     UpdateEvent,
+    NodeSeenByUser,
 )
 
 router = APIRouter(
@@ -17,7 +18,7 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_tree_for_current_user(token: CurrentAuthToken, tree_service: ContextTreeService) -> Node:
+async def get_tree_for_current_user(token: CurrentAuthToken, tree_service: ContextTreeService) -> NodeSeenByUser:
     return await tree_service.get_tree_for_current_user(token=token)
 
 

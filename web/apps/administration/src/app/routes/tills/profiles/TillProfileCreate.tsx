@@ -6,6 +6,7 @@ import { NewTillProfileSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { TillProfileForm } from "./TillProfileForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
 const initialValues: NewTillProfile = {
   name: "",
@@ -16,7 +17,7 @@ const initialValues: NewTillProfile = {
   allow_ticket_sale: false,
 };
 
-export const TillProfileCreate: React.FC = () => {
+export const TillProfileCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createProfile] = useCreateTillProfileMutation();
@@ -32,4 +33,4 @@ export const TillProfileCreate: React.FC = () => {
       form={TillProfileForm}
     />
   );
-};
+});

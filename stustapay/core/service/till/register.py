@@ -92,7 +92,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user()
     async def list_cash_register_stockings_admin(self, *, conn: Connection, node: Node) -> list[CashRegisterStocking]:
         return await _list_cash_register_stockings(conn=conn, node=node)
 
@@ -199,7 +199,7 @@ class TillRegisterService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user()
     async def list_cash_registers_admin(
         self, *, conn: Connection, node: Node, hide_assigned_registers=False
     ) -> list[CashRegister]:

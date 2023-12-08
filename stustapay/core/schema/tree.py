@@ -1,10 +1,12 @@
 import enum
+from itertools import chain
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, computed_field
 
 from stustapay.core.config import CoreConfig
 from stustapay.core.schema.config import SEPAConfig
+from stustapay.core.schema.user import UserRole, Privilege
 
 ROOT_NODE_ID = 0
 INITIAL_EVENT_NODE_ID = 1
@@ -134,3 +136,13 @@ class Node(BaseModel):
 
 class NewEvent(NewNode, UpdateEvent):
     pass
+
+
+class NodeSeenByUser(Node):
+    roles_at_node: list[UserRole]
+    children: list["NodeSeenByUser"]
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def privileges_at_node(self) -> set[Privilege]:
+        return set(chain.from_iterable([r.privileges for r in self.roles_at_node]))

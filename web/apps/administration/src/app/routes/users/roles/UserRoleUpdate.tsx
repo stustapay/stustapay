@@ -7,8 +7,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { UserRoleUpdateForm, UserRoleUpdateSchema, UserRoleUpdate as UserRoleUpdateType } from "./UserRoleUpdateForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
-export const UserRoleUpdate: React.FC = () => {
+export const UserRoleUpdate: React.FC = withPrivilegeGuard("user_management", () => {
   const { t } = useTranslation();
   const { userId } = useParams();
   const { currentNode } = useCurrentNode();
@@ -44,4 +45,4 @@ export const UserRoleUpdate: React.FC = () => {
       form={UserRoleUpdateForm}
     />
   );
-};
+});

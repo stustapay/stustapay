@@ -8,8 +8,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 import { ProductForm } from "./ProductForm";
+import { withPrivilegeGuard } from "@/app/layout";
 
-export const ProductUpdate: React.FC = () => {
+export const ProductUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { productId } = useParams();
@@ -39,4 +40,4 @@ export const ProductUpdate: React.FC = () => {
       form={ProductForm}
     />
   );
-};
+});

@@ -8,7 +8,7 @@ import {
 } from "@/api";
 import { TillProfileRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode, useRenderNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -20,6 +20,7 @@ import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 export const TillProfileList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const canManageNode = useCurrentUserHasPrivilege(TillProfileRoutes.privilege);
   const navigate = useNavigate();
   const { nodeId } = useParams();
 
@@ -111,7 +112,10 @@ export const TillProfileList: React.FC = () => {
       valueFormatter: ({ value }) => renderNode(value),
       flex: 1,
     },
-    {
+  ];
+
+  if (canManageNode) {
+    columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
@@ -130,8 +134,8 @@ export const TillProfileList: React.FC = () => {
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
-    },
-  ];
+    });
+  }
 
   return (
     <ListLayout title={t("profile.profiles")} routes={TillProfileRoutes}>

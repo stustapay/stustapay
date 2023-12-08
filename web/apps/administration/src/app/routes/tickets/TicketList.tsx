@@ -9,7 +9,7 @@ import {
 } from "@/api";
 import { TicketRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode, useRenderNode } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -21,6 +21,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 export const TicketList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const canManageNode = useCurrentUserHasPrivilege(TicketRoutes.privilege);
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
@@ -128,7 +129,10 @@ export const TicketList: React.FC = () => {
       valueFormatter: ({ value }) => renderNode(value),
       flex: 1,
     },
-    {
+  ];
+
+  if (canManageNode) {
+    columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
@@ -154,8 +158,8 @@ export const TicketList: React.FC = () => {
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,
       ],
-    },
-  ];
+    });
+  }
 
   return (
     <ListLayout title={t("tickets")} routes={TicketRoutes}>
