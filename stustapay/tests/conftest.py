@@ -111,9 +111,7 @@ async def setup_test_db_pool(config: Config) -> asyncpg.Pool:
 
     await database.reset_schema(pool)
     await database.apply_revisions(pool)
-
-    yield pool
-    await pool.close()
+    return pool
 
 
 @pytest.fixture
