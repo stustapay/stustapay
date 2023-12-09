@@ -2,6 +2,7 @@
 -- i.e. trace it up to the root.
 create or replace function node_trace(
     start_node_id bigint,
+    start_node_name text,
     start_node_parent_id bigint,
     start_node_is_event boolean
 ) returns table (
@@ -16,9 +17,10 @@ $$
     n_events_in_trace           int;
     event_node_id               bigint;
     parents_until_event_node    bigint[];
+    name_is_unique              bool;
 begin
 
-    with recursive search_graph (node_id, depth, path, cycle, n_events_in_trace, event_node_id, parents_until_event_node) as (
+    with recursive search_graph (node_id, depth, path, cycle, n_events_in_trace, event_node_id, parents_until_event_node, node_names, name_is_unique) as (
         -- base case: start at the requested node
         select
             start_node_parent_id,
@@ -27,17 +29,21 @@ begin
             false,
             case when start_node_is_event then 1 else 0 end,
             case when start_node_is_event then start_node_id else null end,
-            case when start_node_is_event then array[]::bigint[] else array[start_node_parent_id] end
+            case when start_node_is_event then array[]::bigint[] else array[start_node_parent_id] end,
+            array[start_node_name],
+            true
         union all
         -- add the node's parent to our result set (find the parents for all so-far evaluated nodes)
         select
             node.parent,
             sg.depth + 1,
             node.parent || sg.path,
-            node.parent = any (sg.path),
+            node.parent = any(sg.path),
             sg.n_events_in_trace + (case when node.event_id is not null then 1 else 0 end),
             coalesce(sg.event_node_id, case when node.event_id is not null then node.id else null end),
-            case when node.event_id is not null or sg.event_node_id is not null then sg.parents_until_event_node else node.parent || sg.parents_until_event_node end
+            case when node.event_id is not null or sg.event_node_id is not null then sg.parents_until_event_node else node.parent || sg.parents_until_event_node end,
+            node.name || sg.node_names,
+            node.name != any(sg.node_names)
         from
             search_graph sg
             join node on sg.node_id = node.id
@@ -50,8 +56,10 @@ begin
         sg.cycle,
         sg.n_events_in_trace,
         sg.event_node_id,
-        case when sg.event_node_id is null then null else sg.parents_until_event_node end
-    into locals.trace, locals.has_cycle, locals.n_events_in_trace, locals.event_node_id, locals.parents_until_event_node
+        case when sg.event_node_id is null then null else sg.parents_until_event_node end,
+        sg.name_is_unique
+    into
+        locals.trace, locals.has_cycle, locals.n_events_in_trace, locals.event_node_id, locals.parents_until_event_node, locals.name_is_unique
     from
         search_graph sg
     where
@@ -65,9 +73,9 @@ begin
         raise 'node has cycle: %', locals.trace;
     end if;
 
---     if start_node_id != 0 then
---         raise 'stuff %, %', locals.trace, locals.n_events_in_trace;
---     end if;
+    if not locals.name_is_unique then
+        raise 'node name is not unique in subtree';
+    end if;
 
     return query select locals.trace as parent_ids, locals.event_node_id, locals.parents_until_event_node;
 end
@@ -89,7 +97,7 @@ begin
         n.event_node_id,
         n.parents_until_event_node
         into locals.parent_ids, locals.event_node_id, locals.parents_until_event_node
-    from node_trace(NEW.id, NEW.parent, NEW.event_id is not null) n;
+    from node_trace(NEW.id, NEW.name, NEW.parent, NEW.event_id is not null) n;
     NEW.parent_ids := locals.parent_ids;
     NEW.event_node_id := locals.event_node_id;
     NEW.parents_until_event_node := locals.parents_until_event_node;
@@ -110,7 +118,7 @@ execute function update_node_path();
 create or replace function check_node_update() returns trigger as
 $$
 begin
-    perform node_trace(NEW.id, NEW.parent, NEW.event_id is not null);
+    perform node_trace(NEW.id, NEW.name, NEW.parent, NEW.event_id is not null);
     return NEW;
 end
 $$ language plpgsql

@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,no-value-for-parameter
 import pytest
+from asyncpg import RaiseError
 
 from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, NewNode, Node, ObjectType
 from stustapay.core.service.tree.common import fetch_node
@@ -26,6 +27,17 @@ async def test_node_creation(db_connection: Connection, tree_service: TreeServic
 
     # the newly created child should appear as a child of the root node
     assert any([node.id == child.id for child in root_node.children])
+
+    # we should not be able to add a second node with the same name under the newly created one
+    with pytest.raises(RaiseError):
+        await tree_service.create_node(
+            token=admin_token,
+            node_id=node.id,
+            new_node=NewNode(
+                name="Test node",
+                description="",
+            ),
+        )
 
 
 async def test_event_creation(tree_service: TreeService, admin_token: str):
