@@ -52,6 +52,7 @@ export const OrderDetail: React.FC = () => {
   return (
     <DetailLayout
       title={t("order.name", { id: orderId })}
+      routes={OrderRoutes}
       actions={[
         {
           label: t("edit"),

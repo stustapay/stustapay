@@ -1,4 +1,5 @@
 import { Account } from "@/api";
+import { AccountRoutes } from "@/app/routes";
 import { DetailLayout } from "@/components";
 import { useCurrencyFormatter } from "@/hooks";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
@@ -11,7 +12,7 @@ export const SystemAccountDetail: React.FC<{ account: Account }> = ({ account })
   const formatCurrency = useCurrencyFormatter();
 
   return (
-    <DetailLayout title={account.name ?? ""}>
+    <DetailLayout title={account.name ?? ""} routes={AccountRoutes}>
       <Paper>
         <List>
           <ListItem>

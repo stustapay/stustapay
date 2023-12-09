@@ -76,26 +76,4 @@ export function Select<Option, Multiple extends boolean>({
       {...props}
     />
   );
-
-  // return (
-  //   <FormControl fullWidth variant={"standard" ?? variant} margin={margin} error={error}>
-  //     <InputLabel id="roleSelectLabel">{label}</InputLabel>
-  //     <MuiSelect
-  //       labelId="roleSelectLabel"
-  //       value={value == null ? "" : value}
-  //       multiple={multiple}
-  //       onChange={handleChange}
-  //       renderValue={renderValue as any} // TODO: figure out how to get proper typing here
-  //       {...props}
-  //     >
-  //       {options.map((option) => (
-  //         <MenuItem key={getOptionKey(option)} value={getOptionKey(option)}>
-  //           {multiple && checkboxes && <Checkbox checked={((value ?? []) as Key[]).includes(getOptionKey(option))} />}
-  //           {optionToString(option)}
-  //         </MenuItem>
-  //       ))}
-  //     </MuiSelect>
-  //     {helperText && <FormHelperText sx={{ ml: 0 }}>{helperText}</FormHelperText>}
-  //   </FormControl>
-  // );
 }

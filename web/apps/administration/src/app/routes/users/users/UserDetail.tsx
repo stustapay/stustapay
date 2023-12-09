@@ -4,7 +4,7 @@ import { ConfirmDialog, ConfirmDialogCloseHandler } from "@/components";
 import { DetailLayout } from "@/components/layouts";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
+import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
@@ -42,6 +42,7 @@ export const UserDetail: React.FC = () => {
   return (
     <DetailLayout
       title={user.login}
+      routes={UserRoutes}
       actions={[
         {
           label: t("user.changePassword.title"),

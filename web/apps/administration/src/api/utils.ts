@@ -33,3 +33,20 @@ export const convertEntityAdaptorSelectors = <T, N extends string>(
     [`select${c}Total`]: selectors.selectTotal,
   } as ConvertReturn<T, N>;
 };
+
+export type ErrorResp = {
+  error: {
+    status: number;
+    data: { detail: string };
+  };
+};
+
+export const isErrorResp = (resp: object): resp is ErrorResp => {
+  const anyResp = resp as any;
+  return (
+    typeof anyResp.error === "object" &&
+    typeof anyResp.error.status === "number" &&
+    typeof anyResp.error.data === "object" &&
+    typeof anyResp.error.data.detail === "string"
+  );
+};
