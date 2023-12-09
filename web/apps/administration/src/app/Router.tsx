@@ -51,6 +51,7 @@ import {
   UserToRoleList,
   UserToRoleCreate,
 } from "./routes/users";
+import { DsfinvkExport, DsfinvkPageLayout } from "./routes/dsfinvk";
 
 const router = createBrowserRouter([
   {
@@ -265,6 +266,16 @@ const router = createBrowserRouter([
           {
             path: ":tillId",
             element: <TillDetail />,
+          },
+        ],
+      },
+      {
+        path: "node/:nodeId/dsfinvk",
+        element: <DsfinvkPageLayout />,
+        children: [
+          {
+            index: true,
+            element: <DsfinvkExport />,
           },
         ],
       },

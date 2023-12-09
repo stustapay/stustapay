@@ -52,6 +52,7 @@ export const TillProfileDetail: React.FC = () => {
   return (
     <DetailLayout
       title={profile.name}
+      routes={TillProfileRoutes}
       actions={[
         {
           label: t("edit"),

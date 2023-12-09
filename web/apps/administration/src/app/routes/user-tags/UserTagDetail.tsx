@@ -1,5 +1,5 @@
 import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@/api";
-import { AccountRoutes } from "@/app/routes";
+import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailLayout, EditableListItem, ListItemLink } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
@@ -64,7 +64,7 @@ export const UserTagDetail: React.FC = () => {
   };
 
   return (
-    <DetailLayout title={formatUserTagUid(data.user_tag_uid_hex)}>
+    <DetailLayout title={formatUserTagUid(data.user_tag_uid_hex)} routes={UserTagRoutes}>
       <Paper>
         <List>
           <ListItem>

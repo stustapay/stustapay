@@ -101,6 +101,7 @@ export const PayoutRunDetail: React.FC = () => {
   return (
     <DetailLayout
       title={String(payoutRun.id)}
+      routes={PayoutRunRoutes}
       actions={[
         {
           label: t("payoutRun.downloadCsv"),

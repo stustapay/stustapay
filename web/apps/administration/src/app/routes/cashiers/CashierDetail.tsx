@@ -163,6 +163,7 @@ export const CashierDetail: React.FC = () => {
   return (
     <DetailLayout
       title={getUserName(cashier)}
+      routes={CashierRoutes}
       actions={[
         {
           label: t("cashier.closeOut"),

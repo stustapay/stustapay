@@ -35,6 +35,7 @@ export const TseDetail: React.FC = () => {
   return (
     <DetailLayout
       title={tse.name}
+      routes={TseRoutes}
       actions={[
         {
           label: t("edit"),

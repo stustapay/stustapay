@@ -14,6 +14,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
+import { CashierRoutes } from "@/app/routes";
 
 export const CashierShiftDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -51,7 +52,7 @@ export const CashierShiftDetail: React.FC = () => {
   };
 
   return (
-    <DetailLayout title={getUserName(cashier)}>
+    <DetailLayout title={getUserName(cashier)} routes={CashierRoutes}>
       <Paper>
         <List>
           <ListItem>

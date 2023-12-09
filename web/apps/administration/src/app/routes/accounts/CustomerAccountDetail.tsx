@@ -5,7 +5,7 @@ import {
   useListOrdersQuery,
   useUpdateAccountCommentMutation,
 } from "@/api";
-import { UserTagRoutes } from "@/app/routes";
+import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailLayout, EditableListItem } from "@/components";
 import { OrderTable } from "@/components/features";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
@@ -82,6 +82,7 @@ export const CustomerAccountDetail: React.FC<{ account: AccountRead }> = ({ acco
   return (
     <DetailLayout
       title={`Customer Account ${account.id}`}
+      routes={AccountRoutes}
       actions={[
         { label: t("account.disable"), onClick: handleDisableAccount, color: "error", icon: <RemoveCircleIcon /> },
       ]}

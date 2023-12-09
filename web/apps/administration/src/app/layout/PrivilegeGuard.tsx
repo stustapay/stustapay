@@ -1,5 +1,5 @@
 import { Privilege } from "@/api";
-import { selectCurrentUser, useAppSelector } from "@/store";
+import { useCurrentUserHasPrivilege } from "@/hooks";
 import * as React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
@@ -9,9 +9,9 @@ export interface PrivilegeGuardProps {
 }
 
 export const PrivilegeGuard: React.FC<PrivilegeGuardProps> = ({ privilege, children }) => {
-  const user = useAppSelector(selectCurrentUser);
+  const hasPrivilege = useCurrentUserHasPrivilege(privilege);
 
-  if (!user || !user.privileges.includes(privilege)) {
+  if (!hasPrivilege) {
     return <Navigate to="/" />;
   }
 

@@ -1,4 +1,4 @@
-import { Node } from "@/api";
+import { Node, NodeSeenByUserRead } from "@/api";
 import { findNode, useTreeForCurrentUser } from "@/api/nodes";
 import { nodeUrlBaseRegex } from "@/app/routes";
 import {
@@ -71,7 +71,7 @@ export const NavigationTree: React.FC = () => {
     }
   }, [location, tree, setSelected, dispatch]);
 
-  const renderTree = (node: Node) => (
+  const renderTree = (node: NodeSeenByUserRead) => (
     <NavigationTreeItem
       key={node.id}
       nodeId={`/node/${node.id}`}
