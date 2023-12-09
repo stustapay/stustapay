@@ -273,7 +273,17 @@ async def _apply_db_code(conn: asyncpg.Connection, code_path: Path):
     for code_file in sorted(code_path.glob("*.sql")):
         logger.info(f"Applying database code file {code_file.name}")
         code = code_file.read_text("utf-8")
-        await conn.execute(code)
+        try:
+            await conn.execute(code)
+        except asyncpg.exceptions.PostgresSyntaxError as exc:
+            exc_dict = exc.as_dict()
+            position = int(exc_dict["position"])
+            message = exc_dict["message"]
+            lineno = code.count("\n", 0, position) + 1
+            raise ValueError(
+                f"Syntax error when executing SQL code at character "
+                f"{position} ({code_path!s}:{lineno}): {message!r}"
+            ) from exc
 
 
 async def apply_revisions(
