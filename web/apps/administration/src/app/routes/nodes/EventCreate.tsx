@@ -2,7 +2,7 @@ import * as React from "react";
 import { StepperForm, FormStep, FormTextField, FormNumericInput } from "@stustapay/form-components";
 import { z } from "zod";
 import { FormikProps } from "formik";
-import { Container, InputAdornment, Stack } from "@mui/material";
+import { Container, InputAdornment, Stack, Typography } from "@mui/material";
 import { useCreateEventMutation } from "@/api";
 import { useCurrentNode } from "@/hooks";
 import { SumUpSettings, SumUpSettingsSchema, SumupSettingsForm } from "./event-settings/TabSumUp";
@@ -130,6 +130,7 @@ const steps = [generalFormStep, customerPortalFormStep, sumupFormStep, bonFormSt
 type FormValues = GeneralFormValues & SumUpSettings & BonSettings & CustomerPortalSettings & PayoutSettings;
 
 export const EventCreate: React.FC = withPrivilegeGuard("node_administration", () => {
+  const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
   const [createEvent] = useCreateEventMutation();
@@ -144,7 +145,12 @@ export const EventCreate: React.FC = withPrivilegeGuard("node_administration", (
 
   return (
     <Container maxWidth="md">
-      <StepperForm steps={steps} onSubmit={handleSubmit} />
+      <Stack spacing={2}>
+        <Typography variant="h4" textAlign="center">
+          {t("settings.createEvent.heading", { parentNodeName: currentNode.name })}
+        </Typography>
+        <StepperForm steps={steps} onSubmit={handleSubmit} />
+      </Stack>
     </Container>
   );
 });

@@ -5,7 +5,15 @@ import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
 import { Login, Logout, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
-import { EventCreate, NodeOverview, MoneyOverview, NodePageLayout, NodeSettings, SettingsLegacy } from "./routes/nodes";
+import {
+  EventCreate,
+  NodeOverview,
+  MoneyOverview,
+  NodePageLayout,
+  NodeSettings,
+  SettingsLegacy,
+  NodeCreate,
+} from "./routes/nodes";
 import { OrderDetail, OrderList, SaleEdit } from "./routes/orders";
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
 import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
@@ -110,6 +118,10 @@ const router = createBrowserRouter([
       {
         path: "node/:nodeId/create-event",
         element: <EventCreate />,
+      },
+      {
+        path: "node/:nodeId/create-node",
+        element: <NodeCreate />,
       },
       {
         path: "node/:nodeId/products",
