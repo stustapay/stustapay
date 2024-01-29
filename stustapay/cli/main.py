@@ -12,6 +12,7 @@ from stustapay.core.util import log_setup
 from stustapay.customer_portal import server as customerportal_server
 from stustapay.dsfinvk.generator import Generator as DsfinvkGenerator
 from stustapay.terminalserver import server as terminal_server
+
 from .admin import admin_cli
 from .database import database_cli
 from .simulate import simulate_cli

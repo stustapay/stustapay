@@ -20,7 +20,7 @@ class Generator:
     Command which listens for database changes on bons and generates the bons immediately as pdf
     """
 
-    def __init__(self, config: Config, n_workers: int = 1, worker_id: int = 0):
+    def __init__(self, config: Config, worker_id: int = 0):
         self.n_workers = config.bon.n_workers
         self.worker_id = worker_id
         self.config = config
