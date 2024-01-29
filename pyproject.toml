@@ -46,10 +46,10 @@ test = [
     "pytest-cov",
 ]
 dev = [
-    "black",
-    "isort",
-    "mypy",
-    "pylint",
+    "black==24.1.1",
+    "isort==5.13.2",
+    "mypy==1.4.1",
+    "pylint==3.0.3",
     "types-PyYAML",
     "types-python-dateutil",
     "types-pytz",
