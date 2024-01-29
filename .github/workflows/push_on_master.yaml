@@ -1,5 +1,6 @@
 name: Push or tag on master
 on:
+  pull_request:
   push:
     branches: [ "master" ]
     tags: [ "v*" ]
@@ -18,7 +19,7 @@ jobs:
     secrets: inherit
 
   get-distros:
-    name: "Calculate list of debian distros and docker image tags"
+    name: "Calculate list of debian distros"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,17 +28,13 @@ jobs:
         run: |
           # if we're running from a tag, get the full list of distros; otherwise just use debian:sid
           dists='["debian:bookworm"]'
-          tags="master $GITHUB_SHA"
           if [[ $GITHUB_REF == refs/tags/* ]]; then
               dists=$(tools/build_debian_packages.py --show-dists-json)
-              tags="master $GITHUB_SHA latest latest-release $GITHUB_REF_NAME"
           fi
           echo "::set-output name=distros::$dists"
-          echo "::set-output name=tags::$tags"
     # map the step outputs to job outputs
     outputs:
       distros: ${{ steps.set-distros.outputs.distros }}
-      tags: ${{ steps.set-distros.outputs.tags }}
 
   # now build the packages with an abrechnung build.
   build-debs:
