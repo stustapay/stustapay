@@ -1,0 +1,11 @@
+[Unit]
+Description=StuStaPay Bon Generator
+After=postgresql.service
+
+[Service]
+ExecStart=/usr/lib/stustapay/venv/bin/stustapay bon --worker-id %I
+User=stustapay
+Group=stustapay
+
+[Install]
+WantedBy=multi-user.target

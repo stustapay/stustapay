@@ -1,11 +1,14 @@
 [build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=60", "setuptools_scm[toml]>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "stustapay"
+version = "0.1.0"
 license = { file = "LICENSE" }
-dynamic = ["version"]
+maintainers = [
+    { name = "Michael Loipführer", email = "milo@sft.lol" },
+]
 readme = "README.md"
 classifiers = [
     "Operating System :: OS Independent",
@@ -43,13 +46,14 @@ test = [
     "pytest-cov",
 ]
 dev = [
-    "black",
-    "isort",
-    "mypy",
-    "pylint",
+    "black==24.1.1",
+    "isort==5.13.2",
+    "mypy==1.4.1",
+    "pylint==3.0.3",
     "types-PyYAML",
     "types-python-dateutil",
     "types-pytz",
+    "bump-my-version~=0.15",
 ]
 
 [project.urls]
@@ -107,4 +111,14 @@ asyncio_mode = "auto"
 minversion = "6.0"
 testpaths = [
     "stustapay.tests",
+]
+
+[tool.bumpversion]
+current_version = "0.1.0"
+commit = false
+files = [
+    { filename = "pyproject.toml" },
+    { filename = "stustapay/__init__.py" },
+    { filename = "CHANGELOG.md", search = "Unreleased", replace = "{new_version} ({now:%Y-%m-%d})" },
+    { filename = "CHANGELOG.md", search = "v{current_version}...HEAD", replace = "v{current_version}...v{new_version}" },
 ]

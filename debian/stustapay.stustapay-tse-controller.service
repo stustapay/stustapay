@@ -1,0 +1,11 @@
+[Unit]
+Description=StuStaPay TSE Controller
+After=postgresql.service
+
+[Service]
+ExecStart=/usr/lib/stustapay/venv/bin/stustapay tse
+User=stustapay
+Group=stustapay
+
+[Install]
+WantedBy=multi-user.target

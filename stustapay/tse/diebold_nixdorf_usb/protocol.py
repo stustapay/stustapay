@@ -1,6 +1,7 @@
 """
 errorcodes from the manual
 """
+
 from typing import Literal, NotRequired, TypedDict
 
 errors = {

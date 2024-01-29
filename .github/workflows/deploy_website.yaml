@@ -1,10 +1,7 @@
 name: Deploy to GitHub Pages
 
 on:
-  pull_request:
-    branches: [master]
-  push:
-    branches: [master]
+  workflow_call:
 
 jobs:
   website-test-deploy:
@@ -23,6 +20,7 @@ jobs:
       - name: Test build website
         run: npm run build
         working-directory: ./website
+
   website-deploy:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest

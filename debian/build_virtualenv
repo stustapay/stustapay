@@ -1,0 +1,75 @@
+#!/bin/bash
+#
+# runs dh_virtualenv to build the virtualenv in the build directory,
+# Taken from https://github.com/matrix-org/synapse/blob/develop/debian/build_virtualenv, released under Apache 2
+
+set -e
+
+export DH_VIRTUALENV_INSTALL_ROOT=/usr/lib/stustapay
+
+# make sure that the virtualenv links to the specific version of python, by
+# dereferencing the python3 symlink.
+#
+# Otherwise, if somebody tries to install (say) the stretch package on buster,
+# they will get a confusing error about "No module named 'abrechnung'", because
+# python won't look in the right directory. At least this way, the error will
+# be a *bit* more obvious.
+#
+SNAKE=$(readlink -e /usr/bin/python3)
+
+# try to set the CFLAGS so any compiled C extensions are compiled with the most
+# generic as possible x64 instructions, so that compiling it on a new Intel chip
+# doesn't enable features not available on older ones or AMD.
+#
+# TODO: add similar things for non-amd64, or figure out a more generic way to
+# do this.
+
+case $(dpkg-architecture -q DEB_HOST_ARCH) in
+    amd64)
+        export CFLAGS=-march=x86-64
+        ;;
+esac
+
+# Use --builtin-venv to use the better `venv` module from CPython 3.4+ rather
+# than the 2/3 compatible `virtualenv`.
+
+dh_virtualenv \
+    --install-suffix "venv" \
+    --builtin-venv \
+    --python "$SNAKE" \
+    --upgrade-pip \
+    --preinstall="lxml" \
+    --preinstall="mock" \
+    --preinstall="wheel" \
+    --extra-pip-arg="--no-cache-dir" \
+    --extra-pip-arg="--compile" \
+    --extras="all,systemd,test"
+
+# add a dependency on the right version of python to substvars.
+PYPKG=$(basename "$SNAKE")
+echo "stustapay:pydepends=$PYPKG" >> debian/stustapay.substvars
+
+
+# add a couple of triggers.  This is needed so that dh-virtualenv can rebuild
+# the venv when the system python changes (see
+# https://dh-virtualenv.readthedocs.io/en/latest/tutorial.html#step-2-set-up-packaging-for-your-project)
+#
+# we do it here rather than the more conventional way of just adding it to
+# debian/stustapay.triggers, because we need to add a trigger on the
+# right version of python.
+cat >>"debian/.debhelper/generated/stustapay/triggers" <<EOF
+# triggers for dh-virtualenv
+interest-noawait $SNAKE
+interest dh-virtualenv-interpreter-update
+EOF
+
+export DESTDIR="debian/stustapay"
+export NODE_OPTIONS="--max_old_space_size=4096"
+cd web
+npm install
+npx nx run-many --target=build --projects=administration,customerportal
+npx nx build administration
+cd ..
+mkdir -p $DESTDIR/usr/share/stustapay/web
+mv web/dist/apps/administration $DESTDIR/usr/share/stustapay/web/
+mv web/dist/apps/customerportal $DESTDIR/usr/share/stustapay/web/

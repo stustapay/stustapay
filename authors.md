@@ -1,22 +1,21 @@
 Any file in this project that doesn't state otherwise, and isn't listed as an
-exception below, is Copyright 2022-2023 The StuStaPay authors, and licensed
+exception below, is Copyright 2022-2024 The StuStaPay authors, and licensed
 under the terms of the GNU Affero General Public License Version 3, or
 (at your option) any later version ("AGPL3+").
 A copy of the license can be found in [LICENSE](LICENSE).
 
 _the StuStaPay authors_ are:
 
-| Full name                         | aliases                     | E-Mail                                            |
-|-----------------------------------|-----------------------------|---------------------------------------------------|
-| Jonas Jelten                      | TheJJ                       | jj á sft dawt lol                                 |
-| Leo Fahrbach                      | leofah                      | leo.fahrbach á stusta dawt de                     |
-| Lars Frederik Peiss               |                             | lf.peiss á tum dawt de                            |
-| Michael Loipführer                | milo                        | milo á sft dawt lol                               |
-| Michael Enßlin                    | mic_e                       | mic á sft dawt lol                                |
-| Janis Heims                       | TechnoElf                   | janis.heims á stusta dawt de                      |
-| Tobias Jülg                       | juelg,jobi                  | jobi á stusta dawt de                             |
-| Markus Hefele                     |                             | markus dawt hefele á stusta dawt de               |
-
+| Full name           | aliases    | E-Mail                              |
+|---------------------|------------|-------------------------------------|
+| Jonas Jelten        | TheJJ      | jj á sft dawt lol                   |
+| Leo Fahrbach        | leofah     | leo.fahrbach á stusta dawt de       |
+| Lars Frederik Peiss |            | lf.peiss á tum dawt de              |
+| Michael Loipführer  | milo       | milo á sft dawt lol                 |
+| Michael Enßlin      | mic_e      | mic á sft dawt lol                  |
+| Janis Heims         | TechnoElf  | janis.heims á stusta dawt de        |
+| Tobias Jülg         | juelg,jobi | jobi á stusta dawt de               |
+| Markus Hefele       |            | markus dawt hefele á stusta dawt de |
 
 If you're a first-time committer, add yourself to the above list. This is not
 just for legal reasons, but also to keep an overview of all those nicknames.
@@ -38,7 +37,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
 
 If you wish to include a file from StuStaPay in your project, make sure to
@@ -47,5 +46,6 @@ be to include a copy of this file (`authors.md`), and to leave the file's
 copyright header untouched.
 
 Exceptions:
-DSFinV-K library in stustapay/dsfinvk/dsfinvk: Based on https://github.com/pretix/python-dsfinvk, Coypright rami.io GmbH, Apache Lizenz; with modifications by StuStaPay Team, 2023
+DSFinV-K library in stustapay/dsfinvk/dsfinvk: Based on https://github.com/pretix/python-dsfinvk, Coypright rami.io
+GmbH, Apache Lizenz; with modifications by StuStaPay Team, 2023
 

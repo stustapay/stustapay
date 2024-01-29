@@ -1,6 +1,7 @@
 """
 some basic api endpoints.
 """
+
 from fastapi import APIRouter, status
 
 from stustapay.core.http.auth_customer import CurrentAuthToken

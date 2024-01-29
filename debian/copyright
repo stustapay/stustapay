@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Source: https://github.com/stustapay/stustapay
+Upstream-Name: stustapay
+Upstream-Contact: Michael Loipführer, <milo@sft.lol>
+
+Files: stustapay/dsfinvk/dsfinvk/*
+LICENSE: Apache
+Copyright: rami.io GmbH
+
+Files: *
+LICENSE: AGPL-3
+Copyright: 2024, Jonas Jelten <jj@sft.lol>, Michael Enßlin <mic@sft.lol>, Michael Loipführer <milo@sft.lol>

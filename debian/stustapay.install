@@ -1,0 +1,2 @@
+etc/server.yaml /etc/stustapay/config.yaml
+etc/nginx/stustapay /etc/nginx/sites-available/

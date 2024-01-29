@@ -1,0 +1,4 @@
+**/node_modules
+app/app/build
+app/.gradle
+**/*.egg-info

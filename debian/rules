@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+
+#
+# Build Debian package using https://github.com/spotify/dh-virtualenv
+#
+
+PACKAGE_NAME:=`dh_listpackages`
+
+#export DH_VERBOSE = 1
+export NODE_OPTIONS=--openssl-legacy-provider
+
+%:
+	dh $@ --with python-virtualenv
+
+# we don't really want to strip the symbols from our object files.
+override_dh_strip:
+
+override_dh_installsystemd:
+	dh_installsystemd --name=stustapay-administration-api --no-restart-after-upgrade --no-start --no-enable
+	dh_installsystemd --name=stustapay-customerportal-api --no-restart-after-upgrade --no-start --no-enable
+	dh_installsystemd --name=stustapay-terminal-api --no-restart-after-upgrade --no-start --no-enable
+	dh_installsystemd --name=stustapay-tse-controller --no-restart-after-upgrade --no-start --no-enable
+	dh_installsystemd --name=stustapay-bon-generator@ --no-restart-after-upgrade --no-start --no-enable
+
+override_dh_virtualenv:
+	./debian/build_virtualenv

@@ -44,11 +44,10 @@ def get_config(
 @cli.command()
 def bon(
     ctx: typer.Context,
-    n_workers: Annotated[int, typer.Option(help="Number of bon generator indices")] = 1,
     worker_id: Annotated[int, typer.Option(help="Index of this worker instance")] = 0,
 ):
     """Run the bon generator."""
-    generator = Generator(config=ctx.obj.config, n_workers=n_workers, worker_id=worker_id)
+    generator = Generator(config=ctx.obj.config, worker_id=worker_id)
     asyncio.run(generator.run())
 
 

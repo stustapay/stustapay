@@ -66,8 +66,7 @@ async def cash_register_stocking(till_service: TillService, admin_token: str, ev
 
 
 class LoginSupervisedUser(Protocol):
-    def __call__(self, user_tag_uid: int, user_role_id: int, terminal_token: str = ...) -> Awaitable:
-        ...
+    def __call__(self, user_tag_uid: int, user_role_id: int, terminal_token: str = ...) -> Awaitable: ...
 
 
 @pytest.fixture
@@ -89,8 +88,7 @@ async def login_supervised_user(
 
 
 class AssignCashRegister(Protocol):
-    def __call__(self, cashier: Cashier) -> Awaitable:
-        ...
+    def __call__(self, cashier: Cashier) -> Awaitable: ...
 
 
 @pytest.fixture
@@ -116,8 +114,7 @@ async def assign_cash_register(
 
 
 class GetAccountBalance(Protocol):
-    def __call__(self, account_id: int) -> Awaitable[float]:
-        ...
+    def __call__(self, account_id: int) -> Awaitable[float]: ...
 
 
 @pytest.fixture
@@ -131,8 +128,7 @@ async def get_account_balance(account_service: AccountService, event_node: Node,
 
 
 class AssertAccountBalance(Protocol):
-    def __call__(self, account_id: int, expected_balance: float) -> Awaitable:
-        ...
+    def __call__(self, account_id: int, expected_balance: float) -> Awaitable: ...
 
 
 @pytest.fixture
@@ -145,8 +141,7 @@ async def assert_account_balance(get_account_balance: GetAccountBalance):
 
 
 class GetSystemAccountBalance(Protocol):
-    def __call__(self, account_type: AccountType) -> Awaitable[float]:
-        ...
+    def __call__(self, account_type: AccountType) -> Awaitable[float]: ...
 
 
 @pytest.fixture
@@ -159,8 +154,7 @@ async def get_system_account_balance(db_connection: Connection, event_node: Node
 
 
 class AssertSystemAccountBalance(Protocol):
-    def __call__(self, account_type: AccountType, expected_balance: float) -> Awaitable:
-        ...
+    def __call__(self, account_type: AccountType, expected_balance: float) -> Awaitable: ...
 
 
 @pytest.fixture
@@ -254,8 +248,7 @@ async def finanzorga(
 
 
 class CreateTerminalToken(Protocol):
-    def __call__(self) -> Awaitable[str]:
-        ...
+    def __call__(self) -> Awaitable[str]: ...
 
 
 @pytest.fixture

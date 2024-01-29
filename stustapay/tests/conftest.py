@@ -175,8 +175,7 @@ class UserTag:
 
 
 class CreateRandomUserTag(Protocol):
-    def __call__(self, restriction: ProductRestriction | None = None) -> Awaitable[UserTag]:
-        ...
+    def __call__(self, restriction: ProductRestriction | None = None) -> Awaitable[UserTag]: ...
 
 
 @pytest.fixture

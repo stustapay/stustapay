@@ -1,0 +1,8 @@
+.debhelper
+stustapay/
+python3-stustapay
+*.debhelper
+debhelper-build-stamp
+files
+*.substvars
+tmp
