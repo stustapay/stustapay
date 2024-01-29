@@ -1,7 +1,2 @@
 etc/server.yaml /etc/stustapay/config.yaml
-config/nginx/stustapay /etc/nginx/sites-available/
-debian/stustapay-administration-api.service /lib/systemd/system
-debian/stustapay-customerportal-api.service /lib/systemd/system
-debian/stustapay-terminal-api.service /lib/systemd/system
-debian/stustapay-tse-controller.service /lib/systemd/system
-debian/stustapay-bon-generator@.service /lib/systemd/system
+etc/nginx/stustapay /etc/nginx/sites-available/

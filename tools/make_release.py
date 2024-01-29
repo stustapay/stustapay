@@ -1,7 +1,7 @@
 import argparse
 import subprocess
 import tomllib
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -50,7 +50,7 @@ def _read_pyproject_toml():
 def _update_debian_changelog(pyproject: dict, config: Config, dry_run: bool):
     formatted_debian_changelog = debian_changelog_template.format(
         new_version=config.new_version,
-        now=datetime.now(),
+        now=datetime.now(tz=timezone.utc),
         author_name=pyproject["project"]["maintainers"][0]["name"],
         author_email=pyproject["project"]["maintainers"][0]["email"],
     )

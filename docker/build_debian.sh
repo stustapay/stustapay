@@ -8,10 +8,6 @@ set -ex
 # Get the codename from distro env
 DIST=$(cut -d ':' -f2 <<< "${distro:?}")
 
-# we get a read-only copy of the source: make a writeable copy
-cp -aT /stustapay/source /stustapay/build
-cd /stustapay/build
-
 # if this is a prerelease, set the Section accordingly.
 #
 # When the package is later added to the package repo, reprepro will use the

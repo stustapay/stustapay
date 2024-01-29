@@ -92,10 +92,10 @@ class Builder(object):
                 "--build-arg",
                 "distro=" + dist,
                 "-f",
-                "docker/Dockerfile-dhvirtualenv",
+                "docker/dhvirtualenv.Dockerfile",
             )
             + self._docker_build_args
-            + ("docker",)
+            + (".",)
         )
 
         subprocess.check_call(
@@ -117,7 +117,6 @@ class Builder(object):
                 "--rm",
                 "--name",
                 container_name,
-                "--volume=" + projdir + ":/stustapay/source:ro",
                 "--volume=" + debsdir + ":/debs",
                 "-e",
                 "TARGET_USERID=%i" % (os.getuid(),),

@@ -67,9 +67,9 @@ export DESTDIR="debian/stustapay"
 export NODE_OPTIONS="--max_old_space_size=4096"
 cd web
 npm install
-npx nx run-many --target=build administration customer-portal
+npx nx run-many --target=build --projects=administration,customerportal
 npx nx build administration
 cd ..
-mkdir -p $DESTDIR/usr/share/
+mkdir -p $DESTDIR/usr/share/stustapay/web
 mv web/dist/apps/administration $DESTDIR/usr/share/stustapay/web/
 mv web/dist/apps/customerportal $DESTDIR/usr/share/stustapay/web/

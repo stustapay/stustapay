@@ -54,5 +54,6 @@ RUN apt-get update -y -o Acquire::Languages=none \
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
 
-WORKDIR /stustapay/source
-ENTRYPOINT ["bash", "/stustapay/source/docker/build_debian.sh"]
+COPY . /stustapay/build
+WORKDIR /stustapay/build
+ENTRYPOINT ["bash", "/stustapay/build/docker/build_debian.sh"]
