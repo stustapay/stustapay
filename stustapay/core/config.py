@@ -52,7 +52,7 @@ class Config(BaseModel):
     core: CoreConfig
     administration: AdministrationApiConfig
     terminalserver: TerminalApiConfig
-    customer_portal: CustomerPortalApiConfig
+    customerportal: CustomerPortalApiConfig
     bon: BonConfig
 
 

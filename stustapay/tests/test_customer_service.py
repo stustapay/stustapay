@@ -721,7 +721,7 @@ async def test_get_orders_with_bon(
 
     # test bon data
     assert resulting_order_with_bon.bon_generated
-    assert resulting_order_with_bon.bon_output_file == config.customer_portal.base_bon_url.format(
+    assert resulting_order_with_bon.bon_output_file == config.customerportal.base_bon_url.format(
         bon_output_file=bon_path
     )
 

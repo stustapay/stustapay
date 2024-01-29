@@ -113,7 +113,7 @@ class CustomerService(DBService):
         )
         for order_with_bon in orders_with_bon:
             if order_with_bon.bon_output_file is not None:
-                order_with_bon.bon_output_file = self.cfg.customer_portal.base_bon_url.format(
+                order_with_bon.bon_output_file = self.cfg.customerportal.base_bon_url.format(
                     bon_output_file=order_with_bon.bon_output_file
                 )
         return orders_with_bon
