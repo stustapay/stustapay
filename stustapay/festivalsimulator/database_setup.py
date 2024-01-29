@@ -17,9 +17,16 @@ from stustapay.core.schema.till import (
     NewTillLayout,
     NewTillProfile,
 )
-from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, NewNode, ObjectType
+from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, NewNode, Node, ObjectType
 from stustapay.core.schema.tse import NewTse, TseType
-from stustapay.core.schema.user import NewUser, NewUserRole, Privilege, UserRole
+from stustapay.core.schema.user import (
+    ADMIN_ROLE_ID,
+    NewUser,
+    NewUserRole,
+    NewUserToRole,
+    Privilege,
+    UserRole,
+)
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.product import ProductService
@@ -29,7 +36,7 @@ from stustapay.core.service.till import TillService
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.tree.service import create_event, create_node
 from stustapay.core.service.tse import TseService
-from stustapay.core.service.user import UserService
+from stustapay.core.service.user import UserService, associate_user_to_role
 from stustapay.core.service.user_tag import create_user_tag_secret, create_user_tags
 from stustapay.framework.database import Connection, create_db_pool
 
@@ -39,14 +46,19 @@ CUSTOMER_TAG_START = 100000
 logger = logging.getLogger(__name__)
 
 
-async def _create_tags_and_users(conn: Connection, user_service: UserService, event_node_id: int, n_customer_tags: int):
+async def _create_tags_and_users(conn: Connection, user_service: UserService, event_node: Node, n_customer_tags: int):
     logger.info(f"Creating {n_customer_tags} tags")
+    root_node = await fetch_node(conn=conn, node_id=ROOT_NODE_ID)
+    assert root_node is not None and event_node is not None
 
-    await user_service.create_user_no_auth(
+    global_admin = await user_service.create_user_no_auth(
         conn=conn,
         node_id=ROOT_NODE_ID,
-        new_user=NewUser(login="global-admin", display_name="", user_tag_uid=None, role_names=["admin"]),
+        new_user=NewUser(login="global-admin", display_name="", user_tag_uid=None),
         password="admin",
+    )
+    await associate_user_to_role(
+        conn=conn, node=root_node, new_user_to_role=NewUserToRole(user_id=global_admin.id, role_id=ADMIN_ROLE_ID)
     )
 
     admin_login = await user_service.login_user(  # pylint: disable=missing-kwoa
@@ -57,7 +69,7 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
 
     secret = await create_user_tag_secret(
         conn=conn,
-        node_id=event_node_id,
+        node_id=event_node.id,
         secret=NewUserTagSecret(
             key0="000102030405060708090a0b0c0d0e0f",
             key1="000102030405060708090a0b0c0d0e0f",
@@ -68,7 +80,7 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
     finanzorga_role: UserRole = await user_service.create_user_role(
         conn=conn,
         token=admin_token,
-        node_id=event_node_id,
+        node_id=event_node.id,
         new_role=NewUserRole(
             name="finanzorga",
             is_privileged=True,
@@ -84,35 +96,43 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
     )
 
     admin_tag = NewUserTag(uid=1, secret_id=secret.id)
-    await create_user_tags(conn=conn, node_id=event_node_id, tags=[admin_tag])
-    await user_service.create_user_no_auth(
+    await create_user_tags(conn=conn, node_id=event_node.id, tags=[admin_tag])
+    node_admin = await user_service.create_user_no_auth(
         conn=conn,
-        node_id=event_node_id,
-        new_user=NewUser(
-            login="admin", display_name="", user_tag_uid=admin_tag.uid, role_names=["admin", finanzorga_role.name]
-        ),
+        node_id=event_node.id,
+        new_user=NewUser(login="admin", display_name="", user_tag_uid=admin_tag.uid),
         password="admin",
+    )
+    await associate_user_to_role(
+        conn=conn, node=event_node, new_user_to_role=NewUserToRole(user_id=node_admin.id, role_id=ADMIN_ROLE_ID)
+    )
+    await associate_user_to_role(
+        conn=conn, node=event_node, new_user_to_role=NewUserToRole(user_id=node_admin.id, role_id=finanzorga_role.id)
     )
 
     finanzorga_tags = [NewUserTag(uid=i, secret_id=secret.id) for i in range(10, 16)]
-    await create_user_tags(conn=conn, node_id=event_node_id, tags=finanzorga_tags)
+    await create_user_tags(conn=conn, node_id=event_node.id, tags=finanzorga_tags)
     for i, finanzorga_tag in enumerate(finanzorga_tags):
-        await user_service.create_user_no_auth(
+        finanzorga_user = await user_service.create_user_no_auth(
             conn=conn,
-            node_id=event_node_id,
+            node_id=event_node.id,
             new_user=NewUser(
                 login=f"Finanzorga {i + 1}",
                 display_name="",
                 user_tag_uid=finanzorga_tag.uid,
-                role_names=[finanzorga_role.name],
             ),
             password="admin",
+        )
+        await associate_user_to_role(
+            conn=conn,
+            node=event_node,
+            new_user_to_role=NewUserToRole(user_id=finanzorga_user.id, role_id=finanzorga_role.id),
         )
 
     customer_tags = [
         NewUserTag(uid=i + CUSTOMER_TAG_START, pin="pin", secret_id=secret.id) for i in range(n_customer_tags)
     ]
-    await create_user_tags(conn=conn, node_id=event_node_id, tags=customer_tags)
+    await create_user_tags(conn=conn, node_id=event_node.id, tags=customer_tags)
 
     return admin_token
 
@@ -427,6 +447,7 @@ class DatabaseSetup:
         self.n_cocktail_tills = n_cocktail_tills
 
         self.event_node_id: int = None  # type: ignore # initialized at the start of run()
+        self.event_node: Node = None  # type: ignore # initialized at the start of run()
 
         self.db_pool: asyncpg.Pool | None = None
 
@@ -493,15 +514,19 @@ class DatabaseSetup:
                 self.event_node_id,
                 i + CASHIER_TAG_START,
             )
-            await user_service.create_user_no_auth(
+            cashier = await user_service.create_user_no_auth(
                 conn=conn,
                 node_id=self.event_node_id,
                 new_user=NewUser(
                     login=f"Cashier {i}",
                     display_name=f"Cashier {i}",
-                    role_names=[cashier_role.name],
                     user_tag_uid=cashier_tag_uid,
                 ),
+            )
+            await associate_user_to_role(
+                conn=conn,
+                node=self.event_node,
+                new_user_to_role=NewUserToRole(user_id=cashier.id, role_id=cashier_role.id),
             )
 
     async def _create_tse(self, conn: Connection, admin_token: str):
@@ -594,9 +619,10 @@ class DatabaseSetup:
                 ),
             )
             self.event_node_id = event_node.id
+            self.event_node = event_node
 
             admin_token = await _create_tags_and_users(
-                conn=conn, user_service=user_service, event_node_id=self.event_node_id, n_customer_tags=self.n_tags
+                conn=conn, user_service=user_service, event_node=self.event_node, n_customer_tags=self.n_tags
             )
             tax_rate_ust = await tax_service.create_tax_rate(
                 conn=conn,

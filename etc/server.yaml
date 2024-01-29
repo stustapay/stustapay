@@ -4,34 +4,25 @@ database:
   password: null
   dbname: "stustapay"
 
-terminalserver:
-  base_url: "http://localhost:9002"
-  host: "localhost"
-  port: 9002
+core:
+  test_mode: true # TODO: change to false for a production deployment
+  secret_key: "<generate a secret key>"
 
 administration:
-  base_url: "http://localhost:8081"
+  base_url: "http://localhost:8081" # TODO: change to production url
   host: "localhost"
   port: 8081
 
-core:
-  test_mode: true
-  secret_key: "very secret"
-
-customer_portal:
-  base_url: "http://localhost:8082"
+terminalserver:
+  base_url: "http://localhost:8082" # TODO: change to production url
   host: "localhost"
   port: 8082
-  base_bon_url: "https://bon.stustapay.de/{bon_output_file}"
+
+customerportal:
+  base_url: "http://localhost:8083" # TODO: change to production url
+  host: "localhost"
+  port: 8083
+  base_bon_url: "https://<my-customerportal-url>/{bon_output_file}"
 
 bon:
   output_folder: "/tmp/stustapay_bons"
-
-tses:
-  diebold_nixdorf_usb:
-    # simulated tse1
-    tse1:
-      ws_url: "ws://localhost:10001"
-      ws_timeout: 1
-      serial_number: "84ba2997f8fbf9d0feee48c7ba5812d6d1e37c33fdb11cdb06eb849b1336b1c7"
-      password: "12345"

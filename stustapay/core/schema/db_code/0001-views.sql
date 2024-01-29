@@ -327,8 +327,7 @@ create view order_tax_rates as
 create view order_value_with_bon as
     select
         o.*,
-        b.generated   as bon_generated,
-        b.output_file as bon_output_file
+        b.generated   as bon_generated
     from
         order_value o
         left join bon b on (o.id = b.id);

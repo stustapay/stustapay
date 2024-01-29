@@ -1,4 +1,5 @@
 import { OrderWithBon, useGetOrdersQuery } from "@/api";
+import { useDownloadBon } from "@/api/useDownloadBon";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import {
@@ -23,6 +24,7 @@ export const OrderList: React.FC = () => {
   const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
   const { data: orders, error: orderError, isLoading: isOrdersLoading } = useGetOrdersQuery();
+  const downloadBon = useDownloadBon();
 
   if (isOrdersLoading || (!orders && !orderError)) {
     return <Loading />;
@@ -66,8 +68,8 @@ export const OrderList: React.FC = () => {
                 <Typography variant="subtitle2">
                   {t("order.bookedAt", { date: new Date(order.booked_at).toLocaleString() })}
                 </Typography>
-                {order.bon_generated && order.bon_output_file && (
-                  <Link href={order.bon_output_file} target="_blank" rel="noopener">
+                {order.bon_generated && (
+                  <Link component="button" onClick={() => downloadBon(order.id)}>
                     {t("order.viewReceipt")}
                   </Link>
                 )}

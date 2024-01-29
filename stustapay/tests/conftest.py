@@ -86,7 +86,7 @@ TEST_CONFIG = Config(
         host="localhost",
         port=8080,
     ),
-    customer_portal=CustomerPortalApiConfig(
+    customerportal=CustomerPortalApiConfig(
         base_url="http://localhost:8082",
         base_bon_url="https://bon.stustapay.de/{bon_output_file}",
     ),

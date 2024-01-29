@@ -17,7 +17,7 @@ from .routers import auth, base, sumup
 def get_server(config: Config):
     server = Server(
         title="StuStaPay Customer Portal API",
-        config=config.customer_portal,
+        config=config.customerportal,
         cors=True,
     )
 

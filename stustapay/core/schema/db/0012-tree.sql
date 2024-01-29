@@ -389,3 +389,7 @@ delete from account where name = 'Deposit';
 
 -- TODO: include check so that we do not delete accounts here
 delete from account_type where name = 'virtual' or name = 'internal';
+
+alter table bon drop column output_file;
+alter table bon add column mime_type text;
+alter table bon add column content bytea;

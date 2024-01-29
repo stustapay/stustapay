@@ -5,10 +5,9 @@ Helper Functions to generate pdfs from latex templates and store the result as f
 import asyncio
 import os
 import re
-import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional, Tuple
+from typing import Optional
 
 import jinja2
 from pydantic import BaseModel, computed_field
@@ -124,7 +123,18 @@ async def render_template(tex_tpl_name: str, context: BonTemplateContext) -> str
     return tpl.render(context)
 
 
-async def pdflatex(file_content: str, out_file: Path) -> Tuple[bool, str]:
+class RenderedBon(BaseModel):
+    mime_type: str
+    content: bytes
+
+
+class BonRenderResult(BaseModel):
+    success: bool
+    msg: str = ""
+    bon: RenderedBon | None = None
+
+
+async def pdflatex(file_content: str) -> BonRenderResult:
     """
     renders the given latex template with the context and saves the resulting pdf to out_file
     returns <True, ""> if the pdf was compiled successfully
@@ -151,12 +161,13 @@ async def pdflatex(file_content: str, out_file: Path) -> Tuple[bool, str]:
         stdout, _ = await proc.communicate()
         # latex failed
         if proc.returncode != 0:
-            return False, stdout.decode("utf-8")[-800:]
+            return BonRenderResult(success=False, msg=stdout.decode("utf-8")[-800:])
 
-        # don't overwrite existing bons
-        if os.path.exists(out_file):
-            pass  # for now we allow overwrites
-            # return False, f"File {out_file} already exists"
-        shutil.copyfile(os.path.join(tmp_dir, "main.pdf"), out_file)
+        output_pdf = Path(tmp_dir) / "main.pdf"
 
-        return True, ""
+        try:
+            pdf_content = output_pdf.read_bytes()
+        except Exception as e:
+            return BonRenderResult(success=False, msg=str(e))
+
+        return BonRenderResult(success=True, bon=RenderedBon(mime_type="application/pdf", content=pdf_content))

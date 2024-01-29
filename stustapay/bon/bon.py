@@ -1,12 +1,11 @@
-import tempfile
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 from stustapay.bon.pdflatex import (
     BonConfig,
+    BonRenderResult,
     BonTemplateContext,
     OrderWithTse,
     TaxRateAggregation,
@@ -20,9 +19,9 @@ from stustapay.core.service.tree.common import fetch_restricted_event_settings_f
 from stustapay.framework.database import Connection
 
 
-async def render_receipt(context: BonTemplateContext, out_file: Path) -> tuple[bool, str]:
+async def render_receipt(context: BonTemplateContext):
     rendered = await render_template("bon.tex", context)
-    return await pdflatex(file_content=rendered, out_file=out_file)
+    return await pdflatex(file_content=rendered)
 
 
 async def fetch_order(*, conn: Connection, order_id: int) -> Optional[OrderWithTse]:
@@ -50,7 +49,7 @@ class DummyBon:
     error: str | None
 
 
-async def generate_dummy_bon(node_id: int, event: RestrictedEventSettings) -> DummyBon:
+async def generate_dummy_bon(node_id: int, event: RestrictedEventSettings) -> BonRenderResult:
     """Generate a dummy bon for the given event and return the pdf as bytes"""
     ctx = BonTemplateContext(
         order=OrderWithTse(
@@ -171,19 +170,13 @@ async def generate_dummy_bon(node_id: int, event: RestrictedEventSettings) -> Du
             ust_id=event.ust_id,
         ),
     )
-    with tempfile.NamedTemporaryFile() as out_file:
-        out_file_path = Path(out_file.name)
-        success, error_msg = await render_receipt(context=ctx, out_file=out_file_path)
-        if not success:
-            return DummyBon(pdf=None, error=error_msg)
-        content = out_file_path.read_bytes()
-        return DummyBon(pdf=content, error=None)
+    return await render_receipt(context=ctx)
 
 
-async def generate_bon(conn: Connection, order_id: int, out_file: Path) -> tuple[bool, str]:
+async def generate_bon(conn: Connection, order_id: int) -> BonRenderResult:
     order = await fetch_order(conn=conn, order_id=order_id)
     if order is None:
-        return False, "could not fetch order"
+        return BonRenderResult(success=False, msg="could not fetch order")
 
     event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=order.node_id)
     config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
@@ -197,7 +190,7 @@ async def generate_bon(conn: Connection, order_id: int, out_file: Path) -> tuple
         order_id,
     )
     if len(aggregations) == 0:
-        return False, "could not fetch aggregated tax rates"
+        return BonRenderResult(success=False, msg="could not fetch aggregated tax rates")
 
     context = BonTemplateContext(order=order, config=config, tax_rate_aggregations=aggregations)
-    return await render_receipt(context=context, out_file=out_file)
+    return await render_receipt(context=context)
