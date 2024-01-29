@@ -21,7 +21,6 @@ class Customer(Account):
 
 class OrderWithBon(Order):
     bon_generated: Optional[bool]
-    bon_output_file: Optional[str]
 
 
 class SumupCheckoutStatus(enum.Enum):

@@ -116,7 +116,7 @@ async def order_with_bon(
     tax_rate_none: TaxRate,
     cashier: Cashier,
     till: Till,
-) -> tuple[Order, str, TestCustomer]:
+) -> tuple[Order, TestCustomer]:
     product1: Product = await product_service.create_product(
         token=admin_token,
         node_id=event_node.id,
@@ -173,15 +173,15 @@ async def order_with_bon(
     order = await fetch_order(conn=db_connection, order_id=booking.id)
     assert order is not None
 
-    bon_path = "test_bon.pdf"
     await db_connection.execute(
-        "insert into bon (id, generated, generated_at, output_file) overriding system value values ($1, $2, $3, $4)",
+        "insert into bon (id, generated, generated_at, mime_type, content) overriding system value values ($1, $2, $3, $4, $5)",
         order.id,
         True,
         parse("2023-01-01 15:35:02 UTC+1"),
-        bon_path,
+        "application/pdf",
+        b"asdf1234",  # this is obviously not a valid pdf but that's fine for a test
     )
-    return order, bon_path, test_customer
+    return order, test_customer
 
 
 @pytest.fixture
@@ -700,10 +700,8 @@ async def test_auth_customer(customer_service: CustomerService, test_customer: T
         await customer_service.login_customer(uid=test_customer.uid, pin="wrong")
 
 
-async def test_get_orders_with_bon(
-    customer_service: CustomerService, config: Config, order_with_bon: tuple[Order, str, TestCustomer]
-):
-    order, bon_path, test_customer = order_with_bon
+async def test_get_orders_with_bon(customer_service: CustomerService, order_with_bon: tuple[Order, TestCustomer]):
+    order, test_customer = order_with_bon
     # test get_orders_with_bon with wrong token, should raise Unauthorized error
     with pytest.raises(Unauthorized):
         await customer_service.get_orders_with_bon(token="wrong")
@@ -721,9 +719,6 @@ async def test_get_orders_with_bon(
 
     # test bon data
     assert resulting_order_with_bon.bon_generated
-    assert resulting_order_with_bon.bon_output_file == config.customerportal.base_bon_url.format(
-        bon_output_file=bon_path
-    )
 
 
 async def test_update_customer_info(test_customer: TestCustomer, customer_service: CustomerService):

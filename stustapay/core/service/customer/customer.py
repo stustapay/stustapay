@@ -106,17 +106,11 @@ class CustomerService(DBService):
     @with_db_transaction(read_only=True)
     @requires_customer
     async def get_orders_with_bon(self, *, conn: Connection, current_customer: Customer) -> list[OrderWithBon]:
-        orders_with_bon = await conn.fetch_many(
+        return await conn.fetch_many(
             OrderWithBon,
             "select * from order_value_with_bon where customer_account_id = $1 order by booked_at DESC",
             current_customer.id,
         )
-        for order_with_bon in orders_with_bon:
-            if order_with_bon.bon_output_file is not None:
-                order_with_bon.bon_output_file = self.cfg.customerportal.base_bon_url.format(
-                    bon_output_file=order_with_bon.bon_output_file
-                )
-        return orders_with_bon
 
     @with_db_transaction
     @requires_customer
@@ -209,3 +203,17 @@ class CustomerService(DBService):
             sumup_topup_enabled=self.cfg.core.sumup_enabled and node.event.sumup_topup_enabled,
             translation_texts=node.event.translation_texts,
         )
+
+    @with_db_transaction
+    @requires_customer
+    async def get_bon(self, *, conn: Connection, current_customer: Customer, bon_id: int) -> tuple[str, bytes]:
+        blob = await conn.fetchrow(
+            "select content, mime_type from bon b join ordr o on b.id = o.id "
+            "where b.id = $1 and o.customer_account_id = $2",
+            bon_id,
+            current_customer.id,
+        )
+        if not blob:
+            raise InvalidArgument("Bon not found")
+
+        return blob["mime_type"], blob["content"]

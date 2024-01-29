@@ -37,6 +37,10 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/config`, params: { base_url: queryArg.baseUrl } }),
         providesTags: ["base"],
       }),
+      getBon: build.query<GetBonApiResponse, GetBonApiArg>({
+        query: (queryArg) => ({ url: `/bon/${queryArg.bonId}` }),
+        providesTags: ["base"],
+      }),
       createCheckout: build.mutation<CreateCheckoutApiResponse, CreateCheckoutApiArg>({
         query: (queryArg) => ({ url: `/sumup/create-checkout`, method: "POST", body: queryArg.createCheckoutPayload }),
         invalidatesTags: ["sumup"],
@@ -68,6 +72,10 @@ export type UpdateCustomerInfoDonateAllApiArg = void;
 export type GetCustomerConfigApiResponse = /** status 200 Successful Response */ CustomerPortalApiConfig;
 export type GetCustomerConfigApiArg = {
   baseUrl: string;
+};
+export type GetBonApiResponse = /** status 200 Successful Response */ any;
+export type GetBonApiArg = {
+  bonId: number;
 };
 export type CreateCheckoutApiResponse = /** status 200 Successful Response */ CreateCheckoutResponse;
 export type CreateCheckoutApiArg = {
@@ -235,7 +243,6 @@ export type OrderWithBon = {
   customer_tag_uid: number | null;
   line_items: LineItem[];
   bon_generated: boolean | null;
-  bon_output_file: string | null;
 };
 export type OrderWithBonRead = {
   id: number;
@@ -253,7 +260,6 @@ export type OrderWithBonRead = {
   customer_tag_uid: number | null;
   line_items: LineItemRead[];
   bon_generated: boolean | null;
-  bon_output_file: string | null;
   customer_tag_uid_hex: string | null;
 };
 export type CustomerBank = {
@@ -301,6 +307,8 @@ export const {
   useUpdateCustomerInfoDonateAllMutation,
   useGetCustomerConfigQuery,
   useLazyGetCustomerConfigQuery,
+  useGetBonQuery,
+  useLazyGetBonQuery,
   useCreateCheckoutMutation,
   useCheckCheckoutMutation,
 } = injectedRtkApi;

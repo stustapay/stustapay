@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import yaml
 from pydantic import BaseModel
@@ -39,11 +38,9 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     base_url: str
     host: str = "localhost"
     port: int = 8082
-    base_bon_url: str
 
 
 class BonConfig(BaseModel):
-    output_folder: Path
     n_workers: int = 1
 
 

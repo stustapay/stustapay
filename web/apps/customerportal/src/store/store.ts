@@ -7,6 +7,7 @@ import storage from "redux-persist/lib/storage";
 import { authSlice } from "./authSlice";
 import { errorMiddleware } from "./errorMiddleware";
 import { uiSlice } from "./uiSlice";
+import { authApi } from "@/api/authApi";
 
 const authPersistConfig = {
   key: "auth",
@@ -25,12 +26,14 @@ export const store = configureStore({
     [authSlice.name]: persistReducer(authPersistConfig, authSlice.reducer),
     [uiSlice.name]: persistReducer(uiPersistConfig, uiSlice.reducer),
     [api.reducerPath]: api.reducer,
+    [authApi.reducerPath]: authApi.reducer,
   }),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: { ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER] },
     })
       .concat(api.middleware)
+      .concat(authApi.middleware)
       .concat(errorMiddleware),
 });
 

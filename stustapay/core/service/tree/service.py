@@ -276,11 +276,11 @@ class TreeService(DBService):
     @with_db_transaction
     @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
-    async def generate_test_bon(self, *, conn: Connection, node: Node) -> bytes:
+    async def generate_test_bon(self, *, conn: Connection, node: Node) -> tuple[str, bytes]:
         if node.event_node_id is None:
             raise InvalidArgument("Cannot generate bon for a node not associated with an event")
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         dummy_bon = await generate_dummy_bon(node_id=node.event_node_id, event=event)
-        if dummy_bon.error is not None or dummy_bon.pdf is None:
-            raise InvalidArgument(f"Error while generating dummy bon: {dummy_bon.error}")
-        return dummy_bon.pdf
+        if not dummy_bon.success or dummy_bon.bon is None:
+            raise InvalidArgument(f"Error while generating dummy bon: {dummy_bon.msg}")
+        return dummy_bon.bon.mime_type, dummy_bon.bon.content

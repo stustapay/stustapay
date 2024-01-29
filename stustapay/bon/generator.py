@@ -2,9 +2,7 @@
 import asyncio
 import json
 import logging
-import os
 import sys
-from uuid import UUID
 
 from asyncpg.exceptions import PostgresError
 
@@ -30,12 +28,6 @@ class Generator:
         self.db_conn: Connection
         self.db_hook: DBHook
         self.bon_config: BonConfig
-
-        try:
-            os.makedirs(self.config.bon.output_folder, exist_ok=True)
-        except OSError as e:
-            self.logger.fatal(f"Failed to create bon output directory '{self.config.bon.output_folder}'. {e}")
-            sys.exit(1)
 
     def _should_process_order(self, order_id: int) -> bool:
         return order_id % self.n_workers == self.worker_id
@@ -68,7 +60,7 @@ class Generator:
             )
             for row in missing_bons:
                 async with conn.transaction(isoloation="serializable"):
-                    await self.process_bon(conn=conn, order_id=row["id"], order_uuid=row["uuid"])
+                    await self.process_bon(conn=conn, order_id=row["id"])
             self.logger.info("Finished generating left-over bons")
 
     async def handle_hook(self, payload):
@@ -83,7 +75,7 @@ class Generator:
                 async with conn.transaction(isolation="serializable"):
                     order_uuid = await conn.fetchval("select uuid from ordr where id = $1", bon_id)
                     assert order_uuid is not None
-                    await self.process_bon(conn=conn, order_id=bon_id, order_uuid=order_uuid)
+                    await self.process_bon(conn=conn, order_id=bon_id)
         except json.JSONDecodeError as e:
             self.logger.error(f"Error while trying to decode database payload for bon notification: {e}")
         except PostgresError as e:
@@ -96,26 +88,27 @@ class Generator:
                 f"Unexpected error while processing bon: {traceback.format_exception(exc_type, exc_value, exc_traceback)}"
             )
 
-    async def process_bon(self, conn: Connection, order_id: int, order_uuid: UUID):
+    async def process_bon(self, conn: Connection, order_id: int):
         """
         Queries the database for the bon data and generates it.
         Then saves the result back to the database
         """
-        file_name = f"{order_uuid}.pdf"
-        out_file = self.config.bon.output_folder.joinpath(file_name)
-
         # Generate the PDF and store the result back in the database
         self.logger.debug(f"Generating Bon for order {order_id}...")
-        success, msg = await generate_bon(conn=conn, order_id=order_id, out_file=out_file)
-        self.logger.debug(f"Bon {order_id} generated with result {success}, {msg}")
-        if success:
+        render_result = await generate_bon(conn=conn, order_id=order_id)
+        self.logger.debug(f"Bon {order_id} generated with result {render_result.success}, {render_result.msg}")
+        if render_result.success and render_result.bon is not None:
             await conn.execute(
-                "update bon set generated = true, output_file = $2 , generated_at = now() where id = $1",
+                "update bon set generated = true, generated_at = now(), content = $2 , mime_type = $3 where id = $1",
                 order_id,
-                file_name,
+                render_result.bon.content,
+                render_result.bon.mime_type,
             )
         else:
-            self.logger.warning(f"Error while generating bon: {msg}")
+            self.logger.warning(f"Error while generating bon: {render_result.msg}")
             await conn.execute(
-                "update bon set generated = $2, error = $3, generated_at = now() where id = $1", order_id, success, msg
+                "update bon set generated = $2, error = $3, generated_at = now() where id = $1",
+                order_id,
+                False,
+                render_result.msg,
             )
