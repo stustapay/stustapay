@@ -1,0 +1,11 @@
+[Unit]
+Description=StuStaPay Administration API
+After=postgresql.service
+
+[Service]
+ExecStart=/usr/lib/stustapay/venv/bin/stustapay administration-api
+User=stustapay
+Group=stustapay
+
+[Install]
+WantedBy=multi-user.target

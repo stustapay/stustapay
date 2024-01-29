@@ -1,0 +1,11 @@
+[Unit]
+Description=StuStaPay Customerportal API
+After=postgresql.service
+
+[Service]
+ExecStart=/usr/lib/stustapay/venv/bin/stustapay customerportal-api
+User=stustapay
+Group=stustapay
+
+[Install]
+WantedBy=multi-user.target

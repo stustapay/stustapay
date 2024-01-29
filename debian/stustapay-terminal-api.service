@@ -1,0 +1,11 @@
+[Unit]
+Description=StuStaPay Terminal API
+After=postgresql.service
+
+[Service]
+ExecStart=/usr/lib/stustapay/venv/bin/stustapay terminalserver-api
+User=stustapay
+Group=stustapay
+
+[Install]
+WantedBy=multi-user.target

@@ -44,6 +44,7 @@ class CustomerPortalApiConfig(HTTPServerConfig):
 
 class BonConfig(BaseModel):
     output_folder: Path
+    n_workers: int = 1
 
 
 class Config(BaseModel):

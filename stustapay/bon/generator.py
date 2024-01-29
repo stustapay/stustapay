@@ -21,7 +21,7 @@ class Generator:
     """
 
     def __init__(self, config: Config, n_workers: int = 1, worker_id: int = 0):
-        self.n_workers = n_workers
+        self.n_workers = config.bon.n_workers
         self.worker_id = worker_id
         self.config = config
         self.logger = logging.getLogger(__name__)
