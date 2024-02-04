@@ -1,5 +1,4 @@
 import datetime
-import enum
 import uuid
 from typing import Optional
 
@@ -7,6 +6,7 @@ from pydantic import BaseModel
 
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.order import Order
+from stustapay.payment.sumup.api import SumUpCheckoutStatus
 
 
 class Customer(Account):
@@ -23,12 +23,6 @@ class OrderWithBon(Order):
     bon_generated: Optional[bool]
 
 
-class SumupCheckoutStatus(enum.Enum):
-    PENDING = "PENDING"
-    FAILED = "FAILED"
-    PAID = "PAID"
-
-
 class CustomerCheckout(BaseModel):
     checkout_reference: uuid.UUID
     amount: float
@@ -36,7 +30,7 @@ class CustomerCheckout(BaseModel):
     merchant_code: str
     description: str
     id: str
-    status: SumupCheckoutStatus
+    status: SumUpCheckoutStatus
     date: datetime.datetime
     valid_until: Optional[datetime.datetime]
     last_checked: Optional[datetime.datetime]

@@ -22,6 +22,7 @@ export const addTagTypes = [
   "tses",
   "payouts",
   "tree",
+  "sumup",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -730,6 +731,18 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-bon`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
+      listSumupCheckouts: build.query<ListSumupCheckoutsApiResponse, ListSumupCheckoutsApiArg>({
+        query: (queryArg) => ({ url: `/sumup/checkouts`, params: { node_id: queryArg.nodeId } }),
+        providesTags: ["sumup"],
+      }),
+      listSumupTransactions: build.query<ListSumupTransactionsApiResponse, ListSumupTransactionsApiArg>({
+        query: (queryArg) => ({ url: `/sumup/transactions`, params: { node_id: queryArg.nodeId } }),
+        providesTags: ["sumup"],
+      }),
+      getSumupCheckout: build.query<GetSumupCheckoutApiResponse, GetSumupCheckoutApiArg>({
+        query: (queryArg) => ({ url: `/sumup/checkouts/${queryArg.checkoutId}`, params: { node_id: queryArg.nodeId } }),
+        providesTags: ["sumup"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1238,6 +1251,19 @@ export type GetRestrictedEventSettingsApiArg = {
 };
 export type GenerateTestBonApiResponse = /** status 200 Successful Response */ any;
 export type GenerateTestBonApiArg = {
+  nodeId: number;
+};
+export type ListSumupCheckoutsApiResponse = /** status 200 Successful Response */ SumUpCheckout[];
+export type ListSumupCheckoutsApiArg = {
+  nodeId: number;
+};
+export type ListSumupTransactionsApiResponse = /** status 200 Successful Response */ SumUpTransaction[];
+export type ListSumupTransactionsApiArg = {
+  nodeId: number;
+};
+export type GetSumupCheckoutApiResponse = /** status 200 Successful Response */ SumUpCheckout;
+export type GetSumupCheckoutApiArg = {
+  checkoutId: string;
   nodeId: number;
 };
 export type ProductRestriction = "under_16" | "under_18";
@@ -2225,6 +2251,33 @@ export type RestrictedEventSettings = {
   id: number;
   languages: Language[];
 };
+export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
+export type SumUpTransaction = {
+  amount: number;
+  currency: string;
+  id: string;
+  payment_type?: string | null;
+  product_summary?: string | null;
+  card_type?: string | null;
+  type?: string | null;
+  status: string;
+  timestamp: string;
+  transaction_code: string;
+};
+export type SumUpCheckout = {
+  checkout_reference: string;
+  amount: number;
+  currency: string;
+  merchant_code: string;
+  description: string;
+  id: string;
+  status: SumUpCheckoutStatus;
+  valid_until?: string | null;
+  date: string;
+  transaction_code?: string | null;
+  transaction_id?: string | null;
+  transactions?: SumUpTransaction[];
+};
 export const {
   useListProductsQuery,
   useLazyListProductsQuery,
@@ -2368,4 +2421,10 @@ export const {
   useGetRestrictedEventSettingsQuery,
   useLazyGetRestrictedEventSettingsQuery,
   useGenerateTestBonMutation,
+  useListSumupCheckoutsQuery,
+  useLazyListSumupCheckoutsQuery,
+  useListSumupTransactionsQuery,
+  useLazyListSumupTransactionsQuery,
+  useGetSumupCheckoutQuery,
+  useLazyGetSumupCheckoutQuery,
 } = injectedRtkApi;

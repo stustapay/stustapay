@@ -36,6 +36,7 @@ export const translations = {
   registers: "Cash Registers",
   userToRoles: "User to Roles",
   common: {
+    id: "ID",
     definedAtNode: "Node",
     loadingError: "Errors while loading page",
     configLoadFailed: "Something went wrong while loading the page configuration: {{what}}",
@@ -218,6 +219,23 @@ export const translations = {
     update: "Update product",
     delete: "Delete Product",
     deleteDescription: "Confirm product deletion",
+  },
+  sumup: {
+    sumup: "SumUp",
+    checkouts: "SumUp Checkouts",
+    transactions: "Transactions",
+    transaction: {
+      product_summary: "Summary",
+      card_type: "Card Type",
+      type: "Type",
+    },
+    checkout: {
+      reference: "Checkout Reference",
+      amount: "Amount",
+      payment_type: "Payment Type",
+      status: "Status",
+      date: "Date",
+    },
   },
   settings: {
     title: "Settings",

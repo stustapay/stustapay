@@ -60,6 +60,7 @@ import {
   UserToRoleCreate,
 } from "./routes/users";
 import { DsfinvkExport, DsfinvkPageLayout } from "./routes/dsfinvk";
+import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
 
 const router = createBrowserRouter([
   {
@@ -141,6 +142,24 @@ const router = createBrowserRouter([
           {
             path: ":productId",
             element: <ProductDetail />,
+          },
+        ],
+      },
+      {
+        path: "node/:nodeId/sumup",
+        element: <SumUpPageLayout />,
+        children: [
+          {
+            index: true,
+            element: <SumUpTransactionList />,
+          },
+          {
+            path: "checkouts",
+            element: <SumUpCheckoutList />,
+          },
+          {
+            path: ":transactionId",
+            element: <SumUpTransactionDetail />,
           },
         ],
       },

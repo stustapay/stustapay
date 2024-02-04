@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
-from stustapay.core.schema.customer import SumupCheckoutStatus
+from stustapay.core.schema.customer import SumUpCheckoutStatus
 
 router = APIRouter(
     prefix="/sumup",
@@ -29,7 +29,7 @@ class CheckCheckoutPayload(BaseModel):
 
 
 class CheckCheckoutResponse(BaseModel):
-    status: SumupCheckoutStatus
+    status: SumUpCheckoutStatus
 
 
 @router.post("/create-checkout", summary="initiate customer checkout", response_model=CreateCheckoutResponse)
@@ -40,7 +40,6 @@ async def create_checkout(
 ):
     checkout = await customer_service.sumup.create_checkout(token=token, amount=payload.amount)
     return CreateCheckoutResponse(checkout_id=checkout.id)
-    # return CreateCheckoutResponse(checkout_id=str(uuid.uuid4()))
 
 
 @router.post("/check-checkout", summary="after payment check checkout state", response_model=CheckCheckoutResponse)
@@ -51,4 +50,3 @@ async def check_checkout(
 ):
     checkout_status = await customer_service.sumup.check_checkout(token=token, checkout_id=payload.checkout_id)
     return CheckCheckoutResponse(status=checkout_status)
-    # return CheckCheckoutResponse(status=SumupCheckoutStatus.FAILED, checkout_id=str(uuid.uuid4()))

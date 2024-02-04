@@ -9,10 +9,24 @@ import {
   PointOfSale as PointOfSaleIcon,
   Shield as ShieldIcon,
   ShoppingCart as ShoppingCartIcon,
+  Payment as PaymentIcon,
 } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { NavigationTreeItem } from "./NavigationTreeItem";
+import {
+  AccountRoutes,
+  CashierRoutes,
+  OrderRoutes,
+  ProductRoutes,
+  SumUpTransactionRoutes,
+  TicketRoutes,
+  TillRoutes,
+  TseRoutes,
+  UserRoutes,
+  UserTagRoutes,
+  UserToRoleRoutes,
+} from "@/app/routes";
 
 export interface NodeMenuProps {
   node: NodeSeenByUserRead;
@@ -31,9 +45,9 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
     !node.computed_forbidden_objects_at_node.includes("user") ||
     !node.computed_forbidden_objects_at_node.includes("user_role")
   ) {
-    const id = `/node/${node.id}/users`;
+    const id = UserRoutes.list(node.id);
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("users")} labelIcon={PersonIcon} />);
-    const cashierId = `/node/${node.id}/cashiers`;
+    const cashierId = CashierRoutes.list(node.id);
     items.push(
       <NavigationTreeItem
         key={cashierId}
@@ -46,40 +60,46 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
   }
 
   {
-    const id = `/node/${node.id}/user-to-roles`;
+    const id = UserToRoleRoutes.list(node.id);
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("userToRoles")} labelIcon={PersonIcon} />);
   }
 
   if (!node.computed_forbidden_objects_at_node.includes("product")) {
-    const id = `/node/${node.id}/products`;
+    const id = ProductRoutes.list(node.id);
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("products")} labelIcon={ShoppingCartIcon} />
     );
   }
   if (!node.computed_forbidden_objects_at_node.includes("ticket")) {
-    const id = `/node/${node.id}/tickets`;
+    const id = TicketRoutes.list(node.id);
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tickets")} labelIcon={ConfirmationNumberIcon} />
     );
   }
   if (!node.computed_forbidden_objects_at_node.includes("till")) {
-    const id = `/node/${node.id}/tills`;
+    const id = TillRoutes.list(node.id);
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tills")} labelIcon={PointOfSaleIcon} />);
   }
+  if (node.event != null && node.privileges_at_node.includes("node_administration")) {
+    const id = SumUpTransactionRoutes.list(node.id);
+    items.push(
+      <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("sumup.sumup")} labelIcon={PaymentIcon} />
+    );
+  }
   if (!node.computed_forbidden_objects_at_node.includes("account")) {
-    const id = `/node/${node.id}/accounts`;
+    const id = AccountRoutes.list(node.id);
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("accounts")} labelIcon={AccountBalanceIcon} />
     );
   }
   if (!node.computed_forbidden_objects_at_node.includes("till")) {
-    const id = `/node/${node.id}/orders`;
+    const id = OrderRoutes.list(node.id);
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("orders")} labelIcon={AddShoppingCartIcon} />
     );
   }
   if (!node.computed_forbidden_objects_at_node.includes("user_tag")) {
-    const id = `/node/${node.id}/user-tags`;
+    const id = UserTagRoutes.list(node.id);
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("userTag.userTags")} labelIcon={NfcIcon} />
     );
@@ -88,7 +108,7 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
     !node.computed_forbidden_objects_at_node.includes("tse") &&
     node.privileges_at_node.includes("node_administration")
   ) {
-    const id = `/node/${node.id}/tses`;
+    const id = TseRoutes.list(node.id);
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tse.tses")} labelIcon={ShieldIcon} />);
   }
   if (
