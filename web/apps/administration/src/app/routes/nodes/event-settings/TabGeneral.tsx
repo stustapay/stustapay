@@ -1,6 +1,6 @@
 import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, InputAdornment, LinearProgress, Stack } from "@mui/material";
-import { FormNumericInput, FormTextField } from "@stustapay/form-components";
+import { FormNumericInput, FormTextField, FormDateTimePicker, FormTimePicker } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -9,12 +9,27 @@ import { toast } from "react-toastify";
 import { z } from "zod";
 import { CurrencyIdentifierSelect } from "@/components/features";
 import { CurrencyIdentifierSchema, getCurrencySymbolForIdentifier } from "@stustapay/models";
+import i18n from "@/i18n";
 
-const GeneralSettingsSchema = z.object({
-  currency_identifier: CurrencyIdentifierSchema,
-  max_account_balance: z.number(),
-  ust_id: z.string(),
-});
+const GeneralSettingsSchema = z
+  .object({
+    currency_identifier: CurrencyIdentifierSchema,
+    max_account_balance: z.number(),
+    ust_id: z.string(),
+    start_date: z.string().optional().nullable(),
+    end_date: z.string().optional().nullable(),
+    daily_end_time: z.string().optional().nullable(), // TODO: validation
+  })
+  .refine(
+    (values) => {
+      console.log(values);
+      return (
+        (values.start_date == null) === (values.end_date == null) &&
+        (values.start_date === "") === (values.end_date === "")
+      );
+    },
+    { message: i18n.t("settings.general.start_end_date_must_be_set_same"), path: ["end_date"] }
+  );
 
 type GeneralSettings = z.infer<typeof GeneralSettingsSchema>;
 
@@ -70,6 +85,9 @@ export const TabGeneral: React.FC<{ nodeId: number; eventSettings: RestrictedEve
               formik={formik}
             />
             <FormTextField label={t("settings.general.ust_id")} name="ust_id" formik={formik} />
+            <FormDateTimePicker name="start_date" formik={formik} label={t("settings.general.start_date")} />
+            <FormDateTimePicker name="end_date" formik={formik} label={t("settings.general.end_date")} />
+            <FormTimePicker name="daily_end_time" formik={formik} label={t("settings.general.daily_end_time")} />
             {formik.isSubmitting && <LinearProgress />}
             <Button
               type="submit"

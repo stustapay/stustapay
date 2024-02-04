@@ -51,6 +51,11 @@ create table event (
     currency_identifier varchar(255) not null,
     max_account_balance numeric not null,
 
+    start_date timestamptz,
+    end_date timestamptz,  -- TODO: constraint to make sure end_date > start_date
+
+    daily_end_time time,
+
     -- previous values in settings / no other place to put them yet
     ust_id text not null,
     bon_issuer text not null,

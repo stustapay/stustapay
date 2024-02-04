@@ -262,6 +262,10 @@ export const translations = {
       ust_id: "UST ID",
       max_account_balance: "Max account balance",
       currency_identifier: "Currency Identifier",
+      start_date: "Start Date",
+      end_date: "End Date",
+      daily_end_time: "Daily End Time",
+      start_end_date_must_be_set_same: "Start and End Date must both be set or unset",
     },
     customerPortal: {
       tabLabel: "Customer Portal",

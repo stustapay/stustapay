@@ -1,4 +1,5 @@
 import enum
+from datetime import datetime, time
 from itertools import chain
 from typing import Optional
 
@@ -20,6 +21,10 @@ class Language(enum.Enum):
 class _BaseEvent(BaseModel):
     currency_identifier: str
     max_account_balance: float
+
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    daily_end_time: time | None = None
 
     sumup_topup_enabled: bool = False
     sumup_payment_enabled: bool = False

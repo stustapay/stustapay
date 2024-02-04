@@ -2073,6 +2073,9 @@ export type Language = "en-US" | "de-DE";
 export type PublicEventSettings = {
   currency_identifier: string;
   max_account_balance: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  daily_end_time?: string | null;
   sumup_topup_enabled?: boolean;
   sumup_payment_enabled?: boolean;
   customer_portal_url: string;
@@ -2170,6 +2173,9 @@ export type NewEvent = {
   sumup_merchant_code?: string;
   currency_identifier: string;
   max_account_balance: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  daily_end_time?: string | null;
   sumup_topup_enabled?: boolean;
   sumup_payment_enabled?: boolean;
   customer_portal_url: string;
@@ -2201,6 +2207,9 @@ export type UpdateEvent = {
   sumup_merchant_code?: string;
   currency_identifier: string;
   max_account_balance: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  daily_end_time?: string | null;
   sumup_topup_enabled?: boolean;
   sumup_payment_enabled?: boolean;
   customer_portal_url: string;
@@ -2228,6 +2237,9 @@ export type RestrictedEventSettings = {
   sumup_merchant_code?: string;
   currency_identifier: string;
   max_account_balance: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  daily_end_time?: string | null;
   sumup_topup_enabled?: boolean;
   sumup_payment_enabled?: boolean;
   customer_portal_url: string;
