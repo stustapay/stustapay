@@ -3,7 +3,6 @@ import {
   AccountBalance as AccountBalanceIcon,
   AddShoppingCart as AddShoppingCartIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
-  HistoryEdu as HistoryEduIcon,
   Nfc as NfcIcon,
   Person as PersonIcon,
   PointOfSale as PointOfSaleIcon,
@@ -110,13 +109,6 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
   ) {
     const id = TseRoutes.list(node.id);
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tse.tses")} labelIcon={ShieldIcon} />);
-  }
-  if (
-    !node.computed_forbidden_objects_at_node.includes("till") &&
-    node.privileges_at_node.includes("node_administration")
-  ) {
-    const id = `/node/${node.id}/dsfinvk`;
-    items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("dsfinvk")} labelIcon={HistoryEduIcon} />);
   }
 
   return <>{items}</>;

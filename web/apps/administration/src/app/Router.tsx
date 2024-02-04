@@ -59,8 +59,8 @@ import {
   UserToRoleList,
   UserToRoleCreate,
 } from "./routes/users";
-import { DsfinvkExport, DsfinvkPageLayout } from "./routes/dsfinvk";
 import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
+import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
 
 const router = createBrowserRouter([
   {
@@ -113,6 +113,10 @@ const router = createBrowserRouter([
           {
             path: "tax-rates/:taxRateId/edit",
             element: <TaxRateUpdate />,
+          },
+          {
+            path: "dsfinvk",
+            element: <DsfinvkExport />,
           },
         ],
       },
@@ -297,16 +301,6 @@ const router = createBrowserRouter([
           {
             path: ":tillId",
             element: <TillDetail />,
-          },
-        ],
-      },
-      {
-        path: "node/:nodeId/dsfinvk",
-        element: <DsfinvkPageLayout />,
-        children: [
-          {
-            index: true,
-            element: <DsfinvkExport />,
           },
         ],
       },
