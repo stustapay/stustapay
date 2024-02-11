@@ -1,49 +1,55 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python: Customer Portal",
-            "type": "python",
-            "request": "launch",
-            "console": "integratedTerminal",
-            "module": "stustapay.customer_portal",
-            "justMyCode": true,
-            "args": [
-                "-c",
-                "server.yaml",
-                "-vvv",
-                "api"
-            ]
-        },
-        {
-            "name": "FestivalSimulator DB Setup",
-            "type": "python",
-            "request": "launch",
-            "module": "stustapay.festivalsimulator",
-            "justMyCode": true,
-            "args": [
-                "-c",
-                "server.yaml",
-                "-vvv",
-                "setup",
-                "database"
-            ]
-        },
-        {
-            "name": "FestivalSimulator Simulate",
-            "type": "python",
-            "request": "launch",
-            "module": "stustapay.festivalsimulator",
-            "justMyCode": true,
-            "args": [
-                "-c",
-                "server.yaml",
-                "-vvv",
-                "simulate"
-            ]
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Customer Portal",
+      "type": "debugpy",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "module": "stustapay",
+      "justMyCode": true,
+      "args": ["-c", "server.yaml", "-vvv", "customerportal-api"]
+    },
+    {
+      "name": "Python: Administration Portal",
+      "type": "debugpy",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "module": "stustapay",
+      "justMyCode": true,
+      "args": ["-c", "server.yaml", "-vvv", "administration-api"]
+    },
+    {
+      "name": "FestivalSimulator DB Setup",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "stustapay",
+      "justMyCode": true,
+      "args": ["-c", "server.yaml", "-vvv", "simulate", "setup"]
+    },
+    {
+      "name": "FestivalSimulator Simulate",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "stustapay",
+      "justMyCode": true,
+      "args": [
+        "-c",
+        "server.yaml",
+        "-vvv",
+        "simulate",
+        "api",
+        "--no-tse",
+        "--no-bon"
+      ]
+    },
+    {
+      "name": "FestivalSimulator Simulate",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "stustapay",
+      "justMyCode": true,
+      "args": ["-c", "server.yaml", "-vvv", "simulate", "start"]
+    }
+  ]
 }
