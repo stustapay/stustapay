@@ -20,6 +20,8 @@ from stustapay.core.service.tree.service import TreeService
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.service.user_tag import UserTagService
+
+from ..core.service.sumup import SumUpService
 from .routers import account, auth, cashier
 from .routers import config as config_router
 from .routers import (
@@ -27,6 +29,7 @@ from .routers import (
     payout,
     product,
     stats,
+    sumup,
     tax_rate,
     ticket,
     till,
@@ -39,9 +42,7 @@ from .routers import (
     tse,
     user,
     user_tag,
-    sumup
 )
-from ..core.service.sumup import SumUpService
 
 
 def get_server(config: Config):
@@ -117,7 +118,7 @@ class Api:
             customer_service=CustomerService(
                 db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service
             ),
-            sumup_service=SumUpService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
+            sumup_service=SumUpService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
         try:
             self.server.add_task(asyncio.create_task(run_healthcheck(db_pool=db_pool, service_name="administration")))

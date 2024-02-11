@@ -5,10 +5,14 @@ from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction, requires_node, requires_user
+from stustapay.core.service.common.decorators import (
+    requires_node,
+    requires_user,
+    with_db_transaction,
+)
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from stustapay.framework.database import Connection
-from stustapay.payment.sumup.api import SumUpCheckout, SumUpApi, SumUpTransaction
+from stustapay.payment.sumup.api import SumUpApi, SumUpCheckout, SumUpTransaction
 
 
 class SumUpService(DBService):

@@ -2,7 +2,7 @@ import asyncio
 import enum
 import logging
 import uuid
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 import aiohttp
 from pydantic import BaseModel
@@ -63,7 +63,7 @@ class SumUpCheckout(SumUpCreateCheckout):
 
 
 class SumUpApi:
-    SUMUP_API_URL = f"https://api.sumup.com/v0.1"
+    SUMUP_API_URL = "https://api.sumup.com/v0.1"
     SUMUP_CHECKOUT_URL = f"{SUMUP_API_URL}/checkouts"
     SUMUP_AUTH_REFRESH_THRESHOLD = timedelta(seconds=180)
     SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
@@ -87,14 +87,14 @@ class SumUpApi:
                     if not response.ok:
                         resp = await response.json()
                         err = _SumUpErrorFormat.model_validate(resp)
-                        raise SumUpError(f'SumUp API returned an error: {err.error_code} - "{err.message}"')
+                        raise SumUpError(f"SumUp API returned an error: {err.error}")
                     return await response.json()
             except asyncio.TimeoutError as e:
                 raise SumUpError("SumUp API timeout") from e
             except Exception as e:  # pylint: disable=bare-except
                 if isinstance(e, SumUpError):
                     raise e
-                raise SumUpError("SumUp API returned an unknown error")
+                raise SumUpError("SumUp API returned an unknown error") from e
 
     async def _post(self, url: str, data: BaseModel, query: dict | None = None) -> dict:
         async with aiohttp.ClientSession(
@@ -110,14 +110,14 @@ class SumUpApi:
                             raise SumUpError(f'SumUp API returned an error: "{err.error}"')
                         except Exception as e:
                             logging.error(f"SumUp API error {response.content}, {e}")
-                            raise SumUpError("SumUp API returned an unknown error")
+                            raise SumUpError("SumUp API returned an unknown error") from e
                     return await response.json()
             except asyncio.TimeoutError as e:
                 raise SumUpError("SumUp API timeout") from e
             except Exception as e:  # pylint: disable=bare-except
                 if isinstance(e, SumUpError):
                     raise e
-                raise SumUpError(f"SumUp API returned an unknown error {e}")
+                raise SumUpError(f"SumUp API returned an unknown error {e}") from e
 
     async def check_sumup_auth(self) -> bool:
         url = f"{self.SUMUP_API_URL}/merchants/{self.merchant_code}/payment-methods"

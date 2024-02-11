@@ -10,10 +10,7 @@ from pydantic import BaseModel
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
-from stustapay.core.schema.customer import (
-    Customer,
-    CustomerCheckout,
-)
+from stustapay.core.schema.customer import Customer, CustomerCheckout
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.tree import RestrictedEventSettings
 from stustapay.core.schema.user import format_user_tag_uid
@@ -38,12 +35,17 @@ from stustapay.core.service.order.booking import (
 from stustapay.core.service.product import fetch_top_up_product
 from stustapay.core.service.till.common import fetch_virtual_till
 from stustapay.core.service.tree.common import (
+    fetch_event_node_for_node,
     fetch_node,
     fetch_restricted_event_settings_for_node,
-    fetch_event_node_for_node,
 )
 from stustapay.framework.database import Connection
-from stustapay.payment.sumup.api import SumUpApi, SumUpCheckout, SumUpCreateCheckout, SumUpCheckoutStatus
+from stustapay.payment.sumup.api import (
+    SumUpApi,
+    SumUpCheckout,
+    SumUpCheckoutStatus,
+    SumUpCreateCheckout,
+)
 
 
 class SumUpError(ServiceException):
@@ -92,6 +94,7 @@ def _get_sumup_auth_headers(event: RestrictedEventSettings) -> dict:
 
 
 class SumupService(DBService):
+    SUMUP_API_URL = "https://api.sumup.com/v0.1"
     SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
     SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
 
@@ -300,6 +303,7 @@ class SumupService(DBService):
     @requires_sumup_enabled
     async def create_checkout(self, *, conn: Connection, current_customer: Customer, amount: float) -> SumUpCheckout:
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
+        assert event_node is not None
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)
 
         # check amount

@@ -7,7 +7,7 @@ import time
 
 from asyncpg.exceptions import PostgresError
 
-from stustapay.bon.bon import BonConfig, generate_bon
+from stustapay.bon.bon import generate_bon
 from stustapay.core.config import Config
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.service.common.dbhook import DBHook

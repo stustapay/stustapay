@@ -1,7 +1,7 @@
 import asyncio
 import threading
-from functools import wraps
 import traceback
+from functools import wraps
 
 from stustapay.framework.database import create_db_pool
 
@@ -29,7 +29,6 @@ class AsyncThread:
             try:
                 await self.callable()
             except:  # pylint: disable=bare-except
-                pass
                 traceback.print_exc()
             print("runner exited")
 
