@@ -28,6 +28,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
+import { CashierRoutes, TillRoutes } from "@/app/routes";
 
 const CloseOutDataSchema = z.object({
   comment: z.string(),
@@ -108,7 +109,7 @@ export const CashierCloseOut: React.FC = () => {
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate(`/cashiers/${cashierId}`);
+        navigate(CashierRoutes.detail(cashierId));
       })
       .catch((err) => {
         setSubmitting(false);
@@ -128,7 +129,7 @@ export const CashierCloseOut: React.FC = () => {
           <AlertTitle>{t("closeOut.warningStillLoggedInTitle")}</AlertTitle>
           {t("closeOut.warningStillLoggedIn")}
           {cashier.till_ids.map((till_id) => (
-            <RouterLink to={`/tills/${till_id}`}>{getTill(till_id)?.name}</RouterLink>
+            <RouterLink to={TillRoutes.detail(till_id, getTill(till_id)?.node_id)}>{getTill(till_id)?.name}</RouterLink>
           ))}
         </Alert>
       )}
@@ -232,31 +233,33 @@ export const CashierCloseOut: React.FC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-            <Paper sx={{ mt: 2, p: 3 }}>
-              <UserSelect
-                label={t("closeOut.closingOutUser")}
-                value={formik.values.closingOutUserId}
-                onBlur={formik.handleBlur}
-                // TODO: readd filter once roles are again propagated with users
-                // filterRole="finanzorga"
-                onChange={(val) => formik.setFieldValue("closingOutUserId", val)}
-                error={formik.touched.closingOutUserId && !!formik.errors.closingOutUserId}
-                helperText={(formik.touched.closingOutUserId && formik.errors.closingOutUserId) as string}
-              />
-              <CashingTextField
-                multiline
-                fullWidth
-                label={t("closeOut.comment")}
-                name="comment"
-                value={formik.values.comment}
-                onChange={(val) => formik.setFieldValue("comment", val)}
-                error={formik.touched.comment && !!formik.errors.comment}
-                helperText={(formik.touched.comment && formik.errors.comment) as string}
-              />
-              {formik.isSubmitting && <LinearProgress />}
-              <Button type="submit" disabled={formik.isSubmitting}>
-                {t("submit")}
-              </Button>
+            <Paper sx={{ mt: 2, p: 2 }}>
+              <Stack spacing={2}>
+                <UserSelect
+                  label={t("closeOut.closingOutUser")}
+                  value={formik.values.closingOutUserId}
+                  onBlur={formik.handleBlur}
+                  // TODO: readd filter once roles are again propagated with users
+                  // filterRole="finanzorga"
+                  onChange={(val) => formik.setFieldValue("closingOutUserId", val)}
+                  error={formik.touched.closingOutUserId && !!formik.errors.closingOutUserId}
+                  helperText={(formik.touched.closingOutUserId && formik.errors.closingOutUserId) as string}
+                />
+                <CashingTextField
+                  multiline
+                  fullWidth
+                  label={t("closeOut.comment")}
+                  name="comment"
+                  value={formik.values.comment}
+                  onChange={(val) => formik.setFieldValue("comment", val)}
+                  error={formik.touched.comment && !!formik.errors.comment}
+                  helperText={(formik.touched.comment && formik.errors.comment) as string}
+                />
+                {formik.isSubmitting && <LinearProgress />}
+                <Button type="submit" variant="outlined" disabled={formik.isSubmitting}>
+                  {t("submit")}
+                </Button>
+              </Stack>
             </Paper>
             <CashierShiftStatsOverview cashierId={cashier.id} />
           </Form>

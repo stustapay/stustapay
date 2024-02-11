@@ -38,7 +38,7 @@ async def write_healtcheck_status(db_pool: asyncpg.Pool, healthcheck_dir: Path, 
         status_file_name = healthcheck_dir / f"{service_name}.json"
         status_file_name.parent.mkdir(parents=True, exist_ok=True)
         with status_file_name.open("w+") as f:
-            f.write(status.json())
+            f.write(status.model_dump_json())
     except:  # pylint: disable=bare-except
         logging.error(f"An unexpected error occured during healthcheck {traceback.format_exc()}")
 
@@ -50,6 +50,9 @@ async def run_healthcheck(db_pool: asyncpg.Pool, service_name: str):
         logging.error(f"An unexpected error while trying to obtain the healtcheck output dir {traceback.format_exc()}")
         return
 
-    while True:
-        await write_healtcheck_status(db_pool=db_pool, service_name=service_name, healthcheck_dir=healthcheck_dir)
-        await asyncio.sleep(30)
+    try:
+        while True:
+            await write_healtcheck_status(db_pool=db_pool, service_name=service_name, healthcheck_dir=healthcheck_dir)
+            await asyncio.sleep(30)
+    except asyncio.CancelledError:
+        return

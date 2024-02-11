@@ -5,6 +5,7 @@ Helper Functions to generate pdfs from latex templates and store the result as f
 import asyncio
 import os
 import re
+import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional
@@ -151,17 +152,20 @@ async def pdflatex(file_content: str) -> BonRenderResult:
 
         latexmk = ["latexmk", "-xelatex", "-halt-on-error", main_tex]
 
-        proc = await asyncio.create_subprocess_exec(
-            *latexmk,
-            env=newenv,
-            cwd=tmp_dir,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, _ = await proc.communicate()
-        # latex failed
-        if proc.returncode != 0:
-            return BonRenderResult(success=False, msg=stdout.decode("utf-8")[-800:])
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *latexmk,
+                env=newenv,
+                cwd=tmp_dir,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, _ = await proc.communicate()
+            # latex failed
+            if proc.returncode != 0:
+                return BonRenderResult(success=False, msg=stdout.decode("utf-8")[-800:])
+        except subprocess.SubprocessError as e:
+            return BonRenderResult(success=False, msg=f"latex failed with error {e}")
 
         output_pdf = Path(tmp_dir) / "main.pdf"
 

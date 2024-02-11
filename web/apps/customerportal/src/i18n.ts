@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import translationsEn from "./assets/locales/en/translations";
-import translationsDe from "./assets/locales/de/translations";
+import translationsEn from "./locales/en/translations";
+import translationsDe from "./locales/de/translations";
 import LanguageDetector from "i18next-browser-languagedetector";
 
 export const defaultNS = "translations";

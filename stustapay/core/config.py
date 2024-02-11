@@ -50,7 +50,7 @@ class Config(BaseModel):
     administration: AdministrationApiConfig
     terminalserver: TerminalApiConfig
     customerportal: CustomerPortalApiConfig
-    bon: BonConfig
+    bon: BonConfig = BonConfig()
 
 
 def read_config(config_path: os.PathLike) -> Config:

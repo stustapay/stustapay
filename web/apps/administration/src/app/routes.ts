@@ -2,11 +2,10 @@ import { Privilege } from "@/api";
 
 export interface IRouteBuilder {
   readonly privilege: Privilege;
-  list: () => string;
-  add: () => string;
-  detail: (id?: string | number) => string;
-  edit: (id?: string | number) => string;
-  base: () => string;
+  list: (nodeId?: number) => string;
+  add: (nodeId?: number) => string;
+  detail: (id?: string | number | null, nodeId?: number) => string;
+  edit: (id?: string | number | null, nodeId?: number) => string;
 }
 
 export const nodeUrlBaseRegex = /^\/node\/(?<nodeId>[\d]+)/;
@@ -17,7 +16,10 @@ class RouteBuilder implements IRouteBuilder {
     public privilege: Privilege
   ) {}
 
-  public base = () => {
+  private base = (nodeId?: number) => {
+    if (nodeId !== undefined) {
+      return `/node/${nodeId}/${this.resourceUrl}`;
+    }
     const match = window.location.pathname.match(nodeUrlBaseRegex);
     if (!match) {
       return "";
@@ -25,17 +27,17 @@ class RouteBuilder implements IRouteBuilder {
     return `${match[0]}/${this.resourceUrl}`;
   };
 
-  public list = () => {
-    return this.base();
+  public list = (nodeId?: number) => {
+    return this.base(nodeId);
   };
-  public add = () => {
-    return this.base() + `/new`;
+  public add = (nodeId?: number) => {
+    return this.base(nodeId) + `/new`;
   };
-  public edit = (id?: string | number) => {
-    return this.base() + `/${id}/edit`;
+  public edit = (id?: string | number | null, nodeId?: number) => {
+    return this.base(nodeId) + `/${id}/edit`;
   };
-  public detail = (id?: string | number | null) => {
-    return this.base() + `/${id}`;
+  public detail = (id?: string | number | null, nodeId?: number) => {
+    return this.base(nodeId) + `/${id}`;
   };
 
   public detailAction = (id: string | number | undefined | null, suffix: string) => {
@@ -61,3 +63,5 @@ export const UserTagRoutes = new RouteBuilder("user-tags", "node_administration"
 export const OrderRoutes = new RouteBuilder("orders", "node_administration");
 export const TseRoutes = new RouteBuilder("tses", "node_administration");
 export const PayoutRunRoutes = new RouteBuilder("payout-runs", "node_administration");
+export const SumUpTransactionRoutes = new RouteBuilder("sumup", "node_administration");
+export const SumUpCheckoutRoutes = new RouteBuilder("sumup/checkouts", "node_administration");

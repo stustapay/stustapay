@@ -25,9 +25,10 @@ Vcs-Git: https://github.com/stustapay/stustapay.git
 Package: stustapay
 Architecture: any
 Depends:
- postgresql,
  adduser,
  ${misc:Depends},
  ${python3:Depends}
-Suggests: nginx
+Suggests:
+ nginx,
+ postgresql
 Description: Electronic Payment System for Festivals.

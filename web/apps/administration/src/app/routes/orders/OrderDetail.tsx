@@ -1,5 +1,5 @@
 import { useCancelOrderMutation, useGetOrderQuery } from "@/api";
-import { OrderRoutes } from "@/app/routes";
+import { AccountRoutes, OrderRoutes, UserTagRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout, ListItemLink } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
 import { useCurrentNode } from "@/hooks";
@@ -85,12 +85,12 @@ export const OrderDetail: React.FC = () => {
             <ListItemText primary={t("order.bookedAt")} secondary={order.booked_at} />
           </ListItem>
           {order.customer_account_id != null && (
-            <ListItemLink to={`/customer-accounts/${order.customer_account_id}`}>
+            <ListItemLink to={AccountRoutes.detail(order.customer_account_id)}>
               <ListItemText primary={t("order.customerAccountId")} secondary={order.customer_account_id} />
             </ListItemLink>
           )}
           {order.customer_tag_uid_hex != null && (
-            <ListItemLink to={`/user-tags/${order.customer_tag_uid_hex}`}>
+            <ListItemLink to={UserTagRoutes.detail(order.customer_tag_uid_hex)}>
               <ListItemText
                 primary={t("order.customerTagUid")}
                 secondary={formatUserTagUid(order.customer_tag_uid_hex)}

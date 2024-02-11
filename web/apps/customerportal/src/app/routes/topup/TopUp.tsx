@@ -13,7 +13,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { Navigate, Link as RouterLink } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
-import type { SumUpCard, SumUpResponseType } from "./SumUpCard";
+import type { SumUpCard, SumUpCardInstance, SumUpResponseType } from "./SumUpCard";
 
 const TopUpSchema = z.object({
   amount: z.number().int(i18n.t("topup.errorAmountMustBeIntegral")).positive(i18n.t("topup.errorAmountGreaterZero")),
@@ -74,6 +74,9 @@ const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
+type SumUpCardRespHandler = (type: SumUpResponseType, body: object) => void;
+type SumUpCardLoadHandler = () => void;
+
 export const TopUp: React.FC = () => {
   const { t, i18n } = useTranslation();
 
@@ -84,9 +87,9 @@ export const TopUp: React.FC = () => {
   const [createCheckout] = useCreateCheckoutMutation();
   const [checkCheckout] = useCheckCheckoutMutation();
 
-  const sumupCard = React.useRef<any | undefined>(undefined);
-  const handleSumupCardResp = React.useRef<any | undefined>(undefined);
-  const handleSumupCardLoad = React.useRef<any | undefined>(undefined);
+  const sumupCard = React.useRef<SumUpCardInstance | undefined>(undefined);
+  const handleSumupCardResp = React.useRef<SumUpCardRespHandler | undefined>(undefined);
+  const handleSumupCardLoad = React.useRef<SumUpCardLoadHandler | undefined>(undefined);
 
   const [state, dispatch] = React.useReducer(reducer, initialState);
 
@@ -95,14 +98,14 @@ export const TopUp: React.FC = () => {
   };
 
   React.useEffect(() => {
-    handleSumupCardResp.current = (type: SumUpResponseType, body: any) => {
+    handleSumupCardResp.current = (type: SumUpResponseType, body: object) => {
       console.log("handle sumup resp called");
       if (state.stage !== "sumup") {
         return;
       }
       console.log("Type", type);
       console.log("Body", body);
-      if (type === "invalid" && body?.message) {
+      if (type === "invalid" && "message" in body && typeof body.message === "string") {
         toast.error(body.message);
       }
 
@@ -152,8 +155,12 @@ export const TopUp: React.FC = () => {
       console.log("updating sumup card with config", config);
       sumupCard.current.update(config);
     } else {
-      sumupCard.current = SumUpCard.mount(config);
-      // sumupCard.current = SumUpCardMock.mount(config);
+      try {
+        sumupCard.current = SumUpCard.mount(config);
+        // sumupCard.current = SumUpCardMock.mount(config);
+      } catch (e) {
+        console.error("Mounting sumup card threw an error", e);
+      }
     }
   }, [config, state, i18n, checkCheckout, dispatch]);
 

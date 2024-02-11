@@ -68,6 +68,6 @@ async def get_restricted_event_settings(
     },
 )
 async def generate_test_bon(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
-    pdf_content = await tree_service.generate_test_bon(token=token, node_id=node_id)
+    mime_type, content = await tree_service.generate_test_bon(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="test_bon.pdf"'}
-    return Response(pdf_content, headers=headers, media_type="application/pdf")
+    return Response(content, headers=headers, media_type=mime_type)

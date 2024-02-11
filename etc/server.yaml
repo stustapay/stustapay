@@ -9,20 +9,16 @@ core:
   secret_key: "<generate a secret key>"
 
 administration:
-  base_url: "http://localhost:8081" # TODO: change to production url
+  base_url: "http://localhost:8081/api" # TODO: change to production url
   host: "localhost"
   port: 8081
 
-terminalserver:
-  base_url: "http://localhost:8082" # TODO: change to production url
+customerportal:
+  base_url: "http://localhost:8082/api" # TODO: change to production url
   host: "localhost"
   port: 8082
 
-customerportal:
-  base_url: "http://localhost:8083" # TODO: change to production url
+terminalserver:
+  base_url: "http://localhost:8083/api" # TODO: change to production url
   host: "localhost"
   port: 8083
-  base_bon_url: "https://<my-customerportal-url>/{bon_output_file}"
-
-bon:
-  output_folder: "/tmp/stustapay_bons"

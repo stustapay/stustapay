@@ -1,5 +1,12 @@
 import * as React from "react";
-import { StepperForm, FormStep, FormTextField, FormNumericInput } from "@stustapay/form-components";
+import {
+  StepperForm,
+  FormStep,
+  FormTextField,
+  FormNumericInput,
+  FormDateTimePicker,
+  FormTimePicker,
+} from "@stustapay/form-components";
 import { z } from "zod";
 import { FormikProps } from "formik";
 import { Container, InputAdornment, Stack, Typography } from "@mui/material";
@@ -19,17 +26,31 @@ import { CurrencyIdentifierSelect } from "@/components/features";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { withPrivilegeGuard } from "@/app/layout";
+import i18n from "@/i18n";
 
-const GeneralFormSchema = z.object({
-  name: z.string(),
-  description: z
-    .string()
-    .optional()
-    .transform((val) => val ?? ""),
-  currency_identifier: CurrencyIdentifierSchema,
-  max_account_balance: z.number(),
-  ust_id: z.string(),
-});
+const GeneralFormSchema = z
+  .object({
+    name: z.string(),
+    description: z
+      .string()
+      .optional()
+      .transform((val) => val ?? ""),
+    currency_identifier: CurrencyIdentifierSchema,
+    max_account_balance: z.number(),
+    ust_id: z.string(),
+    start_date: z.string().optional().nullable(),
+    end_date: z.string().optional().nullable(),
+    daily_end_time: z.string().optional().nullable(), // TODO: validation
+  })
+  .refine(
+    (values) => {
+      return (
+        (values.start_date == null) === (values.end_date == null) &&
+        (values.start_date === "") === (values.end_date === "")
+      );
+    },
+    { message: i18n.t("settings.general.start_end_date_must_be_set_same"), path: ["end_date"] }
+  );
 
 type GeneralFormValues = z.infer<typeof GeneralFormSchema>;
 
@@ -59,6 +80,9 @@ const GeneralForm: React.FC<FormikProps<GeneralFormValues>> = (formik) => {
         }}
       />
       <FormTextField label={t("settings.general.ust_id")} name="ust_id" formik={formik} />
+      <FormDateTimePicker name="start_date" formik={formik} label={t("settings.general.start_date")} />
+      <FormDateTimePicker name="end_date" formik={formik} label={t("settings.general.end_date")} />
+      <FormTimePicker name="daily_end_time" formik={formik} label={t("settings.general.daily_end_time")} />
     </Stack>
   );
 };
@@ -71,6 +95,9 @@ const generalFormStep: FormStep = {
     currency_identifier: "EUR",
     max_account_balance: null as unknown as number,
     ust_id: "",
+    start_date: null,
+    end_date: null,
+    daily_end_date: null,
   },
   schema: GeneralFormSchema,
   form: GeneralForm,

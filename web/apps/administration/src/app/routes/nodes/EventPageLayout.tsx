@@ -1,11 +1,12 @@
 import { Node } from "@/api";
-import { TaxRateRoutes } from "@/app/routes";
+import { PayoutRunRoutes, TaxRateRoutes } from "@/app/routes";
 import {
   Dashboard as DashboardIcon,
   Leaderboard as LeaderboardIcon,
   Money as MoneyIcon,
   Percent as PercentIcon,
   Settings as SettingsIcon,
+  HistoryEdu as HistoryEduIcon,
 } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import * as React from "react";
@@ -22,11 +23,14 @@ const getActiveTab = (nodeId: number, location: string) => {
   if (location.startsWith(`/node/${nodeId}/settings-legacy`)) {
     return `/node/${nodeId}/settings-legacy`;
   }
-  if (location.startsWith(`/node/${nodeId}/payout-runs`)) {
-    return `/node/${nodeId}/payout-runs`;
+  if (location.startsWith(PayoutRunRoutes.list(nodeId))) {
+    return PayoutRunRoutes.list(nodeId);
   }
-  if (location.startsWith(`/node/${nodeId}/tax-rates`)) {
-    return `/node/${nodeId}/tax-rates`;
+  if (location.startsWith(TaxRateRoutes.list(nodeId))) {
+    return TaxRateRoutes.list(nodeId);
+  }
+  if (location.startsWith(`/node/${nodeId}/dsfinvk`)) {
+    return `/node/${nodeId}/dsfinvk`;
   }
   return `/node/${nodeId}`;
 };
@@ -74,6 +78,14 @@ export const EventPageLayout: React.FC<{ node: Node }> = ({ node }) => {
           icon={<MoneyIcon />}
           iconPosition="start"
           to={`${nodeUrl}/payout-runs`}
+        />
+        <Tab
+          label={t("dsfinvk")}
+          component={RouterLink}
+          value={`${nodeUrl}/dsfinvk`}
+          icon={<HistoryEduIcon />}
+          iconPosition="start"
+          to={`${nodeUrl}/dsfinvk`}
         />
         <Tab
           label={t("nodes.settings")}

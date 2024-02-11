@@ -40,7 +40,7 @@ export const CashierDetail: React.FC = () => {
     error: shiftsError,
     isLoading: isShiftsLoading,
   } = useGetCashierShiftsQuery(
-    { cashierId: Number(cashierId) },
+    { nodeId: currentNode.id, cashierId: Number(cashierId) },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,

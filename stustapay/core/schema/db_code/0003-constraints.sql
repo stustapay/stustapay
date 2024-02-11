@@ -317,3 +317,6 @@ alter table till add constraint name_is_unique check(check_unique_in_tree(id, 't
 alter table user_role add constraint name_is_unique check(check_unique_in_tree(id, 'user_role', 'name', name, node_id));
 alter table tse add constraint name_is_unique check(check_unique_in_tree(id, 'tse', 'name', name, node_id));
 alter table tax_rate add constraint name_is_unique check(check_unique_in_tree(id, 'tax_rate', 'name', name, node_id));
+
+alter table event add constraint end_date_gt_start_date
+    check((start_date is null and end_date is null) or (start_date is not null and end_date is not null and end_date > start_date));

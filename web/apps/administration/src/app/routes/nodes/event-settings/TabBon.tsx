@@ -1,5 +1,5 @@
 import { RestrictedEventSettings, useGenerateTestBonMutation, useUpdateEventMutation } from "@/api";
-import { Button, LinearProgress, Stack } from "@mui/material";
+import { Button, Divider, LinearProgress, Stack } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -68,7 +68,7 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
   };
 
   return (
-    <>
+    <Stack spacing={2}>
       <Formik
         initialValues={eventSettings as BonSettings} // TODO: figure out a way of not needing to cast this
         onSubmit={handleSubmit}
@@ -101,6 +101,6 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
       >
         {t("settings.bon.previewBon")}
       </LoadingButton>
-    </>
+    </Stack>
   );
 };

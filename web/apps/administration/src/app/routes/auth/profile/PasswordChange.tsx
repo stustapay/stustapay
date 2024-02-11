@@ -59,7 +59,6 @@ export const PasswordChange: React.FC = () => {
           <Stack spacing={2}>
             <FormTextField
               variant="outlined"
-              autoFocus
               type="password"
               label={t("auth.oldPassword")}
               name="oldPassword"
