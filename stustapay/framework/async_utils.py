@@ -1,7 +1,7 @@
 import asyncio
 import threading
-import traceback
 from functools import wraps
+import traceback
 
 from stustapay.framework.database import create_db_pool
 
@@ -21,24 +21,32 @@ def with_db_pool(func):
 class AsyncThread:
     def __init__(self, coroutine_callable):
         self.loop = asyncio.new_event_loop()
-        self.thread = threading.Thread(target=self.loop.run_forever)
+        self.thread = threading.Thread(target=self._run)
         self.callable = coroutine_callable
-        self.future = None
 
-    def start(self):
+    def _run(self):
         async def runner():
             try:
                 await self.callable()
             except:  # pylint: disable=bare-except
+                pass
                 traceback.print_exc()
+            print("runner exited")
 
+        asyncio.set_event_loop(self.loop)
+        self.loop.create_task(runner())
+        self.loop.run_forever()
+
+    def run_coroutine(self, coro):
+        self.loop.create_task(coro)
+
+    def start(self):
         self.thread.start()
-        self.future = asyncio.run_coroutine_threadsafe(runner(), self.loop)
 
     def join(self):
         self.thread.join()
 
     def stop(self):
-        if self.future:
-            self.future.cancel()
+        for task in asyncio.all_tasks(self.loop):
+            task.cancel()
         self.loop.stop()

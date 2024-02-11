@@ -22,7 +22,3 @@ customerportal:
   base_url: "http://localhost:8083" # TODO: change to production url
   host: "localhost"
   port: 8083
-  base_bon_url: "https://<my-customerportal-url>/{bon_output_file}"
-
-bon:
-  output_folder: "/tmp/stustapay_bons"

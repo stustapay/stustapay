@@ -3,7 +3,7 @@ Description=StuStaPay Bon Generator
 After=postgresql.service
 
 [Service]
-ExecStart=/usr/lib/stustapay/venv/bin/stustapay bon --worker-id %I
+ExecStart=/usr/lib/stustapay/venv/bin/stustapay bon
 User=stustapay
 Group=stustapay
 

@@ -6,7 +6,7 @@ import asyncio
 import contextlib
 import inspect
 import logging
-from typing import Awaitable, Callable, Optional, Union
+from typing import Awaitable, Callable, Optional
 
 import asyncpg.exceptions
 
@@ -28,7 +28,7 @@ class DBHook:
     ):
         """
         connection: open database connection
-        channel: subcription channel of the database
+        channel: subscription channel of the database
         event_handler: async function which receives the payload of the database notification as argument
         initial_run: true if we shall call the handler once after startup with None as argument.
         """
@@ -39,7 +39,7 @@ class DBHook:
         self.initial_run = initial_run
         self.timelimit = hook_timeout
 
-        self.events: asyncio.Queue[Union[str, StopIteration]] = asyncio.Queue(maxsize=2048)
+        self.events: asyncio.Queue[str | StopIteration] = asyncio.Queue(maxsize=2048)
         self.logger = logging.getLogger(__name__)
 
     @contextlib.asynccontextmanager
@@ -64,6 +64,13 @@ class DBHook:
             self.events.task_done()
         self.events.put_nowait(StopIteration())
 
+    async def stop_async(self):
+        # proper way of clearing asyncio queue
+        for _ in range(self.events.qsize()):
+            self.events.get_nowait()
+            self.events.task_done()
+        await self.events.put(StopIteration())
+
     async def run(self):
         while True:
             try:
@@ -81,11 +88,13 @@ class DBHook:
                             return
 
                         ret = await asyncio.wait_for(self.event_handler(event), self.timelimit)
+                        self.events.task_done()
                         if ret == StopIteration:
                             return
             except asyncio.exceptions.TimeoutError:
                 self.logger.error("Timout occurred during DBHook.run")
-            except (KeyboardInterrupt, SystemExit):
+            except (KeyboardInterrupt, SystemExit, asyncio.CancelledError):
+                self.logger.debug("Stopping DBHook.run due to cancellation")
                 return
             except Exception:
                 import traceback

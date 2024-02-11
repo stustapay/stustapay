@@ -12,7 +12,6 @@ from stustapay.core.util import log_setup
 from stustapay.customer_portal import server as customerportal_server
 from stustapay.dsfinvk.generator import Generator as DsfinvkGenerator
 from stustapay.terminalserver import server as terminal_server
-
 from .admin import admin_cli
 from .database import database_cli
 from .simulate import simulate_cli
@@ -44,11 +43,10 @@ def get_config(
 @cli.command()
 def bon(
     ctx: typer.Context,
-    worker_id: Annotated[int, typer.Option(help="Index of this worker instance")] = 0,
 ):
     """Run the bon generator."""
-    generator = Generator(config=ctx.obj.config, worker_id=worker_id)
-    asyncio.run(generator.run())
+    generator = Generator(config=ctx.obj.config)
+    generator.run()
 
 
 @cli.command()
