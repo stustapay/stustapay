@@ -57,7 +57,8 @@
       "options": {
         "buildTarget": "customerportal:build",
         "hmr": true,
-        "port": 4300
+        "port": 4300,
+        "proxyConfig": "apps/customerportal/proxy.conf.json"
       },
       "configurations": {
         "development": {

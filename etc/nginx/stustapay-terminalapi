@@ -1,5 +1,5 @@
 upstream stustapay_terminal_api {
-    server localhost:8082;
+    server localhost:8083;
 }
 
 server {

@@ -2,9 +2,10 @@ import { type CustomerPortalApiConfig } from "@/api";
 import { RootState, selectAuthToken } from "@/store";
 import type { BaseQueryApi, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { z } from "zod";
 
 const siteHost = window.location.host;
+const siteProtocol = window.location.protocol;
+const customerApiBaseUrl = `${siteProtocol}//${siteHost}/api`;
 
 const prepareAuthHeaders = (
   headers: Headers,
@@ -17,12 +18,6 @@ const prepareAuthHeaders = (
   return headers;
 };
 
-const ClientConfigSchema = z.object({
-  customerApiEndpoint: z.string(),
-});
-
-type ClientConfig = z.infer<typeof ClientConfigSchema>;
-
 export interface Config {
   customerApiBaseUrl: string;
   apiConfig: CustomerPortalApiConfig;
@@ -30,28 +25,24 @@ export interface Config {
 
 export let config: Config;
 
-const generateConfig = (clientConfig: ClientConfig, publicApiConfig: CustomerPortalApiConfig): Config => {
+const generateConfig = (publicApiConfig: CustomerPortalApiConfig): Config => {
   return {
-    ...clientConfig,
-    customerApiBaseUrl: clientConfig.customerApiEndpoint,
+    customerApiBaseUrl: customerApiBaseUrl,
     apiConfig: publicApiConfig,
   };
 };
 
-const fetchPublicCustomerApiConfig = async (clientConfig: ClientConfig): Promise<CustomerPortalApiConfig> => {
+const fetchPublicCustomerApiConfig = async (): Promise<CustomerPortalApiConfig> => {
   const baseUrl = encodeURIComponent(window.location.origin);
-  const resp = await fetch(`${clientConfig.customerApiEndpoint}/config?base_url=${baseUrl}`);
+  const resp = await fetch(`${customerApiBaseUrl}/config?base_url=${baseUrl}`);
   const respJson = await resp.json();
   // TODO: validation
   return respJson as CustomerPortalApiConfig;
 };
 
 export const fetchConfig = async (): Promise<Config> => {
-  const resp = await fetch(`${window.location.protocol}//${siteHost}/assets/config.json`);
-  const respJson = await resp.json();
-  const clientConfig = ClientConfigSchema.parse(respJson);
-  const publicConfig = await fetchPublicCustomerApiConfig(clientConfig);
-  const c = generateConfig(clientConfig, publicConfig);
+  const publicConfig = await fetchPublicCustomerApiConfig();
+  const c = generateConfig(publicConfig);
   config = c;
   return c;
 };
