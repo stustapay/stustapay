@@ -1,0 +1,25 @@
+database:
+  host: localhost
+  user: stustapay
+  password: stustapay
+  dbname: "stustapay"
+  port: 5433
+
+core:
+  test_mode: true
+  secret_key: "dummy secret key"
+
+administration:
+  base_url: "http://localhost:8081"
+  host: "localhost"
+  port: 8081
+
+customerportal:
+  base_url: "http://localhost:8082"
+  host: "localhost"
+  port: 8082
+
+terminalserver:
+  base_url: "http://localhost:8083"
+  host: "localhost"
+  port: 8083

@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
 pip install -e '.[dev,test]'
-cp .devcontainer/config.sample.yml config.devcontainer.yml
-python -m stustapay -c config.devcontainer.yml database rebuild
-python -m stustapay -c config.devcontainer.yml database add_data
+python -m stustapay -c etc/config.devel.yaml database migrate
 
 pushd web
 npm install

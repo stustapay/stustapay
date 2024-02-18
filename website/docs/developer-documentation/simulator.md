@@ -1,15 +1,18 @@
-# StuStaPay Simulator
+---
+sidebar_position: 1
+---
+# Simulator
 
 ## Setup
+Follow instructions in [Installation](./index.mdx) 
+for setting up the general development environment.
 
-- Set up core
-    - Follow instructions in [Installation](../administrator-documentation/installation/index.md) for setting up
-      Postgres
-    - But no need for the `rebuild` and `add_data` commands, this will be handled by the `festivalsimulator`
-- Set up DB: `python3 -m stustapay -c server.yaml simulate setup`
-    - Customize simulation parameters if necessary
+Set up the simulation enviroment (customize parameters if needed)
+```shell
+python3 -m stustapay -c etc/config.devel.yaml simulate setup
+```
 
 ## Simulate
 
-- Start API in one terminal: `python3 -m stustapay -c server.yaml simulate api`
-- Simulate in second terminal: `python3 -m stustapay -c server.yaml simulate start`
+- Start API in one terminal: `python3 -m stustapay -c etc/config.devel.yaml simulate api`
+- Simulate in second terminal: `python3 -m stustapay -c etc/config.devel.yaml simulate start`

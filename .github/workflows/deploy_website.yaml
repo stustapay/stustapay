@@ -1,7 +1,10 @@
 name: Deploy to GitHub Pages
 
 on:
-  workflow_call:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
 
 jobs:
   website-test-deploy:
