@@ -10,18 +10,31 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: "Open Source",
-    description: <>it's awesome</>,
+    title: "Android POS App",
+    description: <>Any Android phone with a NFC reader can be used as sale point.</>,
   },
   {
-    title: "Built for production",
-    description: <>Battle-tested and reliable.</>,
+    title: "Cashless payment",
+    description: <>Customers pay using NFC chips Payment via NFC wristbands or cards.</>,
+  },
+  {
+    title: "Online Top-Up",
+    description: <>Customers can top up their account balance in the online customer portal.</>,
+  },
+  {
+    title: "TSE",
+    description: (
+      <>
+        Supports KassenSichV compatible TSE signatures for all purchases made in the system. <br />
+        DSFinV-K compliant data export is also supported.
+      </>
+    ),
   },
 ];
 
 function Feature({ title, Svg, description }: FeatureItem) {
   return (
-    <div className={clsx("col col--6")}>
+    <div className={clsx("col col--3")}>
       {Svg && (
         <div className="text--center">
           <Svg className={styles.featureSvg} role="img" />
@@ -38,15 +51,6 @@ function Feature({ title, Svg, description }: FeatureItem) {
 export default function HomepageFeatures(): JSX.Element {
   return (
     <>
-      <section className={styles.features}>
-        <div className="container">
-          <div className="row">
-            <div className="col col--12">
-              <h1 className="text--center">This page is WIP</h1>
-            </div>
-          </div>
-        </div>
-      </section>
       <section className={styles.features}>
         <div className="container">
           <div className="row">

@@ -1,0 +1,101 @@
+---
+sidebar_position: 10
+---
+
+# Developer Documentation
+
+To get started with development first clone the repository.
+
+```shell
+git clone https://github.com/stustapay/stustapay.git
+```
+
+## Developing on your local machine
+
+Install system requirements:
+- `python >= 3.11`
+- `nodejs >= 18`
+- `docker` (optional, recommended for running postgresql in a docker container)
+
+### Setup Backend for Development
+Create a python virtualenv 
+```shell
+python3 -m virtualenv -p python3 .venv
+source .venv/bin/activate
+```
+Install backend python module as a local editable python module. 
+This will install all python requirements needed for development and testing as well.
+```shell
+pip install -e '.[dev,test]'
+```
+
+You should now have the `stustapay` command available.
+
+#### Setup the database
+
+Start a local postgres instance via docker compose.
+
+```shell
+docker compose -f docker/docker-compose.devel.yaml up
+```
+This will start a postgresql instance and bind it to the local port `5433` 
+(to not conflict with already locally running postgres databases on the default port.)
+
+<details>
+<summary>Use an already running local postgresql instance</summary>
+<div>
+Another option is to run a local postgresql instance.
+
+In that case you have to take care of setting up a database user and database yourself.
+You'll probably want to copy `etc/config.devel.yaml` and adapt the database connection settings.
+</div>
+</details>
+
+Apply the database schema
+```shell
+stustapay -c etc/config.devel.yaml db migrate
+```
+
+Now you're mostly set up and ready to start developing and using the backend.
+
+Head over to the [simulator docs](simulator.md) to see how to generate test data and obtain a somewhat realistic test setup.
+
+### Setup web frontend for development
+
+To install the web ui requirements run
+```shell
+cd web
+npm install
+```
+
+### Running
+To start the administration web and customer web interfaces in development mode (supports live code reloading) run
+
+```shell
+npx nx serve administration
+npx nx serve customerportal
+```
+
+Other usefull commands for development (where `project` is either `customerportal` or `administration`) are
+```shell
+npx nx build <project>
+npx nx lint <project>
+```
+
+## Developing in a devcontainer
+
+You can use vscode's [development containers](https://containers.dev/),
+we've included a configuration file in the repo root.
+
+After starting the devcontainer you can simply start up the core services and the web uis.
+
+When using DevContainer make sure to forward the port globally. Otherwise the till will not be able to connect.
+In the VSCode Settings set Remote: Local Port Host to `allInterfaces`
+![https://stackoverflow.com/a/67997839](https://i.stack.imgur.com/oM0zl.png)
+
+Troubles with the database?
+Connect to the database in the devcontainer pstgres-data (below dev volumes), then drop and re-create the schema.
+
+1. `su - postgres -c psql`
+2. `drop schema public cascade;`
+3. `create schema public;`

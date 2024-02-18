@@ -64,7 +64,7 @@ const config: Config = {
             route: "/api/terminalserver",
           },
           {
-            id: "customer_portal-api",
+            id: "customerportal-api",
             spec: "../api/customer_portal.json",
             route: "/api/customer_portal",
           },
@@ -115,10 +115,6 @@ const config: Config = {
         {
           title: "More",
           items: [
-            {
-              label: "Blog",
-              to: "/blog",
-            },
             {
               label: "GitHub",
               href: "https://github.com/stustapay/stustapay",
