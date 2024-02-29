@@ -33,6 +33,9 @@ class RouteBuilder implements IRouteBuilder {
   public add = (nodeId?: number) => {
     return this.base(nodeId) + `/new`;
   };
+  public action = (action: string, nodeId?: number) => {
+    return `${this.base(nodeId)}/${action}`;
+  };
   public edit = (id?: string | number | null, nodeId?: number) => {
     return this.base(nodeId) + `/${id}/edit`;
   };
@@ -65,3 +68,4 @@ export const TseRoutes = new RouteBuilder("tses", "node_administration");
 export const PayoutRunRoutes = new RouteBuilder("payout-runs", "node_administration");
 export const SumUpTransactionRoutes = new RouteBuilder("sumup", "node_administration");
 export const SumUpCheckoutRoutes = new RouteBuilder("sumup/checkouts", "node_administration");
+export const CustomerRoutes = new RouteBuilder("customers", "node_administration");

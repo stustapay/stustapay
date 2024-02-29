@@ -743,6 +743,19 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/sumup/checkouts/${queryArg.checkoutId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["sumup"],
       }),
+      findCustomers: build.mutation<FindCustomersApiResponse, FindCustomersApiArg>({
+        query: (queryArg) => ({
+          url: `/customers/find-customers`,
+          method: "POST",
+          body: queryArg.findCustomerPayload,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["accounts"],
+      }),
+      getCustomer: build.query<GetCustomerApiResponse, GetCustomerApiArg>({
+        query: (queryArg) => ({ url: `/customers/${queryArg.customerId}`, params: { node_id: queryArg.nodeId } }),
+        providesTags: ["accounts"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1266,6 +1279,16 @@ export type GetSumupCheckoutApiArg = {
   checkoutId: string;
   nodeId: number;
 };
+export type FindCustomersApiResponse = /** status 200 Successful Response */ CustomerRead[];
+export type FindCustomersApiArg = {
+  nodeId?: number | null;
+  findCustomerPayload: FindCustomerPayload;
+};
+export type GetCustomerApiResponse = /** status 200 Successful Response */ CustomerRead;
+export type GetCustomerApiArg = {
+  customerId: number;
+  nodeId?: number | null;
+};
 export type ProductRestriction = "under_16" | "under_18";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
@@ -1355,6 +1378,7 @@ export type ChangeUserPasswordPayload = {
 };
 export type Privilege =
   | "node_administration"
+  | "customer_management"
   | "user_management"
   | "cash_transport"
   | "terminal_login"
@@ -2290,6 +2314,50 @@ export type SumUpCheckout = {
   transaction_id?: string | null;
   transactions?: SumUpTransaction[];
 };
+export type Customer = {
+  node_id: number;
+  id: number;
+  type: AccountType;
+  name: string | null;
+  comment: string | null;
+  balance: number;
+  vouchers: number;
+  user_tag_uid: number | null;
+  user_tag_comment?: string | null;
+  restriction: ProductRestriction | null;
+  tag_history: UserTagHistoryEntry[];
+  iban: string | null;
+  account_name: string | null;
+  email: string | null;
+  donation: number | null;
+  payout_error: string | null;
+  payout_run_id: number | null;
+  payout_export: boolean | null;
+};
+export type CustomerRead = {
+  node_id: number;
+  id: number;
+  type: AccountType;
+  name: string | null;
+  comment: string | null;
+  balance: number;
+  vouchers: number;
+  user_tag_uid: number | null;
+  user_tag_comment?: string | null;
+  restriction: ProductRestriction | null;
+  tag_history: UserTagHistoryEntryRead[];
+  iban: string | null;
+  account_name: string | null;
+  email: string | null;
+  donation: number | null;
+  payout_error: string | null;
+  payout_run_id: number | null;
+  payout_export: boolean | null;
+  user_tag_uid_hex: string | null;
+};
+export type FindCustomerPayload = {
+  search_term: string;
+};
 export const {
   useListProductsQuery,
   useLazyListProductsQuery,
@@ -2439,4 +2507,7 @@ export const {
   useLazyListSumupTransactionsQuery,
   useGetSumupCheckoutQuery,
   useLazyGetSumupCheckoutQuery,
+  useFindCustomersMutation,
+  useGetCustomerQuery,
+  useLazyGetCustomerQuery,
 } = injectedRtkApi;

@@ -1,11 +1,10 @@
 import { useGetAccountQuery } from "@/api";
-import { AccountRoutes } from "@/app/routes";
+import { AccountRoutes, CustomerRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { CustomerAccountDetail } from "./CustomerAccountDetail";
 import { SystemAccountDetail } from "./SystemAccountDetail";
 
 export const AccountDetail: React.FC = () => {
@@ -29,7 +28,7 @@ export const AccountDetail: React.FC = () => {
   }
 
   if (account.type === "private") {
-    return <CustomerAccountDetail account={account} />;
+    return <Navigate to={CustomerRoutes.detail(account.id, account.node_id)} />;
   } else {
     return <SystemAccountDetail account={account} />;
   }

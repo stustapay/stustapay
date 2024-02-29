@@ -5,7 +5,7 @@ import {
   usePayoutRunCsvExportMutation,
   usePayoutRunPayoutsQuery,
 } from "@/api";
-import { AccountRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
+import { CustomerRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailLayout } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { FileDownload as FileDownloadIcon } from "@mui/icons-material";
@@ -68,7 +68,7 @@ export const PayoutRunDetail: React.FC = () => {
       field: "customer_account_id",
       headerName: t("customer.bankAccountHolder") as string,
       renderCell: (params) => (
-        <Link component={RouterLink} to={AccountRoutes.detail(params.row.customer_account_id)}>
+        <Link component={RouterLink} to={CustomerRoutes.detail(params.row.customer_account_id)}>
           {params.row.account_name}
         </Link>
       ),

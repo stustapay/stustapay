@@ -5,6 +5,7 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, AccountType
+from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.tree import Node
@@ -60,6 +61,49 @@ class AccountService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    # @requires_user([Privilege.customer_management])
+    @requires_user([Privilege.node_administration])
+    async def get_customer(self, *, conn: Connection, node: Node, customer_id: int) -> Customer:
+        customer = await conn.fetch_maybe_one(
+            Customer,
+            "select c.* from customer c where c.id = $1 and c.node_id = any($2)",
+            customer_id,
+            node.ids_to_event_node,
+        )
+        if customer is None:
+            raise NotFound(element_typ="customer", element_id=customer_id)
+        return customer
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    # @requires_user([Privilege.customer_management])
+    @requires_user([Privilege.node_administration])
+    async def find_customers(self, *, conn: Connection, node: Node, search_term: str) -> list[Customer]:
+        value_as_int = None
+        if re.match("^[A-Fa-f0-9]+$", search_term):
+            value_as_int = int(search_term, base=16)
+
+        # the following query won't be able to find full uint64 tag uids as we need cast the numeric(20) to bigint in
+        # order to do hex conversion in postgres, therefore loosing one bit of information as bigint is in64 not uint64
+        return await conn.fetch_many(
+            Customer,
+            "select * from customer c "
+            "where node_id = any ($3) and "
+            "   (name like $1 "
+            "   or comment like $1 "
+            "   or (user_tag_uid is not null and to_hex(user_tag_uid::bigint) like $1) "
+            "   or (user_tag_uid is not null and user_tag_uid = $2)) "
+            "   or lower(c.email) like $1 "
+            "   or c.account_name @@ $4 "
+            "   or lower(c.iban) like $1",
+            f"%{search_term.lower()}%",
+            value_as_int,
+            node.ids_to_root,
+            search_term.lower(),
+        )
 
     @with_db_transaction(read_only=True)
     @requires_node()

@@ -61,6 +61,7 @@ import {
 } from "./routes/users";
 import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
 import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
+import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch } from "./routes/customers";
 
 const router = createBrowserRouter([
   {
@@ -89,6 +90,10 @@ const router = createBrowserRouter([
           {
             path: "settings",
             element: <NodeSettings />,
+          },
+          {
+            path: "system-accounts",
+            element: <SystemAccountList />,
           },
           {
             path: "payout-runs",
@@ -146,6 +151,24 @@ const router = createBrowserRouter([
           {
             path: ":productId",
             element: <ProductDetail />,
+          },
+        ],
+      },
+      {
+        path: "node/:nodeId/customers",
+        element: <CustomerPageLayout />,
+        children: [
+          {
+            index: true,
+            element: <CustomerOverview />,
+          },
+          {
+            path: "search",
+            element: <CustomerSearch />,
+          },
+          {
+            path: ":customerId",
+            element: <CustomerDetail />,
           },
         ],
       },
@@ -316,10 +339,6 @@ const router = createBrowserRouter([
           {
             path: ":accountId",
             element: <AccountDetail />,
-          },
-          {
-            path: "system",
-            element: <SystemAccountList />,
           },
           {
             path: "find",

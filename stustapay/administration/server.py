@@ -25,6 +25,7 @@ from ..core.service.sumup import SumUpService
 from .routers import account, auth, cashier
 from .routers import config as config_router
 from .routers import (
+    customer,
     order,
     payout,
     product,
@@ -73,6 +74,7 @@ def get_server(config: Config):
     server.add_router(payout.router)
     server.add_router(tree.router)
     server.add_router(sumup.router)
+    server.add_router(customer.router)
     return server
 
 

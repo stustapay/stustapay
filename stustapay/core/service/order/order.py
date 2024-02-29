@@ -1129,7 +1129,9 @@ class OrderService(DBService):
 
             # TODO: this should not be necessary, tickets are products but for compatibility
             #  with other code we fetch it again
-            ticket_product = await fetch_product(conn=conn, node=node, product_id=ticket.id)
+            ticket_product = await fetch_product(
+                conn=conn, node=node, product_id=ticket.id, product_type=ProductType.ticket
+            )
             assert ticket_product is not None
             assert ticket_product.price is not None
 

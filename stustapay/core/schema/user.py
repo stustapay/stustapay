@@ -21,6 +21,7 @@ class UserTag(BaseModel):
 class Privilege(enum.Enum):
     # general management privileges
     node_administration = "node_administration"
+    customer_management = "customer_management"
     user_management = "user_management"
 
     # festival workflow privileges
