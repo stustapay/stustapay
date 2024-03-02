@@ -64,6 +64,13 @@ export const EventPageLayout: React.FC<{ node: Node }> = ({ node }) => {
           to={`${nodeUrl}/stats`}
         />
         <Tab
+          label={t("systemAccounts")}
+          component={RouterLink}
+          value={`${nodeUrl}/system-accounts`}
+          iconPosition="start"
+          to={`${nodeUrl}/system-accounts`}
+        />
+        <Tab
           label="Tax Rates"
           component={RouterLink}
           value={TaxRateRoutes.list()}

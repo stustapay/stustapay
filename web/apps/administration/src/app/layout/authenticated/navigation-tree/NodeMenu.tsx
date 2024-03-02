@@ -14,8 +14,8 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { NavigationTreeItem } from "./NavigationTreeItem";
 import {
-  AccountRoutes,
   CashierRoutes,
+  CustomerRoutes,
   OrderRoutes,
   ProductRoutes,
   SumUpTransactionRoutes,
@@ -33,6 +33,7 @@ export interface NodeMenuProps {
 
 export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
   const { t } = useTranslation();
+  const isEvent = node.event != null;
 
   if (node.computed_forbidden_objects_at_node === undefined) {
     return null;
@@ -79,18 +80,30 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
     const id = TillRoutes.list(node.id);
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tills")} labelIcon={PointOfSaleIcon} />);
   }
-  if (node.event != null && node.privileges_at_node.includes("node_administration")) {
+  if (
+    node.event != null &&
+    node.privileges_at_node.includes("node_administration") &&
+    (node.event.sumup_payment_enabled || node.event.sumup_topup_enabled)
+  ) {
     const id = SumUpTransactionRoutes.list(node.id);
     items.push(
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("sumup.sumup")} labelIcon={PaymentIcon} />
     );
   }
-  if (!node.computed_forbidden_objects_at_node.includes("account")) {
-    const id = AccountRoutes.list(node.id);
+
+  if (isEvent && node.privileges_at_node.includes("node_administration")) {
+    const id = CustomerRoutes.list(node.id);
     items.push(
-      <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("accounts")} labelIcon={AccountBalanceIcon} />
+      <NavigationTreeItem
+        key={id}
+        nodeId={id}
+        to={id}
+        labelText={t("customer.customers")}
+        labelIcon={AccountBalanceIcon}
+      />
     );
   }
+
   if (!node.computed_forbidden_objects_at_node.includes("till")) {
     const id = OrderRoutes.list(node.id);
     items.push(
@@ -103,6 +116,7 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
       <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("userTag.userTags")} labelIcon={NfcIcon} />
     );
   }
+
   if (
     !node.computed_forbidden_objects_at_node.includes("tse") &&
     node.privileges_at_node.includes("node_administration")

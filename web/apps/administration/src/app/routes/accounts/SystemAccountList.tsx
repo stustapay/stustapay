@@ -5,8 +5,10 @@ import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { AccountTable } from "./components/AccountTable";
+import { withPrivilegeGuard } from "@/app/layout";
+import { Privilege } from "@stustapay/models";
 
-export const SystemAccountList: React.FC = () => {
+export const SystemAccountList: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
@@ -29,4 +31,4 @@ export const SystemAccountList: React.FC = () => {
       <AccountTable accounts={accounts ?? []} />
     </ListLayout>
   );
-};
+});

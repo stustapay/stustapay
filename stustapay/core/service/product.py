@@ -17,12 +17,15 @@ from stustapay.core.service.common.error import NotFound, ServiceException
 from stustapay.framework.database import Connection
 
 
-async def fetch_product(*, conn: Connection, node: Node, product_id: int) -> Optional[Product]:
+async def fetch_product(
+    *, conn: Connection, node: Node, product_id: int, product_type: ProductType = ProductType.user_defined
+) -> Optional[Product]:
     return await conn.fetch_maybe_one(
         Product,
-        "select * from product_with_tax_and_restrictions where id = $1 and node_id = any($2)",
+        "select * from product_with_tax_and_restrictions where id = $1 and type = $3 and node_id = any($2)",
         product_id,
         node.ids_to_event_node,
+        product_type.name,
     )
 
 
@@ -104,7 +107,9 @@ class ProductService(DBService):
     @requires_user()
     async def list_products(self, *, conn: Connection, node: Node) -> list[Product]:
         return await conn.fetch_many(
-            Product, "select * from product_with_tax_and_restrictions where node_id = any($1)", node.ids_to_event_node
+            Product,
+            "select * from product_with_tax_and_restrictions where node_id = any($1) and type = 'user_defined'",
+            node.ids_to_event_node,
         )
 
     @with_db_transaction(read_only=True)
@@ -169,6 +174,8 @@ class ProductService(DBService):
     @requires_user([Privilege.node_administration])
     async def delete_product(self, *, conn: Connection, node: Node, product_id: int) -> bool:
         result = await conn.execute(
-            "delete from product where id = $1 and node_id = any($2)", product_id, node.ids_to_event_node
+            "delete from product where id = $1 and type = 'user_defined' and node_id = any($2)",
+            product_id,
+            node.ids_to_event_node,
         )
         return result != "DELETE 0"

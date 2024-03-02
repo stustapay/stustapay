@@ -40,6 +40,9 @@ export const translations = {
     definedAtNode: "Node",
     loadingError: "Errors while loading page",
     configLoadFailed: "Something went wrong while loading the page configuration: {{what}}",
+    overview: "Overview",
+    search: "Search",
+    email: "E-Mail",
   },
   nodes: {
     overview: "Overview",
@@ -511,7 +514,15 @@ export const translations = {
     },
   },
   customer: {
+    search: "Search for Customers",
+    customers: "Customers",
     bankAccountHolder: "Account holder",
+    donation: "Donation",
+    payoutRun: "Payout Run",
+    noPayoutRunAssigned: "No payout run assigned",
+    noPayoutError: "No payout error",
+    payoutRunError: "Error during payout",
+    iban: "IBAN",
   },
 };
 
