@@ -1,3 +1,4 @@
+import * as React from "react";
 import { NumericInput, NumericInputProps } from "@stustapay/components";
 import { FormikProps } from "formik";
 
@@ -8,7 +9,7 @@ export interface FormNumericInputProps<Name extends string, Values>
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function FormNumericInput<Name extends string, Values extends Partial<Record<Name, any>>>({
+function FormNumericInputInner<Name extends string, Values extends Partial<Record<Name, any>>>({
   formik,
   name,
   ...props
@@ -31,3 +32,5 @@ export function FormNumericInput<Name extends string, Values extends Partial<Rec
     />
   );
 }
+
+export const FormNumericInput = React.memo(FormNumericInputInner) as typeof FormNumericInputInner;

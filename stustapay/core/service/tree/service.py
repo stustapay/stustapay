@@ -1,5 +1,3 @@
-import uuid
-
 import asyncpg
 
 from stustapay.bon.bon import generate_dummy_bon
@@ -95,11 +93,10 @@ async def _create_system_tills(conn: Connection, node_id: int):
         node_id,
     )
     await conn.execute(
-        "insert into till (name, description, active_profile_id, node_id, registration_uuid, is_virtual) "
-        "values ('Virtual Till', '', $1, $2, $3, true)",
+        "insert into till (name, description, active_profile_id, node_id, is_virtual) "
+        "values ('Virtual Till', '', $1, $2, true)",
         virtual_till_profile_id,
         node_id,
-        uuid.uuid4(),
     )
 
 

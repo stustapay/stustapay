@@ -1,5 +1,4 @@
 from typing import Optional
-from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -48,14 +47,13 @@ class NewTill(BaseModel):
     description: Optional[str] = None
     active_shift: Optional[str] = None
     active_profile_id: int
+    terminal_id: int | None = None
 
 
 class Till(NewTill):
     node_id: int
     id: int
     z_nr: int
-    session_uuid: Optional[UUID] = None
-    registration_uuid: Optional[UUID] = None
     active_user_id: Optional[int] = None
     active_user_role_id: Optional[int] = None
 

@@ -1,12 +1,14 @@
 import {
   Till,
+  selectTerminalById,
   selectTillAll,
   selectTillProfileById,
   useDeleteTillMutation,
+  useListTerminalsQuery,
   useListTillProfilesQuery,
   useListTillsQuery,
 } from "@/api";
-import { TillProfileRoutes, TillRoutes } from "@/app/routes";
+import { TerminalRoutes, TillProfileRoutes, TillRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
@@ -33,11 +35,12 @@ export const TillList: React.FC = () => {
     }
   );
   const { data: profiles, isLoading: isProfilesLoading } = useListTillProfilesQuery({ nodeId: currentNode.id });
+  const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
   const [deleteTill] = useDeleteTillMutation();
   const renderNode = useRenderNode();
 
   const [tillToDelete, setTillToDelete] = React.useState<number | null>(null);
-  if (isTillsLoading || isProfilesLoading) {
+  if (isTillsLoading || isProfilesLoading || isTerminalsLoading) {
     return <Loading />;
   }
 
@@ -53,6 +56,22 @@ export const TillList: React.FC = () => {
     return (
       <Link component={RouterLink} to={TillProfileRoutes.detail(profile.id)}>
         {profile.name}
+      </Link>
+    );
+  };
+
+  const renderTerminal = (id?: number | null) => {
+    if (id == null || !terminals) {
+      return "";
+    }
+    const terminal = selectTerminalById(terminals, id);
+    if (!terminal) {
+      return "";
+    }
+
+    return (
+      <Link component={RouterLink} to={TerminalRoutes.detail(terminal.id)}>
+        {terminal.name}
       </Link>
     );
   };
@@ -96,6 +115,12 @@ export const TillList: React.FC = () => {
       headerName: t("till.profile") as string,
       flex: 0.5,
       renderCell: (params) => renderProfile(params.row.active_profile_id),
+    },
+    {
+      field: "terminal_id",
+      headerName: t("till.terminal") as string,
+      flex: 0.5,
+      renderCell: (params) => renderTerminal(params.row.terminal_id),
     },
     {
       field: "node_id",

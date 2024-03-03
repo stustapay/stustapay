@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
 
-export const encodeTillRegistrationQrCode = (coreUrl: string, registrationUuid: string): string => {
+export const encodeTerminalRegistrationQrCode = (coreUrl: string, registrationUuid: string): string => {
   const payload = {
     core_url: coreUrl,
     registration_uuid: registrationUuid,

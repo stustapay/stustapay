@@ -43,6 +43,8 @@ export const translations = {
     overview: "Overview",
     search: "Search",
     email: "E-Mail",
+    name: "Name",
+    description: "Description",
   },
   nodes: {
     overview: "Overview",
@@ -345,6 +347,7 @@ export const translations = {
     update: "Update till",
     delete: "Delete till",
     deleteDescription: "Confirm till deletion",
+    terminal: "Terminal",
     activeUser: "Logged in user",
     tseId: "TSE ID",
     tseSerial: "TSE Serial",
@@ -523,6 +526,23 @@ export const translations = {
     noPayoutError: "No payout error",
     payoutRunError: "Error during payout",
     iban: "IBAN",
+  },
+  terminal: {
+    terminals: "Terminals",
+    till: "Till",
+    id: "ID",
+    registrationUUID: "Registration ID",
+    loggedIn: "Terminal registered",
+    logout: "Unregister Terminal",
+    create: "Add a new terminal",
+    update: "Update terminal",
+    delete: "Delete terminal",
+    deleteDescription: "Confirm Terminal deletion",
+    forceLogoutUserDescription:
+      "Force logout user at terminal. This should NEVER be done while a cashier is still using the terminal",
+    unregisterTerminal: "Force logout a terminal",
+    unregisterTerminalDescription:
+      "Force logout a terminal. This should NEVER be done while a cashier is still using the terminal",
   },
 };
 

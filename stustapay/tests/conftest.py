@@ -4,7 +4,6 @@ import os
 import random
 import secrets
 from dataclasses import dataclass
-from pathlib import Path
 from typing import AsyncGenerator, Awaitable, Protocol
 
 import asyncpg
@@ -13,7 +12,6 @@ import pytest
 from stustapay.core import database
 from stustapay.core.config import (
     AdministrationApiConfig,
-    BonConfig,
     Config,
     CoreConfig,
     CustomerPortalApiConfig,
@@ -21,6 +19,7 @@ from stustapay.core.config import (
 )
 from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
+from stustapay.core.schema.terminal import NewTerminal, Terminal
 from stustapay.core.schema.till import (
     NewTill,
     NewTillLayout,
@@ -51,6 +50,7 @@ from stustapay.core.service.config import ConfigService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
+from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.tree.common import (
@@ -88,9 +88,7 @@ TEST_CONFIG = Config(
     ),
     customerportal=CustomerPortalApiConfig(
         base_url="http://localhost:8082",
-        base_bon_url="https://bon.stustapay.de/{bon_output_file}",
     ),
-    bon=BonConfig(output_folder=Path("tmp")),
     database=get_test_db_config(),
 )
 
@@ -267,6 +265,13 @@ async def order_service(setup_test_db_pool: asyncpg.Pool, config: Config, auth_s
 
 
 @pytest.fixture(scope="session")
+async def terminal_service(
+    setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService
+) -> TerminalService:
+    return TerminalService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
+
+
+@pytest.fixture(scope="session")
 async def tax_rate_service(
     setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService
 ) -> TaxRateService:
@@ -409,12 +414,18 @@ async def till_profile(
 
 
 @pytest.fixture
-async def till(till_service: TillService, till_profile: TillProfile, admin_token: str, event_node: Node) -> Till:
+async def terminal(terminal_service: TerminalService, admin_token: str, event_node: Node) -> Terminal:
+    return await terminal_service.create_terminal(
+        token=admin_token, node_id=event_node.id, terminal=NewTerminal(name="Test Terminal", description="")
+    )
+
+
+@pytest.fixture
+async def till(
+    till_service: TillService, till_profile: TillProfile, admin_token: str, event_node: Node, terminal: Terminal
+) -> Till:
     return await till_service.create_till(
         token=admin_token,
         node_id=event_node.id,
-        till=NewTill(
-            name="test-till",
-            active_profile_id=till_profile.id,
-        ),
+        till=NewTill(name="test-till", active_profile_id=till_profile.id, terminal_id=terminal.id),
     )

@@ -1,4 +1,3 @@
-import uuid
 from typing import Optional
 
 from stustapay.core.schema.till import NewTill, Till
@@ -10,15 +9,15 @@ async def create_till(*, conn: Connection, node_id: int, till: NewTill) -> Till:
     return await conn.fetch_one(
         Till,
         "insert into till "
-        "   (name, description, registration_uuid, active_shift, active_profile_id, node_id) "
-        "values ($1, $2, $3, $4, $5, $6) returning id, name, description, registration_uuid, session_uuid, "
-        "   tse_id, active_shift, active_profile_id, z_nr, node_id",
+        "   (name, description, active_shift, active_profile_id, node_id, terminal_id) "
+        "values ($1, $2, $3, $4, $5, $6) returning id, name, description, "
+        "   tse_id, active_shift, active_profile_id, z_nr, node_id, terminal_id",
         till.name,
         till.description,
-        uuid.uuid4(),
         till.active_shift,
         till.active_profile_id,
         node_id,
+        till.terminal_id,
     )
 
 

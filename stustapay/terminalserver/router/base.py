@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_till import CurrentAuthToken
-from stustapay.core.http.context import ContextTillService
+from stustapay.core.http.context import ContextTerminalService, ContextTillService
 from stustapay.core.schema.terminal import TerminalConfig
 from stustapay.core.schema.till import CashRegister, CashRegisterStocking, UserInfo
 
@@ -29,9 +29,9 @@ async def health():
 @router.get("/config", summary="obtain the current terminal config", response_model=TerminalConfig)
 async def config(
     token: CurrentAuthToken,
-    till_service: ContextTillService,
+    terminal_service: ContextTerminalService,
 ):
-    terminal_config = await till_service.get_terminal_config(token=token)
+    terminal_config = await terminal_service.get_terminal_config(token=token)
     if terminal_config is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return terminal_config

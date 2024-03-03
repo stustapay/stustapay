@@ -6,6 +6,7 @@ from typing import Awaitable, Protocol
 import pytest
 
 from stustapay.core.schema.account import AccountType
+from stustapay.core.schema.terminal import NewTerminal, Terminal
 from stustapay.core.schema.till import (
     CashRegister,
     CashRegisterStocking,
@@ -28,6 +29,7 @@ from stustapay.core.schema.user import (
     UserTag,
 )
 from stustapay.core.service.account import AccountService, get_system_account_for_node
+from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.framework.database import Connection
@@ -40,13 +42,31 @@ START_BALANCE = 100
 
 @pytest.fixture
 async def terminal_token(
+    terminal_service: TerminalService,
     till_service: TillService,
     till: Till,
+    admin_token: str,
     admin_tag: TestUserTag,
+    event_node: Node,
+    terminal: Terminal,
 ) -> str:
-    terminal_token = (await till_service.register_terminal(registration_uuid=till.registration_uuid)).token
-    await till_service.login_user(token=terminal_token, user_tag=UserTag(uid=admin_tag.uid), user_role_id=ADMIN_ROLE_ID)
-    return terminal_token
+    registration = await terminal_service.register_terminal(registration_uuid=terminal.registration_uuid)
+    await till_service.update_till(
+        token=admin_token,
+        node_id=event_node.id,
+        till_id=till.id,
+        till=NewTill(
+            name=till.name,
+            description=till.description,
+            active_shift=till.active_shift,
+            active_profile_id=till.active_profile_id,
+            terminal_id=terminal.id,
+        ),
+    )
+    await till_service.login_user(
+        token=registration.token, user_tag=UserTag(uid=admin_tag.uid), user_role_id=ADMIN_ROLE_ID
+    )
+    return registration.token
 
 
 @pytest.fixture
@@ -253,7 +273,11 @@ class CreateTerminalToken(Protocol):
 
 @pytest.fixture
 async def create_terminal_token(
-    till_service: TillService, admin_tag: TestUserTag, admin_token: str, event_node: Node
+    till_service: TillService,
+    terminal_service: TerminalService,
+    admin_tag: TestUserTag,
+    admin_token: str,
+    event_node: Node,
 ) -> CreateTerminalToken:
     async def func():
         till_layout = await till_service.layout.create_layout(
@@ -273,15 +297,19 @@ async def create_terminal_token(
                 allow_ticket_sale=True,
             ),
         )
-        till = await till_service.create_till(
+        terminal = await terminal_service.create_terminal(
+            token=admin_token, node_id=event_node.id, terminal=NewTerminal(name=secrets.token_hex(16), description="")
+        )
+        await till_service.create_till(
             token=admin_token,
             node_id=event_node.id,
             till=NewTill(
                 name=secrets.token_hex(16),
                 active_profile_id=till_profile.id,
+                terminal_id=terminal.id,
             ),
         )
-        terminal_token = (await till_service.register_terminal(registration_uuid=till.registration_uuid)).token
+        terminal_token = (await terminal_service.register_terminal(registration_uuid=terminal.registration_uuid)).token
         await till_service.login_user(
             token=terminal_token, user_tag=UserTag(uid=admin_tag.uid), user_role_id=ADMIN_ROLE_ID
         )

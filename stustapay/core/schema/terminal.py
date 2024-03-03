@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -6,8 +7,17 @@ from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import Privilege, UserRole
 
 
-class Terminal(BaseModel):
-    till: Till
+class NewTerminal(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class Terminal(NewTerminal):
+    id: int
+    node_id: int
+    till_id: int | None
+    session_uuid: UUID | None
+    registration_uuid: UUID | None
 
 
 class UserTagSecret(BaseModel):
@@ -31,7 +41,7 @@ class TerminalButton(BaseModel):
     fixed_price: bool
 
 
-class TerminalConfig(BaseModel):
+class TerminalTillConfig(BaseModel):
     id: int
     name: str
     description: Optional[str]
@@ -44,13 +54,29 @@ class TerminalConfig(BaseModel):
     allow_ticket_sale: bool
     buttons: Optional[list[TerminalButton]]
     secrets: Optional[TerminalSecrets]
+    active_user_id: Optional[int]
 
     available_roles: list[UserRole]
+
+
+class TerminalConfig(BaseModel):
+    id: int
+    name: str
+    description: str
+
+    till: TerminalTillConfig | None
 
     test_mode: bool
     test_mode_message: str
 
 
 class TerminalRegistrationSuccess(BaseModel):
-    till: Till
+    terminal: Terminal
     token: str
+
+
+class CurrentTerminal(BaseModel):
+    id: int
+    name: str
+    description: str
+    till: Till

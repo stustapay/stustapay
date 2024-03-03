@@ -9,6 +9,7 @@ import {
   Shield as ShieldIcon,
   ShoppingCart as ShoppingCartIcon,
   Payment as PaymentIcon,
+  Smartphone as SmartphoneIcon,
 } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -19,6 +20,7 @@ import {
   OrderRoutes,
   ProductRoutes,
   SumUpTransactionRoutes,
+  TerminalRoutes,
   TicketRoutes,
   TillRoutes,
   TseRoutes,
@@ -79,6 +81,12 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
   if (!node.computed_forbidden_objects_at_node.includes("till")) {
     const id = TillRoutes.list(node.id);
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("tills")} labelIcon={PointOfSaleIcon} />);
+  }
+  if (!node.computed_forbidden_objects_at_node.includes("terminal")) {
+    const id = TerminalRoutes.list(node.id);
+    items.push(
+      <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("terminal.terminals")} labelIcon={SmartphoneIcon} />
+    );
   }
   if (
     node.event != null &&

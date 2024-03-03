@@ -14,6 +14,7 @@ from stustapay.core.http.server import Server
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.order import OrderService
+from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.terminalserver.router import auth, base, cashier, customer, order, user
@@ -66,6 +67,7 @@ class Api:
             user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             till_service=TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             account_service=AccountService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            terminal_service=TerminalService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
         try:
             self.server.add_task(asyncio.create_task(run_healthcheck(db_pool=db_pool, service_name="terminalserver")))

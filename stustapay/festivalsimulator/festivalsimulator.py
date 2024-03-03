@@ -13,8 +13,8 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.order import Button
+from stustapay.core.schema.terminal import Terminal as _Terminal
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
-from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import ADMIN_ROLE_ID
 from stustapay.framework.async_utils import AsyncThread, with_db_pool
 from stustapay.framework.database import create_db_pool
@@ -23,17 +23,18 @@ from stustapay.framework.database import create_db_pool
 @dataclass
 class Terminal:
     token: str
-    till: Till
+    terminal: _Terminal
     config: TerminalConfig
 
     def get_headers(self):
         return {"Authorization": f"Bearer {self.token}"}
 
     def get_random_button_selection(self) -> list[dict]:
-        if self.config.buttons is None:
+        assert self.config.till is not None
+        if self.config.till.buttons is None:
             return []
 
-        buttons = random.choices(self.config.buttons, k=random.randint(1, len(self.config.buttons)))
+        buttons = random.choices(self.config.till.buttons, k=random.randint(1, len(self.config.till.buttons)))
 
         return [
             Button(
@@ -138,11 +139,12 @@ class Simulator:
         ]
 
     async def _register_terminal(self, db_pool: asyncpg.Pool, till_id: int) -> Terminal:
+        terminal_id = await db_pool.fetchval("select terminal_id from till where id = $1", till_id)
         registration_uuid = await db_pool.fetchval(
-            "update till set registration_uuid = gen_random_uuid(), session_uuid = null "
+            "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null "
             "where id = $1 "
             "returning registration_uuid",
-            till_id,
+            terminal_id,
         )
 
         async with aiohttp.ClientSession(base_url=self.terminal_api_base_url) as client:
@@ -151,7 +153,7 @@ class Simulator:
             ) as resp:
                 if resp.status != 200:
                     self.logger.warning(f"Error registering terminal {resp.status = } payload = {await resp.text()}")
-                    raise RuntimeError("foobar")
+                    raise RuntimeError(f"Error registering terminal {resp.status = } payload = {await resp.text()}")
                 success = TerminalRegistrationSuccess.model_validate(await resp.json())
             async with client.get("/config", headers={"Authorization": f"Bearer {success.token}"}) as resp:
                 if resp.status != 200:
@@ -159,7 +161,7 @@ class Simulator:
                         f"Error fetching terminal config, { resp.status = }, payload = {await resp.json()}"
                     )
                 config = TerminalConfig.model_validate(await resp.json())
-            return Terminal(token=success.token, till=success.till, config=config)
+            return Terminal(token=success.token, terminal=success.terminal, config=config)
 
     @with_db_pool
     async def voucher_granting(self, db_pool: asyncpg.Pool):
@@ -233,7 +235,7 @@ class Simulator:
             ) as resp:
                 if resp.status != 200:
                     self.logger.critical(
-                        f"Failed to login {cashier_tag_uid} as cashier on terminal {terminal.till.name}. "
+                        f"Failed to login {cashier_tag_uid} as cashier on terminal {terminal.terminal.name}. "
                         f"{await resp.text()}"
                     )
                     return False
@@ -245,10 +247,11 @@ class Simulator:
         for till_id in till_ids:
             terminal = await self._register_terminal(db_pool=db_pool, till_id=till_id)
 
-            if terminal.till.active_user_id is not None:
+            assert terminal.config.till is not None
+            if terminal.config.till.active_user_id is not None:
                 is_cashier = await db_pool.fetchval(
                     "select exists(select from usr where id = $1 and cashier_account_id is not null)",
-                    terminal.till.active_user_id,
+                    terminal.config.till.active_user_id,
                 )
                 if is_cashier:
                     self.logger.info("Terminal already has a logged in cashier")
