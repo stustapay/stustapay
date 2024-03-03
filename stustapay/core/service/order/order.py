@@ -41,7 +41,6 @@ from stustapay.core.schema.order import (
     TicketScanResultEntry,
 )
 from stustapay.core.schema.product import Product, ProductRestriction, ProductType
-from stustapay.core.schema.terminal import Terminal
 from stustapay.core.schema.ticket import Ticket
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
@@ -71,6 +70,7 @@ from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from stustapay.framework.database import Connection
 
+from ...schema.terminal import CurrentTerminal
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
@@ -326,7 +326,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: Terminal,
+        current_terminal: CurrentTerminal,
         new_topup: NewTopUp,
     ) -> PendingTopUp:
         event_settings = await fetch_restricted_event_settings_for_node(
@@ -382,7 +382,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: Terminal,
+        current_terminal: CurrentTerminal,
         node: Node,
         current_user: CurrentUser,
         new_topup: NewTopUp,
@@ -533,7 +533,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_sale(
-        self, *, conn: Connection, current_terminal: Terminal, node: Node, new_sale: NewSale
+        self, *, conn: Connection, current_terminal: CurrentTerminal, node: Node, new_sale: NewSale
     ) -> PendingSale:
         """
         prepare the given order: checks all requirements.
@@ -574,7 +574,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: Terminal,
+        current_terminal: CurrentTerminal,
         node: Node,
         new_sale: NewSaleProducts,
     ) -> PendingSaleProducts:
@@ -707,7 +707,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: Terminal,
+        current_terminal: CurrentTerminal,
         node: Node,
         current_user: CurrentUser,
         new_sale: NewSale,
@@ -906,7 +906,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def cancel_sale(
-        self, *, conn: Connection, current_terminal: Terminal, current_user: CurrentUser, order_id: int
+        self, *, conn: Connection, current_terminal: CurrentTerminal, current_user: CurrentUser, order_id: int
     ):
         await self._cancel_sale(
             conn=conn, till_id=current_terminal.till.id, current_user=current_user, order_id=order_id
@@ -922,7 +922,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_pay_out(
-        self, *, conn: Connection, current_terminal: Terminal, new_pay_out: NewPayOut
+        self, *, conn: Connection, current_terminal: CurrentTerminal, new_pay_out: NewPayOut
     ) -> PendingPayOut:
         if new_pay_out.amount is not None and new_pay_out.amount > 0.0:
             raise InvalidArgument("Only payouts with a negative amount are allowed")
@@ -964,7 +964,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: Terminal,
+        current_terminal: CurrentTerminal,
         node: Node,
         current_user: CurrentUser,
         new_pay_out: NewPayOut,
@@ -1027,7 +1027,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_ticket_scan(
-        self, *, conn: Connection, current_terminal: Terminal, new_ticket_scan: NewTicketScan
+        self, *, conn: Connection, current_terminal: CurrentTerminal, new_ticket_scan: NewTicketScan
     ) -> TicketScanResult:
         can_sell_tickets = await conn.fetchval(
             "select allow_ticket_sale from till_profile where id = $1", current_terminal.till.active_profile_id
@@ -1083,7 +1083,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: Terminal,
+        current_terminal: CurrentTerminal,
         node: Node,
         current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,
@@ -1209,7 +1209,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: Terminal,
+        current_terminal: CurrentTerminal,
         node: Node,
         current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,

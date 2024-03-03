@@ -21,6 +21,7 @@ import {
   UserTagDetailRead,
   api as generatedApi,
   GenerateTestBonApiArg,
+  Terminal,
 } from "./generated/api";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
@@ -102,6 +103,10 @@ const payoutRunAdaptor = createEntityAdapter<PayoutRunWithStats>({
   sortComparer: (a, b) => a.created_at.toLowerCase().localeCompare(b.created_at.toLowerCase()),
 });
 
+const terminalAdapter = createEntityAdapter<Terminal>({
+  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+});
+
 export const api = generatedApi.enhanceEndpoints({
   endpoints: {
     listUsers: {
@@ -160,6 +165,12 @@ export const api = generatedApi.enhanceEndpoints({
     },
     getTillProfile: {
       providesTags: (result, error, arg) => [{ type: "till-profiles", id: arg.profileId }],
+    },
+    listTerminals: {
+      providesTags: (result) => generateCacheKeys("terminals", result),
+    },
+    getTerminal: {
+      providesTags: (result, error, arg) => [{ type: "terminals", id: arg.terminalId }],
     },
     listTses: {
       providesTags: (result) => generateCacheKeys("tses", result),
@@ -269,6 +280,9 @@ export const { selectUserTagAll, selectUserTagEntities, selectUserTagTotal, sele
 
 export const { selectTseAll, selectTseById, selectTseEntities, selectTseIds, selectTseTotal } =
   convertEntityAdaptorSelectors("Tse", tseAdapter.getSelectors());
+
+export const { selectTerminalAll, selectTerminalById, selectTerminalEntities, selectTerminalIds, selectTerminalTotal } =
+  convertEntityAdaptorSelectors("Terminal", terminalAdapter.getSelectors());
 
 export const {
   selectPayoutRunAll,

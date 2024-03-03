@@ -23,6 +23,7 @@ export const addTagTypes = [
   "payouts",
   "tree",
   "sumup",
+  "terminals",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -235,14 +236,6 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/tills/${queryArg.tillId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
-        }),
-        invalidatesTags: ["tills"],
-      }),
-      logoutTill: build.mutation<LogoutTillApiResponse, LogoutTillApiArg>({
-        query: (queryArg) => ({
-          url: `/tills/${queryArg.tillId}/logout`,
-          method: "POST",
           params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["tills"],
@@ -756,6 +749,48 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/customers/${queryArg.customerId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["accounts"],
       }),
+      listTerminals: build.query<ListTerminalsApiResponse, ListTerminalsApiArg>({
+        query: (queryArg) => ({ url: `/terminal`, params: { node_id: queryArg.nodeId } }),
+        providesTags: ["terminals"],
+      }),
+      createTerminal: build.mutation<CreateTerminalApiResponse, CreateTerminalApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal`,
+          method: "POST",
+          body: queryArg.newTerminal,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["terminals"],
+      }),
+      getTerminal: build.query<GetTerminalApiResponse, GetTerminalApiArg>({
+        query: (queryArg) => ({ url: `/terminal/${queryArg.terminalId}`, params: { node_id: queryArg.nodeId } }),
+        providesTags: ["terminals"],
+      }),
+      updateTerminal: build.mutation<UpdateTerminalApiResponse, UpdateTerminalApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal/${queryArg.terminalId}`,
+          method: "POST",
+          body: queryArg.newTerminal,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["terminals"],
+      }),
+      deleteTerminal: build.mutation<DeleteTerminalApiResponse, DeleteTerminalApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal/${queryArg.terminalId}`,
+          method: "DELETE",
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["terminals"],
+      }),
+      logoutTerminal: build.mutation<LogoutTerminalApiResponse, LogoutTerminalApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal/${queryArg.terminalId}/logout`,
+          method: "POST",
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["terminals"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -907,11 +942,6 @@ export type UpdateTillApiArg = {
 };
 export type DeleteTillApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTillApiArg = {
-  tillId: number;
-  nodeId?: number | null;
-};
-export type LogoutTillApiResponse = /** status 200 Successful Response */ any;
-export type LogoutTillApiArg = {
   tillId: number;
   nodeId?: number | null;
 };
@@ -1289,6 +1319,36 @@ export type GetCustomerApiArg = {
   customerId: number;
   nodeId?: number | null;
 };
+export type ListTerminalsApiResponse = /** status 200 Successful Response */ NormalizedListTerminalInt;
+export type ListTerminalsApiArg = {
+  nodeId: number;
+};
+export type CreateTerminalApiResponse = /** status 200 Successful Response */ Terminal;
+export type CreateTerminalApiArg = {
+  nodeId: number;
+  newTerminal: NewTerminal;
+};
+export type GetTerminalApiResponse = /** status 200 Successful Response */ Terminal;
+export type GetTerminalApiArg = {
+  terminalId: number;
+  nodeId: number;
+};
+export type UpdateTerminalApiResponse = /** status 200 Successful Response */ Terminal;
+export type UpdateTerminalApiArg = {
+  terminalId: number;
+  nodeId: number;
+  newTerminal: NewTerminal;
+};
+export type DeleteTerminalApiResponse = /** status 200 Successful Response */ any;
+export type DeleteTerminalApiArg = {
+  terminalId: number;
+  nodeId: number;
+};
+export type LogoutTerminalApiResponse = /** status 200 Successful Response */ any;
+export type LogoutTerminalApiArg = {
+  terminalId: number;
+  nodeId: number;
+};
 export type ProductRestriction = "under_16" | "under_18";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
@@ -1487,11 +1547,10 @@ export type Till = {
   description?: string | null;
   active_shift?: string | null;
   active_profile_id: number;
+  terminal_id?: number | null;
   node_id: number;
   id: number;
   z_nr: number;
-  session_uuid?: string | null;
-  registration_uuid?: string | null;
   active_user_id?: number | null;
   active_user_role_id?: number | null;
   current_cash_register_name?: string | null;
@@ -1510,6 +1569,7 @@ export type NewTill = {
   description?: string | null;
   active_shift?: string | null;
   active_profile_id: number;
+  terminal_id?: number | null;
 };
 export type TillLayout = {
   name: string;
@@ -2133,7 +2193,8 @@ export type ObjectType =
   | "user_tag"
   | "tse"
   | "order"
-  | "account";
+  | "account"
+  | "terminal";
 export type NodeSeenByUser = {
   id: number;
   parent: number;
@@ -2358,6 +2419,25 @@ export type CustomerRead = {
 export type FindCustomerPayload = {
   search_term: string;
 };
+export type Terminal = {
+  name: string;
+  description?: string | null;
+  id: number;
+  node_id: number;
+  till_id: number | null;
+  session_uuid: string | null;
+  registration_uuid: string | null;
+};
+export type NormalizedListTerminalInt = {
+  ids: number[];
+  entities: {
+    [key: string]: Terminal;
+  };
+};
+export type NewTerminal = {
+  name: string;
+  description?: string | null;
+};
 export const {
   useListProductsQuery,
   useLazyListProductsQuery,
@@ -2400,7 +2480,6 @@ export const {
   useLazyGetTillQuery,
   useUpdateTillMutation,
   useDeleteTillMutation,
-  useLogoutTillMutation,
   useForceLogoutUserMutation,
   useListTillLayoutsQuery,
   useLazyListTillLayoutsQuery,
@@ -2510,4 +2589,12 @@ export const {
   useFindCustomersMutation,
   useGetCustomerQuery,
   useLazyGetCustomerQuery,
+  useListTerminalsQuery,
+  useLazyListTerminalsQuery,
+  useCreateTerminalMutation,
+  useGetTerminalQuery,
+  useLazyGetTerminalQuery,
+  useUpdateTerminalMutation,
+  useDeleteTerminalMutation,
+  useLogoutTerminalMutation,
 } = injectedRtkApi;

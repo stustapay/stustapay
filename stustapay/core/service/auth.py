@@ -5,7 +5,7 @@ from jose import JWTError, jwt
 from pydantic import BaseModel, ValidationError
 
 from stustapay.core.schema.customer import Customer
-from stustapay.core.schema.terminal import Terminal
+from stustapay.core.schema.terminal import CurrentTerminal, Terminal
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.common.dbservice import DBService
@@ -24,7 +24,7 @@ class CustomerTokenMetadata(BaseModel):
 
 
 class TerminalTokenMetadata(BaseModel):
-    till_id: int
+    terminal_id: int
     session_uuid: uuid.UUID
 
 
@@ -105,23 +105,34 @@ class AuthService(DBService):
             return None
 
     def create_terminal_access_token(self, token_metadata: TerminalTokenMetadata):
-        to_encode = {"till_id": token_metadata.till_id, "session_uuid": str(token_metadata.session_uuid)}
+        to_encode = {"terminal_id": token_metadata.terminal_id, "session_uuid": str(token_metadata.session_uuid)}
         encoded_jwt = jwt.encode(to_encode, self.cfg.core.secret_key, algorithm=self.cfg.core.jwt_token_algorithm)
         return encoded_jwt
 
     @with_db_transaction(read_only=True)
-    async def get_terminal_from_token(self, *, conn: Connection, token: str) -> Optional[Terminal]:
-        token_payload = self.decode_terminal_jwt_payload(token)
+    async def get_terminal_from_token(self, *, conn: Connection, token: str) -> Optional[CurrentTerminal]:
+        token_payload: TerminalTokenMetadata | None = self.decode_terminal_jwt_payload(token)
         if token_payload is None:
+            return None
+
+        terminal = await conn.fetch_maybe_one(
+            Terminal,
+            "select t.*, till.id as till_id "
+            "from terminal t "
+            "left join till on t.id = till.terminal_id "
+            "where t.id = $1 and session_uuid = $2",
+            token_payload.terminal_id,
+            token_payload.session_uuid,
+        )
+        if terminal is None:
             return None
 
         till = await conn.fetch_maybe_one(
             Till,
-            "select * from till where id = $1 and session_uuid = $2",
-            token_payload.till_id,
-            token_payload.session_uuid,
+            "select * from till where terminal_id = $1",
+            token_payload.terminal_id,
         )
         if till is None:
             return None
 
-        return Terminal(till=till)
+        return CurrentTerminal(id=terminal.id, name=terminal.name, description=terminal.description, till=till)

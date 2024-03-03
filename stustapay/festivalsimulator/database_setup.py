@@ -8,6 +8,7 @@ from stustapay.core.config import Config
 from stustapay.core.database import apply_revisions, reset_schema
 from stustapay.core.schema.product import NewProduct, ProductRestriction
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
+from stustapay.core.schema.terminal import NewTerminal
 from stustapay.core.schema.ticket import NewTicket
 from stustapay.core.schema.till import (
     NewCashRegister,
@@ -31,6 +32,7 @@ from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
+from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.tree.common import fetch_node
@@ -141,6 +143,7 @@ async def _create_beverage_tills(
     conn: Connection,
     event_node_id: int,
     admin_token: str,
+    terminal_service: TerminalService,
     product_service: ProductService,
     till_service: TillService,
     n_cocktail_tills: int,
@@ -328,6 +331,10 @@ async def _create_beverage_tills(
         NewTill(name=f"Cocktailkasse {i}", active_profile_id=cocktail_profile.id) for i in range(n_cocktail_tills)
     ]
     for till in tills:
+        terminal = await terminal_service.create_terminal(
+            token=admin_token, node_id=event_node_id, terminal=NewTerminal(name=till.name, description="")
+        )
+        till.terminal_id = terminal.id
         await till_service.create_till(
             token=admin_token,
             node_id=event_node_id,
@@ -341,6 +348,7 @@ async def _create_ticket_tills(
     admin_token: str,
     till_service: TillService,
     ticket_service: TicketService,
+    terminal_service: TerminalService,
     n_tills: int,
     tax_rate_ust: TaxRate,
 ):
@@ -382,6 +390,10 @@ async def _create_ticket_tills(
     )
     tills = [NewTill(name=f"Eintrittskasse {i}", active_profile_id=profile.id) for i in range(n_tills)]
     for till in tills:
+        terminal = await terminal_service.create_terminal(
+            token=admin_token, node_id=event_node_id, terminal=NewTerminal(name=till.name, description="")
+        )
+        till.terminal_id = terminal.id
         await till_service.create_till(
             token=admin_token,
             node_id=event_node_id,
@@ -394,6 +406,7 @@ async def _create_topup_tills(
     event_node_id: int,
     admin_token: str,
     till_service: TillService,
+    terminal_service: TerminalService,
     n_tills: int,
 ):
     layout = await till_service.layout.create_layout(
@@ -420,6 +433,10 @@ async def _create_topup_tills(
     )
     tills = [NewTill(name=f"Aufladekasse {i}", active_profile_id=profile.id) for i in range(n_tills)]
     for till in tills:
+        terminal = await terminal_service.create_terminal(
+            token=admin_token, node_id=event_node_id, terminal=NewTerminal(name=till.name, description="")
+        )
+        till.terminal_id = terminal.id
         await till_service.create_till(
             token=admin_token,
             node_id=event_node_id,
@@ -457,6 +474,7 @@ class DatabaseSetup:
         till_service = TillService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
         product_service = ProductService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
         ticket_service = TicketService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
+        terminal_service = TerminalService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
 
         logger.info(f"Creating {n_tills} tills")
         await _create_beverage_tills(
@@ -466,6 +484,7 @@ class DatabaseSetup:
             product_service=product_service,
             till_service=till_service,
             n_cocktail_tills=self.n_cocktail_tills,
+            terminal_service=terminal_service,
             n_beer_tills=self.n_beer_tills,
             tax_rate_ust=tax_rate_ust,
         )
@@ -475,6 +494,7 @@ class DatabaseSetup:
             event_node_id=self.event_node_id,
             till_service=till_service,
             n_tills=self.n_topup_tills,
+            terminal_service=terminal_service,
         )
         await _create_ticket_tills(
             conn=conn,
@@ -484,6 +504,7 @@ class DatabaseSetup:
             till_service=till_service,
             n_tills=self.n_entry_tills,
             tax_rate_ust=tax_rate_ust,
+            terminal_service=terminal_service,
         )
         for i in range(n_tills):
             await till_service.register.create_cash_register(

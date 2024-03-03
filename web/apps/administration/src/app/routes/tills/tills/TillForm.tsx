@@ -1,4 +1,4 @@
-import { NewTill } from "@/api";
+import { NewTill, Terminal, selectTerminalAll, useListTerminalsQuery } from "@/api";
 import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,15 @@ export function TillForm<T extends NewTill>(props: TillFormProps<T>) {
       }),
     }
   );
+  const { terminals } = useListTerminalsQuery(
+    { nodeId: currentNode.id },
+    {
+      selectFromResult: ({ data, ...rest }) => ({
+        ...rest,
+        terminals: data ? selectTerminalAll(data) : [],
+      }),
+    }
+  );
   return (
     <>
       <FormTextField autoFocus name="name" label={t("till.name")} formik={props} />
@@ -36,6 +45,16 @@ export function TillForm<T extends NewTill>(props: TillFormProps<T>) {
         onChange={(value: TillProfile | null) =>
           value != null ? setFieldValue("active_profile_id", value.id) : undefined
         }
+      />
+      <Select
+        multiple={false}
+        formatOption={(terminal: Terminal) => terminal.name}
+        value={terminals.find((p) => p.id === values.terminal_id) ?? null}
+        options={terminals}
+        label={t("till.terminal")}
+        error={touched.terminal_id && !!errors.terminal_id}
+        helperText={(touched.terminal_id && errors.terminal_id) as string}
+        onChange={(value: Terminal | null) => (value != null ? setFieldValue("terminal_id", value.id) : undefined)}
       />
     </>
   );

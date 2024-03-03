@@ -1,2 +1,2 @@
-export * from "./till";
+export * from "./terminal";
 export * from "./draggable";

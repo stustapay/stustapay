@@ -52,15 +52,6 @@ async def update_till(
     return updated_till
 
 
-@router.post("/{till_id}/logout")
-async def logout_till(
-    till_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
-):
-    logged_out = await till_service.logout_terminal_id(token=token, till_id=till_id, node_id=node_id)
-    if not logged_out:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-
 @router.post("/{till_id}/force-logout-user")
 async def force_logout_user(
     till_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None

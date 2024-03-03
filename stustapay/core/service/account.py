@@ -7,7 +7,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, AccountType
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.terminal import Terminal
+from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
@@ -227,7 +227,13 @@ class AccountService(DBService):
     @with_db_transaction
     @requires_terminal([Privilege.grant_vouchers])
     async def grant_vouchers(
-        self, *, conn: Connection, current_user: User, current_terminal: Terminal, user_tag_uid: int, vouchers: int
+        self,
+        *,
+        conn: Connection,
+        current_user: User,
+        current_terminal: CurrentTerminal,
+        user_tag_uid: int,
+        vouchers: int,
     ) -> Account:
         # TODO: TREE visibility
         if vouchers <= 0:
@@ -265,7 +271,7 @@ class AccountService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: Terminal,
+        current_terminal: CurrentTerminal,
         current_user: User,
         new_free_ticket_grant: NewFreeTicketGrant,
     ) -> Account:

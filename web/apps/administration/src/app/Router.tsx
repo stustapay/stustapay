@@ -62,6 +62,7 @@ import {
 import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
 import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
 import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch } from "./routes/customers";
+import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
 
 const router = createBrowserRouter([
   {
@@ -324,6 +325,27 @@ const router = createBrowserRouter([
           {
             path: ":tillId",
             element: <TillDetail />,
+          },
+        ],
+      },
+      {
+        path: "node/:nodeId/terminals",
+        children: [
+          {
+            index: true,
+            element: <TerminalList />,
+          },
+          {
+            path: "new",
+            element: <TerminalCreate />,
+          },
+          {
+            path: ":terminalId/edit",
+            element: <TerminalUpdate />,
+          },
+          {
+            path: ":terminalId",
+            element: <TerminalDetail />,
           },
         ],
       },

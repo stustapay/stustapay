@@ -97,6 +97,7 @@ class ObjectType(enum.Enum):
     tse = "tse"
     order = "order"
     account = "account"
+    terminal = "terminal"
 
 
 ALL_OBJECT_TYPES = [e for e in ObjectType]

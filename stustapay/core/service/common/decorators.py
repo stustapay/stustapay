@@ -8,7 +8,8 @@ from typing import Awaitable, Callable, Optional, TypeVar, overload
 
 import asyncpg.exceptions
 
-from stustapay.core.schema.terminal import Terminal
+from stustapay.core.schema.terminal import CurrentTerminal
+from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.common.error import (
@@ -314,7 +315,7 @@ def requires_terminal(
                 )
 
             token = kwargs.get("token")
-            terminal: Terminal | None = kwargs.get("current_terminal")
+            terminal: CurrentTerminal | None = kwargs.get("current_terminal")
             conn = kwargs["conn"]
             if terminal is None:
                 if self.__class__.__name__ == "AuthService":
@@ -327,6 +328,14 @@ def requires_terminal(
             if terminal is None:
                 raise Unauthorized("invalid terminal token")
 
+            till = await conn.fetch_maybe_one(
+                Till,
+                "select * from till_with_cash_register where terminal_id = $1",
+                terminal.id,
+            )
+            if till is None:
+                raise Unauthorized("terminal does not have a till ")
+
             logged_in_user = await kwargs["conn"].fetch_maybe_one(
                 CurrentUser,
                 "select "
@@ -338,12 +347,12 @@ def requires_terminal(
                 "join user_to_role utr on utr.user_id = usr.id "
                 "join user_role_with_privileges urwp on urwp.id = utr.role_id "
                 "where usr.id = $1 and utr.role_id = $2",
-                terminal.till.active_user_id,
-                terminal.till.active_user_role_id,
+                till.active_user_id,
+                till.active_user_role_id,
             )
 
             if user_privileges is not None:
-                if terminal.till.active_user_id is None or logged_in_user is None:
+                if till.active_user_id is None or logged_in_user is None:
                     raise AccessDenied(
                         f"no user is logged into this terminal but "
                         f"the following privileges are required {user_privileges}"
@@ -371,7 +380,7 @@ def requires_terminal(
                 kwargs.pop("conn")
 
             if "node" in signature_params:
-                node = await fetch_node(conn=conn, node_id=terminal.till.node_id)
+                node = await fetch_node(conn=conn, node_id=till.node_id)
                 assert node is not None
                 kwargs["node"] = node
 

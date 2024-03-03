@@ -1,3 +1,4 @@
+import * as React from "react";
 import { TextField, TextFieldProps } from "@mui/material";
 import { FormikProps } from "formik";
 
@@ -8,7 +9,7 @@ export interface FormTextFieldProps<Name extends string, Values>
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function FormTextField<Name extends string, Values extends Partial<Record<Name, any>>>({
+function FormTextFieldInner<Name extends string, Values extends Partial<Record<Name, any>>>({
   formik,
   name,
   ...props
@@ -27,3 +28,5 @@ export function FormTextField<Name extends string, Values extends Partial<Record
     />
   );
 }
+
+export const FormTextField = React.memo(FormTextFieldInner) as typeof FormTextFieldInner;

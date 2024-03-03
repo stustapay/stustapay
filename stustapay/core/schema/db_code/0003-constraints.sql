@@ -29,12 +29,12 @@ alter table cash_register_stocking add constraint non_negative_stockings
 alter table till add constraint user_requires_role
     check ((active_user_id is null) = (active_user_role_id is null));
 
-alter table till add constraint registration_or_session_uuid_null
+alter table terminal add constraint registration_or_session_uuid_null
     check ((registration_uuid is null) != (session_uuid is null));
 
 -- TODO: constraint that we can have only one virtual till per event
 alter table till add constraint virtual_till_cannot_be_registered
-    check ((is_virtual and session_uuid is null) or not is_virtual);
+    check ((is_virtual and terminal_id is null) or not is_virtual);
 
 alter table ordr add constraint only_cancel_orders_can_reference_orders
     check ((order_type != 'cancel_sale') = (cancels_order is null));
@@ -317,6 +317,7 @@ alter table till add constraint name_is_unique check(check_unique_in_tree(id, 't
 alter table user_role add constraint name_is_unique check(check_unique_in_tree(id, 'user_role', 'name', name, node_id));
 alter table tse add constraint name_is_unique check(check_unique_in_tree(id, 'tse', 'name', name, node_id));
 alter table tax_rate add constraint name_is_unique check(check_unique_in_tree(id, 'tax_rate', 'name', name, node_id));
+alter table terminal add constraint name_is_unique check(check_unique_in_tree(id, 'terminal', 'name', name, node_id));
 
 alter table event add constraint end_date_gt_start_date
     check((start_date is null and end_date is null) or (start_date is not null and end_date is not null and end_date > start_date));
