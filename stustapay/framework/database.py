@@ -371,6 +371,7 @@ async def create_db_pool(cfg: DatabaseConfig, n_connections=10) -> asyncpg.Pool:
                 password=cfg.password,
                 database=cfg.dbname,
                 host=cfg.host,
+                port=cfg.port,
                 max_size=n_connections,
                 connection_class=Connection,
                 min_size=n_connections,
