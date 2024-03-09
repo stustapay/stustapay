@@ -242,7 +242,7 @@ class TillRegisterService(DBService):
         return result != "DELETE 0"
 
     @with_retryable_db_transaction(read_only=False)
-    @requires_terminal([Privilege.node_administration])
+    @requires_terminal([Privilege.cash_transport])
     async def stock_up_cash_register(
         self,
         *,

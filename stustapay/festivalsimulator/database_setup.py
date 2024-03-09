@@ -93,6 +93,7 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
                 Privilege.grant_vouchers,
                 Privilege.user_management,
                 Privilege.grant_free_tickets,
+                Privilege.customer_management,
             ],
         ),
     )
@@ -137,6 +138,53 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
     await create_user_tags(conn=conn, node_id=event_node.id, tags=customer_tags)
 
     return admin_token
+
+
+async def _create_admin_tills(
+    conn: Connection,
+    event_node_id: int,
+    admin_token: str,
+    terminal_service: TerminalService,
+    till_service: TillService,
+    n_admin_tills: int,
+):
+    node = await fetch_node(conn=conn, node_id=event_node_id)
+    assert node is not None
+    admin_layout = await till_service.layout.create_layout(
+        conn=conn,
+        node_id=event_node_id,
+        token=admin_token,
+        layout=NewTillLayout(
+            name="Admin",
+            description="",
+            button_ids=[],
+        ),
+    )
+    admin_profile = await till_service.profile.create_profile(
+        conn=conn,
+        node_id=event_node_id,
+        token=admin_token,
+        profile=NewTillProfile(
+            name="Admin",
+            description="",
+            allow_top_up=False,
+            allow_cash_out=False,
+            allow_ticket_sale=False,
+            layout_id=admin_layout.id,
+        ),
+    )
+
+    tills = [NewTill(name=f"Admin {i}", active_profile_id=admin_profile.id) for i in range(n_admin_tills)]
+    for till in tills:
+        terminal = await terminal_service.create_terminal(
+            token=admin_token, node_id=event_node_id, terminal=NewTerminal(name=till.name, description="")
+        )
+        till.terminal_id = terminal.id
+        await till_service.create_till(
+            token=admin_token,
+            node_id=event_node_id,
+            till=till,
+        )
 
 
 async def _create_beverage_tills(
@@ -477,6 +525,14 @@ class DatabaseSetup:
         terminal_service = TerminalService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
 
         logger.info(f"Creating {n_tills} tills")
+        await _create_admin_tills(
+            conn=conn,
+            admin_token=admin_token,
+            event_node_id=self.event_node_id,
+            till_service=till_service,
+            terminal_service=terminal_service,
+            n_admin_tills=10,
+        )
         await _create_beverage_tills(
             conn=conn,
             admin_token=admin_token,

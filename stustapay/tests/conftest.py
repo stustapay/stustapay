@@ -316,6 +316,22 @@ async def admin_user(
 async def admin_token(user_service: UserService, admin_user: tuple[User, str]) -> str:
     user, password = admin_user
     admin_token = (await user_service.login_user(username=user.login, password=password)).token
+    await user_service.update_user_role_privileges(
+        token=admin_token,
+        node_id=ROOT_NODE_ID,
+        role_id=ADMIN_ROLE_ID,
+        is_privileged=True,
+        privileges=[
+            Privilege.user_management,
+            Privilege.node_administration,
+            Privilege.cash_transport,
+            Privilege.customer_management,
+            Privilege.terminal_login,
+            Privilege.can_book_orders,
+            Privilege.grant_vouchers,
+            Privilege.grant_free_tickets,
+        ],
+    )
     # TODO: tree, this has to be replaced as soon as we have proper tree visibility rules
     return admin_token
 

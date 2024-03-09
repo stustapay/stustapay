@@ -268,13 +268,15 @@ update till set is_virtual = true where id = 1;  -- set is_virtual flag for init
 
 drop table allowed_user_roles_for_till_profile;
 
-insert into privilege (name) values ('node_administration'), ('cash_transport');
+insert into privilege (name) values ('node_administration'), ('cash_transport'), ('customer_management');
 
 insert into user_role_to_privilege (role_id, privilege)
 values
     (0, 'node_administration'),  -- admin role
+    (0, 'customer_management'),  -- admin role
     (1, 'node_administration'),  -- finanzorga role
-    (1, 'cash_transport');  -- finanzorga role
+    (1, 'cash_transport'),  -- finanzorga role
+    (1, 'customer_management');  -- finanzorga role
 
 delete from user_role_to_privilege where
     privilege = 'account_management' or
