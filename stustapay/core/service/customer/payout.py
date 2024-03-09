@@ -45,6 +45,37 @@ async def get_number_of_payouts(conn: Connection, event_node_id: int, payout_run
 async def create_payout_run(
     conn: Connection, event_node_id: int, created_by: str, max_payout_sum: float
 ) -> tuple[int, int]:
+    """
+    Args:
+        created_by (str): Person who initiated the payout, can be used for documentation reasons
+        max_payout_sum (float): Respected as the maximum amount of money payed out in this run.
+            This is useful if your bank only allows to transfer a maximum amount of money per transaction.
+    Raises:
+        InvalidArgument: Thrown if no the payout does not contain any payouts.
+            e.g. if max_payout_sum is too low such that a payout with at least one payout is included
+            or if no customer provided his bank info.
+
+    Returns:
+        tuple[int, int]: created payout run id and number of payouts in that payout run
+    """
+
+    # check before if the number of payouts is larger than zero
+    number_of_payouts = await conn.fetchval(
+        "select count(*) from ( "
+        "   select "
+        "       customer_account_id, "
+        "       sum(balance) over (order by customer_account_id rows between unbounded preceding and current row) as running_total "
+        "   from payout p where p.payout_run_id is null and p.node_id = $2 "
+        ") as agr "
+        "where running_total <= $1",
+        max_payout_sum,
+        event_node_id,
+    )
+    if number_of_payouts == 0:
+        raise InvalidArgument(
+            "Payout run would have zero payouts. Either no customer has provided bank info or max payout sum is too low."
+        )
+
     payout_run_id = await conn.fetchval(
         "insert into payout_run (node_id, created_at, created_by) values ($1, now(), $2) returning id",
         event_node_id,

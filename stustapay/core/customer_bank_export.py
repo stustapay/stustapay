@@ -48,6 +48,7 @@ async def _export_customer_payouts(
             assert event_node is not None
             assert event_node.event is not None
             if payout_run_id is None:
+                # this throws InvalidArgument number of payouts would result to zero.
                 payout_run_id, number_of_payouts = await create_payout_run(
                     conn=conn, event_node_id=event_node.id, created_by=created_by, max_payout_sum=max_payout_sum
                 )
@@ -55,11 +56,6 @@ async def _export_customer_payouts(
                 number_of_payouts = await get_number_of_payouts(
                     conn=conn, event_node_id=event_node.id, payout_run_id=payout_run_id
                 )
-
-            if number_of_payouts == 0:
-                logging.warning("No customers with bank data found. Nothing to export.")
-                await conn.execute("rollback")
-                return payout_run_id
 
             max_export_items_per_batch = max_export_items_per_batch or number_of_payouts
             currency_ident = event_node.event.currency_identifier
