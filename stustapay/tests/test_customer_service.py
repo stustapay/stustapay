@@ -398,6 +398,28 @@ async def test_max_payout_sum(
     )
 
 
+async def test_zero_payouts(
+    tmp_dir: Path,
+    customers_to_transfer: list[CustomerTestInfo],
+    config: Config,
+    event_node: Node,
+):
+    output_path = tmp_dir / "test_max_payout_sum"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    num = 1
+    s = sum(customer.balance - customer.donation for customer in customers_to_transfer[:num])
+    with pytest.raises(InvalidArgument):
+        _ = await export_customer_payouts(
+            config=config,
+            created_by="test",
+            event_node_id=event_node.id,
+            dry_run=False,
+            output_path=output_path,
+            max_payout_sum=s - 1,
+        )
+
+
 async def test_export_customer_bank_data(
     tmp_dir: Path,
     customer_service: CustomerService,
