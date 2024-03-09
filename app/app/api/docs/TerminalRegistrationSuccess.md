@@ -4,7 +4,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**till** | [**Till**](Till.md) |  | 
+**terminal** | [**Terminal**](Terminal.md) |  | 
 **token** | **kotlin.String** |  | 
 
 

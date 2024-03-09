@@ -1,8 +1,8 @@
 package de.stustapay.stustapay.ui.root
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import de.stustapay.stustapay.model.TerminalConfig
-import de.stustapay.stustapay.model.CurrentUser
+import de.stustapay.api.models.TerminalConfig
+import de.stustapay.api.models.CurrentUser
 import de.stustapay.stustapay.ui.nav.NavDest
 
 data class StartpageItem(

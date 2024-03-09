@@ -49,10 +49,10 @@ data class CompletedSale (
     val uuid: java.util.UUID,
 
     @Contextual @SerialName(value = "old_balance")
-    val oldBalance: java.math.BigDecimal,
+    val oldBalance: kotlin.Double,
 
     @Contextual @SerialName(value = "new_balance")
-    val newBalance: java.math.BigDecimal,
+    val newBalance: kotlin.Double,
 
     @SerialName(value = "old_voucher_balance")
     val oldVoucherBalance: kotlin.Int,
@@ -88,7 +88,7 @@ data class CompletedSale (
     val itemCount: kotlin.Int,
 
     @Contextual @SerialName(value = "total_price")
-    val totalPrice: java.math.BigDecimal
+    val totalPrice: kotlin.Double
 
 )
 

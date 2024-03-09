@@ -59,13 +59,13 @@ data class Account (
     val comment: kotlin.String?,
 
     @Contextual @SerialName(value = "balance")
-    val balance: java.math.BigDecimal,
+    val balance: kotlin.Double,
 
     @SerialName(value = "vouchers")
     val vouchers: kotlin.Int,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.Int?,
+    val userTagUid: kotlin.ULong?,
 
     @Contextual @SerialName(value = "restriction")
     val restriction: ProductRestriction?,

@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.UserRole
+import de.stustapay.api.models.UserRole
 import de.stustapay.stustapay.model.UserRolesState
-import de.stustapay.stustapay.model.UserTag
+import de.stustapay.api.models.UserTag
 
 
 @Preview
@@ -40,17 +40,20 @@ fun PreviewRoleSelectionDialog() {
                     UserRole(
                         name = "Crazy Hacker",
                         id = 1,
-                        privileges = listOf()
+                        privileges = listOf(),
+                        nodeId = 0
                     ),
                     UserRole(
                         name = "Boring Hacker",
                         id = 2,
                         privileges = listOf(),
+                        nodeId = 0
                     ),
                     UserRole(
                         name = "Retired Hacker",
                         id = 3,
                         privileges = listOf(),
+                        nodeId = 0
                     )
                 ),
                 tag = UserTag(0u),

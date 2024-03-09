@@ -25,7 +25,6 @@ import kotlinx.serialization.Contextual
  *
  * @param login 
  * @param displayName 
- * @param roleNames 
  * @param nodeId 
  * @param id 
  * @param userTagUidHex 
@@ -44,9 +43,6 @@ data class User (
     @SerialName(value = "display_name")
     val displayName: kotlin.String,
 
-    @SerialName(value = "role_names")
-    val roleNames: kotlin.collections.List<kotlin.String>,
-
     @SerialName(value = "node_id")
     val nodeId: kotlin.Int,
 
@@ -57,7 +53,7 @@ data class User (
     val userTagUidHex: kotlin.String?,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.Int? = null,
+    val userTagUid: kotlin.ULong? = null,
 
     @SerialName(value = "description")
     val description: kotlin.String? = null,

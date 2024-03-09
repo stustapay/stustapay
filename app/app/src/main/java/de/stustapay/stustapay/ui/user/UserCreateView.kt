@@ -129,7 +129,7 @@ fun UserCreateView(viewModel: UserViewModel) {
                                     label = { Text(stringResource(R.string.user_roles)) },
                                     readOnly = true,
                                     value = roles.map { id ->
-                                        availableRoles.find { r -> r.id == id }?.name ?: ""
+                                        availableRoles.find { r -> r.id.toULong() == id }?.name ?: ""
                                     }.reduceOrNull { acc, r -> "$acc, $r" }.orEmpty(),
                                     onValueChange = {},
                                     trailingIcon = {
@@ -143,12 +143,12 @@ fun UserCreateView(viewModel: UserViewModel) {
                                     expanded = expanded,
                                     onDismissRequest = { expanded = false }) {
                                     for (r in availableRoles) {
-                                        if (!r.is_privileged) {
+                                        if (!r.isPrivileged!!) {
                                             DropdownMenuItem(onClick = {
-                                                roles = if (roles.contains(r.id)) {
-                                                    roles - r.id
+                                                roles = if (roles.contains(r.id.toULong())) {
+                                                    roles - r.id.toULong()
                                                 } else {
-                                                    roles + r.id
+                                                    roles + r.id.toULong()
                                                 }
                                                 expanded = false
                                             }) {
@@ -158,7 +158,7 @@ fun UserCreateView(viewModel: UserViewModel) {
                                                     horizontalArrangement = Arrangement.SpaceBetween
                                                 ) {
                                                     Text(r.name)
-                                                    if (roles.contains(r.id)) {
+                                                    if (roles.contains(r.id.toULong())) {
                                                         Icon(Icons.Filled.Check, null)
                                                     }
                                                 }
@@ -207,7 +207,7 @@ fun UserCreateView(viewModel: UserViewModel) {
                                     login,
                                     displayName,
                                     currentTag!!,
-                                    roles.mapNotNull { roleId -> availableRoles.find { r -> r.id == roleId } },
+                                    roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.toULong() == roleId } },
                                     description
                                 )
                             }

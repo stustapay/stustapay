@@ -1,6 +1,6 @@
 package de.stustapay.stustapay.repository
 
-import de.stustapay.stustapay.model.TerminalConfig
+import de.stustapay.api.models.TerminalConfig
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.netsource.TerminalConfigRemoteDataSource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,8 +45,8 @@ class TerminalConfigRepository @Inject constructor(
             is Response.OK -> {
                 _terminalConfigState.update { TerminalConfigState.Success(response.data) }
                 // if we have secrets, save them
-                response.data.secrets?.let {
-                    nfcRepository.setTagKeys(it.user_tag_secret)
+                response.data.till?.secrets?.let {
+                    nfcRepository.setTagKeys(it.userTagSecret)
                 }
             }
 

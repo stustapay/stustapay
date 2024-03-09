@@ -85,9 +85,10 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
     } else {
         val user = currentUser!!
 
-        val isPrivileged = user.role_names.mapNotNull { role ->
-            availableRoles.find { available -> available.name == role }?.is_privileged
-        }.contains(true)
+        val isPrivileged = false
+        /*val isPrivileged = user.roleNames.mapNotNull { role ->
+            availableRoles.find { available -> available.name == role }?.isPrivileged
+        }.contains(true)*/
 
         Scaffold(
             content = { padding ->
@@ -107,12 +108,12 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
                         )
                         ListItem(
                             text = { Text(stringResource(R.string.user_displayname)) },
-                            secondaryText = { Text(user.display_name) }
+                            secondaryText = { Text(user.displayName) }
                         )
-                        ListItem(
+                        /*ListItem(
                             text = { Text(stringResource(R.string.user_roles)) },
-                            secondaryText = { Text(user.role_names.reduceOrNull { acc, r -> "$acc, $r" } ?: "") }
-                        )
+                            secondaryText = { Text(user.roleNames.reduceOrNull { acc, r -> "$acc, $r" } ?: "") }
+                        )*/
                         ListItem(
                             text = { Text(stringResource(R.string.user_description)) },
                             secondaryText = { Text(user.description ?: "") }

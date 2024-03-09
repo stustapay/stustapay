@@ -17,6 +17,7 @@ package de.stustapay.api.apis
 
 import de.stustapay.api.models.CashRegister
 import de.stustapay.api.models.CashierAccountChangePayload
+
 import de.stustapay.api.models.TransferCashRegisterPayload
 import de.stustapay.api.models.TransportAccountChangePayload
 

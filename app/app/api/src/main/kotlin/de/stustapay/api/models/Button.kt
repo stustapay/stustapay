@@ -38,7 +38,7 @@ data class Button (
     val quantity: kotlin.Int? = null,
 
     @Contextual @SerialName(value = "price")
-    val price: java.math.BigDecimal? = null
+    val price: kotlin.Double? = null
 
 )
 

@@ -31,10 +31,10 @@ import kotlinx.serialization.Contextual
 data class TransferCashRegisterPayload (
 
     @SerialName(value = "source_cashier_tag_uid")
-    val sourceCashierTagUid: kotlin.Int,
+    val sourceCashierTagUid: kotlin.ULong,
 
     @SerialName(value = "target_cashier_tag_uid")
-    val targetCashierTagUid: kotlin.Int
+    val targetCashierTagUid: kotlin.ULong
 
 )
 

@@ -66,13 +66,13 @@ data class Customer (
     val comment: kotlin.String?,
 
     @Contextual @SerialName(value = "balance")
-    val balance: java.math.BigDecimal,
+    val balance: kotlin.Double,
 
     @SerialName(value = "vouchers")
     val vouchers: kotlin.Int,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.Int?,
+    val userTagUid: kotlin.ULong?,
 
     @Contextual @SerialName(value = "restriction")
     val restriction: ProductRestriction?,
@@ -90,7 +90,7 @@ data class Customer (
     val email: kotlin.String?,
 
     @Contextual @SerialName(value = "donation")
-    val donation: java.math.BigDecimal?,
+    val donation: kotlin.Double?,
 
     @SerialName(value = "payout_error")
     val payoutError: kotlin.String?,

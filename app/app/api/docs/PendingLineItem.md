@@ -6,11 +6,11 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **quantity** | **kotlin.Int** |  | 
 **product** | [**Product**](Product.md) |  | 
-**productPrice** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
+**productPrice** | [**kotlin.Double**](kotlin.Double.md) |  | 
 **taxRateId** | **kotlin.Int** |  | 
 **taxName** | **kotlin.String** |  | 
-**taxRate** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
-**totalPrice** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  |  [readonly]
+**taxRate** | [**kotlin.Double**](kotlin.Double.md) |  | 
+**totalPrice** | [**kotlin.Double**](kotlin.Double.md) |  |  [readonly]
 
 
 

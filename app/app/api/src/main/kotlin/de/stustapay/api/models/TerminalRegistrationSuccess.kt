@@ -15,7 +15,7 @@
 
 package de.stustapay.api.models
 
-import de.stustapay.api.models.Till
+import de.stustapay.api.models.Terminal
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -24,15 +24,15 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param till 
+ * @param terminal 
  * @param token 
  */
 @Serializable
 
 data class TerminalRegistrationSuccess (
 
-    @SerialName(value = "till")
-    val till: Till,
+    @SerialName(value = "terminal")
+    val terminal: Terminal,
 
     @SerialName(value = "token")
     val token: kotlin.String

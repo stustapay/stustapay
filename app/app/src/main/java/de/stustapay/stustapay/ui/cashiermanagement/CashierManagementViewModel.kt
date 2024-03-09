@@ -2,6 +2,7 @@ package de.stustapay.stustapay.ui.cashiermanagement
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.CashRegisterStocking
 import de.stustapay.stustapay.model.CashRegister
 import de.stustapay.stustapay.model.CashierStocking
 import de.stustapay.stustapay.net.Response
@@ -17,10 +18,10 @@ class CashierManagementViewModel @Inject constructor(
 ) : ViewModel() {
     private val _status = MutableStateFlow<CashierManagementStatus>(CashierManagementStatus.None)
 
-    private val _stockings = MutableStateFlow<List<CashierStocking>>(listOf())
+    private val _stockings = MutableStateFlow<List<CashRegisterStocking>>(listOf())
     val stockings = _stockings.asStateFlow()
 
-    private val _registers = MutableStateFlow<List<CashRegister>>(listOf())
+    private val _registers = MutableStateFlow<List<de.stustapay.api.models.CashRegister>>(listOf())
     val registers = _registers.asStateFlow()
 
     val status = _status.asStateFlow()
@@ -47,7 +48,7 @@ class CashierManagementViewModel @Inject constructor(
         }
     }
 
-    suspend fun equip(tagId: ULong, registerId: ULong, stockingId: ULong) {
+    suspend fun equip(tagId: ULong, registerId: Int, stockingId: Int) {
         _status.update { CashierManagementStatus.None }
         _status.update {
             CashierManagementStatus.Done(

@@ -38,7 +38,7 @@ data class NewPayOut (
     val customerTagUid: kotlin.Int,
 
     @Contextual @SerialName(value = "amount")
-    val amount: java.math.BigDecimal? = null
+    val amount: kotlin.Double? = null
 
 )
 

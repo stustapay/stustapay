@@ -70,7 +70,7 @@ data class CurrentUser (
     val description: kotlin.String? = null,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.Int? = null,
+    val userTagUid: kotlin.ULong? = null,
 
     @SerialName(value = "transport_account_id")
     val transportAccountId: kotlin.Int? = null,

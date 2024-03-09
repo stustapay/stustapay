@@ -43,7 +43,7 @@ data class PendingLineItem (
     val product: Product,
 
     @Contextual @SerialName(value = "product_price")
-    val productPrice: java.math.BigDecimal,
+    val productPrice: kotlin.Double,
 
     @SerialName(value = "tax_rate_id")
     val taxRateId: kotlin.Int,
@@ -52,10 +52,10 @@ data class PendingLineItem (
     val taxName: kotlin.String,
 
     @Contextual @SerialName(value = "tax_rate")
-    val taxRate: java.math.BigDecimal,
+    val taxRate: kotlin.Double,
 
     @Contextual @SerialName(value = "total_price")
-    val totalPrice: java.math.BigDecimal
+    val totalPrice: kotlin.Double
 
 )
 

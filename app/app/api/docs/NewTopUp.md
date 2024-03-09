@@ -6,7 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **uuid** | [**java.util.UUID**](java.util.UUID.md) |  | 
 **paymentMethod** | [**PaymentMethod**](PaymentMethod.md) |  | 
-**amount** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
+**amount** | [**kotlin.Double**](kotlin.Double.md) |  | 
 **customerTagUid** | **kotlin.Int** |  | 
 
 

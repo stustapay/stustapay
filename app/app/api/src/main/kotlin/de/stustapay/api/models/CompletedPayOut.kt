@@ -44,16 +44,16 @@ data class CompletedPayOut (
     val customerTagUid: kotlin.Int,
 
     @Contextual @SerialName(value = "amount")
-    val amount: java.math.BigDecimal,
+    val amount: kotlin.Double,
 
     @SerialName(value = "customer_account_id")
     val customerAccountId: kotlin.Int,
 
     @Contextual @SerialName(value = "old_balance")
-    val oldBalance: java.math.BigDecimal,
+    val oldBalance: kotlin.Double,
 
     @Contextual @SerialName(value = "new_balance")
-    val newBalance: java.math.BigDecimal,
+    val newBalance: kotlin.Double,
 
     @Contextual @SerialName(value = "booked_at")
     val bookedAt: java.time.OffsetDateTime,

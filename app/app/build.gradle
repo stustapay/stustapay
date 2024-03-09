@@ -1,3 +1,5 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
@@ -15,8 +17,7 @@ def getVersionCode = { ->
             standardOutput = code
         }
         return code.toString().toInteger()
-    }
-    catch (ignored) {
+    } catch (ignored) {
         return -1
     }
 }
@@ -29,8 +30,7 @@ def getVersionName = { ->
             standardOutput = stdout
         }
         return stdout.toString().trim()
-    }
-    catch (ignored) {
+    } catch (ignored) {
         return null
     }
 }
@@ -77,22 +77,59 @@ android {
         }
     }
 
-    openApiGenerate {
-        generatorName.set("kotlin")
-        inputSpec.set("../api/terminalserver.json")
-        outputDir.set("$projectDir/api")
-        skipValidateSpec.set(true)
-        configOptions.set([
-                library: "jvm-ktor",
-                serializationLibrary: "kotlinx_serialization",
-                packageName: "de.stustapay.api",
-                omitGradleWrapper: "true"
-        ])
-    }
-
     sourceSets {
         main {
-            kotlin.srcDirs = ['api/src/main/kotlin']
+            kotlin.srcDirs = ["$projectDir/api/src/main/kotlin"]
+        }
+    }
+
+    tasks.register('api') {
+        dependsOn tasks.modApi
+    }
+
+    tasks.register('modApi') {
+        dependsOn tasks.genApi
+        doLast {
+            copy {
+                from("$projectDir/build/generated/api")
+                into("$projectDir/api")
+                exclude("**/ValidationError.kt")
+                exclude("**/ValidationErrorLocInner.kt")
+                exclude("**/HTTPValidationError.kt")
+                filter { String line -> line.replace("import de.stustapay.api.models.HTTPValidationError", "") }
+                filter { String line -> line.replace("import de.stustapay.api.models.AnyOfLessThanGreaterThan", "") }
+                filter { String line -> line.replace("    val userPrivileges: AnyOfLessThanGreaterThan?,", "    val userPrivileges: kotlin.collections.List<Privilege>?,") }
+                filter { String line -> line.replace("    val buttons: AnyOfLessThanGreaterThan?,", "    val buttons: kotlin.collections.List<TerminalButton>?,") }
+                filter { String line -> line.replace("java.math.BigDecimal", "kotlin.Double") }
+                filter { String line -> line.replace("kotlin.Double(\"0.0\")", "0.0") }
+                filter { String line -> line.replace("    val userTagUid: kotlin.Int? = null", "    val userTagUid: kotlin.ULong? = null") }
+                filter { String line -> line.replace("    val userTagUid: kotlin.Int", "    val userTagUid: kotlin.ULong") }
+                filter { String line -> line.replace("    val uid: kotlin.Int", "    val uid: kotlin.ULong") }
+                filter { String line -> line.replace("    val orgaTagUid: kotlin.Int", "    val orgaTagUid: kotlin.ULong") }
+                filter { String line -> line.replace("    val cashierTagUid: kotlin.Int", "    val cashierTagUid: kotlin.ULong") }
+                filter { String line -> line.replace("    val sourceCashierTagUid: kotlin.Int", "    val sourceCashierTagUid: kotlin.ULong") }
+                filter { String line -> line.replace("    val targetCashierTagUid: kotlin.Int", "    val targetCashierTagUid: kotlin.ULong") }
+                filter { String line -> line.replace("    val currentCashierTagUid: kotlin.Int", "    val currentCashierTagUid: kotlin.ULong") }
+            }
+        }
+    }
+
+    tasks.register('genApi', GenerateTask) {
+        dependsOn tasks.cleanApi
+        generatorName.set("kotlin")
+        inputSpec.set("$projectDir/../../api/terminalserver.json")
+        outputDir.set("$projectDir/build/generated/api")
+        skipValidateSpec.set(true)
+        configOptions.set([library             : "jvm-ktor",
+                           serializationLibrary: "kotlinx_serialization",
+                           packageName         : "de.stustapay.api",
+                           omitGradleWrapper   : "true"])
+    }
+
+    tasks.register('cleanApi') {
+        doLast {
+            delete("$projectDir/build/generated/api")
+            delete("$projectDir/api")
         }
     }
 }

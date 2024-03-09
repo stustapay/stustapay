@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 **cashierId** | **kotlin.Int** |  | 
 **tillId** | **kotlin.Int** |  | 
 **itemCount** | **kotlin.Int** |  |  [readonly]
-**totalPrice** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  |  [readonly]
+**totalPrice** | [**kotlin.Double**](kotlin.Double.md) |  |  [readonly]
 
 
 

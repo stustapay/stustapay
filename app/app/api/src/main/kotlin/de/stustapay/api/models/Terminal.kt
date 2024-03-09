@@ -24,37 +24,37 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param name 
- * @param nodeId 
  * @param id 
- * @param currentCashierId 
- * @param currentCashierTagUid 
- * @param currentTillId 
- * @param currentBalance 
+ * @param nodeId 
+ * @param tillId 
+ * @param sessionUuid 
+ * @param registrationUuid 
+ * @param description 
  */
 @Serializable
 
-data class CashRegister (
+data class Terminal (
 
     @SerialName(value = "name")
     val name: kotlin.String,
 
-    @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
-
     @SerialName(value = "id")
     val id: kotlin.Int,
 
-    @SerialName(value = "current_cashier_id")
-    val currentCashierId: kotlin.Int?,
+    @SerialName(value = "node_id")
+    val nodeId: kotlin.Int,
 
-    @SerialName(value = "current_cashier_tag_uid")
-    val currentCashierTagUid: kotlin.ULong?,
+    @SerialName(value = "till_id")
+    val tillId: kotlin.Int?,
 
-    @SerialName(value = "current_till_id")
-    val currentTillId: kotlin.Int?,
+    @Contextual @SerialName(value = "session_uuid")
+    val sessionUuid: java.util.UUID?,
 
-    @Contextual @SerialName(value = "current_balance")
-    val currentBalance: kotlin.Double
+    @Contextual @SerialName(value = "registration_uuid")
+    val registrationUuid: java.util.UUID?,
+
+    @SerialName(value = "description")
+    val description: kotlin.String? = null
 
 )
 

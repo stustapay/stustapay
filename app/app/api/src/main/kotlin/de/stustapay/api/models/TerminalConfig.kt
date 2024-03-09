@@ -15,8 +15,7 @@
 
 package de.stustapay.api.models
 
-import de.stustapay.api.models.TerminalSecrets
-import de.stustapay.api.models.UserRole
+import de.stustapay.api.models.TerminalTillConfig
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -28,16 +27,7 @@ import kotlinx.serialization.Contextual
  * @param id 
  * @param name 
  * @param description 
- * @param profileName 
- * @param userPrivileges 
- * @param cashRegisterId 
- * @param cashRegisterName 
- * @param allowTopUp 
- * @param allowCashOut 
- * @param allowTicketSale 
- * @param buttons 
- * @param secrets 
- * @param availableRoles 
+ * @param till 
  * @param testMode 
  * @param testModeMessage 
  */
@@ -52,37 +42,10 @@ data class TerminalConfig (
     val name: kotlin.String,
 
     @SerialName(value = "description")
-    val description: kotlin.String?,
+    val description: kotlin.String,
 
-    @SerialName(value = "profile_name")
-    val profileName: kotlin.String,
-
-    @SerialName(value = "user_privileges")
-    val userPrivileges: kotlin.collections.List<Privilege>?,
-
-    @SerialName(value = "cash_register_id")
-    val cashRegisterId: kotlin.Int?,
-
-    @SerialName(value = "cash_register_name")
-    val cashRegisterName: kotlin.String?,
-
-    @SerialName(value = "allow_top_up")
-    val allowTopUp: kotlin.Boolean,
-
-    @SerialName(value = "allow_cash_out")
-    val allowCashOut: kotlin.Boolean,
-
-    @SerialName(value = "allow_ticket_sale")
-    val allowTicketSale: kotlin.Boolean,
-
-    @SerialName(value = "buttons")
-    val buttons: kotlin.collections.List<Button>?,
-
-    @SerialName(value = "secrets")
-    val secrets: TerminalSecrets?,
-
-    @SerialName(value = "available_roles")
-    val availableRoles: kotlin.collections.List<UserRole>,
+    @SerialName(value = "till")
+    val till: TerminalTillConfig?,
 
     @SerialName(value = "test_mode")
     val testMode: kotlin.Boolean,

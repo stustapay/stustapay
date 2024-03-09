@@ -3,7 +3,7 @@ package de.stustapay.stustapay.ui.cashier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.stustapay.model.UserInfo
+import de.stustapay.api.models.UserInfo
 import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
@@ -28,8 +28,8 @@ class CashierStatusViewModel @Inject constructor(
     suspend fun fetchLocal() {
         _state.update { CashierStatusRequestState.Fetching }
         val user = userRepository.userState.value
-        if (user is UserState.LoggedIn && user.user.user_tag_uid != null) {
-            fetchTag(user.user.user_tag_uid!!)
+        if (user is UserState.LoggedIn && user.user.userTagUid != null) {
+            fetchTag(user.user.userTagUid!!)
         } else {
             _state.update { CashierStatusRequestState.Failed("Not logged in") }
         }

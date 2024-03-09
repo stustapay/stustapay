@@ -1,30 +1,29 @@
 package de.stustapay.stustapay.netsource
 
 
-import de.stustapay.stustapay.model.*
 import de.stustapay.stustapay.net.Response
-import de.stustapay.stustapay.net.TerminalAPI
+import de.stustapay.stustapay.net.TerminalApiAccessor
+import de.stustapay.api.models.LoginPayload
+import de.stustapay.api.models.NewUser
+import de.stustapay.api.models.UserTag
+import de.stustapay.stustapay.model.UserCreateState
+import de.stustapay.stustapay.model.UserRolesState
+import de.stustapay.stustapay.model.UserState
+import de.stustapay.stustapay.model.UserUpdateState
+import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class UserRemoteDataSource @Inject constructor(
-    private val terminalAPI: TerminalAPI
+    private val terminalApiAccessor: TerminalApiAccessor
 ) {
     suspend fun currentUser(): UserState {
-        return when (val userResponse = terminalAPI.currentUser()) {
+        return when (val res = terminalApiAccessor.execute { it.user().getCurrentUser() }) {
             is Response.OK -> {
-                val user = userResponse.data
-                if (user != null) {
-                    UserState.LoggedIn(
-                        user = user,
-                    )
-                } else {
-                    UserState.NoLogin
-                }
+                UserState.LoggedIn(res.data)
             }
+
             is Response.Error -> {
-                UserState.Error(
-                    msg = userResponse.msg(),
-                )
+                UserState.Error(res.msg())
             }
         }
     }
@@ -33,17 +32,13 @@ class UserRemoteDataSource @Inject constructor(
      * Login a user by token and desired role.
      */
     suspend fun checkLogin(tag: UserTag): UserRolesState {
-        return when (val checkLoginResponse = terminalAPI.checkLogin(tag)) {
+        return when (val res = terminalApiAccessor.execute { it.user().checkLoginUser(tag) }) {
             is Response.OK -> {
-                UserRolesState.OK(
-                    roles = checkLoginResponse.data.roles,
-                    tag = checkLoginResponse.data.user_tag,
-                )
+                UserRolesState.OK(res.data.roles, res.data.userTag)
             }
+
             is Response.Error -> {
-                UserRolesState.Error(
-                    msg = checkLoginResponse.msg(),
-                )
+                UserRolesState.Error(res.msg())
             }
         }
     }
@@ -52,16 +47,13 @@ class UserRemoteDataSource @Inject constructor(
      * Login a user by token and desired role.
      */
     suspend fun userLogin(loginPayload: LoginPayload): UserState {
-        return when (val userLoginResponse = terminalAPI.userLogin(loginPayload)) {
+        return when (val res = terminalApiAccessor.execute { it.user().loginUser(loginPayload) }) {
             is Response.OK -> {
-                UserState.LoggedIn(
-                    user = userLoginResponse.data,
-                )
+                UserState.LoggedIn(res.data)
             }
+
             is Response.Error -> {
-                UserState.Error(
-                    msg = userLoginResponse.msg(),
-                )
+                UserState.Error(res.msg())
             }
         }
     }
@@ -70,10 +62,12 @@ class UserRemoteDataSource @Inject constructor(
      * Logout the current user.
      */
     suspend fun userLogout(): String? {
-        return when (val userLogoutResponse = terminalAPI.userLogout()) {
+        return when (val userLogoutResponse =
+            terminalApiAccessor.execute { it.user().logoutUser() }) {
             is Response.OK -> {
                 null
             }
+
             is Response.Error -> {
                 userLogoutResponse.msg()
             }
@@ -84,10 +78,11 @@ class UserRemoteDataSource @Inject constructor(
      * Create a new user of any type.
      */
     suspend fun userCreate(newUser: NewUser): UserCreateState {
-        return when (val res = terminalAPI.userCreate(newUser)) {
+        return when (val res = terminalApiAccessor.execute { it.user().createUser(newUser) }) {
             is Response.OK -> {
                 UserCreateState.Created
             }
+
             is Response.Error -> {
                 UserCreateState.Error(res.msg())
             }
@@ -97,14 +92,17 @@ class UserRemoteDataSource @Inject constructor(
     /**
      * Change a user's roles.
      */
-    suspend fun userUpdate(updateUser: UpdateUser): UserUpdateState {
-        return when (val res = terminalAPI.userUpdate(updateUser)) {
+    suspend fun userUpdate(): UserUpdateState {
+        return UserUpdateState.Error("not implemented")
+        /*return when (val res =
+            terminalApiAccessor.execute { it.user().createFinanzorga(updateUser) }) {
             is Response.OK -> {
                 UserUpdateState.Created
             }
+
             is Response.Error -> {
                 UserUpdateState.Error(res.msg())
             }
-        }
+        }*/
     }
 }

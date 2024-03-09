@@ -5,8 +5,8 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **uuid** | [**java.util.UUID**](java.util.UUID.md) |  | 
-**oldBalance** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
-**newBalance** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
+**oldBalance** | [**kotlin.Double**](kotlin.Double.md) |  | 
+**newBalance** | [**kotlin.Double**](kotlin.Double.md) |  | 
 **oldVoucherBalance** | **kotlin.Int** |  | 
 **newVoucherBalance** | **kotlin.Int** |  | 
 **customerAccountId** | **kotlin.Int** |  | 
@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 **tillId** | **kotlin.Int** |  | 
 **usedVouchers** | **kotlin.Int** |  |  [readonly]
 **itemCount** | **kotlin.Int** |  |  [readonly]
-**totalPrice** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  |  [readonly]
+**totalPrice** | [**kotlin.Double**](kotlin.Double.md) |  |  [readonly]
 
 
 

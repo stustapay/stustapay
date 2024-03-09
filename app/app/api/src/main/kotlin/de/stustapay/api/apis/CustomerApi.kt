@@ -16,6 +16,7 @@
 package de.stustapay.api.apis
 
 import de.stustapay.api.models.Customer
+
 import de.stustapay.api.models.SwitchTagPayload
 
 import de.stustapay.api.infrastructure.*

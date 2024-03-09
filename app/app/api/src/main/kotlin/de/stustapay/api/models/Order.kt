@@ -53,13 +53,13 @@ data class Order (
     val uuid: java.util.UUID,
 
     @Contextual @SerialName(value = "total_price")
-    val totalPrice: java.math.BigDecimal,
+    val totalPrice: kotlin.Double,
 
     @Contextual @SerialName(value = "total_tax")
-    val totalTax: java.math.BigDecimal,
+    val totalTax: kotlin.Double,
 
     @Contextual @SerialName(value = "total_no_tax")
-    val totalNoTax: java.math.BigDecimal,
+    val totalNoTax: kotlin.Double,
 
     @SerialName(value = "cancels_order")
     val cancelsOrder: kotlin.Int?,

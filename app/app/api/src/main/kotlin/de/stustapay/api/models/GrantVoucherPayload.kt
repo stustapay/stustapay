@@ -34,7 +34,7 @@ data class GrantVoucherPayload (
     val vouchers: kotlin.Int,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.Int
+    val userTagUid: kotlin.ULong
 
 )
 

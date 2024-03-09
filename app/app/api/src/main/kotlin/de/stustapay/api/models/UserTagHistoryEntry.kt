@@ -34,7 +34,7 @@ import kotlinx.serialization.Contextual
 data class UserTagHistoryEntry (
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.Int,
+    val userTagUid: kotlin.ULong,
 
     @SerialName(value = "account_id")
     val accountId: kotlin.Int,

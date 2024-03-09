@@ -73,7 +73,7 @@ data class CompletedTicketSale (
     val itemCount: kotlin.Int,
 
     @Contextual @SerialName(value = "total_price")
-    val totalPrice: java.math.BigDecimal
+    val totalPrice: kotlin.Double
 
 )
 

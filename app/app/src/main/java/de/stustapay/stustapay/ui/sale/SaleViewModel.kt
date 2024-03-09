@@ -253,14 +253,14 @@ class SaleViewModel @Inject constructor(
                         _status.update { "Ready for order." }
                         SaleConfig(
                             ready = true,
-                            buttons = terminalConfig.config.buttons?.associate {
+                            buttons = terminalConfig.config.till?.buttons?.associate {
                                 Pair(
                                     it.id,
                                     SaleItemConfig(
                                         id = it.id,
                                         caption = it.name,
                                         price = SaleItemPrice.fromTerminalButton(it),
-                                        returnable = it.is_returnable,
+                                        returnable = it.isReturnable,
                                     )
                                 )
                             } ?: mapOf(),

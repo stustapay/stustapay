@@ -5,7 +5,6 @@ All URIs are relative to *http://localhost*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**checkLoginUser**](UserApi.md#checkLoginUser) | **POST** /user/check-login | Check if a user can login to the terminal and return his roles
-[**createFinanzorga**](UserApi.md#createFinanzorga) | **POST** /user/update-user-roles | Update roles of a given user
 [**createUser**](UserApi.md#createUser) | **POST** /user/create-user | Create a new user with the given roles
 [**getCurrentUser**](UserApi.md#getCurrentUser) | **GET** /user | Get the currently logged in User
 [**grantFreeTicket**](UserApi.md#grantFreeTicket) | **POST** /user/grant-free-ticket | grant a free ticket, e.g. to a volunteer
@@ -49,53 +48,6 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**CheckLoginResult**](CheckLoginResult.md)
-
-### Authorization
-
-
-Configure OAuth2PasswordBearer:
-    ApiClient.accessToken = ""
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-<a id="createFinanzorga"></a>
-# **createFinanzorga**
-> User createFinanzorga(updateUserPayload)
-
-Update roles of a given user
-
-### Example
-```kotlin
-// Import classes:
-//import de.stustapay.api.infrastructure.*
-//import de.stustapay.api.models.*
-
-val apiInstance = UserApi()
-val updateUserPayload : UpdateUserPayload =  // UpdateUserPayload | 
-try {
-    val result : User = apiInstance.createFinanzorga(updateUserPayload)
-    println(result)
-} catch (e: ClientException) {
-    println("4xx response calling UserApi#createFinanzorga")
-    e.printStackTrace()
-} catch (e: ServerException) {
-    println("5xx response calling UserApi#createFinanzorga")
-    e.printStackTrace()
-}
-```
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **updateUserPayload** | [**UpdateUserPayload**](UpdateUserPayload.md)|  |
-
-### Return type
-
-[**User**](User.md)
 
 ### Authorization
 

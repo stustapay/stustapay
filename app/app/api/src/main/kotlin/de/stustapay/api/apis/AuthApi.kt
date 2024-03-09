@@ -15,6 +15,7 @@
 
 package de.stustapay.api.apis
 
+
 import de.stustapay.api.models.TerminalRegistrationPayload
 import de.stustapay.api.models.TerminalRegistrationSuccess
 

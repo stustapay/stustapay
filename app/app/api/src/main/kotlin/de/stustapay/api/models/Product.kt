@@ -49,7 +49,7 @@ data class Product (
     val name: kotlin.String,
 
     @Contextual @SerialName(value = "price")
-    val price: java.math.BigDecimal?,
+    val price: kotlin.Double?,
 
     @SerialName(value = "fixed_price")
     val fixedPrice: kotlin.Boolean,
@@ -76,7 +76,7 @@ data class Product (
     val taxName: kotlin.String,
 
     @Contextual @SerialName(value = "tax_rate")
-    val taxRate: java.math.BigDecimal,
+    val taxRate: kotlin.Double,
 
     @Contextual @SerialName(value = "type")
     val type: ProductType,
@@ -88,7 +88,7 @@ data class Product (
     val targetAccountId: kotlin.Int? = null,
 
     @Contextual @SerialName(value = "price_per_voucher")
-    val pricePerVoucher: java.math.BigDecimal? = null
+    val pricePerVoucher: kotlin.Double? = null
 
 )
 

@@ -40,7 +40,7 @@ data class NewTopUp (
     val paymentMethod: PaymentMethod,
 
     @Contextual @SerialName(value = "amount")
-    val amount: java.math.BigDecimal,
+    val amount: kotlin.Double,
 
     @SerialName(value = "customer_tag_uid")
     val customerTagUid: kotlin.Int

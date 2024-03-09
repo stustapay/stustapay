@@ -229,14 +229,14 @@ class SumUp @Inject constructor(
         when (val terminalConfig = terminalConfigRepository.terminalConfigState.value) {
             is TerminalConfigState.Success -> {
                 val cfg = terminalConfig.config
-                if (cfg.secrets == null) {
+                if (cfg.till?.secrets == null) {
                     return SumUpConfigState.Error("no terminal ec secrets in config")
                 }
-                if (!cfg.secrets.sumup_affiliate_key.startsWith("sup_afk")) {
-                    return SumUpConfigState.Error("invalid affiliate key: ${cfg.secrets.sumup_affiliate_key}")
+                if (!cfg.till.secrets.sumupAffiliateKey.startsWith("sup_afk")) {
+                    return SumUpConfigState.Error("invalid affiliate key: ${cfg.till.secrets.sumupAffiliateKey}")
                 }
                 sumUpConfig = SumUpConfig(
-                    affiliateKey = cfg.secrets.sumup_affiliate_key,
+                    affiliateKey = cfg.till.secrets.sumupAffiliateKey,
                     terminal = ECTerminalConfig(
                         name = cfg.name,
                         id = cfg.id.toString()

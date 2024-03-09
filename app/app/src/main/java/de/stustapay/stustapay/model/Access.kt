@@ -1,5 +1,9 @@
 package de.stustapay.stustapay.model
 
+import de.stustapay.api.models.TerminalConfig
+import de.stustapay.api.models.CurrentUser
+import de.stustapay.api.models.Privilege
+
 /**
  * client-side privilege checks.
  */
@@ -7,55 +11,55 @@ object Access {
     // User permissions
 
     fun canCreateUser(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.user_management)
+        return user.privileges.contains(Privilege.userManagement)
     }
 
     fun canReadUserComment(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.account_management)
+        return user.privileges.contains(Privilege.userManagement)
     }
 
     fun canSell(user: CurrentUser, terminal: TerminalConfig): Boolean {
-        return user.privileges.contains(Privilege.can_book_orders) && (((terminal.buttons?.size) ?: 0) > 0)
+        return user.privileges.contains(Privilege.canBookOrders) && (((terminal.till?.buttons?.size) ?: 0) > 0)
     }
 
     fun canHackTheSystem(user: CurrentUser): Boolean {
-        return user.active_role_name == "admin"
+        return user.activeRoleName == "admin"
     }
 
     fun canGiveFreeTickets(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.grant_free_tickets)
+        return user.privileges.contains(Privilege.grantFreeTickets)
     }
 
     fun canGiveVouchers(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.grant_vouchers)
+        return user.privileges.contains(Privilege.grantVouchers)
     }
 
     fun canManageCashiers(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.cashier_management)
+        return user.privileges.contains(Privilege.cashTransport)
     }
 
     fun canLogInOtherUsers(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.terminal_login)
+        return user.privileges.contains(Privilege.terminalLogin)
     }
 
     fun canChangeConfig(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.config_management)
+        return user.privileges.contains(Privilege.nodeAdministration)
     }
 
-    fun canSwap(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.account_management)
+    fun canSwap(user: de.stustapay.api.models.CurrentUser): Boolean {
+        return user.privileges.contains(Privilege.userManagement)
     }
 
     // Till features
     fun canSellTicket(terminal: TerminalConfig, user: CurrentUser): Boolean {
-        return terminal.allow_ticket_sale && user.privileges.contains(Privilege.can_book_orders)
+        return terminal.till?.allowTicketSale == true && user.privileges.contains(Privilege.canBookOrders)
     }
 
     fun canTopUp(terminal: TerminalConfig, user: CurrentUser): Boolean {
-        return terminal.allow_top_up && user.privileges.contains(Privilege.can_book_orders)
+        return terminal.till?.allowTopUp == true && user.privileges.contains(Privilege.canBookOrders)
     }
 
     fun canPayOut(terminal: TerminalConfig, user: CurrentUser): Boolean {
-        return terminal.allow_cash_out && user.privileges.contains(Privilege.can_book_orders)
+        return terminal.till?.allowCashOut == true && user.privileges.contains(Privilege.canBookOrders)
     }
 }

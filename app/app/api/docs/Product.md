@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **name** | **kotlin.String** |  | 
-**price** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
+**price** | [**kotlin.Double**](kotlin.Double.md) |  | 
 **fixedPrice** | **kotlin.Boolean** |  | 
 **taxRateId** | **kotlin.Int** |  | 
 **restrictions** | [**kotlin.collections.List&lt;ProductRestriction&gt;**](ProductRestriction.md) |  | 
@@ -14,11 +14,11 @@ Name | Type | Description | Notes
 **nodeId** | **kotlin.Int** |  | 
 **id** | **kotlin.Int** |  | 
 **taxName** | **kotlin.String** |  | 
-**taxRate** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
+**taxRate** | [**kotlin.Double**](kotlin.Double.md) |  | 
 **type** | [**ProductType**](ProductType.md) |  | 
 **priceInVouchers** | **kotlin.Int** |  |  [optional]
 **targetAccountId** | **kotlin.Int** |  |  [optional]
-**pricePerVoucher** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  |  [optional]
+**pricePerVoucher** | [**kotlin.Double**](kotlin.Double.md) |  |  [optional]
 
 
 

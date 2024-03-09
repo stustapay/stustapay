@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 **currentCashierId** | **kotlin.Int** |  | 
 **currentCashierTagUid** | **kotlin.Int** |  | 
 **currentTillId** | **kotlin.Int** |  | 
-**currentBalance** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
+**currentBalance** | [**kotlin.Double**](kotlin.Double.md) |  | 
 
 
 

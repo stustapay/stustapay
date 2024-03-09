@@ -30,7 +30,7 @@ import kotlinx.serialization.Contextual
 data class UserInfoPayload (
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.Int
+    val userTagUid: kotlin.ULong
 
 )
 

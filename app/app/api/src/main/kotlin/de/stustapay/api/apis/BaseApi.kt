@@ -17,6 +17,7 @@ package de.stustapay.api.apis
 
 import de.stustapay.api.models.CashRegister
 import de.stustapay.api.models.CashRegisterStocking
+
 import de.stustapay.api.models.RegisterStockUpPayload
 import de.stustapay.api.models.TerminalConfig
 import de.stustapay.api.models.UserInfo

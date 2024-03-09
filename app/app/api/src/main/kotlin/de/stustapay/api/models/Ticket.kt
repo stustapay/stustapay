@@ -44,7 +44,7 @@ data class Ticket (
     val name: kotlin.String,
 
     @Contextual @SerialName(value = "price")
-    val price: java.math.BigDecimal,
+    val price: kotlin.Double,
 
     @SerialName(value = "tax_rate_id")
     val taxRateId: kotlin.Int,
@@ -56,7 +56,7 @@ data class Ticket (
     val isLocked: kotlin.Boolean,
 
     @Contextual @SerialName(value = "initial_top_up_amount")
-    val initialTopUpAmount: java.math.BigDecimal,
+    val initialTopUpAmount: kotlin.Double,
 
     @SerialName(value = "node_id")
     val nodeId: kotlin.Int,
@@ -68,10 +68,10 @@ data class Ticket (
     val taxName: kotlin.String,
 
     @Contextual @SerialName(value = "tax_rate")
-    val taxRate: java.math.BigDecimal,
+    val taxRate: kotlin.Double,
 
     @Contextual @SerialName(value = "total_price")
-    val totalPrice: java.math.BigDecimal
+    val totalPrice: kotlin.Double
 
 )
 

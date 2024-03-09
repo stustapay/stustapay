@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **type** | [**AccountType**](AccountType.md) |  | 
 **name** | **kotlin.String** |  | 
 **comment** | **kotlin.String** |  | 
-**balance** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
+**balance** | [**kotlin.Double**](kotlin.Double.md) |  | 
 **vouchers** | **kotlin.Int** |  | 
 **userTagUid** | **kotlin.Int** |  | 
 **restriction** | [**ProductRestriction**](ProductRestriction.md) |  | 

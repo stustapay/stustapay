@@ -19,6 +19,7 @@ import de.stustapay.api.models.CompletedPayOut
 import de.stustapay.api.models.CompletedSale
 import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.CompletedTopUp
+
 import de.stustapay.api.models.NewPayOut
 import de.stustapay.api.models.NewSale
 import de.stustapay.api.models.NewTicketSale

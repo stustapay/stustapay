@@ -6,6 +6,8 @@
 
     * `nodeAdministration` (value: `"node_administration"`)
 
+    * `customerManagement` (value: `"customer_management"`)
+
     * `userManagement` (value: `"user_management"`)
 
     * `cashTransport` (value: `"cash_transport"`)

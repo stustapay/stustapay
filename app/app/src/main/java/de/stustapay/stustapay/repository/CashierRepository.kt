@@ -1,8 +1,8 @@
 package de.stustapay.stustapay.repository
 
-import de.stustapay.stustapay.model.CashRegister
-import de.stustapay.stustapay.model.CashierStocking
-import de.stustapay.stustapay.model.UserInfo
+import de.stustapay.api.models.CashRegister
+import de.stustapay.api.models.CashRegisterStocking
+import de.stustapay.api.models.UserInfo
 import de.stustapay.stustapay.model.UserTag
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.netsource.CashierRemoteDataSource
@@ -11,11 +11,11 @@ import javax.inject.Inject
 class CashierRepository @Inject constructor(
     private val cashierRemoteDataSource: CashierRemoteDataSource
 ) {
-    suspend fun getCashierStockings(): Response<List<CashierStocking>> {
+    suspend fun getCashierStockings(): Response<List<CashRegisterStocking>> {
         return cashierRemoteDataSource.getCashierStockings()
     }
 
-    suspend fun equipCashier(tagid: ULong, registerId: ULong, stockingId: ULong): Response<Unit> {
+    suspend fun equipCashier(tagid: ULong, registerId: Int, stockingId: Int): Response<Unit> {
         return cashierRemoteDataSource.equipCashier(tagid, registerId, stockingId)
     }
 

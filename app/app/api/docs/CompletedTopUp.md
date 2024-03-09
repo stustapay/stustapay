@@ -7,9 +7,9 @@ Name | Type | Description | Notes
 **paymentMethod** | [**PaymentMethod**](PaymentMethod.md) |  | 
 **customerTagUid** | **kotlin.Int** |  | 
 **customerAccountId** | **kotlin.Int** |  | 
-**amount** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
-**oldBalance** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
-**newBalance** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
+**amount** | [**kotlin.Double**](kotlin.Double.md) |  | 
+**oldBalance** | [**kotlin.Double**](kotlin.Double.md) |  | 
+**newBalance** | [**kotlin.Double**](kotlin.Double.md) |  | 
 **uuid** | [**java.util.UUID**](java.util.UUID.md) |  | 
 **bookedAt** | [**java.time.OffsetDateTime**](java.time.OffsetDateTime.md) |  | 
 **cashierId** | **kotlin.Int** |  | 

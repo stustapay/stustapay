@@ -19,10 +19,10 @@ import de.stustapay.api.models.Account
 import de.stustapay.api.models.CheckLoginResult
 import de.stustapay.api.models.CurrentUser
 import de.stustapay.api.models.GrantVoucherPayload
+
 import de.stustapay.api.models.LoginPayload
 import de.stustapay.api.models.NewFreeTicketGrant
 import de.stustapay.api.models.NewUser
-import de.stustapay.api.models.UpdateUserPayload
 import de.stustapay.api.models.User
 import de.stustapay.api.models.UserTag
 
@@ -62,38 +62,6 @@ import io.ktor.http.ParametersBuilder
             val localVariableConfig = RequestConfig<kotlin.Any?>(
             RequestMethod.POST,
             "/user/check-login",
-            query = localVariableQuery,
-            headers = localVariableHeaders,
-            requiresAuthentication = true,
-            )
-
-            return jsonRequest(
-            localVariableConfig,
-            localVariableBody,
-            localVariableAuthNames
-            ).wrap()
-            }
-
-        /**
-        * Update roles of a given user
-        * 
-         * @param updateUserPayload  
-         * @return User
-        */
-            @Suppress("UNCHECKED_CAST")
-        open suspend fun createFinanzorga(updateUserPayload: UpdateUserPayload): HttpResponse<User> {
-
-            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
-
-            val localVariableBody = updateUserPayload
-
-            val localVariableQuery = mutableMapOf<String, List<String>>()
-
-            val localVariableHeaders = mutableMapOf<String, String>()
-
-            val localVariableConfig = RequestConfig<kotlin.Any?>(
-            RequestMethod.POST,
-            "/user/update-user-roles",
             query = localVariableQuery,
             headers = localVariableHeaders,
             requiresAuthentication = true,

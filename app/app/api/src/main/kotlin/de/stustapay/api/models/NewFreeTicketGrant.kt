@@ -31,7 +31,7 @@ import kotlinx.serialization.Contextual
 data class NewFreeTicketGrant (
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.Int,
+    val userTagUid: kotlin.ULong,
 
     @SerialName(value = "initial_voucher_amount")
     val initialVoucherAmount: kotlin.Int? = 0

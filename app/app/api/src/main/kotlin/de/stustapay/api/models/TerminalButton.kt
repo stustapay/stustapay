@@ -43,7 +43,7 @@ data class TerminalButton (
     val name: kotlin.String,
 
     @Contextual @SerialName(value = "price")
-    val price: java.math.BigDecimal?,
+    val price: kotlin.Double?,
 
     @SerialName(value = "is_returnable")
     val isReturnable: kotlin.Boolean,
@@ -52,13 +52,13 @@ data class TerminalButton (
     val fixedPrice: kotlin.Boolean,
 
     @Contextual @SerialName(value = "default_price")
-    val defaultPrice: java.math.BigDecimal? = null,
+    val defaultPrice: kotlin.Double? = null,
 
     @SerialName(value = "price_in_vouchers")
     val priceInVouchers: kotlin.Int? = null,
 
     @Contextual @SerialName(value = "price_per_voucher")
-    val pricePerVoucher: java.math.BigDecimal? = null
+    val pricePerVoucher: kotlin.Double? = null
 
 )
 

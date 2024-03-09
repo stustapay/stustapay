@@ -1,54 +1,62 @@
 package de.stustapay.stustapay.netsource
 
-import de.stustapay.stustapay.model.AccountChange
-import de.stustapay.stustapay.model.CashRegister
-import de.stustapay.stustapay.model.CashierEquip
-import de.stustapay.stustapay.model.CashierStocking
-import de.stustapay.stustapay.model.TransferCashRegisterPayload
-import de.stustapay.stustapay.model.TransportAccountChange
-import de.stustapay.stustapay.model.UserInfo
-import de.stustapay.stustapay.model.UserInfoPayload
+import de.stustapay.api.models.CashRegisterStocking
+import de.stustapay.api.models.CashierAccountChangePayload
+import de.stustapay.api.models.RegisterStockUpPayload
+import de.stustapay.api.models.TransportAccountChangePayload
+import de.stustapay.api.models.CashRegister
+import de.stustapay.api.models.TransferCashRegisterPayload
+import de.stustapay.api.models.UserInfo
 import de.stustapay.stustapay.model.UserTag
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.net.TerminalAPI
+import de.stustapay.stustapay.net.TerminalApiAccessor
+import de.stustapay.api.models.UserInfoPayload
+import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class CashierRemoteDataSource @Inject constructor(
-    private val terminalAPI: TerminalAPI
+    private val terminalAPI: TerminalAPI, private val terminalApiAccessor: TerminalApiAccessor
 ) {
-    suspend fun getCashierStockings(): Response<List<CashierStocking>> {
-        return terminalAPI.getCashierStockings()
+    suspend fun getCashierStockings(): Response<List<CashRegisterStocking>> {
+        return terminalApiAccessor.execute { it.base().listCashRegisterStockings() }
     }
 
-    suspend fun equipCashier(tagId: ULong, registerId: ULong, stockingId: ULong): Response<Unit> {
-        return terminalAPI.equipCashier(CashierEquip(tagId, registerId, stockingId))
+    suspend fun equipCashier(tagId: ULong, registerId: Int, stockingId: Int): Response<Unit> {
+        return terminalApiAccessor.execute {
+            it.base().stockUpCashRegister(RegisterStockUpPayload(tagId, registerId, stockingId))
+        }
     }
 
     suspend fun bookTransport(cashierTagId: ULong, amount: Double): Response<Unit> {
-        return terminalAPI.bookTransport(AccountChange(cashierTagId, amount))
+        return terminalApiAccessor.execute {
+            it.cashier().changeCashRegisterBalance(
+                CashierAccountChangePayload(cashierTagId, amount)
+            )
+        }
     }
 
     suspend fun bookVault(orgaTagId: ULong, amount: Double): Response<Unit> {
-        return terminalAPI.bookVault(TransportAccountChange(orgaTagId, amount))
+        return terminalApiAccessor.execute {
+            it.cashier().changeTransportAccountBalance(
+                TransportAccountChangePayload(orgaTagId, amount)
+            )
+        }
     }
 
     suspend fun getUserInfo(tagId: ULong): Response<UserInfo> {
-        return terminalAPI.getUserInfo(UserInfoPayload(tagId))
+        return terminalApiAccessor.execute { it.base().userInfo(UserInfoPayload(tagId)) }
     }
 
     suspend fun transferCashRegister(
-        sourceTag: UserTag,
-        targetTag: UserTag
+        sourceTag: UserTag, targetTag: UserTag
     ): Response<CashRegister> {
-        return terminalAPI.transferCashRegister(
-            TransferCashRegisterPayload(
-                source_cashier_tag_uid = sourceTag.uid,
-                target_cashier_tag_uid = targetTag.uid,
-            )
-        )
+        return terminalApiAccessor.execute {
+            it.cashier().transferCashRegister(TransferCashRegisterPayload(sourceTag.uid, targetTag.uid))
+        }
     }
 
     suspend fun getRegisters(): Response<List<CashRegister>> {
-        return terminalAPI.listRegisters()
+        return terminalApiAccessor.execute { it.base().listCashRegisters(hideAssigned = false) }
     }
 }

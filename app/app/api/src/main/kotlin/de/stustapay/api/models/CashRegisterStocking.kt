@@ -57,7 +57,7 @@ data class CashRegisterStocking (
     val id: kotlin.Int,
 
     @Contextual @SerialName(value = "total")
-    val total: java.math.BigDecimal,
+    val total: kotlin.Double,
 
     @SerialName(value = "euro200")
     val euro200: kotlin.Int? = 0,
@@ -102,7 +102,7 @@ data class CashRegisterStocking (
     val cent1: kotlin.Int? = 0,
 
     @Contextual @SerialName(value = "variable_in_euro")
-    val variableInEuro: java.math.BigDecimal? = java.math.BigDecimal("0.0")
+    val variableInEuro: kotlin.Double? = 0.0
 
 )
 

@@ -49,13 +49,13 @@ data class CompletedTopUp (
     val customerAccountId: kotlin.Int,
 
     @Contextual @SerialName(value = "amount")
-    val amount: java.math.BigDecimal,
+    val amount: kotlin.Double,
 
     @Contextual @SerialName(value = "old_balance")
-    val oldBalance: java.math.BigDecimal,
+    val oldBalance: kotlin.Double,
 
     @Contextual @SerialName(value = "new_balance")
-    val newBalance: java.math.BigDecimal,
+    val newBalance: kotlin.Double,
 
     @Contextual @SerialName(value = "uuid")
     val uuid: java.util.UUID,

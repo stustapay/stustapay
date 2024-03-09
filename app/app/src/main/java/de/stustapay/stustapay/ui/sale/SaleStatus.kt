@@ -1,7 +1,11 @@
 package de.stustapay.stustapay.ui.sale
 
 import android.util.Log
-import de.stustapay.stustapay.model.*
+import de.stustapay.api.models.TerminalButton
+import de.stustapay.stustapay.model.Button
+import de.stustapay.stustapay.model.NewSale
+import de.stustapay.stustapay.model.PendingSale
+import de.stustapay.stustapay.model.UserTag
 import java.lang.Integer.max
 import java.lang.Integer.min
 import java.util.UUID
@@ -17,12 +21,12 @@ sealed interface SaleItemPrice {
 
     companion object {
         fun fromTerminalButton(button: TerminalButton): SaleItemPrice {
-            return if (button.is_returnable) {
-                Returnable(price = button.price ?: 0.0)
-            } else if (button.fixed_price) {
-                FixedPrice(price = button.price ?: 0.0)
+            return if (button.isReturnable) {
+                Returnable(price = button.price?.toDouble() ?: 0.0)
+            } else if (button.fixedPrice) {
+                FixedPrice(price = button.price?.toDouble() ?: 0.0)
             } else {
-                FreePrice(defaultPrice = button.default_price)
+                FreePrice(defaultPrice = button.defaultPrice?.toDouble())
             }
         }
     }

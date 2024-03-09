@@ -43,7 +43,7 @@ data class PendingTopUp (
     val paymentMethod: PaymentMethod,
 
     @Contextual @SerialName(value = "amount")
-    val amount: java.math.BigDecimal,
+    val amount: kotlin.Double,
 
     @SerialName(value = "customer_tag_uid")
     val customerTagUid: kotlin.Int,
@@ -52,10 +52,10 @@ data class PendingTopUp (
     val customerAccountId: kotlin.Int,
 
     @Contextual @SerialName(value = "old_balance")
-    val oldBalance: java.math.BigDecimal,
+    val oldBalance: kotlin.Double,
 
     @Contextual @SerialName(value = "new_balance")
-    val newBalance: java.math.BigDecimal
+    val newBalance: kotlin.Double
 
 )
 

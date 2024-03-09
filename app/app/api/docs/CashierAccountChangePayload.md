@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **cashierTagUid** | **kotlin.Int** |  | 
-**amount** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
+**amount** | [**kotlin.Double**](kotlin.Double.md) |  | 
 
 
 

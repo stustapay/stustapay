@@ -12,11 +12,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.UserRolesState
-import de.stustapay.stustapay.model.UserTag
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.theme.errorButtonColors
@@ -81,8 +80,8 @@ fun UserLoginView(
                 when (scanTarget) {
                     ScanTarget.Login -> {
                         scope.launch {
-                            roleSelection = RoleSelectionState.Select(tag)
-                            viewModel.checkLogin(tag)
+                            roleSelection = RoleSelectionState.Select(UserTag(tag.uid))
+                            viewModel.checkLogin(UserTag(tag.uid))
                         }
                     }
                 }

@@ -31,10 +31,10 @@ import kotlinx.serialization.Contextual
 data class CashierAccountChangePayload (
 
     @SerialName(value = "cashier_tag_uid")
-    val cashierTagUid: kotlin.Int,
+    val cashierTagUid: kotlin.ULong,
 
     @Contextual @SerialName(value = "amount")
-    val amount: java.math.BigDecimal
+    val amount: kotlin.Double
 
 )
 

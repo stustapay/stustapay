@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 **name** | **kotlin.String** |  | 
 **nodeId** | **kotlin.Int** |  | 
 **id** | **kotlin.Int** |  | 
-**total** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  | 
+**total** | [**kotlin.Double**](kotlin.Double.md) |  | 
 **euro200** | **kotlin.Int** |  |  [optional]
 **euro100** | **kotlin.Int** |  |  [optional]
 **euro50** | **kotlin.Int** |  |  [optional]
@@ -22,7 +22,7 @@ Name | Type | Description | Notes
 **cent5** | **kotlin.Int** |  |  [optional]
 **cent2** | **kotlin.Int** |  |  [optional]
 **cent1** | **kotlin.Int** |  |  [optional]
-**variableInEuro** | [**java.math.BigDecimal**](java.math.BigDecimal.md) |  |  [optional]
+**variableInEuro** | [**kotlin.Double**](kotlin.Double.md) |  |  [optional]
 
 
 
