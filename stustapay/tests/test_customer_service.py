@@ -52,7 +52,7 @@ from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 
 
 @dataclass
-class TestCustomer:
+class CustomerTest:
     account_id: int
     uid: int
     pin: str
@@ -60,7 +60,7 @@ class TestCustomer:
 
 
 @dataclass
-class TestCustomerInfo:
+class CustomerTestInfo:
     uid: int
     pin: str
     balance: float
@@ -90,7 +90,7 @@ async def customer_service(
 @pytest.fixture
 async def test_customer(
     db_connection: Connection, event_node: Node, create_random_user_tag: CreateRandomUserTag
-) -> TestCustomer:
+) -> CustomerTest:
     balance = 120
     tag = await create_random_user_tag()
 
@@ -102,21 +102,21 @@ async def test_customer(
         "private",
     )
 
-    return TestCustomer(account_id=account_id, pin=tag.pin, uid=tag.uid, balance=120)
+    return CustomerTest(account_id=account_id, pin=tag.pin, uid=tag.uid, balance=120)
 
 
 @pytest.fixture
 async def order_with_bon(
     db_connection: Connection,
     product_service: ProductService,
-    test_customer: TestCustomer,
+    test_customer: CustomerTest,
     event_node: Node,
     admin_token: str,
     tax_rate_ust: TaxRate,
     tax_rate_none: TaxRate,
     cashier: Cashier,
     till: Till,
-) -> tuple[Order, TestCustomer]:
+) -> tuple[Order, CustomerTest]:
     product1: Product = await product_service.create_product(
         token=admin_token,
         node_id=event_node.id,
@@ -187,7 +187,7 @@ async def order_with_bon(
 @pytest.fixture
 async def customers(
     db_connection: Connection, event_node: Node, create_random_user_tag: CreateRandomUserTag
-) -> list[TestCustomerInfo]:
+) -> list[CustomerTestInfo]:
     n_customers = 10
     customers = []
     for i in range(n_customers):
@@ -219,7 +219,7 @@ async def customers(
             payout_export,
         )
         customers.append(
-            TestCustomerInfo(
+            CustomerTestInfo(
                 uid=tag.uid,
                 pin=tag.pin,
                 donation=donation,
@@ -234,7 +234,7 @@ async def customers(
 
 
 @pytest.fixture
-async def customers_to_transfer(customers: list[TestCustomerInfo]) -> list[TestCustomerInfo]:
+async def customers_to_transfer(customers: list[CustomerTestInfo]) -> list[CustomerTestInfo]:
     # first customer with uid 12345 should not be included as he has a balance of 0
     # last customer has same amount of donation as balance, thus should also not be included
     return customers[1:-1]
@@ -287,7 +287,7 @@ async def test_payout_runs(
     db_connection: Connection,
     event_node: Node,
     config: Config,
-    customers_to_transfer: list[TestCustomerInfo],
+    customers_to_transfer: list[CustomerTestInfo],
     event: RestrictedEventSettings,
 ):
     output_path = tmp_dir / "test_payout_runs"
@@ -368,7 +368,7 @@ async def test_payout_runs(
 
 async def test_max_payout_sum(
     tmp_dir: Path,
-    customers_to_transfer: list[TestCustomerInfo],
+    customers_to_transfer: list[CustomerTestInfo],
     config: Config,
     event_node: Node,
     event: RestrictedEventSettings,
@@ -403,7 +403,7 @@ async def test_export_customer_bank_data(
     customer_service: CustomerService,
     db_connection: Connection,
     config: Config,
-    customers_to_transfer: list[TestCustomerInfo],
+    customers_to_transfer: list[CustomerTestInfo],
     event_node: Node,
     event: RestrictedEventSettings,
 ):
@@ -495,14 +495,14 @@ async def test_export_customer_bank_data(
 
 
 async def test_get_number_of_payouts(
-    db_connection: Connection, event_node: Node, customers_to_transfer: list[TestCustomerInfo]
+    db_connection: Connection, event_node: Node, customers_to_transfer: list[CustomerTestInfo]
 ):
     result = await get_number_of_payouts(db_connection, event_node_id=event_node.id)
     assert result == len(customers_to_transfer)
 
 
 async def test_get_customer_bank_data(
-    db_connection: Connection, customers_to_transfer: list[TestCustomerInfo], event_node: Node
+    db_connection: Connection, customers_to_transfer: list[CustomerTestInfo], event_node: Node
 ):
     def check_data(result: list[Payout], leng: int, ith: int = 0) -> None:
         assert len(result) == leng
@@ -532,7 +532,7 @@ async def test_get_customer_bank_data(
 async def test_csv_export(
     db_connection: Connection,
     event_node: Node,
-    customers_to_transfer: list[TestCustomerInfo],
+    customers_to_transfer: list[CustomerTestInfo],
     event: RestrictedEventSettings,
 ):
     sepa_config = event.sepa_config
@@ -581,7 +581,7 @@ async def test_csv_export(
 async def test_sepa_export(
     db_connection: Connection,
     event_node: Node,
-    customers_to_transfer: list[TestCustomerInfo],
+    customers_to_transfer: list[CustomerTestInfo],
     event: RestrictedEventSettings,
 ):
     sepa_config = event.sepa_config
@@ -674,7 +674,7 @@ async def test_sepa_export(
         )
 
 
-async def test_auth_customer(customer_service: CustomerService, test_customer: TestCustomer):
+async def test_auth_customer(customer_service: CustomerService, test_customer: CustomerTest):
     auth = await customer_service.login_customer(uid=test_customer.uid, pin=test_customer.pin)
     assert auth is not None
     assert auth.customer.id == test_customer.account_id
@@ -700,7 +700,7 @@ async def test_auth_customer(customer_service: CustomerService, test_customer: T
         await customer_service.login_customer(uid=test_customer.uid, pin="wrong")
 
 
-async def test_get_orders_with_bon(customer_service: CustomerService, order_with_bon: tuple[Order, TestCustomer]):
+async def test_get_orders_with_bon(customer_service: CustomerService, order_with_bon: tuple[Order, CustomerTest]):
     order, test_customer = order_with_bon
     # test get_orders_with_bon with wrong token, should raise Unauthorized error
     with pytest.raises(Unauthorized):
@@ -721,7 +721,7 @@ async def test_get_orders_with_bon(customer_service: CustomerService, order_with
     assert resulting_order_with_bon.bon_generated
 
 
-async def test_update_customer_info(test_customer: TestCustomer, customer_service: CustomerService):
+async def test_update_customer_info(test_customer: CustomerTest, customer_service: CustomerService):
     auth = await customer_service.login_customer(uid=test_customer.uid, pin=test_customer.pin)
     assert auth is not None
 

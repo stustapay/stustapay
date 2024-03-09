@@ -56,4 +56,4 @@ def start(
     """Simulate an actual load on a stustapay instance."""
     config = ctx.obj.config
     simulator = Simulator(config=config, bookings_per_second=bookings_per_second)
-    simulator.run()
+    asyncio.run(simulator.run())

@@ -23,7 +23,7 @@ async def test_switch_user_tag(
     new_user_tag = await create_random_user_tag()
     user = await user_service.create_user_no_auth(
         node_id=event_node.id,
-        new_user=NewUser(login="test-user", display_name="test-user", user_tag_uid=user_tag.uid, role_names=[]),
+        new_user=NewUser(login="test-user", display_name="test-user", user_tag_uid=user_tag.uid),
     )
     account_id = await db_connection.fetchval("select id from account where user_tag_uid = $1", user_tag.uid)
 
