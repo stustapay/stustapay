@@ -55,7 +55,7 @@ data class Product (
     val fixedPrice: kotlin.Boolean,
 
     @SerialName(value = "tax_rate_id")
-    val taxRateId: kotlin.Int,
+    val taxRateId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "restrictions")
     val restrictions: kotlin.collections.List<@Contextual ProductRestriction>,
@@ -67,10 +67,10 @@ data class Product (
     val isReturnable: kotlin.Boolean,
 
     @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
+    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "tax_name")
     val taxName: kotlin.String,
@@ -82,10 +82,10 @@ data class Product (
     val type: ProductType,
 
     @SerialName(value = "price_in_vouchers")
-    val priceInVouchers: kotlin.Int? = null,
+    val priceInVouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "target_account_id")
-    val targetAccountId: kotlin.Int? = null,
+    val targetAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @Contextual @SerialName(value = "price_per_voucher")
     val pricePerVoucher: kotlin.Double? = null

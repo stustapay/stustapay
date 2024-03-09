@@ -4,7 +4,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**uid** | **kotlin.Int** |  | 
+**uid** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 
 
 

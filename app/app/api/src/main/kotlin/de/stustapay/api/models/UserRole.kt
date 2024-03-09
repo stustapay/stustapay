@@ -41,10 +41,10 @@ data class UserRole (
     val privileges: kotlin.collections.List<@Contextual Privilege>,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
+    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "is_privileged")
     val isPrivileged: kotlin.Boolean? = false

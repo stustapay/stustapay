@@ -102,14 +102,21 @@ android {
                 filter { String line -> line.replace("    val buttons: AnyOfLessThanGreaterThan?,", "    val buttons: kotlin.collections.List<TerminalButton>?,") }
                 filter { String line -> line.replace("java.math.BigDecimal", "kotlin.Double") }
                 filter { String line -> line.replace("kotlin.Double(\"0.0\")", "0.0") }
-                filter { String line -> line.replace("    val userTagUid: kotlin.Int? = null", "    val userTagUid: kotlin.ULong? = null") }
-                filter { String line -> line.replace("    val userTagUid: kotlin.Int", "    val userTagUid: kotlin.ULong") }
-                filter { String line -> line.replace("    val uid: kotlin.Int", "    val uid: kotlin.ULong") }
-                filter { String line -> line.replace("    val orgaTagUid: kotlin.Int", "    val orgaTagUid: kotlin.ULong") }
-                filter { String line -> line.replace("    val cashierTagUid: kotlin.Int", "    val cashierTagUid: kotlin.ULong") }
-                filter { String line -> line.replace("    val sourceCashierTagUid: kotlin.Int", "    val sourceCashierTagUid: kotlin.ULong") }
-                filter { String line -> line.replace("    val targetCashierTagUid: kotlin.Int", "    val targetCashierTagUid: kotlin.ULong") }
-                filter { String line -> line.replace("    val currentCashierTagUid: kotlin.Int", "    val currentCashierTagUid: kotlin.ULong") }
+                filter { String line ->
+                    if (line.contains("kotlin.Int")) {
+                        line.replace("kotlin.Int", "@Contextual com.ionspin.kotlin.bignum.integer.BigInteger")
+                                .replace(" = 0", " = com.ionspin.kotlin.bignum.integer.BigInteger(0)")
+                    } else {
+                        line
+                    }
+                }
+                filter { String line ->
+                    if (line.equals("package de.stustapay.api.apis")) {
+                        line + "\n\nimport kotlinx.serialization.Contextual"
+                    } else {
+                        line
+                    }
+                }
             }
         }
     }
@@ -172,6 +179,8 @@ dependencies {
     implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version"
+    implementation "com.ionspin.kotlin:bignum:0.3.9"
+    implementation "com.ionspin.kotlin:bignum-serialization-kotlinx:0.3.2"
 }
 
 kapt {

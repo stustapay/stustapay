@@ -35,7 +35,7 @@ data class NewPayOut (
     val uuid: java.util.UUID,
 
     @SerialName(value = "customer_tag_uid")
-    val customerTagUid: kotlin.Int,
+    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "amount")
     val amount: kotlin.Double? = null

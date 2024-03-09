@@ -55,13 +55,13 @@ data class CompletedSale (
     val newBalance: kotlin.Double,
 
     @SerialName(value = "old_voucher_balance")
-    val oldVoucherBalance: kotlin.Int,
+    val oldVoucherBalance: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "new_voucher_balance")
-    val newVoucherBalance: kotlin.Int,
+    val newVoucherBalance: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "customer_account_id")
-    val customerAccountId: kotlin.Int,
+    val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "line_items")
     val lineItems: kotlin.collections.List<PendingLineItem>,
@@ -70,22 +70,22 @@ data class CompletedSale (
     val buttons: kotlin.collections.List<Button>,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "booked_at")
     val bookedAt: java.time.OffsetDateTime,
 
     @SerialName(value = "cashier_id")
-    val cashierId: kotlin.Int,
+    val cashierId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "till_id")
-    val tillId: kotlin.Int,
+    val tillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "used_vouchers")
-    val usedVouchers: kotlin.Int,
+    val usedVouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "item_count")
-    val itemCount: kotlin.Int,
+    val itemCount: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "total_price")
     val totalPrice: kotlin.Double

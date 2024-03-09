@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.netsource
 
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.CashRegisterStocking
 import de.stustapay.api.models.CashierAccountChangePayload
 import de.stustapay.api.models.RegisterStockUpPayload
@@ -7,31 +8,30 @@ import de.stustapay.api.models.TransportAccountChangePayload
 import de.stustapay.api.models.CashRegister
 import de.stustapay.api.models.TransferCashRegisterPayload
 import de.stustapay.api.models.UserInfo
-import de.stustapay.stustapay.model.UserTag
-import de.stustapay.stustapay.net.Response
-import de.stustapay.stustapay.net.TerminalAPI
-import de.stustapay.stustapay.net.TerminalApiAccessor
 import de.stustapay.api.models.UserInfoPayload
+import de.stustapay.api.models.UserTag
+import de.stustapay.stustapay.net.Response
+import de.stustapay.stustapay.net.TerminalApiAccessor
 import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class CashierRemoteDataSource @Inject constructor(
-    private val terminalAPI: TerminalAPI, private val terminalApiAccessor: TerminalApiAccessor
+    private val terminalApiAccessor: TerminalApiAccessor
 ) {
     suspend fun getCashierStockings(): Response<List<CashRegisterStocking>> {
         return terminalApiAccessor.execute { it.base().listCashRegisterStockings() }
     }
 
-    suspend fun equipCashier(tagId: ULong, registerId: Int, stockingId: Int): Response<Unit> {
+    suspend fun equipCashier(tagId: ULong, registerId: ULong, stockingId: ULong): Response<Unit> {
         return terminalApiAccessor.execute {
-            it.base().stockUpCashRegister(RegisterStockUpPayload(tagId, registerId, stockingId))
+            it.base().stockUpCashRegister(RegisterStockUpPayload(tagId.toBigInteger(), registerId.toBigInteger(), stockingId.toBigInteger()))
         }
     }
 
     suspend fun bookTransport(cashierTagId: ULong, amount: Double): Response<Unit> {
         return terminalApiAccessor.execute {
             it.cashier().changeCashRegisterBalance(
-                CashierAccountChangePayload(cashierTagId, amount)
+                CashierAccountChangePayload(cashierTagId.toBigInteger(), amount)
             )
         }
     }
@@ -39,13 +39,13 @@ class CashierRemoteDataSource @Inject constructor(
     suspend fun bookVault(orgaTagId: ULong, amount: Double): Response<Unit> {
         return terminalApiAccessor.execute {
             it.cashier().changeTransportAccountBalance(
-                TransportAccountChangePayload(orgaTagId, amount)
+                TransportAccountChangePayload(orgaTagId.toBigInteger(), amount)
             )
         }
     }
 
     suspend fun getUserInfo(tagId: ULong): Response<UserInfo> {
-        return terminalApiAccessor.execute { it.base().userInfo(UserInfoPayload(tagId)) }
+        return terminalApiAccessor.execute { it.base().userInfo(UserInfoPayload(tagId.toBigInteger())) }
     }
 
     suspend fun transferCashRegister(

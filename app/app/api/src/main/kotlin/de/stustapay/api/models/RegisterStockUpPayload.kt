@@ -32,13 +32,13 @@ import kotlinx.serialization.Contextual
 data class RegisterStockUpPayload (
 
     @SerialName(value = "cashier_tag_uid")
-    val cashierTagUid: kotlin.ULong,
+    val cashierTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "cash_register_id")
-    val cashRegisterId: kotlin.Int,
+    val cashRegisterId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "register_stocking_id")
-    val registerStockingId: kotlin.Int
+    val registerStockingId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
 )
 

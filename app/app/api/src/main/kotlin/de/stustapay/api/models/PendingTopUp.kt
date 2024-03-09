@@ -46,10 +46,10 @@ data class PendingTopUp (
     val amount: kotlin.Double,
 
     @SerialName(value = "customer_tag_uid")
-    val customerTagUid: kotlin.Int,
+    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "customer_account_id")
-    val customerAccountId: kotlin.Int,
+    val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "old_balance")
     val oldBalance: kotlin.Double,

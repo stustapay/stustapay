@@ -39,7 +39,7 @@ data class NewUser (
     val displayName: kotlin.String,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.ULong? = null,
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "description")
     val description: kotlin.String? = null

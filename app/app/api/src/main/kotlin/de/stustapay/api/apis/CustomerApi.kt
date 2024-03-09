@@ -15,6 +15,8 @@
 
 package de.stustapay.api.apis
 
+import kotlinx.serialization.Contextual
+
 import de.stustapay.api.models.Customer
 
 import de.stustapay.api.models.SwitchTagPayload
@@ -42,7 +44,7 @@ import io.ktor.http.ParametersBuilder
          * @return Customer
         */
             @Suppress("UNCHECKED_CAST")
-        open suspend fun getCustomer(customerTagUid: kotlin.Int): HttpResponse<Customer> {
+        open suspend fun getCustomer(customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<Customer> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 

@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.repository
 
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.UserRole
 import de.stustapay.stustapay.netsource.UserRemoteDataSource
 import de.stustapay.api.models.LoginPayload
@@ -51,7 +52,7 @@ class UserRepository @Inject constructor(
     }
 
     suspend fun login(userTag: UserTag, roleID: Int) {
-        when (val loginResult = userRemoteDataSource.userLogin(LoginPayload(userTag, roleID))) {
+        when (val loginResult = userRemoteDataSource.userLogin(LoginPayload(userTag, roleID.toBigInteger()))) {
             is UserState.Error -> {
                 status.update { loginResult.msg }
             }

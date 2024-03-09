@@ -1,9 +1,9 @@
 package de.stustapay.stustapay.ui.payinout.payout
 
 import android.util.Log
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.model.NewPayOut
 import de.stustapay.stustapay.model.PendingPayOut
-import de.stustapay.stustapay.model.UserTag
 import java.util.UUID
 
 
@@ -50,7 +50,7 @@ data class PayOutState(
 
         return NewPayOut(
             uuid = checkedPayOut?.uuid ?: UUID.randomUUID().toString(),
-            customer_tag_uid = tagV.uid,
+            customer_tag_uid = tagV.uid.ulongValue(),
             amount = amount
         )
     }

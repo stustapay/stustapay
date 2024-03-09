@@ -43,7 +43,7 @@ data class NewTopUp (
     val amount: kotlin.Double,
 
     @SerialName(value = "customer_tag_uid")
-    val customerTagUid: kotlin.Int
+    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
 )
 

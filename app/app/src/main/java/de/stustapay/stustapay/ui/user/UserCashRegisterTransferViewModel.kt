@@ -2,8 +2,8 @@ package de.stustapay.stustapay.ui.user
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.UserTag
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
 import de.stustapay.stustapay.util.ResourcesProvider

@@ -6,7 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **login** | **kotlin.String** |  | 
 **displayName** | **kotlin.String** |  | 
-**userTagUid** | **kotlin.Int** |  |  [optional]
+**userTagUid** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
 **description** | **kotlin.String** |  |  [optional]
 
 

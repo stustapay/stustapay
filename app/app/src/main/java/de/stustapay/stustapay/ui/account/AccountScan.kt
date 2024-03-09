@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import de.stustapay.stustapay.model.UserTag
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 
 @Composable

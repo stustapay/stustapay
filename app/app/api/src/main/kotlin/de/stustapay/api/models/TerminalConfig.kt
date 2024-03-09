@@ -36,7 +36,7 @@ import kotlinx.serialization.Contextual
 data class TerminalConfig (
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "name")
     val name: kotlin.String,

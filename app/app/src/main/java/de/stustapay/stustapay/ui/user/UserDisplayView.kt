@@ -47,7 +47,7 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
                         keepScanning = true,
                         onScan = { tag ->
                             scope.launch {
-                                viewModel.display(tag.uid)
+                                viewModel.display(tag.uid.ulongValue())
                             }
                         }
                     )

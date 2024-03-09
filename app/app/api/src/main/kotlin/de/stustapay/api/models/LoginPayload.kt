@@ -35,7 +35,7 @@ data class LoginPayload (
     val userTag: UserTag,
 
     @SerialName(value = "user_role_id")
-    val userRoleId: kotlin.Int
+    val userRoleId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
 )
 

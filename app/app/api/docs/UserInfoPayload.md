@@ -4,7 +4,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**userTagUid** | **kotlin.Int** |  | 
+**userTagUid** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 
 
 

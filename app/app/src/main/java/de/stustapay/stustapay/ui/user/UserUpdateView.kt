@@ -85,7 +85,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                                 label = { Text(stringResource(R.string.user_roles)) },
                                 readOnly = true,
                                 value = roles.map { id ->
-                                    availableRoles.find { r -> r.id.toULong() == id }?.name ?: ""
+                                    availableRoles.find { r -> r.id.ulongValue() == id }?.name ?: ""
                                 }.reduceOrNull { acc, r -> "$acc, $r" }.orEmpty(),
                                 onValueChange = {},
                                 trailingIcon = {
@@ -101,10 +101,10 @@ fun UserUpdateView(viewModel: UserViewModel) {
                                 for (r in availableRoles) {
                                     if (!r.isPrivileged!!) {
                                         DropdownMenuItem(onClick = {
-                                            roles = if (roles.contains(r.id.toULong())) {
-                                                roles - r.id.toULong()
+                                            roles = if (roles.contains(r.id.ulongValue())) {
+                                                roles - r.id.ulongValue()
                                             } else {
-                                                roles + r.id.toULong()
+                                                roles + r.id.ulongValue()
                                             }
                                             expanded = false
                                         }) {
@@ -114,7 +114,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                                                 horizontalArrangement = Arrangement.SpaceBetween
                                             ) {
                                                 Text(r.name)
-                                                if (roles.contains(r.id.toULong())) {
+                                                if (roles.contains(r.id.ulongValue())) {
                                                     Icon(Icons.Filled.Check, null)
                                                 }
                                             }
@@ -177,7 +177,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                         scope.launch {
                             viewModel.update(
                                 currentTag,
-                                roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.toULong() == roleId } }
+                                roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId } }
                             )
                         }
                     }) {

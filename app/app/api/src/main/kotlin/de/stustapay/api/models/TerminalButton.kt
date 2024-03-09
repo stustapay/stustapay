@@ -37,7 +37,7 @@ import kotlinx.serialization.Contextual
 data class TerminalButton (
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "name")
     val name: kotlin.String,
@@ -55,7 +55,7 @@ data class TerminalButton (
     val defaultPrice: kotlin.Double? = null,
 
     @SerialName(value = "price_in_vouchers")
-    val priceInVouchers: kotlin.Int? = null,
+    val priceInVouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @Contextual @SerialName(value = "price_per_voucher")
     val pricePerVoucher: kotlin.Double? = null

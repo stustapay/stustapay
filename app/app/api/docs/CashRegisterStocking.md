@@ -5,23 +5,23 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **name** | **kotlin.String** |  | 
-**nodeId** | **kotlin.Int** |  | 
-**id** | **kotlin.Int** |  | 
+**nodeId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
+**id** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 **total** | [**kotlin.Double**](kotlin.Double.md) |  | 
-**euro200** | **kotlin.Int** |  |  [optional]
-**euro100** | **kotlin.Int** |  |  [optional]
-**euro50** | **kotlin.Int** |  |  [optional]
-**euro20** | **kotlin.Int** |  |  [optional]
-**euro10** | **kotlin.Int** |  |  [optional]
-**euro5** | **kotlin.Int** |  |  [optional]
-**euro2** | **kotlin.Int** |  |  [optional]
-**euro1** | **kotlin.Int** |  |  [optional]
-**cent50** | **kotlin.Int** |  |  [optional]
-**cent20** | **kotlin.Int** |  |  [optional]
-**cent10** | **kotlin.Int** |  |  [optional]
-**cent5** | **kotlin.Int** |  |  [optional]
-**cent2** | **kotlin.Int** |  |  [optional]
-**cent1** | **kotlin.Int** |  |  [optional]
+**euro200** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**euro100** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**euro50** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**euro20** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**euro10** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**euro5** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**euro2** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**euro1** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**cent50** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**cent20** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**cent10** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**cent5** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**cent2** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**cent1** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
 **variableInEuro** | [**kotlin.Double**](kotlin.Double.md) |  |  [optional]
 
 

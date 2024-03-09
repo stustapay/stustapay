@@ -6,13 +6,13 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **login** | **kotlin.String** |  | 
 **displayName** | **kotlin.String** |  | 
-**nodeId** | **kotlin.Int** |  | 
-**id** | **kotlin.Int** |  | 
+**nodeId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
+**id** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 **userTagUidHex** | **kotlin.String** |  | 
-**userTagUid** | **kotlin.Int** |  |  [optional]
+**userTagUid** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
 **description** | **kotlin.String** |  |  [optional]
-**transportAccountId** | **kotlin.Int** |  |  [optional]
-**cashierAccountId** | **kotlin.Int** |  |  [optional]
+**transportAccountId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**cashierAccountId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
 
 
 

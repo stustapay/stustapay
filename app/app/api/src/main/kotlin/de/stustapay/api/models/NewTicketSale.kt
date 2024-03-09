@@ -36,7 +36,7 @@ data class NewTicketSale (
     val uuid: java.util.UUID,
 
     @SerialName(value = "customer_tag_uids")
-    val customerTagUids: kotlin.collections.List<kotlin.Int>,
+    val customerTagUids: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>,
 
     @Contextual @SerialName(value = "payment_method")
     val paymentMethod: PaymentMethod?

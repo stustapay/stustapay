@@ -46,7 +46,7 @@ import kotlinx.serialization.Contextual
 data class TerminalTillConfig (
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "name")
     val name: kotlin.String,
@@ -61,7 +61,7 @@ data class TerminalTillConfig (
     val userPrivileges: kotlin.collections.List<Privilege>?,
 
     @SerialName(value = "cash_register_id")
-    val cashRegisterId: kotlin.Int?,
+    val cashRegisterId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "cash_register_name")
     val cashRegisterName: kotlin.String?,
@@ -82,7 +82,7 @@ data class TerminalTillConfig (
     val secrets: TerminalSecrets?,
 
     @SerialName(value = "active_user_id")
-    val activeUserId: kotlin.Int?,
+    val activeUserId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "available_roles")
     val availableRoles: kotlin.collections.List<UserRole>

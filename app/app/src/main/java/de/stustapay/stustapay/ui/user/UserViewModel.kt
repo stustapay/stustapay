@@ -2,6 +2,7 @@ package de.stustapay.stustapay.ui.user
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.UserInfo
 import de.stustapay.api.models.UserRole
@@ -119,7 +120,7 @@ class UserViewModel @Inject constructor(
     ) {
         _status.update { UserRequestState.Fetching }
         when (val res =
-            userRepository.create(login, displayName, UserTag(tag), roles, description)) {
+            userRepository.create(login, displayName, UserTag(tag.toBigInteger()), roles, description)) {
             is UserCreateState.Created -> {
                 _status.update { UserRequestState.Done }
             }
@@ -132,7 +133,7 @@ class UserViewModel @Inject constructor(
 
     suspend fun update(tag: ULong, roles: List<UserRole>) {
         _status.update { UserRequestState.Fetching }
-        when (val res = userRepository.update(UserTag(tag), roles)) {
+        when (val res = userRepository.update(UserTag(tag.toBigInteger()), roles)) {
             is UserUpdateState.Created -> {
                 _status.update { UserRequestState.Done }
             }

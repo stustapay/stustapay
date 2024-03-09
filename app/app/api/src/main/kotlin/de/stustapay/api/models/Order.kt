@@ -47,7 +47,7 @@ import kotlinx.serialization.Contextual
 data class Order (
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "uuid")
     val uuid: java.util.UUID,
@@ -62,7 +62,7 @@ data class Order (
     val totalNoTax: kotlin.Double,
 
     @SerialName(value = "cancels_order")
-    val cancelsOrder: kotlin.Int?,
+    val cancelsOrder: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @Contextual @SerialName(value = "booked_at")
     val bookedAt: java.time.OffsetDateTime,
@@ -74,16 +74,16 @@ data class Order (
     val orderType: OrderType,
 
     @SerialName(value = "cashier_id")
-    val cashierId: kotlin.Int?,
+    val cashierId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "till_id")
-    val tillId: kotlin.Int?,
+    val tillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "customer_account_id")
-    val customerAccountId: kotlin.Int?,
+    val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "customer_tag_uid")
-    val customerTagUid: kotlin.Int?,
+    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "line_items")
     val lineItems: kotlin.collections.List<LineItem>,

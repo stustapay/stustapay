@@ -4,19 +4,19 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**nodeId** | **kotlin.Int** |  | 
-**id** | **kotlin.Int** |  | 
+**nodeId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
+**id** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 **login** | **kotlin.String** |  | 
 **displayName** | **kotlin.String** |  | 
 **privileges** | [**kotlin.collections.List&lt;Privilege&gt;**](Privilege.md) |  | 
 **userTagUidHex** | **kotlin.String** |  | 
-**activeRoleId** | **kotlin.Int** |  |  [optional]
+**activeRoleId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
 **activeRoleName** | **kotlin.String** |  |  [optional]
 **description** | **kotlin.String** |  |  [optional]
-**userTagUid** | **kotlin.Int** |  |  [optional]
-**transportAccountId** | **kotlin.Int** |  |  [optional]
-**cashierAccountId** | **kotlin.Int** |  |  [optional]
-**cashRegisterId** | **kotlin.Int** |  |  [optional]
+**userTagUid** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**transportAccountId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**cashierAccountId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**cashRegisterId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
 
 
 

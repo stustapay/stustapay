@@ -48,7 +48,7 @@ class CashierManagementViewModel @Inject constructor(
         }
     }
 
-    suspend fun equip(tagId: ULong, registerId: Int, stockingId: Int) {
+    suspend fun equip(tagId: ULong, registerId: ULong, stockingId: ULong) {
         _status.update { CashierManagementStatus.None }
         _status.update {
             CashierManagementStatus.Done(

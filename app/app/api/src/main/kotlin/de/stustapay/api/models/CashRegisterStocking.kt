@@ -51,55 +51,55 @@ data class CashRegisterStocking (
     val name: kotlin.String,
 
     @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
+    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "total")
     val total: kotlin.Double,
 
     @SerialName(value = "euro200")
-    val euro200: kotlin.Int? = 0,
+    val euro200: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "euro100")
-    val euro100: kotlin.Int? = 0,
+    val euro100: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "euro50")
-    val euro50: kotlin.Int? = 0,
+    val euro50: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "euro20")
-    val euro20: kotlin.Int? = 0,
+    val euro20: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "euro10")
-    val euro10: kotlin.Int? = 0,
+    val euro10: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "euro5")
-    val euro5: kotlin.Int? = 0,
+    val euro5: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "euro2")
-    val euro2: kotlin.Int? = 0,
+    val euro2: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "euro1")
-    val euro1: kotlin.Int? = 0,
+    val euro1: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "cent50")
-    val cent50: kotlin.Int? = 0,
+    val cent50: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "cent20")
-    val cent20: kotlin.Int? = 0,
+    val cent20: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "cent10")
-    val cent10: kotlin.Int? = 0,
+    val cent10: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "cent5")
-    val cent5: kotlin.Int? = 0,
+    val cent5: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "cent2")
-    val cent2: kotlin.Int? = 0,
+    val cent2: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @SerialName(value = "cent1")
-    val cent1: kotlin.Int? = 0,
+    val cent1: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0),
 
     @Contextual @SerialName(value = "variable_in_euro")
     val variableInEuro: kotlin.Double? = 0.0

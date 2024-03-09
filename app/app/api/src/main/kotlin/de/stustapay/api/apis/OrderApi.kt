@@ -15,6 +15,8 @@
 
 package de.stustapay.api.apis
 
+import kotlinx.serialization.Contextual
+
 import de.stustapay.api.models.CompletedPayOut
 import de.stustapay.api.models.CompletedSale
 import de.stustapay.api.models.CompletedTicketSale
@@ -182,7 +184,7 @@ import io.ktor.http.ParametersBuilder
          * @param orderId  
          * @return void
         */
-        open suspend fun cancelOrder(orderId: kotlin.Int): HttpResponse<Unit> {
+        open suspend fun cancelOrder(orderId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<Unit> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 
@@ -407,7 +409,7 @@ import io.ktor.http.ParametersBuilder
          * @return Order
         */
             @Suppress("UNCHECKED_CAST")
-        open suspend fun show(orderId: kotlin.Int): HttpResponse<Order> {
+        open suspend fun show(orderId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<Order> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 

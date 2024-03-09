@@ -34,10 +34,10 @@ import kotlinx.serialization.Contextual
 data class UserTagHistoryEntry (
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.ULong,
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "account_id")
-    val accountId: kotlin.Int,
+    val accountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "mapping_was_valid_until")
     val mappingWasValidUntil: java.time.OffsetDateTime,

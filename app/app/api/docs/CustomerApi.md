@@ -21,7 +21,7 @@ Obtain a customer by tag uid
 //import de.stustapay.api.models.*
 
 val apiInstance = CustomerApi()
-val customerTagUid : kotlin.Int = 56 // kotlin.Int | 
+val customerTagUid : @Contextual com.ionspin.kotlin.bignum.integer.BigInteger = 56 // @Contextual com.ionspin.kotlin.bignum.integer.BigInteger | 
 try {
     val result : Customer = apiInstance.getCustomer(customerTagUid)
     println(result)
@@ -38,7 +38,7 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **customerTagUid** | **kotlin.Int**|  |
+ **customerTagUid** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger**|  |
 
 ### Return type
 

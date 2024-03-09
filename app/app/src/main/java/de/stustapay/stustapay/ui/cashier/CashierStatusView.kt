@@ -47,7 +47,7 @@ fun CashierStatusView(
 
     NfcScanDialog(state = scanState, onScan = { tag ->
         scope.launch {
-            viewModel.fetchTag(tag.uid)
+            viewModel.fetchTag(tag.uid.ulongValue())
         }
     })
 
@@ -81,7 +81,7 @@ fun CashierStatusView(
                                         },
                                         secondaryText = {
                                             Text(
-                                                tagIDtoString(state.userInfo.userTagUid),
+                                                tagIDtoString(state.userInfo.userTagUid.ulongValue()),
                                             )
                                         }
                                     )

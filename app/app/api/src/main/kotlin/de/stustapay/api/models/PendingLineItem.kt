@@ -37,7 +37,7 @@ import kotlinx.serialization.Contextual
 data class PendingLineItem (
 
     @SerialName(value = "quantity")
-    val quantity: kotlin.Int,
+    val quantity: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "product")
     val product: Product,
@@ -46,7 +46,7 @@ data class PendingLineItem (
     val productPrice: kotlin.Double,
 
     @SerialName(value = "tax_rate_id")
-    val taxRateId: kotlin.Int,
+    val taxRateId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "tax_name")
     val taxName: kotlin.String,

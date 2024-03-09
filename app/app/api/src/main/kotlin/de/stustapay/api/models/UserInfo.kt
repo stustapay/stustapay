@@ -47,10 +47,10 @@ data class UserInfo (
     val displayName: kotlin.String,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.ULong,
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
+    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "user_tag_uid_hex")
     val userTagUidHex: kotlin.String?,
@@ -59,13 +59,13 @@ data class UserInfo (
     val description: kotlin.String? = null,
 
     @SerialName(value = "transport_account_id")
-    val transportAccountId: kotlin.Int? = null,
+    val transportAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "cashier_account_id")
-    val cashierAccountId: kotlin.Int? = null,
+    val cashierAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "cash_register_id")
-    val cashRegisterId: kotlin.Int? = null,
+    val cashRegisterId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "cash_register_name")
     val cashRegisterName: kotlin.String? = null,

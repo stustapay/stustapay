@@ -44,10 +44,10 @@ import kotlinx.serialization.Contextual
 data class Account (
 
     @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
+    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "type")
     val type: AccountType,
@@ -62,10 +62,10 @@ data class Account (
     val balance: kotlin.Double,
 
     @SerialName(value = "vouchers")
-    val vouchers: kotlin.Int,
+    val vouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.ULong?,
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @Contextual @SerialName(value = "restriction")
     val restriction: ProductRestriction?,

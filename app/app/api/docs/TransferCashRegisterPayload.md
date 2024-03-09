@@ -4,8 +4,8 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**sourceCashierTagUid** | **kotlin.Int** |  | 
-**targetCashierTagUid** | **kotlin.Int** |  | 
+**sourceCashierTagUid** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
+**targetCashierTagUid** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 
 
 

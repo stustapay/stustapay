@@ -32,10 +32,10 @@ import kotlinx.serialization.Contextual
 data class Button (
 
     @SerialName(value = "till_button_id")
-    val tillButtonId: kotlin.Int,
+    val tillButtonId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "quantity")
-    val quantity: kotlin.Int? = null,
+    val quantity: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @Contextual @SerialName(value = "price")
     val price: kotlin.Double? = null

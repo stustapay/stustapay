@@ -4,7 +4,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**id** | **kotlin.Int** |  | 
+**id** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 **name** | **kotlin.String** |  | 
 **description** | **kotlin.String** |  | 
 **till** | [**TerminalTillConfig**](TerminalTillConfig.md) |  | 

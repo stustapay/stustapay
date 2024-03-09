@@ -7,17 +7,17 @@ Name | Type | Description | Notes
 **name** | **kotlin.String** |  | 
 **price** | [**kotlin.Double**](kotlin.Double.md) |  | 
 **fixedPrice** | **kotlin.Boolean** |  | 
-**taxRateId** | **kotlin.Int** |  | 
+**taxRateId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 **restrictions** | [**kotlin.collections.List&lt;ProductRestriction&gt;**](ProductRestriction.md) |  | 
 **isLocked** | **kotlin.Boolean** |  | 
 **isReturnable** | **kotlin.Boolean** |  | 
-**nodeId** | **kotlin.Int** |  | 
-**id** | **kotlin.Int** |  | 
+**nodeId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
+**id** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 **taxName** | **kotlin.String** |  | 
 **taxRate** | [**kotlin.Double**](kotlin.Double.md) |  | 
 **type** | [**ProductType**](ProductType.md) |  | 
-**priceInVouchers** | **kotlin.Int** |  |  [optional]
-**targetAccountId** | **kotlin.Int** |  |  [optional]
+**priceInVouchers** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
+**targetAccountId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  |  [optional]
 **pricePerVoucher** | [**kotlin.Double**](kotlin.Double.md) |  |  [optional]
 
 

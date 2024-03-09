@@ -55,22 +55,22 @@ data class CompletedTicketSale (
     val scannedTickets: kotlin.collections.List<TicketScanResultEntry>,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "booked_at")
     val bookedAt: java.time.OffsetDateTime,
 
     @SerialName(value = "customer_account_id")
-    val customerAccountId: kotlin.Int,
+    val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "cashier_id")
-    val cashierId: kotlin.Int,
+    val cashierId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "till_id")
-    val tillId: kotlin.Int,
+    val tillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "item_count")
-    val itemCount: kotlin.Int,
+    val itemCount: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "total_price")
     val totalPrice: kotlin.Double

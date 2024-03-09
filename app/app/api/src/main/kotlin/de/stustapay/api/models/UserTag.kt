@@ -30,7 +30,7 @@ import kotlinx.serialization.Contextual
 data class UserTag (
 
     @SerialName(value = "uid")
-    val uid: kotlin.ULong
+    val uid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
 )
 

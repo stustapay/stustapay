@@ -39,7 +39,7 @@ import kotlinx.serialization.Contextual
 data class LineItem (
 
     @SerialName(value = "quantity")
-    val quantity: kotlin.Int,
+    val quantity: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "product")
     val product: Product,
@@ -48,7 +48,7 @@ data class LineItem (
     val productPrice: kotlin.Double,
 
     @SerialName(value = "tax_rate_id")
-    val taxRateId: kotlin.Int,
+    val taxRateId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "tax_name")
     val taxName: kotlin.String,
@@ -57,7 +57,7 @@ data class LineItem (
     val taxRate: kotlin.Double,
 
     @SerialName(value = "item_id")
-    val itemId: kotlin.Int,
+    val itemId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "total_tax")
     val totalTax: kotlin.Double,

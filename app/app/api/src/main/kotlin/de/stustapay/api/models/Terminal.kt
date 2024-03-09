@@ -39,13 +39,13 @@ data class Terminal (
     val name: kotlin.String,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
+    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "till_id")
-    val tillId: kotlin.Int?,
+    val tillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @Contextual @SerialName(value = "session_uuid")
     val sessionUuid: java.util.UUID?,

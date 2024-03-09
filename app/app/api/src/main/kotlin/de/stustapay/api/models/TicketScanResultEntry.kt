@@ -32,7 +32,7 @@ import kotlinx.serialization.Contextual
 data class TicketScanResultEntry (
 
     @SerialName(value = "customer_tag_uid")
-    val customerTagUid: kotlin.Int,
+    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "ticket")
     val ticket: Ticket

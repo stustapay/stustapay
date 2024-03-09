@@ -29,7 +29,7 @@ class CashierStatusViewModel @Inject constructor(
         _state.update { CashierStatusRequestState.Fetching }
         val user = userRepository.userState.value
         if (user is UserState.LoggedIn && user.user.userTagUid != null) {
-            fetchTag(user.user.userTagUid!!)
+            fetchTag(user.user.userTagUid!!.ulongValue())
         } else {
             _state.update { CashierStatusRequestState.Failed("Not logged in") }
         }

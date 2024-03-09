@@ -31,10 +31,10 @@ import kotlinx.serialization.Contextual
 data class NewFreeTicketGrant (
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.ULong,
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "initial_voucher_amount")
-    val initialVoucherAmount: kotlin.Int? = 0
+    val initialVoucherAmount: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0)
 
 )
 

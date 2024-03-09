@@ -15,6 +15,8 @@
 
 package de.stustapay.api.apis
 
+import kotlinx.serialization.Contextual
+
 import de.stustapay.api.models.CashRegister
 import de.stustapay.api.models.CashierAccountChangePayload
 

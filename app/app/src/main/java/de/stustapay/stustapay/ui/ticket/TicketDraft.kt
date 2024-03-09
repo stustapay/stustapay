@@ -1,10 +1,10 @@
 package de.stustapay.stustapay.ui.ticket
 
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.model.NewTicketSale
 import de.stustapay.stustapay.model.PaymentMethod
 import de.stustapay.stustapay.model.PendingTicketSale
 import de.stustapay.stustapay.model.Ticket
-import de.stustapay.stustapay.model.UserTag
 import java.util.UUID
 
 
@@ -56,7 +56,7 @@ data class TicketDraft(
     fun getNewTicketSale(paymentMethod: PaymentMethod?): NewTicketSale {
         return NewTicketSale(
             uuid = checkedSale?.uuid ?: UUID.randomUUID().toString(),
-            customer_tag_uids = scans.map { it.tag.uid },
+            customer_tag_uids = scans.map { it.tag.uid.ulongValue() },
             payment_method = paymentMethod,
         )
     }

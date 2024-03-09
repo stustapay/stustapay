@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustapay.stustapay.model.UserTag
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.theme.NfcScanStyle

@@ -1,6 +1,6 @@
 package de.stustapay.stustapay.ec
 
-import de.stustapay.stustapay.model.UserTag
+import de.stustapay.api.models.UserTag
 import java.math.BigDecimal
 
 data class ECPayment(

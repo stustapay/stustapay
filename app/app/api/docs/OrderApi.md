@@ -219,7 +219,7 @@ cancel information about an order
 //import de.stustapay.api.models.*
 
 val apiInstance = OrderApi()
-val orderId : kotlin.Int = 56 // kotlin.Int | 
+val orderId : @Contextual com.ionspin.kotlin.bignum.integer.BigInteger = 56 // @Contextual com.ionspin.kotlin.bignum.integer.BigInteger | 
 try {
     apiInstance.cancelOrder(orderId)
 } catch (e: ClientException) {
@@ -235,7 +235,7 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **orderId** | **kotlin.Int**|  |
+ **orderId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger**|  |
 
 ### Return type
 
@@ -545,7 +545,7 @@ get information about an order
 //import de.stustapay.api.models.*
 
 val apiInstance = OrderApi()
-val orderId : kotlin.Int = 56 // kotlin.Int | 
+val orderId : @Contextual com.ionspin.kotlin.bignum.integer.BigInteger = 56 // @Contextual com.ionspin.kotlin.bignum.integer.BigInteger | 
 try {
     val result : Order = apiInstance.show(orderId)
     println(result)
@@ -562,7 +562,7 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **orderId** | **kotlin.Int**|  |
+ **orderId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger**|  |
 
 ### Return type
 

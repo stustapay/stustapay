@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **userTag** | [**UserTag**](UserTag.md) |  | 
-**userRoleId** | **kotlin.Int** |  | 
+**userRoleId** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 
 
 

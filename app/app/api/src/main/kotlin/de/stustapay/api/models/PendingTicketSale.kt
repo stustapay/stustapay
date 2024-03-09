@@ -50,7 +50,7 @@ data class PendingTicketSale (
     val scannedTickets: kotlin.collections.List<TicketScanResultEntry>,
 
     @SerialName(value = "item_count")
-    val itemCount: kotlin.Int,
+    val itemCount: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "total_price")
     val totalPrice: kotlin.Double

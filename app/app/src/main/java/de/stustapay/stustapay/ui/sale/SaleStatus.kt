@@ -2,10 +2,10 @@ package de.stustapay.stustapay.ui.sale
 
 import android.util.Log
 import de.stustapay.api.models.TerminalButton
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.model.Button
 import de.stustapay.stustapay.model.NewSale
 import de.stustapay.stustapay.model.PendingSale
-import de.stustapay.stustapay.model.UserTag
 import java.lang.Integer.max
 import java.lang.Integer.min
 import java.util.UUID
@@ -252,7 +252,7 @@ data class SaleStatus(
                     }
                 }
             }.toList(),
-            customer_tag_uid = tag.uid,
+            customer_tag_uid = tag.uid.ulongValue(),
             used_vouchers = voucherAmount,
             uuid = checkedSale?.uuid ?: UUID.randomUUID().toString()
         )

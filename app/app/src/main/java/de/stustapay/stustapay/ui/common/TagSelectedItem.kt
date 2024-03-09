@@ -13,14 +13,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.stustapay.stustapay.model.UserTag
+import com.ionspin.kotlin.bignum.integer.toBigInteger
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.ui.theme.errorButtonColors
 
 
 @Preview
 @Composable
 fun PreviewTagSelectedItem() {
-    TagSelectedItem(tag = UserTag(uid = 0x13374242abcdu), onClear = {})
+    TagSelectedItem(tag = UserTag(uid = 0x13374242abcdu.toBigInteger()), onClear = {})
 }
 
 @Composable

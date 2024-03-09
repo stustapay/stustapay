@@ -4,7 +4,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**orgaTagUid** | **kotlin.Int** |  | 
+**orgaTagUid** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 **amount** | [**kotlin.Double**](kotlin.Double.md) |  | 
 
 

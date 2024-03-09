@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.UserRolesState
 import de.stustapay.api.models.UserTag
@@ -80,8 +81,8 @@ fun UserLoginView(
                 when (scanTarget) {
                     ScanTarget.Login -> {
                         scope.launch {
-                            roleSelection = RoleSelectionState.Select(UserTag(tag.uid))
-                            viewModel.checkLogin(UserTag(tag.uid))
+                            roleSelection = RoleSelectionState.Select(tag)
+                            viewModel.checkLogin(tag)
                         }
                     }
                 }
@@ -108,7 +109,7 @@ fun UserLoginView(
                         LaunchedEffect(Unit) {
                             scope.launch {
                                 roleSelection = RoleSelectionState.Closed
-                                viewModel.login(roleSelectionV.tag, userRolesV.roles[0].id)
+                                viewModel.login(roleSelectionV.tag, userRolesV.roles[0].id.intValue())
                             }
                         }
                     } else {

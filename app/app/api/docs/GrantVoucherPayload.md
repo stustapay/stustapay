@@ -4,8 +4,8 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**vouchers** | **kotlin.Int** |  | 
-**userTagUid** | **kotlin.Int** |  | 
+**vouchers** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
+**userTagUid** | **@Contextual com.ionspin.kotlin.bignum.integer.BigInteger** |  | 
 
 
 

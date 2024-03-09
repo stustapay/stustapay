@@ -39,19 +39,19 @@ data class CashRegister (
     val name: kotlin.String,
 
     @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
+    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "current_cashier_id")
-    val currentCashierId: kotlin.Int?,
+    val currentCashierId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "current_cashier_tag_uid")
-    val currentCashierTagUid: kotlin.ULong?,
+    val currentCashierTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "current_till_id")
-    val currentTillId: kotlin.Int?,
+    val currentTillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @Contextual @SerialName(value = "current_balance")
     val currentBalance: kotlin.Double

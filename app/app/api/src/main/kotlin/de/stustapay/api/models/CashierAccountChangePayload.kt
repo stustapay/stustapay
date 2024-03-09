@@ -31,7 +31,7 @@ import kotlinx.serialization.Contextual
 data class CashierAccountChangePayload (
 
     @SerialName(value = "cashier_tag_uid")
-    val cashierTagUid: kotlin.ULong,
+    val cashierTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "amount")
     val amount: kotlin.Double

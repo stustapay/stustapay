@@ -3,6 +3,7 @@ package de.stustapay.stustapay.ui.account
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.Customer
 import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.model.Account
 import de.stustapay.stustapay.model.UserState
@@ -25,7 +26,7 @@ data class CustomerStatusUiState(
 sealed interface CustomerStatusRequestState {
     object Idle : CustomerStatusRequestState
     object Fetching : CustomerStatusRequestState
-    data class Done(val account: Account) : CustomerStatusRequestState
+    data class Done(val account: Customer) : CustomerStatusRequestState
     data class Failed(val msg: String) : CustomerStatusRequestState
 }
 
@@ -102,7 +103,7 @@ class AccountViewModel @Inject constructor(
         _requestState.update { CustomerStatusRequestState.Fetching }
         when (val customer = customerRepository.getCustomer(oldTagId.value)) {
             is Response.OK -> {
-                when (val switch = customerRepository.switchTag(customer.data.id, newTagId.value, comment)) {
+                when (val switch = customerRepository.switchTag(customer.data.id.ulongValue(), newTagId.value, comment)) {
                     is Response.OK -> {
                         _requestState.update { CustomerStatusRequestState.Done(customer.data) }
                     }

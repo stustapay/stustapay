@@ -37,13 +37,13 @@ data class NewSale (
     val uuid: java.util.UUID,
 
     @SerialName(value = "customer_tag_uid")
-    val customerTagUid: kotlin.Int,
+    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "buttons")
     val buttons: kotlin.collections.List<Button>,
 
     @SerialName(value = "used_vouchers")
-    val usedVouchers: kotlin.Int? = null
+    val usedVouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null
 
 )
 

@@ -3,12 +3,13 @@ package de.stustapay.stustapay.ui.payinout.topup
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.model.CompletedTopUp
 import de.stustapay.stustapay.model.NewTopUp
 import de.stustapay.stustapay.model.PaymentMethod
-import de.stustapay.stustapay.model.UserTag
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
@@ -130,7 +131,7 @@ class TopUpViewModel @Inject constructor(
         return ECPayment(
             id = newTopUp.uuid,
             amount = BigDecimal(newTopUp.amount),
-            tag = UserTag(newTopUp.customer_tag_uid),
+            tag = UserTag(newTopUp.customer_tag_uid.toBigInteger()),
         )
     }
 
@@ -140,7 +141,7 @@ class TopUpViewModel @Inject constructor(
 
         val newTopUp = NewTopUp(
             amount = _topUpState.value.currentAmount.toDouble() / 100,
-            customer_tag_uid = tag.uid,
+            customer_tag_uid = tag.uid.ulongValue(),
             payment_method = PaymentMethod.SumUp,
             // we generate the topup transaction identifier here
             uuid = UUID.randomUUID().toString(),
@@ -194,7 +195,7 @@ class TopUpViewModel @Inject constructor(
 
         val newTopUp = NewTopUp(
             amount = _topUpState.value.currentAmount.toDouble() / 100,
-            customer_tag_uid = tag.uid,
+            customer_tag_uid = tag.uid.ulongValue(),
             payment_method = PaymentMethod.Cash,
             // we generate the topup transaction identifier here
             uuid = UUID.randomUUID().toString(),

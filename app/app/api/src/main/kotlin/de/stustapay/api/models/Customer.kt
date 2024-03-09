@@ -51,10 +51,10 @@ import kotlinx.serialization.Contextual
 data class Customer (
 
     @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
+    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "type")
     val type: AccountType,
@@ -69,10 +69,10 @@ data class Customer (
     val balance: kotlin.Double,
 
     @SerialName(value = "vouchers")
-    val vouchers: kotlin.Int,
+    val vouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.ULong?,
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @Contextual @SerialName(value = "restriction")
     val restriction: ProductRestriction?,
@@ -96,7 +96,7 @@ data class Customer (
     val payoutError: kotlin.String?,
 
     @SerialName(value = "payout_run_id")
-    val payoutRunId: kotlin.Int?,
+    val payoutRunId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "payout_export")
     val payoutExport: kotlin.Boolean?,

@@ -27,7 +27,7 @@ fun CashierManagementEquipView(viewModel: CashierManagementViewModel) {
 
     NfcScanDialog(state = scanState, onScan = {
         scope.launch {
-            viewModel.equip(it.uid, registers[selectedRegister].id, stockings[selectedStocking].id)
+            viewModel.equip(it.uid.ulongValue(), registers[selectedRegister].id.ulongValue(), stockings[selectedStocking].id.ulongValue())
         }
     })
 

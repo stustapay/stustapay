@@ -31,7 +31,7 @@ import kotlinx.serialization.Contextual
 data class TransportAccountChangePayload (
 
     @SerialName(value = "orga_tag_uid")
-    val orgaTagUid: kotlin.ULong,
+    val orgaTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "amount")
     val amount: kotlin.Double

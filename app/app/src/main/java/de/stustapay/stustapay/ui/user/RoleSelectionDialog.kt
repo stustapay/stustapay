@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.stustapay.R
 import de.stustapay.api.models.UserRole
 import de.stustapay.stustapay.model.UserRolesState
@@ -39,24 +40,24 @@ fun PreviewRoleSelectionDialog() {
                 roles = listOf(
                     UserRole(
                         name = "Crazy Hacker",
-                        id = 1,
+                        id = 1.toBigInteger(),
                         privileges = listOf(),
-                        nodeId = 0
+                        nodeId = 0.toBigInteger()
                     ),
                     UserRole(
                         name = "Boring Hacker",
-                        id = 2,
+                        id = 2.toBigInteger(),
                         privileges = listOf(),
-                        nodeId = 0
+                        nodeId = 0.toBigInteger()
                     ),
                     UserRole(
                         name = "Retired Hacker",
-                        id = 3,
+                        id = 3.toBigInteger(),
                         privileges = listOf(),
-                        nodeId = 0
+                        nodeId = 0.toBigInteger()
                     )
                 ),
-                tag = UserTag(0u),
+                tag = UserTag(0u.toBigInteger()),
             ),
         )
     }
@@ -155,7 +156,7 @@ fun RoleButtonList(
                     item {
                         Button(
                             modifier = Modifier.fillMaxWidth(),
-                            onClick = { onSelect(role.id) }
+                            onClick = { onSelect(role.id.intValue()) }
                         ) {
                             Text(text = role.name, fontSize = 24.sp)
                         }

@@ -16,9 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustapay.api.models.Customer
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.Account
-import de.stustapay.stustapay.model.UserTag
 import de.stustapay.stustapay.ui.common.TagItem
 import de.stustapay.stustapay.ui.theme.AccountOverviewKeyStyle
 import de.stustapay.stustapay.ui.theme.AccountOverviewValueBigStyle
@@ -80,7 +80,7 @@ fun SummaryEntry(
 
 @Composable
 fun AccountProperties(
-    account: Account,
+    account: Customer,
     showComment: Boolean,
 ) {
     LazyColumn(
@@ -93,9 +93,9 @@ fun AccountProperties(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (account.user_tag_uid != null) {
+                if (account.userTagUid != null) {
                     TagItem(
-                        UserTag(account.user_tag_uid),
+                        UserTag(account.userTagUid),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp)
@@ -125,7 +125,7 @@ fun AccountProperties(
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_restriction),
-                    when (account.restriction) {
+                    when (account.restriction.value) {
                         "under_18" -> {
                             stringResource(R.string.under_18_years)
                         }
@@ -134,7 +134,7 @@ fun AccountProperties(
                             stringResource(R.string.under_16_years)
                         }
 
-                        else -> account.restriction
+                        else -> account.restriction.value
                     },
                 )
             }

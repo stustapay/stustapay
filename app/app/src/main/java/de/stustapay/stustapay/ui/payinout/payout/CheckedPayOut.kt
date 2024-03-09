@@ -1,7 +1,7 @@
 package de.stustapay.stustapay.ui.payinout.payout
 
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.model.NewPayOut
-import de.stustapay.stustapay.model.UserTag
 
 data class CheckedPayOut(
     /** how much the user has on their account */
@@ -18,7 +18,7 @@ data class CheckedPayOut(
     fun getNewPayOut(): NewPayOut {
         return NewPayOut(
             uuid = uuid,
-            customer_tag_uid = tag.uid,
+            customer_tag_uid = tag.uid.ulongValue(),
             amount = amount,
         )
     }

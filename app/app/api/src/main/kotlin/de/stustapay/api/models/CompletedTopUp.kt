@@ -43,10 +43,10 @@ data class CompletedTopUp (
     val paymentMethod: PaymentMethod,
 
     @SerialName(value = "customer_tag_uid")
-    val customerTagUid: kotlin.Int,
+    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "customer_account_id")
-    val customerAccountId: kotlin.Int,
+    val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @Contextual @SerialName(value = "amount")
     val amount: kotlin.Double,
@@ -64,10 +64,10 @@ data class CompletedTopUp (
     val bookedAt: java.time.OffsetDateTime,
 
     @SerialName(value = "cashier_id")
-    val cashierId: kotlin.Int,
+    val cashierId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "till_id")
-    val tillId: kotlin.Int
+    val tillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
 )
 

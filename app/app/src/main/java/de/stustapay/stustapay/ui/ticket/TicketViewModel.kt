@@ -4,12 +4,12 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.model.CompletedTicketSale
 import de.stustapay.stustapay.model.NewTicketScan
 import de.stustapay.stustapay.model.PaymentMethod
-import de.stustapay.stustapay.model.UserTag
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
@@ -111,7 +111,7 @@ class TicketViewModel @Inject constructor(
     suspend fun tagScanned(tag: UserTag) {
         val response = ticketRepository.checkTicketScan(
             NewTicketScan(
-                customer_tag_uids = listOf(tag.uid)
+                customer_tag_uids = listOf(tag.uid.ulongValue())
             )
         )
 
@@ -125,7 +125,7 @@ class TicketViewModel @Inject constructor(
                     }
 
                     val scanResult = scanned[0]
-                    if (scanResult.customer_tag_uid != tag.uid) {
+                    if (scanResult.customer_tag_uid != tag.uid.ulongValue()) {
                         _status.update { "returned ticket id != ticket unknown" }
                         return
                     }

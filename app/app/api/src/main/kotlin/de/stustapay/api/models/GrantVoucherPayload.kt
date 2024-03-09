@@ -31,10 +31,10 @@ import kotlinx.serialization.Contextual
 data class GrantVoucherPayload (
 
     @SerialName(value = "vouchers")
-    val vouchers: kotlin.Int,
+    val vouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.ULong
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
 )
 

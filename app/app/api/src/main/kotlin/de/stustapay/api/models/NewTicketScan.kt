@@ -30,7 +30,7 @@ import kotlinx.serialization.Contextual
 data class NewTicketScan (
 
     @SerialName(value = "customer_tag_uids")
-    val customerTagUids: kotlin.collections.List<kotlin.Int>
+    val customerTagUids: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>
 
 )
 

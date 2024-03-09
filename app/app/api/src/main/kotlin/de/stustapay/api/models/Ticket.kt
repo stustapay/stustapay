@@ -47,7 +47,7 @@ data class Ticket (
     val price: kotlin.Double,
 
     @SerialName(value = "tax_rate_id")
-    val taxRateId: kotlin.Int,
+    val taxRateId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "restrictions")
     val restrictions: kotlin.collections.List<@Contextual ProductRestriction>,
@@ -59,10 +59,10 @@ data class Ticket (
     val initialTopUpAmount: kotlin.Double,
 
     @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
+    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "tax_name")
     val taxName: kotlin.String,

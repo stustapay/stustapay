@@ -43,10 +43,10 @@ import kotlinx.serialization.Contextual
 data class CurrentUser (
 
     @SerialName(value = "node_id")
-    val nodeId: kotlin.Int,
+    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "id")
-    val id: kotlin.Int,
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "login")
     val login: kotlin.String,
@@ -61,7 +61,7 @@ data class CurrentUser (
     val userTagUidHex: kotlin.String?,
 
     @SerialName(value = "active_role_id")
-    val activeRoleId: kotlin.Int? = null,
+    val activeRoleId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "active_role_name")
     val activeRoleName: kotlin.String? = null,
@@ -70,16 +70,16 @@ data class CurrentUser (
     val description: kotlin.String? = null,
 
     @SerialName(value = "user_tag_uid")
-    val userTagUid: kotlin.ULong? = null,
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "transport_account_id")
-    val transportAccountId: kotlin.Int? = null,
+    val transportAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "cashier_account_id")
-    val cashierAccountId: kotlin.Int? = null,
+    val cashierAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "cash_register_id")
-    val cashRegisterId: kotlin.Int? = null
+    val cashRegisterId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null
 
 )
 
