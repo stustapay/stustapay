@@ -5,11 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.CompletedTopUp
+import de.stustapay.api.models.NewTopUp
+import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.ec.ECPayment
-import de.stustapay.stustapay.model.CompletedTopUp
-import de.stustapay.stustapay.model.NewTopUp
-import de.stustapay.stustapay.model.PaymentMethod
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
@@ -129,9 +129,9 @@ class TopUpViewModel @Inject constructor(
      */
     private fun getECPayment(newTopUp: NewTopUp): ECPayment {
         return ECPayment(
-            id = newTopUp.uuid,
+            id = newTopUp.uuid.toString(),
             amount = BigDecimal(newTopUp.amount),
-            tag = UserTag(newTopUp.customer_tag_uid.toBigInteger()),
+            tag = UserTag(newTopUp.customerTagUid),
         )
     }
 
@@ -141,10 +141,10 @@ class TopUpViewModel @Inject constructor(
 
         val newTopUp = NewTopUp(
             amount = _topUpState.value.currentAmount.toDouble() / 100,
-            customer_tag_uid = tag.uid.ulongValue(),
-            payment_method = PaymentMethod.SumUp,
+            customerTagUid = tag.uid,
+            paymentMethod = PaymentMethod.sumup,
             // we generate the topup transaction identifier here
-            uuid = UUID.randomUUID().toString(),
+            uuid = UUID.randomUUID(),
         )
 
         if (!checkTopUp(newTopUp)) {
@@ -195,10 +195,10 @@ class TopUpViewModel @Inject constructor(
 
         val newTopUp = NewTopUp(
             amount = _topUpState.value.currentAmount.toDouble() / 100,
-            customer_tag_uid = tag.uid.ulongValue(),
-            payment_method = PaymentMethod.Cash,
+            customerTagUid = tag.uid,
+            paymentMethod = PaymentMethod.cash,
             // we generate the topup transaction identifier here
-            uuid = UUID.randomUUID().toString(),
+            uuid = UUID.randomUUID(),
         )
 
         if (!checkTopUp(newTopUp)) {

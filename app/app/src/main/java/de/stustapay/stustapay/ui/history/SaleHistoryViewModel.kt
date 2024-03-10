@@ -2,7 +2,7 @@ package de.stustapay.stustapay.ui.history
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.stustapay.model.Order
+import de.stustapay.api.models.Order
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.SaleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +36,7 @@ class SaleHistoryViewModel @Inject constructor(
         when (val sales = saleRepository.listSales()) {
             is Response.OK -> {
                 _sales.update {
-                    sales.data.sortedBy { ZonedDateTime.parse(it.booked_at).toLocalDateTime() }
+                    sales.data.sortedBy { it.bookedAt.toLocalDateTime() }
                         .reversed()
                 }
                 _status.update { SaleHistoryStatus.Done }

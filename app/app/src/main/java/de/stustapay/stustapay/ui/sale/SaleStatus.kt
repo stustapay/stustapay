@@ -1,11 +1,12 @@
 package de.stustapay.stustapay.ui.sale
 
 import android.util.Log
+import com.ionspin.kotlin.bignum.integer.toBigInteger
+import de.stustapay.api.models.Button
+import de.stustapay.api.models.NewSale
+import de.stustapay.api.models.PendingSale
 import de.stustapay.api.models.TerminalButton
 import de.stustapay.api.models.UserTag
-import de.stustapay.stustapay.model.Button
-import de.stustapay.stustapay.model.NewSale
-import de.stustapay.stustapay.model.PendingSale
 import java.lang.Integer.max
 import java.lang.Integer.min
 import java.util.UUID
@@ -100,7 +101,7 @@ data class SaleStatus(
         // set the custom amount to the "optimum" calculated by server
         // only if we did customize the amount
         if (voucherAmount != null) {
-            voucherAmount = pendingSale.used_vouchers
+            voucherAmount = pendingSale.usedVouchers.intValue()
         }
 
         // update button selections
@@ -108,9 +109,9 @@ data class SaleStatus(
             val quantity = it.quantity
             val price = it.price
             val amount: Pair<Int, SaleItemAmount>? = if (quantity != null) {
-                Pair(it.till_button_id, SaleItemAmount.FixedPrice(quantity))
+                Pair(it.tillButtonId.intValue(), SaleItemAmount.FixedPrice(quantity.intValue()))
             } else if (price != null) {
-                Pair(it.till_button_id, SaleItemAmount.FreePrice((price * 100).toUInt()))
+                Pair(it.tillButtonId.intValue(), SaleItemAmount.FreePrice((price * 100).toUInt()))
             } else {
                 null
             }
@@ -123,17 +124,17 @@ data class SaleStatus(
 
     fun incrementVouchers() {
         val check = checkedSale ?: return
-        val newAmount = (voucherAmount ?: check.used_vouchers) + 1
+        val newAmount = (voucherAmount ?: check.usedVouchers.intValue()) + 1
 
         // only set voucherAmount if we actually change it
-        if (newAmount <= check.old_voucher_balance) {
+        if (newAmount <= check.oldVoucherBalance.intValue()) {
             voucherAmount = newAmount
         }
     }
 
     fun decrementVouchers() {
         val check = checkedSale ?: return
-        val newAmount = (voucherAmount ?: check.used_vouchers) - 1
+        val newAmount = (voucherAmount ?: check.usedVouchers.intValue()) - 1
 
         // only set voucherAmount if we actually change it
         if (newAmount >= 0) {
@@ -237,8 +238,8 @@ data class SaleStatus(
                         // regular or returnable purchase product
                         if (amount.amount != 0) {
                             Button(
-                                till_button_id = it.key,
-                                quantity = amount.amount,
+                                tillButtonId = it.key.toBigInteger(),
+                                quantity = amount.amount.toBigInteger(),
                             )
                         } else {
                             null
@@ -246,15 +247,15 @@ data class SaleStatus(
                     }
                     is SaleItemAmount.FreePrice -> {
                         Button(
-                            till_button_id = it.key,
+                            tillButtonId = it.key.toBigInteger(),
                             price = amount.price.toDouble() / 100,
                         )
                     }
                 }
             }.toList(),
-            customer_tag_uid = tag.uid.ulongValue(),
-            used_vouchers = voucherAmount,
-            uuid = checkedSale?.uuid ?: UUID.randomUUID().toString()
+            customerTagUid = tag.uid,
+            usedVouchers = voucherAmount?.toBigInteger(),
+            uuid = checkedSale?.uuid ?: UUID.randomUUID()
         )
     }
 }

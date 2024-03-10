@@ -1,21 +1,21 @@
 package de.stustapay.stustapay.netsource
 
-
-import de.stustapay.stustapay.model.CompletedTopUp
-import de.stustapay.stustapay.model.NewTopUp
-import de.stustapay.stustapay.model.PendingTopUp
+import de.stustapay.api.models.CompletedTopUp
+import de.stustapay.api.models.NewTopUp
+import de.stustapay.api.models.PendingTopUp
 import de.stustapay.stustapay.net.Response
-import de.stustapay.stustapay.net.TerminalAPI
+import de.stustapay.stustapay.net.TerminalApiAccessor
+import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class TopUpRemoteDataSource @Inject constructor(
-    private val terminalAPI: TerminalAPI,
+    private val terminalApiAccessor: TerminalApiAccessor
 ) {
     suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp> {
-        return terminalAPI.checkTopUp(newTopUp)
+        return terminalApiAccessor.execute { terminalApiAccessor.order().checkTopup(newTopUp) }
     }
 
     suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp> {
-        return terminalAPI.bookTopUp(newTopUp)
+        return terminalApiAccessor.execute { terminalApiAccessor.order().bookTopup(newTopUp) }
     }
 }

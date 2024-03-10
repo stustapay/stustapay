@@ -3,8 +3,6 @@ package de.stustapay.stustapay.ui.cashiermanagement
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CashRegisterStocking
-import de.stustapay.stustapay.model.CashRegister
-import de.stustapay.stustapay.model.CashierStocking
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
 import kotlinx.coroutines.flow.MutableStateFlow

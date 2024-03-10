@@ -39,9 +39,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.ionspin.kotlin.bignum.integer.toBigInteger
+import de.stustapay.api.models.CompletedPayOut
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.CompletedPayOut
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
+import java.time.OffsetDateTime
+import java.util.UUID
 
 @Preview
 @Composable
@@ -53,15 +56,15 @@ fun PreviewCashOutSuccessDialog() {
         CashOutSuccessCard(
             onDismiss = {},
             completedPayOut = CompletedPayOut(
-                uuid = "",
-                customer_tag_uid = 0u,
+                uuid = UUID.randomUUID(),
+                customerTagUid = 0.toBigInteger(),
                 amount = -13.37,
-                customer_account_id = 0,
-                old_balance = 42.0,
-                new_balance = 30.5,
-                booked_at = "",
-                cashier_id = 0,
-                till_id = 0,
+                customerAccountId = 0.toBigInteger(),
+                oldBalance = 42.0,
+                newBalance = 30.5,
+                bookedAt = OffsetDateTime.now(),
+                cashierId = 0.toBigInteger(),
+                tillId = 0.toBigInteger(),
             )
         )
     }
@@ -141,7 +144,7 @@ fun CashOutSuccessCard(
                     Divider(thickness = 2.dp)
                     ProductConfirmItem(
                         name = stringResource(R.string.credit_left),
-                        price = completedPayOut.new_balance,
+                        price = completedPayOut.newBalance,
                     )
 
                     // TODO maybe show vouchers here

@@ -3,8 +3,8 @@ package de.stustapay.stustapay.ui.sale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.CompletedSale
 import de.stustapay.api.models.UserTag
-import de.stustapay.stustapay.model.CompletedSale
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.SaleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository

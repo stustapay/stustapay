@@ -4,12 +4,12 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.CompletedTicketSale
+import de.stustapay.api.models.NewTicketScan
+import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
-import de.stustapay.stustapay.model.CompletedTicketSale
-import de.stustapay.stustapay.model.NewTicketScan
-import de.stustapay.stustapay.model.PaymentMethod
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
@@ -82,7 +82,7 @@ class TicketViewModel @Inject constructor(
      * how much do we have to pay? we get this from the PendingTicketSale
      */
     fun getPrice(): UInt {
-        val price = _ticketDraft.value.checkedSale?.total_price ?: 0.0
+        val price = _ticketDraft.value.checkedSale?.totalPrice ?: 0.0
         return (price * 100).toUInt()
     }
 
@@ -111,21 +111,21 @@ class TicketViewModel @Inject constructor(
     suspend fun tagScanned(tag: UserTag) {
         val response = ticketRepository.checkTicketScan(
             NewTicketScan(
-                customer_tag_uids = listOf(tag.uid.ulongValue())
+                customerTagUids = listOf(tag.uid)
             )
         )
 
         when (response) {
             is Response.OK -> {
                 _ticketDraft.update { status ->
-                    val scanned = response.data.scanned_tickets
+                    val scanned = response.data.scannedTickets
                     if (scanned.isEmpty()) {
                         _status.update { resourcesProvider.getString(R.string.ticket_unknown) }
                         return
                     }
 
                     val scanResult = scanned[0]
-                    if (scanResult.customer_tag_uid != tag.uid.ulongValue()) {
+                    if (scanResult.customerTagUid != tag.uid) {
                         _status.update { "returned ticket id != ticket unknown" }
                         return
                     }
@@ -232,15 +232,15 @@ class TicketViewModel @Inject constructor(
 
 
         // if we do cash payment, the confirmation was already presented by CashECPay
-        if (paymentMethod == PaymentMethod.Cash) {
-            bookSale(paymentMethod = PaymentMethod.Cash)
+        if (paymentMethod == PaymentMethod.cash) {
+            bookSale(paymentMethod = PaymentMethod.cash)
             return
         }
 
         // otherwise, perform ec payment
         val payment = ECPayment(
             id = "${checkedSale.uuid}_${_ticketDraft.value.ecRetry}",
-            amount = BigDecimal(checkedSale.total_price),
+            amount = BigDecimal(checkedSale.totalPrice),
             tag = _ticketDraft.value.scans[0].tag,
         )
 
@@ -256,7 +256,7 @@ class TicketViewModel @Inject constructor(
 
             is ECPaymentResult.Success -> {
                 _status.update { ecResult.result.msg }
-                bookSale(PaymentMethod.SumUp)
+                bookSale(PaymentMethod.sumup)
             }
         }
     }

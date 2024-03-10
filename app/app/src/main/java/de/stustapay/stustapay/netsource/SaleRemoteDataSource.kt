@@ -1,30 +1,32 @@
 package de.stustapay.stustapay.netsource
 
 
-import de.stustapay.stustapay.model.CompletedSale
-import de.stustapay.stustapay.model.NewSale
-import de.stustapay.stustapay.model.Order
-import de.stustapay.stustapay.model.PendingSale
+import com.ionspin.kotlin.bignum.integer.toBigInteger
+import de.stustapay.api.models.CompletedSale
+import de.stustapay.api.models.NewSale
+import de.stustapay.api.models.Order
+import de.stustapay.api.models.PendingSale
 import de.stustapay.stustapay.net.Response
-import de.stustapay.stustapay.net.TerminalAPI
+import de.stustapay.stustapay.net.TerminalApiAccessor
+import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class SaleRemoteDataSource @Inject constructor(
-    private val terminalAPI: TerminalAPI,
+    private val terminalApiAccessor: TerminalApiAccessor
 ) {
     suspend fun checkSale(newOrder: NewSale): Response<PendingSale> {
-        return terminalAPI.checkSale(newOrder)
+        return terminalApiAccessor.execute { it.order().checkSale(newOrder) }
     }
 
     suspend fun bookSale(newOrder: NewSale): Response<CompletedSale> {
-        return terminalAPI.bookSale(newOrder)
+        return terminalApiAccessor.execute { it.order().bookSale(newOrder) }
     }
 
     suspend fun listSales(): Response<List<Order>> {
-        return terminalAPI.listOrders()
+        return terminalApiAccessor.execute { it.order().listOrders() }
     }
 
     suspend fun cancelSale(id: Int): Response<Unit> {
-        return terminalAPI.cancelSale(id)
+        return terminalApiAccessor.execute { it.order().cancelOrder(id.toBigInteger()) }
     }
 }

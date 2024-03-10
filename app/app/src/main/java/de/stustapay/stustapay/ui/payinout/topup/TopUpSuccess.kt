@@ -74,7 +74,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
 
                     TopUpConfirmItem(
                         name = stringResource(R.string.previous_balance),
-                        price = completedTopUp.old_balance,
+                        price = completedTopUp.oldBalance,
                     )
                     TopUpConfirmItem(
                         name = stringResource(R.string.topup),
@@ -85,7 +85,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
 
                     TopUpConfirmItem(
                         name = stringResource(R.string.new_balance),
-                        price = completedTopUp.new_balance,
+                        price = completedTopUp.newBalance,
                         bigStyle = true,
                     )
                 }

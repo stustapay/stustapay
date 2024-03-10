@@ -49,18 +49,18 @@ fun SaleConfirm(
                 Column(modifier = Modifier.padding(horizontal = 10.dp)) {
                     ProductConfirmItem(
                         name = stringResource(R.string.price),
-                        price = checkedSale.total_price,
+                        price = checkedSale.totalPrice,
                         bigStyle = true,
                     )
                     Divider(thickness = 2.dp)
                     ProductConfirmItem(
                         name = stringResource(R.string.credit_left),
-                        price = checkedSale.new_balance,
+                        price = checkedSale.newBalance,
                     )
-                    if (checkedSale.new_voucher_balance > 0) {
+                    if (checkedSale.newVoucherBalance > 0) {
                         ProductConfirmItem(
                             name = stringResource(R.string.remaining_vouchers),
-                            quantity = checkedSale.new_voucher_balance,
+                            quantity = checkedSale.newVoucherBalance.intValue(),
                         )
                     }
                     Divider(thickness = 2.dp)
@@ -75,16 +75,16 @@ fun SaleConfirm(
                     .fillMaxSize()
             ) {
 
-                if (checkedSale.used_vouchers > 0) {
+                if (checkedSale.usedVouchers > 0) {
                     item {
                         ProductConfirmItem(
                             name = stringResource(R.string.used_vouchers),
-                            quantity = checkedSale.used_vouchers,
+                            quantity = checkedSale.usedVouchers.intValue(),
                         )
                     }
                 }
 
-                for (lineItem in checkedSale.line_items) {
+                for (lineItem in checkedSale.lineItems) {
                     item {
                         ProductConfirmLineItem(
                             lineItem = lineItem

@@ -3,14 +3,6 @@ package de.stustapay.stustapay.model
 import kotlinx.serialization.Serializable
 
 /**
- * TerminalRegistrationSuccess from core model.
- */
-@Serializable
-data class TerminalRegistrationSuccess(
-    var token: String
-)
-
-/**
  * as defined in the administration's registration ui qrcode generator
  */
 @Serializable

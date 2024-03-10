@@ -15,8 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.api.models.PaymentMethod
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.PaymentMethod
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.pay.CashECCallback
 import de.stustapay.stustapay.ui.common.pay.CashECPay
@@ -63,7 +63,7 @@ fun TicketConfirm(
                         scope.launch {
                             viewModel.processSale(
                                 context = context,
-                                paymentMethod = PaymentMethod.SumUp
+                                paymentMethod = PaymentMethod.sumup
                             )
                         }
                     },
@@ -71,7 +71,7 @@ fun TicketConfirm(
                         scope.launch {
                             viewModel.processSale(
                                 context = context,
-                                paymentMethod = PaymentMethod.Cash
+                                paymentMethod = PaymentMethod.cash
                             )
                         }
                     },
@@ -91,13 +91,13 @@ fun TicketConfirm(
                     item {
                         ProductConfirmItem(
                             name = stringResource(R.string.price),
-                            price = checkedSale.total_price,
+                            price = checkedSale.totalPrice,
                             bigStyle = true,
                         )
                         Divider(thickness = 2.dp)
                     }
 
-                    for (lineItem in checkedSale.line_items) {
+                    for (lineItem in checkedSale.lineItems) {
                         item {
                             ProductConfirmLineItem(lineItem = lineItem)
                         }
