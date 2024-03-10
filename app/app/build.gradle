@@ -127,6 +127,8 @@ android {
         inputSpec.set("$projectDir/../../api/terminalserver.json")
         outputDir.set("$projectDir/build/generated/api")
         skipValidateSpec.set(true)
+        generateApiDocumentation.set(false)
+        generateModelDocumentation.set(false)
         configOptions.set([library             : "jvm-ktor",
                            serializationLibrary: "kotlinx_serialization",
                            packageName         : "de.stustapay.api",
