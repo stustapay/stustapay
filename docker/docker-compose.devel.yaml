@@ -11,7 +11,21 @@ services:
     ports:
     - 5433:5432
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+  postgres_test:
+    image: docker.io/postgres:14-alpine
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/pg_isready"]
+      start_period: 10s
+    environment:
+      POSTGRES_USER: stustapay_test
+      POSTGRES_DB: stustapay_test
+      POSTGRES_PASSWORD: stustapay_test
+    ports:
+    - 5434:5432
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
 
 volumes:
-  postgres-data:
+  postgres_data:
+  postgres_test_data:

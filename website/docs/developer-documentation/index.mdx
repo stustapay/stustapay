@@ -82,6 +82,23 @@ npx nx build <project>
 npx nx lint <project>
 ```
 
+### Formatting, Linting and Testing
+```shell
+# check format
+make check-format
+# format code
+make format
+# run linters
+make lint
+# run tests (nondocker based postgres instance only)
+make tests
+```
+When using a docker based postgres instance as mentioned above, start the docker compose setup and run the tests using the following commands:
+```shell
+docker compose -f docker/docker-compose.devel.yaml up
+TEST_DB_USER=stustapay_test TEST_DB_PASSWORD=stustapay_test TEST_DB_HOST=localhost TEST_DB_DATABASE=stustapay_test TEST_DB_PORT=5434 make test
+```
+
 ## Developing in a devcontainer
 
 You can use vscode's [development containers](https://containers.dev/),
