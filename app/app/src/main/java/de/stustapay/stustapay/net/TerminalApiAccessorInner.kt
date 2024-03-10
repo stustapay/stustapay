@@ -19,25 +19,52 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.Json
 
 class TerminalApiAccessorInner(
-    private val registrationLocalDataSource: RegistrationLocalDataSource,
+    registrationLocalDataSource: RegistrationLocalDataSource,
     private val retry: Boolean = false,
     private val logRequests: Boolean = true
 ) {
-    private var authApi =
-        AuthApi("http://localhost", CIO.create { this.https {} }) { configureApi(it) }
-    private var baseApi =
-        BaseApi("http://localhost", CIO.create { this.https {} }) { configureApi(it) }
-    private var cashierApi =
-        CashierApi("http://localhost", CIO.create { this.https {} }) { configureApi(it) }
-    private var customerApi =
-        CustomerApi("http://localhost", CIO.create { this.https {} }) { configureApi(it) }
-    private var orderApi =
-        OrderApi("http://localhost", CIO.create { this.https {} }) { configureApi(it) }
-    private var userApi =
-        UserApi("http://localhost", CIO.create { this.https {} }) { configureApi(it) }
+    private var authApi: AuthApi? = null
+    private var baseApi: BaseApi? = null
+    private var cashierApi: CashierApi? = null
+    private var customerApi: CustomerApi? = null
+    private var orderApi: OrderApi? = null
+    private var userApi: UserApi? = null
+
+    init {
+        registrationLocalDataSource.registrationState.onEach {
+            when (it) {
+                is RegistrationState.Registered -> {
+                    if (authApi == null) {
+                        authApi =
+                            AuthApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                        baseApi =
+                            BaseApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                        cashierApi = CashierApi(it.apiUrl,
+                            CIO.create { this.https {} }) { configureApi(it) }
+                        customerApi = CustomerApi(it.apiUrl,
+                            CIO.create { this.https {} }) { configureApi(it) }
+                        orderApi =
+                            OrderApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                        userApi =
+                            UserApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                        authApi!!.setAccessToken(it.token)
+                        baseApi!!.setAccessToken(it.token)
+                        cashierApi!!.setAccessToken(it.token)
+                        customerApi!!.setAccessToken(it.token)
+                        orderApi!!.setAccessToken(it.token)
+                        userApi!!.setAccessToken(it.token)
+                    }
+                }
+
+                is RegistrationState.NotRegistered -> {}
+                is RegistrationState.Error -> {}
+            }
+        }
+    }
 
     fun configureApi(conf: HttpClientConfig<*>) {
         conf.install(ContentNegotiation) {
@@ -78,59 +105,27 @@ class TerminalApiAccessorInner(
         conf.install(Logging)
     }
 
-    suspend fun checkRegistration(): Boolean {
-        return when (val reg = registrationLocalDataSource.registrationState.first()) {
-            is RegistrationState.Registered -> {
-                authApi = AuthApi(reg.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
-                baseApi = BaseApi(reg.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
-                cashierApi = CashierApi(reg.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
-                customerApi = CustomerApi(reg.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
-                orderApi = OrderApi(reg.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
-                userApi = UserApi(reg.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
-                authApi.setAccessToken(reg.token)
-                baseApi.setAccessToken(reg.token)
-                cashierApi.setAccessToken(reg.token)
-                customerApi.setAccessToken(reg.token)
-                orderApi.setAccessToken(reg.token)
-                userApi.setAccessToken(reg.token)
-                true
-            }
-            is RegistrationState.NotRegistered -> {
-                false
-            }
-            is RegistrationState.Error -> {
-                false
-            }
-        }
+    fun auth(): AuthApi {
+        return authApi!!
     }
 
-    suspend fun auth(): AuthApi {
-        checkRegistration()
-        return authApi
+    fun base(): BaseApi {
+        return baseApi!!
     }
 
-    suspend fun base(): BaseApi {
-        checkRegistration()
-        return baseApi
+    fun cashier(): CashierApi {
+        return cashierApi!!
     }
 
-    suspend fun cashier(): CashierApi {
-        checkRegistration()
-        return cashierApi
+    fun customer(): CustomerApi {
+        return customerApi!!
     }
 
-    suspend fun customer(): CustomerApi {
-        checkRegistration()
-        return customerApi
+    fun order(): OrderApi {
+        return orderApi!!
     }
 
-    suspend fun order(): OrderApi {
-        checkRegistration()
-        return orderApi
-    }
-
-    suspend fun user(): UserApi {
-        checkRegistration()
-        return userApi
+    fun user(): UserApi {
+        return userApi!!
     }
 }
