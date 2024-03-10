@@ -12,7 +12,6 @@ import de.stustapay.api.models.UserInfoPayload
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
-import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class CashierRemoteDataSource @Inject constructor(

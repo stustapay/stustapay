@@ -10,7 +10,6 @@ import de.stustapay.stustapay.model.UserCreateState
 import de.stustapay.stustapay.model.UserRolesState
 import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.model.UserUpdateState
-import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class UserRemoteDataSource @Inject constructor(

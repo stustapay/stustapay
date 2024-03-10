@@ -7,7 +7,6 @@ import de.stustapay.api.apis.CashierApi
 import de.stustapay.api.apis.CustomerApi
 import de.stustapay.api.apis.OrderApi
 import de.stustapay.api.apis.UserApi
-import de.stustapay.api.infrastructure.HttpResponse
 import de.stustapay.stustapay.model.RegistrationState
 import de.stustapay.stustapay.storage.RegistrationLocalDataSource
 import io.ktor.client.HttpClientConfig
@@ -22,11 +21,11 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
-class TerminalApiAccessorImpl(
+class TerminalApiAccessorInner(
     private val registrationLocalDataSource: RegistrationLocalDataSource,
     private val retry: Boolean = false,
     private val logRequests: Boolean = true
-) : TerminalApiAccessor {
+) {
     private var authApi =
         AuthApi("http://localhost", CIO.create { this.https {} }) { configureApi(it) }
     private var baseApi =
@@ -105,32 +104,32 @@ class TerminalApiAccessorImpl(
         }
     }
 
-    override suspend fun auth(): AuthApi {
+    suspend fun auth(): AuthApi {
         checkRegistration()
         return authApi
     }
 
-    override suspend fun base(): BaseApi {
+    suspend fun base(): BaseApi {
         checkRegistration()
         return baseApi
     }
 
-    override suspend fun cashier(): CashierApi {
+    suspend fun cashier(): CashierApi {
         checkRegistration()
         return cashierApi
     }
 
-    override suspend fun customer(): CustomerApi {
+    suspend fun customer(): CustomerApi {
         checkRegistration()
         return customerApi
     }
 
-    override suspend fun order(): OrderApi {
+    suspend fun order(): OrderApi {
         checkRegistration()
         return orderApi
     }
 
-    override suspend fun user(): UserApi {
+    suspend fun user(): UserApi {
         checkRegistration()
         return userApi
     }

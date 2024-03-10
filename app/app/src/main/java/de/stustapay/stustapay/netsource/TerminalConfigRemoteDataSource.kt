@@ -3,7 +3,6 @@ package de.stustapay.stustapay.netsource
 import de.stustapay.api.models.TerminalConfig
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
-import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class TerminalConfigRemoteDataSource @Inject constructor(

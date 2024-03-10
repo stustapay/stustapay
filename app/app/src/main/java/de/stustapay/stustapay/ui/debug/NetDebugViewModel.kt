@@ -7,7 +7,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
-import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 @HiltViewModel

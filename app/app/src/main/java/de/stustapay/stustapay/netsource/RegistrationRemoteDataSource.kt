@@ -5,7 +5,6 @@ import de.stustapay.stustapay.model.DeregistrationState
 import de.stustapay.stustapay.model.RegistrationState
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
-import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 

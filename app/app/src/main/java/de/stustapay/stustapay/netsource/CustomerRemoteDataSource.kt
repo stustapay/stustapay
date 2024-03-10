@@ -9,7 +9,6 @@ import de.stustapay.api.models.SwitchTagPayload
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
-import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class CustomerRemoteDataSource @Inject constructor(

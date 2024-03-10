@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.net
 
+import android.util.Log
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,8 +12,21 @@ import de.stustapay.api.apis.CustomerApi
 import de.stustapay.api.apis.OrderApi
 import de.stustapay.api.apis.UserApi
 import de.stustapay.api.infrastructure.HttpResponse
+import de.stustapay.stustapay.model.RegistrationState
 import de.stustapay.stustapay.storage.RegistrationLocalDataSource
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.JsonConvertException
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.reflect.instanceOf
+import kotlinx.coroutines.flow.first
+import kotlinx.serialization.json.Json
 import java.net.ConnectException
 import javax.inject.Singleton
 
@@ -23,23 +37,20 @@ object TerminalApiAccessorModule {
     @Provides
     @Singleton
     fun providesTerminalApiAccessor(registrationLocalDataSource: RegistrationLocalDataSource): TerminalApiAccessor {
-        return TerminalApiAccessorImpl(registrationLocalDataSource)
+        return TerminalApiAccessor(registrationLocalDataSource)
     }
 }
 
-interface TerminalApiAccessor {
-    suspend fun auth(): AuthApi
-    suspend fun base(): BaseApi
-    suspend fun cashier(): CashierApi
-    suspend fun customer(): CustomerApi
-    suspend fun order(): OrderApi
-    suspend fun user(): UserApi
-}
+open class TerminalApiAccessor(
+    registrationLocalDataSource: RegistrationLocalDataSource
+) {
+    private val inner = TerminalApiAccessorInner(registrationLocalDataSource)
 
-suspend inline fun <reified O : Any> TerminalApiAccessor.execute(fn: ((acc: TerminalApiAccessor) -> HttpResponse<O>)): Response<O> {
-    return try {
-        transformResponse(fn(this).response)
-    } catch (e: Exception) {
-        Response.Error.Request(null, e)
+    internal suspend inline fun <reified O : Any> execute(fn: ((acc: TerminalApiAccessorInner) -> HttpResponse<O>)): Response<O> {
+        return try {
+            transformResponse(fn(this.inner).response)
+        } catch (e: Exception) {
+            Response.Error.Request(null, e)
+        }
     }
 }

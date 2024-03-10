@@ -8,7 +8,6 @@ import de.stustapay.api.models.Order
 import de.stustapay.api.models.PendingSale
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
-import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class SaleRemoteDataSource @Inject constructor(

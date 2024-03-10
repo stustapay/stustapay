@@ -6,7 +6,6 @@ import de.stustapay.api.models.NewPayOut
 import de.stustapay.api.models.PendingPayOut
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
-import de.stustapay.stustapay.net.execute
 import javax.inject.Inject
 
 class PayOutRemoteDataSource @Inject constructor(
