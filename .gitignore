@@ -11,6 +11,10 @@ __pycache__
 
 # python venv
 /venv
+bin
+lib
+lib64
+pyvenv.cfg
 
 # building
 MANIFEST
@@ -42,3 +46,7 @@ node_modules/
 
 # local
 TODO.md
+
+# nix
+.direnv
+.envrc

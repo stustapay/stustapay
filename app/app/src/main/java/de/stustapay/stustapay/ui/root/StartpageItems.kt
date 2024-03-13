@@ -2,7 +2,6 @@ package de.stustapay.stustapay.ui.root
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.res.stringResource
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.Access
 
@@ -54,6 +53,6 @@ val startpageItems = listOf(
         icon = Icons.Filled.Info,
         label = R.string.cashier_title,
         navDestination = RootNavDests.cashierStatus,
-        canAccess = { u, t -> Access.canManageCashiers(u) or t.allow_cash_out or t.allow_top_up or t.allow_ticket_sale }
+        canAccess = { u, t -> Access.canManageCashiers(u) or (t.till?.allowCashOut == true) or (t.till?.allowTopUp == true) or (t.till?.allowTicketSale == true) }
     )
 )

@@ -3,8 +3,8 @@ package de.stustapay.stustapay.ui.reward
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.UserTag
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.CustomerRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository

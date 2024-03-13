@@ -1,8 +1,8 @@
 package de.stustapay.stustapay.repository
 
-import de.stustapay.stustapay.model.CompletedPayOut
-import de.stustapay.stustapay.model.NewPayOut
-import de.stustapay.stustapay.model.PendingPayOut
+import de.stustapay.api.models.CompletedPayOut
+import de.stustapay.api.models.NewPayOut
+import de.stustapay.api.models.PendingPayOut
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.netsource.PayOutRemoteDataSource
 import javax.inject.Inject

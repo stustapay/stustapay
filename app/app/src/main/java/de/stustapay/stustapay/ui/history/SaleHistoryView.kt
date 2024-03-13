@@ -21,7 +21,6 @@ import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,15 +39,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.api.models.Order
+import de.stustapay.api.models.OrderType
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.Order
-import de.stustapay.stustapay.model.OrderType
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustapay.stustapay.ui.nav.NavScaffold
 import de.stustapay.stustapay.ui.theme.errorButtonColors
 import de.stustapay.stustapay.util.formatCurrencyValue
 import kotlinx.coroutines.launch
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
@@ -101,12 +99,12 @@ fun SaleHistoryView(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                ZonedDateTime.parse(sale.booked_at)
+                                sale.bookedAt.toZonedDateTime()
                                     .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                     .format(DateTimeFormatter.ofPattern("E HH:mm:ss")),
                                 fontSize = 24.sp
                             )
-                            Text(formatCurrencyValue(sale.total_price), fontSize = 24.sp)
+                            Text(formatCurrencyValue(sale.totalPrice), fontSize = 24.sp)
                         }
                     }
                 }
@@ -160,13 +158,13 @@ fun SaleHistoryView(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            ZonedDateTime.parse(sale.booked_at)
+                            sale.bookedAt.toZonedDateTime()
                                 .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                 .format(DateTimeFormatter.ofPattern("dd-MM-yyyy")), fontSize = 24.sp
                         )
 
                         Text(
-                            ZonedDateTime.parse(sale.booked_at)
+                            sale.bookedAt.toZonedDateTime()
                                 .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                 .format(DateTimeFormatter.ofPattern("HH:mm:ss")), fontSize = 24.sp
                         )
@@ -174,11 +172,11 @@ fun SaleHistoryView(
 
                     Divider()
 
-                    for (item in sale.line_items) {
+                    for (item in sale.lineItems) {
                         ProductConfirmItem(
                             name = item.product.name,
-                            price = item.product_price,
-                            quantity = item.quantity
+                            price = item.productPrice,
+                            quantity = item.quantity.intValue()
                         )
                     }
 
@@ -186,12 +184,12 @@ fun SaleHistoryView(
 
                     ProductConfirmItem(
                         name = stringResource(R.string.history_sum),
-                        price = sale.total_price,
+                        price = sale.totalPrice,
                     )
 
                     Divider()
 
-                    if (sale.id == sales.first().id && sale.order_type == OrderType.Sale) {
+                    if (sale.id == sales.first().id && sale.orderType == OrderType.sale) {
                         Button(modifier = Modifier
                             .fillMaxWidth()
                             .padding(10.dp),
@@ -261,7 +259,7 @@ fun SaleHistoryView(
                         onClick = {
                             scope.launch {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                viewModel.cancelSale(sale.id)
+                                viewModel.cancelSale(sale.id.intValue())
                                 detailOrder = null
                                 cancelOrder = false
                             }

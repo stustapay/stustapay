@@ -1,33 +1,57 @@
 package de.stustapay.stustapay.netsource
 
-import de.stustapay.stustapay.model.Account
-import de.stustapay.stustapay.model.GrantVouchers
-import de.stustapay.stustapay.model.NewFreeTicketGrant
-import de.stustapay.stustapay.model.SwitchTag
-import de.stustapay.stustapay.model.UserTag
+import com.ionspin.kotlin.bignum.integer.toBigInteger
+import de.stustapay.api.models.Account
+import de.stustapay.api.models.Customer
+import de.stustapay.api.models.GrantVoucherPayload
+import de.stustapay.api.models.NewFreeTicketGrant
+import de.stustapay.api.models.SwitchTagPayload
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.net.Response
-import de.stustapay.stustapay.net.TerminalAPI
+import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 
 class CustomerRemoteDataSource @Inject constructor(
-    private val terminalAPI: TerminalAPI
+    private val terminalApiAccessor: TerminalApiAccessor
 ) {
-    suspend fun getCustomer(id: ULong): Response<Account> {
-        return terminalAPI.getCustomer(id)
+    suspend fun getCustomer(id: ULong): Response<Customer> {
+        return terminalApiAccessor.execute { it.customer().getCustomer(id.toBigInteger()) }
     }
 
-    suspend fun grantFreeTicket(tag: UserTag, vouchers: UInt = 0u): Response<Account> {
-        return terminalAPI.grantFreeTicket(NewFreeTicketGrant(
-            user_tag_uid = tag.uid,
-            initial_voucher_amount = vouchers
-        ))
+    suspend fun grantFreeTicket(
+        tag: UserTag,
+        vouchers: UInt = 0u
+    ): Response<Account> {
+        return terminalApiAccessor.execute {
+            it.user().grantFreeTicket(
+                NewFreeTicketGrant(
+                    userTagUid = tag.uid,
+                    initialVoucherAmount = vouchers.toBigInteger()
+                )
+            )
+        }
     }
 
     suspend fun grantVouchers(tag: UserTag, vouchers: UInt): Response<Account> {
-        return terminalAPI.grantVouchers(GrantVouchers(vouchers, tag.uid))
+        return terminalApiAccessor.execute {
+            it.user().grantVouchers(
+                GrantVoucherPayload(
+                    userTagUid = tag.uid,
+                    vouchers = vouchers.toBigInteger()
+                )
+            )
+        }
     }
 
     suspend fun switchTag(customerID: ULong, newTag: ULong, comment: String): Response<Unit> {
-        return terminalAPI.switchTag(SwitchTag(customerID, newTag, comment))
+        return terminalApiAccessor.execute {
+            it.customer().switchTag(
+                SwitchTagPayload(
+                    customerId = customerID.toBigInteger(),
+                    newUserTagUid = newTag.toBigInteger(),
+                    comment = comment
+                )
+            )
+        }
     }
 }

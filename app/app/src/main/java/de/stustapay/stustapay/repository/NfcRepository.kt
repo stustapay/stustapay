@@ -3,7 +3,7 @@ package de.stustapay.stustapay.repository
 import de.stustapay.stustapay.model.NfcScanFailure
 import de.stustapay.stustapay.model.NfcScanRequest
 import de.stustapay.stustapay.model.NfcScanResult
-import de.stustapay.stustapay.model.UserTagSecret
+import de.stustapay.api.models.UserTagSecret
 import de.stustapay.stustapay.nfc.NfcDataSource
 import de.stustapay.stustapay.util.*
 import kotlinx.coroutines.flow.MutableStateFlow

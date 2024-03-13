@@ -1,8 +1,8 @@
 package de.stustapay.stustapay.ui.common
 
 
-import de.stustapay.stustapay.model.CurrentUser
-import de.stustapay.stustapay.model.TerminalConfig
+import de.stustapay.api.models.CurrentUser
+import de.stustapay.api.models.TerminalConfig
 import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.repository.TerminalConfigState
 
@@ -15,7 +15,7 @@ class TerminalLoginState(
 
     fun title(): TillName {
         return if (terminal is TerminalConfigState.Success) {
-            TillName(terminal.config.name, terminal.config.profile_name)
+            TillName(terminal.config.name, terminal.config.till?.profileName)
         } else {
             TillName("StuStaPay")
         }
@@ -41,6 +41,6 @@ class TerminalLoginState(
         if (terminal !is TerminalConfigState.Success) {
             return false;
         }
-        return terminal.config.cash_register_id != null;
+        return terminal.config.till?.cashRegisterId != null;
     }
 }

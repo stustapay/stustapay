@@ -2,11 +2,12 @@ package de.stustapay.stustapay.ui.chipscan
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.NfcScanFailure
 import de.stustapay.stustapay.model.NfcScanResult
-import de.stustapay.stustapay.model.UserTag
 import de.stustapay.stustapay.repository.NfcRepository
 import de.stustapay.stustapay.repository.ReadMode
 import de.stustapay.stustapay.util.ResourcesProvider
@@ -71,7 +72,7 @@ class NfcScanDialogViewModel @Inject constructor(
                 }
 
                 is NfcScanUiState.Success -> {
-                    _scanResult.update { UserTag(uid = scanResult.uid) }
+                    _scanResult.update { UserTag(uid = scanResult.uid.toBigInteger()) }
                     NfcScanState(
                         status = resourcesProvider.getString(R.string.nfc_scan_success),
                     )

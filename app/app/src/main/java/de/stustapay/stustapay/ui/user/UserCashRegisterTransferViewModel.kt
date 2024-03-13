@@ -2,8 +2,8 @@ package de.stustapay.stustapay.ui.user
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.UserTag
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
 import de.stustapay.stustapay.util.ResourcesProvider
@@ -95,8 +95,8 @@ class UserCashRegisterTransferViewModel @Inject constructor(
         when (transferResult) {
             is Response.OK -> {
 
-                if (transferResult.data.current_cashier_tag_uid != targetTag.uid) {
-                    if (transferResult.data.current_cashier_tag_uid == null) {
+                if (transferResult.data.currentCashierTagUid != targetTag.uid) {
+                    if (transferResult.data.currentCashierTagUid == null) {
                         TransferCashRegisterState.Error(
                             resourcesProvider.getString(R.string.cash_register_notassigned)
                         )
@@ -105,7 +105,7 @@ class UserCashRegisterTransferViewModel @Inject constructor(
                             TransferCashRegisterState.Error(
                                 resourcesProvider.getString(R.string.cash_register_unexpected_assign)
                                     .format(
-                                        UserTag(transferResult.data.current_cashier_tag_uid),
+                                        UserTag(transferResult.data.currentCashierTagUid),
                                         UserTag(targetTag.uid)
                                     )
                             )
@@ -116,7 +116,7 @@ class UserCashRegisterTransferViewModel @Inject constructor(
                 _transferCashRegisterState.update {
                     TransferCashRegisterState.Done(
                         cashRegisterName = transferResult.data.name,
-                        balance = transferResult.data.current_balance,
+                        balance = transferResult.data.currentBalance,
                     )
                 }
             }

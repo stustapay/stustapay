@@ -32,8 +32,8 @@ class RootWrapperViewModel @Inject constructor(
             }
 
             is TerminalConfigState.Success -> {
-                if (state.config.test_mode) {
-                    BorderState.Border(state.config.test_mode_message)
+                if (state.config.testMode) {
+                    BorderState.Border(state.config.testModeMessage)
                 } else {
                     BorderState.NoBorder
                 }

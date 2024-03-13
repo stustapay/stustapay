@@ -44,8 +44,8 @@ fun SaleSelectionList(
             .padding(horizontal = 2.dp)
             .fillMaxSize()
     ) {
-        val vouchers = saleStatus.voucherAmount ?: saleStatus.checkedSale?.used_vouchers
-        if (vouchers != null && (saleStatus.checkedSale?.old_voucher_balance ?: 0) > 0) {
+        val vouchers = saleStatus.voucherAmount ?: saleStatus.checkedSale?.usedVouchers?.intValue()
+        if (vouchers != null && (saleStatus.checkedSale?.oldVoucherBalance?.intValue() ?: 0) > 0) {
             // if the server says we used vouchers,
             // allow adjustment here
             item {
@@ -53,7 +53,7 @@ fun SaleSelectionList(
                     caption = stringResource(R.string.voucher),
                     type = SaleSelectionItemType.Vouchers(
                         amount = vouchers,
-                        maxAmount = saleStatus.checkedSale?.old_voucher_balance ?: -1,
+                        maxAmount = saleStatus.checkedSale?.oldVoucherBalance?.intValue() ?: -1,
                         onIncr = { viewModel.incrementVouchers() },
                         onDecr = { viewModel.decrementVouchers() },
                     )

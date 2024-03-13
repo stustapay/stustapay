@@ -81,10 +81,10 @@ private fun loginProfileUiState(
                 is Result.Success -> {
                     when (val state = userStateResult.data) {
                         is UserState.LoggedIn -> {
-                            if (state.user.active_role_name != null) {
+                            if (state.user.activeRoleName != null) {
                                 LoginProfileUIState.LoggedIn(
                                     username = state.user.login,
-                                    role = state.user.active_role_name!!
+                                    role = state.user.activeRoleName!!
                                 )
                             } else {
                                 LoginProfileUIState.Error(

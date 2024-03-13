@@ -1,9 +1,9 @@
 package de.stustapay.stustapay.ui.payinout.payout
 
 import android.util.Log
-import de.stustapay.stustapay.model.NewPayOut
-import de.stustapay.stustapay.model.PendingPayOut
-import de.stustapay.stustapay.model.UserTag
+import de.stustapay.api.models.NewPayOut
+import de.stustapay.api.models.PendingPayOut
+import de.stustapay.api.models.UserTag
 import java.util.UUID
 
 
@@ -49,8 +49,8 @@ data class PayOutState(
         val amount = currentAmount?.let { it.toDouble() / -100 }
 
         return NewPayOut(
-            uuid = checkedPayOut?.uuid ?: UUID.randomUUID().toString(),
-            customer_tag_uid = tagV.uid,
+            uuid = UUID.fromString(checkedPayOut?.uuid) ?: UUID.randomUUID(),
+            customerTagUid = tagV.uid,
             amount = amount
         )
     }
@@ -70,8 +70,8 @@ data class PayOutState(
 
     fun updateWithPendingPayOut(pendingPayOut: PendingPayOut) {
         checkedPayOut = CheckedPayOut(
-            uuid = pendingPayOut.uuid,
-            maxAmount = pendingPayOut.old_balance,
+            uuid = pendingPayOut.uuid.toString(),
+            maxAmount = pendingPayOut.oldBalance,
             amount = pendingPayOut.amount,
             // we couldn't have created a newpayout to request the pendingpayout
             // in getNewPayout if tag was null.

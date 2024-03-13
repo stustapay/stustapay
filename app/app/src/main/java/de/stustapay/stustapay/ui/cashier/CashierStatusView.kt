@@ -47,7 +47,7 @@ fun CashierStatusView(
 
     NfcScanDialog(state = scanState, onScan = { tag ->
         scope.launch {
-            viewModel.fetchTag(tag.uid)
+            viewModel.fetchTag(tag.uid.ulongValue())
         }
     })
 
@@ -81,13 +81,13 @@ fun CashierStatusView(
                                         },
                                         secondaryText = {
                                             Text(
-                                                tagIDtoString(state.userInfo.user_tag_uid),
+                                                tagIDtoString(state.userInfo.userTagUid.ulongValue()),
                                             )
                                         }
                                     )
 
-                                    if (state.userInfo.cash_register_name != null ||
-                                        state.userInfo.cash_drawer_balance != 0.0
+                                    if (state.userInfo.cashRegisterName != null ||
+                                        state.userInfo.cashDrawerBalance != 0.0
                                     ) {
                                         Divider()
                                         Spacer(modifier = Modifier.height(10.dp))
@@ -100,7 +100,7 @@ fun CashierStatusView(
                                             },
                                             secondaryText = {
                                                 Text(
-                                                    state.userInfo.cash_register_name ?: "",
+                                                    state.userInfo.cashRegisterName ?: "",
                                                 )
                                             }
                                         )
@@ -116,13 +116,13 @@ fun CashierStatusView(
                                             },
                                             secondaryText = {
                                                 Text(
-                                                    formatCurrencyValue(state.userInfo.cash_drawer_balance),
+                                                    formatCurrencyValue(state.userInfo.cashDrawerBalance),
                                                 )
                                             }
                                         )
                                     }
 
-                                    if (state.userInfo.transport_account_balance != null) {
+                                    if (state.userInfo.transportAccountBalance != null) {
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Divider()
                                         ListItem(
@@ -133,7 +133,7 @@ fun CashierStatusView(
                                             },
                                             secondaryText = {
                                                 Text(
-                                                    formatCurrencyValue(state.userInfo.transport_account_balance),
+                                                    formatCurrencyValue(state.userInfo.transportAccountBalance),
                                                 )
                                             }
                                         )

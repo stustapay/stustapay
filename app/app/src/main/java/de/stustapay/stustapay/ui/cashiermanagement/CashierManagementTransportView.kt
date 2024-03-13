@@ -32,12 +32,12 @@ fun CashierManagementTransportView(viewModel: CashierManagementViewModel) {
         when (bookingType) {
             TransportBookingType.Withdraw -> {
                 scope.launch {
-                    viewModel.bookCashierToBag(tag.uid, amount.toDouble() / 100.0)
+                    viewModel.bookCashierToBag(tag.uid.ulongValue(), amount.toDouble() / 100.0)
                 }
             }
             TransportBookingType.Deposit -> {
                 scope.launch {
-                    viewModel.bookBagToCashier(tag.uid, amount.toDouble() / 100.0)
+                    viewModel.bookBagToCashier(tag.uid.ulongValue(), amount.toDouble() / 100.0)
                 }
             }
         }

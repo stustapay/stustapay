@@ -1,3 +1,5 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
@@ -15,8 +17,7 @@ def getVersionCode = { ->
             standardOutput = code
         }
         return code.toString().toInteger()
-    }
-    catch (ignored) {
+    } catch (ignored) {
         return -1
     }
 }
@@ -29,8 +30,7 @@ def getVersionName = { ->
             standardOutput = stdout
         }
         return stdout.toString().trim()
-    }
-    catch (ignored) {
+    } catch (ignored) {
         return null
     }
 }
@@ -76,6 +76,71 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+
+    sourceSets {
+        main {
+            kotlin.srcDirs = ["$projectDir/api/src/main/kotlin"]
+        }
+    }
+
+    tasks.register('api') {
+        dependsOn tasks.modApi
+    }
+
+    tasks.register('modApi') {
+        dependsOn tasks.genApi
+        doLast {
+            copy {
+                from("$projectDir/build/generated/api")
+                into("$projectDir/api")
+                exclude("**/ValidationError.kt")
+                exclude("**/ValidationErrorLocInner.kt")
+                exclude("**/HTTPValidationError.kt")
+                filter { String line -> line.replace("import de.stustapay.api.models.HTTPValidationError", "") }
+                filter { String line -> line.replace("import de.stustapay.api.models.AnyOfLessThanGreaterThan", "") }
+                filter { String line -> line.replace("    val userPrivileges: AnyOfLessThanGreaterThan?,", "    val userPrivileges: kotlin.collections.List<Privilege>?,") }
+                filter { String line -> line.replace("    val buttons: AnyOfLessThanGreaterThan?,", "    val buttons: kotlin.collections.List<TerminalButton>?,") }
+                filter { String line -> line.replace("java.math.BigDecimal", "kotlin.Double") }
+                filter { String line -> line.replace("kotlin.Double(\"0.0\")", "0.0") }
+                filter { String line ->
+                    if (line.contains("kotlin.Int")) {
+                        line.replace("kotlin.Int", "@Contextual com.ionspin.kotlin.bignum.integer.BigInteger")
+                                .replace(" = 0", " = com.ionspin.kotlin.bignum.integer.BigInteger(0)")
+                    } else {
+                        line
+                    }
+                }
+                filter { String line ->
+                    if (line.equals("package de.stustapay.api.apis")) {
+                        line + "\n\nimport kotlinx.serialization.Contextual"
+                    } else {
+                        line
+                    }
+                }
+            }
+        }
+    }
+
+    tasks.register('genApi', GenerateTask) {
+        dependsOn tasks.cleanApi
+        generatorName.set("kotlin")
+        inputSpec.set("$projectDir/../../api/terminalserver.json")
+        outputDir.set("$projectDir/build/generated/api")
+        skipValidateSpec.set(true)
+        generateApiDocumentation.set(false)
+        generateModelDocumentation.set(false)
+        configOptions.set([library             : "jvm-ktor",
+                           serializationLibrary: "kotlinx_serialization",
+                           packageName         : "de.stustapay.api",
+                           omitGradleWrapper   : "true"])
+    }
+
+    tasks.register('cleanApi') {
+        doLast {
+            delete("$projectDir/build/generated/api")
+            delete("$projectDir/api")
+        }
+    }
 }
 
 
@@ -116,6 +181,8 @@ dependencies {
     implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version"
+    implementation "com.ionspin.kotlin:bignum:0.3.9"
+    implementation "com.ionspin.kotlin:bignum-serialization-kotlinx:0.3.2"
 }
 
 kapt {

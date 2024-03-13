@@ -1,10 +1,10 @@
 package de.stustapay.stustapay.ui.ticket
 
-import de.stustapay.stustapay.model.NewTicketSale
-import de.stustapay.stustapay.model.PaymentMethod
-import de.stustapay.stustapay.model.PendingTicketSale
-import de.stustapay.stustapay.model.Ticket
-import de.stustapay.stustapay.model.UserTag
+import de.stustapay.api.models.NewTicketSale
+import de.stustapay.api.models.PaymentMethod
+import de.stustapay.api.models.PendingTicketSale
+import de.stustapay.api.models.Ticket
+import de.stustapay.api.models.UserTag
 import java.util.UUID
 
 
@@ -55,9 +55,9 @@ data class TicketDraft(
 
     fun getNewTicketSale(paymentMethod: PaymentMethod?): NewTicketSale {
         return NewTicketSale(
-            uuid = checkedSale?.uuid ?: UUID.randomUUID().toString(),
-            customer_tag_uids = scans.map { it.tag.uid },
-            payment_method = paymentMethod,
+            uuid = checkedSale?.uuid ?: UUID.randomUUID(),
+            customerTagUids = scans.map { it.tag.uid },
+            paymentMethod = paymentMethod,
         )
     }
 

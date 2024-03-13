@@ -6,19 +6,19 @@ import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.stustapay.stustapay.net.Response
-import de.stustapay.stustapay.net.TerminalAPI
+import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 
 @HiltViewModel
 class NetDebugViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val terminalAPI: TerminalAPI
+    private val terminalApiAccessor: TerminalApiAccessor
 ) : ViewModel() {
     var endpointURL: String = "http://10.0.2.2:8080/"
 
     suspend fun announceHealthStatus() {
-        val msg = when (val health = terminalAPI.getHealthStatus(endpointURL)) {
-            is Response.OK -> health.data.status
+        val msg = when (val health = terminalApiAccessor.execute { it.base().health() }) {
+            is Response.OK -> "Ok"
             is Response.Error -> health.msg()
         }
 

@@ -2,8 +2,15 @@ package de.stustapay.stustapay.ui.user
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.stustapay.model.*
+import de.stustapay.api.models.UserInfo
+import de.stustapay.api.models.UserRole
+import de.stustapay.api.models.UserTag
+import de.stustapay.stustapay.model.Access
+import de.stustapay.stustapay.model.UserCreateState
+import de.stustapay.stustapay.model.UserState
+import de.stustapay.stustapay.model.UserUpdateState
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
@@ -59,7 +66,7 @@ class UserViewModel @Inject constructor(
 
     val availableRoles = terminalConfigRepository.terminalConfigState.map { state ->
         if (state is TerminalConfigState.Success) {
-            state.config.available_roles
+            state.config.till?.availableRoles.orEmpty()
         } else {
             listOf()
         }
@@ -108,12 +115,12 @@ class UserViewModel @Inject constructor(
         login: String,
         displayName: String,
         tag: ULong,
-        roles: List<Role>,
+        roles: List<UserRole>,
         description: String
     ) {
         _status.update { UserRequestState.Fetching }
         when (val res =
-            userRepository.create(login, displayName, UserTag(tag), roles, description)) {
+            userRepository.create(login, displayName, UserTag(tag.toBigInteger()), roles, description)) {
             is UserCreateState.Created -> {
                 _status.update { UserRequestState.Done }
             }
@@ -124,9 +131,9 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    suspend fun update(tag: ULong, roles: List<Role>) {
+    suspend fun update(tag: ULong, roles: List<UserRole>) {
         _status.update { UserRequestState.Fetching }
-        when (val res = userRepository.update(UserTag(tag), roles)) {
+        when (val res = userRepository.update(UserTag(tag.toBigInteger()), roles)) {
             is UserUpdateState.Created -> {
                 _status.update { UserRequestState.Done }
             }
@@ -171,10 +178,10 @@ private fun userUiState(
                 is Result.Success -> {
                     when (val userState = userStateResult.data) {
                         is UserState.LoggedIn -> {
-                            if (userState.user.active_role_name != null) {
+                            if (userState.user.activeRoleName != null) {
                                 UserUIState.LoggedIn(
                                     username = userState.user.login,
-                                    activeRole = userState.user.active_role_name!!,
+                                    activeRole = userState.user.activeRoleName!!,
                                     showCreateUser = Access.canCreateUser(userState.user),
                                     showLoginUser = Access.canLogInOtherUsers(userState.user),
                                 )

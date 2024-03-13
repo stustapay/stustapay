@@ -1,9 +1,9 @@
 package de.stustapay.stustapay.repository
 
-import de.stustapay.stustapay.model.CompletedSale
-import de.stustapay.stustapay.model.NewSale
-import de.stustapay.stustapay.model.Order
-import de.stustapay.stustapay.model.PendingSale
+import de.stustapay.api.models.CompletedSale
+import de.stustapay.api.models.NewSale
+import de.stustapay.api.models.Order
+import de.stustapay.api.models.PendingSale
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.netsource.SaleRemoteDataSource
 import javax.inject.Inject

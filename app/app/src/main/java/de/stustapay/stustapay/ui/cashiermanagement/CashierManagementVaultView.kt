@@ -37,12 +37,12 @@ fun CashierManagementVaultView(viewModel: CashierManagementViewModel) {
         when (bookingType) {
             VaultBookingType.Take -> {
                 scope.launch {
-                    viewModel.bookVaultToBag(tag.uid, amount.toDouble() / 100.0)
+                    viewModel.bookVaultToBag(tag.uid.ulongValue(), amount.toDouble() / 100.0)
                 }
             }
             VaultBookingType.Return -> {
                 scope.launch {
-                    viewModel.bookBagToVault(tag.uid, amount.toDouble() / 100.0)
+                    viewModel.bookBagToVault(tag.uid.ulongValue(), amount.toDouble() / 100.0)
                 }
             }
         }

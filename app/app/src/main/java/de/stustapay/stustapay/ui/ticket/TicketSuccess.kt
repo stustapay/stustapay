@@ -110,13 +110,13 @@ fun TicketSuccess(
 
                 ProductConfirmItem(
                     name = stringResource(R.string.price),
-                    price = saleCompletedV.total_price,
+                    price = saleCompletedV.totalPrice,
                     bigStyle = true,
                 )
 
                 ProductConfirmItem(
                     name = stringResource(R.string.tickets),
-                    quantity = saleCompletedV.scanned_tickets.size
+                    quantity = saleCompletedV.scannedTickets.size
                 )
             }
         }

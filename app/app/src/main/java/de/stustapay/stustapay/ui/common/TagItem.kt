@@ -4,7 +4,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import de.stustapay.stustapay.model.UserTag
+import de.stustapay.api.models.UserTag
 
 @Composable
 fun TagItem(

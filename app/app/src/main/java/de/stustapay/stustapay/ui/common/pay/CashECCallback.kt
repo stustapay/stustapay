@@ -1,6 +1,6 @@
 package de.stustapay.stustapay.ui.common.pay
 
-import de.stustapay.stustapay.model.UserTag
+import de.stustapay.api.models.UserTag
 
 /**
  * Callbacks after money was received successfully.

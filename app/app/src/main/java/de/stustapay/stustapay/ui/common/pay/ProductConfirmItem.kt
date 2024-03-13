@@ -9,8 +9,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.stustapay.stustapay.model.PendingLineItem
-import de.stustapay.stustapay.model.Product
+import com.ionspin.kotlin.bignum.integer.toBigInteger
+import de.stustapay.api.models.PendingLineItem
+import de.stustapay.api.models.Product
+import de.stustapay.api.models.ProductType
 import de.stustapay.stustapay.ui.theme.ProductConfirmItemBigStyle
 import de.stustapay.stustapay.ui.theme.ProductConfirmItemStyle
 import de.stustapay.stustapay.util.formatCurrencyValue
@@ -20,17 +22,26 @@ import de.stustapay.stustapay.util.formatCurrencyValue
 fun PreviewProductConfirmLineItem() {
     ProductConfirmLineItem(
         PendingLineItem(
-            quantity = 12,
+            quantity = 12.toBigInteger(),
             product = Product(
                 name = "Fingerbox",
                 price = 13.37,
-                tax_name = "eust",
-                id = 42,
-                tax_rate = 0.19,
+                taxName = "eust",
+                id = 42.toBigInteger(),
+                taxRate = 0.19,
+                fixedPrice = true,
+                isLocked = true,
+                isReturnable = false,
+                nodeId = 0.toBigInteger(),
+                restrictions = listOf(),
+                taxRateId = 0.toBigInteger(),
+                type = ProductType.userDefined
             ),
-            tax_name = "eust",
-            product_price = 13.37,
-            tax_rate = 0.19,
+            taxName = "eust",
+            productPrice = 13.37,
+            taxRate = 0.19,
+            totalPrice = 13.37,
+            taxRateId = 0.toBigInteger()
         )
     )
 }
@@ -41,8 +52,8 @@ fun ProductConfirmLineItem(
 ) {
     ProductConfirmItem(
         name = lineItem.product.name,
-        quantity = lineItem.quantity,
-        price = lineItem.product_price,
+        quantity = lineItem.quantity.intValue(),
+        price = lineItem.productPrice,
     )
 }
 

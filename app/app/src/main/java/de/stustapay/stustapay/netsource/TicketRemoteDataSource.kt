@@ -1,27 +1,26 @@
 package de.stustapay.stustapay.netsource
 
-
-import de.stustapay.stustapay.model.CompletedTicketSale
-import de.stustapay.stustapay.model.NewTicketSale
-import de.stustapay.stustapay.model.NewTicketScan
-import de.stustapay.stustapay.model.PendingTicketSale
-import de.stustapay.stustapay.model.TicketScanResult
+import de.stustapay.api.models.CompletedTicketSale
+import de.stustapay.api.models.NewTicketSale
+import de.stustapay.api.models.NewTicketScan
+import de.stustapay.api.models.PendingTicketSale
+import de.stustapay.api.models.TicketScanResult
 import de.stustapay.stustapay.net.Response
-import de.stustapay.stustapay.net.TerminalAPI
+import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 
 class TicketRemoteDataSource @Inject constructor(
-    private val terminalAPI: TerminalAPI,
+    private val terminalApiAccessor: TerminalApiAccessor
 ) {
     suspend fun checkTicketScan(newTicketScan: NewTicketScan): Response<TicketScanResult> {
-        return terminalAPI.checkTicketScan(newTicketScan)
+        return terminalApiAccessor.execute { it.order().checkTicketScan(newTicketScan) }
     }
 
     suspend fun checkTicketSale(newTicketSale: NewTicketSale): Response<PendingTicketSale> {
-        return terminalAPI.checkTicketSale(newTicketSale)
+        return terminalApiAccessor.execute { it.order().checkTicketSale(newTicketSale) }
     }
 
     suspend fun bookTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
-        return terminalAPI.bookTicketSale(newTicketSale)
+        return terminalApiAccessor.execute { it.order().bookTicketSale(newTicketSale) }
     }
 }

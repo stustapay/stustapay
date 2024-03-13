@@ -51,9 +51,9 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
     val haptic = LocalHapticFeedback.current
 
-    val returnableCount = saleCompletedV.line_items.sumOf { i ->
-        if (i.product.is_returnable) {
-            i.quantity
+    val returnableCount = saleCompletedV.lineItems.sumOf { i ->
+        if (i.product.isReturnable) {
+            i.quantity.intValue()
         } else {
             0
         }
@@ -82,29 +82,29 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
                     ProductConfirmItem(
                         name = stringResource(R.string.price),
-                        price = saleCompletedV.total_price,
+                        price = saleCompletedV.totalPrice,
                         bigStyle = true,
                     )
 
                     ProductConfirmItem(
                         name = stringResource(R.string.new_balance),
-                        price = saleCompletedV.new_balance,
+                        price = saleCompletedV.newBalance,
                         bigStyle = true,
                     )
 
-                    if (saleCompletedV.used_vouchers > 0 || saleCompletedV.new_voucher_balance > 0) {
+                    if (saleCompletedV.usedVouchers > 0 || saleCompletedV.newVoucherBalance > 0) {
                         Divider(modifier = Modifier.padding(bottom = 10.dp))
 
-                        if (saleCompletedV.used_vouchers > 0) {
+                        if (saleCompletedV.usedVouchers > 0) {
                             ProductConfirmItem(
                                 name = stringResource(R.string.used_vouchers),
-                                quantity = saleCompletedV.used_vouchers,
+                                quantity = saleCompletedV.usedVouchers.intValue(),
                             )
                         }
 
                         ProductConfirmItem(
                             name = stringResource(R.string.remaining_vouchers),
-                            quantity = saleCompletedV.new_voucher_balance,
+                            quantity = saleCompletedV.newVoucherBalance.intValue(),
                         )
                     }
 

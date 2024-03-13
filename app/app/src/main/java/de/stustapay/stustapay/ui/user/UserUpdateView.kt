@@ -33,19 +33,20 @@ fun UserUpdateView(viewModel: UserViewModel) {
     }
 
     LaunchedEffect(currentUserV, availableRoles) {
-        roles = currentUserV.role_names.mapNotNull { it ->
+        /*roles = currentUserV.roleNames.mapNotNull { it ->
             val role = availableRoles.find { available -> available.name == it }
-            if (role != null && !role.is_privileged) {
-                role.id
+            if (role != null && !role.isPrivileged!!) {
+                role.id.toULong()
             } else {
                 null
             }
-        }
+        }*/
     }
 
-    val isPrivileged = currentUserV.role_names.mapNotNull { role ->
-        availableRoles.find { available -> available.name == role }?.is_privileged
-    }.contains(true)
+    val isPrivileged = false
+    /*currentUserV.roleNames.mapNotNull { role ->
+        availableRoles.find { available -> available.name == role }?.isPrivileged
+    }.contains(true)*/
 
     Scaffold(
         content = { padding ->
@@ -65,7 +66,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                     )
                     ListItem(
                         text = { Text(stringResource(R.string.user_displayname)) },
-                        secondaryText = { Text(currentUserV.display_name) }
+                        secondaryText = { Text(currentUserV.displayName) }
                     )
 
                     Row(
@@ -84,7 +85,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                                 label = { Text(stringResource(R.string.user_roles)) },
                                 readOnly = true,
                                 value = roles.map { id ->
-                                    availableRoles.find { r -> r.id == id }?.name ?: ""
+                                    availableRoles.find { r -> r.id.ulongValue() == id }?.name ?: ""
                                 }.reduceOrNull { acc, r -> "$acc, $r" }.orEmpty(),
                                 onValueChange = {},
                                 trailingIcon = {
@@ -98,12 +99,12 @@ fun UserUpdateView(viewModel: UserViewModel) {
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false }) {
                                 for (r in availableRoles) {
-                                    if (!r.is_privileged) {
+                                    if (!r.isPrivileged!!) {
                                         DropdownMenuItem(onClick = {
-                                            roles = if (roles.contains(r.id)) {
-                                                roles - r.id
+                                            roles = if (roles.contains(r.id.ulongValue())) {
+                                                roles - r.id.ulongValue()
                                             } else {
-                                                roles + r.id
+                                                roles + r.id.ulongValue()
                                             }
                                             expanded = false
                                         }) {
@@ -113,7 +114,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                                                 horizontalArrangement = Arrangement.SpaceBetween
                                             ) {
                                                 Text(r.name)
-                                                if (roles.contains(r.id)) {
+                                                if (roles.contains(r.id.ulongValue())) {
                                                     Icon(Icons.Filled.Check, null)
                                                 }
                                             }
@@ -176,7 +177,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                         scope.launch {
                             viewModel.update(
                                 currentTag,
-                                roles.mapNotNull { roleId -> availableRoles.find { r -> r.id == roleId } }
+                                roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId } }
                             )
                         }
                     }) {

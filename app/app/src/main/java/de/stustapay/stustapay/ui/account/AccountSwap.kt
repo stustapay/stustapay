@@ -25,7 +25,7 @@ fun AccountSwap(goBack: () -> Unit, viewModel: AccountViewModel) {
     var comment by remember { mutableStateOf("") }
 
     NfcScanDialog(state = scanState, onScan = { tag ->
-        viewModel.setOldTagId(tag.uid)
+        viewModel.setOldTagId(tag.uid.ulongValue())
     })
 
     Scaffold(

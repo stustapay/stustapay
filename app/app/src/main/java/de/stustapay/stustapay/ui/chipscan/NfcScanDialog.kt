@@ -11,8 +11,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.UserTag
 import de.stustapay.stustapay.ui.common.DialogDisplayState
 import de.stustapay.stustapay.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.ui.theme.NfcScanStyle

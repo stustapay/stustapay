@@ -3,10 +3,11 @@ package de.stustapay.stustapay.ui.debug
 
 import android.app.Activity
 import androidx.lifecycle.ViewModel
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.ec.SumUp
-import de.stustapay.stustapay.model.UserTag
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -43,7 +44,7 @@ class ECDebugViewModel @Inject constructor(
             context = context,
             payment = ECPayment(
                 id = "test ${UUID.randomUUID()}",
-                tag = UserTag(0u),
+                tag = UserTag(0.toBigInteger()),
                 amount = BigDecimal(100),
             )
         )
