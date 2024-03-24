@@ -17,6 +17,8 @@ import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TopUpRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
+import de.stustapay.stustapay.util.Infallible
+import de.stustapay.stustapay.util.InfallibleResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -48,6 +50,7 @@ class TopUpViewModel @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
     private val userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
+    private val infallible: Infallible
 ) : ViewModel() {
     private val _navState = MutableStateFlow(TopUpPage.Selection)
     val navState = _navState.asStateFlow()
@@ -173,20 +176,24 @@ class TopUpViewModel @Inject constructor(
             }
         }
 
-        // TODO: maybe retry - but this should be done in http layer already...
-        when (val response = topUpRepository.bookTopUp(newTopUp)) {
-            is Response.OK -> {
-                clearDraft()
-                _topUpCompleted.update { response.data }
-                _status.update { "Card TopUp successful" }
-                _navState.update { TopUpPage.Done }
-            }
-
-            is Response.Error -> {
-                _status.update { "Card TopUp failed! ${response.msg()}" }
-                _navState.update { TopUpPage.Failure }
+        infallible.make {
+            when (val response = topUpRepository.bookTopUp(newTopUp)) {
+                is Response.OK -> {
+                    _topUpCompleted.update { response.data }
+                    InfallibleResult.Ok
+                }
+                is Response.Error -> {
+                    // TODO: Failure is not an option, but what happens if the backend rejects the request?
+                    // checkTopUp should prevent this from ever happening in this case though
+                    // We need more data here to determine whether or not we should retry
+                    InfallibleResult.Err
+                }
             }
         }
+
+        clearDraft()
+        _status.update { "Card TopUp successful" }
+        _navState.update { TopUpPage.Done }
     }
 
 
@@ -206,19 +213,21 @@ class TopUpViewModel @Inject constructor(
             return
         }
 
-        when (val response = topUpRepository.bookTopUp(newTopUp)) {
-            is Response.OK -> {
-                clearDraft()
-                _topUpCompleted.update { response.data }
-                _navState.update { TopUpPage.Done }
-                _status.update { "Cash TopUp successful!" }
-            }
-
-            is Response.Error -> {
-                _status.update { "Cash TopUp failed! ${response.msg()}" }
-                _navState.update { TopUpPage.Failure }
+        infallible.make {
+            when (val response = topUpRepository.bookTopUp(newTopUp)) {
+                is Response.OK -> {
+                    _topUpCompleted.update { response.data }
+                    InfallibleResult.Ok
+                }
+                is Response.Error -> {
+                    InfallibleResult.Err
+                }
             }
         }
+
+        clearDraft()
+        _navState.update { TopUpPage.Done }
+        _status.update { "Cash TopUp successful!" }
     }
 
     fun navigateTo(target: TopUpPage) {
