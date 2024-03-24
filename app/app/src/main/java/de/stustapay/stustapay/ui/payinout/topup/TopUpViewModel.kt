@@ -3,9 +3,8 @@ package de.stustapay.stustapay.ui.payinout.topup
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.api.models.CompletedTopUp
+import de.stustapay.api.models.PendingTopUp
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTag
@@ -17,6 +16,7 @@ import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TopUpRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
+import de.stustapay.stustapay.repository.InfallibleRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -48,6 +48,7 @@ class TopUpViewModel @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
     private val userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
+    private val infallible: InfallibleRepository
 ) : ViewModel() {
     private val _navState = MutableStateFlow(TopUpPage.Selection)
     val navState = _navState.asStateFlow()
@@ -59,7 +60,7 @@ class TopUpViewModel @Inject constructor(
     val topUpState = _topUpState.asStateFlow()
 
     // when we finished a sale
-    private val _topUpCompleted = MutableStateFlow<CompletedTopUp?>(null)
+    private val _topUpCompleted = MutableStateFlow<PendingTopUp?>(null)
     val topUpCompleted = _topUpCompleted.asStateFlow()
 
     // configuration infos from backend
@@ -108,6 +109,7 @@ class TopUpViewModel @Inject constructor(
         return when (val response = topUpRepository.checkTopUp(newTopUp)) {
             is Response.OK -> {
                 _status.update { "TopUp possible" }
+                _topUpCompleted.update { response.data }
                 true
             }
 
@@ -173,20 +175,11 @@ class TopUpViewModel @Inject constructor(
             }
         }
 
-        // TODO: maybe retry - but this should be done in http layer already...
-        when (val response = topUpRepository.bookTopUp(newTopUp)) {
-            is Response.OK -> {
-                clearDraft()
-                _topUpCompleted.update { response.data }
-                _status.update { "Card TopUp successful" }
-                _navState.update { TopUpPage.Done }
-            }
+        infallible.bookTopUp(newTopUp)
 
-            is Response.Error -> {
-                _status.update { "Card TopUp failed! ${response.msg()}" }
-                _navState.update { TopUpPage.Failure }
-            }
-        }
+        clearDraft()
+        _status.update { "Card TopUp successful" }
+        _navState.update { TopUpPage.Done }
     }
 
 
@@ -206,19 +199,11 @@ class TopUpViewModel @Inject constructor(
             return
         }
 
-        when (val response = topUpRepository.bookTopUp(newTopUp)) {
-            is Response.OK -> {
-                clearDraft()
-                _topUpCompleted.update { response.data }
-                _navState.update { TopUpPage.Done }
-                _status.update { "Cash TopUp successful!" }
-            }
+        infallible.bookTopUp(newTopUp)
 
-            is Response.Error -> {
-                _status.update { "Cash TopUp failed! ${response.msg()}" }
-                _navState.update { TopUpPage.Failure }
-            }
-        }
+        clearDraft()
+        _navState.update { TopUpPage.Done }
+        _status.update { "Cash TopUp successful!" }
     }
 
     fun navigateTo(target: TopUpPage) {
