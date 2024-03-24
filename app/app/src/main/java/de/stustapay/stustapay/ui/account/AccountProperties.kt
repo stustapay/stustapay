@@ -95,7 +95,7 @@ fun AccountProperties(
             ) {
                 if (account.userTagUid != null) {
                     TagItem(
-                        UserTag(account.userTagUid),
+                        UserTag(account.userTagUid!!),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp)
@@ -125,7 +125,7 @@ fun AccountProperties(
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_restriction),
-                    when (account.restriction.value) {
+                    when (account.restriction!!.value) {
                         "under_18" -> {
                             stringResource(R.string.under_18_years)
                         }
@@ -134,7 +134,7 @@ fun AccountProperties(
                             stringResource(R.string.under_16_years)
                         }
 
-                        else -> account.restriction.value
+                        else -> account.restriction!!.value
                     },
                 )
             }
@@ -145,7 +145,7 @@ fun AccountProperties(
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_name),
-                    account.name,
+                    account.name!!,
                 )
             }
         }
@@ -155,7 +155,7 @@ fun AccountProperties(
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_comment),
-                    account.comment,
+                    account.comment!!,
                     below = true,
                     small = true,
                 )
