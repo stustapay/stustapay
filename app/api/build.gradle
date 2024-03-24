@@ -21,10 +21,6 @@ apply plugin: 'kotlinx-serialization'
 apply plugin: 'maven-publish'
 apply plugin: 'com.diffplug.spotless'
 
-repositories {
-    maven { url "https://repo1.maven.org/maven2" }
-}
-
 // Use spotless plugin to automatically format code, remove unused import, etc
 // To apply changes directly to the file, run `gradlew spotlessApply`
 // Ref: https://github.com/diffplug/spotless/tree/main/plugin-gradle
@@ -51,6 +47,8 @@ test {
 }
 
 dependencies {
+    implementation "com.ionspin.kotlin:bignum:0.3.9"
+    implementation "com.ionspin.kotlin:bignum-serialization-kotlinx:0.3.2"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1"
     implementation "io.ktor:ktor-client-core:$ktor_version"
