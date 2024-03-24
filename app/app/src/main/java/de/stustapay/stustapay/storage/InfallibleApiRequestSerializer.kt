@@ -11,13 +11,17 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
+import de.stustapay.api.models.UserTagScan
 import de.stustapay.stustapay.model.InfallibleApiRequest
 import de.stustapay.stustapay.model.InfallibleApiRequestKind
 import de.stustapay.stustapay.model.InfallibleApiRequests
 import de.stustapay.stustapay.proto.InfallibleApiRequestKindProto
 import de.stustapay.stustapay.proto.InfallibleApiRequestProto
+import de.stustapay.stustapay.proto.InfallibleApiRequestTagProto
+import de.stustapay.stustapay.proto.InfallibleApiRequestTicketSaleProto
 import de.stustapay.stustapay.proto.InfallibleApiRequestTopUpProto
 import de.stustapay.stustapay.proto.InfallibleApiRequestsProto
 import java.io.File
@@ -51,6 +55,22 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequests> {
                             )
                         }
 
+                        InfallibleApiRequestKindProto.TICKET_SALE -> {
+                            Pair(
+                                id, InfallibleApiRequest(
+                                    InfallibleApiRequestKind.TicketSale(
+                                        NewTicketSale(
+                                            customerTags = it.ticketSale.customerTagsList.map {
+                                                UserTagScan(BigInteger.parseString(it.uid), it.pin)
+                                            },
+                                            paymentMethod = PaymentMethod.decode(it.ticketSale.paymentMethod)!!,
+                                            uuid = id,
+                                        )
+                                    )
+                                )
+                            )
+                        }
+
                         InfallibleApiRequestKindProto.UNRECOGNIZED -> null
 
                         null -> null
@@ -72,7 +92,19 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequests> {
                     request.setTopUp(
                         InfallibleApiRequestTopUpProto.newBuilder().setAmount(kind.content.amount)
                             .setCustomerTagUid(kind.content.customerTagUid.toString())
-                            .setPaymentMethod(PaymentMethod.encode(kind.content.paymentMethod)).build()
+                            .setPaymentMethod(PaymentMethod.encode(kind.content.paymentMethod))
+                            .build()
+                    )
+                }
+
+                is InfallibleApiRequestKind.TicketSale -> {
+                    request.setTicketSale(
+                        InfallibleApiRequestTicketSaleProto.newBuilder()
+                            .addAllCustomerTags(kind.content.customerTags.map {
+                                InfallibleApiRequestTagProto.newBuilder()
+                                    .setUid(it.tagUid.toString()).setPin(it.tagPin).build()
+                            }).setPaymentMethod(PaymentMethod.encode(kind.content.paymentMethod))
+                            .build()
                     )
                 }
             }

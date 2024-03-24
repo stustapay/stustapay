@@ -4,10 +4,9 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.NewTicketScan
 import de.stustapay.api.models.PaymentMethod
-import de.stustapay.api.models.UserTag
+import de.stustapay.api.models.PendingTicketSale
 import de.stustapay.api.models.UserTagScan
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
@@ -17,6 +16,7 @@ import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
+import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TicketRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
@@ -44,6 +44,7 @@ class TicketViewModel @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
     private val ecPaymentRepository: ECPaymentRepository,
     private val resourcesProvider: ResourcesProvider,
+    private val infallible: InfallibleRepository
 ) : ViewModel() {
 
     // navigation in views
@@ -62,7 +63,7 @@ class TicketViewModel @Inject constructor(
     val ticketDraft = _ticketDraft.asStateFlow()
 
     // when we finished a ticket sale
-    private val _saleCompleted = MutableStateFlow<CompletedTicketSale?>(null)
+    private val _saleCompleted = MutableStateFlow<PendingTicketSale?>(null)
     val saleCompleted = _saleCompleted.asStateFlow()
 
     // configuration infos from backend
@@ -186,6 +187,7 @@ class TicketViewModel @Inject constructor(
         val selection = _ticketDraft.value
 
         _status.update { resourcesProvider.getString(R.string.order_checking) }
+        _saleCompleted.update { null }
 
         // check if the sale is nice and well
         val response = ticketRepository.checkTicketSale(
@@ -200,6 +202,7 @@ class TicketViewModel @Inject constructor(
                     newSale
                 }
                 _status.update { resourcesProvider.getString(R.string.ticket_order_validated) }
+                _saleCompleted.update { response.data }
                 _navState.update { TicketPage.Confirm }
             }
 
@@ -260,30 +263,10 @@ class TicketViewModel @Inject constructor(
     }
 
     private suspend fun bookSale(paymentMethod: PaymentMethod) {
-        _saleCompleted.update { null }
+        infallible.bookTicketSale(_ticketDraft.value.getNewTicketSale(paymentMethod))
 
-        val response = ticketRepository.bookTicketSale(
-            _ticketDraft.value.getNewTicketSale(paymentMethod)
-        )
-
-        when (response) {
-            is Response.OK -> {
-                // delete the sale draft
-                clearDraft()
-                _status.update { resourcesProvider.getString(R.string.ticket_order_booked) }
-                // now we have a completed sale
-                _saleCompleted.update { response.data }
-                _navState.update { TicketPage.Done }
-            }
-
-            is Response.Error.Service -> {
-                _navState.update { TicketPage.Error }
-                _status.update { response.msg() }
-            }
-
-            is Response.Error -> {
-                _status.update { response.msg() }
-            }
-        }
+        clearDraft()
+        _status.update { resourcesProvider.getString(R.string.ticket_order_booked) }
+        _navState.update { TicketPage.Done }
     }
 }

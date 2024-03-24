@@ -14,7 +14,7 @@ import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 import de.stustapay.stustapay.ec.SumUp
 import de.stustapay.libssp.nfc.NfcHandler
-import de.stustapay.stustapay.net.Infallible
+import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.ui.Main
 import de.stustapay.libssp.util.ActivityCallback
 import de.stustapay.libssp.util.SysUiController
@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity(), SysUiController {
     lateinit var sumUp: SumUp
 
     @Inject
-    lateinit var infallible: Infallible
+    lateinit var infallible: InfallibleRepository
 
     val viewModel: MainActivityViewModel by viewModels()
 
