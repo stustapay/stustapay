@@ -108,7 +108,8 @@ class ProductService(DBService):
     async def list_products(self, *, conn: Connection, node: Node) -> list[Product]:
         return await conn.fetch_many(
             Product,
-            "select * from product_with_tax_and_restrictions where node_id = any($1) and type = 'user_defined'",
+            "select * from product_with_tax_and_restrictions where node_id = any($1) and type = 'user_defined' "
+            "order by name",
             node.ids_to_event_node,
         )
 

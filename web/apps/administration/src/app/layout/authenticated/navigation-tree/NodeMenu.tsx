@@ -1,7 +1,6 @@
 import { NodeSeenByUserRead } from "@/api";
 import {
   AccountBalance as AccountBalanceIcon,
-  AddShoppingCart as AddShoppingCartIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
   Nfc as NfcIcon,
   Person as PersonIcon,
@@ -17,7 +16,6 @@ import { NavigationTreeItem } from "./NavigationTreeItem";
 import {
   CashierRoutes,
   CustomerRoutes,
-  OrderRoutes,
   ProductRoutes,
   SumUpTransactionRoutes,
   TerminalRoutes,
@@ -33,7 +31,7 @@ export interface NodeMenuProps {
   node: NodeSeenByUserRead;
 }
 
-export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
+export const NodeMenu: React.FC<NodeMenuProps> = React.memo(({ node }) => {
   const { t } = useTranslation();
   const isEvent = node.event != null;
 
@@ -112,12 +110,6 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
     );
   }
 
-  if (!node.computed_forbidden_objects_at_node.includes("till")) {
-    const id = OrderRoutes.list(node.id);
-    items.push(
-      <NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("orders")} labelIcon={AddShoppingCartIcon} />
-    );
-  }
   if (!node.computed_forbidden_objects_at_node.includes("user_tag")) {
     const id = UserTagRoutes.list(node.id);
     items.push(
@@ -134,4 +126,4 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ node }) => {
   }
 
   return <>{items}</>;
-};
+});

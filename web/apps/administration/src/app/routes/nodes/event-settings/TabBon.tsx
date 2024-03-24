@@ -1,5 +1,5 @@
 import { RestrictedEventSettings, useGenerateTestBonMutation, useUpdateEventMutation } from "@/api";
-import { Button, Divider, LinearProgress, Stack } from "@mui/material";
+import { Button, LinearProgress, Stack } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -24,7 +24,7 @@ export const BonSettingsForm: React.FC<FormikProps<BonSettings>> = (formik) => {
     <>
       <FormTextField label={t("settings.bon.title")} name="bon_title" formik={formik} />
       <FormTextField label={t("settings.bon.issuer")} name="bon_issuer" formik={formik} />
-      <FormTextField label={t("settings.bon.address")} name="bon_address" formik={formik} />
+      <FormTextField label={t("settings.bon.address")} name="bon_address" formik={formik} multiline={true} />
     </>
   );
 };

@@ -52,7 +52,7 @@ export interface NavigationTreeItemProps extends TreeItemProps {
   labelText: string;
 }
 
-export const NavigationTreeItem: React.FC<NavigationTreeItemProps> = (props) => {
+export const NavigationTreeItem: React.FC<NavigationTreeItemProps> = React.memo((props) => {
   const theme = useTheme();
   const {
     to,
@@ -99,4 +99,4 @@ export const NavigationTreeItem: React.FC<NavigationTreeItemProps> = (props) => 
       {...other}
     />
   );
-};
+});

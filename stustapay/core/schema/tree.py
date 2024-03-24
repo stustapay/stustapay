@@ -95,7 +95,6 @@ class ObjectType(enum.Enum):
     tax_rate = "tax_rate"
     user_tag = "user_tag"
     tse = "tse"
-    order = "order"
     account = "account"
     terminal = "terminal"
 

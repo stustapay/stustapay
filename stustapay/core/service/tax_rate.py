@@ -53,7 +53,9 @@ class TaxRateService(DBService):
     @requires_node(event_only=True)
     @requires_user()
     async def list_tax_rates(self, *, conn: Connection, node: Node) -> list[TaxRate]:
-        return await conn.fetch_many(TaxRate, "select * from tax_rate where node_id = any($1)", node.ids_to_event_node)
+        return await conn.fetch_many(
+            TaxRate, "select * from tax_rate where node_id = any($1) order by name", node.ids_to_event_node
+        )
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)

@@ -642,6 +642,9 @@ class DatabaseSetup:
                 new_node=NewNode(
                     name="SIMULATOR",
                     description="",
+                    forbidden_objects_at_node=[
+                        ObjectType.user,
+                    ],
                 ),
             )
             event_node = await create_event(
@@ -659,6 +662,9 @@ class DatabaseSetup:
                     customer_portal_contact_email="test@test.com",
                     forbidden_objects_in_subtree=[
                         ObjectType.ticket,
+                        ObjectType.terminal,
+                        ObjectType.product,
+                        ObjectType.tax_rate,
                     ],
                     ust_id="UST ID",
                     bon_issuer="Issuer",

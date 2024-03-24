@@ -16,7 +16,7 @@ from stustapay.framework.database import Connection
 
 
 async def list_tses(conn: Connection, node: Node) -> list[Tse]:
-    return await conn.fetch_many(Tse, "select * from tse where node_id = any($1)", node.ids_to_event_node)
+    return await conn.fetch_many(Tse, "select * from tse where node_id = any($1) order by name", node.ids_to_event_node)
 
 
 class TseService(DBService):

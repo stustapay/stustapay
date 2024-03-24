@@ -59,7 +59,7 @@ class TillService(DBService):
     async def list_tills(self, *, node: Node, conn: Connection) -> list[Till]:
         return await conn.fetch_many(
             Till,
-            "select * from till_with_cash_register where node_id = any($1) and not is_virtual",
+            "select * from till_with_cash_register where node_id = any($1) and not is_virtual order by name",
             node.ids_to_event_node,
         )
 

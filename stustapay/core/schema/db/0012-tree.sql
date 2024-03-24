@@ -156,7 +156,7 @@ create table tree_object_type (
 
 insert into tree_object_type (name)
 values
-('user'), ('user_role'), ('product'), ('ticket'), ('till'), ('terminal');
+('user'), ('user_role'), ('product'), ('ticket'), ('till'), ('terminal'), ('tax_rate'), ('account'), ('user_tag');
 
 create table forbidden_objects_at_node (
     object_name varchar(255) not null references tree_object_type(name),

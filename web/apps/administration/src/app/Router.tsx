@@ -14,7 +14,7 @@ import {
   SettingsLegacy,
   NodeCreate,
 } from "./routes/nodes";
-import { OrderDetail, OrderList, SaleEdit } from "./routes/orders";
+import { OrderDetail, SaleEdit } from "./routes/orders";
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
 import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
 import { TaxRateCreate, TaxRateList, TaxRateUpdate } from "./routes/tax-rates";
@@ -389,10 +389,6 @@ const router = createBrowserRouter([
       {
         path: "node/:nodeId/orders",
         children: [
-          {
-            index: true,
-            element: <OrderList />,
-          },
           {
             path: ":orderId/edit",
             element: <SaleEdit />,

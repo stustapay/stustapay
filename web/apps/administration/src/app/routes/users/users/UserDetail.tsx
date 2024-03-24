@@ -1,6 +1,6 @@
 import { useDeleteUserMutation, useGetUserQuery } from "@/api";
-import { UserRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler } from "@/components";
+import { UserRoutes, UserTagRoutes } from "@/app/routes";
+import { ConfirmDialog, ConfirmDialogCloseHandler, ListItemLink } from "@/components";
 import { DetailLayout } from "@/components/layouts";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
@@ -62,12 +62,15 @@ export const UserDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("userDescription")} secondary={user.description} />
           </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("user.tagUid")}
-              secondary={user.user_tag_uid_hex ? formatUserTagUid(user.user_tag_uid_hex) : t("user.noTagAssigned")}
-            />
-          </ListItem>
+          {user.user_tag_uid_hex ? (
+            <ListItemLink to={UserTagRoutes.detail(user.user_tag_uid_hex)}>
+              <ListItemText primary={t("user.tagUid")} secondary={formatUserTagUid(user.user_tag_uid_hex)} />
+            </ListItemLink>
+          ) : (
+            <ListItem>
+              <ListItemText primary={t("user.tagUid")} secondary={t("user.noTagAssigned")} />
+            </ListItem>
+          )}
         </List>
       </Paper>
       <ConfirmDialog

@@ -230,7 +230,9 @@ class PayoutService(DBService):
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def get_payout_run_payouts(self, *, conn: Connection, payout_run_id: int) -> list[Payout]:
-        return await conn.fetch_many(Payout, "select * from payout where payout_run_id = $1", payout_run_id)
+        return await conn.fetch_many(
+            Payout, "select * from payout where payout_run_id = $1 order by account_name", payout_run_id
+        )
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -299,4 +301,4 @@ class PayoutService(DBService):
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def list_payout_runs(self, *, conn: Connection) -> list[PayoutRunWithStats]:
-        return await conn.fetch_many(PayoutRunWithStats, "select * from payout_run_with_stats")
+        return await conn.fetch_many(PayoutRunWithStats, "select * from payout_run_with_stats order by created_at desc")

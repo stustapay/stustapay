@@ -68,7 +68,7 @@ class TerminalService(DBService):
         return await conn.fetch_many(
             Terminal,
             "select t.*, till.id as till_id from terminal t left join till on t.id = till.terminal_id "
-            "where t.node_id = any($1)",
+            "where t.node_id = any($1) order by t.name",
             node.ids_to_root,
         )
 
