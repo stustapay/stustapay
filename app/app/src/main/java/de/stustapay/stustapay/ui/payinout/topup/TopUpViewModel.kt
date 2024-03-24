@@ -17,7 +17,7 @@ import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TopUpRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
-import de.stustapay.stustapay.net.Infallible
+import de.stustapay.stustapay.repository.InfallibleRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,7 +49,7 @@ class TopUpViewModel @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
     private val userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
-    private val infallible: Infallible
+    private val infallible: InfallibleRepository
 ) : ViewModel() {
     private val _navState = MutableStateFlow(TopUpPage.Selection)
     val navState = _navState.asStateFlow()
