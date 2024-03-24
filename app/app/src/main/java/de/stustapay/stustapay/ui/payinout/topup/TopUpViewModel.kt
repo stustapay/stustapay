@@ -4,7 +4,7 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.api.models.CompletedTopUp
+import de.stustapay.api.models.PendingTopUp
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTag
@@ -17,8 +17,7 @@ import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TopUpRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
-import de.stustapay.stustapay.util.Infallible
-import de.stustapay.stustapay.util.InfallibleResult
+import de.stustapay.stustapay.net.Infallible
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -62,7 +61,7 @@ class TopUpViewModel @Inject constructor(
     val topUpState = _topUpState.asStateFlow()
 
     // when we finished a sale
-    private val _topUpCompleted = MutableStateFlow<CompletedTopUp?>(null)
+    private val _topUpCompleted = MutableStateFlow<PendingTopUp?>(null)
     val topUpCompleted = _topUpCompleted.asStateFlow()
 
     // configuration infos from backend
@@ -111,6 +110,7 @@ class TopUpViewModel @Inject constructor(
         return when (val response = topUpRepository.checkTopUp(newTopUp)) {
             is Response.OK -> {
                 _status.update { "TopUp possible" }
+                _topUpCompleted.update { response.data }
                 true
             }
 
@@ -176,20 +176,7 @@ class TopUpViewModel @Inject constructor(
             }
         }
 
-        infallible.make {
-            when (val response = topUpRepository.bookTopUp(newTopUp)) {
-                is Response.OK -> {
-                    _topUpCompleted.update { response.data }
-                    InfallibleResult.Ok
-                }
-                is Response.Error -> {
-                    // TODO: Failure is not an option, but what happens if the backend rejects the request?
-                    // checkTopUp should prevent this from ever happening in this case though
-                    // We need more data here to determine whether or not we should retry
-                    InfallibleResult.Err
-                }
-            }
-        }
+        infallible.bookTopUp(newTopUp)
 
         clearDraft()
         _status.update { "Card TopUp successful" }
@@ -213,17 +200,7 @@ class TopUpViewModel @Inject constructor(
             return
         }
 
-        infallible.make {
-            when (val response = topUpRepository.bookTopUp(newTopUp)) {
-                is Response.OK -> {
-                    _topUpCompleted.update { response.data }
-                    InfallibleResult.Ok
-                }
-                is Response.Error -> {
-                    InfallibleResult.Err
-                }
-            }
-        }
+        infallible.bookTopUp(newTopUp)
 
         clearDraft()
         _navState.update { TopUpPage.Done }
