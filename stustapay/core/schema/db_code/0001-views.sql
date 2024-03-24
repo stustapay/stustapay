@@ -413,9 +413,9 @@ create view node_with_allowed_objects as
         fan.forbidden_at_node as forbidden_objects_at_node,
         case
             when n.event_node_id is null then -- nodes above event nodes
-                fan.computed_forbidden_at_node || '{"ticket", "product", "tax_rate", "till", "user_tag", "account"}'::varchar(255) array
+                fan.computed_forbidden_at_node || '{"ticket", "product", "tax_rate", "till", "user_tag", "account", "terminal"}'::varchar(255) array
             when n.event_node_id is not null and n.event_node_id != n.id then -- nodes blow event node
-                fan.computed_forbidden_at_node || '{"user_role", "user_tag", "account", "tse"}'::varchar(255) array
+                fan.computed_forbidden_at_node || '{"user_role", "user_tag", "account", "tse", "tax_rate"}'::varchar(255) array
             else
                 fan.computed_forbidden_at_node
         end as computed_forbidden_objects_at_node,

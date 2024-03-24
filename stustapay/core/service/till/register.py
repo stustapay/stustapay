@@ -57,7 +57,9 @@ async def create_cash_register(*, conn: Connection, node: Node, new_register: Ne
 
 async def _list_cash_register_stockings(*, conn: Connection, node: Node) -> list[CashRegisterStocking]:
     return await conn.fetch_many(
-        CashRegisterStocking, "select * from cash_register_stocking where node_id = any($1)", node.ids_to_event_node
+        CashRegisterStocking,
+        "select * from cash_register_stocking where node_id = any($1) order by name",
+        node.ids_to_event_node,
     )
 
 
@@ -76,12 +78,15 @@ async def _list_cash_registers(*, conn: Connection, node: Node, hide_assigned_re
     if hide_assigned_registers:
         return await conn.fetch_many(
             CashRegister,
-            "select * from cash_register_with_cashier where current_cashier_id is null and node_id = any($1)",
+            "select * from cash_register_with_cashier "
+            "where current_cashier_id is null and node_id = any($1) order by name",
             node.ids_to_event_node,
         )
     else:
         return await conn.fetch_many(
-            CashRegister, "select * from cash_register_with_cashier where node_id = any($1)", node.ids_to_event_node
+            CashRegister,
+            "select * from cash_register_with_cashier where node_id = any($1) order by name",
+            node.ids_to_event_node,
         )
 
 

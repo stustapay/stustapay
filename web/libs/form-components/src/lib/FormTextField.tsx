@@ -8,14 +8,16 @@ export interface FormTextFieldProps<Name extends string, Values>
   formik: FormikProps<Values>;
 }
 
+const MemoizedTextField = React.memo(TextField);
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function FormTextFieldInner<Name extends string, Values extends Partial<Record<Name, any>>>({
+export function FormTextField<Name extends string, Values extends Partial<Record<Name, any>>>({
   formik,
   name,
   ...props
 }: FormTextFieldProps<Name, Values>) {
   return (
-    <TextField
+    <MemoizedTextField
       name={name}
       variant={props.variant ?? "standard"}
       fullWidth={props.fullWidth ?? true}
@@ -28,5 +30,3 @@ function FormTextFieldInner<Name extends string, Values extends Partial<Record<N
     />
   );
 }
-
-export const FormTextField = React.memo(FormTextFieldInner) as typeof FormTextFieldInner;

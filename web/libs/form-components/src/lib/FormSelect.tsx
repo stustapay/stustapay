@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Select, SelectProps } from "@stustapay/components";
 import { FormikProps } from "formik";
 
@@ -13,10 +14,14 @@ export function FormSelect<
   Option,
   Multiple extends boolean,
 >({ formik, name, ...props }: FormSelectProps<Name, Values, Option, Multiple>) {
-  const handleChange = (value: unknown) => {
-    formik.setFieldValue(name, value, true);
-    formik.setFieldTouched(name, true, false);
-  };
+  const { setFieldValue, setFieldTouched } = formik;
+  const handleChange = React.useCallback(
+    (value: unknown) => {
+      setFieldValue(name, value, true);
+      setFieldTouched(name, true, false);
+    },
+    [setFieldValue, setFieldTouched, name]
+  );
 
   return (
     <Select

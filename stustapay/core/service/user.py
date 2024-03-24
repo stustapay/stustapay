@@ -40,7 +40,7 @@ class UserLoginSuccess(BaseModel):
 
 async def list_user_roles(*, conn: Connection, node: Node) -> list[UserRole]:
     return await conn.fetch_many(
-        UserRole, "select * from user_role_with_privileges where node_id = any($1)", node.ids_to_root
+        UserRole, "select * from user_role_with_privileges where node_id = any($1) order by name", node.ids_to_root
     )
 
 
@@ -280,7 +280,9 @@ class UserService(DBService):
     @requires_node()
     @requires_user()
     async def list_users(self, *, conn: Connection, node: Node) -> list[User]:
-        return await conn.fetch_many(User, "select * from user_with_roles where node_id = any($1)", node.ids_to_root)
+        return await conn.fetch_many(
+            User, "select * from user_with_roles where node_id = any($1) order by login", node.ids_to_root
+        )
 
     @staticmethod
     async def _get_user(*, conn: Connection, node: Node, user_id: int) -> User:

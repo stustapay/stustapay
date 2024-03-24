@@ -62,7 +62,9 @@ class TillLayoutService(DBService):
     @requires_user()
     async def list_buttons(self, *, node: Node, conn: Connection) -> list[TillButton]:
         return await conn.fetch_many(
-            TillButton, "select * from till_button_with_products where node_id = any($1)", node.ids_to_event_node
+            TillButton,
+            "select * from till_button_with_products where node_id = any($1) order by name",
+            node.ids_to_event_node,
         )
 
     @with_db_transaction(read_only=True)

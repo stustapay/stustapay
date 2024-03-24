@@ -68,7 +68,9 @@ class TicketService(DBService):
     @requires_node(event_only=True)
     @requires_user()
     async def list_tickets(self, *, conn: Connection, node: Node) -> list[Ticket]:
-        return await conn.fetch_many(Ticket, "select * from ticket where node_id = any($1)", node.ids_to_event_node)
+        return await conn.fetch_many(
+            Ticket, "select * from ticket where node_id = any($1) order by name", node.ids_to_event_node
+        )
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)

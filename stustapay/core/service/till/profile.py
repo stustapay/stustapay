@@ -58,7 +58,7 @@ class TillProfileService(DBService):
     @requires_user()
     async def list_profiles(self, *, conn: Connection, node: Node) -> list[TillProfile]:
         return await conn.fetch_many(
-            TillProfile, "select * from till_profile where node_id = any($1)", node.ids_to_event_node
+            TillProfile, "select * from till_profile where node_id = any($1) order by name", node.ids_to_event_node
         )
 
     @with_db_transaction(read_only=True)

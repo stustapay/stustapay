@@ -1,5 +1,5 @@
 import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@/api";
-import { AccountRoutes, UserTagRoutes } from "@/app/routes";
+import { CustomerRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailLayout, EditableListItem, ListItemLink } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
@@ -42,7 +42,7 @@ export const UserTagDetail: React.FC = () => {
       field: "account_id",
       headerName: t("account.history.account") as string,
       renderCell: (params) => (
-        <RouterLink to={AccountRoutes.detail(params.row.account_id)}>{params.row.account_id}</RouterLink>
+        <RouterLink to={CustomerRoutes.detail(params.row.account_id)}>{params.row.account_id}</RouterLink>
       ),
       width: 100,
     },
@@ -72,7 +72,7 @@ export const UserTagDetail: React.FC = () => {
           </ListItem>
           <EditableListItem label={t("userTag.comment")} value={data.comment ?? ""} onChange={handleUpdateComment} />
           {data.account_id ? (
-            <ListItemLink to={AccountRoutes.detail(data.account_id)}>
+            <ListItemLink to={CustomerRoutes.detail(data.account_id)}>
               <ListItemText primary={t("userTag.account")} secondary={data.account_id} />
             </ListItemLink>
           ) : (

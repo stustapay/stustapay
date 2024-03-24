@@ -126,6 +126,7 @@ async def test_object_rules(tree_service: TreeService, admin_token: str):
             ObjectType.user_tag,
             ObjectType.tax_rate,
             ObjectType.account,
+            ObjectType.terminal,
         ],
         top_node.computed_forbidden_objects_at_node,
     )
@@ -177,6 +178,7 @@ async def test_object_rules(tree_service: TreeService, admin_token: str):
             ObjectType.till,
             ObjectType.ticket,
             ObjectType.tse,
+            ObjectType.tax_rate,
             ObjectType.account,
             ObjectType.user_tag,
             ObjectType.user_role,

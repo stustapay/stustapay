@@ -138,7 +138,9 @@ class CashierService(DBService):
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def list_cashiers(self, *, conn: Connection, node: Node) -> list[Cashier]:
-        return await conn.fetch_many(Cashier, "select * from cashier where node_id = any($1)", node.ids_to_event_node)
+        return await conn.fetch_many(
+            Cashier, "select * from cashier where node_id = any($1) order by login", node.ids_to_event_node
+        )
 
     @with_db_transaction(read_only=True)
     @requires_node()
