@@ -232,11 +232,11 @@ class SumUp @Inject constructor(
                 if (cfg.till?.secrets == null) {
                     return SumUpConfigState.Error("no terminal ec secrets in config")
                 }
-                if (!cfg.till.secrets.sumupAffiliateKey.startsWith("sup_afk")) {
-                    return SumUpConfigState.Error("invalid affiliate key: ${cfg.till.secrets.sumupAffiliateKey}")
+                if (!cfg.till!!.secrets!!.sumupAffiliateKey.startsWith("sup_afk")) {
+                    return SumUpConfigState.Error("invalid affiliate key: ${cfg.till!!.secrets!!.sumupAffiliateKey}")
                 }
                 sumUpConfig = SumUpConfig(
-                    affiliateKey = cfg.till.secrets.sumupAffiliateKey,
+                    affiliateKey = cfg.till!!.secrets!!.sumupAffiliateKey,
                     terminal = ECTerminalConfig(
                         name = cfg.name,
                         id = cfg.id.toString()

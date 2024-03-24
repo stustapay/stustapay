@@ -105,7 +105,7 @@ class UserCashRegisterTransferViewModel @Inject constructor(
                             TransferCashRegisterState.Error(
                                 resourcesProvider.getString(R.string.cash_register_unexpected_assign)
                                     .format(
-                                        UserTag(transferResult.data.currentCashierTagUid),
+                                        UserTag(transferResult.data.currentCashierTagUid!!),
                                         UserTag(targetTag.uid)
                                     )
                             )
