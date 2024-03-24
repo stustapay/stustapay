@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option java_package = "de.stustapay.stustapay.proto";
+option java_multiple_files = true;
+
+message InfallibleApiRequestProto {
+  string id = 1;
+  InfallibleApiRequestKindProto kind = 2;
+  oneof content {
+    InfallibleApiRequestTopUpProto top_up = 3;
+  }
+}
+
+enum InfallibleApiRequestKindProto {
+  TOP_UP = 0;
+}
+
+message InfallibleApiRequestTopUpProto {
+  double amount = 1;
+  string customer_tag_uid = 2;
+  string payment_method = 3;
+}
+
+message InfallibleApiRequestsProto {
+  repeated InfallibleApiRequestProto requests = 1;
+}
