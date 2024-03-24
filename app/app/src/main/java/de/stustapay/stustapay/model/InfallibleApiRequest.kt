@@ -1,7 +1,8 @@
 package de.stustapay.stustapay.model
 
-import java.util.UUID
 import de.stustapay.api.models.NewTopUp
+import de.stustapay.api.models.NewTicketSale
+import java.util.UUID
 
 data class InfallibleApiRequests(
     val requests: Map<UUID, InfallibleApiRequest>
@@ -14,5 +15,9 @@ data class InfallibleApiRequest(
 sealed interface InfallibleApiRequestKind {
     data class TopUp(
         val content: NewTopUp
+    ) : InfallibleApiRequestKind
+
+    data class TicketSale(
+        val content: NewTicketSale
     ) : InfallibleApiRequestKind
 }

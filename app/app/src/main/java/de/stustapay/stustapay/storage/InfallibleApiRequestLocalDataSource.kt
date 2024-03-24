@@ -29,8 +29,4 @@ class InfallibleApiRequestLocalDataSource @Inject constructor(
             InfallibleApiRequests(requests = it.requests.filter { it.key != id })
         }
     }
-
-    suspend fun retry() {
-        infallibleApiRequestStore.updateData { it }
-    }
 }
