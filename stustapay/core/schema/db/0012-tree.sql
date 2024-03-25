@@ -324,6 +324,13 @@ alter table product alter column type set not null;
 
 alter table product add column ticket_metadata_id bigint references ticket(id) unique;
 update product set ticket_metadata_id = t.id from product p join ticket t on t.product_id = p.id where p.id = product.id;
+
+insert into product_restriction (id, restriction)
+select p.id, t.restriction
+from product p
+join ticket t on p.ticket_metadata_id = t.id
+where t.restriction is not null;
+
 alter table ticket drop column name;
 alter table ticket drop column description;
 alter table ticket drop column restriction;
