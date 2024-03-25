@@ -556,9 +556,21 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/stats/products`,
           params: {
+            node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getEntryStats: build.query<GetEntryStatsApiResponse, GetEntryStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/entries`,
+          params: {
             node_id: queryArg.nodeId,
+            interval: queryArg.interval,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
           },
         }),
         providesTags: ["stats"],
@@ -1176,9 +1188,16 @@ export type CloseOutCashierApiArg = {
 };
 export type GetProductStatsApiResponse = /** status 200 Successful Response */ ProductStats2;
 export type GetProductStatsApiArg = {
+  nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
-  nodeId?: number | null;
+};
+export type GetEntryStatsApiResponse = /** status 200 Successful Response */ EntryStats;
+export type GetEntryStatsApiArg = {
+  nodeId: number;
+  interval: IntervalType;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
 };
 export type ListTicketsApiResponse = /** status 200 Successful Response */ NormalizedListTicketInt;
 export type ListTicketsApiArg = {
@@ -2011,6 +2030,17 @@ export type ProductStats2 = {
   };
   voucher_stats: VoucherStats;
 };
+export type EntryStatInterval = {
+  from_time: string;
+  to_time: string;
+  n_entries_sold: number;
+};
+export type EntryStats = {
+  from_time: string;
+  to_time: string;
+  intervals: EntryStatInterval[];
+};
+export type IntervalType = "daily" | "hourly";
 export type Ticket = {
   name: string;
   price: number;
@@ -2192,7 +2222,6 @@ export type ObjectType =
   | "tax_rate"
   | "user_tag"
   | "tse"
-  | "order"
   | "account"
   | "terminal";
 export type NodeSeenByUser = {
@@ -2547,6 +2576,8 @@ export const {
   useCloseOutCashierMutation,
   useGetProductStatsQuery,
   useLazyGetProductStatsQuery,
+  useGetEntryStatsQuery,
+  useLazyGetEntryStatsQuery,
   useListTicketsQuery,
   useLazyListTicketsQuery,
   useCreateTicketMutation,

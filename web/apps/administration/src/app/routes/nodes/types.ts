@@ -9,7 +9,6 @@ export const ObjectTypeSchema = z.enum([
   "tax_rate",
   "user_tag",
   "tse",
-  "order",
   "account",
   "terminal",
 ]);

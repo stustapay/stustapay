@@ -13,6 +13,7 @@ import {
   NodeSettings,
   SettingsLegacy,
   NodeCreate,
+  NodeStats,
 } from "./routes/nodes";
 import { OrderDetail, SaleEdit } from "./routes/orders";
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
@@ -83,7 +84,7 @@ const router = createBrowserRouter([
         element: <NodePageLayout />,
         children: [
           { index: true, element: <NodeOverview /> },
-          { path: "stats", element: <MoneyOverview /> },
+          { path: "stats", element: <NodeStats /> },
           {
             path: "settings-legacy",
             element: <SettingsLegacy />,
