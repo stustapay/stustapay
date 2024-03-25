@@ -5,10 +5,10 @@ from stustapay.framework.database import create_db_pool
 
 from . import database
 from .config import Config
-from .schema.user import NewUser
+from .schema.user import NewUser, NewUserToRole
 from .service.auth import AuthService
 from .service.tree.common import fetch_node
-from .service.user import UserService, list_user_roles
+from .service.user import UserService, associate_user_to_role, list_user_roles
 
 
 async def add_user(config: Config, node_id: int):
@@ -36,12 +36,22 @@ async def add_user(config: Config, node_id: int):
         new_user = NewUser(
             login=username,
             description=None,
-            role_names=role_names.split(","),
             display_name=display_name,
         )
         user = await user_service.create_user_no_auth(  # pylint: disable=missing-kwoa
-            new_user=new_user, password=password
+            node_id=node.id, new_user=new_user, password=password
         )
+        async with db_pool.acquire() as conn:
+            for role_name in role_names:
+                roles = [x for x in available_roles if x.name == role_name]
+                if len(roles) != 1:
+                    print(f"Invalid role: {role_name}")
+                    return
+                role_id = roles[0].id
+                await associate_user_to_role(
+                    conn=conn, node=node, new_user_to_role=NewUserToRole(user_id=user.id, role_id=role_id)
+                )
+
         print("created new user:")
         pprint(user)
     finally:
