@@ -123,7 +123,8 @@ class PayOutViewModel @Inject constructor(
         }
 
         // local check: amount has to be negative for payouts
-        if (newPayOut.amount != null && newPayOut.amount!! >= 0.0) {
+        val amount = newPayOut.amount
+        if (amount != null && amount >= 0.0) {
             _status.update { "Amount is zero" }
             return false
         }

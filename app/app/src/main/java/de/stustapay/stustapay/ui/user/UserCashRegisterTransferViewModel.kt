@@ -94,9 +94,9 @@ class UserCashRegisterTransferViewModel @Inject constructor(
 
         when (transferResult) {
             is Response.OK -> {
-
-                if (transferResult.data.currentCashierTagUid != targetTag.uid) {
-                    if (transferResult.data.currentCashierTagUid == null) {
+                val currentCashierTagUid = transferResult.data.currentCashierTagUid
+                if (currentCashierTagUid != targetTag.uid) {
+                    if (currentCashierTagUid == null) {
                         TransferCashRegisterState.Error(
                             resourcesProvider.getString(R.string.cash_register_notassigned)
                         )
@@ -105,8 +105,7 @@ class UserCashRegisterTransferViewModel @Inject constructor(
                             TransferCashRegisterState.Error(
                                 resourcesProvider.getString(R.string.cash_register_unexpected_assign)
                                     .format(
-                                        UserTag(transferResult.data.currentCashierTagUid!!),
-                                        UserTag(targetTag.uid)
+                                        UserTag(currentCashierTagUid), UserTag(targetTag.uid)
                                     )
                             )
                         }

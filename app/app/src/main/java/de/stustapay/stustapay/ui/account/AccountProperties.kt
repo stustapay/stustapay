@@ -120,12 +120,13 @@ fun AccountProperties(
             Spacer(modifier = Modifier.height(5.dp))
         }
 
-        if (account.restriction != null) {
+        val restriction = account.restriction
+        if (restriction != null) {
             item {
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_restriction),
-                    when (account.restriction!!.value) {
+                    when (restriction.value) {
                         "under_18" -> {
                             stringResource(R.string.under_18_years)
                         }
@@ -134,28 +135,30 @@ fun AccountProperties(
                             stringResource(R.string.under_16_years)
                         }
 
-                        else -> account.restriction!!.value
+                        else -> restriction.value
                     },
                 )
             }
         }
 
-        if (account.name != null) {
+        val name = account.name
+        if (name != null) {
             item {
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_name),
-                    account.name!!,
+                    name,
                 )
             }
         }
 
-        if (showComment && !account.comment.isNullOrEmpty()) {
+        val comment = account.comment
+        if (showComment && !comment.isNullOrEmpty()) {
             item {
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_comment),
-                    account.comment!!,
+                    comment,
                     below = true,
                     small = true,
                 )

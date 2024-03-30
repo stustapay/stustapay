@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_to_stustapay">Wilkommen bei StuStaPay!</string>
+    <string name="credit_amount">Guthaben: %.2f€</string>
+    <string name="payout">Auszahlung</string>
+    <string name="credit_left">Übriges Guthaben</string>
+    <string name="success">Erfolgreich!</string>
+    <string name="done">Fertig</string>
+    <string name="payed_to_user_q">Geld an Kunde gegeben?</string>
+    <string name="back">Zurück</string>
+    <string name="received_q">Erhalten?</string>
+    <string name="remaining_vouchers">Übrige Gutscheine</string>
+    <string name="used_vouchers">Gutscheine eingelöst</string>
+    <string name="new_balance">Neues Guthaben</string>
+    <string name="price">Preis</string>
+    <string name="voucher">Gutschein</string>
+    <string name="edit">↢ Zurück</string>
+    <string name="no_balance_for_payout">Kein Guthaben zum Auszahlen</string>
+
+    <string name="common_status_fetching">Anfrage wird ausgeführt</string>
+    <string name="common_status_idle">Bereit</string>
+    <string name="common_status_failed">Fehlgeschlagen</string>
+    <string name="common_status_done">Fertig</string>
+
+    <string name="common_action_scan">Scannen</string>
+    <string name="common_action_cancel">Abbrechen</string>
+    <string name="common_action_create">Erstellen</string>
+    <string name="common_action_update">Änderungen übernehmen</string>
+
+    <string name="root_item_ticket">Eintritt</string>
+    <string name="root_item_sale">Verkauf</string>
+    <string name="root_item_topup">Einzahlen / Auszahlen</string>
+    <string name="root_item_rewards">Gutscheine</string>
+    <string name="root_item_settings">Einstellungen</string>
+    <string name="root_item_development">Entwicklung</string>
+    <string name="root_item_restart_app">App neu starten</string>
+
+    <string name="cashier_title">Kassiererstatus</string>
+    <string name="cashier_drawer">Kassenname</string>
+    <string name="cashier_drawer_cash">Betrag in Kasse</string>
+    <string name="cashier_bag">Rucksack</string>
+
+    <string name="history_title">Bestellverlauf</string>
+    <string name="history_sum">Summe</string>
+    <string name="history_cancel">Stornieren</string>
+    <string name="history_confirm">Stornierung bestätigen</string>
+
+    <string name="customer_title">Kontostand</string>
+    <string name="customer_name">Name</string>
+    <string name="customer_cash">Guthaben</string>
+    <string name="customer_vouchers">Gutscheine</string>
+    <string name="customer_comment">Kommentar</string>
+    <string name="customer_swap">Bändchen tauschen</string>
+    <string name="customer_oldtag">Alt</string>
+    <string name="customer_newtag">Neu</string>
+    <string name="customer_scanoldtag">Altes Bändchen Scannen</string>
+
+    <string name="management_title">Kassenverwaltung</string>
+    <string name="management_equip_title">Bestücken</string>
+    <string name="management_equip_equip">Bestücken</string>
+    <string name="management_transport_title">Rucksack / Kasse</string>
+    <string name="management_transport_withdraw">Abschöpfen</string>
+    <string name="management_transport_deposit">Bestücken</string>
+    <string name="management_vault_title">Keller / Rucksack</string>
+    <string name="management_vault_take">Einpacken</string>
+    <string name="management_vault_return">Auspacken</string>
+
+    <string name="nfc_scan_prompt">📡 Chip scannen</string>
+
+    <string name="user_title">Benutzer</string>
+    <string name="user_login">Einloggen</string>
+    <string name="user_logout">Ausloggen</string>
+    <string name="user_id">ID</string>
+    <string name="user_username">Benutzername</string>
+    <string name="user_displayname">Name</string>
+    <string name="user_roles">Rollen</string>
+    <string name="user_privileged">Benutzer hat Sonderrechte und kann nicht bearbeitet werden</string>
+    <string name="user_description">Beschreibung</string>
+    <string name="user_create_title">Benutzer erstellen</string>
+    <string name="user_display_title">Benutzer anzeigen und verwalten</string>
+    <string name="user_update_title">Benutzer verwalten</string>
+    <string name="user_select">Rolle auswählen:</string>
+    <string name="user_login_other">Nutzer oder Rolle wechseln</string>
+
+    <string name="topup">Aufladung</string>
+    <string name="previous_balance">Altes Guthaben</string>
+    <string name="error">Fehler</string>
+    <string name="pay_cash">🪙\nBar</string>
+    <string name="pay_card">💳\nKarte</string>
+    <string name="arrow_back">← Zurück</string>
+    <string name="check_ok">✓ OK</string>
+    <string name="scan_ticket">🎫 Ticket scannen</string>
+    <string name="duplicate_ticket_scan">Schon gescanned. Neues Ticket scannen!</string>
+    <string name="ticket_scanning_off">Scannen inaktiv.</string>
+    <string name="tickets">Tickets</string>
+    <string name="deposit_handout">Pfand-Ausgabe</string>
+    <string name="deposit_returned">Pfand-Rückgabe</string>
+    <string name="ticket_error_preambel">Fehler beim Ticket-Kauf:</string>
+    <string name="vouchers_granted">%s Gutscheine ausgegeben</string>
+    <string name="with_n_vouchers">mit %s Gutscheinen</string>
+    <string name="free_ticket_activated">Kostenloses Ticket aktiviert</string>
+    <string name="grant_new_wristband">Neues Band ausgeben</string>
+    <string name="voucher_amount">Gutscheinanzahl</string>
+    <string name="vouchers">Gutscheine</string>
+    <string name="wristband">Bändchen</string>
+    <string name="grant">Verteilen</string>
+    <string name="nfc_no_scan_active">Scan inaktiv.</string>
+    <string name="nfc_waiting_for_tag">Warte auf Chip...</string>
+    <string name="nfc_scan_success">Scan erfolgreich!</string>
+    <string name="nfc_error_reading_tag_s">Fehler beim Lesen: %s</string>
+    <string name="nfc_try_again_s">Nochmal scannen! %s</string>
+    <string name="nfc_signature_mismatch">Signatur falsch!</string>
+    <string name="customer_restriction">Beschränkung</string>
+    <string name="under_18_years">Unter 18</string>
+    <string name="under_16_years">Unter 16</string>
+    <string name="failed_fetching">Fehler beim Abruf</string>
+    <string name="hand_over_cash_register">Barkasse übergeben</string>
+    <string name="nfc_scan_login">📡 Zum einloggen Chip scannen</string>
+    <string name="not_logged_in">Nicht eingeloggt</string>
+    <string name="scan_transfer_cashregister_current">📡 Aktuellen Kassenbesitzer scannen</string>
+    <string name="scan_transfer_cashregister_new">📡 Neuen Kassenbesitzer scannen</string>
+    <string name="cash_register_transfer_success">Kassenlade erfolgreich übertragen!</string>
+    <string name="cash_register_transfer_error">Fehler beim Barkassentransfer:</string>
+    <string name="transfer_cash_register">Barkasse übergeben</string>
+    <string name="cash_register_transferring">Übergabe wird durchgeführt...</string>
+    <string name="cash_register_notassigned">Barkasse ist keinem Kassierer mehr zugeordnet.</string>
+    <string name="cash_register_unexpected_assign">Barkasse ist nun %s zugewiesen, sollte aber %s sein.</string>
+    <string name="cash_register_same_source_target">Alter und neuer Chip sind gleich.</string>
+    <string name="no_cash_register">Keine Kassenschublade</string>
+    <string name="sale_check_error">Fehler bei Bestellprüfung:</string>
+    <string name="tag_uid">Chip ID</string>
+    <string name="ticket_order_booked">Bestellung gebucht!</string>
+    <string name="ticket_order_validated">Ticketbestellung gültig!</string>
+    <string name="order_checking">Bestellung wird geprüft...</string>
+    <string name="ticket_order_cleared">Bestellung zurückgesetzt</string>
+    <string name="ticket_order_cleared_success">Bereit für neue Bestellung.</string>
+    <string name="ticket_unknown">Ticket unbekannt.</string>
+    <string name="ticket_valid">Ticket gültig.</string>
+</resources>
