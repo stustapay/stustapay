@@ -93,9 +93,10 @@ fun AccountProperties(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (account.userTagUid != null) {
+                val userTagUid = account.userTagUid
+                if (userTagUid != null) {
                     TagItem(
-                        UserTag(account.userTagUid!!),
+                        UserTag(userTagUid),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp)
