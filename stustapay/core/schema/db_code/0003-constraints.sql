@@ -114,7 +114,8 @@ begin
         till_button_product tlb
         join product p on tlb.product_id = p.id
     where
-            tlb.button_id = check_button_references_max_one_non_fixed_price_product.button_id
+        tlb.button_id = check_button_references_max_one_non_fixed_price_product.button_id
+        and tlb.product_id != check_button_references_max_one_non_fixed_price_product.product_id
         and not p.fixed_price;
 
     select
@@ -146,7 +147,8 @@ begin
         till_button_product tlb
         join product p on tlb.product_id = p.id
     where
-            tlb.button_id = check_button_references_max_one_returnable_product.button_id
+        tlb.button_id = check_button_references_max_one_returnable_product.button_id
+        and tlb.product_id != check_button_references_max_one_returnable_product.product_id
         and p.is_returnable;
 
     select
@@ -178,7 +180,8 @@ begin
         till_button_product tlb
         join product p on tlb.product_id = p.id
     where
-            tlb.button_id = check_button_references_max_one_voucher_product.button_id
+        tlb.button_id = check_button_references_max_one_voucher_product.button_id
+        and tlb.product_id != check_button_references_max_one_voucher_product.product_id
         and p.price_in_vouchers is not null;
 
     select
@@ -235,9 +238,13 @@ begin
         ticket t
         join till_layout_to_ticket tltt on t.id = tltt.ticket_id
     where
-            t.id != check_till_layout_contains_tickets_of_unique_restrictions.ticket_id
+        t.id != check_till_layout_contains_tickets_of_unique_restrictions.ticket_id
         and tltt.layout_id = check_till_layout_contains_tickets_of_unique_restrictions.layout_id
         and (t.restrictions = locals.restrictions);
+
+    if locals.n_current_tickets_in_layout > 0 then
+        raise '% tickets in layout with same restrictions: %', locals.n_current_tickets_in_layout, locals.restrictions;
+    end if;
 
     return locals.n_current_tickets_in_layout < 1;
 end

@@ -4,6 +4,7 @@ from stustapay.core.schema.tree import (
     Language,
     Node,
     NodeSeenByUser,
+    PublicEventSettings,
     RestrictedEventSettings,
 )
 from stustapay.core.schema.user import CurrentUser
@@ -96,6 +97,14 @@ async def get_tree_for_current_user(conn: Connection, current_user: CurrentUser)
         node_map[child.id] = child
 
     return root_node
+
+
+async def fetch_event_for_node(conn: Connection, node: Node) -> PublicEventSettings:
+    return await conn.fetch_one(
+        PublicEventSettings,
+        "select * from event_with_translations e join node n on n.event_id = e.id where n.id = $1",
+        node.event_node_id,
+    )
 
 
 async def fetch_event_node_for_node(conn: Connection, node_id: int) -> Node | None:

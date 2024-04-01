@@ -193,6 +193,10 @@ export const translations = {
     voucherStats: "Vouchers",
     vouchersIssued: "Issued",
     vouchersSpent: "Spent",
+    groupByDay: "Group by day",
+    showRevenue: "Show revenue",
+    warningEventDatesNeedConfiguration:
+      "Please configure the start / end times for this event as well as the daily end time in the event settings",
   },
   ticket: {
     name: "Name",

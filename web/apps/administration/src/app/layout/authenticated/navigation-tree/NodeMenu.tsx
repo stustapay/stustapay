@@ -47,16 +47,18 @@ export const NodeMenu: React.FC<NodeMenuProps> = React.memo(({ node }) => {
   ) {
     const id = UserRoutes.list(node.id);
     items.push(<NavigationTreeItem key={id} nodeId={id} to={id} labelText={t("users")} labelIcon={PersonIcon} />);
-    const cashierId = CashierRoutes.list(node.id);
-    items.push(
-      <NavigationTreeItem
-        key={cashierId}
-        nodeId={cashierId}
-        to={cashierId}
-        labelText={t("cashiers")}
-        labelIcon={PersonIcon}
-      />
-    );
+    if (node.event_node_id != null) {
+      const cashierId = CashierRoutes.list(node.id);
+      items.push(
+        <NavigationTreeItem
+          key={cashierId}
+          nodeId={cashierId}
+          to={cashierId}
+          labelText={t("cashiers")}
+          labelIcon={PersonIcon}
+        />
+      );
+    }
   }
 
   {

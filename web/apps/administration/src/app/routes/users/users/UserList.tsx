@@ -75,11 +75,6 @@ export const UserList: React.FC = () => {
       valueFormatter: ({ value }) => formatUserTagUid(value),
     },
     {
-      field: "role_names",
-      headerName: t("user.roles") as string,
-      flex: 1,
-    },
-    {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
       valueFormatter: ({ value }) => renderNode(value),

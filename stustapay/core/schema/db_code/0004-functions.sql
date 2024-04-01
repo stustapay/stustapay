@@ -51,60 +51,6 @@ end;
 $$ language plpgsql
     set search_path = "$user", public;
 
--- sql type function to the query planner can optimize it
-create or replace function product_stats(
-    from_timestamp timestamptz,
-    to_timestamp timestamptz
-)
-    returns table (
---     till_profile_id bigint,  -- does not make much sense as the profile could change
-        till_id       bigint,
-        product_id    bigint,
-        quantity_sold bigint
-    )
-as
-$$
-select
-    o.till_id,
-    li.product_id,
-    sum(li.quantity) as quantity_sold
-from
-    line_item li
-    join ordr o on li.order_id = o.id
-where
-    o.order_type != 'cancel_order'
-    and (from_timestamp is not null and o.booked_at >= from_timestamp or from_timestamp is null)
-    and (to_timestamp is not null and o.booked_at <= to_timestamp or to_timestamp is null)
-group by
-    o.till_id, li.product_id;
-$$ language sql
-    stable
-    security invoker
-    set search_path = "$user", public;
-
-create or replace function voucher_stats(
-    from_timestamp timestamptz,
-    to_timestamp timestamptz
-)
-    returns table (
-        vouchers_issued bigint,
-        vouchers_spent  bigint
-    )
-as
-$$
-select
-    sum(case when t.source_account = 6 then t.vouchers else 0 end)  as vouchers_issued,
-    sum(case when t.source_account != 6 then t.vouchers else 0 end) as vouchers_spent
-from
-    transaction t
-where
-    (from_timestamp is not null and t.booked_at >= from_timestamp or from_timestamp is null)
-    and (to_timestamp is not null and t.booked_at <= to_timestamp or to_timestamp is null);
-$$ language sql
-    stable
-    security invoker
-    set search_path = "$user", public;
-
 create or replace function node_with_user_roles(
     user_id bigint
 )

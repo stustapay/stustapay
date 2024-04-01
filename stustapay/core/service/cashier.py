@@ -228,7 +228,9 @@ class CashierService(DBService):
             product = await fetch_product(conn=conn, node=node, product_id=row["product_id"])
             if product is None:
                 continue
-            stats.booked_products.append(CashierShiftStats.ProductStats(product=product, quantity=row["quantity"]))
+            stats.booked_products.append(
+                CashierShiftStats.CashierProductStats(product=product, quantity=row["quantity"])
+            )
         return stats
 
     @with_retryable_db_transaction()
