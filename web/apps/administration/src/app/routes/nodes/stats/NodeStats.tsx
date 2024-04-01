@@ -4,9 +4,10 @@ import { Privilege } from "@stustapay/models";
 import { DateTime } from "luxon";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import { useTranslation } from "react-i18next";
-import { Alert, AlertTitle, Checkbox, Divider, FormControlLabel, Grid, Stack } from "@mui/material";
+import { Alert, AlertTitle, Divider, FormControlLabel, Grid, Stack, Switch } from "@mui/material";
 import { useCurrentEventSettings } from "@/hooks";
 import { EventStats } from "./EventStats";
+import { NodeSpecificStats } from "./NodeSpecificStats";
 
 export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
   const { t } = useTranslation();
@@ -14,6 +15,7 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
   const [fromTimestamp, setFromTimestamp] = React.useState<DateTime | undefined>(undefined);
   const [toTimestamp, setToTimestamp] = React.useState<DateTime | undefined>(undefined);
   const [groupByDay, setGroupByDay] = React.useState(true);
+  const [showRevenue, setShowRevenue] = React.useState(false);
 
   if (eventSettings.start_date == null || eventSettings.end_date == null || eventSettings.daily_end_time == null) {
     return (
@@ -38,8 +40,12 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
             onChange={(val) => setToTimestamp(val ?? undefined)}
           />
           <FormControlLabel
-            control={<Checkbox checked={groupByDay} onChange={(evt) => setGroupByDay(evt.target.checked)} />}
+            control={<Switch checked={groupByDay} onChange={(evt) => setGroupByDay(evt.target.checked)} />}
             label={t("overview.groupByDay")}
+          />
+          <FormControlLabel
+            control={<Switch checked={showRevenue} onChange={(evt) => setShowRevenue(evt.target.checked)} />}
+            label={t("overview.showRevenue")}
           />
         </Stack>
       </Grid>
@@ -49,6 +55,15 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
         fromTimestamp={fromTimestamp}
         toTimestamp={toTimestamp}
         groupByDay={groupByDay}
+        useRevenue={showRevenue}
+      />
+      <Divider />
+      <NodeSpecificStats
+        dailyEndTime={eventSettings.daily_end_time}
+        fromTimestamp={fromTimestamp}
+        toTimestamp={toTimestamp}
+        groupByDay={groupByDay}
+        useRevenue={showRevenue}
       />
     </Grid>
   );

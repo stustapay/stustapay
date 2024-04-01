@@ -6,7 +6,7 @@ import { Stack, Typography } from "@mui/material";
 export const NodeOverview: React.FC = () => {
   const { currentNode } = useCurrentNode();
 
-  if (currentNode.event != null || currentNode.event_node_id != null) {
+  if (currentNode.event != null) {
     return <EventOverview />;
   }
 

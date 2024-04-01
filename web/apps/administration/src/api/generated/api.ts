@@ -563,12 +563,33 @@ const injectedRtkApi = api
         }),
         providesTags: ["stats"],
       }),
+      getVoucherStats: build.query<GetVoucherStatsApiResponse, GetVoucherStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/vouchers`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
       getEntryStats: build.query<GetEntryStatsApiResponse, GetEntryStatsApiArg>({
         query: (queryArg) => ({
           url: `/stats/entries`,
           params: {
             node_id: queryArg.nodeId,
-            interval: queryArg.interval,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getTopUpStats: build.query<GetTopUpStatsApiResponse, GetTopUpStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/top-ups`,
+          params: {
+            node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
           },
@@ -1186,16 +1207,27 @@ export type CloseOutCashierApiArg = {
   nodeId?: number | null;
   closeOut: CloseOut;
 };
-export type GetProductStatsApiResponse = /** status 200 Successful Response */ ProductStats2;
+export type GetProductStatsApiResponse = /** status 200 Successful Response */ ProductStats;
 export type GetProductStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
 };
-export type GetEntryStatsApiResponse = /** status 200 Successful Response */ EntryStats;
+export type GetVoucherStatsApiResponse = /** status 200 Successful Response */ VoucherStats;
+export type GetVoucherStatsApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+};
+export type GetEntryStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetEntryStatsApiArg = {
   nodeId: number;
-  interval: IntervalType;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+};
+export type GetTopUpStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
+export type GetTopUpStatsApiArg = {
+  nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
 };
@@ -1985,12 +2017,12 @@ export type NormalizedListCashierShiftInt = {
     [key: string]: CashierShift;
   };
 };
-export type ProductStats = {
+export type CashierProductStats = {
   product: Product;
   quantity: number;
 };
 export type CashierShiftStats = {
-  booked_products: ProductStats[];
+  booked_products: CashierProductStats[];
 };
 export type CloseOutResult = {
   cashier_id: number;
@@ -2001,46 +2033,34 @@ export type CloseOut = {
   actual_cash_drawer_balance: number;
   closing_out_user_id: number;
 };
-export type ProductSoldStats = {
-  name: string;
-  price: number | null;
-  fixed_price: boolean;
-  price_in_vouchers?: number | null;
-  tax_rate_id: number;
-  restrictions: ProductRestriction[];
-  is_locked: boolean;
-  is_returnable: boolean;
-  target_account_id?: number | null;
-  node_id: number;
-  id: number;
-  tax_name: string;
-  tax_rate: number;
-  type: ProductType;
-  price_per_voucher?: number | null;
-  quantity_sold: number;
+export type StatInterval = {
+  from_time: string;
+  to_time: string;
+  count: number;
+  revenue: number;
+};
+export type ProductTimeseries = {
+  product_id: number;
+  intervals: StatInterval[];
+};
+export type ProductStats = {
+  from_time: string;
+  to_time: string;
+  daily_intervals: StatInterval[];
+  hourly_intervals: StatInterval[];
+  product_daily_intervals: ProductTimeseries[];
+  product_hourly_intervals: ProductTimeseries[];
 };
 export type VoucherStats = {
   vouchers_issued: number;
   vouchers_spent: number;
 };
-export type ProductStats2 = {
-  product_quantities: ProductSoldStats[];
-  product_quantities_by_till: {
-    [key: string]: ProductSoldStats[];
-  };
-  voucher_stats: VoucherStats;
-};
-export type EntryStatInterval = {
+export type TimeseriesStats = {
   from_time: string;
   to_time: string;
-  n_entries_sold: number;
+  daily_intervals: StatInterval[];
+  hourly_intervals: StatInterval[];
 };
-export type EntryStats = {
-  from_time: string;
-  to_time: string;
-  intervals: EntryStatInterval[];
-};
-export type IntervalType = "daily" | "hourly";
 export type Ticket = {
   name: string;
   price: number;
@@ -2576,8 +2596,12 @@ export const {
   useCloseOutCashierMutation,
   useGetProductStatsQuery,
   useLazyGetProductStatsQuery,
+  useGetVoucherStatsQuery,
+  useLazyGetVoucherStatsQuery,
   useGetEntryStatsQuery,
   useLazyGetEntryStatsQuery,
+  useGetTopUpStatsQuery,
+  useLazyGetTopUpStatsQuery,
   useListTicketsQuery,
   useLazyListTicketsQuery,
   useCreateTicketMutation,

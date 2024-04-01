@@ -1,6 +1,8 @@
 import * as React from "react";
 import { DateTime } from "luxon";
-import { ResponsiveLine, Datum } from "@nivo/line";
+import { ResponsiveLine, Datum, DatumValue } from "@nivo/line";
+import { TimeseriesStats } from "@/api";
+import { useCurrencyFormatter } from "@/hooks";
 
 interface Serie {
   id: string;
@@ -14,15 +16,21 @@ export type Stats = {
   }>;
 };
 
-const transformHourlyEntryStats = (data: Stats, dailyEndTime: string, groupByDay: boolean): Serie[] => {
-  if (data.intervals.length === 0) {
+const transformHourlyEntryStats = (
+  data: TimeseriesStats,
+  dailyEndTime: string,
+  groupByDay: boolean,
+  useRevenue: boolean
+): Serie[] => {
+  if (data.hourly_intervals.length === 0) {
     return [];
   }
+
   if (groupByDay) {
     const series: Record<string, Serie> = {};
-    const firstDate = data.intervals[0].timestamp;
-    for (const interval of data.intervals) {
-      const t = interval.timestamp;
+    const firstDate = DateTime.fromISO(data.hourly_intervals[0].to_time);
+    for (const interval of data.hourly_intervals) {
+      const t = DateTime.fromISO(interval.to_time);
       const dailyStart = DateTime.fromISO(`${t.toISODate()}T${dailyEndTime}${t.toFormat("ZZZ")}`);
       let d;
       let toPrevDay = false;
@@ -43,7 +51,7 @@ const transformHourlyEntryStats = (data: Stats, dailyEndTime: string, groupByDay
       }
       const formatted = `${firstDate.plus({ days: toPrevDay ? 1 : 0 }).toISODate()}T${t.toISOTime()}`;
       const modifiedT = DateTime.fromISO(formatted);
-      series[d].data.push({ x: modifiedT.toJSDate(), y: interval.value });
+      series[d].data.push({ x: modifiedT.toJSDate(), y: useRevenue ? interval.revenue : interval.count });
     }
 
     return Object.values(series).reverse();
@@ -51,9 +59,9 @@ const transformHourlyEntryStats = (data: Stats, dailyEndTime: string, groupByDay
     return [
       {
         id: "sales",
-        data: data.intervals.map((interval) => ({
-          x: interval.timestamp.toJSDate(),
-          y: interval.value,
+        data: data.hourly_intervals.map((interval) => ({
+          x: DateTime.fromISO(interval.to_time).toJSDate(),
+          y: useRevenue ? interval.revenue : interval.count,
         })),
       },
     ];
@@ -61,42 +69,50 @@ const transformHourlyEntryStats = (data: Stats, dailyEndTime: string, groupByDay
 };
 
 export type HourlyGraphProps = {
-  labelY?: string;
   dailyEndTime: string;
   groupByDay: boolean;
-  data: Stats;
+  useRevenue: boolean;
+  data: TimeseriesStats;
 };
 
-export const HourlyGraph: React.FC<HourlyGraphProps> = ({ data, dailyEndTime, labelY, groupByDay }) => {
+export const HourlyGraph: React.FC<HourlyGraphProps> = ({ data, dailyEndTime, groupByDay, useRevenue }) => {
   const transformedData = React.useMemo(
-    () => transformHourlyEntryStats(data, dailyEndTime, groupByDay),
-    [data, dailyEndTime, groupByDay]
+    () => transformHourlyEntryStats(data, dailyEndTime, groupByDay, useRevenue),
+    [data, dailyEndTime, groupByDay, useRevenue]
   );
-  console.log(transformedData);
+
+  const formatCurrency = useCurrencyFormatter();
 
   return (
     <ResponsiveLine
       data={transformedData}
+      colors={{ scheme: "category10" }}
       axisBottom={{
-        format: "%H:%M",
+        format: "%a %H:%M",
         legend: "time",
-        tickValues: "every 1 hour",
-        tickRotation: -50,
+        tickRotation: 0,
         legendPosition: "middle",
-        legendOffset: 45,
+        legendOffset: 35,
       }}
       axisLeft={{
-        legend: labelY ?? "value",
+        legend: useRevenue ? "revenue per hour" : "count per hour",
         legendPosition: "middle",
-        legendOffset: -40,
+        legendOffset: useRevenue ? -80 : -40,
+        format: (value) => {
+          if (useRevenue) {
+            return formatCurrency(value);
+          } else {
+            return value;
+          }
+        },
       }}
-      xFormat={(value: any) => DateTime.fromJSDate(value).toISO() ?? ""}
-      enablePointLabel
+      xFormat={(value: DatumValue) => DateTime.fromJSDate(value as Date).toISO() ?? ""}
+      enableSlices="x"
       enableTouchCrosshair
       curve="monotoneX"
       margin={{
-        bottom: 60,
-        left: 80,
+        bottom: 40,
+        left: useRevenue ? 90 : 80,
         right: groupByDay ? 100 : 20,
         top: 20,
       }}

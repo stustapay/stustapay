@@ -1,14 +1,15 @@
-import { useCurrencySymbol } from "./useCurrencySymbol";
+import { useCurrencyIdentifier } from "./useCurrencyIdentifier";
 
 export type CurrencyFormatter = (value?: number | null) => string;
 
 export const useCurrencyFormatter = (): CurrencyFormatter => {
-  const currencySymbol = useCurrencySymbol();
+  const currency = useCurrencyIdentifier();
+  const language = "de-DE";
 
   return (value?: number | null) => {
     if (value == null) {
       return "";
     }
-    return `${value.toFixed(2)} ${currencySymbol}`;
+    return Intl.NumberFormat(language, { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
   };
 };

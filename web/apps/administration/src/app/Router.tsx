@@ -13,8 +13,8 @@ import {
   NodeSettings,
   SettingsLegacy,
   NodeCreate,
-  NodeStats,
 } from "./routes/nodes";
+import { NodeStats } from "./routes/nodes/stats";
 import { OrderDetail, SaleEdit } from "./routes/orders";
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
 import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";

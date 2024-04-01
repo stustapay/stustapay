@@ -28,11 +28,11 @@ class Cashier(BaseModel):
 
 
 class CashierShiftStats(BaseModel):
-    class ProductStats(BaseModel):
+    class CashierProductStats(BaseModel):
         product: Product
         quantity: int
 
-    booked_products: list[ProductStats]
+    booked_products: list[CashierProductStats]
 
 
 class CashierShift(BaseModel):
