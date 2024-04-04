@@ -43,43 +43,33 @@ python3 -m stustapay -c <your-config>.yaml token generate-nfc --count <number>
 
 This yields a list of `<number>` individual secrets, for example:
 ```
-index,id,pin
-0,40cf0dd3411aa7d3,GKBQDP
-1,76c90aebcf54d989,R71J6Y
+index,pin
+0,GKBQDPD3411A
+1,R71J6YEBCF54
 ...
 ```
 
 This output should be supplied via a csv file to the NFC chip manufacturer.
 So we provide for each chip:
 
-* individual 8 byte random `id` (stored in chip memory)
-* individual 6 character `PIN` for lasering on the NFC tag
+* individual 12 character random `pin` engraved on back of chip (also stored in chip memory)
 
-The chip manufacturer then has to supply you each chips NFC `UID` assigned to the `index`/`id`/`pin` during manufacturing, because only they know what Chip they assigned to our generated IDs/PINs.
+
+## Feedback from manufacturer 
+
+No feedback is required (the list of pins we generated ourselves is used to verify chips and register them in the backend with an associated chip UID). 
 
 
 ## Laser
 
-On the back of the chip, you can let your manufacturer engrave your payment event website url, and the UID & PIN. Users can use this website to TopUp and see their status by logging in with the `UID` and `PIN` they see on the back of their NFC chip.
+On the back of the chip, you can let your manufacturer engrave your payment event website url, and the PIN. Users can use this website to TopUp and see their status by logging in with the `PIN` they see on the back of their NFC chip.
 
 ```
 pay.your-stustapay-event-name.de
-<<chip's UID in uppercase>>
-<<chip's individual pin from csv file>>
+<<chip's PIN in uppercase>>
 ```
 
 and additionally, if possible, either a datamatrix or qr-code with this url: https://pay.your-stustapay-event-name.de
-
-
-## Feedback from Manufacturer
-
-As a result from the manufacturer, you'll need a CSV or Excel file associating all information for each chip:
-
-- chip's `uid` (given by hardware)
-- `custom id` from our csv file
-- `pin` from our csv file
-
-This is needed so StuStaPay can assign the hardware UID with our generated PIN/ID.
 
 
 ## Chip Programming
@@ -91,7 +81,7 @@ Depending on the Chip type the data needs to be flashed into each NFC tag.
 
 This is the programming description for MIFARE's `MF0AES(H)20` chip.
 
-To program each chip we need to write a custom message, an **individual chip id**, and the **two keys**.
+To program each chip we need to write a custom message, an **individual chip pin**, and the **two keys**.
 
 The short custom message can be customized to whatever your users will read out when scanning their Chip with a smartphone - be creative :) The message is not write-protected intentionally, so user's can update the message to something they like! Other parts of the chip are of course write protected.
 
@@ -113,11 +103,11 @@ a2 0d 00  00  00  00
 a2 0e 00  00  00  00
 a2 0f 00  00  00  00
 
-Write custom individual chip id from (the `id` column from the generated PIN list):
+Write custom individual chip pin from (the `pin` column from the generated PIN list encoded as ASCII):
 
-a2 10 id[0] id[1] id[2] id[3]
-a2 11 id[4] id[5] id[6] id[7]
-a2 12 id[8] id[9] id[10] id[11]
+a2 10 pin[0] pin[1] pin[2] pin[3]
+a2 11 pin[4] pin[5] pin[6] pin[7]
+a2 12 pin[8] pin[9] pin[10] pin[11]
 
 
 Write key (key0 from the secrets):
@@ -152,7 +142,7 @@ a2 2a 80 05 00 00 (disable reading without auth,
 a2 29 03 00 00 10 (enable cmac, enable random id, protect from page 0x10 onwards)
 ```
 
-That's it, the production test should now be quite happy!\
+That's it, the production test should now be quite happy!
 
 This programming leaves the config unlocked, as any additional writes would require an exchange of CMAC-secured messages. See the following section for a sequence of writes that locks the config, but requires the writer to support CMAC.
 
