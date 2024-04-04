@@ -38,6 +38,7 @@ tasks.register('modApi') {
             exclude("**/ValidationErrorLocInner.kt")
             exclude("**/HTTPValidationError.kt")
             exclude("build.gradle")
+            exclude("settings.gradle")
             filter { String line -> line.replace("import de.stustapay.api.models.HTTPValidationError", "") }
             filter { String line -> line.replace("import de.stustapay.api.models.AnyOfLessThanGreaterThan", "") }
             filter { String line -> line.replace("    val userPrivileges: AnyOfLessThanGreaterThan?,", "    val userPrivileges: kotlin.collections.List<Privilege>?,") }
