@@ -115,8 +115,9 @@ a2 0f 00  00  00  00
 
 Write custom individual chip id from (the `id` column from the generated PIN list):
 
-a2 10 id[7] id[6] id[5] id[4]
-a2 11 id[3] id[2] id[1] id[0]
+a2 10 id[0] id[1] id[2] id[3]
+a2 11 id[4] id[5] id[6] id[7]
+a2 12 id[8] id[9] id[10] id[11]
 
 
 Write key (key0 from the secrets):
@@ -127,7 +128,7 @@ a2 32 key0[7] key0[6] key0[5] key0[4]
 a2 33 key0[3] key0[2] key0[1] key0[0]
 
 
-Write backup key (key1 from the secrets):
+Write UID retrieval key (key1 from the secrets):
 
 a2 34 key1[15] key1[14] key1[13] key1[12]
 a2 35 key1[11] key1[10] key1[9] key1[8]
@@ -142,16 +143,18 @@ Now the programming system has to go into AUTHENTICATED state using key0:
 
 Write Configuration:
 
-a2 28 01 00 00 00 (lock pages 0x10 and 0x11)
+a2 28 03 00 00 00 (lock pages 0x10, 0x11, 0x12, 0x13)
 a2 2d e0 00 00 00 (lock keys, lock key lock)
 a2 2a 80 05 00 00 (disable reading without auth,
                    disable access to counter without auth,
                    set virtual card id to 0x05,
                    disable failed auth limit)
-a2 29 02 00 00 10 (enable cmac, disable random id, protect from page 0x10 onwards)
+a2 29 03 00 00 10 (enable cmac, enable random id, protect from page 0x10 onwards)
 ```
 
-That's it, the production test should now be quite happy!
+That's it, the production test should now be quite happy!\
+
+This programming leaves the config unlocked, as any additional writes would require an exchange of CMAC-secured messages. See the following section for a sequence of writes that locks the config, but requires the writer to support CMAC.
 
 
 #### Programming MF0AES(H)20 with CMAC communication
@@ -166,8 +169,8 @@ Since a manufacturer's assembly line most likely does not support CMAC yet, this
 
 Write Configuration (if your assembly line supports CMAC):
 
-a2 28 01 00 00 00 (lock pages 0x10 and 0x11)
-a2 29 02 00 00 10 (enable cmac, disable random id, protect from page 0x10 onwards)
+a2 28 03 00 00 00 (lock pages 0x10, 0x11, 0x12, 0x13)
+a2 29 03 00 00 10 (enable cmac, enable random id, protect from page 0x10 onwards)
 
 <Enable CMAC communication for the following NFC commands>
 
