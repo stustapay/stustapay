@@ -16,8 +16,8 @@ import de.stustapay.stustapay.repository.CashierRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
 import de.stustapay.stustapay.repository.UserRepository
-import de.stustapay.stustapay.util.Result
-import de.stustapay.stustapay.util.asResult
+import de.stustapay.libssp.util.Result
+import de.stustapay.libssp.util.asResult
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 

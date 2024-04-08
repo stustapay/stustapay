@@ -28,9 +28,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustapay.stustapay.ui.theme.ProductButtonBigStyle
-import de.stustapay.stustapay.ui.theme.ProductButtonStyle
-import de.stustapay.stustapay.ui.theme.errorButtonColors
+import de.stustapay.libssp.ui.theme.ProductButtonBigStyle
+import de.stustapay.libssp.ui.theme.ProductButtonStyle
+import de.stustapay.libssp.ui.theme.errorButtonColors
 
 
 @Preview

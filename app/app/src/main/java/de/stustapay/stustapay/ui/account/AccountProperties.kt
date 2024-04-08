@@ -20,10 +20,10 @@ import de.stustapay.api.models.Customer
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.TagItem
-import de.stustapay.stustapay.ui.theme.AccountOverviewKeyStyle
-import de.stustapay.stustapay.ui.theme.AccountOverviewValueBigStyle
-import de.stustapay.stustapay.ui.theme.AccountOverviewValueStyle
-import de.stustapay.stustapay.ui.theme.MoneyAmountStyle
+import de.stustapay.libssp.ui.theme.AccountOverviewKeyStyle
+import de.stustapay.libssp.ui.theme.AccountOverviewValueBigStyle
+import de.stustapay.libssp.ui.theme.AccountOverviewValueStyle
+import de.stustapay.libssp.ui.theme.MoneyAmountStyle
 
 
 @Composable

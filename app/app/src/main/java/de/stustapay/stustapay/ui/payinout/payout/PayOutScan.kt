@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.sp
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.common.StatusText
-import de.stustapay.stustapay.ui.theme.NfcScanStyle
+import de.stustapay.libssp.ui.theme.NfcScanStyle
 
 
 @Composable

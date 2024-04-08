@@ -10,7 +10,7 @@ import de.stustapay.stustapay.repository.CustomerRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
-import de.stustapay.stustapay.util.ResourcesProvider
+import de.stustapay.libssp.util.ResourcesProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow

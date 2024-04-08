@@ -27,7 +27,7 @@ import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.nav.navigateTo
-import de.stustapay.stustapay.ui.theme.LargeButtonStyle
+import de.stustapay.libssp.ui.theme.LargeButtonStyle
 
 enum class CashECPage(val route: String) {
     Selection("selection"),

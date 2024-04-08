@@ -1,11 +1,12 @@
 package de.stustapay.stustapay.repository
 
-import de.stustapay.stustapay.model.NfcScanFailure
-import de.stustapay.stustapay.model.NfcScanRequest
-import de.stustapay.stustapay.model.NfcScanResult
+import de.stustapay.libssp.model.NfcScanFailure
+import de.stustapay.libssp.model.NfcScanRequest
+import de.stustapay.libssp.model.NfcScanResult
 import de.stustapay.api.models.UserTagSecret
-import de.stustapay.stustapay.nfc.NfcDataSource
-import de.stustapay.stustapay.util.*
+import de.stustapay.libssp.nfc.NfcDataSource
+import de.stustapay.libssp.util.BitVector
+import de.stustapay.libssp.util.decodeHex
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject

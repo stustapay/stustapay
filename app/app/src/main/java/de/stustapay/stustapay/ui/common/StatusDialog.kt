@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.theme.errorButtonColors
+import de.stustapay.libssp.ui.theme.errorButtonColors
 
 @Preview
 @Composable

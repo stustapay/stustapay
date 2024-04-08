@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import de.stustapay.stustapay.ui.common.ConfirmCard
-import de.stustapay.stustapay.ui.common.DialogDisplayState
-import de.stustapay.stustapay.ui.common.rememberDialogDisplayState
+import de.stustapay.libssp.ui.common.DialogDisplayState
+import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 
 @Preview
 @Composable

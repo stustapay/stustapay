@@ -8,8 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import de.stustapay.stustapay.ui.root.RootView
 import de.stustapay.stustapay.ui.root.RootWrapper
-import de.stustapay.stustapay.ui.theme.Theme
-import de.stustapay.stustapay.util.SysUiController
+import de.stustapay.libssp.ui.theme.Theme
+import de.stustapay.libssp.util.SysUiController
 
 
 @Preview(showBackground = true)

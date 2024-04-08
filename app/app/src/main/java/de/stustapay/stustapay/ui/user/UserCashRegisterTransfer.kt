@@ -19,10 +19,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.common.ConfirmCard
-import de.stustapay.stustapay.ui.common.DialogDisplayState
+import de.stustapay.libssp.ui.common.DialogDisplayState
 import de.stustapay.stustapay.ui.common.StatusText
-import de.stustapay.stustapay.ui.theme.MoneyAmountStyle
-import de.stustapay.stustapay.ui.theme.NfcScanStyle
+import de.stustapay.libssp.ui.theme.MoneyAmountStyle
+import de.stustapay.libssp.ui.theme.NfcScanStyle
 import kotlinx.coroutines.launch
 
 

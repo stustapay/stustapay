@@ -13,9 +13,9 @@ import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.PendingLineItem
 import de.stustapay.api.models.Product
 import de.stustapay.api.models.ProductType
-import de.stustapay.stustapay.ui.theme.ProductConfirmItemBigStyle
-import de.stustapay.stustapay.ui.theme.ProductConfirmItemStyle
-import de.stustapay.stustapay.util.formatCurrencyValue
+import de.stustapay.libssp.ui.theme.ProductConfirmItemBigStyle
+import de.stustapay.libssp.ui.theme.ProductConfirmItemStyle
+import de.stustapay.libssp.util.formatCurrencyValue
 
 @Preview
 @Composable

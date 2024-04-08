@@ -44,8 +44,8 @@ import de.stustapay.api.models.OrderType
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustapay.stustapay.ui.nav.NavScaffold
-import de.stustapay.stustapay.ui.theme.errorButtonColors
-import de.stustapay.stustapay.util.formatCurrencyValue
+import de.stustapay.libssp.ui.theme.errorButtonColors
+import de.stustapay.libssp.util.formatCurrencyValue
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import java.util.TimeZone

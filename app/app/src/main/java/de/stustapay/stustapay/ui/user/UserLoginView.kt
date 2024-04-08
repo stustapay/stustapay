@@ -19,7 +19,7 @@ import de.stustapay.stustapay.model.UserRolesState
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
-import de.stustapay.stustapay.ui.theme.errorButtonColors
+import de.stustapay.libssp.ui.theme.errorButtonColors
 import kotlinx.coroutines.launch
 
 /** after a scan happened, where do we send the info to */

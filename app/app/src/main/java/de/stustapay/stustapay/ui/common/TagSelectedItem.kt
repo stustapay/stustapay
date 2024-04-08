@@ -15,7 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.UserTag
-import de.stustapay.stustapay.ui.theme.errorButtonColors
+import de.stustapay.libssp.ui.theme.errorButtonColors
 
 
 @Preview

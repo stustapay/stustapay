@@ -3,7 +3,7 @@ package de.stustapay.stustapay.ui.nav
 import android.os.Bundle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import de.stustapay.stustapay.util.SysUiController
+import de.stustapay.libssp.util.SysUiController
 
 /**
  * To react to navigation changes even when one uses the system back button.

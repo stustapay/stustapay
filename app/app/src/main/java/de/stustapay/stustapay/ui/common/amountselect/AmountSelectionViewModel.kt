@@ -1,10 +1,9 @@
 package de.stustapay.stustapay.ui.common.amountselect
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.stustapay.util.mapState
+import de.stustapay.libssp.util.mapState
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 

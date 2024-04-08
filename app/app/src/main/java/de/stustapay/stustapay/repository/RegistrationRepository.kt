@@ -8,13 +8,12 @@ import de.stustapay.stustapay.model.RegisterQRCodeContent
 import de.stustapay.stustapay.model.RegistrationState
 import de.stustapay.stustapay.netsource.RegistrationRemoteDataSource
 import de.stustapay.stustapay.storage.RegistrationLocalDataSource
-import de.stustapay.stustapay.util.merge
+import de.stustapay.libssp.util.merge
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton

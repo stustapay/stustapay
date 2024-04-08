@@ -6,7 +6,7 @@ import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
-import de.stustapay.stustapay.util.ResourcesProvider
+import de.stustapay.libssp.util.ResourcesProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

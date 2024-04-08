@@ -9,11 +9,10 @@ import com.sumup.merchant.reader.api.SumUpPayment
 import com.sumup.merchant.reader.models.TransactionInfo
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
-import de.stustapay.stustapay.util.ActivityCallback
+import de.stustapay.libssp.util.ActivityCallback
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.sumup.merchant.reader.api.SumUpState as SumUpReaderState

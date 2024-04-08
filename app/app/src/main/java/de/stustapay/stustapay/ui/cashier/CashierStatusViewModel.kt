@@ -8,7 +8,7 @@ import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
 import de.stustapay.stustapay.repository.UserRepository
-import de.stustapay.stustapay.util.mapState
+import de.stustapay.libssp.util.mapState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject

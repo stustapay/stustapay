@@ -4,7 +4,7 @@ import android.app.Activity
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.ec.SumUp
 import de.stustapay.stustapay.ec.SumUpState
-import de.stustapay.stustapay.util.waitFor
+import de.stustapay.libssp.util.waitFor
 import javax.inject.Inject
 import javax.inject.Singleton
 

@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.theme.errorButtonColors
+import de.stustapay.libssp.ui.theme.errorButtonColors
 
 @Preview
 @Composable

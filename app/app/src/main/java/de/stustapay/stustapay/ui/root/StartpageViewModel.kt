@@ -7,8 +7,8 @@ import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
-import de.stustapay.stustapay.util.Result
-import de.stustapay.stustapay.util.asResult
+import de.stustapay.libssp.util.Result
+import de.stustapay.libssp.util.asResult
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 

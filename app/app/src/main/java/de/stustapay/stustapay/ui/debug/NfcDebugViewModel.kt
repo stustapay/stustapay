@@ -3,8 +3,8 @@ package de.stustapay.stustapay.ui.debug
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.stustapay.model.NfcScanFailure
-import de.stustapay.stustapay.model.NfcScanResult
+import de.stustapay.libssp.model.NfcScanFailure
+import de.stustapay.libssp.model.NfcScanResult
 import de.stustapay.stustapay.repository.NfcRepository
 import de.stustapay.stustapay.repository.ReadMode
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -13,10 +13,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 import de.stustapay.stustapay.ec.SumUp
-import de.stustapay.stustapay.nfc.NfcHandler
+import de.stustapay.libssp.nfc.NfcHandler
 import de.stustapay.stustapay.ui.Main
-import de.stustapay.stustapay.util.ActivityCallback
-import de.stustapay.stustapay.util.SysUiController
+import de.stustapay.libssp.util.ActivityCallback
+import de.stustapay.libssp.util.SysUiController
 import javax.inject.Inject
 
 @AndroidEntryPoint

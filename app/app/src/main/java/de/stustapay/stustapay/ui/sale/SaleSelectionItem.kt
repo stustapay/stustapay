@@ -5,10 +5,10 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import de.stustapay.stustapay.ui.common.pay.ProductSelectionItem
-import de.stustapay.stustapay.ui.theme.ProductButtonBigStyle
-import de.stustapay.stustapay.ui.theme.ProductButtonStyle
-import de.stustapay.stustapay.ui.theme.errorButtonColors
-import de.stustapay.stustapay.ui.theme.okButtonColors
+import de.stustapay.libssp.ui.theme.ProductButtonBigStyle
+import de.stustapay.libssp.ui.theme.ProductButtonStyle
+import de.stustapay.libssp.ui.theme.errorButtonColors
+import de.stustapay.libssp.ui.theme.okButtonColors
 
 sealed interface SaleSelectionItemType {
     data class FixedPrice(

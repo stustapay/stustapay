@@ -6,16 +6,14 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.common.DialogDisplayState
-import de.stustapay.stustapay.ui.common.rememberDialogDisplayState
-import de.stustapay.stustapay.ui.theme.NfcScanStyle
+import de.stustapay.libssp.ui.common.DialogDisplayState
+import de.stustapay.libssp.ui.common.rememberDialogDisplayState
+import de.stustapay.libssp.ui.theme.NfcScanStyle
 
 @Composable
 fun rememberNfcScanDialogState(): DialogDisplayState {

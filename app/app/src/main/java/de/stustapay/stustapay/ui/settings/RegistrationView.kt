@@ -17,7 +17,7 @@ import de.stustapay.stustapay.repository.ForceDeregisterState
 import de.stustapay.stustapay.ui.barcode.QRScanView
 import de.stustapay.stustapay.ui.common.PrefGroup
 import de.stustapay.stustapay.ui.settings.RegistrationUiState.*
-import de.stustapay.stustapay.ui.theme.errorButtonColors
+import de.stustapay.libssp.ui.theme.errorButtonColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
