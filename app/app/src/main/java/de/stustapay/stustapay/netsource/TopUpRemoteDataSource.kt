@@ -3,7 +3,7 @@ package de.stustapay.stustapay.netsource
 import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PendingTopUp
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 

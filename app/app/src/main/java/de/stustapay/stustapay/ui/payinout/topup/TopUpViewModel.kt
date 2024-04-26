@@ -3,14 +3,13 @@ package de.stustapay.stustapay.ui.payinout.topup
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.ec.ECPayment
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.TerminalConfigRepository

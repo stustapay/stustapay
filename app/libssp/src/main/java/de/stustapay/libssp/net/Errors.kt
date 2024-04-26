@@ -1,8 +1,7 @@
-package de.stustapay.stustapay.net
+package de.stustapay.libssp.net
 
 import io.ktor.client.call.*
 import io.ktor.client.statement.*
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 

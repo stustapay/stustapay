@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.UserInfo
 import de.stustapay.stustapay.model.UserState
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.libssp.util.mapState

@@ -1,7 +1,6 @@
-package de.stustapay.stustapay.net
+package de.stustapay.libssp.net
 
 import kotlinx.serialization.Serializable
-
 
 /**
  * communication api response result type.

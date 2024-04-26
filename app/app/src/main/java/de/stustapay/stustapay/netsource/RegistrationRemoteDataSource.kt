@@ -3,7 +3,7 @@ package de.stustapay.stustapay.netsource
 import de.stustapay.api.models.TerminalRegistrationPayload
 import de.stustapay.stustapay.model.DeregistrationState
 import de.stustapay.stustapay.model.RegistrationState
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 

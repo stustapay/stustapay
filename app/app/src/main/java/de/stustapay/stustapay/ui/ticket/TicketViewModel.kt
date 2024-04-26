@@ -10,7 +10,7 @@ import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.TerminalConfigRepository

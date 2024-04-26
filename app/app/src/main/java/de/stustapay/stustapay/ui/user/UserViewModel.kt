@@ -11,7 +11,7 @@ import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.model.UserCreateState
 import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.model.UserUpdateState
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState

@@ -6,7 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.Customer
 import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.model.UserState
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.CustomerRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.libssp.util.mapState

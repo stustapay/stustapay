@@ -4,7 +4,7 @@ package de.stustapay.stustapay.netsource
 import de.stustapay.api.models.CompletedPayOut
 import de.stustapay.api.models.NewPayOut
 import de.stustapay.api.models.PendingPayOut
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 

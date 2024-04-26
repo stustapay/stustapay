@@ -1,7 +1,7 @@
 package de.stustapay.stustapay.repository
 
 import de.stustapay.api.models.TerminalConfig
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.TerminalConfigRemoteDataSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

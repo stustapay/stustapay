@@ -10,7 +10,7 @@ import de.stustapay.api.models.TransferCashRegisterPayload
 import de.stustapay.api.models.UserInfo
 import de.stustapay.api.models.UserInfoPayload
 import de.stustapay.api.models.UserTag
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 

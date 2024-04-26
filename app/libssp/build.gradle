@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.serialization'
     id 'kotlin-kapt'
     id 'com.google.dagger.hilt.android'
 }
@@ -78,4 +79,6 @@ dependencies {
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
     kapt "androidx.hilt:hilt-compiler:$hilt_android_version"
     annotationProcessor "androidx.hilt:hilt-compiler:$hilt_android_version"
+    implementation "io.ktor:ktor-client-core:$ktor_version"
+    implementation "io.ktor:ktor-serialization-kotlinx-json:$ktor_version"
 }

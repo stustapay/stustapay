@@ -5,7 +5,7 @@ import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.NewTicketScan
 import de.stustapay.api.models.PendingTicketSale
 import de.stustapay.api.models.TicketScanResult
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.TicketRemoteDataSource
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig

@@ -1,7 +1,7 @@
 package de.stustapay.stustapay.netsource
 
 
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import de.stustapay.api.models.LoginPayload
 import de.stustapay.api.models.NewUser

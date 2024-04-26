@@ -136,18 +136,18 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
 
             var confCheckSuccessful = true
 
-            if (conf.gbe(0uL) == 0x01u.toUByte()) {
-                log.add(Pair("cfg: pages 0x10 and 0x11 locked", true))
+            if (conf.gbe(0uL) == 0x03u.toUByte()) {
+                log.add(Pair("cfg: pages 0x10, 0x11, 0x12 and 0x13 locked", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("cfg: pages 0x10 and 0x11 not locked", false))
+                log.add(Pair("cfg: pages 0x10, 0x11, 0x12 and 0x13 not locked", false))
             }
 
-            if (conf.gbe(4uL) == 0x02u.toUByte()) {
-                log.add(Pair("cfg: cmac enabled", true))
+            if (conf.gbe(4uL) == 0x03u.toUByte()) {
+                log.add(Pair("cfg: cmac and random id enabled", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("cfg: cmac disabled", false))
+                log.add(Pair("cfg: cmac or random id disabled", false))
             }
 
             if (conf.gbe(7uL) == 0x10u.toUByte()) {
@@ -187,7 +187,7 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
 
         try {
             authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, cmacCheckSucceeded)
-            val expected = "StuStaPay - built by SSN & friends!\nglhf ;)\n".toByteArray(Charset.forName("UTF-8")).asBitVector()
+            val expected = "StuStaPay at StuStaCulum 2024\n".toByteArray(Charset.forName("UTF-8")).asBitVector()
             val mem = readUserMemory()
             val sig = mem.slice(mem.len - 44uL * 8uL, mem.len)
             if (sig.equals(expected)) {
@@ -195,16 +195,18 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
             } else {
                 log.add(Pair("sig: wrong signature ", false))
                 log.add(Pair("sig: signature is " + sig.asByteString(), false))
+                log.add(Pair("sig: decoded signature is \"" + sig.asByteArray().decodeToString() + "\"", false))
             }
 
-            val secret = mem.slice(mem.len - 56uL * 8uL, mem.len - 48uL * 8uL)
+            val secret = mem.slice(mem.len - 56uL * 8uL, mem.len - 44uL * 8uL)
             val check = secret.gle(0uL) or secret.gle(1uL) or secret.gle(2uL) or secret.gle(3uL) or secret.gle(4uL) or secret.gle(5uL) or secret.gle(6uL) or secret.gle(7uL)
             if (check != 0x00u.toUByte()) {
-                log.add(Pair("secret: random id found", true))
-                log.add(Pair("secret: id is " + secret.asByteString(), true))
+                log.add(Pair("secret: secret pin found", true))
+                log.add(Pair("secret: pin is " + secret.asByteString(), true))
+                log.add(Pair("secret: decoded pin is \"" + secret.asByteArray().decodeToString() + "\"", true))
             } else {
-                log.add(Pair("secret: no random id", false))
-                log.add(Pair("secret: id is " + secret.asByteString(), false))
+                log.add(Pair("secret: no secret pin", false))
+                log.add(Pair("secret: pin is " + secret.asByteString(), false))
             }
         } catch (e: Exception) {
             log.add(Pair("main: failed to read user memory (retry scan)", false))

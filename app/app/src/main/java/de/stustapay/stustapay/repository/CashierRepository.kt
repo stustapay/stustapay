@@ -4,7 +4,7 @@ import de.stustapay.api.models.CashRegister
 import de.stustapay.api.models.CashRegisterStocking
 import de.stustapay.api.models.UserInfo
 import de.stustapay.api.models.UserTag
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.CashierRemoteDataSource
 import javax.inject.Inject
 

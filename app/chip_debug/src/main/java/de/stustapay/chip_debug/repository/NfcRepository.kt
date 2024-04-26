@@ -6,6 +6,7 @@ import de.stustapay.libssp.model.NfcScanResult
 import de.stustapay.api.models.UserTagSecret
 import de.stustapay.libssp.nfc.NfcDataSource
 import de.stustapay.libssp.util.BitVector
+import de.stustapay.libssp.util.bv
 import de.stustapay.libssp.util.decodeHex
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -22,8 +23,10 @@ class NfcRepository @Inject constructor(
     private val nfcDataSource: NfcDataSource
 ) {
     // nfc communication secret keys
-    private val key0 = MutableStateFlow<BitVector?>(null)
-    private val key1 = MutableStateFlow<BitVector?>(null)
+    private val key0 =
+        MutableStateFlow<BitVector?>(0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv)
+    private val key1 =
+        MutableStateFlow<BitVector?>(0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv)
 
     val tagContent = "StuStaPay - built by SSN & friends!\nglhf ;)\n"
 

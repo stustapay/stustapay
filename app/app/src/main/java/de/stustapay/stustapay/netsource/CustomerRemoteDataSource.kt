@@ -7,7 +7,7 @@ import de.stustapay.api.models.GrantVoucherPayload
 import de.stustapay.api.models.NewFreeTicketGrant
 import de.stustapay.api.models.SwitchTagPayload
 import de.stustapay.api.models.UserTag
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 
