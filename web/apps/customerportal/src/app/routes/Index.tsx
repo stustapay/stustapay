@@ -69,6 +69,12 @@ export const Index: React.FC = () => {
 
               <div>
                 <Typography component="div" variant="body1">
+                  {t("tagPin")}
+                </Typography>
+                <Typography component="div" variant="subtitle2">
+                  {customer.user_tag_pin}
+                </Typography>
+                <Typography component="div" variant="body1">
                   {t("tagUid")}
                 </Typography>
                 <Typography component="div" variant="subtitle2">

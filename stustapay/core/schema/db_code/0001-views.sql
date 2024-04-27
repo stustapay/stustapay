@@ -16,7 +16,6 @@ create view cash_register_with_cashier as
         c.*,
         t.id                   as current_till_id,
         u.id                   as current_cashier_id,
-        u.user_tag_uid         as current_cashier_tag_uid,
         coalesce(a.balance, 0) as current_balance
     from
         cash_register c
@@ -37,9 +36,12 @@ create view user_role_with_privileges as
 create view user_with_roles as
     select
         usr.*,
+        ut.pin as user_tag_pin,
+        ut.uid as user_tag_uid,
         coalesce(roles.roles, '{}'::text array) as role_names
     from
         usr
+        left join user_tag ut on usr.user_tag_id = ut.id
         left join (
             select
                 utr.user_id        as user_id,
@@ -53,9 +55,11 @@ create view user_with_roles as
 create view user_with_privileges as
     select
         usr.*,
+        ut.uid as user_tag_uid,
         coalesce(privs.privileges, '{}'::text array) as privileges
     from
         usr
+        left join user_tag ut on usr.user_tag_id = ut.id
         left join (
             select
                 utr.user_id,
@@ -69,21 +73,28 @@ create view user_with_privileges as
 create view account_with_history as
     select
         a.*,
+        ut.uid                                 as user_tag_uid,
+        ut.pin                                 as user_tag_pin,
         ut.comment                             as user_tag_comment,
         ut.restriction,
         coalesce(hist.tag_history, '[]'::json) as tag_history
     from
         account a
-        left join user_tag ut on a.user_tag_uid = ut.uid
+        left join user_tag ut on a.user_tag_id = ut.id
         left join (
             select
                 atah.account_id,
-                json_agg(json_build_object('account_id', atah.account_id, 'user_tag_uid', atah.user_tag_uid,
-                                           'mapping_was_valid_until', atah.mapping_was_valid_until, 'comment',
-                                           ut.comment)) as tag_history
+                json_agg(json_build_object(
+                    'account_id', atah.account_id,
+                    'user_tag_id', atah.user_tag_id,
+                    'user_tag_uid', ut.uid,
+                    'user_tag_pin', ut.pin,
+                    'mapping_was_valid_until', atah.mapping_was_valid_until,
+                    'comment', ut.comment
+                )) as tag_history
             from
                 account_tag_association_history atah
-                join user_tag ut on atah.user_tag_uid = ut.uid
+                join user_tag ut on atah.user_tag_id = ut.id
             group by atah.account_id
                   ) hist on a.id = hist.account_id;
 
@@ -105,11 +116,13 @@ create view payout as
         c.iban,
         c.account_name,
         c.email,
-        c.user_tag_uid,
+        ut.id as user_tag_id,
+        ut.uid as user_tag_uid,
         (c.balance - c.donation) as balance,
         c.payout_run_id
     from
         customer c
+    join user_tag ut on c.user_tag_id = ut.id
     where
         c.iban is not null
         and round(c.balance, 2) > 0
@@ -139,41 +152,44 @@ create view payout_run_with_stats as
 
 create view user_tag_with_history as
     select
+        ut.id,
         ut.node_id,
-        ut.uid                                     as user_tag_uid,
+        ut.uid,
+        ut.pin,
         ut.comment,
         a.id                                       as account_id,
         coalesce(hist.account_history, '[]'::json) as account_history
     from
         user_tag ut
-        left join account a on a.user_tag_uid = ut.uid
+        left join account a on a.user_tag_id = ut.id
         left join (
             select
-                atah.user_tag_uid,
+                atah.user_tag_id,
                 json_agg(json_build_object('account_id', atah.account_id, 'mapping_was_valid_until',
                                            atah.mapping_was_valid_until, 'comment', ut.comment)) as account_history
             from
                 account_tag_association_history atah
-                join user_tag ut on atah.user_tag_uid = ut.uid
-            group by atah.user_tag_uid
-                  ) hist on ut.uid = hist.user_tag_uid;
+                join user_tag ut on atah.user_tag_id = ut.id
+            group by atah.user_tag_id
+        ) hist on ut.id = hist.user_tag_id;
 
 create view cashier as
     select
-        usr.node_id,
-        usr.id,
-        usr.login,
-        usr.display_name,
-        usr.description,
-        usr.user_tag_uid,
-        usr.transport_account_id,
-        usr.cashier_account_id,
-        usr.cash_register_id,
+        u.node_id,
+        u.id,
+        u.login,
+        u.display_name,
+        u.description,
+        u.user_tag_id,
+        u.user_tag_uid,
+        u.transport_account_id,
+        u.cashier_account_id,
+        u.cash_register_id,
         a.balance                                    as cash_drawer_balance,
         coalesce(tills.till_ids, '{}'::bigint array) as till_ids
     from
-        usr
-        join account a on usr.cashier_account_id = a.id
+        user_with_roles u
+        join account a on u.cashier_account_id = a.id
         left join (
             select
                 t.active_user_id as user_id,
@@ -183,7 +199,7 @@ create view cashier as
             where
                 t.active_user_id is not null
             group by t.active_user_id
-                  ) tills on tills.user_id = usr.id;
+        ) tills on tills.user_id = u.id;
 
 create view product_with_tax_and_restrictions as
     select
@@ -290,7 +306,8 @@ create view line_item_aggregated_json as
 create view order_value as
     select
         ordr.*,
-        a.user_tag_uid                              as customer_tag_uid,
+        ut.uid                                      as customer_tag_uid,
+        ut.id                                       as customer_tag_id,
         coalesce(li.total_price, 0)                 as total_price,
         coalesce(li.total_tax, 0)                   as total_tax,
         coalesce(li.total_no_tax, 0)                as total_no_tax,
@@ -298,7 +315,8 @@ create view order_value as
     from
         ordr
         left join line_item_aggregated_json li on ordr.id = li.order_id
-        left join account a on ordr.customer_account_id = a.id;
+        left join account a on ordr.customer_account_id = a.id
+        left join user_tag ut on a.user_tag_id = ut.id;
 
 -- show all line items
 create view order_items as
@@ -402,7 +420,6 @@ create view _forbidden_at_node_computed as
         g.forbidden_at_node
     from graph g;
 
--- TODO: this view will be monstrous, as it needs to do the transitive calculation of allowed objects at a tree
 create view node_with_allowed_objects as
     with event_as_json as (
         select id, row_to_json(event_with_translations) as json_row
@@ -415,12 +432,21 @@ create view node_with_allowed_objects as
             when n.event_node_id is null then -- nodes above event nodes
                 fan.computed_forbidden_at_node || '{"ticket", "product", "tax_rate", "till", "user_tag", "account", "terminal"}'::varchar(255) array
             when n.event_node_id is not null and n.event_node_id != n.id then -- nodes blow event node
-                fan.computed_forbidden_at_node || '{"user_role", "user_tag", "account", "tse", "tax_rate"}'::varchar(255) array
+                fan.computed_forbidden_at_node || '{"user_role", "user_tag", "account", "tse", "tax_rate", "user", "user_role"}'::varchar(255) array
             else
                 fan.computed_forbidden_at_node
         end as computed_forbidden_objects_at_node,
         fan.forbidden_in_subtree as forbidden_objects_in_subtree,
-        fan.computed_forbidden_in_subtree as computed_forbidden_objects_in_subtree,
+        case
+            when n.event_node_id is null then -- nodes above event nodes
+                fan.computed_forbidden_in_subtree
+            when n.event_node_id is not null and n.event_node_id != n.id then -- nodes blow event node
+                -- same as above with computed_forbidden_at_node, keep in sync with there
+                fan.computed_forbidden_in_subtree || '{"user_role", "user_tag", "account", "tse", "tax_rate", "user", "user_role"}'::varchar(255) array
+            else
+                -- same as above with computed_forbidden_at_node, keep in sync with there
+                fan.computed_forbidden_in_subtree || '{"user_role", "user_tag", "account", "tse", "tax_rate", "user", "user_role"}'::varchar(255) array
+        end as computed_forbidden_objects_in_subtree,
         ev.json_row as event
     from node n
     join _forbidden_at_node_computed fan on n.id = fan.node_id

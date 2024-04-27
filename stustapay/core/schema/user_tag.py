@@ -15,8 +15,6 @@ class UserTagSecret(NewUserTagSecret):
 
 
 class NewUserTag(BaseModel):
-    uid: int
-    pin: str | None = None
-    serial: str | None = None
+    pin: str
     restriction: ProductRestriction | None = None
     secret_id: int | None = None

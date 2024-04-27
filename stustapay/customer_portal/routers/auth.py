@@ -1,19 +1,19 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, status
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
 from stustapay.core.schema.customer import Customer
-from stustapay.core.service.common.error import AccessDenied
 
 router = APIRouter(
     prefix="/auth",
     tags=["auth"],
     responses={404: {"description": "Not found"}},
 )
+
+
+class LoginPayload(BaseModel):
+    pin: str
 
 
 class LoginResponse(BaseModel):
@@ -24,16 +24,10 @@ class LoginResponse(BaseModel):
 
 @router.post("/login", summary="customer login with wristband hardware tag and pin", response_model=LoginResponse)
 async def login(
-    payload: Annotated[OAuth2PasswordRequestForm, Depends()],
+    payload: LoginPayload,
     customer_service: ContextCustomerService,
 ):
-    # Names are due to OAuth compatibility
-    try:
-        user_tag_uid = int(payload.username, 16)
-    except Exception as e:  # pylint: disable=broad-except
-        raise AccessDenied("Invalid user tag") from e
-
-    response = await customer_service.login_customer(uid=user_tag_uid, pin=payload.password)
+    response = await customer_service.login_customer(pin=payload.pin)
     return {"customer": response.customer, "access_token": response.token, "grant_type": "bearer"}
 
 

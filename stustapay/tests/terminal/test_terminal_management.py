@@ -16,7 +16,7 @@ async def test_transfer_cash_register(
     till_service: TillService,
     user_service: UserService,
     cashier: Cashier,
-    admin_token: str,
+    event_admin_token: str,
     event_node: Node,
     cash_register: CashRegister,
     cash_register_stocking: CashRegisterStocking,
@@ -41,10 +41,12 @@ async def test_transfer_cash_register(
 
     cashier2 = await user_service.create_user_no_auth(
         node_id=event_node.id,
-        new_user=NewUser(login="cashier2", display_name="cashier2", user_tag_uid=cashier2_tag.uid),
+        new_user=NewUser(
+            login="cashier2", display_name="cashier2", user_tag_uid=cashier2_tag.uid, user_tag_pin=cashier2_tag.pin
+        ),
     )
     await user_service.associate_user_to_role(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         new_user_to_role=NewUserToRole(user_id=cashier2.id, role_id=cashier.cashier_role.id),
     )

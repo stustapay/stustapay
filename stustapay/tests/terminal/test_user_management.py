@@ -7,42 +7,36 @@ from stustapay.core.schema.user import (
     CurrentUser,
     NewUser,
     NewUserRole,
-    NewUserToRole,
     UserRole,
     UserTag,
 )
+from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
+from stustapay.core.service.user_tag import UserTagService
+from stustapay.framework.database import Connection
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 from stustapay.tests.terminal.conftest import Finanzorga
 
 
 async def test_user_creation(
     user_service: UserService,
-    admin_token: str,
+    event_admin_token: str,
     event_node: Node,
     terminal_token: str,
     create_random_user_tag: CreateRandomUserTag,
 ):
     user_tag = await create_random_user_tag()
     test_role1: UserRole = await user_service.create_user_role(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         new_role=NewUserRole(name="test-role-1", is_privileged=False, privileges=[]),
     )
     user = await user_service.create_user_terminal(
         token=terminal_token,
-        node_id=event_node.id,
-        new_user=NewUser(login="test-cashier", display_name="", user_tag_uid=user_tag.uid),
-    )
-    await user_service.associate_user_to_role(
-        token=admin_token,
-        node_id=event_node.id,
-        new_user_to_role=NewUserToRole(
-            user_id=user.id,
-            role_id=test_role1.id,
-        ),
+        new_user=NewUser(login="test-cashier", display_name="", user_tag_uid=user_tag.uid, user_tag_pin=user_tag.pin),
+        role_ids=[test_role1.id],
     )
     assert user is not None
     assert user.login == "test-cashier"
@@ -53,7 +47,6 @@ async def test_user_creation(
     with pytest.raises(InvalidArgument):
         await user_service.create_user_terminal(
             token=terminal_token,
-            node_id=event_node.id,
             new_user=NewUser(login="test-cashier", display_name="", user_tag_uid=user_tag.uid),
         )
 
@@ -132,3 +125,58 @@ async def test_terminal_user_management(
     await till_service.login_user(
         token=terminal_token, user_tag=UserTag(uid=finanzorga.user_tag_uid), user_role_id=cashier.cashier_role.id
     )
+
+
+async def test_switch_user_tag(
+    user_service: UserService,
+    user_tag_service: UserTagService,
+    account_service: AccountService,
+    db_connection: Connection,
+    event_node: Node,
+    terminal_token: str,
+    event_admin_token: str,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    user_tag = await create_random_user_tag()
+    new_user_tag = await create_random_user_tag()
+    user = await user_service.create_user_no_auth(
+        node_id=event_node.id,
+        new_user=NewUser(
+            login="test-user", display_name="test-user", user_tag_uid=user_tag.uid, user_tag_pin=user_tag.pin
+        ),
+    )
+    account_id = await db_connection.fetchval(
+        "select id from account_with_history where user_tag_uid = $1", user_tag.uid
+    )
+
+    acc = await account_service.get_account(token=event_admin_token, node_id=event_node.id, account_id=account_id)
+    assert acc is not None
+    assert user_tag.uid == acc.user_tag_uid
+    await account_service.switch_account_tag_uid_terminal(
+        token=terminal_token,
+        account_id=account_id,
+        new_user_tag_uid=new_user_tag.uid,
+        new_user_tag_pin=new_user_tag.pin,
+        comment="foobar",
+    )
+    acc = await account_service.get_account(token=event_admin_token, node_id=event_node.id, account_id=account_id)
+    assert acc is not None
+    assert new_user_tag.uid == acc.user_tag_uid
+    assert 1 == len(acc.tag_history)
+    assert "foobar" == acc.tag_history[0].comment
+    user_info = await user_service.get_user(token=event_admin_token, node_id=event_node.id, user_id=user.id)
+    assert user_info is not None
+    assert new_user_tag.uid == user_info.user_tag_uid
+
+    user_tag_2 = await user_tag_service.get_user_tag_detail(
+        token=event_admin_token, node_id=event_node.id, user_tag_id=new_user_tag.id
+    )
+    assert user_tag_2 is not None
+    assert 0 == len(user_tag_2.account_history)
+
+    user_tag_1 = await user_tag_service.get_user_tag_detail(
+        token=event_admin_token, node_id=event_node.id, user_tag_id=user_tag.id
+    )
+    assert user_tag_1 is not None
+    assert 1 == len(user_tag_1.account_history)
+    assert acc.id == user_tag_1.account_history[0].account_id

@@ -18,13 +18,13 @@ type HistoryEntry = ArrayElement<History>;
 export const UserTagDetail: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { userTagUidHex } = useParams();
+  const { userTagId } = useParams();
   const navigate = useNavigate();
 
   const [updateComment] = useUpdateUserTagCommentMutation();
   const { data, error, isLoading } = useGetUserTagDetailQuery({
     nodeId: currentNode.id,
-    userTagUidHex: userTagUidHex as string,
+    userTagId: Number(userTagId),
   });
 
   if (isLoading || (!data && !error)) {
@@ -58,17 +58,20 @@ export const UserTagDetail: React.FC = () => {
   const handleUpdateComment = (newComment: string) => {
     updateComment({
       nodeId: currentNode.id,
-      userTagUidHex: userTagUidHex as string,
+      userTagId: Number(userTagId),
       updateCommentPayload: { comment: newComment },
     });
   };
 
   return (
-    <DetailLayout title={formatUserTagUid(data.user_tag_uid_hex)} routes={UserTagRoutes}>
+    <DetailLayout title={t("userTag.userTag")} routes={UserTagRoutes}>
       <Paper>
         <List>
           <ListItem>
-            <ListItemText primary={t("userTag.uid")} secondary={formatUserTagUid(data.user_tag_uid_hex)} />
+            <ListItemText primary={t("userTag.pin")} secondary={data.pin} />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary={t("userTag.uid")} secondary={formatUserTagUid(data.uid_hex)} />
           </ListItem>
           <EditableListItem label={t("userTag.comment")} value={data.comment ?? ""} onChange={handleUpdateComment} />
           {data.account_id ? (

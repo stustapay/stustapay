@@ -13,11 +13,11 @@ from stustapay.core.schema.user import (
     NewUserRole,
     NewUserToRole,
     Privilege,
+    RoleToNode,
     User,
     UserRole,
     UserToRole,
     UserWithoutId,
-    format_user_tag_uid,
 )
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
@@ -30,6 +30,7 @@ from stustapay.core.service.common.decorators import (
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.tree.common import fetch_node
+from stustapay.core.service.user_tag import get_or_assign_user_tag
 from stustapay.framework.database import Connection
 
 
@@ -161,29 +162,44 @@ class UserService(DBService):
         node: Node,
         new_user: NewUser,
         creating_user_id: Optional[int],
+        roles: list[RoleToNode] | None = None,
         password: Optional[str] = None,
     ) -> User:
         # TODO: TREE visibility
+        if new_user.user_tag_uid is not None:
+            tag_id = await get_or_assign_user_tag(
+                conn=conn, node=node, pin=new_user.user_tag_pin, uid=new_user.user_tag_uid
+            )
+
+            existing_user = await conn.fetchrow("select * from user_with_roles where user_tag_id = $1", tag_id)
+            if existing_user is not None:
+                raise InvalidArgument(f"User with tag id {new_user.user_tag_pin} already exists")
+
         hashed_password = None
         if password:
             hashed_password = self._hash_password(password)
 
         customer_account_id = None
-        if new_user.user_tag_uid is not None:
+        if new_user.user_tag_pin is not None:
             customer_account_id = await conn.fetchval(
-                "select id from account a where a.user_tag_uid = $1", new_user.user_tag_uid
+                "select a.id from account a join user_tag ut on a.user_tag_id = ut.id where ut.pin = $1",
+                new_user.user_tag_pin,
             )
 
+        user_tag_id = None
         if customer_account_id is None:
-            # TODO: NODE_ID determine node id
+            if new_user.user_tag_uid is not None:
+                user_tag_id = await get_or_assign_user_tag(
+                    conn=conn, node=node, pin=new_user.user_tag_pin, uid=new_user.user_tag_uid
+                )
             customer_account_id = await conn.fetchval(
-                "insert into account (node_id, user_tag_uid, type) values ($1, $2, 'private') returning id",
+                "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
                 node.id,
-                new_user.user_tag_uid,
+                user_tag_id,
             )
 
         user_id = await conn.fetchval(
-            "insert into usr (node_id, login, description, password, display_name, user_tag_uid, "
+            "insert into usr (node_id, login, description, password, display_name, user_tag_id, "
             "   created_by, customer_account_id) "
             "values ($1, $2, $3, $4, $5, $6, $7, $8) returning id",
             node.id,
@@ -191,10 +207,20 @@ class UserService(DBService):
             new_user.description,
             hashed_password,
             new_user.display_name,
-            new_user.user_tag_uid,
+            user_tag_id,
             creating_user_id,
             customer_account_id,
         )
+        for role in roles or []:
+            role_node = await fetch_node(conn=conn, node_id=role.node_id)
+            if role_node is None:
+                raise InvalidArgument(
+                    f"Could not associate user to role at node {role.node_id} since the node does not exist"
+                )
+            assert role_node is not None
+            await associate_user_to_role(
+                conn=conn, node=role_node, new_user_to_role=NewUserToRole(user_id=user_id, role_id=role.role_id)
+            )
 
         return await conn.fetch_one(User, "select * from user_with_roles where id = $1", user_id)
 
@@ -215,7 +241,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])
-    @requires_user([Privilege.user_management])
+    @requires_user([Privilege.create_user])
     async def create_user(
         self,
         *,
@@ -226,7 +252,11 @@ class UserService(DBService):
         password: Optional[str] = None,
     ) -> User:
         return await self._create_user(
-            conn=conn, creating_user_id=current_user.id, node=node, new_user=new_user, password=password
+            conn=conn,
+            creating_user_id=current_user.id,
+            node=node,
+            new_user=new_user,
+            password=password,
         )
 
     @staticmethod
@@ -239,42 +269,29 @@ class UserService(DBService):
         return res is not None
 
     @with_db_transaction
-    @requires_terminal([Privilege.user_management])
+    @requires_terminal([Privilege.create_user], requires_event_privileges=True)
     async def create_user_terminal(
-        self, *, conn: Connection, node_id: int, current_user: CurrentUser, new_user: NewUser
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        current_user: CurrentUser,
+        new_user: NewUser,
+        role_ids: list[int] | None = None,
     ) -> User:
-        # TODO: TREE visibility
-        node = await fetch_node(conn=conn, node_id=node_id)
-        assert node is not None
-
         # TODO: re-add adding initial roles upon user creation
-        # TODO: node id
-        return await self.create_user_with_tag(  # pylint: disable=missing-kwoa
-            node_id=node.id, conn=conn, current_user=current_user, new_user=new_user
+        event_node = node
+        if node.event_node_id is not None and node.event_node_id != node.id:
+            n = await fetch_node(conn=conn, node_id=node.event_node_id)
+            assert n is not None
+            event_node = n
+
+        actual_roles = None
+        if role_ids is not None:
+            actual_roles = [RoleToNode(node_id=node.id, role_id=r) for r in role_ids]
+        return await self._create_user(
+            node=event_node, conn=conn, creating_user_id=current_user.id, new_user=new_user, roles=actual_roles
         )
-
-    @with_db_transaction
-    @requires_node(object_types=[ObjectType.user])
-    @requires_user([Privilege.user_management])
-    async def create_user_with_tag(
-        self, *, conn: Connection, node: Node, current_user: CurrentUser, new_user: NewUser
-    ) -> User:
-        # TODO: TREE visibility
-        """
-        Create a user at a Terminal, where a name and the user tag must be provided
-        If a user with the given tag already exists, this user is returned, without updating the name
-
-        returns the created user
-        """
-        user_tag_uid = await conn.fetchval("select uid from user_tag where uid = $1", new_user.user_tag_uid)
-        if user_tag_uid is None:
-            raise InvalidArgument(f"Tag uid {format_user_tag_uid(new_user.user_tag_uid)} not found")
-
-        existing_user = await conn.fetchrow("select * from user_with_roles where user_tag_uid = $1", user_tag_uid)
-        if existing_user is not None:
-            raise InvalidArgument(f"User with tag uid {format_user_tag_uid(new_user.user_tag_uid)} already exists")
-
-        return await self._create_user(conn=conn, node=node, creating_user_id=current_user.id, new_user=new_user)
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -300,15 +317,20 @@ class UserService(DBService):
         return await self._get_user(conn=conn, node=node, user_id=user_id)
 
     async def _update_user(self, *, conn: Connection, node: Node, user_id: int, user: NewUser) -> User:
+        user_tag_id = None
+        if user.user_tag_uid is not None:
+            user_tag_id = await get_or_assign_user_tag(
+                conn=conn, node=node, pin=user.user_tag_pin, uid=user.user_tag_uid
+            )
         row = await conn.fetchrow(
             "update usr "
-            "set login = $2, description = $3, display_name = $4, user_tag_uid = $5 "
+            "set login = $2, description = $3, display_name = $4, user_tag_id = $5 "
             "where id = $1 and node_id = any($6) returning id",
             user_id,
             user.login,
             user.description,
             user.display_name,
-            user.user_tag_uid,
+            user_tag_id,
             node.ids_to_root,
         )
         if row is None:

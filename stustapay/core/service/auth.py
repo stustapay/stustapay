@@ -132,7 +132,7 @@ class AuthService(DBService):
             "select * from till where terminal_id = $1",
             token_payload.terminal_id,
         )
-        if till is None:
-            return None
 
-        return CurrentTerminal(id=terminal.id, name=terminal.name, description=terminal.description, till=till)
+        return CurrentTerminal(
+            id=terminal.id, node_id=terminal.node_id, name=terminal.name, description=terminal.description, till=till
+        )

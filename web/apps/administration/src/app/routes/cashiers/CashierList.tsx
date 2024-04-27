@@ -100,11 +100,11 @@ export const CashierList: React.FC = () => {
       renderCell: (params) => params.row.till_ids.map((till_id) => renderTill(till_id)),
     },
     {
-      field: "user_tag_uid_hex",
+      field: "user_tag_id",
       headerName: t("cashier.tagId") as string,
       type: "number",
       renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_uid_hex)}>
+        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}
         </Link>
       ),

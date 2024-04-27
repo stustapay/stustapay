@@ -32,11 +32,11 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
       headerName: t("account.name") as string,
     },
     {
-      field: "user_tag_uid_hex",
+      field: "user_tag_id",
       headerName: t("account.user_tag_uid") as string,
       align: "right",
       renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_uid_hex)}>
+        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}
         </Link>
       ),

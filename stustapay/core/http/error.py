@@ -59,6 +59,19 @@ def unauthorized_exception_handler(request: Request, exc: Unauthorized):
     )
 
 
+def try_again_later_exception_handler(request: Request, exc: Exception):
+    del request
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        headers={"Retry-After": "2"},  # time in seconds
+        content={
+            "type": "service",
+            "id": exc.__class__.__name__,
+            "message": str(exc),
+        },
+    )
+
+
 def bad_request_exception_handler(request: Request, exc: Exception):
     del request
     return JSONResponse(

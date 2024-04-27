@@ -1,5 +1,7 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import logging
+import random
+import secrets
 from typing import Optional
 
 import asyncpg
@@ -56,7 +58,7 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
     global_admin = await user_service.create_user_no_auth(
         conn=conn,
         node_id=ROOT_NODE_ID,
-        new_user=NewUser(login="global-admin", display_name="", user_tag_uid=None),
+        new_user=NewUser(login="global-admin", display_name=""),
         password="admin",
     )
     await associate_user_to_role(
@@ -98,12 +100,14 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
         ),
     )
 
-    admin_tag = NewUserTag(uid=1, secret_id=secret.id)
+    admin_tag = NewUserTag(pin="admin", secret_id=secret.id)
     await create_user_tags(conn=conn, node_id=event_node.id, tags=[admin_tag])
     node_admin = await user_service.create_user_no_auth(
         conn=conn,
         node_id=event_node.id,
-        new_user=NewUser(login="admin", display_name="", user_tag_uid=admin_tag.uid),
+        new_user=NewUser(
+            login="admin", display_name="", user_tag_pin=admin_tag.pin, user_tag_uid=random.randint(1, 100000)
+        ),
         password="admin",
     )
     await associate_user_to_role(
@@ -113,7 +117,7 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
         conn=conn, node=event_node, new_user_to_role=NewUserToRole(user_id=node_admin.id, role_id=finanzorga_role.id)
     )
 
-    finanzorga_tags = [NewUserTag(uid=i, secret_id=secret.id) for i in range(10, 16)]
+    finanzorga_tags = [NewUserTag(pin=secrets.token_hex(16), secret_id=secret.id) for _ in range(10, 16)]
     await create_user_tags(conn=conn, node_id=event_node.id, tags=finanzorga_tags)
     for i, finanzorga_tag in enumerate(finanzorga_tags):
         finanzorga_user = await user_service.create_user_no_auth(
@@ -122,7 +126,8 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
             new_user=NewUser(
                 login=f"Finanzorga {i + 1}",
                 display_name="",
-                user_tag_uid=finanzorga_tag.uid,
+                user_tag_pin=finanzorga_tag.pin,
+                user_tag_uid=random.randint(1, 10000000),
             ),
             password="admin",
         )
@@ -132,9 +137,7 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
             new_user_to_role=NewUserToRole(user_id=finanzorga_user.id, role_id=finanzorga_role.id),
         )
 
-    customer_tags = [
-        NewUserTag(uid=i + CUSTOMER_TAG_START, pin="pin", secret_id=secret.id) for i in range(n_customer_tags)
-    ]
+    customer_tags = [NewUserTag(pin=secrets.token_hex(16), secret_id=secret.id) for _ in range(n_customer_tags)]
     await create_user_tags(conn=conn, node_id=event_node.id, tags=customer_tags)
 
     return admin_token
@@ -586,10 +589,10 @@ class DatabaseSetup:
             ),
         )
         for i in range(n_cashiers):
-            cashier_tag_uid = await conn.fetchval(
-                "insert into user_tag (node_id, uid) values ($1, $2) returning uid",
+            cashier_tag_pin = await conn.fetchval(
+                "insert into user_tag (node_id, pin) values ($1, $2) returning pin",
                 self.event_node_id,
-                i + CASHIER_TAG_START,
+                secrets.token_hex(16),
             )
             cashier = await user_service.create_user_no_auth(
                 conn=conn,
@@ -597,7 +600,8 @@ class DatabaseSetup:
                 new_user=NewUser(
                     login=f"Cashier {i}",
                     display_name=f"Cashier {i}",
-                    user_tag_uid=cashier_tag_uid,
+                    user_tag_pin=cashier_tag_pin,
+                    user_tag_uid=random.randint(1, 1000000),
                 ),
             )
             await associate_user_to_role(
@@ -673,7 +677,7 @@ class DatabaseSetup:
                     sepa_enabled=True,
                     sepa_sender_name="Organizer",
                     sepa_sender_iban="DE89370400440532013000",
-                    sepa_description="FestivalName, TagID: {user_tag_uid}",
+                    sepa_description="FestivalName, TagID: {user_tag_pin}",
                     sepa_allowed_country_codes=["DE"],
                 ),
             )

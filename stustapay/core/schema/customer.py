@@ -17,6 +17,7 @@ class Customer(Account):
     payout_error: Optional[str]
     payout_run_id: Optional[int]
     payout_export: Optional[bool]
+    user_tag_pin: Optional[str]
 
 
 class OrderWithBon(Order):

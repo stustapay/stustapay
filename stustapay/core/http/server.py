@@ -21,6 +21,7 @@ from stustapay.core.http.error import (
     exception_handler,
     not_found_exception_handler,
     service_exception_handler,
+    try_again_later_exception_handler,
     unauthorized_exception_handler,
 )
 from stustapay.core.service.common.error import (
@@ -62,6 +63,8 @@ class Server:
         self.api.add_exception_handler(
             asyncpg.exceptions.IntegrityConstraintViolationError, bad_request_exception_handler
         )
+        self.api.add_exception_handler(asyncpg.exceptions.DeadlockDetectedError, try_again_later_exception_handler)
+        self.api.add_exception_handler(asyncpg.exceptions.SerializationError, try_again_later_exception_handler)
         self.api.add_exception_handler(asyncpg.exceptions.RaiseError, bad_request_exception_handler)
         self.api.add_exception_handler(Exception, exception_handler)
 

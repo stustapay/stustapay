@@ -260,12 +260,12 @@ create or replace function update_tag_association_history() returns trigger as
 $$
 begin
     -- this check is already done in the trigger definition but still included here as to not forget it in the future
-    if NEW.user_tag_uid = OLD.user_tag_uid or OLD.user_tag_uid is null then return NEW; end if;
+    if NEW.user_tag_id = OLD.user_tag_id or OLD.user_tag_id is null then return NEW; end if;
     insert into account_tag_association_history (
-        account_id, user_tag_uid
+        account_id, user_tag_id
     )
     values (
-        NEW.id, OLD.user_tag_uid
+        NEW.id, OLD.user_tag_id
     );
     return NEW;
 end
@@ -274,10 +274,10 @@ $$ language plpgsql
 
 drop trigger if exists update_tag_association_history_trigger on account;
 create trigger update_tag_association_history_trigger
-    after update of user_tag_uid
+    after update of user_tag_id
     on account
     for each row
-    when (OLD.user_tag_uid is distinct from NEW.user_tag_uid and OLD.user_tag_uid is not null)
+    when (OLD.user_tag_id is distinct from NEW.user_tag_id and OLD.user_tag_id is not null)
 execute function update_tag_association_history();
 
 create or replace function handle_till_user_login() returns trigger as
@@ -468,13 +468,13 @@ execute function tse_signature_finished_trigger_procedure();
 create or replace function update_account_user_tag_association_to_user() returns trigger as
 $$
 <<locals>> declare
-    user_user_tag_uid numeric(20);
+    user_user_tag_id bigint;
 begin
-    select usr.user_tag_uid into locals.user_user_tag_uid
+    select usr.user_tag_id into locals.user_user_tag_id
     from usr where usr.customer_account_id = NEW.id;
 
-    if locals.user_user_tag_uid is distinct from NEW.user_tag_uid then
-        update usr set user_tag_uid = NEW.user_tag_uid where usr.customer_account_id = NEW.id;
+    if locals.user_user_tag_id is distinct from NEW.user_tag_id then
+        update usr set user_tag_id = NEW.user_tag_id where usr.customer_account_id = NEW.id;
     end if;
 
     return NEW;
@@ -485,13 +485,13 @@ $$ language plpgsql
 create or replace function update_user_tag_association_to_account() returns trigger as
 $$
 <<locals>> declare
-    account_user_tag_uid numeric(20);
+    account_user_tag_id bigint;
 begin
-    select a.user_tag_uid into locals.account_user_tag_uid
+    select a.user_tag_id into locals.account_user_tag_id
     from account a where a.id = NEW.customer_account_id;
 
-    if locals.account_user_tag_uid is distinct from NEW.user_tag_uid then
-        update account set user_tag_uid = NEW.user_tag_uid where id = NEW.customer_account_id;
+    if locals.account_user_tag_id is distinct from NEW.user_tag_id then
+        update account set user_tag_id = NEW.user_tag_id where id = NEW.customer_account_id;
     end if;
 
     return NEW;
@@ -502,7 +502,7 @@ drop trigger if exists update_user_tag_association_to_account_trigger on usr;
 create trigger update_user_tag_association_to_account_trigger
     after update on usr
     for each row
-    when (OLD.user_tag_uid is distinct from NEW.user_tag_uid)
+    when (OLD.user_tag_id is distinct from NEW.user_tag_id)
 execute function update_user_tag_association_to_account();
 
 -- there was an error where this trigger was initially set on the 'usr' table
@@ -510,7 +510,7 @@ drop trigger if exists update_account_user_tag_association_to_user_trigger on us
 create trigger update_account_user_tag_association_to_user_trigger
     after update on account
     for each row
-    when (OLD.user_tag_uid is distinct from NEW.user_tag_uid)
+    when (OLD.user_tag_id is distinct from NEW.user_tag_id)
 execute function update_account_user_tag_association_to_user();
 
 create function noupdate() returns trigger as

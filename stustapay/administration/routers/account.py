@@ -86,28 +86,6 @@ async def update_voucher_amount(
     )
 
 
-class UpdateTagUidPayload(BaseModel):
-    new_tag_uid_hex: str
-    comment: Optional[str] = None
-
-
-@router.post("/accounts/{account_id}/update-tag-uid")
-async def update_tag_uid(
-    token: CurrentAuthToken,
-    account_service: ContextAccountService,
-    account_id: int,
-    payload: UpdateTagUidPayload,
-    node_id: Optional[int] = None,
-):
-    await account_service.switch_account_tag_uid_admin(
-        token=token,
-        account_id=account_id,
-        new_user_tag_uid=int(payload.new_tag_uid_hex, 16),
-        comment=payload.comment,
-        node_id=node_id,
-    )
-
-
 class UpdateAccountCommentPayload(BaseModel):
     comment: str
 

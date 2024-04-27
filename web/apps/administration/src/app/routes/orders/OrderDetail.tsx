@@ -90,7 +90,7 @@ export const OrderDetail: React.FC = () => {
             </ListItemLink>
           )}
           {order.customer_tag_uid_hex != null && (
-            <ListItemLink to={UserTagRoutes.detail(order.customer_tag_uid_hex)}>
+            <ListItemLink to={UserTagRoutes.detail(order.customer_tag_id)}>
               <ListItemText
                 primary={t("order.customerTagUid")}
                 secondary={formatUserTagUid(order.customer_tag_uid_hex)}

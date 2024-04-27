@@ -1,4 +1,4 @@
-import { useLogoutMutation } from "@/api/authApi";
+import { useLogoutMutation } from "@/api";
 import { Loading } from "@stustapay/components";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import * as React from "react";

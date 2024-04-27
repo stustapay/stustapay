@@ -1,5 +1,5 @@
 import { withPrivilegeGuard } from "@/app/layout";
-import { Privilege } from "@stustapay/models";
+import { Privilege, formatUserTagUid } from "@stustapay/models";
 import {
   selectOrderAll,
   useDisableAccountMutation,
@@ -8,20 +8,18 @@ import {
   useUpdateAccountCommentMutation,
 } from "@/api";
 import { AccountRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailLayout, EditableListItem } from "@/components";
+import { DetailLayout, EditableListItem, ListItemLink } from "@/components";
 import { OrderTable } from "@/components/features";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
 import { Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { AccountTagHistoryTable } from "../accounts/components/AccountTagHistoryTable";
 import { EditAccountBalanceModal } from "../accounts/components/EditAccountBalanceModal";
-import { EditAccountTagModal } from "../accounts/components/EditAccountTagModal";
 import { EditAccountVoucherAmountModal } from "../accounts/components/EditAccountVoucherAmountModal";
 
 export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, () => {
@@ -41,7 +39,6 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
 
   const [balanceModalOpen, setBalanceModalOpen] = React.useState(false);
   const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
-  const [tagModalOpen, setTagModalOpen] = React.useState(false);
 
   const {
     orders,
@@ -121,21 +118,12 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
               <ListItem>
                 <ListItemText primary={t("account.type")} secondary={customer.type} />
               </ListItem>
-              <ListItem>
+              <ListItemLink to={UserTagRoutes.detail(customer.user_tag_id)}>
                 <ListItemText
                   primary={t("account.user_tag_uid")}
-                  secondary={
-                    <RouterLink to={UserTagRoutes.detail(customer.user_tag_uid_hex)}>
-                      {formatUserTagUid(customer.user_tag_uid_hex)}
-                    </RouterLink>
-                  }
+                  secondary={formatUserTagUid(customer.user_tag_uid_hex)}
                 />
-                <ListItemSecondaryAction>
-                  <IconButton color="primary" onClick={() => setTagModalOpen(true)}>
-                    <EditIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
+              </ListItemLink>
               <ListItem>
                 <ListItemText primary={t("account.name")} secondary={customer.name} />
               </ListItem>
@@ -216,7 +204,6 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
         open={voucherModalOpen}
         handleClose={() => setVoucherModalOpen(false)}
       />
-      <EditAccountTagModal account={customer} open={tagModalOpen} handleClose={() => setTagModalOpen(false)} />
       <OrderTable orders={orders} />
     </DetailLayout>
   );

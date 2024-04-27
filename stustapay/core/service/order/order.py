@@ -175,11 +175,6 @@ class BookedProduct(BaseModel):
     price: Optional[float] = None
 
 
-class PendingTicket(BaseModel):
-    ticket: Ticket
-    customer_tag_uid: int
-
-
 class InternalNewSale(BaseModel):
     uuid: UUID
     buttons: list[BookedButton]
@@ -308,13 +303,14 @@ class OrderService(DBService):
         return line_items
 
     @staticmethod
-    async def _fetch_customer_by_user_tag(*, conn: Connection, customer_tag_uid: int) -> Account:
+    async def _fetch_customer_by_user_tag(*, conn: Connection, node: Node, customer_tag_uid: int) -> Account:
         customer = await conn.fetch_maybe_one(
             Account,
             "select a.*, t.restriction "
-            "from user_tag t join account_with_history a on t.uid = a.user_tag_uid "
-            "where t.uid = $1 and a.type = 'private'",
+            "from user_tag t join account_with_history a on t.id = a.user_tag_id "
+            "where t.uid = $1 and a.type = 'private' and a.node_id = any($2)",
             customer_tag_uid,
+            node.ids_to_root,
         )
         if customer is None:
             raise CustomerNotFound(uid=customer_tag_uid)
@@ -326,12 +322,11 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: CurrentTerminal,
+        node: Node,
+        current_till: Till,
         new_topup: NewTopUp,
     ) -> PendingTopUp:
-        event_settings = await fetch_restricted_event_settings_for_node(
-            conn=conn, node_id=current_terminal.till.node_id
-        )
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_till.node_id)
         if new_topup.amount <= 0.0:
             raise InvalidArgument("Only topups with a positive amount are allowed")
 
@@ -340,7 +335,7 @@ class OrderService(DBService):
 
         can_top_up = await conn.fetchval(
             "select allow_top_up from till_profile where id = $1",
-            current_terminal.till.active_profile_id,
+            current_till.active_profile_id,
         )
         if not can_top_up:
             raise TillPermissionException("This terminal is not allowed to top up customers")
@@ -354,7 +349,7 @@ class OrderService(DBService):
             raise InvalidArgument("This order has already been booked, duplicate order uuid")
 
         customer_account = await self._fetch_customer_by_user_tag(
-            conn=conn, customer_tag_uid=new_topup.customer_tag_uid
+            conn=conn, node=node, customer_tag_uid=new_topup.customer_tag_uid
         )
 
         max_limit = event_settings.max_account_balance
@@ -383,14 +378,16 @@ class OrderService(DBService):
         *,
         conn: Connection,
         current_terminal: CurrentTerminal,
+        current_till: Till,
         node: Node,
         current_user: CurrentUser,
         new_topup: NewTopUp,
     ) -> CompletedTopUp:
         assert current_user.cashier_account_id is not None
 
-        pending_top_up: PendingTopUp = await self.check_topup(  # pylint: disable=unexpected-keyword-arg
+        pending_top_up: PendingTopUp = await self.check_topup(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
             conn=conn,
+            node=node,
             current_terminal=current_terminal,
             current_user=current_user,
             new_topup=new_topup,
@@ -440,7 +437,7 @@ class OrderService(DBService):
             order_type=OrderType.top_up,
             payment_method=pending_top_up.payment_method,
             cashier_id=current_user.id,
-            till_id=current_terminal.till.id,
+            till_id=current_till.id,
             customer_account_id=pending_top_up.customer_account_id,
             cash_register_id=current_user.cash_register_id,
             line_items=line_items,
@@ -457,7 +454,7 @@ class OrderService(DBService):
             uuid=order_info.uuid,
             booked_at=order_info.booked_at,
             cashier_id=current_user.id,
-            till_id=current_terminal.till.id,
+            till_id=current_till.id,
         )
 
     async def _check_sale(
@@ -477,7 +474,9 @@ class OrderService(DBService):
         if uuid_exists:
             raise InvalidArgument("This order has already been booked, duplicate order uuid")
 
-        customer_account = await self._fetch_customer_by_user_tag(conn=conn, customer_tag_uid=new_sale.customer_tag_uid)
+        customer_account = await self._fetch_customer_by_user_tag(
+            conn=conn, node=node, customer_tag_uid=new_sale.customer_tag_uid
+        )
 
         booked_products = await self._get_products_from_buttons(
             conn=conn, till_profile_id=till.active_profile_id, buttons=new_sale.buttons
@@ -532,9 +531,7 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def check_sale(
-        self, *, conn: Connection, current_terminal: CurrentTerminal, node: Node, new_sale: NewSale
-    ) -> PendingSale:
+    async def check_sale(self, *, conn: Connection, current_till: Till, node: Node, new_sale: NewSale) -> PendingSale:
         """
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
@@ -555,7 +552,7 @@ class OrderService(DBService):
             ],
         )
         pending_sale = await self._check_sale(
-            conn=conn, event_settings=event_settings, node=node, till=current_terminal.till, new_sale=internal_new_sale
+            conn=conn, event_settings=event_settings, node=node, till=current_till, new_sale=internal_new_sale
         )
         return PendingSale(
             uuid=pending_sale.uuid,
@@ -574,7 +571,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: CurrentTerminal,
+        current_till: Till,
         node: Node,
         new_sale: NewSaleProducts,
     ) -> PendingSaleProducts:
@@ -598,7 +595,7 @@ class OrderService(DBService):
             ],
         )
         pending_sale = await self._check_sale(
-            conn=conn, event_settings=event_settings, node=node, till=current_terminal.till, new_sale=internal_new_sale
+            conn=conn, event_settings=event_settings, node=node, till=current_till, new_sale=internal_new_sale
         )
         return PendingSaleProducts(
             uuid=pending_sale.uuid,
@@ -707,7 +704,7 @@ class OrderService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: CurrentTerminal,
+        current_till: Till,
         node: Node,
         current_user: CurrentUser,
         new_sale: NewSale,
@@ -735,7 +732,7 @@ class OrderService(DBService):
             conn=conn,
             event_settings=event_settings,
             node=node,
-            till=current_terminal.till,
+            till=current_till,
             new_sale=internal_new_sale,
             current_user=current_user,
         )
@@ -905,12 +902,8 @@ class OrderService(DBService):
 
     @with_retryable_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def cancel_sale(
-        self, *, conn: Connection, current_terminal: CurrentTerminal, current_user: CurrentUser, order_id: int
-    ):
-        await self._cancel_sale(
-            conn=conn, till_id=current_terminal.till.id, current_user=current_user, order_id=order_id
-        )
+    async def cancel_sale(self, *, conn: Connection, current_till: Till, current_user: CurrentUser, order_id: int):
+        await self._cancel_sale(conn=conn, till_id=current_till.id, current_user=current_user, order_id=order_id)
 
     @with_retryable_db_transaction(read_only=False)
     @requires_node()
@@ -922,7 +915,7 @@ class OrderService(DBService):
     @with_retryable_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_pay_out(
-        self, *, conn: Connection, current_terminal: CurrentTerminal, new_pay_out: NewPayOut
+        self, *, conn: Connection, node: Node, current_till: Till, new_pay_out: NewPayOut
     ) -> PendingPayOut:
         if new_pay_out.amount is not None and new_pay_out.amount > 0.0:
             raise InvalidArgument("Only payouts with a negative amount are allowed")
@@ -932,13 +925,13 @@ class OrderService(DBService):
             raise InvalidArgument("This order has already been booked, duplicate order uuid")
 
         can_pay_out = await conn.fetchval(
-            "select allow_cash_out from till_profile where id = $1", current_terminal.till.active_profile_id
+            "select allow_cash_out from till_profile where id = $1", current_till.active_profile_id
         )
         if not can_pay_out:
             raise TillPermissionException("This terminal is not allowed to pay out customers")
 
         customer_account = await self._fetch_customer_by_user_tag(
-            conn=conn, customer_tag_uid=new_pay_out.customer_tag_uid
+            conn=conn, node=node, customer_tag_uid=new_pay_out.customer_tag_uid
         )
 
         if new_pay_out.amount is None:
@@ -965,13 +958,20 @@ class OrderService(DBService):
         *,
         conn: Connection,
         current_terminal: CurrentTerminal,
+        current_till: Till,
         node: Node,
         current_user: CurrentUser,
         new_pay_out: NewPayOut,
     ) -> CompletedPayOut:
         assert current_user.cashier_account_id is not None
-        pending_pay_out: PendingPayOut = await self.check_pay_out(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_terminal=current_terminal, current_user=current_user, new_pay_out=new_pay_out
+        pending_pay_out: PendingPayOut = (
+            await self.check_pay_out(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
+                conn=conn,
+                node=node,
+                current_terminal=current_terminal,
+                current_user=current_user,
+                new_pay_out=new_pay_out,
+            )
         )
 
         pay_out_product = await fetch_pay_out_product(conn=conn, node=node)
@@ -1004,7 +1004,7 @@ class OrderService(DBService):
             uuid=pending_pay_out.uuid,
             order_type=OrderType.pay_out,
             cashier_id=current_user.id,
-            till_id=current_terminal.till.id,
+            till_id=current_till.id,
             customer_account_id=pending_pay_out.customer_account_id,
             payment_method=PaymentMethod.cash,
             cash_register_id=current_user.cash_register_id,
@@ -1021,44 +1021,47 @@ class OrderService(DBService):
             uuid=order_info.uuid,
             booked_at=order_info.booked_at,
             cashier_id=current_user.id,
-            till_id=current_terminal.till.id,
+            till_id=current_till.id,
         )
 
     @with_retryable_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_ticket_scan(
-        self, *, conn: Connection, current_terminal: CurrentTerminal, new_ticket_scan: NewTicketScan
+        self, *, conn: Connection, node: Node, current_till: Till, new_ticket_scan: NewTicketScan
     ) -> TicketScanResult:
         can_sell_tickets = await conn.fetchval(
-            "select allow_ticket_sale from till_profile where id = $1", current_terminal.till.active_profile_id
+            "select allow_ticket_sale from till_profile where id = $1", current_till.active_profile_id
         )
         if not can_sell_tickets:
             raise TillPermissionException("This terminal is not allowed to sell tickets")
 
         layout_id = await conn.fetchval(
-            "select layout_id from till_profile tp where id = $1", current_terminal.till.active_profile_id
+            "select layout_id from till_profile tp where id = $1", current_till.active_profile_id
+        )
+        customer_pins = list(map(lambda x: x.tag_pin, new_ticket_scan.customer_tags))
+
+        known_tag_ids = await conn.fetch(
+            "select u.pin as user_tag_uid "
+            "from account a join user_tag u on a.user_tag_id = u.id "
+            "where u.pin = any($1) and u.node_id = any($2)",
+            customer_pins,
+            node.ids_to_root,
         )
 
-        known_accounts = await conn.fetch(
-            "select user_tag_uid from account where user_tag_uid = ANY($1::numeric(20)[])",
-            new_ticket_scan.customer_tag_uids,
-        )
+        if len(known_tag_ids) > 0:
+            formatted_pins = ", ".join(a["pin"] for a in known_tag_ids)
+            raise InvalidArgument(f"Ticket already has account: {formatted_pins}")
 
-        if len(known_accounts) > 0:
-            raise InvalidArgument(
-                f"Ticket already has account: " f"{', '.join('%X' % int(a['user_tag_uid']) for a in known_accounts)}"
-            )
-
-        known_uids = await conn.fetch(
-            "select uid from user_tag where uid = ANY($1::numeric(20)[])",
-            new_ticket_scan.customer_tag_uids,
+        known_pins = await conn.fetch(
+            "select pin from user_tag where pin = any($1)",
+            customer_pins,
         )
-        if len(known_uids) != len(new_ticket_scan.customer_tag_uids):
-            unknown_ids = set(new_ticket_scan.customer_tag_uids) - set(i["id"] for i in known_uids)
-            raise InvalidArgument(f"Unknown Ticket ID: {', '.join('%X' % i for i in unknown_ids)}")
+        if len(known_pins) != len(new_ticket_scan.customer_tags):
+            unknown_ids = set(customer_pins) - set(i["pin"] for i in known_pins)
+            raise InvalidArgument(f"Unknown Ticket ID: {', '.join(unknown_ids)}")
 
         scanned_tickets = []
-        for customer_tag_uid in new_ticket_scan.customer_tag_uids:
+        for customer_tag in new_ticket_scan.customer_tags:
             ticket = await conn.fetch_maybe_one(
                 Ticket,
                 "select t.* "
@@ -1067,13 +1070,17 @@ class OrderService(DBService):
                 "join user_tag ut "
                 "   on (ut.restriction = any(t.restrictions) "
                 "       or t.restrictions = '{}'::text array and ut.restriction is null) "
-                "where tltt.layout_id = $1 and ut.uid = $2",
+                "where tltt.layout_id = $1 and ut.pin = $2",
                 layout_id,
-                customer_tag_uid,
+                customer_tag.tag_pin,
             )
             if ticket is None:
                 raise InvalidArgument("This terminal is not allowed to sell this ticket")
-            scanned_tickets.append(TicketScanResultEntry(customer_tag_uid=customer_tag_uid, ticket=ticket))
+            scanned_tickets.append(
+                TicketScanResultEntry(
+                    customer_tag_uid=customer_tag.tag_uid, customer_tag_pin=customer_tag.tag_pin, ticket=ticket
+                )
+            )
 
         return TicketScanResult(scanned_tickets=scanned_tickets)
 
@@ -1084,6 +1091,7 @@ class OrderService(DBService):
         *,
         conn: Connection,
         current_terminal: CurrentTerminal,
+        current_till: Till,
         node: Node,
         current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,
@@ -1098,21 +1106,23 @@ class OrderService(DBService):
 
             if new_ticket_sale.payment_method == PaymentMethod.cash:
                 cash_register_id = await conn.fetchval(
-                    "select t.active_cash_register_id from till t where id = $1", current_terminal.till.id
+                    "select t.active_cash_register_id from till t where id = $1", current_till.id
                 )
                 if cash_register_id is None:
                     raise InvalidArgument("This till needs a cash register for cash payments")
 
-        ticket_scan_result: TicketScanResult = await self.check_ticket_scan(  # pylint: disable=unexpected-keyword-arg
-            conn=conn,
-            current_terminal=current_terminal,
-            current_user=current_user,
-            new_ticket_scan=NewTicketScan(customer_tag_uids=new_ticket_sale.customer_tag_uids),
+        ticket_scan_result: TicketScanResult = (
+            await self.check_ticket_scan(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
+                conn=conn,
+                node=node,
+                current_terminal=current_terminal,
+                current_user=current_user,
+                new_ticket_scan=NewTicketScan(customer_tags=new_ticket_sale.customer_tags),
+            )
         )
 
         # mapping of product id to pending line item
         ticket_line_items: dict[int, PendingLineItem] = {}
-        pending_tickets = []
 
         top_up_product = await fetch_top_up_product(conn=conn, node=node)
         top_up_line_item = PendingLineItem(
@@ -1149,28 +1159,6 @@ class OrderService(DBService):
             if ticket.initial_top_up_amount > 0:
                 # wtf, pylint does not recognise this member
                 top_up_line_item.product_price += ticket.initial_top_up_amount  # pylint: disable=no-member
-
-            # TODO: The following check should not be necessary as it should be enforced by check_ticket_scan that
-            #   the correct ticket is assigned to each tag uid
-            # row = await conn.fetchrow(
-            #     "select uid, restriction from user_tag where uid = $1", ticket_scan.customer_tag_uid
-            # )
-            # if row is None:
-            #     raise InvalidArgument(f"Tag with uid {ticket_scan.customer_tag_uid:X} does not exist")
-            # ticket_restriction_name = ticket.restriction.name if ticket.restriction is not None else None
-            # tag_restriction = row["restriction"]
-            # if tag_restriction != ticket_restriction_name:
-            #     raise InvalidArgument(
-            #         "Ticket restriction does not match up with scanned tag. "
-            #         f"Ticket has restriction {ticket_restriction_name}, scanned tag has restriction {tag_restriction}"
-            #     )
-
-            pending_tickets.append(
-                PendingTicket(
-                    customer_tag_uid=ticket_scan.customer_tag_uid,
-                    ticket=ticket,
-                )
-            )
 
         line_items = list(ticket_line_items.values()) + [top_up_line_item]
 
@@ -1210,6 +1198,7 @@ class OrderService(DBService):
         *,
         conn: Connection,
         current_terminal: CurrentTerminal,
+        current_till: Till,
         node: Node,
         current_user: CurrentUser,
         new_ticket_sale: NewTicketSale,
@@ -1218,7 +1207,7 @@ class OrderService(DBService):
             raise InvalidArgument("No payment method provided")
 
         assert current_user.cashier_account_id is not None
-        pending_ticket_sale = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg
+        pending_ticket_sale = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
             conn=conn,
             current_terminal=current_terminal,
             node=node,
@@ -1231,12 +1220,20 @@ class OrderService(DBService):
         customers: dict[int, tuple[float, Optional[str]]] = {}
         for scanned_ticket in pending_ticket_sale.scanned_tickets:
             restriction = await conn.fetchval(
-                "select restriction from user_tag where uid = $1", scanned_ticket.customer_tag_uid
+                "select restriction from user_tag where pin = $1 and node_id = any($2)",
+                scanned_ticket.customer_tag_pin,
+                node.ids_to_root,
+            )
+            user_tag_id = await conn.fetchval(
+                "update user_tag set uid = $1 where pin = $2 and node_id = any($3) returning id",
+                scanned_ticket.customer_tag_uid,
+                scanned_ticket.customer_tag_pin,
+                node.ids_to_root,
             )
             customer_account_id = await conn.fetchval(
-                "insert into account (node_id, user_tag_uid, type) values ($1, $2, 'private') returning id",
+                "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
                 node.event_node_id,
-                scanned_ticket.customer_tag_uid,
+                user_tag_id,
             )
             customers[customer_account_id] = (scanned_ticket.ticket.initial_top_up_amount, restriction)
 
@@ -1297,7 +1294,7 @@ class OrderService(DBService):
             order_type=OrderType.ticket,
             customer_account_id=oldest_customer_account_id,
             cashier_id=current_user.id,
-            till_id=current_terminal.till.id,
+            till_id=current_till.id,
             uuid=new_ticket_sale.uuid,
             cash_register_id=current_user.cash_register_id,
             payment_method=pending_ticket_sale.payment_method,
@@ -1314,7 +1311,7 @@ class OrderService(DBService):
             booked_at=order_info.booked_at,
             cashier_id=current_user.id,
             scanned_tickets=pending_ticket_sale.scanned_tickets,
-            till_id=current_terminal.till.id,
+            till_id=current_till.id,
         )
 
     @with_db_transaction(read_only=True)

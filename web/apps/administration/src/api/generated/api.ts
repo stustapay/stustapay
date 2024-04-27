@@ -474,15 +474,6 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["accounts"],
       }),
-      updateTagUid: build.mutation<UpdateTagUidApiResponse, UpdateTagUidApiArg>({
-        query: (queryArg) => ({
-          url: `/accounts/${queryArg.accountId}/update-tag-uid`,
-          method: "POST",
-          body: queryArg.updateTagUidPayload,
-          params: { node_id: queryArg.nodeId },
-        }),
-        invalidatesTags: ["accounts"],
-      }),
       updateAccountComment: build.mutation<UpdateAccountCommentApiResponse, UpdateAccountCommentApiArg>({
         query: (queryArg) => ({
           url: `/accounts/${queryArg.accountId}/update-comment`,
@@ -640,12 +631,12 @@ const injectedRtkApi = api
         invalidatesTags: ["user_tags"],
       }),
       getUserTagDetail: build.query<GetUserTagDetailApiResponse, GetUserTagDetailApiArg>({
-        query: (queryArg) => ({ url: `/user-tags/${queryArg.userTagUidHex}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({ url: `/user-tags/${queryArg.userTagId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["user_tags"],
       }),
       updateUserTagComment: build.mutation<UpdateUserTagCommentApiResponse, UpdateUserTagCommentApiArg>({
         query: (queryArg) => ({
-          url: `/user-tags/${queryArg.userTagUidHex}/update-comment`,
+          url: `/user-tags/${queryArg.userTagId}/update-comment`,
           method: "POST",
           body: queryArg.updateCommentPayload,
           params: { node_id: queryArg.nodeId },
@@ -857,17 +848,17 @@ export type ListUsersApiResponse = /** status 200 Successful Response */ Normali
 export type ListUsersApiArg = {
   nodeId: number;
 };
-export type CreateUserApiResponse = /** status 200 Successful Response */ UserRead;
+export type CreateUserApiResponse = /** status 200 Successful Response */ User;
 export type CreateUserApiArg = {
   nodeId: number;
   createUserPayload: CreateUserPayload;
 };
-export type GetUserApiResponse = /** status 200 Successful Response */ UserRead;
+export type GetUserApiResponse = /** status 200 Successful Response */ User;
 export type GetUserApiArg = {
   userId: number;
   nodeId: number;
 };
-export type UpdateUserApiResponse = /** status 200 Successful Response */ UserRead;
+export type UpdateUserApiResponse = /** status 200 Successful Response */ User;
 export type UpdateUserApiArg = {
   userId: number;
   nodeId: number;
@@ -878,7 +869,7 @@ export type DeleteUserApiArg = {
   userId: number;
   nodeId: number;
 };
-export type ChangeUserPasswordApiResponse = /** status 200 Successful Response */ UserRead;
+export type ChangeUserPasswordApiResponse = /** status 200 Successful Response */ User;
 export type ChangeUserPasswordApiArg = {
   userId: number;
   nodeId: number;
@@ -943,7 +934,7 @@ export type DeleteTaxRateApiArg = {
   taxRateId: number;
   nodeId?: number | null;
 };
-export type LoginApiResponse = /** status 200 Successful Response */ LoginResponseRead;
+export type LoginApiResponse = /** status 200 Successful Response */ LoginResponse;
 export type LoginApiArg = {
   loginPayload: LoginPayload;
 };
@@ -1143,12 +1134,6 @@ export type UpdateVoucherAmountApiArg = {
   nodeId?: number | null;
   updateVoucherAmountPayload: UpdateVoucherAmountPayload;
 };
-export type UpdateTagUidApiResponse = /** status 200 Successful Response */ any;
-export type UpdateTagUidApiArg = {
-  accountId: number;
-  nodeId?: number | null;
-  updateTagUidPayload: UpdateTagUidPayload;
-};
 export type UpdateAccountCommentApiResponse = /** status 200 Successful Response */ AccountRead;
 export type UpdateAccountCommentApiArg = {
   accountId: number;
@@ -1263,12 +1248,12 @@ export type FindUserTagsApiArg = {
 };
 export type GetUserTagDetailApiResponse = /** status 200 Successful Response */ UserTagDetailRead;
 export type GetUserTagDetailApiArg = {
-  userTagUidHex: string;
+  userTagId: number;
   nodeId?: number | null;
 };
 export type UpdateUserTagCommentApiResponse = /** status 200 Successful Response */ UserTagDetailRead;
 export type UpdateUserTagCommentApiArg = {
-  userTagUidHex: string;
+  userTagId: number;
   nodeId?: number | null;
   updateCommentPayload: UpdateCommentPayload;
 };
@@ -1447,42 +1432,33 @@ export type NewProduct = {
 export type User = {
   login: string;
   display_name: string;
+  user_tag_pin?: string | null;
   user_tag_uid?: number | null;
   description?: string | null;
   node_id: number;
+  user_tag_id?: number | null;
   transport_account_id?: number | null;
   cashier_account_id?: number | null;
   id: number;
-};
-export type UserRead = {
-  login: string;
-  display_name: string;
-  user_tag_uid?: number | null;
-  description?: string | null;
-  node_id: number;
-  transport_account_id?: number | null;
-  cashier_account_id?: number | null;
-  id: number;
-  user_tag_uid_hex: string | null;
 };
 export type NormalizedListUserInt = {
   ids: number[];
   entities: {
-    [key: string]: UserRead;
+    [key: string]: User;
   };
 };
 export type CreateUserPayload = {
   login: string;
   display_name: string;
   description?: string | null;
-  user_tag_uid_hex?: string | null;
+  user_tag_pin?: string | null;
   password?: string | null;
 };
 export type UpdateUserPayload = {
   login: string;
   display_name: string;
   description?: string | null;
-  user_tag_uid_hex?: string | null;
+  user_tag_pin?: string | null;
 };
 export type ChangeUserPasswordPayload = {
   new_password: string;
@@ -1490,6 +1466,7 @@ export type ChangeUserPasswordPayload = {
 export type Privilege =
   | "node_administration"
   | "customer_management"
+  | "create_user"
   | "user_management"
   | "cash_transport"
   | "terminal_login"
@@ -1555,33 +1532,14 @@ export type CurrentUser = {
   active_role_name?: string | null;
   privileges: Privilege[];
   description?: string | null;
+  user_tag_id?: number | null;
   user_tag_uid?: number | null;
   transport_account_id?: number | null;
   cashier_account_id?: number | null;
   cash_register_id?: number | null;
-};
-export type CurrentUserRead = {
-  node_id: number;
-  id: number;
-  login: string;
-  display_name: string;
-  active_role_id?: number | null;
-  active_role_name?: string | null;
-  privileges: Privilege[];
-  description?: string | null;
-  user_tag_uid?: number | null;
-  transport_account_id?: number | null;
-  cashier_account_id?: number | null;
-  cash_register_id?: number | null;
-  user_tag_uid_hex: string | null;
 };
 export type LoginResponse = {
   user: CurrentUser;
-  access_token: string;
-  grant_type?: string;
-};
-export type LoginResponseRead = {
-  user: CurrentUserRead;
   access_token: string;
   grant_type?: string;
 };
@@ -1733,7 +1691,6 @@ export type CashRegister = {
   node_id: number;
   id: number;
   current_cashier_id: number | null;
-  current_cashier_tag_uid: number | null;
   current_till_id: number | null;
   current_balance: number;
 };
@@ -1780,13 +1737,17 @@ export type AccountType =
   | "cashier"
   | "voucher_create";
 export type UserTagHistoryEntry = {
-  user_tag_uid: number;
+  user_tag_id: number;
+  user_tag_pin: string;
+  user_tag_uid: number | null;
   account_id: number;
   comment?: string | null;
   mapping_was_valid_until: string;
 };
 export type UserTagHistoryEntryRead = {
-  user_tag_uid: number;
+  user_tag_id: number;
+  user_tag_pin: string;
+  user_tag_uid: number | null;
   account_id: number;
   comment?: string | null;
   mapping_was_valid_until: string;
@@ -1800,6 +1761,7 @@ export type Account = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
@@ -1813,6 +1775,7 @@ export type AccountRead = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
@@ -1833,10 +1796,6 @@ export type UpdateBalancePayload = {
 };
 export type UpdateVoucherAmountPayload = {
   new_voucher_amount: number;
-};
-export type UpdateTagUidPayload = {
-  new_tag_uid_hex: string;
-  comment?: string | null;
 };
 export type UpdateAccountCommentPayload = {
   comment: string;
@@ -1885,6 +1844,7 @@ export type Order = {
   till_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
+  customer_tag_id: number | null;
   line_items: LineItem[];
 };
 export type OrderRead = {
@@ -1901,6 +1861,7 @@ export type OrderRead = {
   till_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
+  customer_tag_id: number | null;
   line_items: LineItemRead[];
   customer_tag_uid_hex: string | null;
 };
@@ -1974,6 +1935,7 @@ export type Cashier = {
   login: string;
   display_name: string;
   description?: string | null;
+  user_tag_id?: number | null;
   user_tag_uid?: number | null;
   transport_account_id?: number | null;
   cashier_account_id: number;
@@ -1987,6 +1949,7 @@ export type CashierRead = {
   login: string;
   display_name: string;
   description?: string | null;
+  user_tag_id?: number | null;
   user_tag_uid?: number | null;
   transport_account_id?: number | null;
   cashier_account_id: number;
@@ -2093,17 +2056,23 @@ export type UserTagAccountAssociation = {
   mapping_was_valid_until: string;
 };
 export type UserTagDetail = {
-  user_tag_uid: number;
+  id: number;
+  pin: string;
+  uid: number | null;
+  node_id: number;
   comment?: string | null;
   account_id?: number | null;
   account_history: UserTagAccountAssociation[];
 };
 export type UserTagDetailRead = {
-  user_tag_uid: number;
+  id: number;
+  pin: string;
+  uid: number | null;
+  node_id: number;
   comment?: string | null;
   account_id?: number | null;
   account_history: UserTagAccountAssociation[];
-  user_tag_uid_hex: string | null;
+  uid_hex: string | null;
 };
 export type NormalizedListUserTagDetailInt = {
   ids: number[];
@@ -2182,6 +2151,7 @@ export type Payout = {
   iban: string;
   account_name: string;
   email: string;
+  user_tag_id: number;
   user_tag_uid: number;
   balance: number;
   payout_run_id: number;
@@ -2191,10 +2161,11 @@ export type PayoutRead = {
   iban: string;
   account_name: string;
   email: string;
+  user_tag_id: number;
   user_tag_uid: number;
   balance: number;
   payout_run_id: number;
-  user_tag_uid_hex: string;
+  user_tag_uid_hex: string | null;
 };
 export type CreateCsvPayload = {
   batch_size?: number | null;
@@ -2432,6 +2403,7 @@ export type Customer = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
@@ -2443,6 +2415,7 @@ export type Customer = {
   payout_error: string | null;
   payout_run_id: number | null;
   payout_export: boolean | null;
+  user_tag_pin: string | null;
 };
 export type CustomerRead = {
   node_id: number;
@@ -2452,6 +2425,7 @@ export type CustomerRead = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
@@ -2463,6 +2437,7 @@ export type CustomerRead = {
   payout_error: string | null;
   payout_run_id: number | null;
   payout_export: boolean | null;
+  user_tag_pin: string | null;
   user_tag_uid_hex: string | null;
 };
 export type FindCustomerPayload = {
@@ -2575,7 +2550,6 @@ export const {
   useDisableAccountMutation,
   useUpdateBalanceMutation,
   useUpdateVoucherAmountMutation,
-  useUpdateTagUidMutation,
   useUpdateAccountCommentMutation,
   useListOrdersByTillQuery,
   useLazyListOrdersByTillQuery,

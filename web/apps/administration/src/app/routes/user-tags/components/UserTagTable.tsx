@@ -3,7 +3,6 @@ import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
@@ -18,11 +17,11 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
 
   const columns: GridColDef<UserTagDetailRead>[] = [
     {
-      field: "user_tag_uid_hex",
-      headerName: t("userTag.uid") as string,
+      field: "user_tag_id",
+      headerName: t("userTag.id") as string,
       renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_uid_hex)}>
-          {formatUserTagUid(params.row.user_tag_uid_hex)}
+        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.id)}>
+          {params.row.id}
         </Link>
       ),
       minWidth: 250,
@@ -59,7 +58,6 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
       autoHeight
       rows={userTags}
       columns={columns}
-      getRowId={(row) => row.user_tag_uid}
       disableRowSelectionOnClick
       sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
     />

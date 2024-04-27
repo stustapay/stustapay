@@ -15,11 +15,11 @@ async def test_basic_ticket_workflow(
     event_node: Node,
     tax_rate_none: TaxRate,
     tax_rate_ust: TaxRate,
-    admin_token: str,
+    event_admin_token: str,
     cashier: Cashier,
 ):
     ticket = await ticket_service.create_ticket(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         ticket=NewTicket(
             name="Test Ticket",
@@ -47,7 +47,7 @@ async def test_basic_ticket_workflow(
         )
 
     updated_ticket = await ticket_service.update_ticket(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         ticket_id=ticket.id,
         ticket=NewTicket(
@@ -63,11 +63,11 @@ async def test_basic_ticket_workflow(
     assert updated_ticket.initial_top_up_amount == 4
     assert updated_ticket.is_locked
 
-    tickets = await ticket_service.list_tickets(token=admin_token, node_id=event_node.id)
+    tickets = await ticket_service.list_tickets(token=event_admin_token, node_id=event_node.id)
     assert len(list(filter(lambda p: p.name == "Updated Test Ticket", tickets))) == 1
 
     with pytest.raises(AccessDenied):
         await ticket_service.delete_ticket(token=cashier.token, node_id=event_node.id, ticket_id=ticket.id)
 
-    deleted = await ticket_service.delete_ticket(token=admin_token, node_id=event_node.id, ticket_id=ticket.id)
+    deleted = await ticket_service.delete_ticket(token=event_admin_token, node_id=event_node.id, ticket_id=ticket.id)
     assert deleted

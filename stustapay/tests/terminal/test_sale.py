@@ -18,7 +18,7 @@ from stustapay.core.schema.till import (
     TillLayout,
 )
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
-from stustapay.core.schema.user import ADMIN_ROLE_ID, User, UserTag
+from stustapay.core.schema.user import ADMIN_ROLE_ID, UserTag
 from stustapay.core.service.cashier import (
     CashierService,
     CloseOut,
@@ -59,14 +59,14 @@ class SaleProducts:
 async def sale_products(
     product_service: ProductService,
     till_service: TillService,
-    admin_token: str,
+    event_admin_token: str,
     event_node: Node,
     tax_rate_ust: TaxRate,
     tax_rate_none: TaxRate,
     till_layout: TillLayout,
 ) -> SaleProducts:
     beer_product = await product_service.create_product(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         product=NewProduct(
             name="Helles 0,5l",
@@ -81,7 +81,7 @@ async def sale_products(
         ),
     )
     beer_product_full = await product_service.create_product(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         product=NewProduct(
             name="Helles 1l",
@@ -96,7 +96,7 @@ async def sale_products(
         ),
     )
     deposit_product = await product_service.create_product(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         product=NewProduct(
             name="Pfand",
@@ -110,23 +110,23 @@ async def sale_products(
         ),
     )
     beer_button = await till_service.layout.create_button(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         button=NewTillButton(name="Helles 0,5l", product_ids=[beer_product.id, deposit_product.id]),
     )
     beer_button_full = await till_service.layout.create_button(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         button=NewTillButton(name="Helles 1l", product_ids=[beer_product_full.id, deposit_product.id]),
     )
     deposit_button = await till_service.layout.create_button(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         button=NewTillButton(name="Pfand", product_ids=[deposit_product.id]),
     )
 
     await till_service.layout.update_layout(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         layout_id=till_layout.id,
         layout=NewTillLayout(
@@ -155,11 +155,11 @@ async def test_basic_sale_flow(
     customer: Customer,
     event_node: Node,
     terminal_token: str,
-    admin_token: str,
+    event_admin_token: str,
     assert_system_account_balance: AssertSystemAccountBalance,
     sale_products: SaleProducts,
     cashier: Cashier,
-    admin_tag: UserTag,
+    event_admin_tag: UserTag,
     login_supervised_user: LoginSupervisedUser,
 ):
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
@@ -185,7 +185,7 @@ async def test_basic_sale_flow(
     assert pending_sale.new_balance == START_BALANCE - pending_sale.total_price
     completed_sale = await order_service.book_sale(token=terminal_token, new_sale=new_sale)
     assert completed_sale is not None
-    order = await order_service.get_order(token=admin_token, node_id=event_node.id, order_id=completed_sale.id)
+    order = await order_service.get_order(token=event_admin_token, node_id=event_node.id, order_id=completed_sale.id)
     assert order is not None
     await assert_system_account_balance(
         account_type=AccountType.sale_exit,
@@ -204,7 +204,9 @@ async def test_basic_sale_flow(
     z_nr = await db_connection.fetchval("select z_nr from till where id = $1", till.id)
     assert z_nr_start == z_nr
     # after logging in a user with bookings the z_nr should be incremented
-    await till_service.login_user(token=terminal_token, user_tag=UserTag(uid=admin_tag.uid), user_role_id=ADMIN_ROLE_ID)
+    await till_service.login_user(
+        token=terminal_token, user_tag=UserTag(uid=event_admin_tag.uid), user_role_id=ADMIN_ROLE_ID
+    )
     z_nr = await db_connection.fetchval("select z_nr from till where id = $1", till.id)
     assert z_nr_start + 1 == z_nr
 
@@ -453,17 +455,17 @@ async def test_cashier_close_out(
     db_connection: Connection,
     event_node: Node,
     cashier: Cashier,
-    admin_token: str,
+    event_admin_token: str,
     login_supervised_user: LoginSupervisedUser,
-    admin_tag: UserTag,
+    event_admin_tag: UserTag,
     terminal_token: str,
     assert_account_balance: AssertAccountBalance,
     assert_system_account_balance: AssertSystemAccountBalance,
     customer: Customer,
     sale_products: SaleProducts,
-    admin_user: tuple[User, str],
+    event_admin_user,
 ):
-    admin, _ = admin_user
+    admin, _ = event_admin_user
 
     async def get_num_orders(order_type: OrderType) -> int:
         return await db_connection.fetchval(
@@ -476,11 +478,11 @@ async def test_cashier_close_out(
     n_orders_start = await get_num_orders(OrderType.money_transfer)
 
     register = await till_service.register.create_cash_register(
-        token=admin_token, node_id=event_node.id, new_register=NewCashRegister(name="Lade 25")
+        token=event_admin_token, node_id=event_node.id, new_register=NewCashRegister(name="Lade 25")
     )
-    await login_supervised_user(user_tag_uid=admin_tag.uid, user_role_id=ADMIN_ROLE_ID)
+    await login_supervised_user(user_tag_uid=event_admin_tag.uid, user_role_id=ADMIN_ROLE_ID)
     stocking = await till_service.register.create_cash_register_stockings(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         stocking=NewCashRegisterStocking(name="My fancy stocking 25", euro20=2),
     )
@@ -516,12 +518,14 @@ async def test_cashier_close_out(
         ),
     )
 
-    cashier_info = await cashier_service.get_cashier(token=admin_token, node_id=event_node.id, cashier_id=cashier.id)
+    cashier_info = await cashier_service.get_cashier(
+        token=event_admin_token, node_id=event_node.id, cashier_id=cashier.id
+    )
     assert cashier_info is not None
     actual_balance = 458.2
     with pytest.raises(InvalidCloseOutException):
         await cashier_service.close_out_cashier(
-            token=admin_token,
+            token=event_admin_token,
             node_id=event_node.id,
             cashier_id=cashier.id,
             close_out=CloseOut(
@@ -536,7 +540,7 @@ async def test_cashier_close_out(
     assert n_orders_start + 2 == n_orders
 
     close_out_result = await cashier_service.close_out_cashier(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         cashier_id=cashier.id,
         close_out=CloseOut(
@@ -548,7 +552,9 @@ async def test_cashier_close_out(
     assert close_out_result.imbalance == actual_balance - cashier_info.cash_drawer_balance
 
     await assert_account_balance(account_id=cashier.cashier_account_id, expected_balance=0)
-    shifts = await cashier_service.get_cashier_shifts(token=admin_token, node_id=event_node.id, cashier_id=cashier.id)
+    shifts = await cashier_service.get_cashier_shifts(
+        token=event_admin_token, node_id=event_node.id, cashier_id=cashier.id
+    )
     assert len(shifts) == 1
     n_orders = await get_num_orders(OrderType.money_transfer)
     assert n_orders_start + 4 == n_orders

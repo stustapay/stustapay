@@ -7,7 +7,7 @@ from stustapay.core.service.terminal import TerminalService
 async def test_terminal_registration_flow(
     terminal_service: TerminalService,
     event_node: Node,
-    admin_token: str,
+    event_admin_token: str,
     terminal_token: str,
 ):
     terminal_config = await terminal_service.get_terminal_config(token=terminal_token)
@@ -18,6 +18,6 @@ async def test_terminal_registration_flow(
 
     # logout till from admin
     logged_out = await terminal_service.logout_terminal_id(
-        token=admin_token, node_id=event_node.id, terminal_id=terminal_config.id
+        token=event_admin_token, node_id=event_node.id, terminal_id=terminal_config.id
     )
     assert logged_out

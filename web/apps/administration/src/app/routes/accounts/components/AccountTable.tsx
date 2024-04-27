@@ -3,10 +3,10 @@ import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { useCurrencyFormatter, useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+import { formatUserTagUid } from "@stustapay/models";
 
 export interface AccountTableProps {
   accounts: AccountRead[];
@@ -34,11 +34,11 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       width: 100,
     },
     {
-      field: "user_tag_uid_hex",
+      field: "user_tag_id",
       headerName: t("account.user_tag_uid") as string,
       align: "right",
       renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_uid_hex)}>
+        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}
         </Link>
       ),
