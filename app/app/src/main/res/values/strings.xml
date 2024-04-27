@@ -147,4 +147,6 @@
     <string name="ticket_order_cleared_success">Ready for new order.</string>
     <string name="ticket_unknown">Ticket unknown.</string>
     <string name="ticket_valid">Ticket is valid.</string>
+    <string name="infallible_popup_transaction_pending">Transaction pending:</string>
+    <string name="infallible_popup_restart">Try restarting the app.</string>
 </resources>

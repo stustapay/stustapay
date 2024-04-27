@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -29,7 +30,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.ui.theme.StartpageItemStyle
 import de.stustapay.stustapay.R
-import kotlinx.coroutines.coroutineScope
 
 @Composable
 fun InfalliblePopup(
@@ -57,13 +57,27 @@ fun InfalliblePopup(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            "A background task is still running: " + (infallibleRequest?.msg()
-                                ?: "None") + ". Try restarting the app.",
-                            fontSize = 20.sp,
-                            modifier = Modifier.clickable {
-                                viewModel.click()
-                            }
+                            stringResource(R.string.infallible_popup_transaction_pending),
+                            fontSize = 25.sp,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Left
                         )
+                        Text(
+                            (infallibleRequest?.msg() ?: "None"),
+                            fontSize = 25.sp,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Left
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Text(
+                            stringResource(R.string.infallible_popup_restart),
+                            fontSize = 25.sp,
+                            modifier = Modifier
+                                .clickable { viewModel.click() }
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Left,
+
+                            )
                         Spacer(modifier = Modifier.height(20.dp))
                         Button(onClick = {
                             val packageManager: PackageManager = activity.packageManager
