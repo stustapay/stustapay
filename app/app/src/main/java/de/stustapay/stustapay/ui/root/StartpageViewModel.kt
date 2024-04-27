@@ -9,6 +9,7 @@ import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
 import de.stustapay.libssp.util.Result
 import de.stustapay.libssp.util.asResult
+import de.stustapay.stustapay.repository.InfallibleRepository
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
@@ -30,13 +31,20 @@ sealed interface LoginProfileUIState {
 @HiltViewModel
 class StartpageViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val terminalConfigRepository: TerminalConfigRepository
+    private val terminalConfigRepository: TerminalConfigRepository,
+    infallibleRepository: InfallibleRepository
 ) : ViewModel() {
     private val _user = userRepository.userState
     private val _terminal = terminalConfigRepository.terminalConfigState
 
     private val _configLoading = MutableStateFlow(false)
     val configLoading = _configLoading.asStateFlow()
+
+    val infallibleBusy = infallibleRepository.busy.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = false,
+    )
 
     val uiState = combine(_user, _terminal) { user, terminal ->
         TerminalLoginState(user, terminal)

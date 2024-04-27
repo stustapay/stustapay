@@ -89,6 +89,7 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequests> {
             val kind = it.value.kind
             when (kind) {
                 is InfallibleApiRequestKind.TopUp -> {
+                    request.setKind(InfallibleApiRequestKindProto.TOP_UP)
                     request.setTopUp(
                         InfallibleApiRequestTopUpProto.newBuilder().setAmount(kind.content.amount)
                             .setCustomerTagUid(kind.content.customerTagUid.toString())
@@ -98,6 +99,7 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequests> {
                 }
 
                 is InfallibleApiRequestKind.TicketSale -> {
+                    request.setKind(InfallibleApiRequestKindProto.TICKET_SALE)
                     request.setTicketSale(
                         InfallibleApiRequestTicketSaleProto.newBuilder()
                             .addAllCustomerTags(kind.content.customerTags.map {

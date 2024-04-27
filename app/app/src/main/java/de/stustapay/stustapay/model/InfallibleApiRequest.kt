@@ -10,7 +10,18 @@ data class InfallibleApiRequests(
 
 data class InfallibleApiRequest(
     val kind: InfallibleApiRequestKind
-)
+) {
+    fun msg(): String {
+        return when (this.kind) {
+            is InfallibleApiRequestKind.TicketSale -> {
+                "Ticket sale for " + this.kind.content.customerTagUids.joinToString { it.toString() }
+            }
+            is InfallibleApiRequestKind.TopUp -> {
+                "Top-Up of " + this.kind.content.amount + "€ for " + this.kind.content.customerTagUid.toString()
+            }
+        }
+    }
+}
 
 sealed interface InfallibleApiRequestKind {
     data class TopUp(

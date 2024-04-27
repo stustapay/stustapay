@@ -46,10 +46,10 @@ data class TopUpState(
 @HiltViewModel
 class TopUpViewModel @Inject constructor(
     private val topUpRepository: TopUpRepository,
-    private val terminalConfigRepository: TerminalConfigRepository,
-    private val userRepository: UserRepository,
+    terminalConfigRepository: TerminalConfigRepository,
+    userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
-    private val infallible: InfallibleRepository
+    private val infallibleRepository: InfallibleRepository
 ) : ViewModel() {
     private val _navState = MutableStateFlow(TopUpPage.Selection)
     val navState = _navState.asStateFlow()
@@ -74,6 +74,12 @@ class TopUpViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = TerminalLoginState(),
+    )
+
+    val infallibleBusy = infallibleRepository.busy.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = false,
     )
 
     fun setAmount(amount: UInt) {
@@ -176,7 +182,7 @@ class TopUpViewModel @Inject constructor(
             }
         }
 
-        infallible.bookTopUp(newTopUp)
+        infallibleRepository.bookTopUp(newTopUp)
 
         clearDraft()
         _status.update { "Card TopUp successful" }
@@ -200,7 +206,7 @@ class TopUpViewModel @Inject constructor(
             return
         }
 
-        infallible.bookTopUp(newTopUp)
+        infallibleRepository.bookTopUp(newTopUp)
 
         clearDraft()
         _navState.update { TopUpPage.Done }
