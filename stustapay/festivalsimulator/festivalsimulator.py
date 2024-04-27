@@ -54,6 +54,7 @@ class Simulator:
 
         self.terminal_api_base_url = self.config.terminalserver.base_url
         self.admin_api_base_url = self.config.administration.base_url
+        self.customer_api_base_url = self.config.customerportal.base_url
         self.bookings_per_second = bookings_per_second
         self.admin_tag_uid: int
         self.n_tills_total: int | None = None
@@ -195,6 +196,61 @@ class Simulator:
                             f"Error while updating voucher amount {resp.status = }, payload = {await resp.json()}"
                         )
 
+                await asyncio.sleep(0.3)
+
+    async def payout_registration(self):
+        async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
+            while True:
+
+                # TODO: future: test if the user has not already locked in
+                # get random user that has uid
+                rows = await self.db_pool.fetch(
+                    "select user_tag_pin from account_with_history where user_tag_uid is not null"
+                )
+                if len(rows) == 0:  # no tickets were sold yet
+                    await asyncio.sleep(1)
+                    continue
+
+                pin = random.choice([(row["user_tag_pin"]) for row in rows])
+                token = await self.login_customer(pin=pin)
+
+                donation = random.choice(["no_donation", "partial_donation", "full_donation"])
+
+                if donation == "full_donation":
+                    async with client.post(
+                        "/customer_all_donation",
+                        headers={"Authorization": f"Bearer {token}"},
+                    ) as resp:
+                        if resp.status != 204:
+                            self.logger.warning(f"Error while donating all with {resp.status = }")
+                elif donation == "no_donation":
+                    async with client.post(
+                        "/customer_info",
+                        json={
+                            "iban": "DE89370400440532013000",
+                            "account_name": "Max Muster",
+                            "email": "max.muster@stusta.de",
+                        },
+                        headers={"Authorization": f"Bearer {token}"},
+                    ) as resp:
+                        if resp.status != 204:
+                            self.logger.warning(f"Error while setting payout {resp.status = }")
+                else:  # partial donation
+                    balance = await self.db_pool.fetchval("select balance from customer where user_tag_pin = $1", pin)
+                    async with client.post(
+                        "/customer_info",
+                        json={
+                            "iban": "DE89370400440532013000",
+                            "account_name": "Max Muster",
+                            "email": "max.muster@stusta.de",
+                            "donation": random.random() * float(balance),
+                        },
+                        headers={"Authorization": f"Bearer {token}"},
+                    ) as resp:
+                        if resp.status != 204:
+                            self.logger.warning(f"Error while setting payout with donation {resp.status = }")
+
+                await self.logout_customer(pin=pin, token=token)
                 await asyncio.sleep(0.3)
 
     async def reporter(self):
@@ -497,6 +553,20 @@ class Simulator:
                 payload = await resp.json()
             return payload["access_token"]
 
+    async def login_customer(self, pin: str) -> str:
+        async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
+            async with client.post("/auth/login", json={"pin": pin}) as resp:
+                if resp.status != 200:
+                    raise RuntimeError(f"Error trying to log in customer with pin {pin}")
+                payload = await resp.json()
+            return payload["access_token"]
+
+    async def logout_customer(self, pin: str, token: str):
+        async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
+            async with client.post("/auth/logout", headers={"Authorization": f"Bearer {token}"}) as resp:
+                if resp.status != 204:
+                    raise RuntimeError(f"Error trying to log out customer with pin {pin}")
+
     async def _prepare_admin_terminals(self):
         rows = await self.db_pool.fetch("select id from till where name like '%Admin%'")
         terminals = []
@@ -560,7 +630,11 @@ class Simulator:
             [asyncio.create_task(self.entry_till(i)) for i in range(self.n_entry_till_workers)]
             + [asyncio.create_task(self.sale_till(i)) for i in range(self.n_sale_till_workers)]
             + [asyncio.create_task(self.topup_till(i)) for i in range(self.n_topup_till_workers)]
-            + [asyncio.create_task(self.voucher_granting()), asyncio.create_task(self.reporter())]
+            + [
+                asyncio.create_task(self.voucher_granting()),
+                asyncio.create_task(self.reporter()),
+                asyncio.create_task(self.payout_registration()),
+            ]
         )
 
         try:

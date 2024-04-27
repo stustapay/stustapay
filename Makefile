@@ -9,8 +9,8 @@ check-format:
 
 .PHONY: format
 format:
-	isort .
-	black .
+	isort stustapay tools
+	black stustapay tools
 
 .PHONY: lint
 lint: pylint mypy
