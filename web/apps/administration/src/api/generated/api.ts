@@ -1302,7 +1302,7 @@ export type PayoutRunSepaXmlExportApiArg = {
   nodeId?: number | null;
   createSepaXmlPayload: CreateSepaXmlPayload;
 };
-export type GetTreeForCurrentUserApiResponse = /** status 200 Successful Response */ NodeSeenByUserRead;
+export type GetTreeForCurrentUserApiResponse = /** status 200 Successful Response */ NodeSeenByUser;
 export type GetTreeForCurrentUserApiArg = void;
 export type CreateNodeApiResponse = /** status 200 Successful Response */ Node;
 export type CreateNodeApiArg = {
@@ -1467,6 +1467,7 @@ export type Privilege =
   | "node_administration"
   | "customer_management"
   | "create_user"
+  | "allow_privileged_role_assignment"
   | "user_management"
   | "cash_transport"
   | "terminal_login"
@@ -2230,24 +2231,6 @@ export type NodeSeenByUser = {
   forbidden_objects_in_subtree: ObjectType[];
   computed_forbidden_objects_in_subtree: ObjectType[];
   children: NodeSeenByUser[];
-  roles_at_node: UserRole[];
-};
-export type NodeSeenByUserRead = {
-  id: number;
-  parent: number;
-  name: string;
-  description: string;
-  event: PublicEventSettings | null;
-  path: string;
-  parent_ids: number[];
-  event_node_id: number | null;
-  parents_until_event_node: number[] | null;
-  forbidden_objects_at_node: ObjectType[];
-  computed_forbidden_objects_at_node: ObjectType[];
-  forbidden_objects_in_subtree: ObjectType[];
-  computed_forbidden_objects_in_subtree: ObjectType[];
-  children: NodeSeenByUserRead[];
-  roles_at_node: UserRole[];
   privileges_at_node: Privilege[];
 };
 export type Node = {

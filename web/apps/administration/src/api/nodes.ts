@@ -1,8 +1,8 @@
 import { useGetTreeForCurrentUserQuery } from "./api";
-import { NodeSeenByUserRead } from "@/api";
+import { NodeSeenByUser } from "@/api";
 import { useCurrentUser } from "@/hooks";
 
-export const findNode = (nodeId: number, startNode: NodeSeenByUserRead): NodeSeenByUserRead | undefined => {
+export const findNode = (nodeId: number, startNode: NodeSeenByUser): NodeSeenByUser | undefined => {
   const currNode = startNode;
   if (currNode.id === nodeId) {
     return currNode;
@@ -16,17 +16,17 @@ export const findNode = (nodeId: number, startNode: NodeSeenByUserRead): NodeSee
   return undefined;
 };
 
-export const useNodeTree = (): { root: NodeSeenByUserRead } => {
+export const useNodeTree = (): { root: NodeSeenByUser } => {
   const { data: rootNode } = useGetTreeForCurrentUserQuery();
   if (!rootNode) {
     throw new Error(
       "tree has not been loaded, please make sure to preload this before rendering a component which uses the useNodeTree hook"
     );
   }
-  return { root: rootNode as NodeSeenByUserRead };
+  return { root: rootNode as NodeSeenByUser };
 };
 
-export const useTreeForCurrentUser = (): NodeSeenByUserRead => {
+export const useTreeForCurrentUser = (): NodeSeenByUser => {
   const currentUser = useCurrentUser();
   const { data: rootNode } = useGetTreeForCurrentUserQuery();
   if (!rootNode) {
@@ -41,7 +41,7 @@ export const useTreeForCurrentUser = (): NodeSeenByUserRead => {
   return userNode;
 };
 
-export const useNode = ({ nodeId }: { nodeId: number }): { node: NodeSeenByUserRead | undefined } => {
+export const useNode = ({ nodeId }: { nodeId: number }): { node: NodeSeenByUser | undefined } => {
   const { root } = useNodeTree();
   return { node: findNode(nodeId, root) };
 };

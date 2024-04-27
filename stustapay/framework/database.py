@@ -231,7 +231,7 @@ class SchemaRevision:
             revision_content = revision.read_text("utf-8")
             lines = revision_content.splitlines()
             if not len(lines) > 2:
-                logger.warning(f"Revision {revision} is empty")
+                logger.debug(f"Revision {revision} is empty")
 
             if (version_match := REVISION_VERSION_RE.match(lines[0])) is None:
                 raise ValueError(

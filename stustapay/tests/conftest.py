@@ -40,6 +40,7 @@ from stustapay.core.schema.user import (
     NewUserRole,
     NewUserToRole,
     Privilege,
+    RoleToNode,
     User,
     UserRole,
 )
@@ -293,12 +294,8 @@ async def global_admin_user(
             description="",
             display_name="Admin",
         ),
+        roles=[RoleToNode(node_id=ROOT_NODE_ID, role_id=ADMIN_ROLE_ID)],
         password=password,
-    )
-    await associate_user_to_role(
-        conn=db_connection,
-        node=node,
-        new_user_to_role=NewUserToRole(user_id=admin_user.id, role_id=ADMIN_ROLE_ID),
     )
     return admin_user, password
 
@@ -314,6 +311,7 @@ async def global_admin_token(user_service: UserService, global_admin_user: tuple
         is_privileged=True,
         privileges=[
             Privilege.user_management,
+            Privilege.allow_privileged_role_assignment,
             Privilege.node_administration,
             Privilege.cash_transport,
             Privilege.customer_management,
@@ -363,7 +361,7 @@ async def event_admin_user(
 
 
 @pytest.fixture
-async def event_admin_token(user_service: UserService, event_admin_user) -> str:
+async def event_admin_token(user_service: UserService, event_admin_user: tuple[User, str]) -> str:
     user, password = event_admin_user
     admin_token = (await user_service.login_user(username=user.login, password=password)).token
     return admin_token
@@ -392,10 +390,12 @@ class Cashier(User):
 async def cashier(
     db_connection: Connection,
     event_admin_token: str,
+    event_admin_user: tuple[User, str],
     event_node: Node,
     user_service: UserService,
     create_random_user_tag: CreateRandomUserTag,
 ) -> Cashier:
+    admin, _ = event_admin_user
     cashier_tag = await create_random_user_tag()
     cashier_role: UserRole = await user_service.create_user_role(
         token=event_admin_token,
@@ -420,6 +420,7 @@ async def cashier(
     await associate_user_to_role(
         conn=db_connection,
         node=event_node,
+        current_user_id=admin.id,
         new_user_to_role=NewUserToRole(user_id=cashier_user.id, role_id=cashier_role.id),
     )
     updated_cashier = await user_service.get_user(

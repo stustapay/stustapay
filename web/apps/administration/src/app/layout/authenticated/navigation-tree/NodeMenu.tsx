@@ -1,4 +1,4 @@
-import { NodeSeenByUserRead } from "@/api";
+import { NodeSeenByUser } from "@/api";
 import {
   AccountBalance as AccountBalanceIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
@@ -28,7 +28,7 @@ import {
 } from "@/app/routes";
 
 export interface NodeMenuProps {
-  node: NodeSeenByUserRead;
+  node: NodeSeenByUser;
 }
 
 export const NodeMenu: React.FC<NodeMenuProps> = React.memo(({ node }) => {

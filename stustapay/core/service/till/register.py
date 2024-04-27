@@ -333,7 +333,7 @@ class TillRegisterService(DBService):
             )
 
         assert current_user.transport_account_id is not None
-        transport_account = await get_account_by_id(conn=conn, account_id=current_user.transport_account_id)
+        transport_account = await get_account_by_id(conn=conn, node=node, account_id=current_user.transport_account_id)
         assert transport_account is not None
 
         if transport_account.balance - amount < 0:
@@ -363,12 +363,12 @@ class TillRegisterService(DBService):
         *,
         conn: Connection,
         current_user: CurrentUser,
-        current_till: Till,
+        node: Node,
         orga_tag_uid: int,
         amount: float,
     ):
         # TODO: TREE visibility
-        transport_account = await get_transport_account_by_tag_uid(conn=conn, orga_tag_uid=orga_tag_uid)
+        transport_account = await get_transport_account_by_tag_uid(conn=conn, node=node, orga_tag_uid=orga_tag_uid)
         if transport_account is None:
             raise InvalidArgument("Transport account could not be found")
 
@@ -377,8 +377,6 @@ class TillRegisterService(DBService):
                 f"Insufficient balance on transport account. Current balance is {transport_account.balance}."
             )
 
-        node = await fetch_node(conn=conn, node_id=current_till.node_id)
-        assert node is not None
         cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
 
         await book_transaction(
@@ -402,8 +400,9 @@ class TillRegisterService(DBService):
             "from usr "
             "left join till t on t.active_user_id = usr.id "
             "left join account a on usr.cashier_account_id = a.id "
-            "where usr.id = $1",
+            "where usr.id = $1 and usr.node_id = any($2)",
             source_cashier_id,
+            node.ids_to_event_node,
         )
         if source_cashier is None:
             raise InvalidArgument("The cashier from whom to transfer the cash register does not exist")
@@ -419,8 +418,10 @@ class TillRegisterService(DBService):
 
         target_cashier = await conn.fetchrow(
             "select t.id as till_id, usr.cash_register_id, usr.cashier_account_id "
-            "from usr left join till t on t.active_user_id = usr.id where usr.id = $1",
+            "from usr left join till t on t.active_user_id = usr.id "
+            "where usr.id = $1 and usr.node_id = any($2)",
             target_cashier_id,
+            node.ids_to_event_node,
         )
         if target_cashier is None:
             raise InvalidArgument("The cashier to whom to transfer the cash register does not exist")
@@ -455,7 +456,6 @@ class TillRegisterService(DBService):
     async def transfer_cash_register_admin(
         self, *, conn: Connection, node: Node, source_cashier_id: int, target_cashier_id: int
     ) -> CashRegister:
-        # TODO: TREE visibility
         return await self._transfer_cash_register(
             conn=conn, node=node, source_cashier_id=source_cashier_id, target_cashier_id=target_cashier_id
         )
@@ -466,18 +466,19 @@ class TillRegisterService(DBService):
         self,
         *,
         conn: Connection,
-        current_till: Till,
+        node: Node,
         source_cashier_tag_uid: int,
         target_cashier_tag_uid: int,
     ):
-        node = await fetch_node(conn=conn, node_id=current_till.node_id)
-        assert node is not None
-        # TODO: TREE visibility
         source_cashier_id = await conn.fetchval(
-            "select id from user_with_roles where user_tag_uid = $1", source_cashier_tag_uid
+            "select id from user_with_roles where user_tag_uid = $1 and node_id = any($2)",
+            source_cashier_tag_uid,
+            node.ids_to_event_node,
         )
         target_cashier_id = await conn.fetchval(
-            "select id from user_with_roles where user_tag_uid = $1", target_cashier_tag_uid
+            "select id from user_with_roles where user_tag_uid = $1 and node_id = any($2)",
+            target_cashier_tag_uid,
+            node.ids_to_event_node,
         )
         return await self._transfer_cash_register(
             conn=conn, node=node, source_cashier_id=source_cashier_id, target_cashier_id=target_cashier_id

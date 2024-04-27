@@ -268,17 +268,25 @@ update till set is_virtual = true where id = 1;  -- set is_virtual flag for init
 
 drop table allowed_user_roles_for_till_profile;
 
-insert into privilege (name) values ('node_administration'), ('cash_transport'), ('customer_management'), ('create_user');
+insert into privilege (name)
+values
+    ('node_administration'),
+    ('cash_transport'),
+    ('customer_management'),
+    ('create_user'),
+    ('allow_privileged_role_assignment');
 
 insert into user_role_to_privilege (role_id, privilege)
 values
     (0, 'node_administration'),  -- admin role
     (0, 'customer_management'),  -- admin role
     (0, 'create_user'),  -- admin role
+    (0, 'allow_privileged_role_assignment'),  -- admin role
     (1, 'node_administration'),  -- finanzorga role
     (1, 'cash_transport'),  -- finanzorga role
     (1, 'customer_management'),  -- finanzorga role
-    (1, 'create_user');  -- finanzorga role
+    (1, 'create_user'),  -- finanzorga role
+    (1, 'allow_privileged_role_assignment');  -- finanzorga role
 
 delete from user_role_to_privilege where
     privilege = 'account_management' or
@@ -350,8 +358,6 @@ alter table till_layout_to_ticket rename column new_ticket_id to ticket_id;
 
 alter table ticket rename to product_ticket_metadata;
 
-create index on product (type, node_id);
-
 insert into account_type (name)
 values
 ('sale_exit'),
@@ -406,3 +412,13 @@ create table terminal (
 );
 
 alter table till add column terminal_id bigint references terminal(id) unique;
+
+create index on product (type, name, node_id);
+create index on till (name, node_id);
+create index on till_button (name, node_id);
+create index on till_layout (name, node_id);
+create index on till_profile (name, node_id);
+create index on user_role (name, node_id);
+create index on tse (name, node_id);
+create index on tax_rate (name, node_id);
+create index on terminal (name, node_id);
