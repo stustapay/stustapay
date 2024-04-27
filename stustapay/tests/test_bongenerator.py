@@ -25,6 +25,7 @@ async def test_pdflatex_bon(event_node: Node):
             till_id=0,
             cancels_order=None,
             customer_tag_uid=None,
+            customer_tag_id=1032,
             customer_account_id=0,
             signature_status="done",
             line_items=[

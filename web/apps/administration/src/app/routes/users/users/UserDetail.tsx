@@ -62,13 +62,13 @@ export const UserDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("userDescription")} secondary={user.description} />
           </ListItem>
-          {user.user_tag_uid_hex ? (
-            <ListItemLink to={UserTagRoutes.detail(user.user_tag_uid_hex)}>
-              <ListItemText primary={t("user.tagUid")} secondary={formatUserTagUid(user.user_tag_uid_hex)} />
+          {user.user_tag_id ? (
+            <ListItemLink to={UserTagRoutes.detail(user.user_tag_id)}>
+              <ListItemText primary={t("user.tagId")} secondary={user.user_tag_id} />
             </ListItemLink>
           ) : (
             <ListItem>
-              <ListItemText primary={t("user.tagUid")} secondary={t("user.noTagAssigned")} />
+              <ListItemText primary={t("user.tagId")} secondary={t("user.noTagAssigned")} />
             </ListItem>
           )}
         </List>

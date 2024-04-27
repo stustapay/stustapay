@@ -10,6 +10,7 @@ from stustapay.core.schema.till import (
     CashRegisterStocking,
     NewCashRegister,
     NewCashRegisterStocking,
+    Till,
 )
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege
@@ -104,9 +105,9 @@ class TillRegisterService(DBService):
     @with_db_transaction(read_only=True)
     @requires_terminal()
     async def list_cash_register_stockings_terminal(
-        self, *, conn: Connection, current_terminal: CurrentTerminal
+        self, *, conn: Connection, current_till: CurrentTerminal
     ) -> list[CashRegisterStocking]:
-        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        node = await fetch_node(conn=conn, node_id=current_till.node_id)
         assert node is not None
         return await _list_cash_register_stockings(conn=conn, node=node)
 
@@ -195,10 +196,10 @@ class TillRegisterService(DBService):
     @with_db_transaction(read_only=True)
     @requires_terminal([Privilege.node_administration])
     async def list_cash_registers_terminal(
-        self, *, conn: Connection, current_terminal: CurrentTerminal, hide_assigned_registers=False
+        self, *, conn: Connection, current_till: Till, hide_assigned_registers=False
     ) -> list[CashRegister]:
         # TODO: TREE visibility
-        node = await fetch_node(conn=conn, node_id=current_terminal.till.id)
+        node = await fetch_node(conn=conn, node_id=current_till.id)
         assert node is not None
         return await _list_cash_registers(conn=conn, node=node, hide_assigned_registers=hide_assigned_registers)
 
@@ -253,20 +254,21 @@ class TillRegisterService(DBService):
         *,
         conn: Connection,
         current_user: CurrentUser,
-        current_terminal: CurrentTerminal,
+        current_till: Till,
         stocking_id: int,
         cashier_tag_uid: int,
         cash_register_id: int,
     ) -> bool:
         # TODO: TREE visibility
-        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        node = await fetch_node(conn=conn, node_id=current_till.node_id)
         assert node is not None
         register_stocking = await _get_cash_register_stocking(conn=conn, node=node, stocking_id=stocking_id)
         if register_stocking is None:
             raise InvalidArgument("cash register stocking template does not exist")
 
         row = await conn.fetchrow(
-            "select id, cashier_account_id, cash_register_id from usr where user_tag_uid = $1", cashier_tag_uid
+            "select id, cashier_account_id, cash_register_id from user_with_roles where user_tag_uid = $1",
+            cashier_tag_uid,
         )
         if row is None:
             raise InvalidArgument("Cashier does not have a cash register")
@@ -283,7 +285,7 @@ class TillRegisterService(DBService):
 
         await conn.fetchval("update usr set cash_register_id = $1 where id = $2", cash_register_id, user_id)
 
-        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        node = await fetch_node(conn=conn, node_id=current_till.node_id)
         assert node is not None
         cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
 
@@ -308,14 +310,14 @@ class TillRegisterService(DBService):
         cashier_tag_uid: int,
         amount: float,
     ):
-        # TODO: TREE visibility
         row = await conn.fetchrow(
-            "select usr.cash_register_id, t.id as till_id, a.* "
-            "from usr "
-            "join till t on usr.id = t.active_user_id "
-            "join account_with_history a on usr.cashier_account_id = a.id "
-            "where usr.user_tag_uid = $1",
+            "select u.cash_register_id, t.id as till_id, a.* "
+            "from user_with_roles u "
+            "join till t on u.id = t.active_user_id "
+            "join account_with_history a on u.cashier_account_id = a.id "
+            "where u.user_tag_uid = $1 and u.node_id = any($2)",
             cashier_tag_uid,
+            node.ids_to_event_node,
         )
         if row is None:
             raise InvalidArgument("Cashier does not exists or is not logged in at a terminal")
@@ -361,7 +363,7 @@ class TillRegisterService(DBService):
         *,
         conn: Connection,
         current_user: CurrentUser,
-        current_terminal: CurrentTerminal,
+        current_till: Till,
         orga_tag_uid: int,
         amount: float,
     ):
@@ -375,7 +377,7 @@ class TillRegisterService(DBService):
                 f"Insufficient balance on transport account. Current balance is {transport_account.balance}."
             )
 
-        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        node = await fetch_node(conn=conn, node_id=current_till.node_id)
         assert node is not None
         cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
 
@@ -464,15 +466,19 @@ class TillRegisterService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: CurrentTerminal,
+        current_till: Till,
         source_cashier_tag_uid: int,
         target_cashier_tag_uid: int,
     ):
-        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        node = await fetch_node(conn=conn, node_id=current_till.node_id)
         assert node is not None
         # TODO: TREE visibility
-        source_cashier_id = await conn.fetchval("select id from usr where user_tag_uid = $1", source_cashier_tag_uid)
-        target_cashier_id = await conn.fetchval("select id from usr where user_tag_uid = $1", target_cashier_tag_uid)
+        source_cashier_id = await conn.fetchval(
+            "select id from user_with_roles where user_tag_uid = $1", source_cashier_tag_uid
+        )
+        target_cashier_id = await conn.fetchval(
+            "select id from user_with_roles where user_tag_uid = $1", target_cashier_tag_uid
+        )
         return await self._transfer_cash_register(
             conn=conn, node=node, source_cashier_id=source_cashier_id, target_cashier_id=target_cashier_id
         )

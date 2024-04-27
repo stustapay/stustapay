@@ -32,11 +32,13 @@ class Payout(BaseModel):
     iban: str
     account_name: str
     email: str
+    user_tag_id: int
     user_tag_uid: int
-
-    @computed_field
-    def user_tag_uid_hex(self) -> str:
-        return format_user_tag_uid(self.user_tag_uid)  # type: ignore
 
     balance: float
     payout_run_id: int
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def user_tag_uid_hex(self) -> str | None:
+        return format_user_tag_uid(self.user_tag_uid)

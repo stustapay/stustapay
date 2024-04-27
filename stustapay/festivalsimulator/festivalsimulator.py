@@ -102,10 +102,10 @@ class Simulator:
         self.unused_cashiers = [
             int(row["user_tag_uid"])
             for row in await self.db_pool.fetch(
-                "select usr.user_tag_uid "
-                "from usr "
-                "join account a on usr.cashier_account_id = a.id "
-                "left join till t on usr.id = t.active_user_id "
+                "select u.user_tag_uid "
+                "from user_with_roles u "
+                "join account a on u.cashier_account_id = a.id "
+                "left join till t on u.id = t.active_user_id "
                 "where t.id is null"
             )
         ]
@@ -123,10 +123,10 @@ class Simulator:
 
     async def get_free_tags(self, limit=1):
         return [
-            int(row["uid"])
+            row["pin"]
             for row in await self.db_pool.fetch(
-                "select uid from user_tag "
-                "left join account a on user_tag.uid = a.user_tag_uid "
+                "select pin from user_tag "
+                "left join account a on user_tag.id = a.user_tag_id "
                 "where a.id is null limit $1",
                 limit,
             )
@@ -136,7 +136,7 @@ class Simulator:
         return [
             int(row["uid"])
             for row in await self.db_pool.fetch(
-                "select uid from user_tag join account a on user_tag.uid = a.user_tag_uid"
+                "select uid from user_tag join account a on user_tag.id = a.user_tag_id"
             )
         ]
 
@@ -179,7 +179,7 @@ class Simulator:
     async def voucher_granting(self):
         async with aiohttp.ClientSession(base_url=self.admin_api_base_url) as client:
             while True:
-                rows = await self.db_pool.fetch("select * from account where user_tag_uid is not null")
+                rows = await self.db_pool.fetch("select * from account where user_tag_id is not null")
                 if len(rows) == 0:  # no tickets were sold yet
                     await asyncio.sleep(1)
                     continue
@@ -209,7 +209,7 @@ class Simulator:
 
     async def _stock_up_cashier(self, cashier_tag_uid: int):
         till_id = await self.db_pool.fetchval(
-            "select till.id from till join usr on till.active_user_id = usr.id where usr.user_tag_uid = $1",
+            "select till.id from till join user_with_roles u on till.active_user_id = u.id where u.user_tag_uid = $1",
             cashier_tag_uid,
         )
         await self.db_pool.execute(
@@ -217,7 +217,7 @@ class Simulator:
         )
         stocking_id = await self.db_pool.fetchval("select id from cash_register_stocking limit 1")
         has_cash_register = await self.db_pool.fetchval(
-            "select exists (select from usr where user_tag_uid = $1 and cash_register_id is not null)",
+            "select exists (select from user_with_roles where user_tag_uid = $1 and cash_register_id is not null)",
             cashier_tag_uid,
         )
         terminal = random.choice(self.admin_terminals)
@@ -264,6 +264,7 @@ class Simulator:
         terminals: list[Terminal] = []
         for till_id in till_ids:
             terminal = await self._register_terminal(till_id=till_id)
+            await asyncio.sleep(0.1)  # to avoid overloading the database
 
             assert terminal.config.till is not None
             if terminal.config.till.active_user_id is not None:
@@ -361,15 +362,26 @@ class Simulator:
                 terminal = random.choice(terminals)
                 await self.sleep()
                 n_customers = random.randint(1, 3)
-                user_tags = await self.get_free_tags(limit=n_customers)
-                if len(user_tags) == 0:
+
+                user_tag_pins = await self.get_free_tags(limit=n_customers)
+                if len(user_tag_pins) == 0:
                     return
+
+                customer_tags = []
+                for user_tag_pin in user_tag_pins:
+                    uid = random.randint(1, 100000000)
+                    customer_tags.append(
+                        {
+                            "tag_uid": uid,
+                            "tag_pin": user_tag_pin,
+                        }
+                    )
 
                 self.inc_counter()
                 payload = {
                     "uuid": str(uuid.uuid4()),
                     "payment_method": "cash",
-                    "customer_tag_uids": user_tags,
+                    "customer_tags": customer_tags,
                 }
                 async with client.post(
                     "/order/check-ticket-sale", json=payload, headers=terminal.get_headers()
@@ -519,7 +531,7 @@ class Simulator:
 
         self.admin_tag_uid = int(
             await self.db_pool.fetchval(
-                "select user_tag_uid from user_with_roles where $1=any(role_names) and node_id = $2 limit 1",
+                "select user_tag_uid from user_with_roles where $1 = any(role_names) and node_id = $2 limit 1",
                 "admin",
                 self.event_node_id,
             )

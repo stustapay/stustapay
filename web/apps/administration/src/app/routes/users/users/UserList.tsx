@@ -1,12 +1,11 @@
-import { selectUserAll, useDeleteUserMutation, useListUsersQuery, UserRead } from "@/api";
-import { UserRoutes } from "@/app/routes";
+import { selectUserAll, useDeleteUserMutation, useListUsersQuery, User } from "@/api";
+import { UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -47,7 +46,7 @@ export const UserList: React.FC = () => {
     setUserToDelete(null);
   };
 
-  const columns: GridColDef<UserRead>[] = [
+  const columns: GridColDef<User>[] = [
     {
       field: "login",
       headerName: t("userLogin") as string,
@@ -69,10 +68,15 @@ export const UserList: React.FC = () => {
       flex: 2,
     },
     {
-      field: "user_tag_uid_hex",
-      headerName: t("user.tagUid") as string,
-      flex: 1,
-      valueFormatter: ({ value }) => formatUserTagUid(value),
+      field: "user_tag_id",
+      headerName: t("user.tagId") as string,
+      width: 100,
+      renderCell: (params) =>
+        params.row.user_tag_id && (
+          <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
+            {params.row.user_tag_id}
+          </Link>
+        ),
     },
     {
       field: "node_id",

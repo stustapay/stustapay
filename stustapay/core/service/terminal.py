@@ -14,7 +14,7 @@ from stustapay.core.schema.terminal import (
     TerminalTillConfig,
     UserTagSecret,
 )
-from stustapay.core.schema.till import TillProfile
+from stustapay.core.schema.till import Till, TillProfile
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService, TerminalTokenMetadata
@@ -27,7 +27,10 @@ from stustapay.core.service.common.decorators import (
     with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, NotFound
-from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
+from stustapay.core.service.tree.common import (
+    fetch_node,
+    fetch_restricted_event_settings_for_node,
+)
 from stustapay.core.service.user import list_user_roles
 from stustapay.framework.database import Connection
 
@@ -153,16 +156,13 @@ class TerminalService(DBService):
         )
         await conn.execute("update till set terminal_id = null where terminal_id = $1", current_terminal.id)
 
-    @with_db_transaction(read_only=True)
-    @requires_terminal()
-    async def get_terminal_config(
-        self, *, conn: Connection, current_terminal: CurrentTerminal, node: Node
-    ) -> TerminalConfig | None:
+    @staticmethod
+    async def _get_terminal_till_config(conn: Connection, node: Node, till: Till) -> TerminalTillConfig:
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         profile = await conn.fetch_one(
             TillProfile,
             "select * from till_profile tp where id = $1",
-            current_terminal.till.active_profile_id,
+            till.active_profile_id,
         )
         layout_has_tickets = await conn.fetchval(
             "select exists (select from till_layout_to_ticket tltt where layout_id = $1)",
@@ -172,7 +172,7 @@ class TerminalService(DBService):
 
         user_privileges = await conn.fetchval(
             "select privileges from user_with_privileges where id = $1",
-            current_terminal.till.active_user_id,
+            till.active_user_id,
         )
         buttons = await conn.fetch_many(
             TerminalButton,
@@ -191,7 +191,7 @@ class TerminalService(DBService):
             "from cash_register cr "
             "join till t on cr.id = t.active_cash_register_id "
             "where t.id = $1",
-            current_terminal.till.id,
+            till.id,
         )
         if cash_reg is not None:
             cash_register_id = cash_reg["id"]
@@ -210,26 +210,39 @@ class TerminalService(DBService):
 
         available_roles = await list_user_roles(conn=conn, node=node)
 
+        return TerminalTillConfig(
+            id=till.id,
+            name=till.name,
+            description=till.description,
+            cash_register_id=cash_register_id,
+            cash_register_name=cash_register_name,
+            user_privileges=user_privileges,
+            profile_name=profile.name,
+            allow_top_up=profile.allow_top_up,
+            allow_cash_out=profile.allow_cash_out,
+            allow_ticket_sale=allow_ticket_sale,
+            buttons=buttons,
+            secrets=secrets,
+            available_roles=available_roles,
+            active_user_id=till.active_user_id,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_terminal(requires_till=False)
+    async def get_terminal_config(
+        self, *, conn: Connection, current_terminal: CurrentTerminal
+    ) -> TerminalConfig | None:
+        node = await fetch_node(conn=conn, node_id=current_terminal.node_id)
+        assert node is not None
+        till_config = None
+        if current_terminal.till is not None:
+            till_config = await self._get_terminal_till_config(conn=conn, node=node, till=current_terminal.till)
+
         return TerminalConfig(
             id=current_terminal.id,
             name=current_terminal.name,
             description=current_terminal.description,
-            till=TerminalTillConfig(
-                id=current_terminal.till.id,
-                name=current_terminal.till.name,
-                description=current_terminal.till.description,
-                cash_register_id=cash_register_id,
-                cash_register_name=cash_register_name,
-                user_privileges=user_privileges,
-                profile_name=profile.name,
-                allow_top_up=profile.allow_top_up,
-                allow_cash_out=profile.allow_cash_out,
-                allow_ticket_sale=allow_ticket_sale,
-                buttons=buttons,
-                secrets=secrets,
-                available_roles=available_roles,
-                active_user_id=current_terminal.till.active_user_id,
-            ),
+            till=till_config,
             test_mode=self.cfg.core.test_mode,
             test_mode_message=self.cfg.core.test_mode_message,
         )

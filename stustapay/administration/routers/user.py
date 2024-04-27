@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
@@ -35,14 +35,7 @@ class UpdateUserPayload(BaseModel):
     login: str
     display_name: str
     description: Optional[str] = None
-    user_tag_uid_hex: Optional[str] = None
-
-    @field_validator("user_tag_uid_hex")
-    def user_tag_uid_hex_must_be_hexadecimal(cls, v):  # pylint: disable=no-self-argument
-        if v is None:
-            return v
-        int(v, 16)
-        return v
+    user_tag_pin: Optional[str] = None
 
 
 class CreateUserPayload(UpdateUserPayload):
@@ -62,7 +55,7 @@ async def create_user(
             login=new_user.login,
             display_name=new_user.display_name,
             description=new_user.description,
-            user_tag_uid=int(new_user.user_tag_uid_hex, 16) if new_user.user_tag_uid_hex is not None else None,
+            user_tag_pin=new_user.user_tag_pin,
         ),
         password=new_user.password,
         node_id=node_id,
@@ -93,7 +86,7 @@ async def update_user(
             login=user.login,
             display_name=user.display_name,
             description=user.description,
-            user_tag_uid=int(user.user_tag_uid_hex, 16) if user.user_tag_uid_hex is not None else None,
+            user_tag_pin=user.user_tag_pin,
         ),
         node_id=node_id,
     )

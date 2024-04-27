@@ -1,4 +1,3 @@
-import re
 from typing import Optional
 
 import asyncpg
@@ -7,7 +6,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, AccountType
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.terminal import CurrentTerminal
+from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
@@ -38,21 +37,37 @@ async def get_account_by_id(*, conn: Connection, account_id: int) -> Optional[Ac
 
 
 async def get_account_by_tag_uid(*, conn: Connection, tag_uid: int) -> Optional[Account]:
-    return await conn.fetch_maybe_one(Account, "select * from account_with_history where user_tag_uid = $1", tag_uid)
-
-
-async def get_cashier_account_by_tag_uid(*, conn: Connection, cashier_tag_uid: int) -> Optional[Account]:
     return await conn.fetch_maybe_one(
         Account,
-        "select a.* from usr join account_with_history a on a.id = usr.cashier_account_id where usr.user_tag_uid = $1",
-        cashier_tag_uid,
+        "select * from account_with_history a where user_tag_uid = $1",
+        tag_uid,
+    )
+
+
+async def get_account_by_tag_id(*, conn: Connection, tag_id: int) -> Optional[Account]:
+    return await conn.fetch_maybe_one(
+        Account,
+        "select * from account_with_history a where a.user_tag_id = $1",
+        tag_id,
+    )
+
+
+async def get_cashier_account_by_tag_uid(*, conn: Connection, cashier_tag_id: int) -> Optional[Account]:
+    return await conn.fetch_maybe_one(
+        Account,
+        "select a.* from usr join account_with_history a on a.id = usr.cashier_account_id where usr.user_tag_id = $1",
+        cashier_tag_id,
     )
 
 
 async def get_transport_account_by_tag_uid(*, conn: Connection, orga_tag_uid: int) -> Optional[Account]:
     return await conn.fetch_maybe_one(
         Account,
-        "select a.* from usr join account_with_history a on a.id = usr.transport_account_id where usr.user_tag_uid = $1",
+        "select a.* "
+        "from usr "
+        "   join account_with_history a on a.id = usr.transport_account_id "
+        "   join user_tag t on usr.user_tag_id = t.id "
+        "where t.uid = $1",
         orga_tag_uid,
     )
 
@@ -82,25 +97,17 @@ class AccountService(DBService):
     # @requires_user([Privilege.customer_management])
     @requires_user([Privilege.node_administration])
     async def find_customers(self, *, conn: Connection, node: Node, search_term: str) -> list[Customer]:
-        value_as_int = None
-        if re.match("^[A-Fa-f0-9]+$", search_term):
-            value_as_int = int(search_term, base=16)
-
-        # the following query won't be able to find full uint64 tag uids as we need cast the numeric(20) to bigint in
-        # order to do hex conversion in postgres, therefore loosing one bit of information as bigint is in64 not uint64
         return await conn.fetch_many(
             Customer,
-            "select * from customer c "
-            "where node_id = any ($3) and "
-            "   (name like $1 "
-            "   or comment like $1 "
-            "   or (user_tag_uid is not null and to_hex(user_tag_uid::bigint) like $1) "
-            "   or (user_tag_uid is not null and user_tag_uid = $2)) "
+            "select * from customer c left join user_tag u on c.user_tag_id = u.id "
+            "where c.node_id = any ($2) and "
+            "   (c.name like $1 "
+            "   or c.comment like $1 "
+            "   or (u.pin is not null and lower(u.pin) like $1) "
             "   or lower(c.email) like $1 "
-            "   or c.account_name @@ $4 "
-            "   or lower(c.iban) like $1",
+            "   or c.account_name @@ $3 "
+            "   or lower(c.iban) like $1)",
             f"%{search_term.lower()}%",
-            value_as_int,
             node.ids_to_root,
             search_term.lower(),
         )
@@ -128,30 +135,22 @@ class AccountService(DBService):
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
-    async def get_account_by_tag_uid(self, *, conn: Connection, user_tag_uid: int) -> Optional[Account]:
+    async def get_account_by_tag_id(self, *, conn: Connection, user_tag_id: int) -> Optional[Account]:
         # TODO: TREE visibility
-        return await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
+        return await get_account_by_tag_id(conn=conn, tag_id=user_tag_id)
 
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def find_accounts(self, *, conn: Connection, node: Node, search_term: str) -> list[Account]:
-        value_as_int = None
-        if re.match("^[A-Fa-f0-9]+$", search_term):
-            value_as_int = int(search_term, base=16)
-
-        # the following query won't be able to find full uint64 tag uids as we need cast the numeric(20) to bigint in
-        # order to do hex conversion in postgres, therefore loosing one bit of information as bigint is in64 not uint64
         return await conn.fetch_many(
             Account,
-            "select * from account_with_history "
-            "where node_id = any ($3) and "
-            "   (name like $1 "
-            "   or comment like $1 "
-            "   or (user_tag_uid is not null and to_hex(user_tag_uid::bigint) like $1) "
-            "   or (user_tag_uid is not null and user_tag_uid = $2))",
+            "select * from account_with_history a left join user_tag u on a.user_tag_id = u.id "
+            "where a.node_id = any ($2) and "
+            "   (a.name like $1 "
+            "   or a.comment like $1 "
+            "   or (u.pin is not null and u.pin like $1))",
             f"%{search_term.lower()}%",
-            value_as_int,
             node.ids_to_root,
         )
 
@@ -160,7 +159,7 @@ class AccountService(DBService):
     @requires_user([Privilege.node_administration])
     async def disable_account(self, *, conn: Connection, account_id: int):
         # TODO: TREE visibility
-        row = await conn.fetchval("update account set user_tag_uid = null where id = $1 returning id", account_id)
+        row = await conn.fetchval("update account set user_tag_id = null where id = $1 returning id", account_id)
         if row is None:
             raise NotFound(element_typ="account", element_id=str(account_id))
 
@@ -171,30 +170,6 @@ class AccountService(DBService):
         self, *, conn: Connection, current_user: User, account_id: int, new_balance: float
     ) -> bool:
         raise RuntimeError("currently disallowed")
-        # account = await self.get_account(conn=conn, current_user=current_user, account_id=account_id)
-        # if account is None:
-        #     return False
-        #
-        # imbalance = new_balance - account.balance
-        # try:
-        #     await conn.fetchval(
-        #         "select * from book_transaction("
-        #         "   order_id => null,"
-        #         "   description => $1,"
-        #         "   source_account_id => $2,"
-        #         "   target_account_id => $3,"
-        #         "   amount => $4,"
-        #         "   vouchers_amount => 0,
-        #         "   conducting_user_id => $5)",
-        #         "Admin override for account balance",
-        #         ACCOUNT_MONEY_VOUCHER_CREATE,
-        #         account.id,
-        #         imbalance,
-        #         current_user.id,
-        #     )
-        # except:  # pylint: disable=bare-except
-        #     return False
-        # return True
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -231,7 +206,7 @@ class AccountService(DBService):
         *,
         conn: Connection,
         current_user: User,
-        current_terminal: CurrentTerminal,
+        current_till: Till,
         user_tag_uid: int,
         vouchers: int,
     ) -> Account:
@@ -243,7 +218,7 @@ class AccountService(DBService):
         if account is None:
             raise InvalidArgument(f"Tag {format_user_tag_uid(user_tag_uid)} is not registered")
 
-        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        node = await fetch_node(conn=conn, node_id=current_till.node_id)
         assert node is not None
         voucher_create_acc = await get_system_account_for_node(
             conn=conn, node=node, account_type=AccountType.voucher_create
@@ -271,32 +246,32 @@ class AccountService(DBService):
         self,
         *,
         conn: Connection,
-        current_terminal: CurrentTerminal,
+        node: Node,
         current_user: User,
         new_free_ticket_grant: NewFreeTicketGrant,
     ) -> Account:
-        # TODO: TREE visibility
         user_tag = await conn.fetchrow(
-            "select true as found, a.id as account_id "
-            "from user_tag u left join account a on a.user_tag_uid = u.uid where u.uid = $1",
-            new_free_ticket_grant.user_tag_uid,
+            "select true as found, u.id as user_tag_id, a.id as account_id "
+            "from user_tag u left join account a on a.user_tag_id = u.id where u.pin = $1 and u.node_id = any($2)",
+            new_free_ticket_grant.user_tag_pin,
+            node.ids_to_event_node,
         )
         if user_tag is None:
-            raise InvalidArgument(f"Tag does not exist {format_user_tag_uid(new_free_ticket_grant.user_tag_uid)}")
+            raise InvalidArgument(f"Tag does not exist {new_free_ticket_grant.user_tag_pin}")
 
         if user_tag["account_id"] is not None:
             raise InvalidArgument("Tag is already registered")
 
         # create a new customer account for the given tag
-        # TODO: NODE use node_id here
         account_id = await conn.fetchval(
-            "insert into account (node_id, user_tag_uid, type) values ($1, $2, 'private') returning id",
-            current_terminal.till.node_id,
-            new_free_ticket_grant.user_tag_uid,
+            "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
+            node.event_node_id,
+            user_tag["user_tag_id"],
+        )
+        await conn.execute(
+            "update user_tag set uid = $1 where id = $2", new_free_ticket_grant.user_tag_uid, user_tag["user_tag_id"]
         )
 
-        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
-        assert node is not None
         voucher_create_acc = await get_system_account_for_node(
             conn=conn, node=node, account_type=AccountType.voucher_create
         )
@@ -318,9 +293,13 @@ class AccountService(DBService):
     @with_db_transaction
     @requires_node()
     @requires_user([Privilege.node_administration])
-    async def update_account_comment(self, *, conn: Connection, account_id: int, comment: str) -> Account:
-        # TODO: TREE visibility
-        ret = await conn.fetchval("update account set comment = $1 where id = $2 returning id", comment, account_id)
+    async def update_account_comment(self, *, conn: Connection, node: Node, account_id: int, comment: str) -> Account:
+        ret = await conn.fetchval(
+            "update account set comment = $1 where id = $2 and node_id = any($3) returning id",
+            comment,
+            account_id,
+            node.ids_to_root,
+        )
         if ret is None:
             raise NotFound(element_typ="account", element_id=account_id)
 
@@ -330,35 +309,62 @@ class AccountService(DBService):
 
     @staticmethod
     async def _switch_account_tag_uid(
-        *, conn: Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
+        *,
+        conn: Connection,
+        node: Node,
+        account_id: int,
+        new_user_tag_pin: str,
+        new_user_tag_uid: int,
+        comment: Optional[str],
     ):
         account_exists = await conn.fetchval("select exists(select from account where id = $1)", account_id)
         if not account_exists:
             raise NotFound(element_typ="account", element_id=account_id)
 
-        old_user_tag_uid = await conn.fetchval("select user_tag_uid from account where id = $1", account_id)
-        await conn.fetchval(
-            "update account set user_tag_uid = $2 where id = $1 returning id", account_id, new_user_tag_uid
+        old_user_tag_id = await conn.fetchval(
+            "select user_tag_id from account where id = $1 and node_id = any($2)", account_id, node.ids_to_root
         )
-        await conn.execute("update user_tag set comment = $2 where uid = $1", old_user_tag_uid, comment)
+        new_user_tag_id = await conn.fetchval(
+            "select id from user_tag where pin = $1 and node_id = any($2)", new_user_tag_pin, node.ids_to_root
+        )
+        if new_user_tag_id is None:
+            raise NotFound(element_typ="user_tag", element_id=new_user_tag_pin)
 
-    @with_db_transaction
-    @requires_node()
-    @requires_user([Privilege.node_administration])
-    async def switch_account_tag_uid_admin(
-        self, *, conn: Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
-    ):
-        # TODO: TREE visibility
-        await self._switch_account_tag_uid(
-            conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid, comment=comment
+        new_tag_is_registered = await conn.fetchval(
+            "select exists(select from account where user_tag_id = $1)", new_user_tag_id
         )
+        if new_tag_is_registered:
+            raise InvalidArgument("New tag is already activated in the system")
+
+        new_tag_was_used = await conn.fetchval(
+            "select exists(select from account_tag_association_history where user_tag_id = $1)", new_user_tag_id
+        )
+        if new_tag_was_used:
+            raise InvalidArgument("New tag has been previously associated with an account")
+
+        await conn.fetchval(
+            "update account set user_tag_id = $2 where id = $1 returning id", account_id, new_user_tag_id
+        )
+        await conn.execute("update user_tag set uid = $2 where id = $1", new_user_tag_id, new_user_tag_uid)
+        await conn.execute("update user_tag set comment = $2 where id = $1", old_user_tag_id, comment)
 
     @with_db_transaction
     @requires_terminal([Privilege.node_administration])
     async def switch_account_tag_uid_terminal(
-        self, *, conn: Connection, account_id: int, new_user_tag_uid: int, comment: Optional[str]
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        account_id: int,
+        new_user_tag_pin: str,
+        new_user_tag_uid: int,
+        comment: Optional[str],
     ):
-        # TODO: TREE visibility
         await self._switch_account_tag_uid(
-            conn=conn, account_id=account_id, new_user_tag_uid=new_user_tag_uid, comment=comment
+            conn=conn,
+            node=node,
+            account_id=account_id,
+            new_user_tag_pin=new_user_tag_pin,
+            new_user_tag_uid=new_user_tag_uid,
+            comment=comment,
         )

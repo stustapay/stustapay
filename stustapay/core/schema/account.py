@@ -50,30 +50,35 @@ class UserTagAccountAssociation(BaseModel):
 
 
 class UserTagDetail(BaseModel):
-    user_tag_uid: int
-
-    @computed_field  # type: ignore[misc]
-    @property
-    def user_tag_uid_hex(self) -> Optional[str]:
-        return format_user_tag_uid(self.user_tag_uid)
+    id: int
+    pin: str
+    uid: Optional[int]
+    node_id: int
 
     comment: Optional[str] = None
     account_id: Optional[int] = None
 
     account_history: list[UserTagAccountAssociation]
 
+    @computed_field  # type: ignore[misc]
+    @property
+    def uid_hex(self) -> Optional[str]:
+        return format_user_tag_uid(self.uid)
+
 
 class UserTagHistoryEntry(BaseModel):
-    user_tag_uid: int
+    user_tag_id: int
+    user_tag_pin: str
+    user_tag_uid: Optional[int]
+
+    account_id: int
+    comment: Optional[str] = None
+    mapping_was_valid_until: datetime
 
     @computed_field  # type: ignore[misc]
     @property
     def user_tag_uid_hex(self) -> Optional[str]:
         return format_user_tag_uid(self.user_tag_uid)
-
-    account_id: int
-    comment: Optional[str] = None
-    mapping_was_valid_until: datetime
 
 
 class Account(BaseModel):
@@ -86,14 +91,14 @@ class Account(BaseModel):
     vouchers: int
 
     # metadata relevant to a tag
+    user_tag_id: Optional[int]
     user_tag_uid: Optional[int]
+    user_tag_comment: Optional[str] = None
+    restriction: Optional[ProductRestriction]
+
+    tag_history: list[UserTagHistoryEntry]
 
     @computed_field  # type: ignore[misc]
     @property
     def user_tag_uid_hex(self) -> Optional[str]:
         return format_user_tag_uid(self.user_tag_uid)
-
-    user_tag_comment: Optional[str] = None
-    restriction: Optional[ProductRestriction]
-
-    tag_history: list[UserTagHistoryEntry]

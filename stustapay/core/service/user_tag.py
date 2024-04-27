@@ -1,4 +1,3 @@
-import re
 from typing import Optional
 
 import asyncpg
@@ -6,7 +5,7 @@ import asyncpg
 from stustapay.core.config import Config
 from stustapay.core.schema.account import UserTagDetail
 from stustapay.core.schema.tree import Node
-from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
+from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret, UserTagSecret
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -15,7 +14,7 @@ from stustapay.core.service.common.decorators import (
     requires_user,
     with_db_transaction,
 )
-from stustapay.core.service.common.error import InvalidArgument
+from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.framework.database import Connection
 
 
@@ -46,15 +45,33 @@ async def create_user_tag_secret(conn: Connection, node_id: int, secret: NewUser
 async def create_user_tags(conn: Connection, node_id: int, tags: list[NewUserTag]):
     for tag in tags:
         await conn.execute(
-            "insert into user_tag (node_id, uid, pin, serial, restriction, secret_id) "
-            "values ($1, $2, $3, $4, $5, $6)",
+            "insert into user_tag (node_id, pin, restriction, secret_id) values ($1, $2, $3, $4)",
             node_id,
-            tag.uid,
             tag.pin,
-            tag.serial,
             tag.restriction,
             tag.secret_id,
         )
+
+
+async def get_or_assign_user_tag(conn: Connection, node: Node, pin: Optional[str], uid: int) -> int:
+    user_tag_id = await conn.fetchval(
+        "select id from user_tag where uid = $1 and node_id = any($2)", uid, node.ids_to_root
+    )
+    if user_tag_id:
+        return user_tag_id
+
+    if pin is None:
+        raise InvalidArgument("Chip was not activated and no pin was provided")
+
+    user_tag_id = await conn.fetchval(
+        "select id from user_tag where pin = $1 and node_id = any($2)", pin, node.ids_to_root
+    )
+    if user_tag_id is None:
+        raise NotFound(element_typ="user_tag", element_id=pin)
+
+    await conn.fetchval("update user_tag set uid = $1 where id = $2", uid, user_tag_id)
+
+    return user_tag_id
 
 
 class UserTagService(DBService):
@@ -74,27 +91,25 @@ class UserTagService(DBService):
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
-    async def get_user_tag_detail(self, *, conn: Connection, user_tag_uid: int) -> Optional[UserTagDetail]:
+    async def get_user_tag_detail(self, *, conn: Connection, user_tag_id: int) -> Optional[UserTagDetail]:
         # TODO: TREE visibility
         return await conn.fetch_maybe_one(
-            UserTagDetail, "select * from user_tag_with_history utwh where user_tag_uid = $1", user_tag_uid
+            UserTagDetail, "select * from user_tag_with_history utwh where id = $1", user_tag_id
         )
 
     @with_db_transaction
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def update_user_tag_comment(
-        self, *, conn: Connection, node: Node, current_user: CurrentUser, user_tag_uid: int, comment: str
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, user_tag_id: int, comment: str
     ) -> UserTagDetail:
         # TODO: TREE visibility
-        ret = await conn.fetchval(
-            "update user_tag set comment = $1 where uid = $2 returning uid", comment, user_tag_uid
-        )
+        ret = await conn.fetchval("update user_tag set comment = $1 where id = $2 returning id", comment, user_tag_id)
         if ret is None:
-            raise InvalidArgument(f"User tag {format_user_tag_uid(user_tag_uid)} does not exist")
+            raise InvalidArgument(f"User tag {user_tag_id} does not exist")
 
         detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, node_id=node.id, current_user=current_user, user_tag_uid=user_tag_uid
+            conn=conn, node_id=node.id, current_user=current_user, user_tag_id=user_tag_id
         )
         assert detail is not None
         return detail
@@ -103,17 +118,9 @@ class UserTagService(DBService):
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
-        value_as_int = None
-        if re.match("^[A-Fa-f0-9]+$", search_term):
-            value_as_int = int(search_term, base=16)
-
-        # the following query won't be able to find full uint64 tag uids as we need cast the numeric(20) to bigint in
-        # order to do hex conversion in postgres, therefore loosing one bit of information as bigint is in64 not uint64
         return await conn.fetch_many(
             UserTagDetail,
-            "select * from user_tag_with_history "
-            "where to_hex(user_tag_uid::bigint) like $1 or user_tag_uid = $2 and node_id = any($3)",
+            "select * from user_tag_with_history where lower(pin) like $1 and node_id = any($2)",
             f"%{search_term.lower()}%",
-            value_as_int,
             node.ids_to_event_node,
         )

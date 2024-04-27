@@ -166,7 +166,7 @@ async def test_cash_pay_out_flow_no_amount(
 async def test_only_topup_till_profiles_can_topup(
     till_service: TillService,
     order_service: OrderService,
-    admin_token: str,
+    event_admin_token: str,
     event_node: Node,
     till_layout: TillLayout,
     till: Till,
@@ -177,7 +177,7 @@ async def test_only_topup_till_profiles_can_topup(
 ):
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     profile = await till_service.profile.create_profile(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         profile=NewTillProfile(
             name="profile2",
@@ -189,7 +189,7 @@ async def test_only_topup_till_profiles_can_topup(
         ),
     )
     till.active_profile_id = profile.id
-    await till_service.update_till(token=admin_token, node_id=event_node.id, till_id=till.id, till=till)
+    await till_service.update_till(token=event_admin_token, node_id=event_node.id, till_id=till.id, till=till)
 
     with pytest.raises(TillPermissionException):
         new_topup = NewTopUp(
@@ -246,7 +246,7 @@ async def test_topup_cash_order_flow(
 async def test_only_payout_till_profiles_can_payout(
     order_service: OrderService,
     till_service: TillService,
-    admin_token: str,
+    event_admin_token: str,
     till: Till,
     till_layout: TillLayout,
     customer: Customer,
@@ -257,7 +257,7 @@ async def test_only_payout_till_profiles_can_payout(
 ):
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     profile = await till_service.profile.create_profile(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         profile=NewTillProfile(
             name="profile2",
@@ -269,7 +269,7 @@ async def test_only_payout_till_profiles_can_payout(
         ),
     )
     till.active_profile_id = profile.id
-    await till_service.update_till(token=admin_token, node_id=event_node.id, till_id=till.id, till=till)
+    await till_service.update_till(token=event_admin_token, node_id=event_node.id, till_id=till.id, till=till)
 
     with pytest.raises(TillPermissionException):
         new_pay_out = NewPayOut(

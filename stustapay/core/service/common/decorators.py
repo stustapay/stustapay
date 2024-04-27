@@ -15,6 +15,7 @@ from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.common.error import (
     AccessDenied,
     EventRequired,
+    InvalidArgument,
     ResourceNotAllowed,
     Unauthorized,
 )
@@ -295,6 +296,8 @@ def requires_customer(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaita
 
 def requires_terminal(
     user_privileges: Optional[list[Privilege]] = None,
+    requires_event_privileges=False,
+    requires_till=True,
 ) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
     """
     Check if a terminal is logged in via a provided terminal jwt token
@@ -316,7 +319,7 @@ def requires_terminal(
 
             token = kwargs.get("token")
             terminal: CurrentTerminal | None = kwargs.get("current_terminal")
-            conn = kwargs["conn"]
+            conn: Connection = kwargs["conn"]
             if terminal is None:
                 if self.__class__.__name__ == "AuthService":
                     terminal = await self.get_terminal_from_token(conn=conn, token=token)
@@ -333,40 +336,58 @@ def requires_terminal(
                 "select * from till_with_cash_register where terminal_id = $1",
                 terminal.id,
             )
-            if till is None:
-                raise Unauthorized("terminal does not have a till ")
-
-            logged_in_user = await kwargs["conn"].fetch_maybe_one(
-                CurrentUser,
-                "select "
-                "   usr.*, "
-                "   urwp.privileges as privileges, "
-                "   $2::bigint as active_role_id, "
-                "   urwp.name as active_role_name "
-                "from usr "
-                "join user_to_role utr on utr.user_id = usr.id "
-                "join user_role_with_privileges urwp on urwp.id = utr.role_id "
-                "where usr.id = $1 and utr.role_id = $2",
-                till.active_user_id,
-                till.active_user_role_id,
-            )
-
-            if user_privileges is not None:
-                if till.active_user_id is None or logged_in_user is None:
-                    raise AccessDenied(
-                        f"no user is logged into this terminal but "
-                        f"the following privileges are required {user_privileges}"
-                    )
-
-                if not any([p in user_privileges for p in logged_in_user.privileges]):
-                    raise AccessDenied(f"user does not have any of the required privileges: {user_privileges}")
+            if till is None and requires_till:
+                raise Unauthorized("Terminal does not have an assigned till but one is required")
 
             signature_params = signature(func).parameters
 
-            if "current_user" in signature_params:
-                kwargs["current_user"] = logged_in_user
-            elif "current_user" in kwargs:
-                kwargs.pop("current_user")
+            if requires_till:
+                assert till is not None
+                node = await fetch_node(conn=conn, node_id=till.node_id)
+                assert node is not None
+                if node.event_node_id is None:
+                    raise InvalidArgument("Tills should not be able to be created outside of events")
+                event_node = await fetch_node(conn=conn, node_id=node.event_node_id)
+                assert event_node is not None
+
+                logged_in_user = await conn.fetch_maybe_one(
+                    CurrentUser,
+                    "select "
+                    "   usr.*, "
+                    "   ut.uid as user_tag_uid, "
+                    "   urwp.privileges as privileges, "
+                    "   $2::bigint as active_role_id, "
+                    "   urwp.name as active_role_name "
+                    "from usr "
+                    "join user_tag ut on usr.user_tag_id = ut.id "
+                    "join user_to_role utr on utr.user_id = usr.id "
+                    "join user_role_with_privileges urwp on urwp.id = utr.role_id "
+                    "where usr.id = $1 and utr.role_id = $2 and utr.node_id = any($3)",
+                    till.active_user_id,
+                    till.active_user_role_id,
+                    event_node.ids_to_root if requires_event_privileges else node.ids_to_root,
+                )
+
+                if user_privileges is not None:
+                    if till.active_user_id is None or logged_in_user is None:
+                        raise AccessDenied(
+                            f"no user is logged into this terminal but "
+                            f"the following privileges are required {user_privileges}"
+                        )
+
+                    if not any([p in user_privileges for p in logged_in_user.privileges]):
+                        raise AccessDenied(f"user does not have any of the required privileges: {user_privileges}")
+
+                if "current_user" in signature_params:
+                    kwargs["current_user"] = logged_in_user
+                elif "current_user" in kwargs:
+                    kwargs.pop("current_user")
+
+                if "node" in signature_params:
+                    kwargs["node"] = node
+
+                if "current_till" in signature_params:
+                    kwargs["current_till"] = till
 
             if "current_terminal" in signature_params:
                 kwargs["current_terminal"] = terminal
@@ -378,11 +399,6 @@ def requires_terminal(
 
             if "conn" not in signature_params:
                 kwargs.pop("conn")
-
-            if "node" in signature_params:
-                node = await fetch_node(conn=conn, node_id=till.node_id)
-                assert node is not None
-                kwargs["node"] = node
 
             return await func(self, **kwargs)
 

@@ -1,9 +1,9 @@
 import {
-  PayoutRead,
   selectPayoutRunById,
   useListPayoutRunsQuery,
   usePayoutRunCsvExportMutation,
   usePayoutRunPayoutsQuery,
+  PayoutRead,
 } from "@/api";
 import { CustomerRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailLayout } from "@/components";
@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useParams, Link as RouterLink } from "react-router-dom";
 import { toast } from "react-toastify";
 import { DownloadSepaXMLModal } from "./DownloadSepaXMLModal";
+import { formatUserTagUid } from "@stustapay/models";
 
 export const PayoutRunDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -80,11 +81,11 @@ export const PayoutRunDetail: React.FC = () => {
       flex: 1,
     },
     {
-      field: "user_tag_uid",
+      field: "user_tag_id",
       headerName: t("account.user_tag_uid") as string,
       renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_uid_hex)}>
-          {params.row.user_tag_uid_hex}
+        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
+          {formatUserTagUid(params.row.user_tag_uid_hex)}
         </Link>
       ),
       minWidth: 300,

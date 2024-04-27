@@ -13,6 +13,7 @@ class Cashier(BaseModel):
     login: str
     display_name: str
     description: Optional[str] = None
+    user_tag_id: Optional[int] = None
     user_tag_uid: Optional[int] = None
 
     @computed_field  # type: ignore[misc]

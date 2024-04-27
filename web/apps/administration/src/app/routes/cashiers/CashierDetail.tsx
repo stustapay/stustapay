@@ -190,7 +190,7 @@ export const CashierDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("cashier.description")} secondary={cashier.description} />
           </ListItem>
-          <ListItemLink to={UserTagRoutes.detail(cashier.user_tag_uid_hex)}>
+          <ListItemLink to={UserTagRoutes.detail(cashier.user_tag_id)}>
             <ListItemText primary={t("cashier.tagId")} secondary={formatUserTagUid(cashier.user_tag_uid_hex)} />
           </ListItemLink>
           {cashier.till_ids.length !== 0 ? (

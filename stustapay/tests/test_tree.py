@@ -9,9 +9,9 @@ from stustapay.framework.database import Connection
 from stustapay.tests.common import list_equals
 
 
-async def test_node_creation(db_connection: Connection, tree_service: TreeService, admin_token: str):
+async def test_node_creation(db_connection: Connection, tree_service: TreeService, global_admin_token: str):
     node: Node = await tree_service.create_node(
-        token=admin_token,
+        token=global_admin_token,
         node_id=ROOT_NODE_ID,
         new_node=NewNode(
             name="Test node",
@@ -31,7 +31,7 @@ async def test_node_creation(db_connection: Connection, tree_service: TreeServic
     # we should not be able to add a second node with the same name under the newly created one
     with pytest.raises(RaiseError):
         await tree_service.create_node(
-            token=admin_token,
+            token=global_admin_token,
             node_id=node.id,
             new_node=NewNode(
                 name="Test node",
@@ -40,9 +40,9 @@ async def test_node_creation(db_connection: Connection, tree_service: TreeServic
         )
 
 
-async def test_event_creation(tree_service: TreeService, admin_token: str):
+async def test_event_creation(tree_service: TreeService, global_admin_token: str):
     event_node: Node = await tree_service.create_event(
-        token=admin_token,
+        token=global_admin_token,
         node_id=ROOT_NODE_ID,
         event=NewEvent(
             name="Test event",
@@ -71,7 +71,7 @@ async def test_event_creation(tree_service: TreeService, admin_token: str):
     assert 0 == event_node.parent
 
     child_node: Node = await tree_service.create_node(
-        token=admin_token,
+        token=global_admin_token,
         node_id=event_node.id,
         new_node=NewNode(
             name="Child node",
@@ -82,7 +82,7 @@ async def test_event_creation(tree_service: TreeService, admin_token: str):
 
     with pytest.raises(Exception):
         await tree_service.create_event(
-            token=admin_token,
+            token=global_admin_token,
             node_id=child_node.id,
             event=NewEvent(
                 name="Invalid Node",
@@ -107,9 +107,9 @@ async def test_event_creation(tree_service: TreeService, admin_token: str):
         )
 
 
-async def test_object_rules(tree_service: TreeService, admin_token: str):
+async def test_object_rules(tree_service: TreeService, global_admin_token: str):
     top_node = await tree_service.create_node(
-        token=admin_token,
+        token=global_admin_token,
         node_id=ROOT_NODE_ID,
         new_node=NewNode(
             name="foobar",
@@ -132,7 +132,7 @@ async def test_object_rules(tree_service: TreeService, admin_token: str):
     )
     assert len(top_node.computed_forbidden_objects_in_subtree) == 0
     event_node = await tree_service.create_event(
-        token=admin_token,
+        token=global_admin_token,
         node_id=top_node.id,
         event=NewEvent(
             name="Test event",
@@ -159,20 +159,31 @@ async def test_object_rules(tree_service: TreeService, admin_token: str):
     assert len(event_node.forbidden_objects_at_node) == 0
     assert list_equals([ObjectType.ticket], event_node.forbidden_objects_in_subtree)
     assert len(event_node.computed_forbidden_objects_at_node) == 0
-    assert list_equals([ObjectType.ticket], event_node.computed_forbidden_objects_in_subtree)
+    assert list_equals(
+        [
+            ObjectType.ticket,
+            ObjectType.tse,
+            ObjectType.tax_rate,
+            ObjectType.account,
+            ObjectType.user_tag,
+            ObjectType.user_role,
+            ObjectType.user,
+        ],
+        event_node.computed_forbidden_objects_in_subtree,
+    )
 
     sub_node = await tree_service.create_node(
-        token=admin_token,
+        token=global_admin_token,
         node_id=event_node.id,
         new_node=NewNode(
             name="sub-node",
             description="",
             forbidden_objects_at_node=[ObjectType.till],
-            forbidden_objects_in_subtree=[ObjectType.user_role],
+            forbidden_objects_in_subtree=[ObjectType.product],
         ),
     )
     assert list_equals([ObjectType.till], sub_node.forbidden_objects_at_node)
-    assert list_equals([ObjectType.user_role], sub_node.forbidden_objects_in_subtree)
+    assert list_equals([ObjectType.product], sub_node.forbidden_objects_in_subtree)
     assert list_equals(
         [
             ObjectType.till,
@@ -182,7 +193,20 @@ async def test_object_rules(tree_service: TreeService, admin_token: str):
             ObjectType.account,
             ObjectType.user_tag,
             ObjectType.user_role,
+            ObjectType.user,
         ],
         sub_node.computed_forbidden_objects_at_node,
     )
-    assert list_equals([ObjectType.ticket, ObjectType.user_role], sub_node.computed_forbidden_objects_in_subtree)
+    assert list_equals(
+        [
+            ObjectType.product,
+            ObjectType.ticket,
+            ObjectType.tse,
+            ObjectType.tax_rate,
+            ObjectType.account,
+            ObjectType.user_tag,
+            ObjectType.user_role,
+            ObjectType.user,
+        ],
+        sub_node.computed_forbidden_objects_in_subtree,
+    )

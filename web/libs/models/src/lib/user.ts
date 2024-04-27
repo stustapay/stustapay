@@ -3,6 +3,7 @@ import { z } from "zod";
 export const PrivilegeSchema = z.enum([
   "node_administration",
   "user_management",
+  "create_user",
   "customer_management",
 
   // festival workflow privileges
@@ -44,8 +45,6 @@ export const NewUserSchema = z.object({
   description: z.string().optional(),
   role_names: z.array(z.string()),
   password: z.string().optional().nullable(),
-  // user_tag_uid: z.bigint().optional().nullable(),
-  user_tag_uid_hex: z.string().optional().nullable(),
   transport_account_id: z.number().optional().nullable(),
   cashier_account_id: z.number().optional().nullable(),
 });
@@ -57,8 +56,6 @@ export const UserSchema = z.object({
   login: z.string().min(1),
   display_name: z.string(),
   description: z.string().optional().nullable(),
-  // user_tag_uid: z.bigint().optional().nullable(),
-  user_tag_uid_hex: z.string().optional().nullable(),
 });
 
 export type User = z.infer<typeof UserSchema>;
@@ -72,8 +69,6 @@ export const getUserName = (user: Pick<User, "login" | "display_name">) => {
 
 export const CurrentUserSchema = UserSchema.merge(
   z.object({
-    // user_tag_uid: z.bigint().optional().nullable(),
-    user_tag_uid_hex: z.string().optional().nullable(),
     transport_account_id: z.number().optional().nullable(),
     cashier_account_id: z.number().optional().nullable(),
     active_role_id: z.number().optional(),

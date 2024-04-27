@@ -1,7 +1,7 @@
 import enum
 from typing import Optional
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel
 
 ADMIN_ROLE_ID = 0
 ADMIN_ROLE_NAME = "admin"
@@ -22,6 +22,8 @@ class Privilege(enum.Enum):
     # general management privileges
     node_administration = "node_administration"
     customer_management = "customer_management"
+
+    create_user = "create_user"
     user_management = "user_management"
 
     # festival workflow privileges
@@ -47,6 +49,11 @@ class UserRole(NewUserRole):
     node_id: int
 
 
+class RoleToNode(BaseModel):
+    node_id: int
+    role_id: int
+
+
 class NewUserToRole(BaseModel):
     user_id: int
     role_id: int
@@ -69,19 +76,16 @@ class LoginPayload(BaseModel):
 class NewUser(BaseModel):
     login: str
     display_name: str
+    user_tag_pin: Optional[str] = None
     user_tag_uid: Optional[int] = None
     description: Optional[str] = None
 
 
 class UserWithoutId(NewUser):
     node_id: int
+    user_tag_id: Optional[int] = None
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None
-
-    @computed_field  # type: ignore[misc]
-    @property
-    def user_tag_uid_hex(self) -> Optional[str]:
-        return format_user_tag_uid(self.user_tag_uid)
 
 
 class User(UserWithoutId):
@@ -105,12 +109,8 @@ class CurrentUser(BaseModel):
     active_role_name: Optional[str] = None
     privileges: list[Privilege]
     description: Optional[str] = None
+    user_tag_id: Optional[int] = None
     user_tag_uid: Optional[int] = None
-
-    @computed_field  # type: ignore[misc]
-    @property
-    def user_tag_uid_hex(self) -> Optional[str]:
-        return format_user_tag_uid(self.user_tag_uid)
 
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None

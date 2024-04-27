@@ -28,20 +28,18 @@ async def find_user_tags(
 ):
     return normalize_list(
         await user_tag_service.find_user_tags(token=token, search_term=payload.search_term, node_id=node_id),
-        primary_key="user_tag_uid",
+        primary_key="id",
     )
 
 
-@router.get("/user-tags/{user_tag_uid_hex}", response_model=UserTagDetail)
+@router.get("/user-tags/{user_tag_id}", response_model=UserTagDetail)
 async def get_user_tag_detail(
     token: CurrentAuthToken,
     user_tag_service: ContextUserTagService,
-    user_tag_uid_hex: str,
+    user_tag_id: int,
     node_id: Optional[int] = None,
 ):
-    resp = await user_tag_service.get_user_tag_detail(
-        token=token, user_tag_uid=int(user_tag_uid_hex, 16), node_id=node_id
-    )
+    resp = await user_tag_service.get_user_tag_detail(token=token, user_tag_id=user_tag_id, node_id=node_id)
     if resp is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return resp
@@ -51,14 +49,14 @@ class UpdateCommentPayload(BaseModel):
     comment: str
 
 
-@router.post("/user-tags/{user_tag_uid_hex}/update-comment", response_model=UserTagDetail)
+@router.post("/user-tags/{user_tag_id}/update-comment", response_model=UserTagDetail)
 async def update_user_tag_comment(
     token: CurrentAuthToken,
     user_tag_service: ContextUserTagService,
-    user_tag_uid_hex: str,
+    user_tag_id: int,
     payload: UpdateCommentPayload,
     node_id: Optional[int] = None,
 ):
     return await user_tag_service.update_user_tag_comment(
-        token=token, user_tag_uid=int(user_tag_uid_hex, 16), comment=payload.comment, node_id=node_id
+        token=token, user_tag_id=user_tag_id, comment=payload.comment, node_id=node_id
     )

@@ -47,6 +47,7 @@ from stustapay.core.service.customer.payout import (
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.user_tag import get_or_assign_user_tag
 from stustapay.framework.database import Connection
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 
@@ -61,6 +62,7 @@ class CustomerTest:
 
 @dataclass
 class CustomerTestInfo:
+    id: int
     uid: int
     pin: str
     balance: float
@@ -95,9 +97,9 @@ async def test_customer(
     tag = await create_random_user_tag()
 
     account_id = await db_connection.fetchval(
-        "insert into account (node_id, user_tag_uid, balance, type) values ($1, $2, $3, $4) returning id",
+        "insert into account (node_id, user_tag_id, balance, type) values ($1, $2, $3, $4) returning id",
         event_node.id,
-        tag.uid,
+        tag.id,
         balance,
         "private",
     )
@@ -111,14 +113,14 @@ async def order_with_bon(
     product_service: ProductService,
     test_customer: CustomerTest,
     event_node: Node,
-    admin_token: str,
+    event_admin_token: str,
     tax_rate_ust: TaxRate,
     tax_rate_none: TaxRate,
     cashier: Cashier,
     till: Till,
 ) -> tuple[Order, CustomerTest]:
     product1: Product = await product_service.create_product(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         product=NewProduct(
             name="Bier",
@@ -131,7 +133,7 @@ async def order_with_bon(
         ),
     )
     product2: Product = await product_service.create_product(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         product=NewProduct(
             name="Pfand",
@@ -198,12 +200,12 @@ async def customers(
         donation = balance if i == n_customers - 1 else 1.0 * i
         payout_export = True
         tag = await create_random_user_tag()
-
+        await get_or_assign_user_tag(conn=db_connection, node=event_node, uid=tag.uid, pin=tag.pin)
         account_id = await db_connection.fetchval(
-            "insert into account (node_id, user_tag_uid, balance, type) "
+            "insert into account (node_id, user_tag_id, balance, type) "
             "overriding system value values ($1, $2, $3, $4) returning id",
             event_node.id,
-            tag.uid,
+            tag.id,
             balance,
             "private",
         )
@@ -220,6 +222,7 @@ async def customers(
         )
         customers.append(
             CustomerTestInfo(
+                id=account_id,
                 uid=tag.uid,
                 pin=tag.pin,
                 donation=donation,
@@ -294,13 +297,13 @@ async def test_payout_runs(
     output_path.mkdir(parents=True, exist_ok=True)
     os.makedirs(output_path, exist_ok=True)
 
-    uid_not_to_transfer = [customer.uid for customer in customers_to_transfer[:2]]
+    ids_not_to_transfer = [customer.id for customer in customers_to_transfer[:2]]
 
     await db_connection.execute(
         "update customer_info c set payout_export = false "
         "from account_with_history a "
-        "where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2) and node_id = any($3)",
-        *uid_not_to_transfer,
+        "where a.id = c.customer_account_id and a.id in ($1, $2) and node_id = any($3)",
+        *ids_not_to_transfer,
         event_node.ids_to_event_node,
     )
 
@@ -321,9 +324,9 @@ async def test_payout_runs(
     customers = await db_connection.fetch_many(
         Customer, "select * from customer where node_id = any($1)", event_node.ids_to_event_node
     )
-    uid_to_transfer = [customer.uid for customer in customers_to_transfer[2:]]
+    ids_to_transfer = [customer.id for customer in customers_to_transfer[2:]]
     for customer in customers:
-        if customer.user_tag_uid in uid_to_transfer:
+        if customer.id in ids_to_transfer:
             assert customer.payout_run_id == payout_run_id
         else:
             assert customer.payout_run_id is None
@@ -332,8 +335,8 @@ async def test_payout_runs(
     await db_connection.execute(
         "update customer_info c set payout_export = true "
         "from account_with_history a "
-        "where a.id = c.customer_account_id and a.user_tag_uid in ($1, $2) and node_id = any($3)",
-        *uid_not_to_transfer,
+        "where a.id = c.customer_account_id and a.id in ($1, $2) and node_id = any($3)",
+        *ids_not_to_transfer,
         event_node.ids_to_event_node,
     )
 
@@ -341,8 +344,8 @@ async def test_payout_runs(
     await db_connection.execute(
         "update customer_info c set payout_error = 'some error' "
         "from account_with_history a "
-        "where a.id = c.customer_account_id and a.user_tag_uid = $1 and node_id = any($2)",
-        customers_to_transfer[0].uid,
+        "where a.id = c.customer_account_id and a.id = $1 and node_id = any($2)",
+        customers_to_transfer[0].id,
         event_node.ids_to_event_node,
     )
 
@@ -491,15 +494,15 @@ async def test_export_customer_bank_data(
     customers = await db_connection.fetch_many(
         Customer, "select * from customer where node_id = any($1)", event_node.ids_to_event_node
     )
-    uid_to_transfer = [customer.uid for customer in customers_to_transfer]
+    ids_to_transfer = [customer.id for customer in customers_to_transfer]
     for customer in customers:
-        if customer.user_tag_uid in uid_to_transfer:
+        if customer.id in ids_to_transfer:
             assert customer.payout_run_id == payout_run_id_3
         else:
             assert customer.payout_run_id is None
 
     # test customer "Rolf1" can no longer be updated since they now have a payout run assigned
-    auth = await customer_service.login_customer(uid=customers_to_transfer[0].uid, pin=customers_to_transfer[0].pin)
+    auth = await customer_service.login_customer(pin=customers_to_transfer[0].pin)
     assert auth is not None
     customer_bank = CustomerBank(
         iban="DE89370400440532013000", account_name="Rolf1 updated", email="lol@rolf.de", donation=2.0
@@ -532,7 +535,6 @@ async def test_get_customer_bank_data(
             assert result_customer.iban == customer.iban
             assert result_customer.account_name == customer.account_name
             assert result_customer.email == customer.email
-            assert result_customer.user_tag_uid == customer.uid
             assert result_customer.balance == customer.balance - customer.donation
 
     # create payout run
@@ -589,7 +591,7 @@ async def test_csv_export(
         assert row["currency"] == event.currency_identifier
         assert row["reference"] == sepa_config.description.format(user_tag_uid=format_user_tag_uid(customer.uid))
         assert row["email"] == customer.email
-        assert int(row["uid"]) == customer.uid
+        assert row["uid"] == format_user_tag_uid(customer.uid)
         export_sum += float(row["amount"])
 
     sql_sum = float(
@@ -697,7 +699,7 @@ async def test_sepa_export(
 
 
 async def test_auth_customer(customer_service: CustomerService, test_customer: CustomerTest):
-    auth = await customer_service.login_customer(uid=test_customer.uid, pin=test_customer.pin)
+    auth = await customer_service.login_customer(pin=test_customer.pin)
     assert auth is not None
     assert auth.customer.id == test_customer.account_id
     assert auth.customer.balance == test_customer.balance
@@ -719,7 +721,7 @@ async def test_auth_customer(customer_service: CustomerService, test_customer: C
 
     # test wrong pin
     with pytest.raises(AccessDenied):
-        await customer_service.login_customer(uid=test_customer.uid, pin="wrong")
+        await customer_service.login_customer(pin="wrong")
 
 
 async def test_get_orders_with_bon(customer_service: CustomerService, order_with_bon: tuple[Order, CustomerTest]):
@@ -729,7 +731,7 @@ async def test_get_orders_with_bon(customer_service: CustomerService, order_with
         await customer_service.get_orders_with_bon(token="wrong")
 
     # login
-    login_result = await customer_service.login_customer(uid=test_customer.uid, pin=test_customer.pin)
+    login_result = await customer_service.login_customer(pin=test_customer.pin)
     assert login_result is not None
 
     # test get_orders_with_bon
@@ -744,7 +746,7 @@ async def test_get_orders_with_bon(customer_service: CustomerService, order_with
 
 
 async def test_update_customer_info(test_customer: CustomerTest, customer_service: CustomerService):
-    auth = await customer_service.login_customer(uid=test_customer.uid, pin=test_customer.pin)
+    auth = await customer_service.login_customer(pin=test_customer.pin)
     assert auth is not None
 
     valid_IBAN = "DE89370400440532013000"

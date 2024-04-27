@@ -16,7 +16,7 @@ import {
   TillLayout,
   TillProfile,
   Tse,
-  UserRead,
+  User,
   UserRole,
   UserTagDetailRead,
   api as generatedApi,
@@ -27,7 +27,7 @@ import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
 export * from "./generated/api";
 
-const userAdapter = createEntityAdapter<UserRead>({
+const userAdapter = createEntityAdapter<User>({
   sortComparer: (a, b) => a.login.toLowerCase().localeCompare(b.login.toLowerCase()),
 });
 
@@ -36,8 +36,7 @@ const accountAdapter = createEntityAdapter<AccountRead>({
 });
 
 const userTagAdapter = createEntityAdapter<UserTagDetailRead>({
-  sortComparer: (a, b) =>
-    (a.user_tag_uid_hex?.toLowerCase() ?? "").localeCompare(b.user_tag_uid_hex?.toLowerCase() ?? ""),
+  sortComparer: (a, b) => a.pin.toLowerCase().localeCompare(b.pin.toLowerCase()),
 });
 
 const userRoleAdapter = createEntityAdapter<UserRole>({

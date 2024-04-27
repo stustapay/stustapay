@@ -4,8 +4,8 @@ alter table usr add constraint login_encoding
 alter table usr add constraint cash_register_need_cashier_acccount
     check (((cash_register_id is not null) and (cashier_account_id is not null)) or cash_register_id is null);
 
-alter table usr add constraint password_or_user_tag_uid_set
-    check ((user_tag_uid is not null) or (password is not null));
+alter table usr add constraint password_or_user_tag_id_set
+    check ((user_tag_id is not null) or (password is not null));
 
 alter table product add constraint product_vouchers_only_with_fixed_price
     check ( price_in_vouchers is not null and fixed_price or price_in_vouchers is null );
@@ -285,6 +285,65 @@ begin
     from node n
     where n.id = check_unique_in_tree.node_id;
 
+    if check_unique_in_tree.value is null then
+        return true;
+    end if;
+
+    execute format(
+        'select tab.id from %1$s tab join node n on n.id = tab.node_id ' ||
+        'where tab.%2$s = ''%3$s'' and tab.id != %7$L::bigint and (n.id = %6$L or n.id = any(''%4$s''::bigint array) or n.path like ''%5$s/%%'') ' ||
+        'limit 1',
+        check_unique_in_tree.table_name,
+        quote_ident(check_unique_in_tree.column_name),
+        check_unique_in_tree.value,
+        locals.node_parent_ids,
+        locals.node_path,
+        check_unique_in_tree.node_id,
+        check_unique_in_tree.element_id
+    )
+    into locals.existing_id;
+
+    if locals.existing_id is not null then
+        execute format(
+            'select n.name from node n join %1$s tab on n.id = tab.node_id ' ||
+            'where tab.id = %2$L::bigint',
+            check_unique_in_tree.table_name,
+            locals.existing_id
+        )
+        into locals.existing_node_name;
+        raise '% with value "%" is not unique at node % : %, the same exists already at node %',
+            check_unique_in_tree.column_name, check_unique_in_tree.value, locals.node_name, check_unique_in_tree.node_id, locals.existing_node_name;
+    end if;
+
+    return true;
+end
+$$ language plpgsql
+    set search_path = "$user", public;
+
+create or replace function check_unique_in_tree(
+    element_id bigint,
+    table_name regclass,
+    column_name text,
+    value numeric,
+    node_id bigint
+) returns boolean as
+$$
+<<locals>> declare
+    node_parent_ids     bigint[];
+    node_path           text;
+    node_name           text;
+
+    existing_id         bigint;
+    existing_node_name  text;
+begin
+    select n.parent_ids, n.path, n.name into locals.node_parent_ids, locals.node_path, locals.node_name
+    from node n
+    where n.id = check_unique_in_tree.node_id;
+
+    if check_unique_in_tree.value is null then
+        return true;
+    end if;
+
     execute format(
         'select tab.id from %1$s tab join node n on n.id = tab.node_id ' ||
         'where tab.%2$s = ''%3$s'' and tab.id != %7$L::bigint and (n.id = %6$L or n.id = any(''%4$s''::bigint array) or n.path like ''%5$s/%%'') ' ||
@@ -325,6 +384,8 @@ alter table user_role add constraint name_is_unique check(check_unique_in_tree(i
 alter table tse add constraint name_is_unique check(check_unique_in_tree(id, 'tse', 'name', name, node_id));
 alter table tax_rate add constraint name_is_unique check(check_unique_in_tree(id, 'tax_rate', 'name', name, node_id));
 alter table terminal add constraint name_is_unique check(check_unique_in_tree(id, 'terminal', 'name', name, node_id));
+alter table user_tag add constraint pin_is_unique check(check_unique_in_tree(id, 'user_tag', 'pin', pin, node_id));
+alter table user_tag add constraint uid_is_unique check(check_unique_in_tree(id, 'user_tag', 'uid', uid, node_id));
 
 alter table event add constraint end_date_gt_start_date
     check((start_date is null and end_date is null) or (start_date is not null and end_date is not null and end_date > start_date));

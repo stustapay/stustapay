@@ -10,7 +10,6 @@
         "cwd": "apps/administration",
         "commands": [
           "npx @rtk-query/codegen-openapi openapi-config.js",
-          "sed -i 's/\\[key: string\\]: User;/\\[key: string\\]: UserRead;/' src/api/generated/api.ts",
           "sed -i 's/\\[key: string\\]: Account;/\\[key: string\\]: AccountRead;/' src/api/generated/api.ts",
           "sed -i 's/\\[key: string\\]: UserTagDetail;/\\[key: string\\]: UserTagDetailRead;/' src/api/generated/api.ts",
           "sed -i 's/\\[key: string\\]: Cashier;/\\[key: string\\]: CashierRead;/' src/api/generated/api.ts"

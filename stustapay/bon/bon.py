@@ -65,6 +65,7 @@ async def generate_dummy_bon(node_id: int, event: RestrictedEventSettings) -> Bo
             cashier_id=0,
             till_id=0,
             cancels_order=None,
+            customer_tag_id=None,
             customer_tag_uid=None,
             customer_account_id=0,
             signature_status="done",

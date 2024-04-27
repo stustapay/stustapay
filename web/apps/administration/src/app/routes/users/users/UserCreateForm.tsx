@@ -11,7 +11,6 @@ export function UserCreateForm<T extends CreateUserPayload>(props: UserCreateFor
     <>
       <FormTextField autoFocus name="login" label={t("userLogin")} formik={props} />
       <FormTextField name="display_name" label={t("userDisplayName")} formik={props} />
-      <FormTextField name="user_tag_uid_hex" label={t("user.tagUid")} formik={props} />
       <FormTextField name="description" label={t("userDescription")} formik={props} />
       <FormTextField type="password" name="password" label={t("userPassword")} formik={props} />
     </>

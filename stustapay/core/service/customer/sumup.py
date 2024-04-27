@@ -13,7 +13,6 @@ from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.customer import Customer, CustomerCheckout
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.tree import RestrictedEventSettings
-from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
@@ -329,8 +328,7 @@ class SumupService(DBService):
             amount=amount,
             currency=event_settings.currency_identifier,
             merchant_code=event_settings.sumup_merchant_code,
-            # TODO: HARDCODED
-            description=f"{event_node.name} Online TopUp {format_user_tag_uid(current_customer.user_tag_uid)} {checkout_reference}",
+            description=f"{event_node.name} Online TopUp {current_customer.user_tag_uid_hex} {checkout_reference}",
         )
         checkout_response = await self._create_sumup_checkout(event=event_settings, checkout=create_checkout)
 

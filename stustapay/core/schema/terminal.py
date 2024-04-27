@@ -77,6 +77,7 @@ class TerminalRegistrationSuccess(BaseModel):
 
 class CurrentTerminal(BaseModel):
     id: int
+    node_id: int
     name: str
     description: str
-    till: Till
+    till: Till | None

@@ -1,4 +1,4 @@
-import { useLoginMutation } from "@/api/authApi";
+import { useLoginMutation } from "@/api";
 import { ReactComponent as PinUidHowToImg } from "@/assets/img/pin_uid_howto.svg";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
@@ -13,14 +13,12 @@ import { toast } from "react-toastify";
 import { z } from "zod";
 
 const validationSchema = z.object({
-  userTagUid: z.string(),
   userTagPin: z.string(),
 });
 
 type FormSchema = z.infer<typeof validationSchema>;
 
 const initialValues: FormSchema = {
-  userTagUid: "",
   userTagPin: "",
 };
 
@@ -38,7 +36,7 @@ export const Login: React.FC = () => {
 
   const handleSubmit = (values: FormSchema, { setSubmitting }: FormikHelpers<FormSchema>) => {
     setSubmitting(true);
-    login(values)
+    login({ loginPayload: { pin: values.userTagPin } })
       .unwrap()
       .then(() => {
         setSubmitting(false);
@@ -77,14 +75,6 @@ export const Login: React.FC = () => {
                   autoComplete="current-password"
                   name="userTagPin"
                   label={t("userTagPin")}
-                  formik={formik}
-                />
-                <FormTextField
-                  variant="outlined"
-                  type="text"
-                  autoComplete="username"
-                  label={t("userTagUid")}
-                  name="userTagUid"
                   formik={formik}
                 />
 

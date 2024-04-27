@@ -62,16 +62,15 @@ class CustomerService(DBService):
         )
 
     @with_db_transaction
-    async def login_customer(self, *, conn: Connection, uid: int, pin: str) -> CustomerLoginSuccess:
+    async def login_customer(self, *, conn: Connection, pin: str) -> CustomerLoginSuccess:
         # Customer has hardware tag and pin
         customer = await conn.fetch_maybe_one(
             Customer,
-            "select c.* from user_tag u join customer c on u.uid = c.user_tag_uid where u.uid = $1 and u.pin = $2",
-            uid,
+            "select c.* from user_tag ut join customer c on ut.id = c.user_tag_id where ut.pin = $1",
             pin,
         )
         if customer is None:
-            raise AccessDenied("Invalid user tag uid or pin")
+            raise AccessDenied("Invalid pin")
 
         session_id = await conn.fetchval(
             "insert into customer_session (customer) values ($1) returning id", customer.id

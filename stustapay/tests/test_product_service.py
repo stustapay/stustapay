@@ -18,11 +18,11 @@ async def test_basic_product_workflow(
     event_node: Node,
     tax_rate_ust: TaxRate,
     tax_rate_none: TaxRate,
-    admin_token: str,
+    event_admin_token: str,
     cashier: Cashier,
 ):
     product = await product_service.create_product(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         product=NewProduct(name="Test Product", price=3, tax_rate_id=tax_rate_ust.id),
     )
@@ -37,7 +37,7 @@ async def test_basic_product_workflow(
         )
 
     updated_product = await product_service.update_product(
-        token=admin_token,
+        token=event_admin_token,
         product_id=product.id,
         node_id=event_node.id,
         product=NewProduct(name="Updated Test Product", price=4, tax_rate_id=tax_rate_none.id),
@@ -46,13 +46,15 @@ async def test_basic_product_workflow(
     assert updated_product.price == 4
     assert updated_product.tax_name == tax_rate_none.name
 
-    products = await product_service.list_products(token=admin_token, node_id=event_node.id)
+    products = await product_service.list_products(token=event_admin_token, node_id=event_node.id)
     assert len(list(filter(lambda p: p.name == "Updated Test Product", products))) == 1
 
     with pytest.raises(AccessDenied):
         await product_service.delete_product(token=cashier.token, node_id=event_node.id, product_id=product.id)
 
-    deleted = await product_service.delete_product(token=admin_token, node_id=event_node.id, product_id=product.id)
+    deleted = await product_service.delete_product(
+        token=event_admin_token, node_id=event_node.id, product_id=product.id
+    )
     assert deleted
 
 
@@ -61,7 +63,7 @@ async def test_product_name_is_unique_in_tree(
     db_connection: Connection,
     event_node: Node,
     tax_rate_none: TaxRate,
-    admin_token: str,
+    event_admin_token: str,
 ):
     sub_node = await create_node(
         conn=db_connection,
@@ -79,7 +81,7 @@ async def test_product_name_is_unique_in_tree(
     )
     product = NewProduct(name="Test Product", price=3, tax_rate_id=tax_rate_none.id)
     await product_service.create_product(
-        token=admin_token,
+        token=event_admin_token,
         node_id=sub_node.id,
         product=product,
     )
@@ -87,21 +89,21 @@ async def test_product_name_is_unique_in_tree(
     with pytest.raises(RaiseError):
         # will not allow a duplicate name on the same node
         await product_service.create_product(
-            token=admin_token,
+            token=event_admin_token,
             node_id=sub_node.id,
             product=product,
         )
     with pytest.raises(RaiseError):
         # will not allow a duplicate name in a sub node
         await product_service.create_product(
-            token=admin_token,
+            token=event_admin_token,
             node_id=event_node.id,
             product=product,
         )
     with pytest.raises(RaiseError):
         # will not allow a duplicate name in a parent node
         await product_service.create_product(
-            token=admin_token,
+            token=event_admin_token,
             node_id=sub_sub_node.id,
             product=product,
         )

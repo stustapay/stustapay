@@ -17,9 +17,9 @@ export const translations = {
   about: "About",
   contact: "Contact",
   wristbandTagExample: "Wristband Tag Example",
-  wristbandTagExampleTitle: "Wristband Tag Example with PIN and ID",
+  wristbandTagExampleTitle: "Wristband Tag Example with PIN",
   wristbandTagExampleDescription:
-    "You can find your wristband tag ID and PIN on the back of your wristband tag. It should look like the example given below:",
+    "You can find your wristband tag PIN on the back of your wristband tag. It should look like the example given below:",
   termsAndConditionsHeader:
     "Our Terms and Conditions are only available in German. You can access our privacy policy on <1>here</1>.",
   privacyPolicyHeader:
@@ -29,7 +29,8 @@ export const translations = {
     de: "Deutsch",
   },
   balance: "Balance",
-  tagUid: "Wristband Tag ID",
+  tagPin: "Wristband Tag Pin",
+  tagUid: "Wristband Tag Uid",
   vouchers: "Vouchers",
   order: {
     loadingError: "Error loading orders",

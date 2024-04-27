@@ -78,6 +78,25 @@ async def psql_attach(config: DatabaseConfig):
         return ret
 
 
+async def _run_postgres_code(conn: asyncpg.Connection, code: str, file_name: Path):
+    if all(line.startswith("--") for line in code.splitlines()):
+        return
+    try:
+        await conn.execute(code)
+    except asyncpg.exceptions.PostgresSyntaxError as exc:
+        exc_dict = exc.as_dict()
+        position = int(exc_dict["position"])
+        message = exc_dict["message"]
+        lineno = code.count("\n", 0, position) + 1
+        raise ValueError(
+            f"Syntax error when executing SQL code at character {position} ({file_name!s}:{lineno}): {message!r}"
+        ) from exc
+    except asyncpg.exceptions.SyntaxOrAccessError as exc:
+        exc_dict = exc.as_dict()
+        message = exc_dict["message"]
+        raise ValueError(f"Syntax or Access error when executing SQL code ({file_name!s}): {message!r}") from exc
+
+
 async def drop_all_views(conn: asyncpg.Connection, schema: str):
     # TODO: we might have to find out the dependency order of the views if drop cascade does not work
     result = await conn.fetch(
@@ -200,18 +219,7 @@ class SchemaRevision:
             await conn.execute(f"insert into {REVISION_TABLE} (version) values ($1)", self.version)
 
         # now we can actually apply the revision
-        try:
-            if len(self.code.splitlines()) > 2:  # does not only consist of first two header comment lines
-                await conn.execute(self.code)
-        except asyncpg.exceptions.PostgresSyntaxError as exc:
-            exc_dict = exc.as_dict()
-            position = int(exc_dict["position"])
-            message = exc_dict["message"]
-            lineno = self.code.count("\n", 0, position) + 1
-            raise ValueError(
-                f"Syntax error when executing SQL code at character "
-                f"{position} ({self.file_name!s}:{lineno}): {message!r}"
-            ) from exc
+        await _run_postgres_code(conn, self.code, self.file_name)
 
     @classmethod
     def revisions_from_dir(cls, revision_dir: Path) -> list["SchemaRevision"]:
@@ -273,17 +281,7 @@ async def _apply_db_code(conn: asyncpg.Connection, code_path: Path):
     for code_file in sorted(code_path.glob("*.sql")):
         logger.info(f"Applying database code file {code_file.name}")
         code = code_file.read_text("utf-8")
-        try:
-            await conn.execute(code)
-        except asyncpg.exceptions.PostgresSyntaxError as exc:
-            exc_dict = exc.as_dict()
-            position = int(exc_dict["position"])
-            message = exc_dict["message"]
-            lineno = code.count("\n", 0, position) + 1
-            raise ValueError(
-                f"Syntax error when executing SQL code at character "
-                f"{position} ({code_path!s}:{lineno}): {message!r}"
-            ) from exc
+        await _run_postgres_code(conn, code, code_file)
 
 
 async def apply_revisions(

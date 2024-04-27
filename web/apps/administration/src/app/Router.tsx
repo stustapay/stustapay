@@ -382,7 +382,7 @@ const router = createBrowserRouter([
             element: <FindUserTags />,
           },
           {
-            path: ":userTagUidHex",
+            path: ":userTagId",
             element: <UserTagDetail />,
           },
         ],

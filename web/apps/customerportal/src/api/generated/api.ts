@@ -7,7 +7,7 @@ const injectedRtkApi = api
   .injectEndpoints({
     endpoints: (build) => ({
       login: build.mutation<LoginApiResponse, LoginApiArg>({
-        query: (queryArg) => ({ url: `/auth/login`, method: "POST", body: queryArg.bodyLoginAuthLoginPost }),
+        query: (queryArg) => ({ url: `/auth/login`, method: "POST", body: queryArg.loginPayload }),
         invalidatesTags: ["auth"],
       }),
       logout: build.mutation<LogoutApiResponse, LogoutApiArg>({
@@ -55,7 +55,7 @@ const injectedRtkApi = api
 export { injectedRtkApi as api };
 export type LoginApiResponse = /** status 200 Successful Response */ LoginResponseRead;
 export type LoginApiArg = {
-  bodyLoginAuthLoginPost: BodyLoginAuthLoginPost;
+  loginPayload: LoginPayload;
 };
 export type LogoutApiResponse = unknown;
 export type LogoutApiArg = void;
@@ -100,13 +100,17 @@ export type AccountType =
   | "voucher_create";
 export type ProductRestriction = "under_16" | "under_18";
 export type UserTagHistoryEntry = {
-  user_tag_uid: number;
+  user_tag_id: number;
+  user_tag_pin: string;
+  user_tag_uid: number | null;
   account_id: number;
   comment?: string | null;
   mapping_was_valid_until: string;
 };
 export type UserTagHistoryEntryRead = {
-  user_tag_uid: number;
+  user_tag_id: number;
+  user_tag_pin: string;
+  user_tag_uid: number | null;
   account_id: number;
   comment?: string | null;
   mapping_was_valid_until: string;
@@ -120,6 +124,7 @@ export type Customer = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
@@ -131,6 +136,7 @@ export type Customer = {
   payout_error: string | null;
   payout_run_id: number | null;
   payout_export: boolean | null;
+  user_tag_pin: string | null;
 };
 export type CustomerRead = {
   node_id: number;
@@ -140,6 +146,7 @@ export type CustomerRead = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
@@ -151,6 +158,7 @@ export type CustomerRead = {
   payout_error: string | null;
   payout_run_id: number | null;
   payout_export: boolean | null;
+  user_tag_pin: string | null;
   user_tag_uid_hex: string | null;
 };
 export type LoginResponse = {
@@ -171,13 +179,8 @@ export type ValidationError = {
 export type HttpValidationError = {
   detail?: ValidationError[];
 };
-export type BodyLoginAuthLoginPost = {
-  grant_type?: string | null;
-  username: string;
-  password: string;
-  scope?: string;
-  client_id?: string | null;
-  client_secret?: string | null;
+export type LoginPayload = {
+  pin: string;
 };
 export type PaymentMethod = "cash" | "sumup" | "tag" | "sumup_online";
 export type OrderType =
@@ -241,6 +244,7 @@ export type OrderWithBon = {
   till_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
+  customer_tag_id: number | null;
   line_items: LineItem[];
   bon_generated: boolean | null;
 };
@@ -258,6 +262,7 @@ export type OrderWithBonRead = {
   till_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
+  customer_tag_id: number | null;
   line_items: LineItemRead[];
   bon_generated: boolean | null;
   customer_tag_uid_hex: string | null;
@@ -289,9 +294,9 @@ export type CreateCheckoutResponse = {
 export type CreateCheckoutPayload = {
   amount: number;
 };
-export type SumupCheckoutStatus = "PENDING" | "FAILED" | "PAID";
+export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
 export type CheckCheckoutResponse = {
-  status: SumupCheckoutStatus;
+  status: SumUpCheckoutStatus;
 };
 export type CheckCheckoutPayload = {
   checkout_id: string;

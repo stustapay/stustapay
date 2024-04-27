@@ -217,12 +217,18 @@ class CompletedSale(CompletedSaleBase, PendingSale):
     pass
 
 
+class UserTagScan(BaseModel):
+    tag_uid: int
+    tag_pin: str
+
+
 class NewTicketScan(BaseModel):
-    customer_tag_uids: list[int]
+    customer_tags: list[UserTagScan]
 
 
 class TicketScanResultEntry(BaseModel):
     customer_tag_uid: int
+    customer_tag_pin: str
     ticket: Ticket
 
 
@@ -232,7 +238,7 @@ class TicketScanResult(BaseModel):
 
 class NewTicketSale(BaseModel):
     uuid: UUID
-    customer_tag_uids: list[int]
+    customer_tags: list[UserTagScan]
 
     payment_method: Optional[PaymentMethod]
 
@@ -301,6 +307,7 @@ class Order(BaseModel):
     till_id: Optional[int]
     customer_account_id: Optional[int]
     customer_tag_uid: Optional[int]
+    customer_tag_id: Optional[int]
 
     @computed_field  # type: ignore[misc]
     @property
@@ -311,6 +318,7 @@ class Order(BaseModel):
 
 
 class NewFreeTicketGrant(BaseModel):
+    user_tag_pin: str
     user_tag_uid: int
     initial_voucher_amount: int = 0
 

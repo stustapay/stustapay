@@ -147,7 +147,7 @@ def dump_payout_run_as_csv(
                     "reference": sepa_config.description.format(
                         user_tag_uid=format_user_tag_uid(customer.user_tag_uid)
                     ),
-                    "uid": customer.user_tag_uid,
+                    "uid": format_user_tag_uid(customer.user_tag_uid),
                     "email": customer.email,
                 },
             )

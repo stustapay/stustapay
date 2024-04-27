@@ -13,19 +13,19 @@ async def test_get_user_info(
     cashier: Cashier,
     terminal_token: str,
     login_supervised_user: LoginSupervisedUser,
-    admin_tag: UserTag,
+    event_admin_tag: UserTag,
 ):
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     user_info = await till_service.get_user_info(token=terminal_token, user_tag_uid=cashier.user_tag_uid)
     assert user_info is not None
 
     with pytest.raises(AccessDenied):
-        await till_service.get_user_info(token=terminal_token, user_tag_uid=admin_tag.uid)
+        await till_service.get_user_info(token=terminal_token, user_tag_uid=event_admin_tag.uid)
 
-    await login_supervised_user(user_tag_uid=admin_tag.uid, user_role_id=ADMIN_ROLE_ID)
+    await login_supervised_user(user_tag_uid=event_admin_tag.uid, user_role_id=ADMIN_ROLE_ID)
 
     user_info = await till_service.get_user_info(token=terminal_token, user_tag_uid=cashier.user_tag_uid)
     assert user_info is not None
 
-    user_info = await till_service.get_user_info(token=terminal_token, user_tag_uid=admin_tag.uid)
+    user_info = await till_service.get_user_info(token=terminal_token, user_tag_uid=event_admin_tag.uid)
     assert user_info is not None

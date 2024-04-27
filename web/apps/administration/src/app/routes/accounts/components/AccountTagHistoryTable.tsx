@@ -21,11 +21,11 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
 
   const columns: GridColDef<HistoryEntry>[] = [
     {
-      field: "user_tag_uid_hex",
+      field: "user_tag_id",
       headerName: t("account.user_tag_uid") as string,
       align: "right",
       renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_uid_hex)}>
+        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}
         </Link>
       ),
@@ -59,7 +59,7 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
     <DataGrid
       autoHeight
       slots={{ toolbar: () => <DataGridTitle title={t("account.history.title")} /> }}
-      getRowId={(row) => `${row.account_id}-${row.user_tag_uid_hex}`}
+      getRowId={(row) => `${row.account_id}-${row.user_tag_id}`}
       rows={history}
       columns={columns}
       disableRowSelectionOnClick

@@ -10,6 +10,7 @@ from stustapay.core.schema.order import (
     NewTicketSale,
     NewTicketScan,
     PaymentMethod,
+    UserTagScan,
 )
 from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.tax_rate import TaxRate
@@ -42,13 +43,13 @@ class SaleTickets:
 async def sale_tickets(
     ticket_service: TicketService,
     till_service: TillService,
-    admin_token: str,
+    event_admin_token: str,
     event_node: Node,
     tax_rate_none: TaxRate,
     till_layout: TillLayout,
 ) -> SaleTickets:
     ticket = await ticket_service.create_ticket(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         ticket=NewTicket(
             name="Eintritt mit 8€",
@@ -60,7 +61,7 @@ async def sale_tickets(
         ),
     )
     ticket_u18 = await ticket_service.create_ticket(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         ticket=NewTicket(
             name="Eintritt U18",
@@ -72,7 +73,7 @@ async def sale_tickets(
         ),
     )
     ticket_u16 = await ticket_service.create_ticket(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         ticket=NewTicket(
             name="Eintritt U16",
@@ -84,7 +85,7 @@ async def sale_tickets(
         ),
     )
     await till_service.layout.update_layout(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         layout_id=till_layout.id,
         layout=NewTillLayout(
@@ -104,7 +105,7 @@ async def sale_tickets(
 async def test_only_ticket_till_profiles_can_sell_tickets(
     order_service: OrderService,
     till_service: TillService,
-    admin_token: str,
+    event_admin_token: str,
     till_layout: TillLayout,
     till: Till,
     customer: Customer,
@@ -117,7 +118,7 @@ async def test_only_ticket_till_profiles_can_sell_tickets(
     await assign_cash_register(cashier=cashier)
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     profile = await till_service.profile.create_profile(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         profile=NewTillProfile(
             name="profile2",
@@ -129,12 +130,12 @@ async def test_only_ticket_till_profiles_can_sell_tickets(
         ),
     )
     till.active_profile_id = profile.id
-    await till_service.update_till(token=admin_token, node_id=event_node.id, till_id=till.id, till=till)
+    await till_service.update_till(token=event_admin_token, node_id=event_node.id, till_id=till.id, till=till)
 
     with pytest.raises(TillPermissionException):
         new_ticket_sale = NewTicketSale(
             uuid=uuid.uuid4(),
-            customer_tag_uids=[customer.tag.uid],
+            customer_tags=[UserTagScan(tag_uid=customer.tag.uid, tag_pin=customer.tag.pin)],
             payment_method=PaymentMethod.cash,
         )
         await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket_sale)
@@ -163,13 +164,13 @@ async def test_ticket_flow_with_one_tag(
 
     unused_tag = await create_random_user_tag()
 
-    new_scan = NewTicketScan(customer_tag_uids=[unused_tag.uid])
+    new_scan = NewTicketScan(customer_tags=[UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin)])
     scan_result = await order_service.check_ticket_scan(token=terminal_token, new_ticket_scan=new_scan)
     assert scan_result is not None
 
     new_ticket = NewTicketSale(
         uuid=uuid.uuid4(),
-        customer_tag_uids=[unused_tag.uid],
+        customer_tags=[UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin)],
         payment_method=PaymentMethod.cash,
     )
     pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
@@ -213,13 +214,13 @@ async def test_ticket_flow_with_initial_topup_sumup(
     sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.sale_exit)
     unused_tag = await create_random_user_tag()
 
-    new_scan = NewTicketScan(customer_tag_uids=[unused_tag.uid])
+    new_scan = NewTicketScan(customer_tags=[UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin)])
     scan_result = await order_service.check_ticket_scan(token=terminal_token, new_ticket_scan=new_scan)
     assert scan_result is not None
 
     new_ticket = NewTicketSale(
         uuid=uuid.uuid4(),
-        customer_tag_uids=[unused_tag.uid],
+        customer_tags=[UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin)],
         payment_method=PaymentMethod.sumup,
     )
     pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
@@ -270,7 +271,12 @@ async def test_ticket_flow_with_multiple_tags_invalid_booking(
 
     new_ticket = NewTicketSale(
         uuid=uuid.uuid4(),
-        customer_tag_uids=[tag.uid, tag2.uid, u18_tag.uid, u16_tag.uid],
+        customer_tags=[
+            UserTagScan(tag_uid=tag.uid, tag_pin=tag.pin),
+            UserTagScan(tag_uid=tag2.uid, tag_pin=tag2.pin),
+            UserTagScan(tag_uid=u16_tag.uid, tag_pin=u16_tag.pin),
+            UserTagScan(tag_uid=u18_tag.uid, tag_pin=u18_tag.pin),
+        ],
         payment_method=PaymentMethod.cash,
     )
     pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)

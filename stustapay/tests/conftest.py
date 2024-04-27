@@ -168,6 +168,7 @@ async def user_tag_secret(db_connection: Connection, event_node: Node) -> int:
 
 @dataclass
 class UserTag:
+    id: int
     uid: int
     pin: str
 
@@ -185,16 +186,15 @@ async def create_random_user_tag(
             uid = random.randint(1, 2**32 - 1)
             pin = secrets.token_hex(16)
             try:
-                user_tag_uid = await db_connection.fetchval(
-                    "insert into user_tag (node_id, uid, secret_id, restriction, pin) values ($1, $2, $3, $4, $5) "
-                    "returning uid",
+                user_tag_id = await db_connection.fetchval(
+                    "insert into user_tag (node_id, secret_id, restriction, pin) values ($1, $2, $3, $4) "
+                    "returning id",
                     event_node.id,
-                    uid,
                     user_tag_secret,
                     restriction.name if restriction is not None else None,
                     pin,
                 )
-                return UserTag(uid=int(user_tag_uid), pin=pin)
+                return UserTag(id=user_tag_id, uid=uid, pin=pin)
             except asyncpg.DataError:
                 pass
 
@@ -279,42 +279,33 @@ async def tax_rate_service(
 
 
 @pytest.fixture
-async def admin_tag(
-    create_random_user_tag: CreateRandomUserTag,
-) -> UserTag:
-    return await create_random_user_tag()
-
-
-@pytest.fixture
-async def admin_user(
+async def global_admin_user(
     db_connection: Connection,
     user_service: UserService,
-    admin_tag: UserTag,
 ) -> tuple[User, str]:
-    root_node = await fetch_node(conn=db_connection, node_id=ROOT_NODE_ID)
-    assert root_node is not None
+    node = await fetch_node(conn=db_connection, node_id=ROOT_NODE_ID)
+    assert node is not None
     password = "rolf"
     admin_user = await user_service.create_user_no_auth(
         node_id=ROOT_NODE_ID,
         new_user=NewUser(
-            login=f"test-admin-user {secrets.token_hex(16)}",
+            login=f"test-global-admin-user {secrets.token_hex(16)}",
             description="",
             display_name="Admin",
-            user_tag_uid=admin_tag.uid,
         ),
         password=password,
     )
     await associate_user_to_role(
         conn=db_connection,
-        node=root_node,
+        node=node,
         new_user_to_role=NewUserToRole(user_id=admin_user.id, role_id=ADMIN_ROLE_ID),
     )
     return admin_user, password
 
 
 @pytest.fixture
-async def admin_token(user_service: UserService, admin_user: tuple[User, str]) -> str:
-    user, password = admin_user
+async def global_admin_token(user_service: UserService, global_admin_user: tuple[User, str]) -> str:
+    user, password = global_admin_user
     admin_token = (await user_service.login_user(username=user.login, password=password)).token
     await user_service.update_user_role_privileges(
         token=admin_token,
@@ -330,9 +321,51 @@ async def admin_token(user_service: UserService, admin_user: tuple[User, str]) -
             Privilege.can_book_orders,
             Privilege.grant_vouchers,
             Privilege.grant_free_tickets,
+            Privilege.create_user,
         ],
     )
-    # TODO: tree, this has to be replaced as soon as we have proper tree visibility rules
+    return admin_token
+
+
+@pytest.fixture
+async def event_admin_tag(
+    create_random_user_tag: CreateRandomUserTag,
+) -> UserTag:
+    return await create_random_user_tag()
+
+
+@pytest.fixture
+async def event_admin_user(
+    user_service: UserService,
+    event_admin_tag: UserTag,
+    global_admin_token: str,
+    event_node: Node,
+) -> tuple[User, str]:
+    password = "rolf"
+    admin_user = await user_service.create_user(
+        node_id=event_node.id,
+        token=global_admin_token,
+        new_user=NewUser(
+            login=f"test-admin-user {secrets.token_hex(16)}",
+            description="",
+            display_name="Admin",
+            user_tag_uid=event_admin_tag.uid,
+            user_tag_pin=event_admin_tag.pin,
+        ),
+        password=password,
+    )
+    await user_service.associate_user_to_role(
+        token=global_admin_token,
+        node_id=event_node.id,
+        new_user_to_role=NewUserToRole(user_id=admin_user.id, role_id=ADMIN_ROLE_ID),
+    )
+    return admin_user, password
+
+
+@pytest.fixture
+async def event_admin_token(user_service: UserService, event_admin_user) -> str:
+    user, password = event_admin_user
+    admin_token = (await user_service.login_user(username=user.login, password=password)).token
     return admin_token
 
 
@@ -342,9 +375,9 @@ async def tax_rate_none(db_connection: Connection, event_node: Node) -> TaxRate:
 
 
 @pytest.fixture
-async def tax_rate_ust(tax_rate_service: TaxRateService, admin_token: str, event_node: Node) -> TaxRate:
+async def tax_rate_ust(tax_rate_service: TaxRateService, event_admin_token: str, event_node: Node) -> TaxRate:
     return await tax_rate_service.create_tax_rate(
-        token=admin_token, node_id=event_node.id, tax_rate=NewTaxRate(name="ust", description="", rate=0.19)
+        token=event_admin_token, node_id=event_node.id, tax_rate=NewTaxRate(name="ust", description="", rate=0.19)
     )
 
 
@@ -358,14 +391,14 @@ class Cashier(User):
 @pytest.fixture
 async def cashier(
     db_connection: Connection,
-    admin_token: str,
+    event_admin_token: str,
     event_node: Node,
     user_service: UserService,
     create_random_user_tag: CreateRandomUserTag,
 ) -> Cashier:
     cashier_tag = await create_random_user_tag()
     cashier_role: UserRole = await user_service.create_user_role(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         new_role=NewUserRole(
             name="cashier",
@@ -378,6 +411,7 @@ async def cashier(
         new_user=NewUser(
             login=f"test-cashier-user-{secrets.token_hex(16)}",
             user_tag_uid=cashier_tag.uid,
+            user_tag_pin=cashier_tag.pin,
             description="",
             display_name="Cashier",
         ),
@@ -388,7 +422,9 @@ async def cashier(
         node=event_node,
         new_user_to_role=NewUserToRole(user_id=cashier_user.id, role_id=cashier_role.id),
     )
-    updated_cashier = await user_service.get_user(token=admin_token, node_id=event_node.id, user_id=cashier_user.id)
+    updated_cashier = await user_service.get_user(
+        token=event_admin_token, node_id=event_node.id, user_id=cashier_user.id
+    )
     assert updated_cashier is not None
     cashier_token = (await user_service.login_user(username=updated_cashier.login, password="rolf")).token
     cashier_as_dict = updated_cashier.model_dump()
@@ -401,11 +437,11 @@ async def cashier(
 @pytest.fixture
 async def till_layout(
     till_service: TillService,
-    admin_token: str,
+    event_admin_token: str,
     event_node: Node,
 ) -> TillLayout:
     return await till_service.layout.create_layout(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         layout=NewTillLayout(name="test-layout", description="", button_ids=[]),
     )
@@ -413,10 +449,10 @@ async def till_layout(
 
 @pytest.fixture
 async def till_profile(
-    till_service: TillService, till_layout: TillLayout, admin_token: str, event_node: Node
+    till_service: TillService, till_layout: TillLayout, event_admin_token: str, event_node: Node
 ) -> TillProfile:
     return await till_service.profile.create_profile(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         profile=NewTillProfile(
             name="test-profile",
@@ -430,18 +466,18 @@ async def till_profile(
 
 
 @pytest.fixture
-async def terminal(terminal_service: TerminalService, admin_token: str, event_node: Node) -> Terminal:
+async def terminal(terminal_service: TerminalService, event_admin_token: str, event_node: Node) -> Terminal:
     return await terminal_service.create_terminal(
-        token=admin_token, node_id=event_node.id, terminal=NewTerminal(name="Test Terminal", description="")
+        token=event_admin_token, node_id=event_node.id, terminal=NewTerminal(name="Test Terminal", description="")
     )
 
 
 @pytest.fixture
 async def till(
-    till_service: TillService, till_profile: TillProfile, admin_token: str, event_node: Node, terminal: Terminal
+    till_service: TillService, till_profile: TillProfile, event_admin_token: str, event_node: Node, terminal: Terminal
 ) -> Till:
     return await till_service.create_till(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         till=NewTill(name="test-till", active_profile_id=till_profile.id, terminal_id=terminal.id),
     )

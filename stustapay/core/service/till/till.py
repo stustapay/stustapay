@@ -119,6 +119,7 @@ class TillService(DBService):
     async def check_user_login(
         self,
         *,
+        node: Node,
         conn: Connection,
         current_user: CurrentUser,
         user_tag: UserTag,
@@ -134,11 +135,14 @@ class TillService(DBService):
             "from user_role_with_privileges urwp "
             "join user_to_role urt on urwp.id = urt.role_id "
             "join usr on urt.user_id = usr.id "
-            "where usr.user_tag_uid = $1 "
-            "   and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges)) ",
+            "join user_tag ut on usr.user_tag_id = ut.id "
+            "where ut.uid = $1 "
+            "   and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges)) "
+            "   and urt.node_id = any($4)",
             user_tag.uid,
             Privilege.terminal_login.name,
             Privilege.supervised_terminal_login.name,
+            node.ids_to_root,
         )
         if len(available_roles) == 0:
             raise AccessDenied(
@@ -147,9 +151,11 @@ class TillService(DBService):
             )
 
         new_user_is_supervisor = await conn.fetchval(
-            "select true from user_with_privileges where user_tag_uid = $1 and $2 = any(privileges)",
+            "select true from user_with_privileges "
+            "where user_tag_uid = $1 and $2 = any(privileges) and node_id = any($3)",
             user_tag.uid,
             Privilege.terminal_login.name,
+            node.ids_to_root,
         )
         if not new_user_is_supervisor:
             if current_user is None or Privilege.terminal_login not in current_user.privileges:
@@ -178,13 +184,14 @@ class TillService(DBService):
 
         returns the newly logged-in User if successful
         """
+        assert current_terminal.till is not None
         available_roles = await self.check_user_login(  # pylint: disable=missing-kwoa,unexpected-keyword-arg
             conn=conn, current_terminal=current_terminal, user_tag=user_tag
         )
         if not any(x.id == user_role_id for x in available_roles):
             raise AccessDenied("The user does not have the requested role")
 
-        user_id = await conn.fetchval("select usr.id from usr where user_tag_uid = $1", user_tag.uid)
+        user_id = await conn.fetchval("select id from user_with_roles where user_tag_uid = $1", user_tag.uid)
         assert user_id is not None
 
         t_id = await conn.fetchval(
@@ -212,6 +219,7 @@ class TillService(DBService):
         """
         Logout the currently logged-in user. This is always possible
         """
+        assert current_terminal.till is not None
 
         await conn.fetchval(
             "update till set active_user_id = null, active_user_role_id = null where id = $1",
@@ -248,11 +256,11 @@ class TillService(DBService):
         return info
 
     @with_db_transaction(read_only=True)
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def get_customer(
         self, *, conn: Connection, current_terminal: CurrentTerminal, customer_tag_uid: int
     ) -> Account:
-        node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
+        node = await fetch_node(conn=conn, node_id=current_terminal.node_id)
         assert node is not None
         customer = await conn.fetch_maybe_one(
             Account,

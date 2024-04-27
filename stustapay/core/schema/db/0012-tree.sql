@@ -268,15 +268,17 @@ update till set is_virtual = true where id = 1;  -- set is_virtual flag for init
 
 drop table allowed_user_roles_for_till_profile;
 
-insert into privilege (name) values ('node_administration'), ('cash_transport'), ('customer_management');
+insert into privilege (name) values ('node_administration'), ('cash_transport'), ('customer_management'), ('create_user');
 
 insert into user_role_to_privilege (role_id, privilege)
 values
     (0, 'node_administration'),  -- admin role
     (0, 'customer_management'),  -- admin role
+    (0, 'create_user'),  -- admin role
     (1, 'node_administration'),  -- finanzorga role
     (1, 'cash_transport'),  -- finanzorga role
-    (1, 'customer_management');  -- finanzorga role
+    (1, 'customer_management'),  -- finanzorga role
+    (1, 'create_user');  -- finanzorga role
 
 delete from user_role_to_privilege where
     privilege = 'account_management' or
@@ -300,7 +302,6 @@ where
     name = 'festival_overview';
 
 alter table user_role drop constraint user_role_name_key;
--- TODO: make user role name unique in tree
 update user_role set node_id = 0 where name = 'admin';
 
 create table product_type (
@@ -350,10 +351,6 @@ alter table till_layout_to_ticket rename column new_ticket_id to ticket_id;
 alter table ticket rename to product_ticket_metadata;
 
 create index on product (type, node_id);
-
--- TODO assign the associated event node to: ordr, transaction, line_item
--- TODO store the next id for orders in an event to increment them continuously
--- TODO: where do we put the hard coded products????????
 
 insert into account_type (name)
 values

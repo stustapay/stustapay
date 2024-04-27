@@ -17,9 +17,9 @@ export const translations: NestedPartialAsStrings<Translations> = {
   about: "Impressum",
   contact: "Kontakt",
   wristbandTagExample: "Beispiel eines Bändchen-Chips",
-  wristbandTagExampleTitle: "Bändchen-Chip Beispiel mit PIN und ID",
+  wristbandTagExampleTitle: "Bändchen-Chip Beispiel mit PIN",
   wristbandTagExampleDescription:
-    "Die Bändchen-Chip ID und PIN findest Du auf der Rückseite deines Bändchen-Chips. Sie sollte aussehen wie im unteren Beispiel:",
+    "Die Bändchen-Chip PIN findest Du auf der Rückseite deines Bändchen-Chips. Sie sollte aussehen wie im unteren Beispiel:",
   termsAndConditionsHeader: "Die Datenschutzbestimmungen können <1>hier</1> eingesehen werden.",
   privacyPolicyHeader: "Unsere AGBs können <1>hier</1> eingesehen werden.",
   languages: {
@@ -33,7 +33,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     faq: "FAQ",
   },
   balance: "Guthaben",
-  tagUid: "Bändchen-Chip ID",
+  tagPin: "Bändchen-Chip Pin",
+  tagUid: "Bändchen-Chip Uid",
   vouchers: "Getränkemarken",
   order: {
     loadingError: "Fehler beim laden der Bestellungen",

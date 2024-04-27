@@ -34,6 +34,7 @@ from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.framework.database import Connection
 
+from ...core.service.user_tag import get_or_assign_user_tag
 from ..conftest import Cashier, CreateRandomUserTag
 from ..conftest import UserTag as TestUserTag
 
@@ -45,14 +46,14 @@ async def terminal_token(
     terminal_service: TerminalService,
     till_service: TillService,
     till: Till,
-    admin_token: str,
-    admin_tag: TestUserTag,
+    event_admin_token: str,
+    event_admin_tag: TestUserTag,
     event_node: Node,
     terminal: Terminal,
 ) -> str:
     registration = await terminal_service.register_terminal(registration_uuid=terminal.registration_uuid)
     await till_service.update_till(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         till_id=till.id,
         till=NewTill(
@@ -64,23 +65,25 @@ async def terminal_token(
         ),
     )
     await till_service.login_user(
-        token=registration.token, user_tag=UserTag(uid=admin_tag.uid), user_role_id=ADMIN_ROLE_ID
+        token=registration.token, user_tag=UserTag(uid=event_admin_tag.uid), user_role_id=ADMIN_ROLE_ID
     )
     return registration.token
 
 
 @pytest.fixture
-async def cash_register(till_service: TillService, admin_token: str, event_node: Node) -> CashRegister:
+async def cash_register(till_service: TillService, event_admin_token: str, event_node: Node) -> CashRegister:
     return await till_service.register.create_cash_register(
-        node_id=event_node.id, token=admin_token, new_register=NewCashRegister(name="Lade")
+        node_id=event_node.id, token=event_admin_token, new_register=NewCashRegister(name="Lade")
     )
 
 
 @pytest.fixture
-async def cash_register_stocking(till_service: TillService, admin_token: str, event_node: Node) -> CashRegisterStocking:
+async def cash_register_stocking(
+    till_service: TillService, event_admin_token: str, event_node: Node
+) -> CashRegisterStocking:
     return await till_service.register.create_cash_register_stockings(
         node_id=event_node.id,
-        token=admin_token,
+        token=event_admin_token,
         stocking=NewCashRegisterStocking(name="My fancy stocking"),
     )
 
@@ -93,12 +96,12 @@ class LoginSupervisedUser(Protocol):
 async def login_supervised_user(
     till_service: TillService,
     terminal_token: str,
-    admin_user: tuple[User, str],
+    event_admin_user,
 ) -> LoginSupervisedUser:
     async def func(user_tag_uid: int, user_role_id: int, terminal_token: str = terminal_token):
         await till_service.logout_user(token=terminal_token)
         await till_service.login_user(
-            token=terminal_token, user_tag=UserTag(uid=admin_user[0].user_tag_uid), user_role_id=ADMIN_ROLE_ID
+            token=terminal_token, user_tag=UserTag(uid=event_admin_user[0].user_tag_uid), user_role_id=ADMIN_ROLE_ID
         )
         await till_service.login_user(
             token=terminal_token, user_tag=UserTag(uid=user_tag_uid), user_role_id=user_role_id
@@ -117,11 +120,11 @@ async def assign_cash_register(
     cash_register_stocking: CashRegisterStocking,
     till_service: TillService,
     terminal_token: str,
-    admin_tag: TestUserTag,
+    event_admin_tag: TestUserTag,
 ) -> AssignCashRegister:
     async def func(cashier: Cashier):
         await till_service.login_user(
-            token=terminal_token, user_tag=UserTag(uid=admin_tag.uid), user_role_id=ADMIN_ROLE_ID
+            token=terminal_token, user_tag=UserTag(uid=event_admin_tag.uid), user_role_id=ADMIN_ROLE_ID
         )
         await till_service.register.stock_up_cash_register(
             token=terminal_token,
@@ -138,9 +141,11 @@ class GetAccountBalance(Protocol):
 
 
 @pytest.fixture
-async def get_account_balance(account_service: AccountService, event_node: Node, admin_token: str):
+async def get_account_balance(account_service: AccountService, event_node: Node, event_admin_token: str):
     async def func(account_id: int) -> float:
-        account = await account_service.get_account(token=admin_token, node_id=event_node.id, account_id=account_id)
+        account = await account_service.get_account(
+            token=event_admin_token, node_id=event_node.id, account_id=account_id
+        )
         assert account is not None
         return account.balance
 
@@ -199,10 +204,13 @@ async def customer(
     create_random_user_tag: CreateRandomUserTag, db_connection: Connection, event_node: Node
 ) -> Customer:
     customer_tag = await create_random_user_tag()
+    user_tag_id = await get_or_assign_user_tag(
+        conn=db_connection, node=event_node, uid=customer_tag.uid, pin=customer_tag.pin
+    )
     customer_account_id = await db_connection.fetchval(
-        "insert into account (node_id, user_tag_uid, type, balance) values ($1, $2, 'private', $3) returning id",
+        "insert into account (node_id, user_tag_id, type, balance) values ($1, $2, 'private', $3) returning id",
         event_node.id,
-        customer_tag.uid,
+        user_tag_id,
         START_BALANCE,
     )
     return Customer(tag=customer_tag, account_id=customer_account_id)
@@ -218,12 +226,12 @@ async def finanzorga(
     user_service: UserService,
     event_node: Node,
     cashier: Cashier,
-    admin_token: str,
+    event_admin_token: str,
     create_random_user_tag: CreateRandomUserTag,
 ) -> Finanzorga:
     finanzorga_tag = await create_random_user_tag()
     finanzorga_role = await user_service.create_user_role(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         new_role=NewUserRole(
             name="finanzorga",
@@ -244,20 +252,23 @@ async def finanzorga(
             login=f"Finanzorga {secrets.token_hex(16)}",
             description="",
             user_tag_uid=finanzorga_tag.uid,
+            user_tag_pin=finanzorga_tag.pin,
             display_name="Finanzorga",
         ),
     )
     await user_service.associate_user_to_role(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         new_user_to_role=NewUserToRole(role_id=finanzorga_role.id, user_id=finanzorga_user.id),
     )
     await user_service.associate_user_to_role(
-        token=admin_token,
+        token=event_admin_token,
         node_id=event_node.id,
         new_user_to_role=NewUserToRole(role_id=cashier.cashier_role.id, user_id=finanzorga_user.id),
     )
-    updated_user = await user_service.get_user(token=admin_token, node_id=event_node.id, user_id=finanzorga_user.id)
+    updated_user = await user_service.get_user(
+        token=event_admin_token, node_id=event_node.id, user_id=finanzorga_user.id
+    )
     assert updated_user is not None
     finanzorga_dump = updated_user.model_dump()
     finanzorga_dump.update(
@@ -275,18 +286,18 @@ class CreateTerminalToken(Protocol):
 async def create_terminal_token(
     till_service: TillService,
     terminal_service: TerminalService,
-    admin_tag: TestUserTag,
-    admin_token: str,
+    event_admin_tag: TestUserTag,
+    event_admin_token: str,
     event_node: Node,
 ) -> CreateTerminalToken:
     async def func():
         till_layout = await till_service.layout.create_layout(
-            token=admin_token,
+            token=event_admin_token,
             node_id=event_node.id,
             layout=NewTillLayout(name=secrets.token_hex(16), description="", button_ids=[]),
         )
         till_profile = await till_service.profile.create_profile(
-            token=admin_token,
+            token=event_admin_token,
             node_id=event_node.id,
             profile=NewTillProfile(
                 name=secrets.token_hex(16),
@@ -298,10 +309,12 @@ async def create_terminal_token(
             ),
         )
         terminal = await terminal_service.create_terminal(
-            token=admin_token, node_id=event_node.id, terminal=NewTerminal(name=secrets.token_hex(16), description="")
+            token=event_admin_token,
+            node_id=event_node.id,
+            terminal=NewTerminal(name=secrets.token_hex(16), description=""),
         )
         await till_service.create_till(
-            token=admin_token,
+            token=event_admin_token,
             node_id=event_node.id,
             till=NewTill(
                 name=secrets.token_hex(16),
@@ -311,7 +324,7 @@ async def create_terminal_token(
         )
         terminal_token = (await terminal_service.register_terminal(registration_uuid=terminal.registration_uuid)).token
         await till_service.login_user(
-            token=terminal_token, user_tag=UserTag(uid=admin_tag.uid), user_role_id=ADMIN_ROLE_ID
+            token=terminal_token, user_tag=UserTag(uid=event_admin_tag.uid), user_role_id=ADMIN_ROLE_ID
         )
         return terminal_token
 
