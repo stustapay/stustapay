@@ -1,20 +1,20 @@
-import { Node, NodeSeenByUserRead } from "@/api";
+import { Node, NodeSeenByUser } from "@/api";
 import { useCurrentNode } from "@/hooks";
 import { Select } from "@stustapay/components";
 import * as React from "react";
 
 export type NodeSelectProps = {
   label: string;
-  value: NodeSeenByUserRead;
-  onChange: (value: NodeSeenByUserRead | null) => void;
+  value: NodeSeenByUser;
+  onChange: (value: NodeSeenByUser | null) => void;
 };
 
 export const NodeSelect: React.FC<NodeSelectProps> = ({ ...props }) => {
   const { currentNode } = useCurrentNode();
 
   const options = React.useMemo(() => {
-    let result: NodeSeenByUserRead[] = [currentNode];
-    let next: NodeSeenByUserRead[] = [currentNode];
+    let result: NodeSeenByUser[] = [currentNode];
+    let next: NodeSeenByUser[] = [currentNode];
     for (let curr = next.pop(); curr !== undefined; curr = next.pop()) {
       result = result.concat(curr.children);
       next = next.concat(curr.children);

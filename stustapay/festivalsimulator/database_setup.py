@@ -28,6 +28,8 @@ from stustapay.core.schema.user import (
     NewUserRole,
     NewUserToRole,
     Privilege,
+    RoleToNode,
+    User,
     UserRole,
 )
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret
@@ -59,10 +61,8 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
         conn=conn,
         node_id=ROOT_NODE_ID,
         new_user=NewUser(login="global-admin", display_name=""),
+        roles=[RoleToNode(node_id=ROOT_NODE_ID, role_id=ADMIN_ROLE_ID)],
         password="admin",
-    )
-    await associate_user_to_role(
-        conn=conn, node=root_node, new_user_to_role=NewUserToRole(user_id=global_admin.id, role_id=ADMIN_ROLE_ID)
     )
 
     admin_login = await user_service.login_user(  # pylint: disable=missing-kwoa
@@ -111,10 +111,16 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
         password="admin",
     )
     await associate_user_to_role(
-        conn=conn, node=event_node, new_user_to_role=NewUserToRole(user_id=node_admin.id, role_id=ADMIN_ROLE_ID)
+        conn=conn,
+        node=event_node,
+        current_user_id=global_admin.id,
+        new_user_to_role=NewUserToRole(user_id=node_admin.id, role_id=ADMIN_ROLE_ID),
     )
     await associate_user_to_role(
-        conn=conn, node=event_node, new_user_to_role=NewUserToRole(user_id=node_admin.id, role_id=finanzorga_role.id)
+        conn=conn,
+        node=event_node,
+        current_user_id=global_admin.id,
+        new_user_to_role=NewUserToRole(user_id=node_admin.id, role_id=finanzorga_role.id),
     )
 
     finanzorga_tags = [NewUserTag(pin=secrets.token_hex(16), secret_id=secret.id) for _ in range(10, 16)]
@@ -134,13 +140,14 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
         await associate_user_to_role(
             conn=conn,
             node=event_node,
+            current_user_id=global_admin.id,
             new_user_to_role=NewUserToRole(user_id=finanzorga_user.id, role_id=finanzorga_role.id),
         )
 
     customer_tags = [NewUserTag(pin=secrets.token_hex(16), secret_id=secret.id) for _ in range(n_customer_tags)]
     await create_user_tags(conn=conn, node_id=event_node.id, tags=customer_tags)
 
-    return admin_token
+    return global_admin, admin_token
 
 
 async def _create_admin_tills(
@@ -576,7 +583,9 @@ class DatabaseSetup:
             stocking=NewCashRegisterStocking(name="Stocking", euro20=2, euro10=1),
         )
 
-    async def _create_cashiers(self, conn: Connection, user_service: UserService, admin_token: str, n_cashiers: int):
+    async def _create_cashiers(
+        self, conn: Connection, admin_user: User, user_service: UserService, admin_token: str, n_cashiers: int
+    ):
         logger.info(f"Creating {n_cashiers} cashiers")
         cashier_role: UserRole = await user_service.create_user_role(
             conn=conn,
@@ -607,6 +616,7 @@ class DatabaseSetup:
             await associate_user_to_role(
                 conn=conn,
                 node=self.event_node,
+                current_user_id=admin_user.id,
                 new_user_to_role=NewUserToRole(user_id=cashier.id, role_id=cashier_role.id),
             )
 
@@ -708,7 +718,7 @@ class DatabaseSetup:
             self.event_node_id = event_node.id
             self.event_node = event_node
 
-            admin_token = await _create_tags_and_users(
+            admin, admin_token = await _create_tags_and_users(
                 conn=conn, user_service=user_service, event_node=self.event_node, n_customer_tags=self.n_tags
             )
             tax_rate_ust = await tax_service.create_tax_rate(
@@ -719,6 +729,6 @@ class DatabaseSetup:
             )
             await self._create_tills(conn=conn, admin_token=admin_token, n_tills=n_tills, tax_rate_ust=tax_rate_ust)
             await self._create_cashiers(
-                conn=conn, user_service=user_service, admin_token=admin_token, n_cashiers=n_cashiers
+                conn=conn, user_service=user_service, admin_user=admin, admin_token=admin_token, n_cashiers=n_cashiers
             )
             await self._create_tse(conn=conn, admin_token=admin_token)

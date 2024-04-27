@@ -31,7 +31,7 @@ from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
 )
-from stustapay.core.service.user import list_user_roles
+from stustapay.core.service.user import list_assignable_roles_for_user_at_node
 from stustapay.framework.database import Connection
 
 
@@ -157,7 +157,9 @@ class TerminalService(DBService):
         await conn.execute("update till set terminal_id = null where terminal_id = $1", current_terminal.id)
 
     @staticmethod
-    async def _get_terminal_till_config(conn: Connection, node: Node, till: Till) -> TerminalTillConfig:
+    async def _get_terminal_till_config(conn: Connection, till: Till) -> TerminalTillConfig:
+        node = await fetch_node(conn=conn, node_id=till.node_id)
+        assert node is not None
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         profile = await conn.fetch_one(
             TillProfile,
@@ -197,10 +199,13 @@ class TerminalService(DBService):
             cash_register_id = cash_reg["id"]
             cash_register_name = cash_reg["name"]
 
-        # TODO: tree, fetch correct secret
         user_tag_secret = await conn.fetch_one(
             UserTagSecret,
-            "select encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 from user_tag_secret limit 1",
+            "select encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 "
+            "from user_tag_secret "
+            "where node_id = any($1) "
+            "limit 1",
+            node.ids_to_event_node,
         )
         sumup_key = ""
         if profile.allow_ticket_sale or profile.allow_top_up:
@@ -208,7 +213,11 @@ class TerminalService(DBService):
 
         secrets = TerminalSecrets(sumup_affiliate_key=sumup_key, user_tag_secret=user_tag_secret)
 
-        available_roles = await list_user_roles(conn=conn, node=node)
+        available_roles = []
+        if till.active_user_id is not None:
+            available_roles = await list_assignable_roles_for_user_at_node(
+                conn=conn, node=node, user_id=till.active_user_id
+            )
 
         return TerminalTillConfig(
             id=till.id,
@@ -232,11 +241,9 @@ class TerminalService(DBService):
     async def get_terminal_config(
         self, *, conn: Connection, current_terminal: CurrentTerminal
     ) -> TerminalConfig | None:
-        node = await fetch_node(conn=conn, node_id=current_terminal.node_id)
-        assert node is not None
         till_config = None
         if current_terminal.till is not None:
-            till_config = await self._get_terminal_till_config(conn=conn, node=node, till=current_terminal.till)
+            till_config = await self._get_terminal_till_config(conn=conn, till=current_terminal.till)
 
         return TerminalConfig(
             id=current_terminal.id,

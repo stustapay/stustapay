@@ -59,7 +59,10 @@ async def fetch_node(conn: Connection, node_id: int) -> Node | None:
 async def get_tree_for_current_user(conn: Connection, current_user: CurrentUser) -> NodeSeenByUser:
     user_node = await conn.fetch_maybe_one(
         NodeSeenByUser,
-        "select n.*, '{}'::json array as children from node_with_user_roles($1) n where n.id = $2",
+        "select n.*, u.privileges_at_node, '{}'::json array as children "
+        "from node_with_allowed_objects n "
+        "join user_privileges_at_node($1) u on n.id = u.node_id "
+        "where n.id = $2",
         current_user.id,
         current_user.node_id,
     )
@@ -68,8 +71,9 @@ async def get_tree_for_current_user(conn: Connection, current_user: CurrentUser)
 
     trace_to_root = await conn.fetch_many(
         NodeSeenByUser,
-        "select n.*, '{}'::json array as children "
-        "from node_with_user_roles($1) n "
+        "select n.*, u.privileges_at_node, '{}'::json array as children "
+        "from node_with_allowed_objects n "
+        "join user_privileges_at_node($1) u on n.id = u.node_id "
         "where id = any($2) order by path asc",
         current_user.id,
         user_node.parent_ids,
@@ -86,8 +90,9 @@ async def get_tree_for_current_user(conn: Connection, current_user: CurrentUser)
 
     children = await conn.fetch_many(
         NodeSeenByUser,
-        "select n.*, '{}'::json array as children "
-        "from node_with_user_roles($1) n "
+        "select n.*, u.privileges_at_node, '{}'::json array as children "
+        "from node_with_allowed_objects n "
+        "join user_privileges_at_node($1) u on n.id = u.node_id "
         "where n.path like $2 order by path asc",
         current_user.id,
         f"{user_node.path}/%",

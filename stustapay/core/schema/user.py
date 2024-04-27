@@ -24,6 +24,7 @@ class Privilege(enum.Enum):
     customer_management = "customer_management"
 
     create_user = "create_user"
+    allow_privileged_role_assignment = "allow_privileged_role_assignment"
     user_management = "user_management"
 
     # festival workflow privileges

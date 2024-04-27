@@ -6,7 +6,6 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, AccountType
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import NewFreeTicketGrant
-from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
@@ -19,7 +18,6 @@ from stustapay.core.service.common.decorators import (
 )
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.transaction import book_transaction
-from stustapay.core.service.tree.common import fetch_node
 from stustapay.framework.database import Connection
 
 
@@ -32,43 +30,53 @@ async def get_system_account_for_node(*, conn: Connection, node: Node, account_t
     )
 
 
-async def get_account_by_id(*, conn: Connection, account_id: int) -> Optional[Account]:
-    return await conn.fetch_maybe_one(Account, "select * from account_with_history where id = $1", account_id)
-
-
-async def get_account_by_tag_uid(*, conn: Connection, tag_uid: int) -> Optional[Account]:
+async def get_account_by_id(*, conn: Connection, node: Node, account_id: int) -> Optional[Account]:
     return await conn.fetch_maybe_one(
         Account,
-        "select * from account_with_history a where user_tag_uid = $1",
+        "select * from account_with_history where id = $1 and node_id = any($2)",
+        account_id,
+        node.ids_to_event_node,
+    )
+
+
+async def get_account_by_tag_uid(*, conn: Connection, node: Node, tag_uid: int) -> Optional[Account]:
+    return await conn.fetch_maybe_one(
+        Account,
+        "select * from account_with_history a where user_tag_uid = $1 and node_id = any($2)",
         tag_uid,
+        node.ids_to_event_node,
     )
 
 
-async def get_account_by_tag_id(*, conn: Connection, tag_id: int) -> Optional[Account]:
+async def get_account_by_tag_id(*, conn: Connection, node: Node, tag_id: int) -> Optional[Account]:
     return await conn.fetch_maybe_one(
         Account,
-        "select * from account_with_history a where a.user_tag_id = $1",
+        "select * from account_with_history a where a.user_tag_id = $1 and node_id = any($2)",
         tag_id,
+        node.ids_to_event_node,
     )
 
 
-async def get_cashier_account_by_tag_uid(*, conn: Connection, cashier_tag_id: int) -> Optional[Account]:
+async def get_cashier_account_by_tag_uid(*, conn: Connection, node: Node, cashier_tag_id: int) -> Optional[Account]:
     return await conn.fetch_maybe_one(
         Account,
-        "select a.* from usr join account_with_history a on a.id = usr.cashier_account_id where usr.user_tag_id = $1",
+        "select a.* from usr join account_with_history a on a.id = usr.cashier_account_id "
+        "where usr.user_tag_id = $1 and usr.node_id = any($2)",
         cashier_tag_id,
+        node.ids_to_event_node,
     )
 
 
-async def get_transport_account_by_tag_uid(*, conn: Connection, orga_tag_uid: int) -> Optional[Account]:
+async def get_transport_account_by_tag_uid(*, conn: Connection, node: Node, orga_tag_uid: int) -> Optional[Account]:
     return await conn.fetch_maybe_one(
         Account,
         "select a.* "
         "from usr "
         "   join account_with_history a on a.id = usr.transport_account_id "
         "   join user_tag t on usr.user_tag_id = t.id "
-        "where t.uid = $1",
+        "where t.uid = $1 and usr.node_id = any($2)",
         orga_tag_uid,
+        node.ids_to_event_node,
     )
 
 
@@ -79,8 +87,7 @@ class AccountService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    # @requires_user([Privilege.customer_management])
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.customer_management])
     async def get_customer(self, *, conn: Connection, node: Node, customer_id: int) -> Customer:
         customer = await conn.fetch_maybe_one(
             Customer,
@@ -94,8 +101,7 @@ class AccountService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    # @requires_user([Privilege.customer_management])
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.customer_management])
     async def find_customers(self, *, conn: Connection, node: Node, search_term: str) -> list[Customer]:
         return await conn.fetch_many(
             Customer,
@@ -104,6 +110,7 @@ class AccountService(DBService):
             "   (c.name like $1 "
             "   or c.comment like $1 "
             "   or (u.pin is not null and lower(u.pin) like $1) "
+            "   or (u.uid is not null and to_hex(u.uid::bigint) like $1) "
             "   or lower(c.email) like $1 "
             "   or c.account_name @@ $3 "
             "   or lower(c.iban) like $1)",
@@ -125,9 +132,8 @@ class AccountService(DBService):
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
-    async def get_account(self, *, conn: Connection, account_id: int) -> Account:
-        # TODO: TREE visibility
-        account = await get_account_by_id(conn=conn, account_id=account_id)
+    async def get_account(self, *, conn: Connection, node: Node, account_id: int) -> Account:
+        account = await get_account_by_id(conn=conn, node=node, account_id=account_id)
         if account is None:
             raise NotFound(element_typ="account", element_id=str(account_id))
         return account
@@ -135,9 +141,8 @@ class AccountService(DBService):
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
-    async def get_account_by_tag_id(self, *, conn: Connection, user_tag_id: int) -> Optional[Account]:
-        # TODO: TREE visibility
-        return await get_account_by_tag_id(conn=conn, tag_id=user_tag_id)
+    async def get_account_by_tag_id(self, *, conn: Connection, node: Node, user_tag_id: int) -> Optional[Account]:
+        return await get_account_by_tag_id(conn=conn, node=node, tag_id=user_tag_id)
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -149,7 +154,8 @@ class AccountService(DBService):
             "where a.node_id = any ($2) and "
             "   (a.name like $1 "
             "   or a.comment like $1 "
-            "   or (u.pin is not null and u.pin like $1))",
+            "   or (u.pin is not null and u.pin like $1)) "
+            "   or (u.uid is not null and to_hex(u.uid::bigint) like $1) ",
             f"%{search_term.lower()}%",
             node.ids_to_root,
         )
@@ -157,9 +163,12 @@ class AccountService(DBService):
     @with_db_transaction
     @requires_node()
     @requires_user([Privilege.node_administration])
-    async def disable_account(self, *, conn: Connection, account_id: int):
-        # TODO: TREE visibility
-        row = await conn.fetchval("update account set user_tag_id = null where id = $1 returning id", account_id)
+    async def disable_account(self, *, conn: Connection, node: Node, account_id: int):
+        row = await conn.fetchval(
+            "update account set user_tag_id = null where id = $1 and node_id = any($2) returning id",
+            account_id,
+            node.ids_to_event_node,
+        )
         if row is None:
             raise NotFound(element_typ="account", element_id=str(account_id))
 
@@ -177,8 +186,7 @@ class AccountService(DBService):
     async def update_account_vouchers(
         self, *, conn: Connection, current_user: User, node: Node, account_id: int, new_voucher_amount: int
     ) -> bool:
-        # TODO: TREE visibility
-        account = await self.get_account(  # pylint: disable=unexpected-keyword-arg
+        account = await self.get_account(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
             conn=conn, node_id=node.id, current_user=current_user, account_id=account_id
         )
         if account is None:
@@ -206,20 +214,17 @@ class AccountService(DBService):
         *,
         conn: Connection,
         current_user: User,
-        current_till: Till,
+        node: Node,
         user_tag_uid: int,
         vouchers: int,
     ) -> Account:
-        # TODO: TREE visibility
         if vouchers <= 0:
             raise InvalidArgument("voucher amount must be positive")
 
-        account = await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
+        account = await get_account_by_tag_uid(conn=conn, node=node, tag_uid=user_tag_uid)
         if account is None:
             raise InvalidArgument(f"Tag {format_user_tag_uid(user_tag_uid)} is not registered")
 
-        node = await fetch_node(conn=conn, node_id=current_till.node_id)
-        assert node is not None
         voucher_create_acc = await get_system_account_for_node(
             conn=conn, node=node, account_type=AccountType.voucher_create
         )
@@ -236,7 +241,7 @@ class AccountService(DBService):
         except Exception as e:  # pylint: disable=bare-except
             raise InvalidArgument(f"Error while granting vouchers {str(e)}") from e
 
-        account = await get_account_by_tag_uid(conn=conn, tag_uid=user_tag_uid)
+        account = await get_account_by_tag_uid(conn=conn, node=node, tag_uid=user_tag_uid)
         assert account is not None
         return account
 
@@ -286,7 +291,7 @@ class AccountService(DBService):
                 conducting_user_id=current_user.id,
             )
 
-        account = await get_account_by_id(conn=conn, account_id=account_id)
+        account = await get_account_by_id(conn=conn, node=node, account_id=account_id)
         assert account is not None
         return account
 
@@ -303,7 +308,7 @@ class AccountService(DBService):
         if ret is None:
             raise NotFound(element_typ="account", element_id=account_id)
 
-        acc = await get_account_by_id(conn=conn, account_id=account_id)
+        acc = await get_account_by_id(conn=conn, node=node, account_id=account_id)
         assert acc is not None
         return acc
 

@@ -51,37 +51,58 @@ end;
 $$ language plpgsql
     set search_path = "$user", public;
 
-create or replace function node_with_user_roles(
+create or replace function user_privileges_at_node(
     user_id bigint
 )
 returns table (
-    id bigint,
-    parent bigint,
-    name text,
-    description text,
-    event_id bigint,
-    path text,
-    parent_ids bigint array,
-    event_node_id bigint,
-    parents_until_event_node bigint array,
-    forbidden_objects_at_node varchar(255) array,
-    computed_forbidden_objects_at_node varchar(255) array,
-    forbidden_objects_in_subtree varchar(255) array,
-    computed_forbidden_objects_in_subtree varchar(255) array,
-    event json,
-    roles_at_node json
+    node_id bigint,
+    role_ids bigint array,
+    privileges_at_node text array
 )
 as
 $$
+with recursive graph (node_id, depth, path, cycle, role_ids, privileges_at_node) as (
+    -- base case: start at the requested node
+    select
+        0::bigint, -- root node ID
+        1,
+        '{0}'::bigint[],
+        false,
+        coalesce((
+            select array_agg(utr3.role_id)
+            from user_to_role utr3
+            where utr3.node_id = 0 and utr3.user_id = user_privileges_at_node.user_id),
+            '{}'::bigint array
+        ) as role_ids,
+        coalesce((
+            select array_agg(urtp.privilege)
+            from user_role_to_privilege urtp join user_to_role utr2 on urtp.role_id = utr2.role_id
+            where utr2.node_id = 0 and utr2.user_id = user_privileges_at_node.user_id),
+            '{}'::text array
+        ) as privileges_at_node
+    union all
+    -- add the node's children result set (find the parents for all so-far evaluated nodes)
+    select
+        node.id,
+        g.depth + 1,
+        g.path || node.parent,
+        node.id = any(g.path),
+        case when utr.role_id is null then g.role_ids else (g.role_ids || array[utr.role_id])::bigint array end,
+        case when urwp.privileges is null then g.privileges_at_node else (g.privileges_at_node || urwp.privileges)::text array end
+    from
+        graph g
+        join node on g.node_id = node.parent
+        left join user_to_role utr on node.id = utr.node_id and utr.user_id = user_privileges_at_node.user_id
+        left join user_role_with_privileges urwp on utr.role_id = urwp.id
+    where
+        node.id != 0
+        and not g.cycle
+)
 select
-    n.*,
-    coalesce((select json_agg(roles) from (
-        select r.*
-        from user_to_role utr
-        join user_role_with_privileges r on utr.role_id = r.id
-        where (utr.node_id = any(n.parent_ids) or utr.node_id = n.id) and utr.user_id = node_with_user_roles.user_id
-    ) roles), '[]'::json) as roles_at_node
-from node_with_allowed_objects n
+    g.node_id,
+    g.role_ids,
+    g.privileges_at_node
+from graph g;
 $$ language sql
     stable
     security invoker

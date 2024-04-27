@@ -688,7 +688,7 @@ class OrderService(DBService):
         )
 
         customer_account_after_booking = await get_account_by_id(
-            conn=conn, account_id=completed_order.customer_account_id
+            conn=conn, node=node, account_id=completed_order.customer_account_id
         )
         assert customer_account_after_booking is not None
 

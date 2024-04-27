@@ -32,5 +32,8 @@ alter table account drop user_tag_uid;
 
 alter table account_tag_association_history add column user_tag_id bigint references user_tag(id);
 update account_tag_association_history set user_tag_id = u.id
-from user_tag u join account_tag_association_history atah on u.uid = atah.user_tag_uid where atah.user_tag_uid = account_tag_association_history.user_tag_uid;
+from user_tag u join account_tag_association_history atah on u.uid = atah.user_tag_uid
+where atah.user_tag_uid = account_tag_association_history.user_tag_uid;
 alter table account_tag_association_history drop user_tag_uid;
+
+create index on user_tag (pin, uid, node_id);

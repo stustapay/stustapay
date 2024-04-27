@@ -4,7 +4,7 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import UserTagDetail
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret, UserTagSecret
 from stustapay.core.service.auth import AuthService
@@ -80,21 +80,22 @@ class UserTagService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_node()
+    @requires_node(object_types=[ObjectType.user_tag])
     @requires_user([Privilege.node_administration])
     async def create_user_tag_secret(
         self, *, conn: Connection, node: Node, new_secret: NewUserTagSecret
     ) -> UserTagSecret:
-        # TODO: TREE visibility
         return await create_user_tag_secret(conn=conn, node_id=node.id, secret=new_secret)
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(object_types=[ObjectType.user_tag])
     @requires_user([Privilege.node_administration])
-    async def get_user_tag_detail(self, *, conn: Connection, user_tag_id: int) -> Optional[UserTagDetail]:
-        # TODO: TREE visibility
+    async def get_user_tag_detail(self, *, conn: Connection, node: Node, user_tag_id: int) -> Optional[UserTagDetail]:
         return await conn.fetch_maybe_one(
-            UserTagDetail, "select * from user_tag_with_history utwh where id = $1", user_tag_id
+            UserTagDetail,
+            "select * from user_tag_with_history utwh where id = $1 and node_id = any($2)",
+            user_tag_id,
+            node.ids_to_event_node,
         )
 
     @with_db_transaction
@@ -108,7 +109,7 @@ class UserTagService(DBService):
         if ret is None:
             raise InvalidArgument(f"User tag {user_tag_id} does not exist")
 
-        detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg
+        detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
             conn=conn, node_id=node.id, current_user=current_user, user_tag_id=user_tag_id
         )
         assert detail is not None
@@ -120,7 +121,8 @@ class UserTagService(DBService):
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
         return await conn.fetch_many(
             UserTagDetail,
-            "select * from user_tag_with_history where lower(pin) like $1 and node_id = any($2)",
+            "select * from user_tag_with_history "
+            "where (uid is not null and to_hex(uid::bigint) like $1) or lower(pin) like $1 and node_id = any($2)",
             f"%{search_term.lower()}%",
             node.ids_to_event_node,
         )

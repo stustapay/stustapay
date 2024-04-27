@@ -33,15 +33,21 @@ create view user_role_with_privileges as
             select ur.role_id, array_agg(ur.privilege) as privileges from user_role_to_privilege ur group by ur.role_id
         ) privs on r.id = privs.role_id;
 
-create view user_with_roles as
+create view user_with_tag as
     select
         usr.*,
         ut.pin as user_tag_pin,
-        ut.uid as user_tag_uid,
-        coalesce(roles.roles, '{}'::text array) as role_names
+        ut.uid as user_tag_uid
     from
         usr
-        left join user_tag ut on usr.user_tag_id = ut.id
+        left join user_tag ut on usr.user_tag_id = ut.id;
+
+create view user_with_roles as
+    select
+        u.*,
+        coalesce(roles.roles, '{}'::text array) as role_names
+    from
+        user_with_tag u
         left join (
             select
                 utr.user_id        as user_id,
@@ -50,16 +56,15 @@ create view user_with_roles as
                 user_to_role utr
                 join user_role ur on utr.role_id = ur.id
             group by utr.user_id
-        ) roles on usr.id = roles.user_id;
+        ) roles on u.id = roles.user_id;
 
 create view user_with_privileges as
     select
-        usr.*,
-        ut.uid as user_tag_uid,
+        u.*,
         coalesce(privs.privileges, '{}'::text array) as privileges
     from
-        usr
-        left join user_tag ut on usr.user_tag_id = ut.id
+        user_with_tag u
+        left join user_tag ut on u.user_tag_id = ut.id
         left join (
             select
                 utr.user_id,
@@ -68,7 +73,7 @@ create view user_with_privileges as
                 user_to_role utr
                 join user_role_to_privilege urtp on utr.role_id = urtp.role_id
             group by utr.user_id
-        ) privs on usr.id = privs.user_id;
+        ) privs on u.id = privs.user_id;
 
 create view account_with_history as
     select
@@ -450,4 +455,4 @@ create view node_with_allowed_objects as
         ev.json_row as event
     from node n
     join _forbidden_at_node_computed fan on n.id = fan.node_id
-    left join event_as_json ev on n.event_id = ev.id
+    left join event_as_json ev on n.event_id = ev.id;

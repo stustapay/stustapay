@@ -65,18 +65,33 @@ async def logout_user(
     await till_service.logout_user(token=token)
 
 
+class CreateUserPayload(NewUser):
+    role_ids: list[int]
+
+
 @router.post("/create-user", summary="Create a new user with the given roles", response_model=User)
 async def create_user(
     token: CurrentAuthToken,
     user_service: ContextUserService,
-    new_user: NewUser,
+    new_user: CreateUserPayload,
 ):
-    return await user_service.create_user_terminal(token=token, new_user=new_user)
+    return await user_service.create_user_terminal(token=token, new_user=new_user, role_ids=new_user.role_ids)
 
 
 class UpdateUserPayload(BaseModel):
     user_tag_uid: int
-    role_names: list[str]
+    role_ids: list[int]
+
+
+@router.post("/update-user-roles", summary="Update the roles of a given user", response_model=User)
+async def update_user_roles(
+    token: CurrentAuthToken,
+    user_service: ContextUserService,
+    payload: UpdateUserPayload,
+):
+    return await user_service.update_user_roles_terminal(
+        token=token, user_tag_uid=payload.user_tag_uid, role_ids=payload.role_ids
+    )
 
 
 @router.post("/grant-free-ticket", summary="grant a free ticket, e.g. to a volunteer", response_model=Account)
