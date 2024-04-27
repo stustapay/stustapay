@@ -1,9 +1,7 @@
 package de.stustapay.stustapay.net
 
 import android.util.Log
-import androidx.compose.runtime.collectAsState
 import com.ionspin.kotlin.bignum.serialization.kotlinx.biginteger.bigIntegerhumanReadableSerializerModule
-import com.ionspin.kotlin.bignum.serialization.kotlinx.humanReadableSerializerModule
 import de.stustapay.api.apis.AuthApi
 import de.stustapay.api.apis.BaseApi
 import de.stustapay.api.apis.CashierApi
@@ -12,9 +10,7 @@ import de.stustapay.api.apis.OrderApi
 import de.stustapay.api.apis.UserApi
 import de.stustapay.libssp.util.uuidSerializersModule
 import de.stustapay.stustapay.model.RegistrationState
-import de.stustapay.stustapay.repository.RegistrationRepository
 import de.stustapay.stustapay.repository.RegistrationRepositoryInner
-import de.stustapay.stustapay.storage.RegistrationLocalDataSource
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpRequestRetry
