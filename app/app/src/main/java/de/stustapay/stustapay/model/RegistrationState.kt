@@ -8,6 +8,11 @@ sealed interface RegistrationState {
         var message: String? = null,
     ) : RegistrationState
 
+    data class Registering(
+        var apiUrl: String,
+        var message: String? = null,
+    ) : RegistrationState
+
     data class NotRegistered(
         var message: String
     ) : RegistrationState

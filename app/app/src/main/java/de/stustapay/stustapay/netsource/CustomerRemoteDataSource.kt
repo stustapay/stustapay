@@ -15,7 +15,7 @@ class CustomerRemoteDataSource @Inject constructor(
     private val terminalApiAccessor: TerminalApiAccessor
 ) {
     suspend fun getCustomer(id: ULong): Response<Customer> {
-        return terminalApiAccessor.execute { it.customer().getCustomer(id.toBigInteger()) }
+        return terminalApiAccessor.execute { it.customer()?.getCustomer(id.toBigInteger()) }
     }
 
     suspend fun grantFreeTicket(
@@ -23,7 +23,7 @@ class CustomerRemoteDataSource @Inject constructor(
         vouchers: UInt = 0u
     ): Response<Account> {
         return terminalApiAccessor.execute {
-            it.user().grantFreeTicket(
+            it.user()?.grantFreeTicket(
                 NewFreeTicketGrant(
                     userTagUid = tag.uid,
                     initialVoucherAmount = vouchers.toBigInteger()
@@ -34,7 +34,7 @@ class CustomerRemoteDataSource @Inject constructor(
 
     suspend fun grantVouchers(tag: UserTag, vouchers: UInt): Response<Account> {
         return terminalApiAccessor.execute {
-            it.user().grantVouchers(
+            it.user()?.grantVouchers(
                 GrantVoucherPayload(
                     userTagUid = tag.uid,
                     vouchers = vouchers.toBigInteger()
@@ -45,7 +45,7 @@ class CustomerRemoteDataSource @Inject constructor(
 
     suspend fun switchTag(customerID: ULong, newTag: ULong, comment: String): Response<Unit> {
         return terminalApiAccessor.execute {
-            it.customer().switchTag(
+            it.customer()?.switchTag(
                 SwitchTagPayload(
                     customerId = customerID.toBigInteger(),
                     newUserTagUid = newTag.toBigInteger(),

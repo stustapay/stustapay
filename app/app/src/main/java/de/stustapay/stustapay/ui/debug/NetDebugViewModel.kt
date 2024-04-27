@@ -17,7 +17,7 @@ class NetDebugViewModel @Inject constructor(
     var endpointURL: String = "http://10.0.2.2:8080/"
 
     suspend fun announceHealthStatus() {
-        val msg = when (val health = terminalApiAccessor.execute { it.base().health() }) {
+        val msg = when (val health = terminalApiAccessor.execute { it.base()?.health() }) {
             is Response.OK -> "Ok"
             is Response.Error -> health.msg()
         }

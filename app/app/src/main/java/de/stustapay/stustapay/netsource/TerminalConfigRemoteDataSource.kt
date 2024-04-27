@@ -9,6 +9,6 @@ class TerminalConfigRemoteDataSource @Inject constructor(
     private val terminalApiAccessor: TerminalApiAccessor
 ){
     suspend fun getTerminalConfig(): Response<TerminalConfig> {
-        return terminalApiAccessor.execute { it.base().config() }
+        return terminalApiAccessor.execute { it.base()?.config() }
     }
 }

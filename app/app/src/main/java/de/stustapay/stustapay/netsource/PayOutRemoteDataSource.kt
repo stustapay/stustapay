@@ -13,13 +13,13 @@ class PayOutRemoteDataSource @Inject constructor(
 ) {
     suspend fun checkPayOut(newPayOut: NewPayOut): Response<PendingPayOut> {
         return terminalApiAccessor.execute {
-            it.order().checkPayout(newPayOut)
+            it.order()?.checkPayout(newPayOut)
         }
     }
 
     suspend fun bookPayOut(newPayOut: NewPayOut): Response<CompletedPayOut> {
         return terminalApiAccessor.execute {
-            it.order().bookPayout(newPayOut)
+            it.order()?.bookPayout(newPayOut)
         }
     }
 }

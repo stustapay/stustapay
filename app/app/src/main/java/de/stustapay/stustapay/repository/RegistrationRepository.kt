@@ -26,38 +26,29 @@ sealed interface ForceDeregisterState {
 @Singleton
 class RegistrationRepository @Inject constructor(
     private val registrationRemoteDataSource: RegistrationRemoteDataSource,
-    private val registrationLocalDataSource: RegistrationLocalDataSource,
+    private val registrationRepositoryInner: RegistrationRepositoryInner,
 ) {
-    // for local insertions of values without the datasources
-    private var _regState = MutableSharedFlow<RegistrationState>()
-    var registrationState: Flow<RegistrationState> =
-        registrationLocalDataSource.registrationState.merge(_regState)
-
+    var registrationState = registrationRepositoryInner.registrationState
     var forceDeregisterState = MutableStateFlow<ForceDeregisterState>(ForceDeregisterState.Disallow)
 
     suspend fun isRegistered(): Boolean {
-        return try {
-            val regState = registrationLocalDataSource.registrationState.first()
-            regState is RegistrationState.Registered
-        } catch (e : NoSuchElementException) {
-            false
-        }
+        return registrationRepositoryInner.isRegistered()
     }
 
     suspend fun register(
         qrcodeB64: String,
     ): Boolean {
-        _regState.tryEmit(RegistrationState.NotRegistered("Registering..."))
+        registrationRepositoryInner.tryEmit(RegistrationState.NotRegistered("Registering..."))
         forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
 
         val state = registerAsState(qrcodeB64)
 
         // only persist if registration was successful
         return if (state is RegistrationState.Registered) {
-            registrationLocalDataSource.setState(state)
+            registrationRepositoryInner.setState(state)
             true
         } else {
-            _regState.tryEmit(state)
+            registrationRepositoryInner.tryEmit(state)
             false
         }
     }
@@ -68,7 +59,7 @@ class RegistrationRepository @Inject constructor(
                 // remote deregistration failed
                 if (force) {
                     // delete the local state anyway
-                    registrationLocalDataSource.delete()
+                    registrationRepositoryInner.delete()
                     forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
                     true
                 } else {
@@ -79,7 +70,7 @@ class RegistrationRepository @Inject constructor(
             }
 
             is DeregistrationState.Deregistered -> {
-                registrationLocalDataSource.delete()
+                registrationRepositoryInner.delete()
                 forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
                 true
             }
@@ -102,6 +93,8 @@ class RegistrationRepository @Inject constructor(
                 )
             }
 
+            registrationRepositoryInner.emit(RegistrationState.Registering(regCode.core_url))
+
             return registrationRemoteDataSource.register(
                 regCode.core_url,
                 regCode.registration_uuid
@@ -113,5 +106,40 @@ class RegistrationRepository @Inject constructor(
                 message = "error: ${e.javaClass.name}: ${e.localizedMessage}",
             )
         }
+    }
+}
+
+@Singleton
+class RegistrationRepositoryInner @Inject constructor(
+    private val registrationLocalDataSource: RegistrationLocalDataSource,
+) {
+    // for local insertions of values without the datasources
+    private var _regState = MutableSharedFlow<RegistrationState>()
+    var registrationState: Flow<RegistrationState> =
+        registrationLocalDataSource.registrationState.merge(_regState)
+
+    suspend fun isRegistered(): Boolean {
+        return try {
+            val regState = registrationLocalDataSource.registrationState.first()
+            regState is RegistrationState.Registered
+        } catch (e : NoSuchElementException) {
+            false
+        }
+    }
+
+    fun tryEmit(s: RegistrationState): Boolean {
+        return _regState.tryEmit(s)
+    }
+
+    suspend fun emit(s: RegistrationState) {
+        _regState.emit(s)
+    }
+
+    suspend fun setState(s: RegistrationState.Registered) {
+        registrationLocalDataSource.setState(s)
+    }
+
+    suspend fun delete() {
+        registrationLocalDataSource.delete()
     }
 }

@@ -11,10 +11,10 @@ class TopUpRemoteDataSource @Inject constructor(
     private val terminalApiAccessor: TerminalApiAccessor
 ) {
     suspend fun checkTopUp(newTopUp: NewTopUp): Response<PendingTopUp> {
-        return terminalApiAccessor.execute { it.order().checkTopup(newTopUp) }
+        return terminalApiAccessor.execute { it.order()?.checkTopup(newTopUp) }
     }
 
     suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp> {
-        return terminalApiAccessor.execute { it.order().bookTopup(newTopUp) }
+        return terminalApiAccessor.execute { it.order()?.bookTopup(newTopUp) }
     }
 }

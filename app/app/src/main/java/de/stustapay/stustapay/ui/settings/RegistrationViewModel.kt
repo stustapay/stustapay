@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.settings
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -90,6 +91,10 @@ private fun registrationUiState(
                             RegistrationUiState.Error(
                                 msg = registerState.message,
                             )
+                        }
+
+                        is RegistrationState.Registering -> {
+                            RegistrationUiState.Loading
                         }
                     }
                 }
