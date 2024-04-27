@@ -1,32 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">SSP Chip Debug</string>
-    <string name="welcome_to_stustapay">Welcome to StuStaPay!</string>
-    <string name="credit_amount">Credit: %.2f€</string>
-    <string name="payout">Payout</string>
-    <string name="credit_left">Credit left</string>
-    <string name="success">Success!</string>
-    <string name="done">Done</string>
-    <string name="payed_to_user_q">Payed to user?</string>
-    <string name="back">Back</string>
-    <string name="received_q">Received?</string>
-    <string name="remaining_vouchers">Remaining vouchers</string>
-    <string name="used_vouchers">Used vouchers</string>
-    <string name="new_balance">New balance</string>
-    <string name="price">Price</string>
-    <string name="voucher">Voucher</string>
-    <string name="edit">↢ Edit</string>
-    <string name="no_balance_for_payout">No balance for payout</string>
-
-    <string name="common_status_fetching">Fetching</string>
-    <string name="common_status_idle">Idle</string>
-    <string name="common_status_failed">Failed</string>
-    <string name="common_status_done">Done</string>
-
-    <string name="common_action_scan">Scan</string>
-    <string name="common_action_cancel">Cancel</string>
-    <string name="common_action_create">Create</string>
-    <string name="common_action_update">Update</string>
 
     <string name="root_item_test">Test</string>
     <string name="root_item_restart_app">Restart App</string>
