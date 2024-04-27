@@ -34,6 +34,7 @@ fun TicketConfirm(
     val status by viewModel.status.collectAsStateWithLifecycle()
     val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
     val ticketDraft by viewModel.ticketDraft.collectAsStateWithLifecycle()
+    val infallibleBusy by viewModel.infallibleBusy.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current as Activity
@@ -76,7 +77,7 @@ fun TicketConfirm(
                         }
                     },
                 ),
-                ready = config.isTerminalReady(),
+                ready = config.isTerminalReady() && !infallibleBusy,
                 getAmount = { viewModel.getPrice() },
             ) { paddingValues ->
                 // TODO: pending ticket sale display

@@ -21,7 +21,9 @@ import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TicketRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -41,10 +43,10 @@ sealed interface TagScanStatus {
 @HiltViewModel
 class TicketViewModel @Inject constructor(
     private val ticketRepository: TicketRepository,
-    private val terminalConfigRepository: TerminalConfigRepository,
+    terminalConfigRepository: TerminalConfigRepository,
     private val ecPaymentRepository: ECPaymentRepository,
     private val resourcesProvider: ResourcesProvider,
-    private val infallible: InfallibleRepository
+    private val infallibleRepository: InfallibleRepository
 ) : ViewModel() {
 
     // navigation in views
@@ -72,6 +74,12 @@ class TicketViewModel @Inject constructor(
     ) { terminal ->
         TerminalLoginState(terminal = terminal)
     }
+
+    val infallibleBusy = infallibleRepository.busy.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = false,
+    )
 
     fun navTo(page: TicketPage) {
         _navState.update { page }
@@ -263,7 +271,7 @@ class TicketViewModel @Inject constructor(
     }
 
     private suspend fun bookSale(paymentMethod: PaymentMethod) {
-        infallible.bookTicketSale(_ticketDraft.value.getNewTicketSale(paymentMethod))
+        infallibleRepository.bookTicketSale(_ticketDraft.value.getNewTicketSale(paymentMethod))
 
         clearDraft()
         _status.update { resourcesProvider.getString(R.string.ticket_order_booked) }
