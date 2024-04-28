@@ -11,6 +11,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.libssp.ui.theme.NfcScanStyle
@@ -18,7 +19,7 @@ import de.stustapay.libssp.ui.theme.NfcScanStyle
 
 @Composable
 fun PayOutScan(
-    onScan: (UserTag) -> Unit,
+    onScan: (NfcTag) -> Unit,
     status: String
 ) {
 

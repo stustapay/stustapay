@@ -3,6 +3,8 @@ package de.stustapay.libssp.nfc
 import android.nfc.Tag
 import android.nfc.tech.NfcA
 import android.nfc.tech.TagTechnology
+import com.ionspin.kotlin.bignum.integer.toBigInteger
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.util.*
 import java.io.IOException
 import java.security.SecureRandom
@@ -21,7 +23,9 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     var sessionKey: BitVector? = null
     var sessionCounter: UShort? = null
 
-    fun fastRead(key: BitVector): ULong {
+    fun fastRead(uidRetrKey: BitVector, dataProtKey: BitVector?): NfcTag {
+        val key = dataProtKey ?: uidRetrKey
+
         if (key.len != 16uL * 8uL) { throw IllegalArgumentException() }
         if (chipState != ChipState.ACTIVE) { throw Exception("Already authenticated") }
 
@@ -51,18 +55,29 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
         sessionKey = genSessionKey(key, rndA, rndB)
         sessionCounter = 0u
 
-        val readBuffer = cmdRead(0x00u, sessionKey!!, sessionCounter!!, nfcaTag)
+        var readBuffer = cmdRead(0x00u, sessionKey!!, sessionCounter!!, nfcaTag)
         sessionCounter = (sessionCounter!! + 2u).toUShort()
 
-        var ser = 0uL
+        var uid = 0uL
         for (i in 0uL until 3uL) {
-            ser = ser or (readBuffer.gbe(i).toULong() shl ((6u - i) * 8u).toInt())
+            uid = uid or (readBuffer.gbe(i).toULong() shl ((6u - i) * 8u).toInt())
         }
         for (i in 3uL until 7uL) {
-            ser = ser or (readBuffer.gbe(i + 1u).toULong() shl ((6u - i) * 8u).toInt())
+            uid = uid or (readBuffer.gbe(i + 1u).toULong() shl ((6u - i) * 8u).toInt())
         }
 
-        return ser
+        var pin: String? = null
+        if (dataProtKey != null) {
+            pin = ""
+
+            readBuffer = cmdRead(0x10u, sessionKey!!, sessionCounter!!, nfcaTag)
+
+            for (i in 0uL until 12uL) {
+                pin += readBuffer.gbe(i).toInt().toChar()
+            }
+        }
+
+        return NfcTag(uid.toBigInteger(), pin)
     }
 
     fun setAuth0(page: UByte) {

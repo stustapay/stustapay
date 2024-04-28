@@ -46,7 +46,7 @@ fun AccountView(
             composable(CustomerStatusNavDests.scan.route) {
                 AccountScan(onScan = {
                     scope.launch {
-                        viewModel.setNewTagId(it.uid.ulongValue())
+                        viewModel.setNewTag(it)
                         nav.navigateTo(CustomerStatusNavDests.status.route)
                     }
                 })

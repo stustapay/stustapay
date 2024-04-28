@@ -15,18 +15,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.ui.theme.errorButtonColors
 
 
 @Preview
 @Composable
 fun PreviewTagSelectedItem() {
-    TagSelectedItem(tag = UserTag(uid = 0x13374242abcdu.toBigInteger()), onClear = {})
+    TagSelectedItem(tag = NfcTag(uid = 0x13374242abcdu.toBigInteger(), pin = null), onClear = {})
 }
 
 @Composable
 fun TagSelectedItem(
-    tag: UserTag,
+    tag: NfcTag,
     modifier: Modifier = Modifier,
     onClear: () -> Unit
 ) {

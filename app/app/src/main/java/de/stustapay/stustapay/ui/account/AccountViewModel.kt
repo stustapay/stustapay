@@ -2,8 +2,11 @@ package de.stustapay.stustapay.ui.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ionspin.kotlin.bignum.integer.BigInteger
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.Customer
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.model.UserState
 import de.stustapay.libssp.net.Response
@@ -32,8 +35,7 @@ sealed interface CustomerStatusRequestState {
 
 @HiltViewModel
 class AccountViewModel @Inject constructor(
-    private val customerRepository: CustomerRepository,
-    userRepository: UserRepository
+    private val customerRepository: CustomerRepository, userRepository: UserRepository
 ) : ViewModel() {
     private val _requestState =
         MutableStateFlow<CustomerStatusRequestState>(CustomerStatusRequestState.Fetching)
@@ -48,9 +50,11 @@ class AccountViewModel @Inject constructor(
             is UserState.LoggedIn -> {
                 Access.canSwap(it.user)
             }
+
             is UserState.NoLogin -> {
                 false
             }
+
             is UserState.Error -> {
                 false
             }
@@ -62,28 +66,30 @@ class AccountViewModel @Inject constructor(
             is UserState.LoggedIn -> {
                 Access.canReadUserComment(it.user)
             }
+
             is UserState.NoLogin -> {
                 false
             }
+
             is UserState.Error -> {
                 false
             }
         }
     }
 
-    private val _newTagId = MutableStateFlow(0uL)
-    val newTagId = _newTagId.asStateFlow()
-    private val _oldTagId = MutableStateFlow(0uL)
+    private val _newTag = MutableStateFlow(NfcTag(0uL.toBigInteger(), null))
+    val newTag = _newTag.asStateFlow()
+    private val _oldTagId = MutableStateFlow(0uL.toBigInteger())
     val oldTagId = _oldTagId.asStateFlow()
 
     fun idleState() {
         _requestState.update { CustomerStatusRequestState.Idle }
     }
 
-    suspend fun setNewTagId(id: ULong) {
+    suspend fun setNewTag(tag: NfcTag) {
         _requestState.update { CustomerStatusRequestState.Fetching }
-        _newTagId.update { id }
-        when (val customer = customerRepository.getCustomer(id)) {
+        _newTag.update { tag }
+        when (val customer = customerRepository.getCustomer(tag.uid)) {
             is Response.OK -> {
                 _requestState.update { CustomerStatusRequestState.Done(customer.data) }
             }
@@ -94,7 +100,7 @@ class AccountViewModel @Inject constructor(
         }
     }
 
-    fun setOldTagId(id: ULong) {
+    fun setOldTagId(id: BigInteger) {
         _oldTagId.update { id }
     }
 
@@ -102,15 +108,19 @@ class AccountViewModel @Inject constructor(
         _requestState.update { CustomerStatusRequestState.Fetching }
         when (val customer = customerRepository.getCustomer(oldTagId.value)) {
             is Response.OK -> {
-                when (val switch = customerRepository.switchTag(customer.data.id.ulongValue(), newTagId.value, comment)) {
+                when (val switch = customerRepository.switchTag(
+                    customer.data.id.ulongValue(), newTag.value, comment
+                )) {
                     is Response.OK -> {
                         _requestState.update { CustomerStatusRequestState.Done(customer.data) }
                     }
+
                     is Response.Error -> {
                         _requestState.update { CustomerStatusRequestState.Failed(switch.msg()) }
                     }
                 }
             }
+
             is Response.Error -> {
                 _requestState.update { CustomerStatusRequestState.Failed(customer.msg()) }
             }

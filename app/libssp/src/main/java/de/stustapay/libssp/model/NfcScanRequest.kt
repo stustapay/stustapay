@@ -4,7 +4,8 @@ import de.stustapay.libssp.util.BitVector
 
 sealed interface NfcScanRequest {
     data class FastRead(
-        val key: BitVector
+        val uidRetrKey: BitVector,
+        val dataProtKey: BitVector?
     ): NfcScanRequest
 
     data class Read(

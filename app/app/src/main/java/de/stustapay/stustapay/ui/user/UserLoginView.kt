@@ -17,6 +17,7 @@ import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.UserRolesState
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.libssp.ui.theme.errorButtonColors
@@ -33,7 +34,7 @@ private enum class ScanTarget {
  */
 sealed interface RoleSelectionState {
     object Closed : RoleSelectionState
-    data class Select(var tag: UserTag) : RoleSelectionState
+    data class Select(var tag: NfcTag) : RoleSelectionState
 }
 
 
@@ -109,7 +110,7 @@ fun UserLoginView(
                         LaunchedEffect(Unit) {
                             scope.launch {
                                 roleSelection = RoleSelectionState.Closed
-                                viewModel.login(roleSelectionV.tag, userRolesV.roles[0].id.intValue())
+                                viewModel.login(roleSelectionV.tag, userRolesV.roles[0].id)
                             }
                         }
                     } else {

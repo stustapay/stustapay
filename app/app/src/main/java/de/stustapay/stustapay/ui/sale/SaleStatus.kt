@@ -7,8 +7,8 @@ import de.stustapay.api.models.NewSale
 import de.stustapay.api.models.PendingSale
 import de.stustapay.api.models.TerminalButton
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import java.lang.Integer.max
-import java.lang.Integer.min
 import java.util.UUID
 
 
@@ -68,7 +68,7 @@ data class SaleStatus(
     /**
      * What user is this sale for?
      */
-    var tag: UserTag? = null,
+    var tag: NfcTag? = null,
 
     /**
      * Which buttons were selected how often?
@@ -157,6 +157,7 @@ data class SaleStatus(
                     )
                 }
             }
+
             is SaleItemPrice.FreePrice -> {
                 Log.e("StuStaPay", "increment on free price item invalid!")
             }
@@ -180,6 +181,7 @@ data class SaleStatus(
                     // ignore decrement on unset button
                 }
             }
+
             is SaleItemPrice.Returnable -> {
                 if (current is SaleItemAmount.FixedPrice) {
                     current.amount = current.amount - 1
@@ -190,6 +192,7 @@ data class SaleStatus(
                     )
                 }
             }
+
             is SaleItemPrice.FreePrice -> {
                 Log.e("StuStaPay", "decrement on free price item invalid!")
             }
@@ -213,6 +216,7 @@ data class SaleStatus(
                             )
                         }
                     }
+
                     is FreePrice.Unset -> {
                         if (current is SaleItemAmount.FreePrice) {
                             buttonSelection.remove(buttonId)
@@ -222,6 +226,7 @@ data class SaleStatus(
                     }
                 }
             }
+
             is SaleItemPrice.FixedPrice,
             is SaleItemPrice.Returnable -> {
                 Log.e("StuStaPay", "adjustprice on non-free-price item invalid!")
@@ -230,7 +235,7 @@ data class SaleStatus(
         statusSerial += 1u
     }
 
-    fun getNewSale(tag: UserTag): NewSale {
+    fun getNewSale(tag: NfcTag): NewSale {
         return NewSale(
             buttons = buttonSelection.mapNotNull {
                 when (val amount = it.value) {
@@ -245,6 +250,7 @@ data class SaleStatus(
                             null
                         }
                     }
+
                     is SaleItemAmount.FreePrice -> {
                         Button(
                             tillButtonId = it.key.toBigInteger(),

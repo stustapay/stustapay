@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.stustapay.R
 import de.stustapay.api.models.UserRole
@@ -66,7 +67,7 @@ fun PreviewRoleSelectionDialog() {
 @Composable
 fun RoleSelectionDialog(
     roles: UserRolesState,
-    onSelect: (roleID: Int) -> Unit = {},
+    onSelect: (roleID: BigInteger) -> Unit = {},
     onDismiss: () -> Unit = {},
 ) {
     Dialog(
@@ -86,7 +87,7 @@ fun RoleSelectionDialog(
 @Composable
 fun RoleSelectionCard(
     roles: UserRolesState,
-    onSelect: (roleID: Int) -> Unit = {},
+    onSelect: (roleID: BigInteger) -> Unit = {},
     onDismiss: () -> Unit = {},
 ) {
     val haptic = LocalHapticFeedback.current
@@ -139,7 +140,7 @@ fun RoleSelectionCard(
 fun RoleButtonList(
     modifier: Modifier = Modifier,
     roles: UserRolesState,
-    onSelect: (roleID: Int) -> Unit,
+    onSelect: (roleID: BigInteger) -> Unit,
 ) {
     when (roles) {
         is UserRolesState.Unknown -> {
@@ -156,7 +157,7 @@ fun RoleButtonList(
                     item {
                         Button(
                             modifier = Modifier.fillMaxWidth(),
-                            onClick = { onSelect(role.id.intValue()) }
+                            onClick = { onSelect(role.id) }
                         ) {
                             Text(text = role.name, fontSize = 24.sp)
                         }

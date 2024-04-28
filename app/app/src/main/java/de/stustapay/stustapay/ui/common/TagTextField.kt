@@ -6,16 +6,18 @@ import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import com.ionspin.kotlin.bignum.integer.BigInteger
+import com.ionspin.kotlin.bignum.integer.toBigInteger
 
 @Composable
 fun TagTextField(
-    tagID: ULong?,
+    tagID: BigInteger?,
     modifier: Modifier = Modifier,
-    onTagIDChanged: (ULong?) -> Unit = { },
+    onTagIDChanged: (BigInteger?) -> Unit = { },
 ) {
     var value by remember { mutableStateOf("") }
     LaunchedEffect(tagID) {
-        value = tagID?.let { tagIDtoString(it) } ?: ""
+        value = tagID?.let { tagIDtoString(it.ulongValue()) } ?: ""
     }
 
     TextField(
@@ -23,7 +25,7 @@ fun TagTextField(
         placeholder = { Text("Tag UID in Hex") },
         onValueChange = {
             value = it
-            onTagIDChanged(tagIDfromString(value))
+            onTagIDChanged(tagIDfromString(value)?.toBigInteger())
         },
         modifier = modifier,
         singleLine = true,

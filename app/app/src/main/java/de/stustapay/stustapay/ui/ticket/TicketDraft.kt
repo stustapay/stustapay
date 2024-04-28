@@ -4,12 +4,13 @@ import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.PendingTicketSale
 import de.stustapay.api.models.Ticket
-import de.stustapay.api.models.UserTag
+import de.stustapay.api.models.UserTagScan
+import de.stustapay.libssp.model.NfcTag
 import java.util.UUID
 
 
 data class ScannedTicket(
-    val tag: UserTag,
+    val tag: NfcTag,
     val ticket: Ticket,
 )
 
@@ -44,7 +45,7 @@ data class TicketDraft(
         checkedSale = pendingTicketSale
     }
 
-    fun tagKnown(tag: UserTag): Boolean {
+    fun tagKnown(tag: NfcTag): Boolean {
         return scans.any { it.tag == tag }
     }
 
@@ -56,7 +57,11 @@ data class TicketDraft(
     fun getNewTicketSale(paymentMethod: PaymentMethod?): NewTicketSale {
         return NewTicketSale(
             uuid = checkedSale?.uuid ?: UUID.randomUUID(),
-            customerTagUids = scans.map { it.tag.uid },
+            customerTags = scans.mapNotNull {
+                UserTagScan(
+                    it.tag.uid, it.tag.pin ?: return@mapNotNull null
+                )
+            },
             paymentMethod = paymentMethod,
         )
     }
@@ -64,8 +69,7 @@ data class TicketDraft(
     fun addTicket(ticket: ScannedTicket): Boolean {
         return if (tagKnown(ticket.tag)) {
             false
-        }
-        else {
+        } else {
             scans += ticket
             statusSerial += 1u
             true

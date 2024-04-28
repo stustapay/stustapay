@@ -117,7 +117,7 @@ class NfcHandler @Inject constructor(
             when (req) {
                 is NfcScanRequest.FastRead -> {
                     tag.connect()
-                    dataSource.setScanResult(NfcScanResult.FastRead(tag.fastRead(req.key)))
+                    dataSource.setScanResult(NfcScanResult.FastRead(tag.fastRead(req.uidRetrKey, req.dataProtKey)))
                 }
                 is NfcScanRequest.Read -> {
                     tag.connect()

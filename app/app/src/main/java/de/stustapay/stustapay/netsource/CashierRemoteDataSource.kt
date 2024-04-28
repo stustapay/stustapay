@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.netsource
 
+import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.CashRegisterStocking
 import de.stustapay.api.models.CashierAccountChangePayload
@@ -10,6 +11,7 @@ import de.stustapay.api.models.TransferCashRegisterPayload
 import de.stustapay.api.models.UserInfo
 import de.stustapay.api.models.UserInfoPayload
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
@@ -43,12 +45,12 @@ class CashierRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun getUserInfo(tagId: ULong): Response<UserInfo> {
-        return terminalApiAccessor.execute { it.base()?.userInfo(UserInfoPayload(tagId.toBigInteger())) }
+    suspend fun getUserInfo(tag: NfcTag): Response<UserInfo> {
+        return terminalApiAccessor.execute { it.base()?.userInfo(UserInfoPayload(tag.uid)) }
     }
 
     suspend fun transferCashRegister(
-        sourceTag: UserTag, targetTag: UserTag
+        sourceTag: NfcTag, targetTag: NfcTag
     ): Response<CashRegister> {
         return terminalApiAccessor.execute {
             it.cashier()?.transferCashRegister(TransferCashRegisterPayload(sourceTag.uid, targetTag.uid))

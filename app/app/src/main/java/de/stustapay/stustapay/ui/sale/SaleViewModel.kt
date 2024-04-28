@@ -4,12 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedSale
-import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
+import de.stustapay.libssp.util.mapState
 import de.stustapay.stustapay.repository.SaleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
-import de.stustapay.libssp.util.mapState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,16 +18,12 @@ import javax.inject.Inject
 
 
 enum class SalePage(val route: String) {
-    ProductSelect("product"),
-    Confirm("confirm"),
-    Success("done"),
-    Error("error"),
+    ProductSelect("product"), Confirm("confirm"), Success("done"), Error("error"),
 }
 
 
 enum class ScanTarget {
-    None,
-    CheckSale,
+    None, CheckSale,
 }
 
 
@@ -104,9 +100,7 @@ class SaleViewModel @Inject constructor(
         _saleStatus.update { sale ->
             val newSale = sale.copy()
             newSale.adjustPrice(
-                buttonId = buttonId,
-                setPrice = setPrice,
-                saleConfig = saleConfig.value
+                buttonId = buttonId, setPrice = setPrice, saleConfig = saleConfig.value
             )
             newSale
         }
@@ -129,7 +123,7 @@ class SaleViewModel @Inject constructor(
         }
     }
 
-    suspend fun tagScanned(tag: UserTag) {
+    suspend fun tagScanned(tag: NfcTag) {
         // remember the user tag
         _saleStatus.update { sale ->
             val newSale = sale.copy()
@@ -143,6 +137,7 @@ class SaleViewModel @Inject constructor(
             ScanTarget.CheckSale -> {
                 checkSale()
             }
+
             ScanTarget.None -> {
                 // nothing to scan for
             }
@@ -197,12 +192,14 @@ class SaleViewModel @Inject constructor(
                 _status.update { "Order validated!" }
                 _navState.update { SalePage.Confirm }
             }
+
             is Response.Error.Service -> {
                 // maybe only clear tag for some errors.
                 clearScannedTag()
                 _status.update { response.msg() }
                 _navState.update { SalePage.Error }
             }
+
             is Response.Error -> {
                 _status.update { response.msg() }
             }
@@ -231,11 +228,13 @@ class SaleViewModel @Inject constructor(
                 _saleCompleted.update { response.data }
                 _navState.update { SalePage.Success }
             }
+
             is Response.Error.Service -> {
                 clearScannedTag()
                 _navState.update { SalePage.Error }
                 _status.update { response.msg() }
             }
+
             is Response.Error -> {
                 _status.update { response.msg() }
             }
@@ -246,8 +245,7 @@ class SaleViewModel @Inject constructor(
         terminalConfigFlow: StateFlow<TerminalConfigState>,
     ): StateFlow<SaleConfig> {
 
-        return terminalConfigFlow
-            .mapState(SaleConfig(), viewModelScope) { terminalConfig ->
+        return terminalConfigFlow.mapState(SaleConfig(), viewModelScope) { terminalConfig ->
                 when (terminalConfig) {
                     is TerminalConfigState.Success -> {
                         _status.update { "Ready for order." }
@@ -255,8 +253,7 @@ class SaleViewModel @Inject constructor(
                             ready = true,
                             buttons = terminalConfig.config.till?.buttons?.associate {
                                 Pair(
-                                    it.id.intValue(),
-                                    SaleItemConfig(
+                                    it.id.intValue(), SaleItemConfig(
                                         id = it.id.intValue(),
                                         caption = it.name,
                                         price = SaleItemPrice.fromTerminalButton(it),
@@ -267,10 +264,12 @@ class SaleViewModel @Inject constructor(
                             tillName = terminalConfig.config.name,
                         )
                     }
+
                     is TerminalConfigState.Error -> {
                         _status.update { terminalConfig.message }
                         SaleConfig()
                     }
+
                     is TerminalConfigState.NoConfig -> {
                         _status.update { "Loading..." }
                         SaleConfig()

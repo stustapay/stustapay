@@ -8,10 +8,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 
 @Composable
-fun AccountScan(onScan: (UserTag) -> Unit) {
+fun AccountScan(onScan: (NfcTag) -> Unit) {
     Box(
         modifier = Modifier
             .padding(20.dp)

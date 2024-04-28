@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedPayOut
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.PayOutRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
@@ -51,7 +52,7 @@ class PayOutViewModel @Inject constructor(
         initialValue = TerminalLoginState(),
     )
 
-    suspend fun tagScanned(tag: UserTag) {
+    suspend fun tagScanned(tag: NfcTag) {
         _payOutState.update {
             PayOutState(tag = tag)
         }
