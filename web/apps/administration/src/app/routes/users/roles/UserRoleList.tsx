@@ -1,7 +1,7 @@
 import { UserRole, selectUserRoleAll, useDeleteUserRoleMutation, useListUserRolesQuery } from "@/api";
 import { UserRoleRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 export const UserRoleList: React.FC = () => {
   const { t } = useTranslation();
   const canManageUsers = useCurrentUserHasPrivilege(UserRoleRoutes.privilege);
+  const canManageUsersAtNode = useCurrentUserHasPrivilegeAtNode(UserRoleRoutes.privilege);
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
 
@@ -75,20 +76,23 @@ export const UserRoleList: React.FC = () => {
       type: "actions",
       headerName: t("actions") as string,
       width: 150,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={<EditIcon />}
-          color="primary"
-          label={t("edit")}
-          onClick={() => navigate(UserRoleRoutes.edit(params.row.id))}
-        />,
-        <GridActionsCellItem
-          icon={<DeleteIcon />}
-          color="error"
-          label={t("delete")}
-          onClick={() => openConfirmDeleteDialog(params.row.id)}
-        />,
-      ],
+      getActions: (params) =>
+        canManageUsersAtNode(params.row.node_id)
+          ? [
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                color="primary"
+                label={t("edit")}
+                onClick={() => navigate(UserRoleRoutes.edit(params.row.id))}
+              />,
+              <GridActionsCellItem
+                icon={<DeleteIcon />}
+                color="error"
+                label={t("delete")}
+                onClick={() => openConfirmDeleteDialog(params.row.id)}
+              />,
+            ]
+          : [],
     });
   }
 

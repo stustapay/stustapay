@@ -12,7 +12,6 @@ import {
   List,
   ListItemButton,
   ListItemText,
-  Box,
 } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";

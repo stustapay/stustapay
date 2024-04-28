@@ -1,11 +1,20 @@
-import { selectTillRegisterStockingAll, useDeleteRegisterStockingMutation, useListRegisterStockingsQuery } from "@/api";
+import {
+  CashRegisterStocking,
+  selectTillRegisterStockingAll,
+  useDeleteRegisterStockingMutation,
+  useListRegisterStockingsQuery,
+} from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
+import {
+  useCurrencyFormatter,
+  useCurrentNode,
+  useCurrentUserHasPrivilege,
+  useCurrentUserHasPrivilegeAtNode,
+} from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { TillRegisterStocking } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +23,8 @@ export const TillRegisterStockingList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { currentNode } = useCurrentNode();
-  const canManageNode = useCurrentUserHasPrivilege(TillStockingsRoutes.privilege);
+  const canManageStockings = useCurrentUserHasPrivilege(TillStockingsRoutes.privilege);
+  const canManageStockingsAtNode = useCurrentUserHasPrivilegeAtNode(TillStockingsRoutes.privilege);
   const formatCurrency = useCurrencyFormatter();
 
   const { stockings, isLoading } = useListRegisterStockingsQuery(
@@ -46,7 +56,7 @@ export const TillRegisterStockingList: React.FC = () => {
     setStockingToDelete(null);
   };
 
-  const columns: GridColDef<TillRegisterStocking>[] = [
+  const columns: GridColDef<CashRegisterStocking>[] = [
     {
       field: "name",
       headerName: t("register.name") as string,
@@ -60,26 +70,29 @@ export const TillRegisterStockingList: React.FC = () => {
     },
   ];
 
-  if (canManageNode) {
+  if (canManageStockings) {
     columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
       width: 150,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={<EditIcon />}
-          color="primary"
-          label={t("edit")}
-          onClick={() => navigate(TillStockingsRoutes.edit(params.row.id))}
-        />,
-        <GridActionsCellItem
-          icon={<DeleteIcon />}
-          color="error"
-          label={t("delete")}
-          onClick={() => openConfirmDeleteDialog(params.row.id)}
-        />,
-      ],
+      getActions: (params) =>
+        canManageStockingsAtNode(params.row.node_id)
+          ? [
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                color="primary"
+                label={t("edit")}
+                onClick={() => navigate(TillStockingsRoutes.edit(params.row.id))}
+              />,
+              <GridActionsCellItem
+                icon={<DeleteIcon />}
+                color="error"
+                label={t("delete")}
+                onClick={() => openConfirmDeleteDialog(params.row.id)}
+              />,
+            ]
+          : [],
     });
   }
 

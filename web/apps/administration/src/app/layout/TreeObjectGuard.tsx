@@ -1,10 +1,11 @@
-import { Privilege } from "@/api";
-import { useCurrentUserHasPrivilege } from "@/hooks";
+import { ObjectType } from "@/api";
+import { useCurrentNodeAllowsObject } from "@/hooks";
 import * as React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
-export interface PrivilegeGuardProps {
-  privilege: Privilege;
+export interface TreeObjectGuardProps {
+  objectType: ObjectType;
+
   /*
    * whether to hide children instead of redirecting to the root route
    * default is redirect
@@ -13,14 +14,14 @@ export interface PrivilegeGuardProps {
   children?: React.ReactNode;
 }
 
-export const PrivilegeGuard: React.FC<PrivilegeGuardProps> = ({ privilege, children, hideChildren = false }) => {
-  const hasPrivilege = useCurrentUserHasPrivilege(privilege);
+export const TreeObjectGuard: React.FC<TreeObjectGuardProps> = ({ objectType, children, hideChildren = false }) => {
+  const isAllowed = useCurrentNodeAllowsObject(objectType);
 
-  if (hideChildren && !hasPrivilege) {
+  if (hideChildren && !isAllowed) {
     return null;
   }
 
-  if (!hideChildren && !hasPrivilege) {
+  if (!hideChildren && !isAllowed) {
     return <Navigate to="/" />;
   }
 

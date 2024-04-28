@@ -8,7 +8,7 @@ import {
 } from "@/api";
 import { TerminalRoutes, TillRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -20,7 +20,8 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 export const TerminalList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const canManageNode = useCurrentUserHasPrivilege(TerminalRoutes.privilege);
+  const canManageTerminals = useCurrentUserHasPrivilege(TerminalRoutes.privilege);
+  const canManageTerminalsAtNode = useCurrentUserHasPrivilegeAtNode(TerminalRoutes.privilege);
   const navigate = useNavigate();
 
   const { terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery(
@@ -100,26 +101,29 @@ export const TerminalList: React.FC = () => {
     },
   ];
 
-  if (canManageNode) {
+  if (canManageTerminals) {
     columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
       width: 150,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={<EditIcon />}
-          color="primary"
-          label={t("edit")}
-          onClick={() => navigate(TerminalRoutes.edit(params.row.id))}
-        />,
-        <GridActionsCellItem
-          icon={<DeleteIcon />}
-          color="error"
-          label={t("delete")}
-          onClick={() => openConfirmDeleteDialog(params.row.id)}
-        />,
-      ],
+      getActions: (params) =>
+        canManageTerminalsAtNode(params.row.node_id)
+          ? [
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                color="primary"
+                label={t("edit")}
+                onClick={() => navigate(TerminalRoutes.edit(params.row.id))}
+              />,
+              <GridActionsCellItem
+                icon={<DeleteIcon />}
+                color="error"
+                label={t("delete")}
+                onClick={() => openConfirmDeleteDialog(params.row.id)}
+              />,
+            ]
+          : [],
     });
   }
 

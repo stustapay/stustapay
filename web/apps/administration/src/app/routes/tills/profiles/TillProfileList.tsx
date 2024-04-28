@@ -8,7 +8,7 @@ import {
 } from "@/api";
 import { TillProfileRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -20,7 +20,8 @@ import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 export const TillProfileList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const canManageNode = useCurrentUserHasPrivilege(TillProfileRoutes.privilege);
+  const canManageProfiles = useCurrentUserHasPrivilege(TillProfileRoutes.privilege);
+  const canManageProfilesAtNode = useCurrentUserHasPrivilegeAtNode(TillProfileRoutes.privilege);
   const navigate = useNavigate();
   const { nodeId } = useParams();
 
@@ -114,26 +115,29 @@ export const TillProfileList: React.FC = () => {
     },
   ];
 
-  if (canManageNode) {
+  if (canManageProfiles) {
     columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
       width: 150,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={<EditIcon />}
-          color="primary"
-          label={t("edit")}
-          onClick={() => navigate(`/node/${nodeId}/tills/profiles/${params.row.id}/edit`)}
-        />,
-        <GridActionsCellItem
-          icon={<DeleteIcon />}
-          color="error"
-          label={t("delete")}
-          onClick={() => openConfirmDeleteDialog(params.row.id)}
-        />,
-      ],
+      getActions: (params) =>
+        canManageProfilesAtNode(params.row.node_id)
+          ? [
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                color="primary"
+                label={t("edit")}
+                onClick={() => navigate(`/node/${nodeId}/tills/profiles/${params.row.id}/edit`)}
+              />,
+              <GridActionsCellItem
+                icon={<DeleteIcon />}
+                color="error"
+                label={t("delete")}
+                onClick={() => openConfirmDeleteDialog(params.row.id)}
+              />,
+            ]
+          : [],
     });
   }
 

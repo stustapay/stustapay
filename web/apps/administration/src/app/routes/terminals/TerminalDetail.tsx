@@ -83,6 +83,7 @@ export const TerminalDetail: React.FC = () => {
     <DetailLayout
       title={terminal.name}
       routes={TerminalRoutes}
+      elementNodeId={terminal.node_id}
       actions={[
         {
           label: t("edit"),

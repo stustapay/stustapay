@@ -47,6 +47,7 @@ export const TicketDetail: React.FC = () => {
     <DetailLayout
       title={ticket.name}
       routes={TicketRoutes}
+      elementNodeId={ticket.node_id}
       actions={[
         {
           label: t("edit"),
