@@ -498,6 +498,7 @@ class VirtualTSE:
         return {"Status": "ok", "Name": name, "Value": value_enc, "Length": len(value)}
 
     def generate_signature(self, msg, transaction_nr, log_time):
+        del transaction_nr
         signature: str = ""
 
         # simulate time required for signing process

@@ -1,4 +1,4 @@
-etc/server.yaml /etc/stustapay/config.yaml
+etc/config.yaml /etc/stustapay/
 etc/nginx/stustapay-admin /etc/nginx/sites-available/
 etc/nginx/stustapay-customerportal /etc/nginx/sites-available/
 etc/nginx/stustapay-terminalapi /etc/nginx/sites-available/

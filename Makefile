@@ -21,7 +21,7 @@ pylint:
 
 .PHONY: mypy
 mypy:
-	mypy .
+	mypy stustapay
 
 .PHONY: generate-openapi
 generate-openapi:
