@@ -30,7 +30,8 @@ async def add_user(config: Config, node_id: int):
             print("Error, passwords do not match")
             return
 
-        role_names = input(f"Enter roles (comma separated, choose from {available_roles_formatted}:\n")
+        role_names_input = input(f"Enter roles (comma separated, choose from {available_roles_formatted}:\n")
+        role_names = role_names_input.split(",")
         display_name = input("Enter display name:\n")
 
         new_user = NewUser(

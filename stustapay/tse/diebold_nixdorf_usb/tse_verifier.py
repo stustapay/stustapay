@@ -48,14 +48,14 @@ class TransactionData(Sequence):
     ]
 
 
-def main(args):
-    qr = args.QR.split(";")
+def main(qr_code: str):
+    qr = qr_code.split(";")
 
     certidata = CertifiedData()
     data = TransactionData()
 
     if qr[0] != "V0":  # check version
-        raise NotImplemented
+        raise NotImplementedError()
 
     certidata["clientId"] = qr[1]  # fill in data fields from QR code in prepared ASN.1 structure
     certidata["ProcessType"] = qr[2]
@@ -66,14 +66,14 @@ def main(args):
 
     public_key = qr[11]
     if qr[8] != "ecdsa-plain-SHA384":
-        raise NotImplemented
+        raise NotImplementedError()
     else:
         signaturealgorithm = SignatureAlgorithm_seq()
         signaturealgorithm["signatureAlgorithm"] = "0.4.0.127.0.7.1.1.4.1.4"  # ecdsa-plain-SHA384
         vk = ecdsa.VerifyingKey.from_string(base64.b64decode(public_key), curve=ecdsa.BRAINPOOLP384r1, hashfunc=sha384)
 
     if qr[9] != "unixTime":  # case sensitive != UnixTime ...
-        raise NotImplemented
+        raise NotImplementedError()
     signature = qr[10]
 
     certidata["operationType"] = "FinishTransaction"
@@ -111,6 +111,6 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(
         prog="TSE_Verify", description="Veryfies TSE QR codes", epilog="only ecdsa-plain-SHA384 and unixTime for now"
     )
-    p.add_argument("QR", help="decoded QR code (str)")
+    p.add_argument("qr_code", help="decoded QR code (str)")
     args = p.parse_args()
-    main(args)
+    main(qr_code=args.qr_code)
