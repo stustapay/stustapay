@@ -23,9 +23,11 @@ export const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addMatcher(api.endpoints.login.matchFulfilled, (state, action) => {
-      const { user, access_token } = action.payload;
-      state.user = user;
-      state.token = access_token;
+      if (action.payload.success) {
+        const { user, token } = action.payload.success;
+        state.user = user;
+        state.token = token;
+      }
     });
     builder.addMatcher(api.endpoints.logout.matchFulfilled, (state) => {
       state.user = null;

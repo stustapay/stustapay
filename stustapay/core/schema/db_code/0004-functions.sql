@@ -61,11 +61,10 @@ returns table (
 )
 as
 $$
-with recursive graph (node_id, depth, path, cycle, role_ids, privileges_at_node) as (
+with recursive graph (node_id, path, cycle, role_ids, privileges_at_node) as (
     -- base case: start at the requested node
     select
         0::bigint, -- root node ID
-        1,
         '{0}'::bigint[],
         false,
         coalesce((
@@ -84,16 +83,24 @@ with recursive graph (node_id, depth, path, cycle, role_ids, privileges_at_node)
     -- add the node's children result set (find the parents for all so-far evaluated nodes)
     select
         node.id,
-        g.depth + 1,
         g.path || node.parent,
         node.id = any(g.path),
-        case when utr.role_id is null then g.role_ids else (g.role_ids || array[utr.role_id])::bigint array end,
-        case when urwp.privileges is null then g.privileges_at_node else (g.privileges_at_node || urwp.privileges)::text array end
+        g.role_ids || (
+            select coalesce(array_agg(utr2.role_id), '{}'::bigint array)
+            from user_to_role utr2
+            where utr2.node_id = node.id and utr2.user_id = user_privileges_at_node.user_id
+        )::bigint array,
+        g.privileges_at_node || (
+            select coalesce(array_agg(t.privileges), '{}'::text array)
+            from (
+                select unnest(urwp.privileges) as privileges
+                from user_role_with_privileges urwp join user_to_role utr3 on urwp.id = utr3.role_id
+                where utr3.node_id = node.id and utr3.user_id = user_privileges_at_node.user_id
+            ) t
+        )::text array
     from
         graph g
         join node on g.node_id = node.parent
-        left join user_to_role utr on node.id = utr.node_id and utr.user_id = user_privileges_at_node.user_id
-        left join user_role_with_privileges urwp on utr.role_id = urwp.id
     where
         node.id != 0
         and not g.cycle

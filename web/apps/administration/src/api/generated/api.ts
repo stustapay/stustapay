@@ -934,7 +934,7 @@ export type DeleteTaxRateApiArg = {
   taxRateId: number;
   nodeId?: number | null;
 };
-export type LoginApiResponse = /** status 200 Successful Response */ LoginResponse;
+export type LoginApiResponse = /** status 200 Successful Response */ UserLoginResult;
 export type LoginApiArg = {
   loginPayload: LoginPayload;
 };
@@ -1539,14 +1539,23 @@ export type CurrentUser = {
   cashier_account_id?: number | null;
   cash_register_id?: number | null;
 };
-export type LoginResponse = {
+export type UserLoginSuccess = {
   user: CurrentUser;
-  access_token: string;
-  grant_type?: string;
+  token: string;
+};
+export type NodeChoice = {
+  node_id: number;
+  name: string;
+  description: string;
+};
+export type UserLoginResult = {
+  success: UserLoginSuccess | null;
+  available_nodes: NodeChoice[] | null;
 };
 export type LoginPayload = {
   username: string;
   password: string;
+  node_id: number | null;
 };
 export type ChangePasswordPayload = {
   old_password: string;

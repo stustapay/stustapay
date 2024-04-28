@@ -376,6 +376,7 @@ $$ language plpgsql
     set search_path = "$user", public;
 
 alter table product add constraint name_is_unique check(check_unique_in_tree(id, 'product', 'name', name, node_id));
+alter table usr add constraint login_is_unique check(check_unique_in_tree(id, 'usr', 'login', login, node_id));
 alter table till_button add constraint name_is_unique check(check_unique_in_tree(id, 'till_button', 'name', name, node_id));
 alter table till_layout add constraint name_is_unique check(check_unique_in_tree(id, 'till_layout', 'name', name, node_id));
 alter table till_profile add constraint name_is_unique check(check_unique_in_tree(id, 'till_profile', 'name', name, node_id));

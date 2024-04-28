@@ -68,8 +68,8 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
     admin_login = await user_service.login_user(  # pylint: disable=missing-kwoa
         conn=conn, username="global-admin", password="admin"
     )
-    assert admin_login is not None
-    admin_token = admin_login.token
+    assert admin_login.success is not None
+    admin_token = admin_login.success.token
 
     secret = await create_user_tag_secret(
         conn=conn,

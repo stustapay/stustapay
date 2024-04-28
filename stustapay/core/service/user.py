@@ -40,6 +40,16 @@ class UserLoginSuccess(BaseModel):
     token: str
 
 
+class UserLoginResult(BaseModel):
+    class NodeChoice(BaseModel):
+        node_id: int
+        name: str
+        description: str
+
+    success: UserLoginSuccess | None
+    available_nodes: list[NodeChoice] | None
+
+
 async def list_user_roles(*, conn: Connection, node: Node) -> list[UserRole]:
     return await conn.fetch_many(
         UserRole, "select * from user_role_with_privileges where node_id = any($1) order by name", node.ids_to_root
@@ -469,25 +479,49 @@ class UserService(DBService):
             raise NotFound(element_typ="user_to_role", element_id=user_to_role.user_id)
 
     @with_db_transaction
-    async def login_user(self, *, conn: Connection, username: str, password: str) -> UserLoginSuccess:
-        # TODO: TREE visibility
-        row = await conn.fetchrow(
-            "select * from usr where login = $1",
-            username,
-        )
-        if row is None:
+    async def login_user(
+        self, *, conn: Connection, username: str, password: str, node_id: int | None = None
+    ) -> UserLoginResult:
+        if node_id is None:
+            potential_users = await conn.fetch(
+                "select * from usr where login = $1", username
+            )
+        else:
+            potential_users = await conn.fetch(
+                "select * from usr where login = $1 and node_id = $2", username, node_id
+            )
+        if len(potential_users) == 0:
             raise AccessDenied("Invalid username or password")
 
-        user_id = row["id"]
-        if not self._check_password(password, row["password"]):
+        users_with_matching_passwords = []
+        for row in potential_users:
+            user_id = row["id"]
+            if self._check_password(password, row["password"]):
+                users_with_matching_passwords.append(row)
+
+        if len(users_with_matching_passwords) == 0:
             raise AccessDenied("Invalid username or password")
 
+        if len(users_with_matching_passwords) > 1:
+            node_ids = [row["node_id"] for row in users_with_matching_passwords]
+            nodes = await conn.fetch_many(
+                UserLoginResult.NodeChoice,
+                "select id as node_id, name, description from node n where id = any($1)",
+                node_ids,
+            )
+            return UserLoginResult(success=None, available_nodes=nodes)
+
+        logged_in_user = users_with_matching_passwords[0]
+        user_id = logged_in_user["id"]
         session_id = await conn.fetchval("insert into usr_session (usr) values ($1) returning id", user_id)
         token = self.auth_service.create_user_access_token(UserTokenMetadata(user_id=user_id, session_id=session_id))
         user = await self.auth_service.get_user_from_token(conn=conn, token=token)
-        return UserLoginSuccess(
-            user=user,
-            token=token,
+        return UserLoginResult(
+            available_nodes=None,
+            success=UserLoginSuccess(
+                user=user,
+                token=token,
+            ),
         )
 
     @with_db_transaction
