@@ -37,9 +37,9 @@ flycheck_*
 .auctex-auto
 
 # project specific
-config.yaml
-config.devcontainer.yml
-server.yaml
+/config.yaml
+/config.devcontainer.yml
+/server.yaml
 
 # nodejs
 node_modules/

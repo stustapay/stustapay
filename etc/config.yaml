@@ -1,0 +1,24 @@
+database:
+  host: null
+  user: null
+  password: null
+  dbname: "stustapay"
+
+core:
+  test_mode: true # TODO: change to false for a production deployment
+  secret_key: "<generate a secret key>"
+
+administration:
+  base_url: "http://localhost:8081/api" # TODO: change to production url
+  host: "localhost"
+  port: 8081
+
+customerportal:
+  base_url: "http://localhost:8082/api" # TODO: change to production url
+  host: "localhost"
+  port: 8082
+
+terminalserver:
+  base_url: "http://localhost:8083/api" # TODO: change to production url
+  host: "localhost"
+  port: 8083

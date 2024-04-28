@@ -8,7 +8,8 @@ import requests
 url = "https://api.github.com/repos/stustapay/stustapay/actions/artifacts?per_page=1&name=debs"
 
 
-def main(output_dir: Path, access_token: str):
+def main(output_dir: Path, access_token_file: Path):
+    access_token = access_token_file.read_text("utf-8").strip()
     resp = requests.get(url)
     data = resp.json()
     download_url = data["artifacts"][0]["archive_download_url"]
@@ -31,10 +32,10 @@ def main(output_dir: Path, access_token: str):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("output_dir", type=Path)
-    parser.add_argument("access_token", type=str)
+    parser.add_argument("access_token_file", type=Path)
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args.output_dir, args.access_token)
+    main(args.output_dir, args.access_token_file)
