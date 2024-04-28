@@ -72,8 +72,8 @@ class NfcRepository @Inject constructor(
     }
 
     suspend fun test(): NfcScanResult {
-        val k0 = uidRetrKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
-        val k1 = dataProtKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
+        val k0 = dataProtKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
+        val k1 = uidRetrKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
         return nfcDataSource.scan(NfcScanRequest.Test(k0, k1))
     }
 }

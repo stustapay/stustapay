@@ -10,6 +10,7 @@ import de.stustapay.libssp.model.NfcScanFailure
 import de.stustapay.libssp.model.NfcScanResult
 import de.stustapay.chip_debug.repository.NfcRepository
 import de.stustapay.chip_debug.repository.ReadMode
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.util.ResourcesProvider
 import de.stustapay.libssp.util.mapState
 import kotlinx.coroutines.Job
@@ -27,7 +28,7 @@ sealed interface NfcScanUiState {
     object Scan : NfcScanUiState
 
     data class Success(
-        val uid: ULong
+        val tag: NfcTag
     ) : NfcScanUiState
 
     data class Error(val msg: String) : NfcScanUiState
@@ -53,7 +54,7 @@ class NfcScanDialogViewModel @Inject constructor(
     private val _scanning = MutableStateFlow(false)
     val scanning = _scanning.asStateFlow()
 
-    private val _scanResult = MutableStateFlow<UserTag?>(null)
+    private val _scanResult = MutableStateFlow<NfcTag?>(null)
     val scanResult = _scanResult.asStateFlow()
 
     val scanState: StateFlow<NfcScanState> =
@@ -72,7 +73,7 @@ class NfcScanDialogViewModel @Inject constructor(
                 }
 
                 is NfcScanUiState.Success -> {
-                    _scanResult.update { UserTag(uid = scanResult.uid.toBigInteger()) }
+                    _scanResult.update { scanResult.tag }
                     NfcScanState(
                         status = resourcesProvider.getString(R.string.nfc_scan_success),
                     )
@@ -114,14 +115,14 @@ class NfcScanDialogViewModel @Inject constructor(
 
                     when (res) {
                         is NfcScanResult.FastRead -> {
-                            _scanState.update { NfcScanUiState.Success(res.chipUid) }
+                            _scanState.update { NfcScanUiState.Success(res.tag) }
                             trying = false
                         }
 
                         // when fast = false, we read the chip content.
                         is NfcScanResult.Read -> {
                             if (res.chipContent.startsWith(nfcRepository.tagContent)) {
-                                _scanState.update { NfcScanUiState.Success(res.chipUid) }
+                                _scanState.update { NfcScanUiState.Success(NfcTag(res.chipUid.toBigInteger(), null)) }
                                 trying = false
                             } else {
                                 _scanState.update { NfcScanUiState.Tampered }
