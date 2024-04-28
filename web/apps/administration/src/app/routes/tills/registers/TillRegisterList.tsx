@@ -6,15 +6,21 @@ import {
   useListCashRegistersAdminQuery,
   useListCashiersQuery,
   useListTillsQuery,
+  CashRegister,
 } from "@/api";
 import { CashierRoutes, TillRegistersRoutes, TillRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
+import {
+  useCurrencyFormatter,
+  useCurrentNode,
+  useCurrentUserHasPrivilege,
+  useCurrentUserHasPrivilegeAtNode,
+} from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { TillRegister, getUserName } from "@stustapay/models";
+import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -22,7 +28,8 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 export const TillRegisterList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const canManageNode = useCurrentUserHasPrivilege(TillRegistersRoutes.privilege);
+  const canManageRegisters = useCurrentUserHasPrivilege(TillRegistersRoutes.privilege);
+  const canManageRegistersAtNode = useCurrentUserHasPrivilegeAtNode(TillRegistersRoutes.privilege);
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
@@ -89,7 +96,7 @@ export const TillRegisterList: React.FC = () => {
     );
   };
 
-  const columns: GridColDef<TillRegister>[] = [
+  const columns: GridColDef<CashRegister>[] = [
     {
       field: "name",
       headerName: t("register.name") as string,
@@ -116,33 +123,36 @@ export const TillRegisterList: React.FC = () => {
     },
   ];
 
-  if (canManageNode) {
+  if (canManageRegisters) {
     columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
       width: 150,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={<SwapHorizIcon />}
-          color="primary"
-          label={t("register.transfer")}
-          disabled={params.row.current_cashier_id == null}
-          onClick={() => navigate(`${TillRegistersRoutes.detail(params.row.id)}/transfer`)}
-        />,
-        <GridActionsCellItem
-          icon={<EditIcon />}
-          color="primary"
-          label={t("edit")}
-          onClick={() => navigate(TillRegistersRoutes.edit(params.row.id))}
-        />,
-        <GridActionsCellItem
-          icon={<DeleteIcon />}
-          color="error"
-          label={t("delete")}
-          onClick={() => openConfirmDeleteDialog(params.row.id)}
-        />,
-      ],
+      getActions: (params) =>
+        canManageRegistersAtNode(params.row.node_id)
+          ? [
+              <GridActionsCellItem
+                icon={<SwapHorizIcon />}
+                color="primary"
+                label={t("register.transfer")}
+                disabled={params.row.current_cashier_id == null}
+                onClick={() => navigate(`${TillRegistersRoutes.detail(params.row.id)}/transfer`)}
+              />,
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                color="primary"
+                label={t("edit")}
+                onClick={() => navigate(TillRegistersRoutes.edit(params.row.id))}
+              />,
+              <GridActionsCellItem
+                icon={<DeleteIcon />}
+                color="error"
+                label={t("delete")}
+                onClick={() => openConfirmDeleteDialog(params.row.id)}
+              />,
+            ]
+          : [],
     });
   }
 

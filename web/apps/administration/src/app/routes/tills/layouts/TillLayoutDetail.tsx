@@ -63,6 +63,7 @@ export const TillLayoutDetail: React.FC = () => {
     <DetailLayout
       title={layout.name}
       routes={TillLayoutRoutes}
+      elementNodeId={layout.node_id}
       actions={[
         {
           label: t("edit"),

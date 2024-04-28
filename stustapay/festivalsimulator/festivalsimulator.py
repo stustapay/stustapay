@@ -551,7 +551,7 @@ class Simulator:
                 if resp.status != 200:
                     raise RuntimeError("Error trying to log in admin user")
                 payload = await resp.json()
-            return payload["access_token"]
+            return payload["success"]["token"]
 
     async def login_customer(self, pin: str) -> str:
         async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:

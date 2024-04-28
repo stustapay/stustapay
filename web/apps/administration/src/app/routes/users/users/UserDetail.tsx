@@ -43,6 +43,7 @@ export const UserDetail: React.FC = () => {
     <DetailLayout
       title={user.login}
       routes={UserRoutes}
+      elementNodeId={user.node_id}
       actions={[
         {
           label: t("user.changePassword.title"),

@@ -9,7 +9,13 @@ import {
 } from "@/api";
 import { TicketRoutes } from "@/app/routes";
 import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
+import {
+  useCurrencyFormatter,
+  useCurrentNode,
+  useCurrentUserHasPrivilege,
+  useCurrentUserHasPrivilegeAtNode,
+  useRenderNode,
+} from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -21,7 +27,8 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 export const TicketList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const canManageNode = useCurrentUserHasPrivilege(TicketRoutes.privilege);
+  const canManageTickets = useCurrentUserHasPrivilege(TicketRoutes.privilege);
+  const canManageTicketsAtNode = useCurrentUserHasPrivilegeAtNode(TicketRoutes.privilege);
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
@@ -131,33 +138,36 @@ export const TicketList: React.FC = () => {
     },
   ];
 
-  if (canManageNode) {
+  if (canManageTickets) {
     columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
       width: 150,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={<EditIcon />}
-          color="primary"
-          label={t("edit")}
-          onClick={() => navigate(TicketRoutes.edit(params.row.id))}
-        />,
-        <GridActionsCellItem
-          icon={<LockIcon />}
-          color="primary"
-          disabled={params.row.is_locked}
-          label={t("ticket.lock")}
-          onClick={() => handleLockTicket(params.row)}
-        />,
-        <GridActionsCellItem
-          icon={<DeleteIcon />}
-          color="error"
-          label={t("delete")}
-          onClick={() => openConfirmDeleteDialog(params.row.id)}
-        />,
-      ],
+      getActions: (params) =>
+        canManageTicketsAtNode(params.row.node_id)
+          ? [
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                color="primary"
+                label={t("edit")}
+                onClick={() => navigate(TicketRoutes.edit(params.row.id))}
+              />,
+              <GridActionsCellItem
+                icon={<LockIcon />}
+                color="primary"
+                disabled={params.row.is_locked}
+                label={t("ticket.lock")}
+                onClick={() => handleLockTicket(params.row)}
+              />,
+              <GridActionsCellItem
+                icon={<DeleteIcon />}
+                color="error"
+                label={t("delete")}
+                onClick={() => openConfirmDeleteDialog(params.row.id)}
+              />,
+            ]
+          : [],
     });
   }
 

@@ -125,6 +125,7 @@ export const TillDetail: React.FC = () => {
     <DetailLayout
       title={till.name}
       routes={TillRoutes}
+      elementNodeId={till.node_id}
       actions={[
         { label: t("edit"), onClick: () => navigate(TillRoutes.edit(tillId)), color: "primary", icon: <EditIcon /> },
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
-from stustapay.core.schema.user import CurrentUser
+from stustapay.core.service.user import UserLoginResult
 
 router = APIRouter(
     prefix="/auth",
@@ -15,22 +15,15 @@ router = APIRouter(
 class LoginPayload(BaseModel):
     username: str
     password: str
+    node_id: int | None = None
 
 
-class LoginResponse(BaseModel):
-    user: CurrentUser
-    access_token: str
-    grant_type: str = "bearer"
-
-
-@router.post("/login", summary="login with username and password", response_model=LoginResponse)
+@router.post("/login", summary="login with username and password", response_model=UserLoginResult)
 async def login(
-    # payload: Annotated[OAuth2PasswordRequestForm, Depends()],
     payload: LoginPayload,
     user_service: ContextUserService,
 ):
-    response = await user_service.login_user(username=payload.username, password=payload.password)
-    return {"user": response.user, "access_token": response.token, "grant_type": "bearer"}
+    return await user_service.login_user(username=payload.username, password=payload.password, node_id=payload.node_id)
 
 
 class ChangePasswordPayload(BaseModel):

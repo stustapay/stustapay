@@ -49,6 +49,7 @@ export const ProductDetail: React.FC = () => {
     <DetailLayout
       title={product.name}
       routes={ProductRoutes}
+      elementNodeId={product.node_id}
       actions={[
         {
           label: t("edit"),

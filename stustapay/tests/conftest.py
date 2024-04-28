@@ -303,7 +303,9 @@ async def global_admin_user(
 @pytest.fixture
 async def global_admin_token(user_service: UserService, global_admin_user: tuple[User, str]) -> str:
     user, password = global_admin_user
-    admin_token = (await user_service.login_user(username=user.login, password=password)).token
+    result = await user_service.login_user(username=user.login, password=password)
+    assert result.success is not None
+    admin_token = result.success.token
     await user_service.update_user_role_privileges(
         token=admin_token,
         node_id=ROOT_NODE_ID,
@@ -363,8 +365,9 @@ async def event_admin_user(
 @pytest.fixture
 async def event_admin_token(user_service: UserService, event_admin_user: tuple[User, str]) -> str:
     user, password = event_admin_user
-    admin_token = (await user_service.login_user(username=user.login, password=password)).token
-    return admin_token
+    result = await user_service.login_user(username=user.login, password=password)
+    assert result.success is not None
+    return result.success.token
 
 
 @pytest.fixture
@@ -427,7 +430,9 @@ async def cashier(
         token=event_admin_token, node_id=event_node.id, user_id=cashier_user.id
     )
     assert updated_cashier is not None
-    cashier_token = (await user_service.login_user(username=updated_cashier.login, password="rolf")).token
+    login_result = await user_service.login_user(username=updated_cashier.login, password="rolf")
+    assert login_result.success is not None
+    cashier_token = login_result.success.token
     cashier_as_dict = updated_cashier.model_dump()
     cashier_as_dict.update({"token": cashier_token, "cashier_role": cashier_role})
     cashier = Cashier.model_validate(cashier_as_dict)

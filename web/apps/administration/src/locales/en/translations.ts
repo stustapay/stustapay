@@ -94,11 +94,13 @@ export const translations = {
     accountHistory: "Account association history",
   },
   auth: {
+    signIn: "Sign In",
     username: "Username",
     password: "Password",
     login: "Login",
     loginFailed: "Login failed: {{reason}}.",
     profile: "Profile",
+    selectNode: "Select node for login",
     changePassword: "Change Password",
     oldPassword: "Old password",
     newPassword: "New password",

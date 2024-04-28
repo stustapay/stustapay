@@ -254,6 +254,8 @@ alter table line_item alter column tax_rate_id set not null;
 alter table tax_rate drop constraint tax_pkey;
 alter table tax_rate add constraint tax_rate_pkey primary key (id);
 
+alter table usr drop constraint usr_login_key;
+
 -- we cannot drop this yet as it would break login in admin
 -- alter table usr drop constraint usr_login_key;
 alter table till_button drop constraint till_button_name_key;

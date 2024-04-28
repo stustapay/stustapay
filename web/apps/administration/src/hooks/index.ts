@@ -5,3 +5,5 @@ export * from "./useCurrentNode";
 export * from "./useCurrentUser";
 export * from "./useRenderNode";
 export * from "./useCurrentUserHasPrivilege";
+export * from "./useCurrentNodeAllowsObject";
+export * from "./useCurrentUserHasPrivilegeAtNode";

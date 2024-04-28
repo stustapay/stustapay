@@ -22,12 +22,19 @@ import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
+import {
+  useCurrencyFormatter,
+  useCurrentNode,
+  useCurrentUserHasPrivilege,
+  useCurrentUserHasPrivilegeAtNode,
+  useRenderNode,
+} from "@/hooks";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const canManageNode = useCurrentUserHasPrivilege(ProductRoutes.privilege);
+  const canManageProducts = useCurrentUserHasPrivilege(ProductRoutes.privilege);
+  const canManageProductsAtNode = useCurrentUserHasPrivilegeAtNode(ProductRoutes.privilege);
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
 
@@ -146,40 +153,43 @@ export const ProductList: React.FC = () => {
     },
   ];
 
-  if (canManageNode) {
+  if (canManageProducts) {
     columns.push({
       field: "actions",
       type: "actions",
       headerName: t("actions") as string,
       width: 150,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={<EditIcon />}
-          color="primary"
-          label={t("edit")}
-          onClick={() => navigate(ProductRoutes.edit(params.row.id))}
-        />,
-        <GridActionsCellItem
-          icon={<ContentCopyIcon />}
-          color="primary"
-          label={t("copy")}
-          onClick={() => copyProduct(params.row)}
-        />,
-        <GridActionsCellItem
-          icon={<LockIcon />}
-          color="primary"
-          disabled={params.row.is_locked}
-          label={t("product.lock")}
-          onClick={() => handleLockProduct(params.row)}
-        />,
-        <GridActionsCellItem
-          icon={<DeleteIcon />}
-          color="error"
-          disabled={params.row.is_locked}
-          label={t("delete")}
-          onClick={() => openConfirmDeleteDialog(params.row.id)}
-        />,
-      ],
+      getActions: (params) =>
+        canManageProductsAtNode(params.row.node_id)
+          ? [
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                color="primary"
+                label={t("edit")}
+                onClick={() => navigate(ProductRoutes.edit(params.row.id))}
+              />,
+              <GridActionsCellItem
+                icon={<ContentCopyIcon />}
+                color="primary"
+                label={t("copy")}
+                onClick={() => copyProduct(params.row)}
+              />,
+              <GridActionsCellItem
+                icon={<LockIcon />}
+                color="primary"
+                disabled={params.row.is_locked}
+                label={t("product.lock")}
+                onClick={() => handleLockProduct(params.row)}
+              />,
+              <GridActionsCellItem
+                icon={<DeleteIcon />}
+                color="error"
+                disabled={params.row.is_locked}
+                label={t("delete")}
+                onClick={() => openConfirmDeleteDialog(params.row.id)}
+              />,
+            ]
+          : [],
     });
   }
 
