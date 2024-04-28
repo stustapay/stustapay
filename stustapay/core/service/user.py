@@ -483,13 +483,9 @@ class UserService(DBService):
         self, *, conn: Connection, username: str, password: str, node_id: int | None = None
     ) -> UserLoginResult:
         if node_id is None:
-            potential_users = await conn.fetch(
-                "select * from usr where login = $1", username
-            )
+            potential_users = await conn.fetch("select * from usr where login = $1", username)
         else:
-            potential_users = await conn.fetch(
-                "select * from usr where login = $1 and node_id = $2", username, node_id
-            )
+            potential_users = await conn.fetch("select * from usr where login = $1 and node_id = $2", username, node_id)
         if len(potential_users) == 0:
             raise AccessDenied("Invalid username or password")
 
