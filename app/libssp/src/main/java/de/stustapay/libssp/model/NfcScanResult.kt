@@ -1,13 +1,8 @@
 package de.stustapay.libssp.model
 
 sealed interface NfcScanResult {
-    data class FastRead(
-        val tag: NfcTag
-    ): NfcScanResult
     data class Read(
-        val chipProtected: Boolean,
-        val chipUid: ULong,
-        val chipContent: String
+        val tag: NfcTag
     ): NfcScanResult
     object Write: NfcScanResult
     data class Fail(

@@ -187,9 +187,10 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
 
         try {
             authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, cmacCheckSucceeded)
-            val expected = "StuStaPay at StuStaCulum 2024\n".toByteArray(Charset.forName("UTF-8")).asBitVector()
+            val expectedStr = "StuStaPay at StuStaCulum 2024\n"
+            val expected = expectedStr.toByteArray(Charset.forName("UTF-8")).asBitVector()
             val mem = readUserMemory()
-            val sig = mem.slice(mem.len - 44uL * 8uL, mem.len)
+            val sig = mem.slice(mem.len - expectedStr.length.toULong() * 8uL, mem.len)
             if (sig.equals(expected)) {
                 log.add(Pair("sig: found valid signature", true))
             } else {

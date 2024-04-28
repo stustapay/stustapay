@@ -115,25 +115,9 @@ class NfcScanDialogViewModel @Inject constructor(
                     val res = nfcRepository.read(ReadMode.Fast)
 
                     when (res) {
-                        is NfcScanResult.FastRead -> {
+                        is NfcScanResult.Read -> {
                             _scanState.update { NfcScanUiState.Success(res.tag) }
                             trying = false
-                        }
-
-                        // when fast = false, we read the chip content.
-                        is NfcScanResult.Read -> {
-                            if (res.chipContent.startsWith(nfcRepository.tagContent)) {
-                                _scanState.update {
-                                    NfcScanUiState.Success(
-                                        NfcTag(
-                                            uid = res.chipUid.toBigInteger(), pin = null
-                                        )
-                                    )
-                                }
-                                trying = false
-                            } else {
-                                _scanState.update { NfcScanUiState.Tampered }
-                            }
                         }
 
                         is NfcScanResult.Write -> {

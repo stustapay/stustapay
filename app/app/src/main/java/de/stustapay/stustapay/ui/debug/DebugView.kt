@@ -18,7 +18,6 @@ import de.stustapay.stustapay.ui.nav.NavScaffold
 object DevelopNavDest : NavDestinations() {
     val main = NavDest("main", title = "Development")
     val net = NavDest("net", title = "Network")
-    val nfc = NavDest("nfc", title = "NFC")
     val qr = NavDest("qr", title = "QR Scan")
     val ec = NavDest("ec", title = "EC Payment")
 }
@@ -53,9 +52,6 @@ fun DebugView(leaveView: () -> Unit = {}) {
             }
             composable(DevelopNavDest.net.route) {
                 NetDebugView()
-            }
-            composable(DevelopNavDest.nfc.route) {
-                NfcDebugView()
             }
             composable(DevelopNavDest.qr.route) {
                 QRScanView()

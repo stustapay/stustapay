@@ -5,6 +5,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.TagLostException
 import android.os.Bundle
+import android.util.Log
 import de.stustapay.libssp.model.NfcScanFailure
 import de.stustapay.libssp.model.NfcScanRequest
 import de.stustapay.libssp.model.NfcScanResult
@@ -115,73 +116,12 @@ class NfcHandler @Inject constructor(
         val req = dataSource.getScanRequest()
         if (req != null) {
             when (req) {
-                is NfcScanRequest.FastRead -> {
-                    tag.connect()
-                    dataSource.setScanResult(NfcScanResult.FastRead(tag.fastRead(req.uidRetrKey, req.dataProtKey)))
-                }
                 is NfcScanRequest.Read -> {
                     tag.connect()
-
-                    if (!authenticate(tag, req.auth, req.cmac, req.key)) {
-                        return
-                    }
-                    val chipProtected = tag.isProtected()
-                    val chipUid = tag.readSerialNumber()
-                    val chipContent = tag.readUserMemory().asByteArray().decodeToString()
-                    dataSource.setScanResult(
-                        NfcScanResult.Read(
-                            chipProtected,
-                            chipUid,
-                            chipContent
-                        )
-                    )
+                    dataSource.setScanResult(NfcScanResult.Read(tag.fastRead(req.uidRetrKey, req.dataProtKey)))
                 }
-                is NfcScanRequest.ReadMultiKey -> {
-                    tag.connect()
-
-                    for (key in req.keys) {
-                        try {
-                            tag.authenticate(
-                                key,
-                                MifareUltralightAES.KeyType.DATA_PROT_KEY,
-                                req.cmac
-                            )
-                        } catch (e: Exception) {
-                            tag.close()
-                            tag.connect()
-                            continue
-                        }
-                        val chipProtected = tag.isProtected()
-                        val chipUid = tag.readSerialNumber()
-                        val chipContent = tag.readUserMemory().asByteArray().decodeToString()
-                        dataSource.setScanResult(
-                            NfcScanResult.Read(
-                                chipProtected,
-                                chipUid,
-                                chipContent
-                            )
-                        )
-                        return
-                    }
-                    dataSource.setScanResult(NfcScanResult.Fail(NfcScanFailure.Auth("none of the keys worked")))
-                }
-                is NfcScanRequest.WriteSig -> {
-                    tag.connect()
-
-                    if (!authenticate(tag, req.auth, req.cmac, req.key)) {
-                        return
-                    }
-                    var data = req.signature.toByteArray(Charset.forName("UTF-8")).asBitVector()
-                    for (i in 0u until 4u) {
-                        data += 0.bv
-                    }
-                    for (i in 48u until 56u) {
-                        data += i.bv
-                    }
-                    tag.writeUserMemory(data)
-                    dataSource.setScanResult(NfcScanResult.Write)
-                }
-                is NfcScanRequest.WriteKey -> {
+                is NfcScanRequest.Write -> {
+                    Log.e("SSP", "Hell")
                     try {
                         tag.connect()
                     } catch (e: TagIncompatibleException) {
@@ -194,57 +134,19 @@ class NfcHandler @Inject constructor(
                         )
                         return
                     }
-                    if (!authenticate(tag, req.auth, req.cmac, req.key)) {
-                        return
-                    }
-                    tag.writeDataProtKey(req.key)
-                    tag.writeUidRetrKey(req.key)
-                    dataSource.setScanResult(NfcScanResult.Write)
-                }
-                is NfcScanRequest.WriteProtect -> {
-                    try {
-                        tag.connect()
-                    } catch (e: TagIncompatibleException) {
-                        dataSource.setScanResult(
-                            NfcScanResult.Fail(
-                                NfcScanFailure.Incompatible(
-                                    e.message ?: "unknown reason"
-                                )
-                            )
-                        )
-                        return
-                    }
-                    if (!authenticate(tag, req.auth, req.cmac, req.key)) {
-                        return
-                    }
-                    if (req.enable) {
-                        tag.setAuth0(0x10u)
-                    } else {
-                        tag.setAuth0(0x3cu)
-                    }
-                    dataSource.setScanResult(NfcScanResult.Write)
-                }
-                is NfcScanRequest.WriteCmac -> {
-                    try {
-                        tag.connect()
-                    } catch (e: TagIncompatibleException) {
-                        dataSource.setScanResult(
-                            NfcScanResult.Fail(
-                                NfcScanFailure.Incompatible(
-                                    e.message ?: "unknown reason"
-                                )
-                            )
-                        )
-                        return
-                    }
-                    if (!authenticate(tag, req.auth, req.cmac, req.key)) {
-                        return
-                    }
-                    tag.setCMAC(req.enable)
+
+                    authenticate(tag, true, true, req.dataProtKey!!)
+
+                    tag.setCMAC(true)
+                    tag.setAuth0(0x10u)
+                    tag.writeUserMemory("StuStaPay at StuStaCulum 2024\n".toByteArray(Charset.forName("UTF-8")).asBitVector())
+                    tag.writePin("DDDDDDDDDDDD")
+                    tag.writeDataProtKey(req.dataProtKey)
+                    tag.writeUidRetrKey(req.uidRetrKey)
                     dataSource.setScanResult(NfcScanResult.Write)
                 }
                 is NfcScanRequest.Test -> {
-                    val log = tag.test(req.key0, req.key1)
+                    val log = tag.test(req.dataProtKey, req.uidRetrKey)
                     dataSource.setScanResult(NfcScanResult.Test(log))
                 }
             }
