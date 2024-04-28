@@ -29,6 +29,7 @@ src/main/kotlin/de/stustapay/api/models/CompletedPayOut.kt
 src/main/kotlin/de/stustapay/api/models/CompletedSale.kt
 src/main/kotlin/de/stustapay/api/models/CompletedTicketSale.kt
 src/main/kotlin/de/stustapay/api/models/CompletedTopUp.kt
+src/main/kotlin/de/stustapay/api/models/CreateUserPayload.kt
 src/main/kotlin/de/stustapay/api/models/CurrentUser.kt
 src/main/kotlin/de/stustapay/api/models/Customer.kt
 src/main/kotlin/de/stustapay/api/models/GrantVoucherPayload.kt
@@ -41,7 +42,6 @@ src/main/kotlin/de/stustapay/api/models/NewSale.kt
 src/main/kotlin/de/stustapay/api/models/NewTicketSale.kt
 src/main/kotlin/de/stustapay/api/models/NewTicketScan.kt
 src/main/kotlin/de/stustapay/api/models/NewTopUp.kt
-src/main/kotlin/de/stustapay/api/models/NewUser.kt
 src/main/kotlin/de/stustapay/api/models/Order.kt
 src/main/kotlin/de/stustapay/api/models/OrderType.kt
 src/main/kotlin/de/stustapay/api/models/PaymentMethod.kt
@@ -68,12 +68,14 @@ src/main/kotlin/de/stustapay/api/models/TicketScanResult.kt
 src/main/kotlin/de/stustapay/api/models/TicketScanResultEntry.kt
 src/main/kotlin/de/stustapay/api/models/TransferCashRegisterPayload.kt
 src/main/kotlin/de/stustapay/api/models/TransportAccountChangePayload.kt
+src/main/kotlin/de/stustapay/api/models/UpdateUserPayload.kt
 src/main/kotlin/de/stustapay/api/models/User.kt
 src/main/kotlin/de/stustapay/api/models/UserInfo.kt
 src/main/kotlin/de/stustapay/api/models/UserInfoPayload.kt
 src/main/kotlin/de/stustapay/api/models/UserRole.kt
 src/main/kotlin/de/stustapay/api/models/UserTag.kt
 src/main/kotlin/de/stustapay/api/models/UserTagHistoryEntry.kt
+src/main/kotlin/de/stustapay/api/models/UserTagScan.kt
 src/main/kotlin/de/stustapay/api/models/UserTagSecret.kt
 src/main/kotlin/de/stustapay/api/models/ValidationError.kt
 src/main/kotlin/de/stustapay/api/models/ValidationErrorLocInner.kt

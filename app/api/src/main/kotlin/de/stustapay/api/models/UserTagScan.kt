@@ -23,26 +23,18 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param login 
- * @param displayName 
- * @param userTagUid 
- * @param description 
+ * @param tagUid 
+ * @param tagPin 
  */
 @Serializable
 
-data class NewUser (
+data class UserTagScan (
 
-    @SerialName(value = "login")
-    val login: kotlin.String,
+    @SerialName(value = "tag_uid")
+    val tagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
-    @SerialName(value = "display_name")
-    val displayName: kotlin.String,
-
-    @SerialName(value = "user_tag_uid")
-    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
-
-    @SerialName(value = "description")
-    val description: kotlin.String? = null
+    @SerialName(value = "tag_pin")
+    val tagPin: kotlin.String
 
 )
 

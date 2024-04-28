@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: nodeAdministration,customerManagement,userManagement,cashTransport,terminalLogin,supervisedTerminalLogin,canBookOrders,grantFreeTickets,grantVouchers
+ * Values: nodeAdministration,customerManagement,createUser,allowPrivilegedRoleAssignment,userManagement,cashTransport,terminalLogin,supervisedTerminalLogin,canBookOrders,grantFreeTickets,grantVouchers
  */
 @Serializable
 enum class Privilege(val value: kotlin.String) {
@@ -32,6 +32,12 @@ enum class Privilege(val value: kotlin.String) {
 
     @SerialName(value = "customer_management")
     customerManagement("customer_management"),
+
+    @SerialName(value = "create_user")
+    createUser("create_user"),
+
+    @SerialName(value = "allow_privileged_role_assignment")
+    allowPrivilegedRoleAssignment("allow_privileged_role_assignment"),
 
     @SerialName(value = "user_management")
     userManagement("user_management"),

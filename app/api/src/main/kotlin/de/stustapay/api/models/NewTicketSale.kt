@@ -16,6 +16,7 @@
 package de.stustapay.api.models
 
 import de.stustapay.api.models.PaymentMethod
+import de.stustapay.api.models.UserTagScan
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -25,7 +26,7 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param uuid 
- * @param customerTagUids 
+ * @param customerTags 
  * @param paymentMethod 
  */
 @Serializable
@@ -35,8 +36,8 @@ data class NewTicketSale (
     @Contextual @SerialName(value = "uuid")
     val uuid: java.util.UUID,
 
-    @SerialName(value = "customer_tag_uids")
-    val customerTagUids: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>,
+    @SerialName(value = "customer_tags")
+    val customerTags: kotlin.collections.List<UserTagScan>,
 
     @Contextual @SerialName(value = "payment_method")
     val paymentMethod: PaymentMethod?

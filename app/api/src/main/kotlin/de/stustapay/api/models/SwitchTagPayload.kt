@@ -25,6 +25,7 @@ import kotlinx.serialization.Contextual
  *
  * @param customerId 
  * @param newUserTagUid 
+ * @param newUserTagPin 
  * @param comment 
  */
 @Serializable
@@ -36,6 +37,9 @@ data class SwitchTagPayload (
 
     @SerialName(value = "new_user_tag_uid")
     val newUserTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
+    @SerialName(value = "new_user_tag_pin")
+    val newUserTagPin: kotlin.String,
 
     @SerialName(value = "comment")
     val comment: kotlin.String

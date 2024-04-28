@@ -33,6 +33,7 @@ import kotlinx.serialization.Contextual
  * @param comment 
  * @param balance 
  * @param vouchers 
+ * @param userTagId 
  * @param userTagUid 
  * @param restriction 
  * @param tagHistory 
@@ -43,6 +44,7 @@ import kotlinx.serialization.Contextual
  * @param payoutError 
  * @param payoutRunId 
  * @param payoutExport 
+ * @param userTagPin 
  * @param userTagUidHex 
  * @param userTagComment 
  */
@@ -70,6 +72,9 @@ data class Customer (
 
     @SerialName(value = "vouchers")
     val vouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
+    @SerialName(value = "user_tag_id")
+    val userTagId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "user_tag_uid")
     val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
@@ -100,6 +105,9 @@ data class Customer (
 
     @SerialName(value = "payout_export")
     val payoutExport: kotlin.Boolean?,
+
+    @SerialName(value = "user_tag_pin")
+    val userTagPin: kotlin.String?,
 
     @SerialName(value = "user_tag_uid_hex")
     val userTagUidHex: kotlin.String?,

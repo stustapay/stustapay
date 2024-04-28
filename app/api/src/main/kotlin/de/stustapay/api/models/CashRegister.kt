@@ -27,7 +27,6 @@ import kotlinx.serialization.Contextual
  * @param nodeId 
  * @param id 
  * @param currentCashierId 
- * @param currentCashierTagUid 
  * @param currentTillId 
  * @param currentBalance 
  */
@@ -46,9 +45,6 @@ data class CashRegister (
 
     @SerialName(value = "current_cashier_id")
     val currentCashierId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
-
-    @SerialName(value = "current_cashier_tag_uid")
-    val currentCashierTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "current_till_id")
     val currentTillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,

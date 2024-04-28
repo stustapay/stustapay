@@ -19,12 +19,13 @@ import kotlinx.serialization.Contextual
 
 import de.stustapay.api.models.Account
 import de.stustapay.api.models.CheckLoginResult
+import de.stustapay.api.models.CreateUserPayload
 import de.stustapay.api.models.CurrentUser
 import de.stustapay.api.models.GrantVoucherPayload
 
 import de.stustapay.api.models.LoginPayload
 import de.stustapay.api.models.NewFreeTicketGrant
-import de.stustapay.api.models.NewUser
+import de.stustapay.api.models.UpdateUserPayload
 import de.stustapay.api.models.User
 import de.stustapay.api.models.UserTag
 
@@ -79,15 +80,15 @@ import io.ktor.http.ParametersBuilder
         /**
         * Create a new user with the given roles
         * 
-         * @param newUser  
+         * @param createUserPayload  
          * @return User
         */
             @Suppress("UNCHECKED_CAST")
-        open suspend fun createUser(newUser: NewUser): HttpResponse<User> {
+        open suspend fun createUser(createUserPayload: CreateUserPayload): HttpResponse<User> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 
-            val localVariableBody = newUser
+            val localVariableBody = createUserPayload
 
             val localVariableQuery = mutableMapOf<String, List<String>>()
 
@@ -261,6 +262,38 @@ import io.ktor.http.ParametersBuilder
             )
 
             return request(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+            ).wrap()
+            }
+
+        /**
+        * Update the roles of a given user
+        * 
+         * @param updateUserPayload  
+         * @return User
+        */
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun updateUserRoles(updateUserPayload: UpdateUserPayload): HttpResponse<User> {
+
+            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
+
+            val localVariableBody = updateUserPayload
+
+            val localVariableQuery = mutableMapOf<String, List<String>>()
+
+            val localVariableHeaders = mutableMapOf<String, String>()
+
+            val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.POST,
+            "/user/update-user-roles",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+            )
+
+            return jsonRequest(
             localVariableConfig,
             localVariableBody,
             localVariableAuthNames

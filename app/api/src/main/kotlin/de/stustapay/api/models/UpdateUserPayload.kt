@@ -15,7 +15,6 @@
 
 package de.stustapay.api.models
 
-import de.stustapay.api.models.Ticket
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -24,22 +23,18 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param customerTagUid 
- * @param customerTagPin 
- * @param ticket 
+ * @param userTagUid 
+ * @param roleIds 
  */
 @Serializable
 
-data class TicketScanResultEntry (
+data class UpdateUserPayload (
 
-    @SerialName(value = "customer_tag_uid")
-    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+    @SerialName(value = "user_tag_uid")
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
-    @SerialName(value = "customer_tag_pin")
-    val customerTagPin: kotlin.String,
-
-    @SerialName(value = "ticket")
-    val ticket: Ticket
+    @SerialName(value = "role_ids")
+    val roleIds: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>
 
 )
 

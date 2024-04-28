@@ -27,8 +27,9 @@ import kotlinx.serialization.Contextual
  * @param displayName 
  * @param userTagUid 
  * @param nodeId 
- * @param userTagUidHex 
+ * @param userTagPin 
  * @param description 
+ * @param userTagId 
  * @param transportAccountId 
  * @param cashierAccountId 
  * @param cashRegisterId 
@@ -52,11 +53,14 @@ data class UserInfo (
     @SerialName(value = "node_id")
     val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
-    @SerialName(value = "user_tag_uid_hex")
-    val userTagUidHex: kotlin.String?,
+    @SerialName(value = "user_tag_pin")
+    val userTagPin: kotlin.String? = null,
 
     @SerialName(value = "description")
     val description: kotlin.String? = null,
+
+    @SerialName(value = "user_tag_id")
+    val userTagId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "transport_account_id")
     val transportAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
