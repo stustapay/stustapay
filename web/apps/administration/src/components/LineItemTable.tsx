@@ -37,12 +37,12 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
     return <RouterLink to={ProductRoutes.detail(product.id)}>{product.name}</RouterLink>;
   };
 
-  const renderTaxRate = (name: string, rate: number) => {
+  const renderTaxRate = (id: number, rate: number) => {
     if (!taxRates) {
       return "";
     }
 
-    const tax = selectTaxRateById(taxRates, name);
+    const tax = selectTaxRateById(taxRates, id);
     if (!tax) {
       return "";
     }
@@ -88,7 +88,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
     {
       field: "tax_rate",
       headerName: t("item.taxRate") as string,
-      renderCell: (params) => renderTaxRate(params.row.tax_name, params.row.tax_rate),
+      renderCell: (params) => renderTaxRate(params.row.tax_rate_id, params.row.tax_rate),
       align: "right",
       width: 100,
     },

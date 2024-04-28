@@ -668,7 +668,6 @@ class DatabaseSetup:
                     name="SSC-Test",
                     description="",
                     currency_identifier="EUR",
-                    sumup_topup_enabled=True,
                     max_account_balance=150,
                     customer_portal_url="http://localhost:4300",
                     customer_portal_about_page_url="http://localhost:4300/about",

@@ -39,3 +39,5 @@ alter table account_tag_association_history drop user_tag_uid;
 create index on user_tag (pin, uid, node_id);
 create index on usr (login, node_id, user_tag_id);
 create index on account (type, user_tag_id, node_id);
+create index on line_item (order_id);
+create index on ordr (order_type, till_id, cancels_order, customer_account_id, payment_method, booked_at);
