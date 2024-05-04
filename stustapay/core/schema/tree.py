@@ -42,6 +42,7 @@ class _BaseEvent(BaseModel):
     sepa_sender_name: str
     sepa_sender_iban: str
     sepa_description: str
+    sepa_max_num_payouts_in_run: int = 1000
     sepa_allowed_country_codes: list[str]
 
     # map of lang_code -> [text type -> text content]
@@ -62,6 +63,7 @@ class _BaseEvent(BaseModel):
             sender_iban=self.sepa_sender_iban,
             description=self.sepa_description,
             allowed_country_codes=self.sepa_allowed_country_codes,
+            max_num_payouts_in_run=self.sepa_max_num_payouts_in_run,
         )
 
 

@@ -79,6 +79,7 @@ create table event (
     sepa_sender_name text,
     sepa_sender_iban text,
     sepa_description text,
+    sepa_max_num_payouts_in_run bigint not null default 1000,
     sepa_allowed_country_codes text[]
 );
 
@@ -101,7 +102,8 @@ insert into event (
     id, currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, bon_address, bon_title,
     customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban,
     sepa_description, sepa_allowed_country_codes, customer_portal_url, customer_portal_about_page_url,
-    customer_portal_data_privacy_url, sumup_payment_enabled, sumup_affiliate_key, sumup_api_key, sumup_merchant_code
+    customer_portal_data_privacy_url, sumup_payment_enabled, sumup_affiliate_key, sumup_api_key, sumup_merchant_code,
+    sepa_max_num_payouts_in_run
 ) overriding system value
 select
     0,
@@ -124,7 +126,8 @@ select
     false, -- sumup_payment_enabled
     '', -- sumup_affiliate_key
     '', -- sumup_api_key
-    ''; -- sumup_merchant_code
+    '', -- sumup_merchant_code
+    1000; -- sepa_max_num_payouts_in_run
 
 alter table event alter column sepa_allowed_country_codes set not null;
 alter table event alter column sepa_description set not null;
@@ -276,7 +279,9 @@ values
     ('cash_transport'),
     ('customer_management'),
     ('create_user'),
-    ('allow_privileged_role_assignment');
+    ('allow_privileged_role_assignment'),
+    ('payout_management'),
+    ('view_node_stats');
 
 insert into user_role_to_privilege (role_id, privilege)
 values
@@ -284,11 +289,15 @@ values
     (0, 'customer_management'),  -- admin role
     (0, 'create_user'),  -- admin role
     (0, 'allow_privileged_role_assignment'),  -- admin role
+    (0, 'payout_management'),  -- admin role
+    (0, 'view_node_stats'),  -- admin role
     (1, 'node_administration'),  -- finanzorga role
     (1, 'cash_transport'),  -- finanzorga role
     (1, 'customer_management'),  -- finanzorga role
     (1, 'create_user'),  -- finanzorga role
-    (1, 'allow_privileged_role_assignment');  -- finanzorga role
+    (1, 'allow_privileged_role_assignment'),  -- finanzorga role
+    (1, 'payout_management'),  -- finanzorga role
+    (1, 'view_node_stats');  -- finanzorga role
 
 delete from user_role_to_privilege where
     privilege = 'account_management' or
@@ -415,6 +424,40 @@ create table terminal (
 
 alter table till add column terminal_id bigint references terminal(id) unique;
 
+alter table payout_run add column done bool default false;
+alter table payout_run add column revoked bool default false;
+alter table payout_run add column sepa_xml text;
+alter table payout_run add column csv text;
+alter table payout_run add column set_done_at timestamptz;
+alter table payout_run add column set_done_by bigint references usr(id);
+alter table payout_run add column created_by_new bigint references usr(id);
+alter table payout_run drop column created_by;
+alter table payout_run rename column created_by_new to created_by;
+
+create table payout (
+    id bigint primary key generated always as identity (start with 1000),
+
+    customer_account_id bigint not null references account(id),
+    payout_run_id bigint not null references payout_run(id),
+    unique(customer_account_id, payout_run_id),  -- for now we do not allow multiple payouts per customer to keep things simple
+
+    iban text,
+    account_name text,
+    email text,
+    amount numeric not null,
+    donation numeric default 0.0,
+    payout_error text
+);
+
+insert into payout (customer_account_id, payout_run_id, iban, account_name, email, amount, donation, payout_error)
+select c.customer_account_id, c.payout_run_id, c.iban, c.account_name, c.email, a.balance, c.donation, c.payout_error
+from customer_info c join account a on c.customer_account_id = a.id
+where c.payout_run_id is not null;
+
+alter table customer_info drop column payout_error;
+alter table customer_info drop column payout_run_id;
+
+create index on payout (payout_run_id, customer_account_id);
 create index on product (type, name, node_id);
 create index on till (name, node_id);
 create index on till_button (name, node_id);

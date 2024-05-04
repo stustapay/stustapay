@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.order import Order
+from stustapay.core.schema.payout import Payout
 from stustapay.payment.sumup.api import SumUpCheckoutStatus
 
 
@@ -14,10 +15,10 @@ class Customer(Account):
     account_name: Optional[str]
     email: Optional[str]
     donation: Optional[float]
-    payout_error: Optional[str]
-    payout_run_id: Optional[int]
     payout_export: Optional[bool]
     user_tag_pin: Optional[str]
+
+    payout: Payout | None
 
 
 class OrderWithBon(Order):

@@ -1,18 +1,32 @@
 import { withPrivilegeGuard } from "@/app/layout";
 import { Privilege, formatUserTagUid } from "@stustapay/models";
 import {
+  Customer,
   selectOrderAll,
+  useAllowCustomerPayoutMutation,
   useDisableAccountMutation,
   useGetCustomerQuery,
   useListOrdersQuery,
+  usePreventCustomerPayoutMutation,
   useUpdateAccountCommentMutation,
 } from "@/api";
 import { AccountRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailLayout, EditableListItem, ListItemLink } from "@/components";
 import { OrderTable } from "@/components/features";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilegeAtNode } from "@/hooks";
 import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
-import { Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Paper } from "@mui/material";
+import {
+  Alert,
+  Button,
+  Grid,
+  IconButton,
+  List,
+  ListItem,
+  ListItemSecondaryAction,
+  ListItemText,
+  Paper,
+  Stack,
+} from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -21,6 +35,84 @@ import { toast } from "react-toastify";
 import { AccountTagHistoryTable } from "../accounts/components/AccountTagHistoryTable";
 import { EditAccountBalanceModal } from "../accounts/components/EditAccountBalanceModal";
 import { EditAccountVoucherAmountModal } from "../accounts/components/EditAccountVoucherAmountModal";
+import { LayoutAction } from "@/components/layouts/types";
+
+const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
+  const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
+  const formatCurrency = useCurrencyFormatter();
+  const [allowPayout] = useAllowCustomerPayoutMutation();
+
+  const printMaybeNull = (value?: string | null) => {
+    if (value == null || value === "") {
+      return t("common.notSet");
+    }
+    return value;
+  };
+
+  const onClickAllowPayout = () => {
+    allowPayout({ customerId: customer.id, nodeId: currentNode.id }).catch(() => {
+      toast.error("Error while allowing customer payout");
+    });
+  };
+
+  return (
+    <Grid item>
+      <Stack spacing={2}>
+        <Paper sx={{ height: "100%" }}>
+          {customer.payout_export === false && (
+            <Alert severity="info" action={<Button onClick={onClickAllowPayout}>{t("customer.allowPayout")}</Button>}>
+              {t("customer.payoutExportPrevented")}
+            </Alert>
+          )}
+          <List>
+            <ListItem>
+              <ListItemText
+                primary={t("customer.bankAccountHolder")}
+                secondary={printMaybeNull(customer.account_name)}
+              />
+            </ListItem>
+            <ListItem>
+              <ListItemText primary={t("customer.iban")} secondary={printMaybeNull(customer.iban)} />
+            </ListItem>
+            <ListItem>
+              <ListItemText primary={t("common.email")} secondary={printMaybeNull(customer.email)} />
+            </ListItem>
+            <ListItem>
+              <ListItemText primary={t("customer.donation")} secondary={formatCurrency(customer.donation)} />
+            </ListItem>
+          </List>
+        </Paper>
+        <Paper>
+          {customer.payout ? (
+            <List>
+              <ListItem>
+                <ListItemText primary={t("customer.detailsInPayoutRun")} />
+              </ListItem>
+              <ListItemLink to={PayoutRunRoutes.detail(customer.payout.payout_run_id)}>
+                <ListItemText primary={t("customer.payoutRun")} secondary={customer.payout.payout_run_id} />
+              </ListItemLink>
+              <ListItem>
+                <ListItemText primary={t("customer.iban")} secondary={printMaybeNull(customer.payout.iban)} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary={t("common.email")} secondary={printMaybeNull(customer.payout.email)} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary={t("customer.donation")} secondary={formatCurrency(customer.payout.donation)} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary={t("customer.payoutAmount")} secondary={formatCurrency(customer.payout.amount)} />
+              </ListItem>
+            </List>
+          ) : (
+            <Alert severity="info">{t("customer.noPayoutRunAssigned")}</Alert>
+          )}
+        </Paper>
+      </Stack>
+    </Grid>
+  );
+};
 
 export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, () => {
   const { t } = useTranslation();
@@ -36,6 +128,10 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
   const formatCurrency = useCurrencyFormatter();
   const [disableAccount] = useDisableAccountMutation();
   const [updateComment] = useUpdateAccountCommentMutation();
+  const canManagePayoutsAtNode = useCurrentUserHasPrivilegeAtNode(PayoutRunRoutes.privilege);
+
+  const [allowPayout] = useAllowCustomerPayoutMutation();
+  const [preventPayout] = usePreventCustomerPayoutMutation();
 
   const [balanceModalOpen, setBalanceModalOpen] = React.useState(false);
   const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
@@ -94,21 +190,41 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
     });
   };
 
+  const handleAllowPayout = () => {
+    allowPayout({ customerId: customer.id, nodeId: currentNode.id }).catch(() => {
+      toast.error("Error while allowing customer payout");
+    });
+  };
+
+  const handlePreventPayout = () => {
+    preventPayout({ customerId: customer.id, nodeId: currentNode.id }).catch(() => {
+      toast.error("Error while allowing customer payout");
+    });
+  };
+
+  const actions: LayoutAction[] = [
+    { label: t("account.disable"), onClick: handleDisableAccount, color: "error", icon: <RemoveCircleIcon /> },
+  ];
+
+  if (canManagePayoutsAtNode(currentNode.id) && customer.payout == null) {
+    if (customer.payout_export !== false) {
+      actions.splice(0, 0, {
+        label: t("customer.preventPayout"),
+        onClick: handlePreventPayout,
+        color: "error",
+      });
+    } else {
+      actions.splice(0, 0, {
+        label: t("customer.allowPayout"),
+        onClick: handleAllowPayout,
+        color: "error",
+      });
+    }
+  }
+
   return (
-    <DetailLayout
-      title={`Customer Account ${customer.id}`}
-      routes={AccountRoutes}
-      actions={[
-        { label: t("account.disable"), onClick: handleDisableAccount, color: "error", icon: <RemoveCircleIcon /> },
-      ]}
-    >
-      <Grid
-        container
-        spacing={1}
-        display="grid"
-        alignItems="stretch"
-        gridTemplateColumns={`repeat(${customer.payout_export ? 2 : 1}, auto)`}
-      >
+    <DetailLayout title={`Customer Account ${customer.id}`} routes={AccountRoutes} actions={actions}>
+      <Grid container spacing={1} display="grid" alignItems="stretch" gridTemplateColumns="1fr 1fr">
         <Grid item>
           <Paper sx={{ height: "100%" }}>
             <List>
@@ -153,45 +269,7 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
             </List>
           </Paper>
         </Grid>
-        {customer.payout_export && (
-          <Grid item>
-            <Paper sx={{ height: "100%" }}>
-              <List>
-                <ListItem>
-                  <ListItemText primary={t("customer.bankAccountHolder")} secondary={customer.account_name} />
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary={t("customer.iban")} secondary={customer.iban} />
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary={t("common.email")} secondary={customer.email} />
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary={t("customer.donation")} secondary={formatCurrency(customer.donation)} />
-                </ListItem>
-                <ListItem>
-                  <ListItemText
-                    primary={t("customer.payoutRun")}
-                    secondary={
-                      customer.payout_run_id != null ? (
-                        <RouterLink to={PayoutRunRoutes.detail(customer.payout_run_id)}>
-                          {customer.payout_run_id}
-                        </RouterLink>
-                      ) : (
-                        t("customer.noPayoutRunAssigned")
-                      )
-                    }
-                  />
-                </ListItem>
-                {customer.payout_error && (
-                  <ListItem>
-                    <ListItemText primary={t("customer.payoutRunError")} secondary={customer.payout_error} />
-                  </ListItem>
-                )}
-              </List>
-            </Paper>
-          </Grid>
-        )}
+        <PayoutDetails customer={customer} />
       </Grid>
       {customer.tag_history.length > 0 && <AccountTagHistoryTable history={customer.tag_history} />}
       <EditAccountBalanceModal

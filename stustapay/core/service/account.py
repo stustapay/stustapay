@@ -17,6 +17,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument, NotFound
+from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.transaction import book_transaction
 from stustapay.framework.database import Connection
 
@@ -89,15 +90,7 @@ class AccountService(DBService):
     @requires_node()
     @requires_user([Privilege.node_administration, Privilege.customer_management])
     async def get_customer(self, *, conn: Connection, node: Node, customer_id: int) -> Customer:
-        customer = await conn.fetch_maybe_one(
-            Customer,
-            "select c.* from customer c where c.id = $1 and c.node_id = any($2)",
-            customer_id,
-            node.ids_to_event_node,
-        )
-        if customer is None:
-            raise NotFound(element_typ="customer", element_id=customer_id)
-        return customer
+        return await fetch_customer(conn=conn, node=node, customer_id=customer_id)
 
     @with_db_transaction(read_only=True)
     @requires_node()

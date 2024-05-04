@@ -103,57 +103,60 @@ create view account_with_history as
             group by atah.account_id
                   ) hist on a.id = hist.account_id;
 
+create view payout_view as
+    select
+        p.id,
+        a.node_id,
+        p.customer_account_id,
+        p.iban,
+        p.account_name,
+        p.email,
+        ut.id as user_tag_id,
+        ut.uid as user_tag_uid,
+        p.amount,
+        p.donation,
+        p.payout_run_id
+    from payout p
+    join account a on p.customer_account_id = a.id
+    join user_tag ut on a.user_tag_id = ut.id;
+
 -- aggregates account and customer_info to customer
 create view customer as
     select
         a.*,
-        customer_info.*
+        customer_info.*,
+        (select row_to_json(p.*) from payout_view p where p.customer_account_id = a.id) as payout
     from
         account_with_history a
         left join customer_info on (a.id = customer_info.customer_account_id)
     where
         a.type = 'private';
 
-create view payout as
+create view customers_without_payout_run as
     select
-        c.node_id,
-        c.customer_account_id,
-        c.iban,
-        c.account_name,
-        c.email,
-        ut.id as user_tag_id,
-        ut.uid as user_tag_uid,
-        (c.balance - c.donation) as balance,
-        c.payout_run_id
-    from
-        customer c
-    join user_tag ut on c.user_tag_id = ut.id
-    where
-        c.iban is not null
-        and round(c.balance, 2) > 0
-        and round(c.balance - c.donation, 2) > 0
-        and c.payout_export
-        and c.payout_error is null;
+        c.*
+    from customer c
+    left join payout p on c.id = p.customer_account_id
+    where p.id is null and (c.iban is not null or round(c.balance - c.donation, 2) = 0) and c.payout_export != false;
 
 create view payout_run_with_stats as
     select
         p.*,
-        s.total_donation_amount,
-        s.total_payout_amount,
-        s.n_payouts
+        coalesce(s.total_donation_amount, 0) as total_donation_amount,
+        coalesce(s.total_payout_amount, 0) as total_payout_amount,
+        coalesce(s.n_payouts, 0) as n_payouts
     from
         payout_run p
-        join (
+        left join (
             select
-                py.id                                                      as id,
-                coalesce(sum(c.donation), 0)                               as total_donation_amount,
-                coalesce(sum(c.balance), 0) - coalesce(sum(c.donation), 0) as total_payout_amount,
-                count(*)                                                   as n_payouts
+                p.payout_run_id               as id,
+                coalesce(sum(p.donation), 0)  as total_donation_amount,
+                coalesce(sum(p.amount), 0)    as total_payout_amount,
+                count(*)                      as n_payouts
             from
-                payout_run py
-                left join customer c on py.id = c.payout_run_id
-            group by py.id
-             ) s on p.id = s.id;
+                payout p
+            group by p.payout_run_id
+        ) s on p.id = s.id;
 
 create view user_tag_with_history as
     select

@@ -1,11 +1,12 @@
 import { selectTillLayoutAll, useDeleteTillLayoutMutation, useListTillLayoutsQuery } from "@/api";
 import { TillLayoutRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import { TillLayout } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -16,6 +17,7 @@ export const TillLayoutList: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const canManageNode = useCurrentUserHasPrivilege(TillLayoutRoutes.privilege);
   const navigate = useNavigate();
+  const openModal = useOpenModal();
 
   const { layouts, isLoading: isTillsLoading } = useListTillLayoutsQuery(
     { nodeId: currentNode.id },
@@ -29,22 +31,21 @@ export const TillLayoutList: React.FC = () => {
   const [deleteTill] = useDeleteTillLayoutMutation();
   const renderNode = useRenderNode();
 
-  const [layoutToDelete, setLayoutToDelete] = React.useState<number | null>(null);
   if (isTillsLoading) {
     return <Loading />;
   }
 
-  const openConfirmDeleteDialog = (tillId: number) => {
-    setLayoutToDelete(tillId);
-  };
-
-  const handleConfirmDeleteLayout: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && layoutToDelete !== null) {
-      deleteTill({ nodeId: currentNode.id, layoutId: layoutToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setLayoutToDelete(null);
+  const openConfirmDeleteDialog = (layoutId: number) => {
+    openModal({
+      type: "confirm",
+      title: t("layout.delete"),
+      content: t("layout.deleteDescription"),
+      onConfirm: () => {
+        deleteTill({ nodeId: currentNode.id, layoutId })
+          .unwrap()
+          .catch(() => undefined);
+      },
+    });
   };
 
   const columns: GridColDef<TillLayout>[] = [
@@ -102,12 +103,6 @@ export const TillLayoutList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("layout.delete")}
-        body={t("layout.deleteDescription")}
-        show={layoutToDelete !== null}
-        onClose={handleConfirmDeleteLayout}
       />
     </ListLayout>
   );

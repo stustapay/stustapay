@@ -41,6 +41,7 @@ from stustapay.core.schema.order import (
     TicketScanResultEntry,
 )
 from stustapay.core.schema.product import Product, ProductRestriction, ProductType
+from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.ticket import Ticket
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
@@ -70,7 +71,6 @@ from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from stustapay.framework.database import Connection
 
-from ...schema.terminal import CurrentTerminal
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService

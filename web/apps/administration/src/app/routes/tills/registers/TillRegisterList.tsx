@@ -9,7 +9,7 @@ import {
   CashRegister,
 } from "@/api";
 import { CashierRoutes, TillRegistersRoutes, TillRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import {
   useCurrencyFormatter,
   useCurrentNode,
@@ -20,6 +20,7 @@ import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } fr
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -32,6 +33,7 @@ export const TillRegisterList: React.FC = () => {
   const canManageRegistersAtNode = useCurrentUserHasPrivilegeAtNode(TillRegistersRoutes.privilege);
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
+  const openModal = useOpenModal();
 
   const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
   const { data: cashiers } = useListCashiersQuery({ nodeId: currentNode.id });
@@ -46,22 +48,21 @@ export const TillRegisterList: React.FC = () => {
   );
   const [deleteRegister] = useDeleteRegisterMutation();
 
-  const [registerToDelete, setToDelete] = React.useState<number | null>(null);
   if (isLoading) {
     return <Loading />;
   }
 
-  const openConfirmDeleteDialog = (tillId: number) => {
-    setToDelete(tillId);
-  };
-
-  const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && registerToDelete !== null) {
-      deleteRegister({ nodeId: currentNode.id, registerId: registerToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setToDelete(null);
+  const openConfirmDeleteDialog = (registerId: number) => {
+    openModal({
+      type: "confirm",
+      title: t("register.deleteRegister"),
+      content: t("register.deleteRegisterDescription"),
+      onConfirm: () => {
+        deleteRegister({ nodeId: currentNode.id, registerId })
+          .unwrap()
+          .catch(() => undefined);
+      },
+    });
   };
 
   const renderTill = (id: number | null) => {
@@ -164,12 +165,6 @@ export const TillRegisterList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("register.deleteRegister")}
-        body={t("register.deleteRegisterDescription")}
-        show={registerToDelete !== null}
-        onClose={handleConfirmDeleteProfile}
       />
     </ListLayout>
   );

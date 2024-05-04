@@ -1,14 +1,22 @@
-import { PayoutRunWithStats, selectPayoutRunAll, useListPayoutRunsQuery } from "@/api";
-import { PayoutRunRoutes } from "@/app/routes";
+import {
+  PayoutRunWithStats,
+  selectPayoutRunAll,
+  selectUserById,
+  useListPayoutRunsQuery,
+  useListUsersQuery,
+} from "@/api";
+import { PayoutRunRoutes, UserRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
+import { Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { PendingPayoutDetail } from "./PendingPayoutDetail";
+import { getUserName } from "@stustapay/models";
 
 export const PayoutRunList: React.FC = () => {
   const { t } = useTranslation();
@@ -24,6 +32,7 @@ export const PayoutRunList: React.FC = () => {
       }),
     }
   );
+  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
 
   if (isPayoutRunsLoading) {
     return <Loading />;
@@ -44,6 +53,12 @@ export const PayoutRunList: React.FC = () => {
       field: "created_by",
       headerName: t("payoutRun.createdBy") as string,
       minWidth: 200,
+      renderCell: (params) =>
+        params.row.created_by && (
+          <Link component={RouterLink} to={UserRoutes.detail(params.row.created_by)}>
+            {users && getUserName(selectUserById(users, params.row.created_by))}
+          </Link>
+        ),
     },
     {
       field: "created_at",
@@ -51,6 +66,30 @@ export const PayoutRunList: React.FC = () => {
       type: "dateTime",
       valueGetter: (params) => new Date(params.row.created_at),
       minWidth: 200,
+    },
+    {
+      field: "done",
+      headerName: t("common.status") as string,
+      minWidth: 100,
+      renderCell: (params) => {
+        if (params.row.done) {
+          return (
+            <>
+              <CheckIcon />
+              {t("payoutRun.done")}
+            </>
+          );
+        }
+        if (params.row.revoked) {
+          return (
+            <>
+              <DeleteIcon />
+              {t("payoutRun.revoked")}
+            </>
+          );
+        }
+        return "";
+      },
     },
     {
       field: "total_payout_amount",

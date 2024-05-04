@@ -3,10 +3,13 @@ import { z } from "zod";
 export const PrivilegeSchema = z.enum([
   "node_administration",
   "customer_management",
+  "payout_management",
 
   "create_user",
   "user_management",
   "allow_privileged_role_assignment",
+
+  "view_node_stats",
 
   // festival workflow privileges
   "cash_transport",
@@ -62,7 +65,10 @@ export const UserSchema = z.object({
 
 export type User = z.infer<typeof UserSchema>;
 
-export const getUserName = (user: Pick<User, "login" | "display_name">) => {
+export const getUserName = (user?: Pick<User, "login" | "display_name">) => {
+  if (!user) {
+    return "";
+  }
   if (user.display_name === "" || user.display_name == null) {
     return user.login;
   }

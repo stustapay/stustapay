@@ -7,13 +7,14 @@ import {
 } from "@/api";
 import { config } from "@/api/common";
 import { TerminalRoutes, TillRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListItemLink } from "@/components";
+import { ListItemLink } from "@/components";
 import { DetailLayout } from "@/components/layouts";
 import { encodeTerminalRegistrationQrCode } from "@/core";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import { Box, Checkbox, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import QRCode from "react-qr-code";
@@ -26,8 +27,6 @@ export const TerminalDetail: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
 
-  const [showUnregisterTerminalDlg, setShowUnregisterTerminalDlg] = React.useState(false);
-
   const [deleteTerminal] = useDeleteTerminalMutation();
   const [logoutTerminal] = useLogoutTerminalMutation();
   const { data: terminal, error: terminalError } = useGetTerminalQuery({
@@ -35,7 +34,8 @@ export const TerminalDetail: React.FC = () => {
     terminalId: Number(terminalId),
   });
   const { data: tills, error: tillError } = useListTillsQuery({ nodeId: currentNode.id });
-  const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
+
+  const openModal = useOpenModal();
 
   if (terminalError || tillError) {
     toast.error("Error loading terminals or orders");
@@ -43,27 +43,29 @@ export const TerminalDetail: React.FC = () => {
   }
 
   const openConfirmDeleteDialog = () => {
-    setShowConfirmDelete(true);
-  };
-
-  const handleConfirmDeleteTerminal: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm") {
-      deleteTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) }).then(() =>
-        navigate(TerminalRoutes.list())
-      );
-    }
-    setShowConfirmDelete(false);
+    openModal({
+      type: "confirm",
+      title: t("terminal.delete"),
+      content: t("terminal.deleteDescription"),
+      onConfirm: () => {
+        deleteTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) }).then(() =>
+          navigate(TerminalRoutes.list())
+        );
+        return true;
+      },
+    });
   };
 
   const openUnregisterTerminalDialog = () => {
-    setShowUnregisterTerminalDlg(true);
-  };
-
-  const handleUnregisterTerminal: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm") {
-      logoutTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) });
-    }
-    setShowUnregisterTerminalDlg(false);
+    openModal({
+      type: "confirm",
+      title: t("terminal.unregisterTerminal"),
+      content: t("terminal.unregisterTerminalDescription"),
+      onConfirm: () => {
+        logoutTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) });
+        return true;
+      },
+    });
   };
 
   if (terminal === undefined || tills === undefined) {
@@ -149,18 +151,6 @@ export const TerminalDetail: React.FC = () => {
           </Box>
         </Paper>
       )}
-      <ConfirmDialog
-        title={t("terminal.unregisterTerminal")}
-        body={t("terminal.unregisterTerminalDescription")}
-        show={showUnregisterTerminalDlg}
-        onClose={handleUnregisterTerminal}
-      />
-      <ConfirmDialog
-        title={t("terminal.delete")}
-        body={t("terminal.deleteDescription")}
-        show={showConfirmDelete}
-        onClose={handleConfirmDeleteTerminal}
-      />
     </DetailLayout>
   );
 };

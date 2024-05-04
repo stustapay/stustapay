@@ -1,6 +1,6 @@
 import { useCreatePayoutRunMutation } from "@/api";
 import { PayoutRunRoutes } from "@/app/routes";
-import { useCurrencySymbol, useCurrentNode } from "@/hooks";
+import { useCurrencySymbol, useCurrentEventSettings, useCurrentNode } from "@/hooks";
 import { ChevronLeft } from "@mui/icons-material";
 import { Button, Grid, IconButton, InputAdornment, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import { FormNumericInput } from "@stustapay/form-components";
@@ -14,13 +14,10 @@ import { PendingPayoutDetail } from "./PendingPayoutDetail";
 
 const NewPayoutRunSchema = z.object({
   max_payout_sum: z.number().gt(0),
+  max_num_payouts: z.number().gt(0),
 });
 
 type NewPayoutRun = z.infer<typeof NewPayoutRunSchema>;
-
-const initialValues: NewPayoutRun = {
-  max_payout_sum: 0,
-};
 
 export const PayoutRunCreate: React.FC = () => {
   const navigate = useNavigate();
@@ -28,12 +25,14 @@ export const PayoutRunCreate: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const currencySymbol = useCurrencySymbol();
 
+  const { eventSettings } = useCurrentEventSettings();
+
   const [createPayoutRun] = useCreatePayoutRunMutation();
 
   const handleSubmit = (values: NewPayoutRun, { setSubmitting }: FormikHelpers<NewPayoutRun>) => {
     setSubmitting(true);
 
-    createPayoutRun({ nodeId: currentNode.id, newPayoutRun: { max_payout_sum: values.max_payout_sum } })
+    createPayoutRun({ nodeId: currentNode.id, newPayoutRun: values })
       .unwrap()
       .then(() => {
         setSubmitting(false);
@@ -43,6 +42,24 @@ export const PayoutRunCreate: React.FC = () => {
         setSubmitting(false);
       });
   };
+
+  const [initialValues, refinedSchema] = React.useMemo(() => {
+    const initialValues = {
+      max_payout_sum: 0,
+      max_num_payouts: eventSettings.sepa_max_num_payouts_in_run,
+    };
+    const refinedForm = NewPayoutRunSchema.refine(
+      ({ max_num_payouts }) => max_num_payouts <= eventSettings.sepa_max_num_payouts_in_run,
+      {
+        message: t("payoutRun.maxNumPayoutsMustBeSmallerThanEventDefault", {
+          maxNumPayoutsAtEvent: eventSettings.sepa_max_num_payouts_in_run,
+        }),
+        path: ["max_num_payouts"],
+      }
+    );
+
+    return [initialValues, refinedForm];
+  }, [eventSettings, t]);
 
   return (
     <Stack spacing={2}>
@@ -59,26 +76,34 @@ export const PayoutRunCreate: React.FC = () => {
       <Formik
         initialValues={initialValues}
         onSubmit={handleSubmit}
-        validationSchema={toFormikValidationSchema(NewPayoutRunSchema)}
+        validationSchema={toFormikValidationSchema(refinedSchema)}
       >
         {(formik) => (
           <Form onSubmit={formik.handleSubmit}>
             <Stack spacing={2}>
               <PendingPayoutDetail />
               <Paper sx={{ p: 3 }}>
-                <FormNumericInput
-                  variant="outlined"
-                  name="max_payout_sum"
-                  label={t("payoutRun.maxPayoutSum")}
-                  InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
-                  formik={formik}
-                />
+                <Stack spacing={2}>
+                  <FormNumericInput
+                    variant="outlined"
+                    name="max_payout_sum"
+                    label={t("payoutRun.maxPayoutSum")}
+                    InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
+                    formik={formik}
+                  />
+                  <FormNumericInput
+                    variant="outlined"
+                    name="max_num_payouts"
+                    label={t("payoutRun.maxNumPayouts")}
+                    formik={formik}
+                  />
 
-                {formik.isSubmitting && <LinearProgress />}
+                  {formik.isSubmitting && <LinearProgress />}
+                  <Button type="submit" fullWidth variant="contained" color="primary" disabled={formik.isSubmitting}>
+                    {t("submit")}
+                  </Button>
+                </Stack>
               </Paper>
-              <Button type="submit" fullWidth variant="contained" color="primary" disabled={formik.isSubmitting}>
-                {t("submit")}
-              </Button>
             </Stack>
           </Form>
         )}

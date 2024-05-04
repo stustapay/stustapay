@@ -686,7 +686,7 @@ class DatabaseSetup:
                     sepa_enabled=True,
                     sepa_sender_name="Organizer",
                     sepa_sender_iban="DE89370400440532013000",
-                    sepa_description="FestivalName, TagID: {user_tag_pin}",
+                    sepa_description="FestivalName, TagID: {user_tag_uid}",
                     sepa_allowed_country_codes=["DE"],
                 ),
             )

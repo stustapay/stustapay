@@ -1,12 +1,12 @@
 import { useDeleteUserMutation, useGetUserQuery } from "@/api";
 import { UserRoutes, UserTagRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListItemLink } from "@/components";
+import { ListItemLink } from "@/components";
 import { DetailLayout } from "@/components/layouts";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { formatUserTagUid } from "@stustapay/models";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
@@ -18,21 +18,21 @@ export const UserDetail: React.FC = () => {
   const navigate = useNavigate();
   const [deleteUser] = useDeleteUserMutation();
   const { data: user, error } = useGetUserQuery({ nodeId: currentNode.id, userId: Number(userId) });
-  const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
+  const openModal = useOpenModal();
 
   if (error) {
     return <Navigate to={UserRoutes.list()} />;
   }
 
   const openConfirmDeleteDialog = () => {
-    setShowConfirmDelete(true);
-  };
-
-  const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm") {
-      deleteUser({ nodeId: currentNode.id, userId: Number(userId) }).then(() => navigate(UserRoutes.list()));
-    }
-    setShowConfirmDelete(false);
+    openModal({
+      type: "confirm",
+      title: t("deleteUser"),
+      content: t("deleteUserDescription"),
+      onConfirm: () => {
+        deleteUser({ nodeId: currentNode.id, userId: Number(userId) }).then(() => navigate(UserRoutes.list()));
+      },
+    });
   };
 
   if (user === undefined) {
@@ -74,12 +74,6 @@ export const UserDetail: React.FC = () => {
           )}
         </List>
       </Paper>
-      <ConfirmDialog
-        title={t("deleteUser")}
-        body={t("deleteUserDescription")}
-        show={showConfirmDelete}
-        onClose={handleConfirmDeleteUser}
-      />
     </DetailLayout>
   );
 };

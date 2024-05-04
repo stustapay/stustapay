@@ -78,13 +78,14 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
       valueFormatter: ({ value }) => (value != null ? formatCurrency(value) : "-"),
     },
     {
-      field: "payout_run_id",
+      field: "payout",
       headerName: t("customer.payoutRun") as string,
-      renderCell: (params) => (
-        <Link component={RouterLink} to={PayoutRunRoutes.detail(params.row.payout_run_id)}>
-          {params.row.payout_run_id}
-        </Link>
-      ),
+      renderCell: (params) =>
+        params.row.payout && (
+          <Link component={RouterLink} to={PayoutRunRoutes.detail(params.row.payout.payout_run_id)}>
+            {params.row.payout.payout_run_id}
+          </Link>
+        ),
       minWidth: 80,
     },
     {
