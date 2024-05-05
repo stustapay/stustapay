@@ -9,12 +9,13 @@ import {
   useListTillsQuery,
 } from "@/api";
 import { TerminalRoutes, TillProfileRoutes, TillRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -25,6 +26,7 @@ export const TillList: React.FC = () => {
   const canManageTills = useCurrentUserHasPrivilege(TillRoutes.privilege);
   const canManageTillsAtNode = useCurrentUserHasPrivilegeAtNode(TillRoutes.privilege);
   const navigate = useNavigate();
+  const openModal = useOpenModal();
 
   const { tills, isLoading: isTillsLoading } = useListTillsQuery(
     { nodeId: currentNode.id },
@@ -40,7 +42,6 @@ export const TillList: React.FC = () => {
   const [deleteTill] = useDeleteTillMutation();
   const renderNode = useRenderNode();
 
-  const [tillToDelete, setTillToDelete] = React.useState<number | null>(null);
   if (isTillsLoading || isProfilesLoading || isTerminalsLoading) {
     return <Loading />;
   }
@@ -78,16 +79,16 @@ export const TillList: React.FC = () => {
   };
 
   const openConfirmDeleteDialog = (tillId: number) => {
-    setTillToDelete(tillId);
-  };
-
-  const handleConfirmDeleteTill: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && tillToDelete !== null) {
-      deleteTill({ nodeId: currentNode.id, tillId: tillToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setTillToDelete(null);
+    openModal({
+      type: "confirm",
+      title: t("till.delete"),
+      content: t("till.deleteDescription"),
+      onConfirm: () => {
+        deleteTill({ nodeId: currentNode.id, tillId })
+          .unwrap()
+          .catch(() => undefined);
+      },
+    });
   };
 
   const columns: GridColDef<Till>[] = [
@@ -165,12 +166,6 @@ export const TillList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("till.delete")}
-        body={t("till.deleteDescription")}
-        show={tillToDelete !== null}
-        onClose={handleConfirmDeleteTill}
       />
     </ListLayout>
   );

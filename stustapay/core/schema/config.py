@@ -20,3 +20,4 @@ class SEPAConfig(BaseModel):
     # verwendungsungszweck
     description: str
     allowed_country_codes: list[str]
+    max_num_payouts_in_run: int

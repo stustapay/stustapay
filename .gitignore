@@ -10,10 +10,7 @@ __pycache__
 /junit
 
 # python venv
-/venv
-bin
-lib
-lib64
+/*venv*
 pyvenv.cfg
 
 # building

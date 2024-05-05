@@ -1,11 +1,12 @@
 import { selectUserAll, useDeleteUserMutation, useListUsersQuery, User } from "@/api";
 import { UserRoutes, UserTagRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -16,6 +17,7 @@ export const UserList: React.FC = () => {
   const canManageUsers = useCurrentUserHasPrivilege(UserRoutes.privilege);
   const canManageUsersAtNode = useCurrentUserHasPrivilegeAtNode(UserRoutes.privilege);
   const navigate = useNavigate();
+  const openModal = useOpenModal();
 
   const { users, isLoading } = useListUsersQuery(
     { nodeId: currentNode.id },
@@ -27,7 +29,6 @@ export const UserList: React.FC = () => {
     }
   );
   const [deleteUser] = useDeleteUserMutation();
-  const [userToDelete, setUserToDelete] = React.useState<number | null>(null);
   const renderNode = useRenderNode();
 
   if (isLoading) {
@@ -35,16 +36,16 @@ export const UserList: React.FC = () => {
   }
 
   const openConfirmDeleteDialog = (userId: number) => {
-    setUserToDelete(userId);
-  };
-
-  const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && userToDelete !== null) {
-      deleteUser({ nodeId: currentNode.id, userId: userToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setUserToDelete(null);
+    openModal({
+      type: "confirm",
+      title: t("deleteUser"),
+      content: t("deleteUserDescription"),
+      onConfirm: () => {
+        deleteUser({ nodeId: currentNode.id, userId })
+          .unwrap()
+          .catch(() => undefined);
+      },
+    });
   };
 
   const columns: GridColDef<User>[] = [
@@ -121,12 +122,6 @@ export const UserList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("deleteUser")}
-        body={t("deleteUserDescription")}
-        show={userToDelete !== null}
-        onClose={handleConfirmDeleteUser}
       />
     </ListLayout>
   );

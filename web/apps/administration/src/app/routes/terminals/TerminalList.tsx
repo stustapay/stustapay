@@ -7,12 +7,13 @@ import {
   useListTillsQuery,
 } from "@/api";
 import { TerminalRoutes, TillRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -23,6 +24,7 @@ export const TerminalList: React.FC = () => {
   const canManageTerminals = useCurrentUserHasPrivilege(TerminalRoutes.privilege);
   const canManageTerminalsAtNode = useCurrentUserHasPrivilegeAtNode(TerminalRoutes.privilege);
   const navigate = useNavigate();
+  const openModal = useOpenModal();
 
   const { terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery(
     { nodeId: currentNode.id },
@@ -37,7 +39,6 @@ export const TerminalList: React.FC = () => {
   const [deleteTerminal] = useDeleteTerminalMutation();
   const renderNode = useRenderNode();
 
-  const [terminalToDelete, setTerminalToDelete] = React.useState<number | null>(null);
   if (isTerminalsLoading || isTillsLoading) {
     return <Loading />;
   }
@@ -59,16 +60,17 @@ export const TerminalList: React.FC = () => {
   };
 
   const openConfirmDeleteDialog = (terminalId: number) => {
-    setTerminalToDelete(terminalId);
-  };
-
-  const handleConfirmDeleteTerminal: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && terminalToDelete !== null) {
-      deleteTerminal({ nodeId: currentNode.id, terminalId: terminalToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setTerminalToDelete(null);
+    openModal({
+      type: "confirm",
+      title: t("terminal.delete"),
+      content: t("terminal.deleteDescription"),
+      onConfirm: () => {
+        deleteTerminal({ nodeId: currentNode.id, terminalId })
+          .unwrap()
+          .catch(() => undefined);
+        return true;
+      },
+    });
   };
 
   const columns: GridColDef<Terminal>[] = [
@@ -135,12 +137,6 @@ export const TerminalList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("terminal.delete")}
-        body={t("terminal.deleteDescription")}
-        show={terminalToDelete !== null}
-        onClose={handleConfirmDeleteTerminal}
       />
     </ListLayout>
   );

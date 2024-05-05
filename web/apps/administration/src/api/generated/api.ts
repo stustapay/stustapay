@@ -683,23 +683,49 @@ const injectedRtkApi = api
         providesTags: ["payouts"],
       }),
       payoutRunPayouts: build.query<PayoutRunPayoutsApiResponse, PayoutRunPayoutsApiArg>({
-        query: (queryArg) => ({ url: `/payouts/${queryArg.payoutRunId}/csv`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/payouts/${queryArg.payoutRunId}/payouts`,
+          params: { node_id: queryArg.nodeId },
+        }),
         providesTags: ["payouts"],
       }),
       payoutRunCsvExport: build.mutation<PayoutRunCsvExportApiResponse, PayoutRunCsvExportApiArg>({
         query: (queryArg) => ({
           url: `/payouts/${queryArg.payoutRunId}/csv`,
           method: "POST",
-          body: queryArg.createCsvPayload,
           params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["payouts"],
       }),
-      payoutRunSepaXmlExport: build.mutation<PayoutRunSepaXmlExportApiResponse, PayoutRunSepaXmlExportApiArg>({
+      payoutRunSepaXml: build.mutation<PayoutRunSepaXmlApiResponse, PayoutRunSepaXmlApiArg>({
         query: (queryArg) => ({
           url: `/payouts/${queryArg.payoutRunId}/sepa_xml`,
           method: "POST",
           body: queryArg.createSepaXmlPayload,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["payouts"],
+      }),
+      previousPayoutRunSepaXml: build.mutation<PreviousPayoutRunSepaXmlApiResponse, PreviousPayoutRunSepaXmlApiArg>({
+        query: (queryArg) => ({
+          url: `/payouts/${queryArg.payoutRunId}/previous_sepa_xml`,
+          method: "POST",
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["payouts"],
+      }),
+      setPayoutRunAsDone: build.mutation<SetPayoutRunAsDoneApiResponse, SetPayoutRunAsDoneApiArg>({
+        query: (queryArg) => ({
+          url: `/payouts/${queryArg.payoutRunId}/set-as-done`,
+          method: "POST",
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["payouts"],
+      }),
+      revokePayoutRun: build.mutation<RevokePayoutRunApiResponse, RevokePayoutRunApiArg>({
+        query: (queryArg) => ({
+          url: `/payouts/${queryArg.payoutRunId}/revoke`,
+          method: "POST",
           params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["payouts"],
@@ -772,6 +798,22 @@ const injectedRtkApi = api
       getCustomer: build.query<GetCustomerApiResponse, GetCustomerApiArg>({
         query: (queryArg) => ({ url: `/customers/${queryArg.customerId}`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["accounts"],
+      }),
+      preventCustomerPayout: build.mutation<PreventCustomerPayoutApiResponse, PreventCustomerPayoutApiArg>({
+        query: (queryArg) => ({
+          url: `/customers/${queryArg.customerId}/prevent-payout`,
+          method: "POST",
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["accounts"],
+      }),
+      allowCustomerPayout: build.mutation<AllowCustomerPayoutApiResponse, AllowCustomerPayoutApiArg>({
+        query: (queryArg) => ({
+          url: `/customers/${queryArg.customerId}/allow-payout`,
+          method: "POST",
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["accounts"],
       }),
       listTerminals: build.query<ListTerminalsApiResponse, ListTerminalsApiArg>({
         query: (queryArg) => ({ url: `/terminal`, params: { node_id: queryArg.nodeId } }),
@@ -1274,33 +1316,47 @@ export type UpdateTseApiArg = {
 };
 export type ListPayoutRunsApiResponse = /** status 200 Successful Response */ NormalizedListPayoutRunWithStatsInt;
 export type ListPayoutRunsApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreatePayoutRunApiResponse = /** status 200 Successful Response */ PayoutRunWithStats;
 export type CreatePayoutRunApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newPayoutRun: NewPayoutRun;
 };
 export type PendingPayoutDetailApiResponse = /** status 200 Successful Response */ PendingPayoutDetail;
 export type PendingPayoutDetailApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type PayoutRunPayoutsApiResponse = /** status 200 Successful Response */ PayoutRead[];
 export type PayoutRunPayoutsApiArg = {
   payoutRunId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
-export type PayoutRunCsvExportApiResponse = /** status 200 Successful Response */ string[];
+export type PayoutRunCsvExportApiResponse = /** status 200 Successful Response */ string;
 export type PayoutRunCsvExportApiArg = {
   payoutRunId: number;
-  nodeId?: number | null;
-  createCsvPayload: CreateCsvPayload;
+  nodeId: number;
 };
-export type PayoutRunSepaXmlExportApiResponse = /** status 200 Successful Response */ string[];
-export type PayoutRunSepaXmlExportApiArg = {
+export type PayoutRunSepaXmlApiResponse = /** status 200 Successful Response */ string;
+export type PayoutRunSepaXmlApiArg = {
   payoutRunId: number;
-  nodeId?: number | null;
+  nodeId: number;
   createSepaXmlPayload: CreateSepaXmlPayload;
+};
+export type PreviousPayoutRunSepaXmlApiResponse = /** status 200 Successful Response */ string;
+export type PreviousPayoutRunSepaXmlApiArg = {
+  payoutRunId: number;
+  nodeId: number;
+};
+export type SetPayoutRunAsDoneApiResponse = /** status 200 Successful Response */ any;
+export type SetPayoutRunAsDoneApiArg = {
+  payoutRunId: number;
+  nodeId: number;
+};
+export type RevokePayoutRunApiResponse = /** status 200 Successful Response */ any;
+export type RevokePayoutRunApiArg = {
+  payoutRunId: number;
+  nodeId: number;
 };
 export type GetTreeForCurrentUserApiResponse = /** status 200 Successful Response */ NodeSeenByUser;
 export type GetTreeForCurrentUserApiArg = void;
@@ -1347,13 +1403,23 @@ export type GetSumupCheckoutApiArg = {
 };
 export type FindCustomersApiResponse = /** status 200 Successful Response */ CustomerRead[];
 export type FindCustomersApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   findCustomerPayload: FindCustomerPayload;
 };
 export type GetCustomerApiResponse = /** status 200 Successful Response */ CustomerRead;
 export type GetCustomerApiArg = {
   customerId: number;
-  nodeId?: number | null;
+  nodeId: number;
+};
+export type PreventCustomerPayoutApiResponse = /** status 200 Successful Response */ any;
+export type PreventCustomerPayoutApiArg = {
+  customerId: number;
+  nodeId: number;
+};
+export type AllowCustomerPayoutApiResponse = /** status 200 Successful Response */ any;
+export type AllowCustomerPayoutApiArg = {
+  customerId: number;
+  nodeId: number;
 };
 export type ListTerminalsApiResponse = /** status 200 Successful Response */ NormalizedListTerminalInt;
 export type ListTerminalsApiArg = {
@@ -1466,9 +1532,11 @@ export type ChangeUserPasswordPayload = {
 export type Privilege =
   | "node_administration"
   | "customer_management"
+  | "payout_management"
   | "create_user"
   | "allow_privileged_role_assignment"
   | "user_management"
+  | "view_node_stats"
   | "cash_transport"
   | "terminal_login"
   | "supervised_terminal_login"
@@ -1555,7 +1623,7 @@ export type UserLoginResult = {
 export type LoginPayload = {
   username: string;
   password: string;
-  node_id: number | null;
+  node_id?: number | null;
 };
 export type ChangePasswordPayload = {
   old_password: string;
@@ -2136,8 +2204,14 @@ export type UpdateTse = {
 };
 export type PayoutRunWithStats = {
   id: number;
-  created_by: string;
+  node_id: number;
+  created_by: number | null;
   created_at: string;
+  set_done_by: number | null;
+  set_done_at: string | null;
+  done: boolean;
+  revoked: boolean;
+  sepa_was_generated: boolean;
   total_donation_amount: number;
   total_payout_amount: number;
   n_payouts: number;
@@ -2150,6 +2224,7 @@ export type NormalizedListPayoutRunWithStatsInt = {
 };
 export type NewPayoutRun = {
   max_payout_sum: number;
+  max_num_payouts: number;
 };
 export type PendingPayoutDetail = {
   total_payout_amount: number;
@@ -2157,32 +2232,32 @@ export type PendingPayoutDetail = {
   n_payouts: number;
 };
 export type Payout = {
+  id: number;
   customer_account_id: number;
-  iban: string;
-  account_name: string;
-  email: string;
+  iban: string | null;
+  account_name: string | null;
+  email: string | null;
   user_tag_id: number;
   user_tag_uid: number;
-  balance: number;
+  amount: number;
+  donation: number;
   payout_run_id: number;
 };
 export type PayoutRead = {
+  id: number;
   customer_account_id: number;
-  iban: string;
-  account_name: string;
-  email: string;
+  iban: string | null;
+  account_name: string | null;
+  email: string | null;
   user_tag_id: number;
   user_tag_uid: number;
-  balance: number;
+  amount: number;
+  donation: number;
   payout_run_id: number;
   user_tag_uid_hex: string | null;
 };
-export type CreateCsvPayload = {
-  batch_size?: number | null;
-};
 export type CreateSepaXmlPayload = {
   execution_date: string;
-  batch_size?: number | null;
 };
 export type Language = "en-US" | "de-DE";
 export type PublicEventSettings = {
@@ -2205,6 +2280,7 @@ export type PublicEventSettings = {
   sepa_sender_name: string;
   sepa_sender_iban: string;
   sepa_description: string;
+  sepa_max_num_payouts_in_run: number;
   sepa_allowed_country_codes: string[];
   translation_texts?: {
     [key: string]: {
@@ -2287,6 +2363,7 @@ export type NewEvent = {
   sepa_sender_name: string;
   sepa_sender_iban: string;
   sepa_description: string;
+  sepa_max_num_payouts_in_run?: number | null;
   sepa_allowed_country_codes: string[];
   translation_texts?: {
     [key: string]: {
@@ -2321,6 +2398,7 @@ export type UpdateEvent = {
   sepa_sender_name: string;
   sepa_sender_iban: string;
   sepa_description: string;
+  sepa_max_num_payouts_in_run?: number | null;
   sepa_allowed_country_codes: string[];
   translation_texts?: {
     [key: string]: {
@@ -2351,6 +2429,7 @@ export type RestrictedEventSettings = {
   sepa_sender_name: string;
   sepa_sender_iban: string;
   sepa_description: string;
+  sepa_max_num_payouts_in_run: number;
   sepa_allowed_country_codes: string[];
   translation_texts?: {
     [key: string]: {
@@ -2404,10 +2483,9 @@ export type Customer = {
   account_name: string | null;
   email: string | null;
   donation: number | null;
-  payout_error: string | null;
-  payout_run_id: number | null;
   payout_export: boolean | null;
   user_tag_pin: string | null;
+  payout: Payout | null;
 };
 export type CustomerRead = {
   node_id: number;
@@ -2426,10 +2504,9 @@ export type CustomerRead = {
   account_name: string | null;
   email: string | null;
   donation: number | null;
-  payout_error: string | null;
-  payout_run_id: number | null;
   payout_export: boolean | null;
   user_tag_pin: string | null;
+  payout: PayoutRead | null;
   user_tag_uid_hex: string | null;
 };
 export type FindCustomerPayload = {
@@ -2591,7 +2668,10 @@ export const {
   usePayoutRunPayoutsQuery,
   useLazyPayoutRunPayoutsQuery,
   usePayoutRunCsvExportMutation,
-  usePayoutRunSepaXmlExportMutation,
+  usePayoutRunSepaXmlMutation,
+  usePreviousPayoutRunSepaXmlMutation,
+  useSetPayoutRunAsDoneMutation,
+  useRevokePayoutRunMutation,
   useGetTreeForCurrentUserQuery,
   useLazyGetTreeForCurrentUserQuery,
   useCreateNodeMutation,
@@ -2610,6 +2690,8 @@ export const {
   useFindCustomersMutation,
   useGetCustomerQuery,
   useLazyGetCustomerQuery,
+  usePreventCustomerPayoutMutation,
+  useAllowCustomerPayoutMutation,
   useListTerminalsQuery,
   useLazyListTerminalsQuery,
   useCreateTerminalMutation,

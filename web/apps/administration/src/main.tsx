@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { PersistGate } from "redux-persist/integration/react";
 import "./i18n";
 import { persistor, store } from "./store";
+import { ModalProvider } from "@stustapay/modal-provider";
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -22,11 +23,13 @@ root.render(
     <LocalizationProvider dateAdapter={AdapterLuxon}>
       <StoreProvider store={store}>
         <PersistGate persistor={persistor} loading={null}>
-          <React.Suspense>
-            <DndProvider backend={HTML5Backend}>
-              <App />
-            </DndProvider>
-          </React.Suspense>
+          <ModalProvider>
+            <React.Suspense>
+              <DndProvider backend={HTML5Backend}>
+                <App />
+              </DndProvider>
+            </React.Suspense>
+          </ModalProvider>
         </PersistGate>
       </StoreProvider>
     </LocalizationProvider>

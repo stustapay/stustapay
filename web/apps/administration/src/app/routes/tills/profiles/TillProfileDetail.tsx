@@ -5,12 +5,12 @@ import {
   useListTillLayoutsQuery,
 } from "@/api";
 import { TillLayoutRoutes, TillProfileRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler } from "@/components";
 import { DetailLayout } from "@/components/layouts";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Checkbox, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Link as RouterLink, useNavigate, useParams } from "react-router-dom";
@@ -20,27 +20,27 @@ export const TillProfileDetail: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const { profileId } = useParams();
   const navigate = useNavigate();
+  const openModal = useOpenModal();
   const [deleteProfile] = useDeleteTillProfileMutation();
   const { data: profile, error } = useGetTillProfileQuery({ nodeId: currentNode.id, profileId: Number(profileId) });
 
   const { data: layouts, error: layoutError } = useListTillLayoutsQuery({ nodeId: currentNode.id });
-  const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   if (error || layoutError) {
     return <Navigate to={TillProfileRoutes.list()} />;
   }
 
   const openConfirmDeleteDialog = () => {
-    setShowConfirmDelete(true);
-  };
-
-  const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm") {
-      deleteProfile({ nodeId: currentNode.id, profileId: Number(profileId) }).then(() =>
-        navigate(TillProfileRoutes.list())
-      );
-    }
-    setShowConfirmDelete(false);
+    openModal({
+      type: "confirm",
+      title: t("profile.delete"),
+      content: t("profile.deleteDescription"),
+      onConfirm: () => {
+        deleteProfile({ nodeId: currentNode.id, profileId: Number(profileId) }).then(() =>
+          navigate(TillProfileRoutes.list())
+        );
+      },
+    });
   };
 
   if (profile === undefined || layouts === undefined) {
@@ -94,12 +94,6 @@ export const TillProfileDetail: React.FC = () => {
           )}
         </List>
       </Paper>
-      <ConfirmDialog
-        title={t("profile.delete")}
-        body={t("profile.deleteDescription")}
-        show={showConfirmDelete}
-        onClose={handleConfirmDeleteProfile}
-      />
     </DetailLayout>
   );
 };

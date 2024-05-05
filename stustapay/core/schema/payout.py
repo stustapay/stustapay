@@ -7,12 +7,19 @@ from stustapay.core.schema.user import format_user_tag_uid
 
 class NewPayoutRun(BaseModel):
     max_payout_sum: float
+    max_num_payouts: int
 
 
 class PayoutRun(BaseModel):
     id: int
-    created_by: str
+    node_id: int
+    created_by: int | None
     created_at: datetime
+    set_done_by: int | None
+    set_done_at: datetime | None
+    done: bool
+    revoked: bool
+    sepa_was_generated: bool
 
 
 class PendingPayoutDetail(BaseModel):
@@ -28,14 +35,16 @@ class PayoutRunWithStats(PayoutRun):
 
 
 class Payout(BaseModel):
+    id: int
     customer_account_id: int
-    iban: str
-    account_name: str
-    email: str
+    iban: str | None
+    account_name: str | None
+    email: str | None
     user_tag_id: int
     user_tag_uid: int
 
-    balance: float
+    amount: float
+    donation: float
     payout_run_id: int
 
     @computed_field  # type: ignore[misc]

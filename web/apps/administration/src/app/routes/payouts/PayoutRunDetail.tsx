@@ -4,12 +4,17 @@ import {
   usePayoutRunCsvExportMutation,
   usePayoutRunPayoutsQuery,
   PayoutRead,
+  usePreviousPayoutRunSepaXmlMutation,
+  useSetPayoutRunAsDoneMutation,
+  useRevokePayoutRunMutation,
+  useListUsersQuery,
+  selectUserById,
 } from "@/api";
-import { CustomerRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailLayout } from "@/components";
+import { CustomerRoutes, PayoutRunRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
+import { DetailLayout, ListItemLink } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { FileDownload as FileDownloadIcon } from "@mui/icons-material";
-import { List, ListItem, ListItemText, Paper, Link } from "@mui/material";
+import { FileDownload as FileDownloadIcon, Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import { List, ListItem, ListItemText, Paper, Link, Alert } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DataGridTitle, Loading } from "@stustapay/components";
 import * as React from "react";
@@ -17,7 +22,9 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useParams, Link as RouterLink } from "react-router-dom";
 import { toast } from "react-toastify";
 import { DownloadSepaXMLModal } from "./DownloadSepaXMLModal";
-import { formatUserTagUid } from "@stustapay/models";
+import { formatUserTagUid, getUserName } from "@stustapay/models";
+import { LayoutAction } from "@/components/layouts/types";
+import { useOpenModal } from "@stustapay/modal-provider";
 
 export const PayoutRunDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -26,7 +33,12 @@ export const PayoutRunDetail: React.FC = () => {
   const formatCurrency = useCurrencyFormatter();
   const [showSepaModal, setShowSepaModal] = React.useState(false);
 
+  const openModal = useOpenModal();
+
   const [csvExport] = usePayoutRunCsvExportMutation();
+  const [previousSepa] = usePreviousPayoutRunSepaXmlMutation();
+  const [setAsDone] = useSetPayoutRunAsDoneMutation();
+  const [revoke] = useRevokePayoutRunMutation();
   const { payoutRun, error } = useListPayoutRunsQuery(
     { nodeId: currentNode.id },
     {
@@ -37,6 +49,7 @@ export const PayoutRunDetail: React.FC = () => {
     }
   );
   const { data: payouts } = usePayoutRunPayoutsQuery({ nodeId: currentNode.id, payoutRunId: Number(payoutRunId) });
+  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
 
   if (error) {
     return <Navigate to={PayoutRunRoutes.list()} />;
@@ -51,9 +64,8 @@ export const PayoutRunDetail: React.FC = () => {
       const data = await csvExport({
         nodeId: currentNode.id,
         payoutRunId: Number(payoutRunId),
-        createCsvPayload: {},
       }).unwrap();
-      const url = window.URL.createObjectURL(new Blob([data[0]], { type: "text/csv" }));
+      const url = window.URL.createObjectURL(new Blob([data], { type: "text/csv" }));
       const link = document.createElement("a");
       link.setAttribute("href", url);
       link.setAttribute("download", `bank_export__run_${payoutRunId}.csv`);
@@ -64,15 +76,37 @@ export const PayoutRunDetail: React.FC = () => {
     }
   };
 
+  const downloadPreviousSepa = async () => {
+    try {
+      const data = await previousSepa({
+        nodeId: currentNode.id,
+        payoutRunId: Number(payoutRunId),
+      }).unwrap();
+      const url = window.URL.createObjectURL(new Blob([data], { type: "text/xml" }));
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `sepa__run_${payoutRunId}.xml`);
+      link.click();
+      link.remove();
+    } catch {
+      toast.error("Error downloading csv");
+    }
+  };
+
   const columns: GridColDef<PayoutRead>[] = [
     {
       field: "customer_account_id",
-      headerName: t("customer.bankAccountHolder") as string,
+      headerName: t("common.id") as string,
       renderCell: (params) => (
         <Link component={RouterLink} to={CustomerRoutes.detail(params.row.customer_account_id)}>
-          {params.row.account_name}
+          {params.row.customer_account_id}
         </Link>
       ),
+      flex: 1,
+    },
+    {
+      field: "account_name",
+      headerName: t("customer.bankAccountHolder") as string,
       flex: 1,
     },
     {
@@ -91,41 +125,125 @@ export const PayoutRunDetail: React.FC = () => {
       minWidth: 300,
     },
     {
-      field: "balance",
-      headerName: t("account.balance") as string,
+      field: "amount",
+      headerName: t("common.amount") as string,
+      align: "right",
+      valueFormatter: ({ value }) => formatCurrency(value),
+      width: 150,
+    },
+    {
+      field: "donation",
+      headerName: t("common.donation") as string,
       align: "right",
       valueFormatter: ({ value }) => formatCurrency(value),
       width: 150,
     },
   ];
 
+  const handleSetDone = () => {
+    openModal({
+      type: "confirm",
+      title: t("payoutRun.setDone"),
+      content: t("payoutRun.setDoneExplanation"),
+      onConfirm: () => {
+        setAsDone({ nodeId: currentNode.id, payoutRunId: payoutRun.id })
+          .unwrap()
+          .then(() => {
+            toast.success("Payout run set as done");
+          })
+          .catch(() => {
+            toast.error("Error setting the payout run as done");
+          });
+        return true;
+      },
+    });
+  };
+
+  const handleRevoke = () => {
+    openModal({
+      type: "confirm",
+      title: t("payoutRun.revoke"),
+      content: t("payoutRun.revokeExplanation"),
+      onConfirm: () => {
+        revoke({ nodeId: currentNode.id, payoutRunId: payoutRun.id })
+          .unwrap()
+          .then(() => {
+            toast.success("Payout run revoked");
+          })
+          .catch(() => {
+            toast.error("Error revoking the payout");
+          });
+        return true;
+      },
+    });
+  };
+
+  const actions: LayoutAction[] = [
+    {
+      label: t("payoutRun.setDone"),
+      onClick: handleSetDone,
+      color: "success",
+      icon: <CheckIcon />,
+      disabled: payoutRun.done || payoutRun.revoked,
+    },
+    {
+      label: t("payoutRun.revoke"),
+      onClick: handleRevoke,
+      color: "error",
+      icon: <DeleteIcon />,
+      disabled: payoutRun.done || payoutRun.revoked,
+    },
+    {
+      label: t("payoutRun.downloadCsv"),
+      onClick: downloadCsv,
+      color: "success",
+      icon: <FileDownloadIcon />,
+    },
+    {
+      label: t("payoutRun.downloadSepa"),
+      onClick: () => setShowSepaModal(true),
+      color: "success",
+      icon: <FileDownloadIcon />,
+    },
+    {
+      label: t("payoutRun.downloadPreviousSepa"),
+      onClick: downloadPreviousSepa,
+      disabled: !payoutRun.sepa_was_generated,
+      color: "success",
+      icon: <FileDownloadIcon />,
+    },
+  ];
+
   return (
-    <DetailLayout
-      title={String(payoutRun.id)}
-      routes={PayoutRunRoutes}
-      actions={[
-        {
-          label: t("payoutRun.downloadCsv"),
-          onClick: downloadCsv,
-          color: "success",
-          icon: <FileDownloadIcon />,
-        },
-        {
-          label: t("payoutRun.downloadSepa"),
-          onClick: () => setShowSepaModal(true),
-          color: "success",
-          icon: <FileDownloadIcon />,
-        },
-      ]}
-    >
+    <DetailLayout title={String(payoutRun.id)} routes={PayoutRunRoutes} actions={actions}>
       <Paper>
+        {payoutRun.done && <Alert severity="success">{t("payoutRun.done")}</Alert>}
+        {payoutRun.revoked && <Alert severity="warning">{t("payoutRun.revoked")}</Alert>}
         <List>
-          <ListItem>
-            <ListItemText primary={t("payoutRun.createdBy")} secondary={payoutRun.created_by} />
-          </ListItem>
+          <ListItemLink to={UserRoutes.detail(payoutRun.created_by)}>
+            <ListItemText
+              primary={t("payoutRun.createdBy")}
+              secondary={
+                users && payoutRun.created_by != null && getUserName(selectUserById(users, payoutRun.created_by))
+              }
+            />
+          </ListItemLink>
           <ListItem>
             <ListItemText primary={t("payoutRun.createdAt")} secondary={payoutRun.created_at} />
           </ListItem>
+          {payoutRun.set_done_by != null && payoutRun.set_done_at && (
+            <>
+              <ListItemLink to={UserRoutes.detail(payoutRun.created_by)}>
+                <ListItemText
+                  primary={t("payoutRun.setDoneBy")}
+                  secondary={users && getUserName(selectUserById(users, payoutRun.set_done_by))}
+                />
+              </ListItemLink>
+              <ListItem>
+                <ListItemText primary={t("payoutRun.setDoneAt")} secondary={payoutRun.set_done_at} />
+              </ListItem>
+            </>
+          )}
           <ListItem>
             <ListItemText
               primary={t("payoutRun.totalDonationAmount")}

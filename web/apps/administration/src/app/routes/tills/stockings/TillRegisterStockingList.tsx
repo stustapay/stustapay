@@ -5,7 +5,7 @@ import {
   useListRegisterStockingsQuery,
 } from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import {
   useCurrencyFormatter,
   useCurrentNode,
@@ -15,6 +15,7 @@ import {
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +27,7 @@ export const TillRegisterStockingList: React.FC = () => {
   const canManageStockings = useCurrentUserHasPrivilege(TillStockingsRoutes.privilege);
   const canManageStockingsAtNode = useCurrentUserHasPrivilegeAtNode(TillStockingsRoutes.privilege);
   const formatCurrency = useCurrencyFormatter();
+  const openModal = useOpenModal();
 
   const { stockings, isLoading } = useListRegisterStockingsQuery(
     { nodeId: currentNode.id },
@@ -38,22 +40,21 @@ export const TillRegisterStockingList: React.FC = () => {
   );
   const [deleteStocking] = useDeleteRegisterStockingMutation();
 
-  const [stockingToDelete, setStockingToDelete] = React.useState<number | null>(null);
   if (isLoading) {
     return <Loading />;
   }
 
-  const openConfirmDeleteDialog = (tillId: number) => {
-    setStockingToDelete(tillId);
-  };
-
-  const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && stockingToDelete !== null) {
-      deleteStocking({ nodeId: currentNode.id, stockingId: stockingToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setStockingToDelete(null);
+  const openConfirmDeleteDialog = (stockingId: number) => {
+    openModal({
+      type: "confirm",
+      title: t("register.deleteStocking"),
+      content: t("register.deleteStockingDescription"),
+      onConfirm: () => {
+        deleteStocking({ nodeId: currentNode.id, stockingId })
+          .unwrap()
+          .catch(() => undefined);
+      },
+    });
   };
 
   const columns: GridColDef<CashRegisterStocking>[] = [
@@ -104,12 +105,6 @@ export const TillRegisterStockingList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("register.deleteStocking")}
-        body={t("register.deleteStockingDescription")}
-        show={stockingToDelete !== null}
-        onClose={handleConfirmDeleteProfile}
       />
     </ListLayout>
   );

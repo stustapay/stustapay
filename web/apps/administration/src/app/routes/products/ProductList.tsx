@@ -9,7 +9,7 @@ import {
   useUpdateProductMutation,
 } from "@/api";
 import { ProductRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import {
   ContentCopy as ContentCopyIcon,
   Delete as DeleteIcon,
@@ -29,6 +29,7 @@ import {
   useCurrentUserHasPrivilegeAtNode,
   useRenderNode,
 } from "@/hooks";
+import { useOpenModal } from "@stustapay/modal-provider";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation();
@@ -37,6 +38,7 @@ export const ProductList: React.FC = () => {
   const canManageProductsAtNode = useCurrentUserHasPrivilegeAtNode(ProductRoutes.privilege);
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
+  const openModal = useOpenModal();
 
   const { products, isLoading: isProductsLoading } = useListProductsQuery(
     { nodeId: currentNode.id },
@@ -53,7 +55,6 @@ export const ProductList: React.FC = () => {
   const [updateProduct] = useUpdateProductMutation();
   const renderNode = useRenderNode();
 
-  const [productToDelete, setProductToDelete] = React.useState<number | null>(null);
   if (isProductsLoading || isTaxRatesLoading) {
     return <Loading />;
   }
@@ -80,16 +81,17 @@ export const ProductList: React.FC = () => {
   };
 
   const openConfirmDeleteDialog = (productId: number) => {
-    setProductToDelete(productId);
-  };
-
-  const handleConfirmDeleteProduct: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && productToDelete !== null) {
-      deleteProduct({ nodeId: currentNode.id, productId: productToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setProductToDelete(null);
+    openModal({
+      type: "confirm",
+      title: t("product.delete"),
+      content: t("product.deleteDescription"),
+      onConfirm: () => {
+        deleteProduct({ nodeId: currentNode.id, productId })
+          .unwrap()
+          .catch(() => undefined);
+        return true;
+      },
+    });
   };
 
   const copyProduct = (product: Product) => {
@@ -201,12 +203,6 @@ export const ProductList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("product.delete")}
-        body={t("product.deleteDescription")}
-        show={productToDelete !== null}
-        onClose={handleConfirmDeleteProduct}
       />
     </ListLayout>
   );

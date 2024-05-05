@@ -1,10 +1,11 @@
 import { selectTillButtonAll, useDeleteTillButtonMutation, useListTillButtonsQuery, TillButton } from "@/api";
 import { TillButtonsRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,7 @@ export const TillButtonList: React.FC = () => {
   const canManageButtons = useCurrentUserHasPrivilege(TillButtonsRoutes.privilege);
   const canManageButtonsAtNode = useCurrentUserHasPrivilegeAtNode(TillButtonsRoutes.privilege);
   const navigate = useNavigate();
+  const openModal = useOpenModal();
 
   const { buttons, isLoading } = useListTillButtonsQuery(
     { nodeId: currentNode.id },
@@ -28,22 +30,22 @@ export const TillButtonList: React.FC = () => {
   const [deleteButton] = useDeleteTillButtonMutation();
   const renderNode = useRenderNode();
 
-  const [buttonToDelete, setButtonToDelete] = React.useState<number | null>(null);
   if (isLoading) {
     return <Loading />;
   }
 
   const openConfirmDeleteDialog = (buttonId: number) => {
-    setButtonToDelete(buttonId);
-  };
-
-  const handleConfirmDeleteTaxRate: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && buttonToDelete !== null) {
-      deleteButton({ nodeId: currentNode.id, buttonId: buttonToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setButtonToDelete(null);
+    openModal({
+      type: "confirm",
+      title: t("button.delete"),
+      content: t("button.deleteDescription"),
+      onConfirm: () => {
+        deleteButton({ nodeId: currentNode.id, buttonId })
+          .unwrap()
+          .catch(() => undefined);
+        return true;
+      },
+    });
   };
 
   const columns: GridColDef<TillButton>[] = [
@@ -101,12 +103,6 @@ export const TillButtonList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("button.delete")}
-        body={t("button.deleteDescription")}
-        show={buttonToDelete !== null}
-        onClose={handleConfirmDeleteTaxRate}
       />
     </ListLayout>
   );

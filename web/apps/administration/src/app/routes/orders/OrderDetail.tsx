@@ -1,11 +1,12 @@
 import { useCancelOrderMutation, useGetOrderQuery } from "@/api";
 import { CustomerRoutes, OrderRoutes, UserTagRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout, ListItemLink } from "@/components";
+import { DetailLayout, ListItemLink } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
 import { useCurrentNode } from "@/hooks";
 import { Cancel as CancelIcon, Edit as EditIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -17,7 +18,7 @@ export const OrderDetail: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { currentNode } = useCurrentNode();
-  const [showCancelOrderConfirm, setShowCancelOrderConfirm] = React.useState(false);
+  const openModal = useOpenModal();
 
   const [cancelSale] = useCancelOrderMutation();
 
@@ -36,17 +37,19 @@ export const OrderDetail: React.FC = () => {
     return null;
   }
 
-  const openConfirmCancelOrderDialog = () => setShowCancelOrderConfirm(true);
-
-  const handleCancelOrderConfirmClose: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm") {
-      cancelSale({ orderId: order.id, nodeId: currentNode.id })
-        .unwrap()
-        .then(() => toast.success(t("order.cancelSuccessful")))
-        .catch((err) => undefined); // to avoid uncaught promise errors
-    }
-
-    setShowCancelOrderConfirm(false);
+  const openConfirmCancelOrderDialog = () => {
+    openModal({
+      type: "confirm",
+      title: t("order.confirmCancelOrderTitle"),
+      content: t("order.confirmCancelOrderDescription"),
+      onConfirm: () => {
+        cancelSale({ orderId: order.id, nodeId: currentNode.id })
+          .unwrap()
+          .then(() => toast.success(t("order.cancelSuccessful")))
+          .catch((err) => undefined); // to avoid uncaught promise errors
+        return true;
+      },
+    });
   };
 
   return (
@@ -100,12 +103,6 @@ export const OrderDetail: React.FC = () => {
         </List>
       </Paper>
       <LineItemTable lineItems={order.line_items} />
-      <ConfirmDialog
-        title={t("order.confirmCancelOrderTitle")}
-        show={showCancelOrderConfirm}
-        body={t("order.confirmCancelOrderDescription")}
-        onClose={handleCancelOrderConfirmClose}
-      />
     </DetailLayout>
   );
 };

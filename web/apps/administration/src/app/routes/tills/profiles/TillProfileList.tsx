@@ -7,12 +7,13 @@ import {
   useListTillProfilesQuery,
 } from "@/api";
 import { TillProfileRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
@@ -24,6 +25,7 @@ export const TillProfileList: React.FC = () => {
   const canManageProfilesAtNode = useCurrentUserHasPrivilegeAtNode(TillProfileRoutes.privilege);
   const navigate = useNavigate();
   const { nodeId } = useParams();
+  const openModal = useOpenModal();
 
   const { profiles, isLoading: isTillsLoading } = useListTillProfilesQuery(
     { nodeId: currentNode.id },
@@ -38,7 +40,6 @@ export const TillProfileList: React.FC = () => {
   const [deleteTillProfile] = useDeleteTillProfileMutation();
   const renderNode = useRenderNode();
 
-  const [profileToDelete, setProfileToDelete] = React.useState<number | null>(null);
   if (isTillsLoading || isLayoutsLoading) {
     return <Loading />;
   }
@@ -60,17 +61,17 @@ export const TillProfileList: React.FC = () => {
     );
   };
 
-  const openConfirmDeleteDialog = (tillId: number) => {
-    setProfileToDelete(tillId);
-  };
-
-  const handleConfirmDeleteProfile: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && profileToDelete !== null) {
-      deleteTillProfile({ nodeId: currentNode.id, profileId: profileToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setProfileToDelete(null);
+  const openConfirmDeleteDialog = (profileId: number) => {
+    openModal({
+      type: "confirm",
+      title: t("profile.delete"),
+      content: t("profile.deleteDescription"),
+      onConfirm: () => {
+        deleteTillProfile({ nodeId: currentNode.id, profileId })
+          .unwrap()
+          .catch(() => undefined);
+      },
+    });
   };
 
   const columns: GridColDef<TillProfile>[] = [
@@ -149,12 +150,6 @@ export const TillProfileList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("profile.delete")}
-        body={t("profile.deleteDescription")}
-        show={profileToDelete !== null}
-        onClose={handleConfirmDeleteProfile}
       />
     </ListLayout>
   );

@@ -1,13 +1,11 @@
 import asyncio
 import json
-from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
 
 from stustapay.core import admin, populate
-from stustapay.core.customer_bank_export import export_customer_payouts
 
 admin_cli = typer.Typer()
 
@@ -111,74 +109,6 @@ def create_tills(
             n_tills=n_tills,
             profile_id=profile_id,
             name_format=name_format,
-            dry_run=dry_run,
-        )
-    )
-
-
-@admin_cli.command()
-def customer_bank_export(
-    ctx: typer.Context,
-    created_by: Annotated[
-        str,
-        typer.Option("--created-by", "-c", help="User who created the payout run. This is used for logging purposes."),
-    ],
-    event_node_id: Annotated[
-        int, typer.Option("--event-node-id", help="Event node in the tree the export should be created for")
-    ],
-    execution_date: Annotated[
-        Optional[datetime],
-        typer.Option(
-            "--execution-date", "-t", formats=["%Y-%m-%d"], help="Execution date for SEPA transfer. Format: YYYY-MM-DD"
-        ),
-    ] = None,
-    max_transactions_per_batch: Annotated[
-        Optional[int],
-        typer.Option(
-            "--max-transactions-per-batch",
-            "-n",
-            help="Maximum amount of transactions per file. "
-            "Not giving this argument means one large batch with all customers in a single file.",
-        ),
-    ] = None,
-    payout_run_id: Annotated[
-        Optional[int],
-        typer.Option(
-            "--payout-run-id",
-            "-p",
-            help="Payout run id. If not given, a new payout run is created. If given, the payout run is recreated.",
-        ),
-    ] = None,
-    output_path: Annotated[
-        Optional[Path],
-        typer.Option(
-            "--output-path",
-            "-o",
-            help="Output path for the generated files. If not given, the current working directory is used.",
-        ),
-    ] = None,
-    max_payout_sum: Annotated[
-        float,
-        typer.Option(
-            "--max-payout-sum",
-            "-s",
-            help="Maximum sum of money being payed out for this payout run. "
-            "Relevant is the bank only accepts a certain max. number that one can spend per day. "
-            "If not given, the default is 50.000€.",
-        ),
-    ] = 50_000.0,
-    dry_run: Annotated[bool, typer.Option(help="If set, don't perform any database modifications.")] = False,
-):
-    asyncio.run(
-        export_customer_payouts(
-            config=ctx.obj.config,
-            created_by=created_by,
-            execution_date=execution_date,
-            max_transactions_per_batch=max_transactions_per_batch,
-            payout_run_id=payout_run_id,
-            output_path=output_path,
-            max_payout_sum=max_payout_sum,
-            event_node_id=event_node_id,
             dry_run=dry_run,
         )
     )

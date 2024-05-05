@@ -159,11 +159,11 @@ class CustomerService(DBService):
 
     async def check_payout_run(self, conn: Connection, current_customer: Customer) -> None:
         # if a payout is assigned, disallow updates.
-        payout_id = await conn.fetchval(
-            "select payout_run_id from customer_info where customer_account_id = $1",
+        is_in_payout = await conn.fetchval(
+            "select exists(select from payout where customer_account_id = $1)",
             current_customer.id,
         )
-        if payout_id is not None:
+        if is_in_payout:
             raise InvalidArgument(
                 "Your account is already scheduled for the next payout, so updates are no longer possible."
             )

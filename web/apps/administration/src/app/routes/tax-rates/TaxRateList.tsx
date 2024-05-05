@@ -1,10 +1,11 @@
 import { TaxRate, selectTaxRateAll, useDeleteTaxRateMutation, useListTaxRatesQuery } from "@/api";
 import { TaxRateRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +15,7 @@ export const TaxRateList: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
   const canManageTaxRatesAtNode = useCurrentUserHasPrivilegeAtNode(TaxRateRoutes.privilege);
+  const openModal = useOpenModal();
 
   const { taxRates, isLoading } = useListTaxRatesQuery(
     { nodeId: currentNode.id },
@@ -27,22 +29,22 @@ export const TaxRateList: React.FC = () => {
   const [deleteTaxRate] = useDeleteTaxRateMutation();
   const renderNode = useRenderNode();
 
-  const [taxRateToDelete, setTaxRateToDelete] = React.useState<number | null>(null);
   if (isLoading) {
     return <Loading />;
   }
 
   const openConfirmDeleteDialog = (taxRateId: number) => {
-    setTaxRateToDelete(taxRateId);
-  };
-
-  const handleConfirmDeleteTaxRate: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && taxRateToDelete !== null) {
-      deleteTaxRate({ nodeId: currentNode.id, taxRateId: taxRateToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setTaxRateToDelete(null);
+    openModal({
+      type: "confirm",
+      title: t("deleteTaxRate"),
+      content: t("deleteTaxRateDescription"),
+      onConfirm: () => {
+        deleteTaxRate({ nodeId: currentNode.id, taxRateId })
+          .unwrap()
+          .catch(() => undefined);
+        return true;
+      },
+    });
   };
 
   const columns: GridColDef<TaxRate>[] = [
@@ -104,12 +106,6 @@ export const TaxRateList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("deleteTaxRate")}
-        body={t("deleteTaxRateDescription")}
-        show={taxRateToDelete !== null}
-        onClose={handleConfirmDeleteTaxRate}
       />
     </ListLayout>
   );

@@ -48,6 +48,7 @@ from stustapay.core.service.account import AccountService
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
+from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
@@ -279,6 +280,15 @@ async def tax_rate_service(
     return TaxRateService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
 
 
+@pytest.fixture(scope="session")
+async def customer_service(
+    setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, config_service: ConfigService
+) -> CustomerService:
+    return CustomerService(
+        db_pool=setup_test_db_pool, config=config, auth_service=auth_service, config_service=config_service
+    )
+
+
 @pytest.fixture
 async def global_admin_user(
     db_connection: Connection,
@@ -313,6 +323,8 @@ async def global_admin_token(user_service: UserService, global_admin_user: tuple
         is_privileged=True,
         privileges=[
             Privilege.user_management,
+            Privilege.payout_management,
+            Privilege.view_node_stats,
             Privilege.allow_privileged_role_assignment,
             Privilege.node_administration,
             Privilege.cash_transport,

@@ -8,7 +8,7 @@ import {
   useUpdateTicketMutation,
 } from "@/api";
 import { TicketRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import {
   useCurrencyFormatter,
   useCurrentNode,
@@ -20,6 +20,7 @@ import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/i
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -31,6 +32,7 @@ export const TicketList: React.FC = () => {
   const canManageTicketsAtNode = useCurrentUserHasPrivilegeAtNode(TicketRoutes.privilege);
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
+  const openModal = useOpenModal();
 
   const { tickets, isLoading: isTicketsLoading } = useListTicketsQuery(
     { nodeId: currentNode.id },
@@ -46,26 +48,26 @@ export const TicketList: React.FC = () => {
   const [deleteTicket] = useDeleteTicketMutation();
   const renderNode = useRenderNode();
 
-  const [ticketToDelete, setTicketToDelete] = React.useState<number | null>(null);
   if (isTicketsLoading) {
     return <Loading />;
   }
 
   const openConfirmDeleteDialog = (ticketId: number) => {
-    setTicketToDelete(ticketId);
+    openModal({
+      type: "confirm",
+      title: t("ticket.delete"),
+      content: t("ticket.deleteDescription"),
+      onConfirm: () => {
+        deleteTicket({ nodeId: currentNode.id, ticketId })
+          .unwrap()
+          .catch(() => undefined);
+        return true;
+      },
+    });
   };
 
   const handleLockTicket = (ticket: Ticket) => {
     updateTicket({ nodeId: currentNode.id, ticketId: ticket.id, newTicket: { ...ticket, is_locked: true } });
-  };
-
-  const handleConfirmDeleteTicket: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && ticketToDelete !== null) {
-      deleteTicket({ nodeId: currentNode.id, ticketId: ticketToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setTicketToDelete(null);
   };
 
   const renderTaxRate = (id: number) => {
@@ -179,12 +181,6 @@ export const TicketList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("ticket.delete")}
-        body={t("ticket.deleteDescription")}
-        show={ticketToDelete !== null}
-        onClose={handleConfirmDeleteTicket}
       />
     </ListLayout>
   );

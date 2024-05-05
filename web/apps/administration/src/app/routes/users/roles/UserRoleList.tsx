@@ -1,10 +1,11 @@
 import { UserRole, selectUserRoleAll, useDeleteUserRoleMutation, useListUserRolesQuery } from "@/api";
 import { UserRoleRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, ListLayout } from "@/components";
+import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,7 @@ export const UserRoleList: React.FC = () => {
   const canManageUsersAtNode = useCurrentUserHasPrivilegeAtNode(UserRoleRoutes.privilege);
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
+  const openModal = useOpenModal();
 
   const { userRoles, isLoading } = useListUserRolesQuery(
     { nodeId: currentNode.id },
@@ -26,24 +28,23 @@ export const UserRoleList: React.FC = () => {
     }
   );
   const [deleteUserRole] = useDeleteUserRoleMutation();
-  const [userRoleToDelete, setUserRoleToDelete] = React.useState<number | null>(null);
   const renderNode = useRenderNode();
 
   if (isLoading) {
     return <Loading />;
   }
 
-  const openConfirmDeleteDialog = (userId: number) => {
-    setUserRoleToDelete(userId);
-  };
-
-  const handleConfirmDeleteUser: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm" && userRoleToDelete !== null) {
-      deleteUserRole({ nodeId: currentNode.id, userRoleId: userRoleToDelete })
-        .unwrap()
-        .catch(() => undefined);
-    }
-    setUserRoleToDelete(null);
+  const openConfirmDeleteDialog = (userRoleId: number) => {
+    openModal({
+      type: "confirm",
+      title: t("userRole.delete"),
+      content: t("userRole.deleteDescription"),
+      onConfirm: () => {
+        deleteUserRole({ nodeId: currentNode.id, userRoleId })
+          .unwrap()
+          .catch(() => undefined);
+      },
+    });
   };
 
   const columns: GridColDef<UserRole>[] = [
@@ -104,12 +105,6 @@ export const UserRoleList: React.FC = () => {
         columns={columns}
         disableRowSelectionOnClick
         sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-      <ConfirmDialog
-        title={t("userRole.delete")}
-        body={t("userRole.deleteDescription")}
-        show={userRoleToDelete !== null}
-        onClose={handleConfirmDeleteUser}
       />
     </ListLayout>
   );

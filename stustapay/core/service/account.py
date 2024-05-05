@@ -17,6 +17,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument, NotFound
+from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.transaction import book_transaction
 from stustapay.framework.database import Connection
 
@@ -89,15 +90,7 @@ class AccountService(DBService):
     @requires_node()
     @requires_user([Privilege.node_administration, Privilege.customer_management])
     async def get_customer(self, *, conn: Connection, node: Node, customer_id: int) -> Customer:
-        customer = await conn.fetch_maybe_one(
-            Customer,
-            "select c.* from customer c where c.id = $1 and c.node_id = any($2)",
-            customer_id,
-            node.ids_to_event_node,
-        )
-        if customer is None:
-            raise NotFound(element_typ="customer", element_id=customer_id)
-        return customer
+        return await fetch_customer(conn=conn, node=node, customer_id=customer_id)
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -105,12 +98,12 @@ class AccountService(DBService):
     async def find_customers(self, *, conn: Connection, node: Node, search_term: str) -> list[Customer]:
         return await conn.fetch_many(
             Customer,
-            "select * from customer c left join user_tag u on c.user_tag_id = u.id "
+            "select c.* from customer c "
             "where c.node_id = any ($2) and "
             "   (c.name like $1 "
             "   or c.comment like $1 "
-            "   or (u.pin is not null and lower(u.pin) like $1) "
-            "   or (u.uid is not null and to_hex(u.uid::bigint) like $1) "
+            "   or (c.user_tag_pin is not null and lower(c.user_tag_pin) like $1) "
+            "   or (c.user_tag_uid is not null and to_hex(c.user_tag_uid::bigint) like $1) "
             "   or lower(c.email) like $1 "
             "   or c.account_name @@ $3 "
             "   or lower(c.iban) like $1)",
@@ -150,12 +143,12 @@ class AccountService(DBService):
     async def find_accounts(self, *, conn: Connection, node: Node, search_term: str) -> list[Account]:
         return await conn.fetch_many(
             Account,
-            "select * from account_with_history a left join user_tag u on a.user_tag_id = u.id "
+            "select * from account_with_history a "
             "where a.node_id = any ($2) and "
             "   (a.name like $1 "
             "   or a.comment like $1 "
-            "   or (u.pin is not null and u.pin like $1)) "
-            "   or (u.uid is not null and to_hex(u.uid::bigint) like $1) ",
+            "   or (a.user_tag_pin is not null and a.user_tag_pin like $1)) "
+            "   or (a.user_tag_uid is not null and to_hex(a.user_tag_uid::bigint) like $1) ",
             f"%{search_term.lower()}%",
             node.ids_to_root,
         )

@@ -11,6 +11,7 @@
       "@stustapay/form-components": ["../../libs/form-components/src/index.ts"],
       "@stustapay/components": ["../../libs/components/src/index.ts"],
       "@stustapay/models": ["../../libs/models/src/index.ts"],
+      "@stustapay/modal-provider": ["../../libs/modal-provider/src/index.ts"],
       "@/*": ["src/*"]
     }
   },

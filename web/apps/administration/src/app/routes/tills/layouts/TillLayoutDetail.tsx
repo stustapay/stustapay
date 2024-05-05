@@ -8,12 +8,13 @@ import {
   useListTillButtonsQuery,
 } from "@/api";
 import { TillLayoutRoutes } from "@/app/routes";
-import { ConfirmDialog, ConfirmDialogCloseHandler, DetailLayout } from "@/components";
+import { DetailLayout } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, List, ListItem, ListItemText, Paper, Tab } from "@mui/material";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import { TillButton } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -25,11 +26,11 @@ export const TillLayoutDetail: React.FC = () => {
   const { layoutId } = useParams();
   const formatCurrency = useCurrencyFormatter();
   const navigate = useNavigate();
+  const openModal = useOpenModal();
   const [deleteLayout] = useDeleteTillLayoutMutation();
   const { data: layout, error } = useGetTillLayoutQuery({ nodeId: currentNode.id, layoutId: Number(layoutId) });
   const { data: buttons, error: buttonsError } = useListTillButtonsQuery({ nodeId: currentNode.id });
   const { data: tickets, error: ticketsError } = useListTicketsQuery({ nodeId: currentNode.id });
-  const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   const [selectedTab, setSelectedTab] = React.useState<"buttons" | "tickets">("buttons");
 
@@ -38,16 +39,16 @@ export const TillLayoutDetail: React.FC = () => {
   }
 
   const openConfirmDeleteDialog = () => {
-    setShowConfirmDelete(true);
-  };
-
-  const handleConfirmDeleteLayout: ConfirmDialogCloseHandler = (reason) => {
-    if (reason === "confirm") {
-      deleteLayout({ nodeId: currentNode.id, layoutId: Number(layoutId) }).then(() =>
-        navigate(TillLayoutRoutes.list())
-      );
-    }
-    setShowConfirmDelete(false);
+    openModal({
+      type: "confirm",
+      title: t("layout.delete"),
+      content: t("layout.deleteDescription"),
+      onConfirm: () => {
+        deleteLayout({ nodeId: currentNode.id, layoutId: Number(layoutId) }).then(() =>
+          navigate(TillLayoutRoutes.list())
+        );
+      },
+    });
   };
 
   if (layout === undefined || buttons === undefined || tickets === undefined) {
@@ -114,12 +115,6 @@ export const TillLayoutDetail: React.FC = () => {
           </TabContext>
         </Paper>
       )}
-      <ConfirmDialog
-        title={t("layout.delete")}
-        body={t("layout.deleteDescription")}
-        show={showConfirmDelete}
-        onClose={handleConfirmDeleteLayout}
-      />
     </DetailLayout>
   );
 };
