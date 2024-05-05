@@ -272,13 +272,13 @@ class TreeService(DBService):
         return await get_tree_for_current_user(conn=conn, current_user=current_user)
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
     async def get_restricted_event_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:
         return await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
 
-    @with_db_transaction
-    @requires_node()
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
     async def generate_test_bon(self, *, conn: Connection, node: Node) -> tuple[str, bytes]:
         if node.event_node_id is None:
@@ -288,3 +288,12 @@ class TreeService(DBService):
         if not dummy_bon.success or dummy_bon.bon is None:
             raise InvalidArgument(f"Error while generating dummy bon: {dummy_bon.msg}")
         return dummy_bon.bon.mime_type, dummy_bon.bon.content
+
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def archive_node(self, *, conn: Connection, node: Node):
+        if node.read_only:
+            raise InvalidArgument("Node is already read only")
+
+        await conn.execute("update node set read_only = true where id = $1 or $1 = any(parent_ids)", node.id)

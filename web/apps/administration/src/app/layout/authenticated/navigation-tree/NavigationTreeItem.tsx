@@ -50,6 +50,7 @@ export interface NavigationTreeItemProps extends TreeItemProps {
   labelIcon: React.ElementType<SvgIconProps>;
   labelInfo?: string;
   labelText: string;
+  suffixIcon?: React.ElementType<SvgIconProps>;
 }
 
 export const NavigationTreeItem: React.FC<NavigationTreeItemProps> = React.memo((props) => {
@@ -63,6 +64,7 @@ export const NavigationTreeItem: React.FC<NavigationTreeItemProps> = React.memo(
     labelText,
     colorForDarkMode,
     bgColorForDarkMode,
+    suffixIcon: SuffixIcon,
     ...other
   } = props;
 
@@ -93,6 +95,7 @@ export const NavigationTreeItem: React.FC<NavigationTreeItemProps> = React.memo(
           <Typography variant="caption" color="inherit">
             {labelInfo}
           </Typography>
+          {SuffixIcon && <Box component={SuffixIcon} color="inherit" sx={{ mr: 1 }} />}
         </Box>
       }
       style={styleProps}

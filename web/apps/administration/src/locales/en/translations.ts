@@ -271,6 +271,14 @@ export const translations = {
       link: "Create new node",
       heading: "Create new node below {{parentNodeName}}",
     },
+    archiveNode: {
+      button: "Archive node",
+      confirmTitle: "Confirm archive node",
+      confirmContent:
+        'Are you sure you want to archive the node "{{nodeName}}". This is irreversible and will prevent any changes from being made to this node.',
+      success: "Sucessfully archived node",
+      error: "Error while archiving node",
+    },
     general: {
       tabLabel: "General",
       name: "Name",

@@ -37,6 +37,11 @@ async def update_node(
     return await tree_service.update_node(token=token, node_id=node_id, updated_node=payload)
 
 
+@router.post("/nodes/{node_id}/archive-node")
+async def archive_node(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int) -> Node:
+    return await tree_service.archive_node(token=token, node_id=node_id)
+
+
 @router.post("/nodes/{node_id}/create-event")
 async def create_event(
     token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, payload: NewEvent

@@ -16,6 +16,7 @@ from stustapay.core.service.common.error import (
     AccessDenied,
     EventRequired,
     InvalidArgument,
+    NodeIsReadOnly,
     ResourceNotAllowed,
     Unauthorized,
 )
@@ -58,9 +59,35 @@ def with_db_transaction(read_only):
         return wrapper
 
 
+_READONLY_KWARG_NAME = "__read_only__"
+
+
+def _is_func_read_only(kwargs, func):
+    is_readonly = kwargs.get(_READONLY_KWARG_NAME, False)
+    if _READONLY_KWARG_NAME not in signature(func).parameters:
+        kwargs.pop(_READONLY_KWARG_NAME)
+
+    return is_readonly
+
+
+def _add_readonly_to_kwargs(read_only: bool, kwargs, func):
+    if _READONLY_KWARG_NAME in signature(func).parameters:
+        kwargs[_READONLY_KWARG_NAME] = read_only
+
+
+def _add_arg_to_signature(original_func, new_func, name: str):
+    sig = signature(original_func)
+    new_parameters = tuple(sig.parameters.values()) + (Parameter(name, kind=Parameter.KEYWORD_ONLY, annotation=Node),)
+    sig = sig.replace(parameters=new_parameters)
+    new_func.__signature__ = sig  # type: ignore
+
+
 def with_db_isolation_transaction(func, read_only: bool = False):
+
     @wraps(func)
     async def wrapper(self, **kwargs):
+        _add_readonly_to_kwargs(read_only, kwargs, func)
+
         if "conn" in kwargs:
             return await func(self, **kwargs)
 
@@ -77,6 +104,8 @@ def with_retryable_db_transaction(
     def f(func: Callable[..., Awaitable[R]]):
         @wraps(func)
         async def wrapper(self, **kwargs):
+            _add_readonly_to_kwargs(read_only, kwargs, func)
+
             current_retries = n_retries
             if "conn" in kwargs:
                 return await func(self, **kwargs)
@@ -138,6 +167,10 @@ def requires_node(
                 if node is None:
                     raise RuntimeError(f"Node with id {node_id} does not exist")
 
+            func_is_read_only = _is_func_read_only(kwargs, func)
+            if not func_is_read_only and node.read_only:
+                raise NodeIsReadOnly(f"{node.name} is read only")
+
             if object_types is not None:
                 forbidden = list(filter(lambda obj: obj in node.computed_forbidden_objects_at_node, object_types))
                 if len(forbidden) != 0:
@@ -151,6 +184,8 @@ def requires_node(
                 kwargs["node"] = node
 
             return await func(self, **kwargs)
+
+        _add_arg_to_signature(func, wrapper, _READONLY_KWARG_NAME)
 
         return wrapper
 
@@ -234,12 +269,7 @@ def requires_user(
             return await func(self, **kwargs)
 
         if node_required and "node" not in original_signature.parameters:
-            sig = signature(func)
-            new_parameters = tuple(sig.parameters.values()) + (
-                Parameter("node", kind=Parameter.KEYWORD_ONLY, annotation=Node),
-            )
-            sig = sig.replace(parameters=new_parameters)
-            wrapper.__signature__ = sig  # type: ignore
+            _add_arg_to_signature(func, wrapper, "node")
 
         return wrapper
 
@@ -278,6 +308,13 @@ def requires_customer(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaita
         if customer is None:
             raise Unauthorized("invalid customer token")
 
+        node_is_readonly = await conn.fetchval(
+            "select read_only from node n join account a on a.node_id = n.id where a.id = $1", customer.id
+        )
+        func_is_read_only = _is_func_read_only(kwargs, func)
+        if not func_is_read_only and node_is_readonly:
+            raise NodeIsReadOnly("Event is read only")
+
         if "current_customer" in signature(func).parameters:
             kwargs["current_customer"] = customer
         elif "current_customer" in kwargs:
@@ -290,6 +327,8 @@ def requires_customer(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaita
             kwargs.pop("conn")
 
         return await func(self, **kwargs)
+
+    _add_arg_to_signature(func, wrapper, _READONLY_KWARG_NAME)
 
     return wrapper
 
@@ -340,6 +379,7 @@ def requires_terminal(
                 raise Unauthorized("Terminal does not have an assigned till but one is required")
 
             signature_params = signature(func).parameters
+            func_is_read_only = _is_func_read_only(kwargs, func)
 
             if requires_till:
                 assert till is not None
@@ -378,6 +418,9 @@ def requires_terminal(
                     if not any([p in user_privileges for p in logged_in_user.privileges]):
                         raise AccessDenied(f"user does not have any of the required privileges: {user_privileges}")
 
+                if not func_is_read_only and node.read_only:
+                    raise NodeIsReadOnly(f"{node.name} is read only")
+
                 if "current_user" in signature_params:
                     kwargs["current_user"] = logged_in_user
                 elif "current_user" in kwargs:
@@ -388,6 +431,13 @@ def requires_terminal(
 
                 if "current_till" in signature_params:
                     kwargs["current_till"] = till
+
+            else:  # requires_till == False
+                node_is_readonly = await conn.fetchval(
+                    "select read_only from node n join terminal t on t.node_id = n.id where t.id = $1", terminal.id
+                )
+                if not func_is_read_only and node_is_readonly:
+                    raise NodeIsReadOnly("Node is read only")
 
             if "current_terminal" in signature_params:
                 kwargs["current_terminal"] = terminal
@@ -401,6 +451,8 @@ def requires_terminal(
                 kwargs.pop("conn")
 
             return await func(self, **kwargs)
+
+        _add_arg_to_signature(func, wrapper, _READONLY_KWARG_NAME)
 
         return wrapper
 

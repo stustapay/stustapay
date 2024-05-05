@@ -140,6 +140,8 @@ delete from config; -- TODO: debate if we need the table at all -> now it is emp
 -- one tree node, references exactly one parent
 create table node (
     id bigint primary key generated always as identity (start with 1000),
+    read_only bool not null default false,
+
     parent bigint not null references node(id),
 
     name text not null,

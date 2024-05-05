@@ -14,6 +14,7 @@ import asyncpg
 from pydantic import BaseModel
 
 from stustapay.core import util
+from stustapay.core.service.common.error import NotFound
 
 logger = logging.getLogger(__name__)
 
@@ -322,7 +323,7 @@ class Connection(asyncpg.Connection):
     async def fetch_one(self, model: Type[T], query: str, *args) -> T:
         result: Optional[asyncpg.Record] = await self.fetchrow(query, *args)
         if result is None:
-            raise asyncpg.DataError("not found")
+            raise NotFound(element_typ=model.__name__)
 
         return model.model_validate(dict(result))
 

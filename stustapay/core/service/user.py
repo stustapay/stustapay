@@ -448,7 +448,7 @@ class UserService(DBService):
         )
         return result != "DELETE 0"
 
-    @with_db_transaction
+    @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user()
     async def list_user_to_roles(self, *, conn: Connection, node: Node) -> list[UserToRole]:
