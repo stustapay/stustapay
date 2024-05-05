@@ -42,7 +42,7 @@ class _BaseEvent(BaseModel):
     sepa_sender_name: str
     sepa_sender_iban: str
     sepa_description: str
-    sepa_max_num_payouts_in_run: int = 1000
+    sepa_max_num_payouts_in_run: int
     sepa_allowed_country_codes: list[str]
 
     # map of lang_code -> [text type -> text content]
@@ -74,7 +74,7 @@ class _RestrictedEventMetadata(BaseModel):
 
 
 class UpdateEvent(_BaseEvent, _RestrictedEventMetadata):
-    pass
+    sepa_max_num_payouts_in_run: int | None = None  # type: ignore
 
 
 class PublicEventSettings(_BaseEvent):
@@ -115,6 +115,7 @@ class Node(BaseModel):
     parent: int
     name: str
     description: str
+    read_only: bool
     event: Optional[PublicEventSettings]
     path: str
     parent_ids: list[int]

@@ -15,6 +15,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   Folder as FolderIcon,
   Event as EventIcon,
+  EditOff as EditOffIcon,
 } from "@mui/icons-material";
 import { TreeView } from "@mui/lab";
 import * as React from "react";
@@ -78,6 +79,7 @@ export const NavigationTree: React.FC = () => {
       to={`/node/${node.id}`}
       labelText={node.name}
       labelIcon={getNavigationTreeItemLabel(node)}
+      suffixIcon={node.read_only ? EditOffIcon : undefined}
     >
       <NodeMenu node={node} />
       {Array.isArray(node.children) ? node.children.map((node) => renderTree(node)) : null}

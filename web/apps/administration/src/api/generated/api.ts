@@ -750,6 +750,10 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tree"],
       }),
+      archiveNode: build.mutation<ArchiveNodeApiResponse, ArchiveNodeApiArg>({
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/archive-node`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
       createEvent: build.mutation<CreateEventApiResponse, CreateEventApiArg>({
         query: (queryArg) => ({
           url: `/tree/nodes/${queryArg.nodeId}/create-event`,
@@ -1369,6 +1373,10 @@ export type UpdateNodeApiResponse = /** status 200 Successful Response */ Node;
 export type UpdateNodeApiArg = {
   nodeId: number;
   newNode: NewNode;
+};
+export type ArchiveNodeApiResponse = /** status 200 Successful Response */ Node;
+export type ArchiveNodeApiArg = {
+  nodeId: number;
 };
 export type CreateEventApiResponse = /** status 200 Successful Response */ Node;
 export type CreateEventApiArg = {
@@ -2306,6 +2314,7 @@ export type NodeSeenByUser = {
   parent: number;
   name: string;
   description: string;
+  read_only: boolean;
   event: PublicEventSettings | null;
   path: string;
   parent_ids: number[];
@@ -2323,6 +2332,7 @@ export type Node = {
   parent: number;
   name: string;
   description: string;
+  read_only: boolean;
   event: PublicEventSettings | null;
   path: string;
   parent_ids: number[];
@@ -2676,6 +2686,7 @@ export const {
   useLazyGetTreeForCurrentUserQuery,
   useCreateNodeMutation,
   useUpdateNodeMutation,
+  useArchiveNodeMutation,
   useCreateEventMutation,
   useUpdateEventMutation,
   useGetRestrictedEventSettingsQuery,
