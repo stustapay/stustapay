@@ -53,7 +53,8 @@ def bon(
 @cli.command()
 def dsfinvk_export(
     ctx: typer.Context,
-    filename: Annotated[Path, typer.Option("--filename", "-f", help="Number of bon generator indices")] = Path(
+    node_id: Annotated[int, typer.Option("--node-id", help="id of node to run the export for")],
+    filename: Annotated[Path, typer.Option("--filename", "-f", help="output file path of resulting zip file")] = Path(
         "dsfinV_k.zip"
     ),
     index_xml: Annotated[Path, typer.Option("--xml", help="index.xml file to include")] = Path(
@@ -71,6 +72,7 @@ def dsfinvk_export(
         xml=str(index_xml),
         dtd=str(dtd_file),
         simulate=dry_run,
+        event_node_id=node_id,
     )
     asyncio.run(generator.run())
 

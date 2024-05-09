@@ -713,7 +713,7 @@ class DatabaseSetup:
                     ],
                     ust_id="UST ID",
                     bon_issuer="Issuer",
-                    bon_address="Address",
+                    bon_address="Street 12\n81321 City",
                     bon_title="Title",
                     sepa_enabled=True,
                     sepa_sender_name="Organizer",

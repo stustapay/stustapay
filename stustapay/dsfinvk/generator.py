@@ -1,12 +1,17 @@
 import contextlib
 import logging
 import time
+from datetime import datetime
 from decimal import Decimal
-from typing import no_type_check
 
 from dateutil import parser
 
 from stustapay.core.config import Config
+from stustapay.core.schema.tree import Node, RestrictedEventSettings
+from stustapay.core.service.tree.common import (
+    fetch_node,
+    fetch_restricted_event_settings_for_node,
+)
 from stustapay.framework.database import Connection, create_db_pool
 from stustapay.tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
 
@@ -49,7 +54,8 @@ class BNU:
 
 
 class Generator:
-    def __init__(self, config: Config, filename: str, xml: str, dtd: str, simulate: bool):
+    def __init__(self, config: Config, event_node_id: int, filename: str, xml: str, dtd: str, simulate: bool):
+        self.node_id = event_node_id
         self.config = config
         self.filename = filename
         self.xml = xml  # path to index.xml file
@@ -58,7 +64,6 @@ class Generator:
         self.simulate = simulate
         self.starttime = time.monotonic()
         self.GV_SUMME: dict = dict()  # aufsummierte Geschäftsvorfalltypen
-        self.systemconfig: dict = dict()
         self.PLZ = ""
         self.Street = ""
         self.City = ""
@@ -66,69 +71,66 @@ class Generator:
     async def run(self):
         async with contextlib.AsyncExitStack() as es:
             db_pool = await create_db_pool(self.config.database)
-            es.push_async_callback(db_pool.close())
+            es.push_async_callback(db_pool.close)
             conn: Connection = await es.enter_async_context(db_pool.acquire())
-
-            # get paymentsystem config
-            self.systemconfig = dict()
-            rows = await conn.fetch("select * from config")
-            for row in rows:
-                self.systemconfig[row["key"]] = row["value"]
-            LOGGER.debug(self.systemconfig)
+            node = await fetch_node(conn=conn, node_id=self.node_id)
+            assert node is not None
+            event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=self.node_id)
 
             # extract address information
-            if "steuer.plz" in self.systemconfig:  # new improved format
-                self.PLZ = self.systemconfig["steuer.plz"]
-                if "steuer.street" in self.systemconfig:
-                    self.Street = self.systemconfig["steuer.street"]
-                if "steuer.city" in self.systemconfig:
-                    self.City = self.systemconfig["steuer.city"]
-            elif "bon.addr" in self.systemconfig:  # old format extracted from bon address
-                if "\n" in self.systemconfig["bon.addr"]:
-                    self.Street = self.systemconfig["bon.addr"].split("\n")[0]
-                    self.PLZ = self.systemconfig["bon.addr"].split("\n")[1].split(" ")[0]
-                    self.City = self.systemconfig["bon.addr"].split("\n")[1].split(" ")[1]
-                else:
-                    self.Street = (
-                        self.systemconfig["bon.addr"].split(" ")[0] + " " + self.systemconfig["bon.addr"].split(" ")[1]
-                    )
-                    self.PLZ = self.systemconfig["bon.addr"].split(" ")[2]
-                    self.City = self.systemconfig["bon.addr"].split(" ")[3]
+            bon_addr = event_settings.bon_address
+            if "\n" in bon_addr:
+                self.Street = bon_addr.split("\n")[0]
+                self.PLZ = bon_addr.split("\n")[1].split(" ")[0]
+                self.City = bon_addr.split("\n")[1].split(" ")[1]
             else:
-                LOGGER.error("No address of business for taxation configured in database")
-                print(self.systemconfig)
-                exit(1)
+                self.Street = bon_addr.split(" ")[0] + " " + bon_addr.split(" ")[1]
+                self.PLZ = bon_addr.split(" ")[2]
+                self.City = bon_addr.split(" ")[3]
 
             # iteriere über alle Kassen Z_KASSE_ID (= KASSE_SERIENNR bei uns)
             # alle Kassen mit einer order (und damit auch mit einer TSE und die deshalb ans Finanzamt gemeldet wurden)
-            for row in await conn.fetch("select till_id from ordr group by till_id order by till_id"):
-                Z_KASSE_ID = row["till_id"]
+            for row in await conn.fetch(
+                "select distinct o.till_id "
+                "from ordr o "
+                "   join till t on o.till_id = t.id "
+                "   join node n on t.node_id = n.id "
+                "where n.id = $1 or $1 = any(n.parent_ids) "
+                "order by o.till_id",
+                node.id,
+            ):
+                Z_KASSE_ID: int = row["till_id"]
 
                 # iteriere über Kassenabschlüsse Z_NR dieser Kassen
                 for row in await conn.fetch(
                     "select z_nr from ordr where till_id = $1 group by z_nr order by z_nr", Z_KASSE_ID
                 ):  # alle Kassenabschlussids
-                    Z_NR = row["z_nr"]
+                    Z_NR: int = row["z_nr"]
 
                     # hole alle order dieser Kasse und Kassenabschluss und nimm den Zeitpunkt der letzten für den Kassenabschluss
                     last_order_time = await conn.fetchval(
                         "select booked_at from ordr where till_id = $1 and z_nr = $2 order by id desc", Z_KASSE_ID, Z_NR
                     )
-                    Z_ERSTELLUNG = last_order_time
+                    Z_ERSTELLUNG: datetime = last_order_time
 
+                    # sammle Einzelaufzeichnungsmodul
                     await self.einzelaufzeichnungsmodul(
-                        conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID
-                    )  # sammle Einzelaufzeichnungsmodul
-                    await self.stammdatenmodul(conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID)  # sammle Stammdatenmodul
-                    await self.kassenabschlussmodul(conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID)  # sammle Kassenabschlussmodul
+                        conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID, event_settings=event_settings
+                    )
+                    # sammle Stammdatenmodul
+                    await self.stammdatenmodul(
+                        conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID, node=node, event_settings=event_settings
+                    )
+                    # sammle Kassenabschlussmodul
+                    await self.kassenabschlussmodul(conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID, event_settings=event_settings)
 
             self.finalize()  # schreibe die Datei
             LOGGER.info(f"Duration: {time.monotonic() - self.starttime:.3f}s")
             return
 
-    #######################################################################################################################################
-    @no_type_check
-    async def einzelaufzeichnungsmodul(self, conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID):
+    async def einzelaufzeichnungsmodul(
+        self, conn, Z_NR: int, Z_ERSTELLUNG: datetime, Z_KASSE_ID: int, event_settings: RestrictedEventSettings
+    ):
         self.GV_SUMME = {
             "MehrzweckgutscheinKauf": {1: BNU(), 2: BNU(), 5: BNU(), 1337: BNU()},
             "Geldtransit": {1: BNU(), 2: BNU(), 5: BNU(), 1337: BNU()},
@@ -234,7 +236,8 @@ class Generator:
             # leider müssen wir da wieder eine db abfrage machen....
             if row["item_count"] != 0:
                 for line in await conn.fetch(
-                    "select tax_name, total_price, total_tax, total_no_tax from order_tax_rates where id=$1", row["id"]
+                    "select tax_name, total_price, total_tax, total_no_tax from order_tax_rates where id = $1",
+                    row["id"],
                 ):
                     c = Bonkopf_USt()
                     c.Z_KASSE_ID = Z_KASSE_ID
@@ -259,7 +262,7 @@ class Generator:
             d.BON_ID = row["id"]
             d.ZAHLART_TYP = PAYMENT_METHOD_TO_ZAHLUNGSART[row["payment_method"]]  # 'Bar'/'Unbar'
             d.ZAHLART_NAME = row["payment_method"]
-            d.ZAHLWAEH_CODE = self.systemconfig["currency.identifier"]
+            d.ZAHLWAEH_CODE = event_settings.currency_identifier
             d.ZAHLWAEH_BETRAG = Decimal(0)  # Fremdwährung, bei uns immer 0
             d.BASISWAEH_BETRAG = Decimal(row["total_price"])  # Bezahlter betrag in Grundwährung
             d.KASSENSCHUBLADENNR = row[
@@ -359,9 +362,15 @@ class Generator:
 
         return
 
-    ########################################################################################################################################
-    @no_type_check
-    async def stammdatenmodul(self, conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID):
+    async def stammdatenmodul(
+        self,
+        conn: Connection,
+        Z_NR: int,
+        Z_ERSTELLUNG: datetime,
+        Z_KASSE_ID: int,
+        node: Node,
+        event_settings: RestrictedEventSettings,
+    ):
         ### cashpointclosing.csv ###
         a = Stamm_Abschluss()
         # wir haben für jeden Kassenabschluss und Kasse immer die gleichen Stammdaten (pro Festival)
@@ -369,13 +378,13 @@ class Generator:
         a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
         a.TAXONOMIE_VERSION = "2.3"  # aktuelle version der DSFinV-K
-        a.NAME = self.systemconfig["bon.issuer"]
+        a.NAME = event_settings.bon_issuer
         a.STRASSE = self.Street
         a.PLZ = self.PLZ
         a.ORT = self.City
         a.LAND = "DEU"  # sorry, not in db -> hardcoded
         a.STNR = ""
-        a.USTID = self.systemconfig["ust_id"]
+        a.USTID = event_settings.ust_id
 
         a.Z_START_ID = await conn.fetchval(
             "select id from ordr where ordr.till_id = $1 and ordr.z_nr = $2 order by ordr.id asc", Z_KASSE_ID, Z_NR
@@ -387,7 +396,8 @@ class Generator:
         Z_SE_ZAHLUNGEN = Decimal()
         Z_SE_BARZAHLUNGEN = Decimal()
         for row in await conn.fetch(
-            "select total_price, payment_method from line_item join ordr on line_item.order_id=ordr.id where ordr.till_id = $1 and ordr.z_nr = $2",
+            "select total_price, payment_method from line_item join ordr on line_item.order_id = ordr.id "
+            "where ordr.till_id = $1 and ordr.z_nr = $2",
             Z_KASSE_ID,
             Z_NR,
         ):
@@ -408,12 +418,12 @@ class Generator:
         a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
 
-        a.LOC_NAME = self.systemconfig["bon.issuer"]
+        a.LOC_NAME = event_settings.bon_issuer
         a.LOC_STRASSE = self.Street
         a.LOC_PLZ = self.PLZ
         a.LOC_ORT = self.City
         a.LOC_LAND = "DEU"  # sorry, not in db -> hardcoded
-        a.USTID = self.systemconfig["ust_id"]
+        a.USTID = event_settings.ust_id
 
         self.c.add(a)
         ### \locations.csv ###
@@ -428,14 +438,14 @@ class Generator:
         a.KASSE_SERIENNR = str(Z_KASSE_ID)
         a.KASSE_SW_BRAND = "StuStaPay Enterprise Payment Solutions Festival Edition Pro"
         a.KASSE_SW_VERSION = "v0"  # TODO version?
-        a.KASSE_BASISWAEH_CODE = self.systemconfig["currency.identifier"]
+        a.KASSE_BASISWAEH_CODE = event_settings.currency_identifier
         a.KASSE_UST_ZUORDNUNG = ""  # puh?
 
         self.c.add(a)
         ### \cashregister.csv ###
 
         ### vat.csv ###
-        for row in await conn.fetch("select name, rate, description from tax"):
+        for row in await conn.fetch("select name, rate, description from tax_rate where node_id = $1", node.id):
             a = Stamm_USt()
             a.Z_KASSE_ID = Z_KASSE_ID
             a.Z_ERSTELLUNG = Z_ERSTELLUNG
@@ -476,7 +486,7 @@ class Generator:
                 # jetze müssen wir in der history nachschauen, auf welcher TSE diese Kasse registriert war, kann natürlich auch wieder mehrere geben, ahrg
                 # dazu kopieren wir jetzt einfach den code von unten
                 kassenschlussgrenzen = await conn.fetch(
-                    "select z_nr from till_tse_history where till_id = $1 and what='register' order by z_nr",
+                    "select z_nr from till_tse_history where till_id = $1 and what = 'register' order by z_nr",
                     str(Z_KASSE_ID),
                 )
                 aeltereschluesse = list()
@@ -488,7 +498,7 @@ class Generator:
                 # nimm jetzt den größten weil ältesten Kassenschluss in der Liste und hole die TSE
                 aeltereschluesse.sort(reverse=True)
                 aktuelle_tse_id = await conn.fetchval(
-                    "select tse_id from till_tse_history where till_id = $1 and what='register' and z_nr = $2",
+                    "select tse_id from till_tse_history where till_id = $1 and what = 'register' and z_nr = $2",
                     str(Z_KASSE_ID),
                     aeltereschluesse[0],
                 )
@@ -498,7 +508,9 @@ class Generator:
 
                 # und jetzt die stammdaten dieser TSE
                 row = await conn.fetchrow(
-                    "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, tse.public_key, tse.certificate from tse where id = $1",
+                    "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, "
+                    "   tse.public_key, tse.certificate "
+                    "from tse where id = $1",
                     aktuelle_tse_id,
                 )
 
@@ -511,7 +523,7 @@ class Generator:
             # Erstens: Herausfinden, welche TSE für diesen Kassenschluss zuständig war:
             # ich habe mehrere Einträge, davon muss ich den mit dem kleinsten z_nr nehmen und vergleichen, ob der größer gleich dem aktuellen z_nr ist.
             kassenschlussgrenzen = await conn.fetch(
-                "select z_nr from till_tse_history where till_id = $1 and what='register' order by z_nr",
+                "select z_nr from till_tse_history where till_id = $1 and what = 'register' order by z_nr",
                 str(Z_KASSE_ID),
             )
             aeltereschluesse = list()
@@ -523,7 +535,7 @@ class Generator:
             # nimm jetzt den größten weil ältesten Kassenschluss in der Liste und hole die TSE
             aeltereschluesse.sort(reverse=True)
             aktuelle_tse_id = await conn.fetchval(
-                "select tse_id from till_tse_history where till_id = $1 and what='register' and z_nr = $2",
+                "select tse_id from till_tse_history where till_id = $1 and what = 'register' and z_nr = $2",
                 str(Z_KASSE_ID),
                 aeltereschluesse[0],
             )
@@ -531,7 +543,9 @@ class Generator:
 
             # und jetzt die stammdaten dieser TSE
             row = await conn.fetchrow(
-                "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, tse.public_key, tse.certificate from tse where id = $1",
+                "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, "
+                "   tse.public_key, tse.certificate "
+                "from tse where id = $1",
                 aktuelle_tse_id,
             )
 
@@ -574,11 +588,17 @@ class Generator:
 
         return
 
-    ############################################################################################################
-    @no_type_check
-    async def kassenabschlussmodul(self, conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID):
+    async def kassenabschlussmodul(
+        self,
+        conn: Connection,
+        Z_NR: int,
+        Z_ERSTELLUNG: datetime,
+        Z_KASSE_ID: int,
+        event_settings: RestrictedEventSettings,
+    ):
         paymentmethods = await conn.fetch(
-            "select payment_method from line_item join ordr on line_item.order_id=ordr.id where ordr.till_id = $1 and ordr.z_nr = $2 group by payment_method",
+            "select payment_method from line_item join ordr on line_item.order_id = ordr.id "
+            "where ordr.till_id = $1 and ordr.z_nr = $2 group by payment_method",
             Z_KASSE_ID,
             Z_NR,
         )
@@ -588,7 +608,8 @@ class Generator:
             summe_je_zahlart[str(method["payment_method"])] = Decimal(0)
 
         for row in await conn.fetch(
-            "select total_price, payment_method from line_item join ordr on line_item.order_id=ordr.id where ordr.till_id = $1 and ordr.z_nr = $2",
+            "select total_price, payment_method from line_item join ordr on line_item.order_id = ordr.id "
+            "where ordr.till_id = $1 and ordr.z_nr = $2",
             Z_KASSE_ID,
             Z_NR,
         ):
@@ -632,7 +653,7 @@ class Generator:
         a.Z_KASSE_ID = Z_KASSE_ID
         a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
-        a.ZAHLART_WAEH = self.systemconfig["currency.identifier"]
+        a.ZAHLART_WAEH = event_settings.currency_identifier
         a.ZAHLART_BETRAG_WAEH = barzahlungen  # Gesamtsumme der Barzahlungen je Währung (... wir nehmen nur eine!)
         self.c.add(a)
         ### \cash_per_currency.csv###
