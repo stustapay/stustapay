@@ -7,6 +7,12 @@ import { useTranslation } from "react-i18next";
 import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
 
 const getActiveTab = (location: string) => {
+  if (location.endsWith("create-tags")) {
+    return UserTagRoutes.action("create-tags");
+  }
+  if (location.endsWith("create-secret")) {
+    return UserTagRoutes.action("create-secret");
+  }
   return UserTagRoutes.list();
 };
 
@@ -33,6 +39,18 @@ export const UserTagPageLayout: React.FC = () => {
         aria-label="User Tags"
       >
         <Tab label={t("userTag.find")} component={RouterLink} value={UserTagRoutes.list()} to={UserTagRoutes.list()} />
+        <Tab
+          label={t("userTag.createButton")}
+          component={RouterLink}
+          value={UserTagRoutes.action("create-tags")}
+          to={UserTagRoutes.action("create-tags")}
+        />
+        <Tab
+          label={t("userTagSecret.createButton")}
+          component={RouterLink}
+          value={UserTagRoutes.action("create-secret")}
+          to={UserTagRoutes.action("create-secret")}
+        />
       </Tabs>
       <Box sx={{ mt: 2 }}>
         <Outlet />

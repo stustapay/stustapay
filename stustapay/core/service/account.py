@@ -87,13 +87,13 @@ class AccountService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration, Privilege.customer_management])
     async def get_customer(self, *, conn: Connection, node: Node, customer_id: int) -> Customer:
         return await fetch_customer(conn=conn, node=node, customer_id=customer_id)
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration, Privilege.customer_management])
     async def find_customers(self, *, conn: Connection, node: Node, search_term: str) -> list[Customer]:
         return await conn.fetch_many(
@@ -113,7 +113,7 @@ class AccountService(DBService):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def list_system_accounts(self, *, conn: Connection, node: Node) -> list[Account]:
         return await conn.fetch_many(
@@ -123,7 +123,7 @@ class AccountService(DBService):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def get_account(self, *, conn: Connection, node: Node, account_id: int) -> Account:
         account = await get_account_by_id(conn=conn, node=node, account_id=account_id)
@@ -132,13 +132,13 @@ class AccountService(DBService):
         return account
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def get_account_by_tag_id(self, *, conn: Connection, node: Node, user_tag_id: int) -> Optional[Account]:
         return await get_account_by_tag_id(conn=conn, node=node, tag_id=user_tag_id)
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def find_accounts(self, *, conn: Connection, node: Node, search_term: str) -> list[Account]:
         return await conn.fetch_many(
@@ -154,7 +154,7 @@ class AccountService(DBService):
         )
 
     @with_db_transaction
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def disable_account(self, *, conn: Connection, node: Node, account_id: int):
         row = await conn.fetchval(
@@ -166,7 +166,7 @@ class AccountService(DBService):
             raise NotFound(element_typ="account", element_id=str(account_id))
 
     @with_db_transaction
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def update_account_balance(
         self, *, conn: Connection, current_user: User, account_id: int, new_balance: float
@@ -174,7 +174,7 @@ class AccountService(DBService):
         raise RuntimeError("currently disallowed")
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def update_account_vouchers(
         self, *, conn: Connection, current_user: User, node: Node, account_id: int, new_voucher_amount: int
@@ -289,7 +289,7 @@ class AccountService(DBService):
         return account
 
     @with_db_transaction
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def update_account_comment(self, *, conn: Connection, node: Node, account_id: int, comment: str) -> Account:
         ret = await conn.fetchval(
@@ -347,7 +347,7 @@ class AccountService(DBService):
         await conn.execute("update user_tag set comment = $2 where id = $1", old_user_tag_id, comment)
 
     @with_db_transaction
-    @requires_terminal([Privilege.node_administration])
+    @requires_terminal([Privilege.customer_management])
     async def switch_account_tag_uid_terminal(
         self,
         *,

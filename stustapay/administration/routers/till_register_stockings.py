@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
@@ -15,9 +13,7 @@ router = APIRouter(
 
 
 @router.get("", response_model=NormalizedList[CashRegisterStocking, int])
-async def list_register_stockings(
-    token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
-):
+async def list_register_stockings(token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
     return normalize_list(await till_service.register.list_cash_register_stockings_admin(token=token, node_id=node_id))
 
 
@@ -26,7 +22,7 @@ async def create_register_stocking(
     stocking: NewCashRegisterStocking,
     token: CurrentAuthToken,
     till_service: ContextTillService,
-    node_id: Optional[int] = None,
+    node_id: int,
 ):
     return await till_service.register.create_cash_register_stockings(token=token, stocking=stocking, node_id=node_id)
 
@@ -37,7 +33,7 @@ async def update_register_stocking(
     stocking: NewCashRegisterStocking,
     token: CurrentAuthToken,
     till_service: ContextTillService,
-    node_id: Optional[int] = None,
+    node_id: int,
 ):
     updated = await till_service.register.update_cash_register_stockings(
         token=token, stocking_id=stocking_id, stocking=stocking, node_id=node_id
@@ -50,7 +46,7 @@ async def update_register_stocking(
 
 @router.delete("/{stocking_id}")
 async def delete_register_stocking(
-    stocking_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: Optional[int] = None
+    stocking_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: int
 ):
     deleted = await till_service.register.delete_cash_register_stockings(
         token=token, stocking_id=stocking_id, node_id=node_id

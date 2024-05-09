@@ -96,6 +96,21 @@ export const translations = {
     noAccount: "No account associated",
     account: "Account",
     accountHistory: "Account association history",
+    restriction: "User Tag restriction",
+    secret: "Secret these tags use",
+    create: "Create new user tags for this event",
+    createButton: "Create new tags",
+    uploadPinCsv: "Upload CSV with tag pins",
+    uploadPinCsvTooltip:
+      'Csv with one column "pin" containing the string encoded pins of all tags which are to be created',
+    willCreate: "Will create {{nTags}} new user tags",
+    firstNTags: "The following are the first {{actualNum}} tags which will be created",
+  },
+  userTagSecret: {
+    create: "Upload a new user tag secret for this event",
+    createButton: "Upload secret",
+    key0: "Hex encoded key0 of this secret",
+    key1: "Hex encoded key1 of this secret",
   },
   auth: {
     signIn: "Sign In",

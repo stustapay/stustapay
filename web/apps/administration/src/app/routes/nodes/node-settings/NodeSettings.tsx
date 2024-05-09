@@ -1,7 +1,7 @@
 import { useUpdateNodeMutation } from "@/api";
 import { isErrorResp } from "@/api/utils";
 import { useCurrentNode } from "@/hooks";
-import { Box, Button, Container, LinearProgress, Stack } from "@mui/material";
+import { Button, Container, LinearProgress, Stack } from "@mui/material";
 import { FormSelect, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";

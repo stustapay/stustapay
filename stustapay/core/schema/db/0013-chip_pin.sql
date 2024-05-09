@@ -19,7 +19,6 @@ alter table user_tag add constraint user_tag_pkey primary key(id);
 -- 4. clean up user_tag table
 alter table user_tag drop column serial;
 alter table user_tag alter column pin set not null;
-alter table user_tag add constraint user_tag_pin_unique unique(pin);
 
 -- 5. add back foreign keys
 alter table usr add column user_tag_id bigint references user_tag(id);

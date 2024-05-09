@@ -28,12 +28,20 @@ async def fetch_user_tag_secret(conn: Connection, secret_id: int) -> UserTagSecr
 
 
 async def create_user_tag_secret(conn: Connection, node_id: int, secret: NewUserTagSecret) -> UserTagSecret:
+    secrets_already_exist_for_node = await conn.fetchval(
+        "select exists(select from user_tag_secret where node_id = $1)", node_id
+    )
+    if secrets_already_exist_for_node:
+        raise InvalidArgument("It is currently not supported to have multiple user tag secrets for one event")
+
+    key0 = secret.key0.replace(" ", "")
+    key1 = secret.key1.replace(" ", "")
     secret_id = await conn.fetchval(
         "insert into user_tag_secret (key0, key1, description, node_id) "
         "values (decode($1, 'hex'), decode($2, 'hex'), $3, $4) "
         "returning id",
-        secret.key0,
-        secret.key1,
+        key0,
+        key1,
         secret.description,
         node_id,
     )
@@ -43,12 +51,15 @@ async def create_user_tag_secret(conn: Connection, node_id: int, secret: NewUser
 
 
 async def create_user_tags(conn: Connection, node_id: int, tags: list[NewUserTag]):
+    if len(tags) == 0:
+        raise InvalidArgument("List of tags to create is empty")
+
     for tag in tags:
         await conn.execute(
             "insert into user_tag (node_id, pin, restriction, secret_id) values ($1, $2, $3, $4)",
             node_id,
             tag.pin,
-            tag.restriction,
+            tag.restriction.value if tag.restriction is not None else None,
             tag.secret_id,
         )
 
@@ -80,7 +91,7 @@ class UserTagService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction
-    @requires_node(object_types=[ObjectType.user_tag])
+    @requires_node(event_only=True, object_types=[ObjectType.user_tag])
     @requires_user([Privilege.node_administration])
     async def create_user_tag_secret(
         self, *, conn: Connection, node: Node, new_secret: NewUserTagSecret
@@ -88,7 +99,24 @@ class UserTagService(DBService):
         return await create_user_tag_secret(conn=conn, node_id=node.id, secret=new_secret)
 
     @with_db_transaction(read_only=True)
-    @requires_node(object_types=[ObjectType.user_tag])
+    @requires_node(event_only=True, object_types=[ObjectType.user_tag])
+    @requires_user([Privilege.node_administration])
+    async def list_user_tag_secrets(self, *, conn: Connection, node: Node) -> list[UserTagSecret]:
+        return await conn.fetch_many(
+            UserTagSecret,
+            "select id, node_id, description, encode(key0, 'hex') as key0, encode(key1, 'hex') as key1 "
+            "from user_tag_secret where node_id = $1",
+            node.id,
+        )
+
+    @with_db_transaction
+    @requires_node(event_only=True, object_types=[ObjectType.user_tag])
+    @requires_user([Privilege.node_administration])
+    async def create_user_tags(self, *, conn: Connection, node: Node, new_user_tags: list[NewUserTag]):
+        return await create_user_tags(conn=conn, node_id=node.id, tags=new_user_tags)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True, object_types=[ObjectType.user_tag])
     @requires_user([Privilege.node_administration])
     async def get_user_tag_detail(self, *, conn: Connection, node: Node, user_tag_id: int) -> Optional[UserTagDetail]:
         return await conn.fetch_maybe_one(
@@ -99,7 +127,7 @@ class UserTagService(DBService):
         )
 
     @with_db_transaction
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def update_user_tag_comment(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, user_tag_id: int, comment: str
@@ -116,13 +144,13 @@ class UserTagService(DBService):
         return detail
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
         return await conn.fetch_many(
             UserTagDetail,
             "select * from user_tag_with_history "
-            "where (uid is not null and to_hex(uid::bigint) like $1) or lower(pin) like $1 and node_id = any($2)",
+            "where ((uid is not null and to_hex(uid::bigint) like $1) or lower(pin) like $1) and node_id = any($2)",
             f"%{search_term.lower()}%",
             node.ids_to_event_node,
         )
