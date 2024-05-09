@@ -720,6 +720,8 @@ class DatabaseSetup:
                     sepa_sender_iban="DE89370400440532013000",
                     sepa_description="FestivalName, TagID: {user_tag_uid}",
                     sepa_allowed_country_codes=["DE"],
+                    sumup_topup_enabled=False,
+                    sumup_payment_enabled=False,
                 ),
             )
             beer_team_node = await create_node(
