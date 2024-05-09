@@ -65,6 +65,7 @@ import {
   UserUpdate,
   UserToRoleList,
   UserToRoleCreate,
+  UserRoleDetail,
 } from "./routes/users";
 import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
 import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
@@ -435,7 +436,11 @@ const router = createBrowserRouter([
             element: <UserRoleCreate />,
           },
           {
-            path: "roles/:userId/edit",
+            path: "roles/:roleId",
+            element: <UserRoleDetail />,
+          },
+          {
+            path: "roles/:roleId/edit",
             element: <UserRoleUpdate />,
           },
           {

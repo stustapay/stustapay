@@ -502,7 +502,8 @@ class Simulator:
 
     async def sale_till(self, worker_idx: int):
         rows = await self.db_pool.fetch(
-            "select id from till where name like '%Bierkasse%' or name like '%Cocktailkasse%'",
+            "select id from till "
+            "where name like '%Weißbierinsel%' or name like '%Cocktailkasse%' or name like '%Weißbierkarussel%'",
         )
         till_ids = ith_chunk([row["id"] for row in rows], self.n_sale_till_workers, worker_idx)
         terminals = await self._register_terminals(till_ids=till_ids)
@@ -531,7 +532,7 @@ class Simulator:
                     if resp.status != 200:
                         if "Not enough funds" not in await resp.text():
                             self.logger.warning(
-                                f"Error in check sale, { resp.status = }, payload = {await resp.json()}"
+                                f"Error in check sale (terminal {terminal.config.name}), { resp.status = }, payload = {await resp.json()}"
                             )
                         self.unlock_customer(customer_tag_uid)
                         continue

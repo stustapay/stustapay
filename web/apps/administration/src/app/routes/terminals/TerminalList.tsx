@@ -10,7 +10,7 @@ import { TerminalRoutes, TillRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Link } from "@mui/material";
+import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -53,7 +53,7 @@ export const TerminalList: React.FC = () => {
     }
 
     return (
-      <Link component={RouterLink} to={TillRoutes.detail(till.id)}>
+      <Link component={RouterLink} to={TillRoutes.detail(till.id, till.node_id)}>
         {till.name}
       </Link>
     );
@@ -79,15 +79,12 @@ export const TerminalList: React.FC = () => {
       headerName: t("common.name") as string,
       flex: 1,
       renderCell: (params) => (
-        <Link component={RouterLink} to={TerminalRoutes.detail(params.row.id)}>
-          {params.row.name}
-        </Link>
+        <Tooltip title={params.row.description}>
+          <Link component={RouterLink} to={TerminalRoutes.detail(params.row.id)}>
+            {params.row.name}
+          </Link>
+        </Tooltip>
       ),
-    },
-    {
-      field: "description",
-      headerName: t("common.description") as string,
-      flex: 2,
     },
     {
       field: "till_id",
@@ -96,10 +93,16 @@ export const TerminalList: React.FC = () => {
       renderCell: (params) => renderTill(params.row.till_id),
     },
     {
+      field: "session_uuid",
+      headerName: t("terminal.loggedIn") as string,
+      type: "boolean",
+      valueGetter: (params) => params.row.session_uuid != null,
+    },
+    {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
       valueFormatter: ({ value }) => renderNode(value),
-      flex: 1,
+      minWidth: 200,
     },
   ];
 

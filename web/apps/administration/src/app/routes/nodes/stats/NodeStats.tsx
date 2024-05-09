@@ -5,13 +5,14 @@ import { DateTime } from "luxon";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import { useTranslation } from "react-i18next";
 import { Alert, AlertTitle, Divider, FormControlLabel, Grid, Stack, Switch } from "@mui/material";
-import { useCurrentEventSettings } from "@/hooks";
+import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
 import { EventStats } from "./EventStats";
 import { NodeSpecificStats } from "./NodeSpecificStats";
 
 export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
   const { t } = useTranslation();
   const { eventSettings } = useCurrentEventSettings();
+  const { currentNode } = useCurrentNode();
   const [fromTimestamp, setFromTimestamp] = React.useState<DateTime | undefined>(undefined);
   const [toTimestamp, setToTimestamp] = React.useState<DateTime | undefined>(undefined);
   const [groupByDay, setGroupByDay] = React.useState(true);
@@ -50,14 +51,18 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
         </Stack>
       </Grid>
       <Divider />
-      <EventStats
-        dailyEndTime={eventSettings.daily_end_time}
-        fromTimestamp={fromTimestamp}
-        toTimestamp={toTimestamp}
-        groupByDay={groupByDay}
-        useRevenue={showRevenue}
-      />
-      <Divider />
+      {currentNode.event != null && (
+        <>
+          <EventStats
+            dailyEndTime={eventSettings.daily_end_time}
+            fromTimestamp={fromTimestamp}
+            toTimestamp={toTimestamp}
+            groupByDay={groupByDay}
+            useRevenue={showRevenue}
+          />
+          <Divider />
+        </>
+      )}
       <NodeSpecificStats
         dailyEndTime={eventSettings.daily_end_time}
         fromTimestamp={fromTimestamp}

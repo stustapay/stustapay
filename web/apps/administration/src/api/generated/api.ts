@@ -2188,7 +2188,7 @@ export type NewUserTagSecret = {
 export type NewUserTag = {
   pin: string;
   restriction?: ProductRestriction | null;
-  secret_id?: number | null;
+  secret_id: number;
 };
 export type UserTagAccountAssociation = {
   account_id: number;
@@ -2327,8 +2327,8 @@ export type PublicEventSettings = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
-  sumup_topup_enabled?: boolean;
-  sumup_payment_enabled?: boolean;
+  sumup_topup_enabled: boolean;
+  sumup_payment_enabled: boolean;
   customer_portal_url: string;
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
@@ -2412,8 +2412,8 @@ export type NewEvent = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
-  sumup_topup_enabled?: boolean;
-  sumup_payment_enabled?: boolean;
+  sumup_topup_enabled: boolean;
+  sumup_payment_enabled: boolean;
   customer_portal_url: string;
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
@@ -2447,8 +2447,8 @@ export type UpdateEvent = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
-  sumup_topup_enabled?: boolean;
-  sumup_payment_enabled?: boolean;
+  sumup_topup_enabled: boolean;
+  sumup_payment_enabled: boolean;
   customer_portal_url: string;
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
@@ -2478,8 +2478,8 @@ export type RestrictedEventSettings = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
-  sumup_topup_enabled?: boolean;
-  sumup_payment_enabled?: boolean;
+  sumup_topup_enabled: boolean;
+  sumup_payment_enabled: boolean;
   customer_portal_url: string;
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;

@@ -49,6 +49,8 @@ export const translations = {
     amount: "Amount",
     donation: "Donation",
     status: "Status",
+    yes: "Yes",
+    no: "No",
   },
   nodes: {
     overview: "Overview",

@@ -71,15 +71,7 @@ export const TerminalDetail: React.FC = () => {
   if (terminal === undefined || tills === undefined) {
     return <Loading />;
   }
-
-  const renderTill = (id: number) => {
-    const till = selectTillById(tills, id);
-    if (!till) {
-      return "";
-    }
-
-    return till.name;
-  };
+  const till = terminal.till_id != null ? selectTillById(tills, terminal.till_id) : undefined;
 
   return (
     <DetailLayout
@@ -114,9 +106,9 @@ export const TerminalDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("common.description")} secondary={terminal.description} />
           </ListItem>
-          {terminal.till_id != null && (
-            <ListItemLink to={TillRoutes.detail(terminal.till_id)}>
-              <ListItemText primary={t("terminal.till")} secondary={renderTill(terminal.till_id)} />
+          {till != null && (
+            <ListItemLink to={TillRoutes.detail(till.id, till.node_id)}>
+              <ListItemText primary={t("terminal.till")} secondary={till.name} />
             </ListItemLink>
           )}
           {terminal.registration_uuid != null && (

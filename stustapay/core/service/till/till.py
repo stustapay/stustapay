@@ -50,7 +50,6 @@ class TillService(DBService):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def create_till(self, *, conn: Connection, node: Node, till: NewTill) -> Till:
-        # TODO: TREE visibility
         return await create_till(conn=conn, node_id=node.id, till=till)
 
     @with_db_transaction(read_only=True)
@@ -59,8 +58,10 @@ class TillService(DBService):
     async def list_tills(self, *, node: Node, conn: Connection) -> list[Till]:
         return await conn.fetch_many(
             Till,
-            "select * from till_with_cash_register where node_id = any($1) and not is_virtual order by name",
+            "select t.* from till_with_cash_register t join node n on t.node_id = n.id "
+            "where (t.node_id = any($1) or $2 = any(n.parent_ids)) and not t.is_virtual order by t.name",
             node.ids_to_event_node,
+            node.id,
         )
 
     @with_db_transaction(read_only=True)
@@ -94,22 +95,19 @@ class TillService(DBService):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def delete_till(self, *, conn: Connection, till_id: int) -> bool:
-        # TODO: TREE visibility
-        result = await conn.execute(
-            "delete from till where id = $1",
-            till_id,
-        )
+    async def delete_till(self, *, conn: Connection, node: Node, till_id: int) -> bool:
+        result = await conn.execute("delete from till where id = $1 and node_id = $2", till_id, node.id)
         return result != "DELETE 0"
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def force_logout_user(self, *, conn: Connection, till_id: int):
-        # TODO: TREE visibility
+    async def force_logout_user(self, *, conn: Connection, node: Node, till_id: int):
         result = await conn.fetchval(
-            "update till set active_user_id = null, active_user_role_id = null where id = $1 returning id",
+            "update till set active_user_id = null, active_user_role_id = null "
+            "where id = $1 and node_id = $2 returning id",
             till_id,
+            node.id,
         )
         if result is None:
             raise InvalidArgument("till does not exist")

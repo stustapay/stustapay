@@ -8,11 +8,11 @@ import {
   useListTillProfilesQuery,
   useListTillsQuery,
 } from "@/api";
-import { TerminalRoutes, TillProfileRoutes, TillRoutes } from "@/app/routes";
+import { TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Link } from "@mui/material";
+import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -97,20 +97,23 @@ export const TillList: React.FC = () => {
       headerName: t("till.name") as string,
       flex: 1,
       renderCell: (params) => (
-        <Link component={RouterLink} to={TillRoutes.detail(params.row.id)}>
-          {params.row.name}
-        </Link>
+        <Tooltip title={params.row.description}>
+          <Link component={RouterLink} to={TillRoutes.detail(params.row.id, params.row.node_id)}>
+            {params.row.name}
+          </Link>
+        </Tooltip>
       ),
     },
     {
-      field: "description",
-      headerName: t("till.description") as string,
-      flex: 2,
-    },
-    {
-      field: "tse_serial",
-      headerName: t("till.tseSerial") as string,
+      field: "tse_id",
+      headerName: t("till.tseId") as string,
       minWidth: 150,
+      renderCell: (params) =>
+        params.row.tse_id != null && (
+          <Link component={RouterLink} to={TseRoutes.detail(params.row.tse_id)}>
+            {params.row.tse_id}
+          </Link>
+        ),
     },
     {
       field: "profile",
@@ -128,7 +131,7 @@ export const TillList: React.FC = () => {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
       valueFormatter: ({ value }) => renderNode(value),
-      flex: 1,
+      minWidth: 200,
     },
   ];
 

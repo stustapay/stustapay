@@ -17,7 +17,15 @@ from stustapay.core.service.order import OrderService
 from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
-from stustapay.terminalserver.router import auth, base, cashier, customer, order, user
+from stustapay.terminalserver.router import (
+    auth,
+    base,
+    cashier,
+    customer,
+    management,
+    order,
+    user,
+)
 
 
 def get_server(config: Config):
@@ -34,6 +42,7 @@ def get_server(config: Config):
     server.add_router(user.router)
     server.add_router(customer.router)
     server.add_router(cashier.router)
+    server.add_router(management.router)
     return server
 
 

@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import logging
+import math
 import random
 import secrets
 from typing import Optional
@@ -207,6 +208,9 @@ async def _create_beverage_tills(
     n_cocktail_tills: int,
     n_beer_tills: int,
     tax_rate_ust: TaxRate,
+    cocktail_node: Node,
+    karussel_node: Node,
+    insel_node: Node,
 ):
     beer_products = [
         NewProduct(
@@ -385,17 +389,28 @@ async def _create_beverage_tills(
         ),
     )
 
-    tills = [NewTill(name=f"Bierkasse {i}", active_profile_id=beer_profile.id) for i in range(n_beer_tills)] + [
-        NewTill(name=f"Cocktailkasse {i}", active_profile_id=cocktail_profile.id) for i in range(n_cocktail_tills)
-    ]
-    for till in tills:
+    tills = (
+        [
+            (karussel_node.id, NewTill(name=f"Weißbierkarussel {i}", active_profile_id=beer_profile.id))
+            for i in range(math.ceil(n_beer_tills / 2))
+        ]
+        + [
+            (insel_node.id, NewTill(name=f"Weißbierinsel {i}", active_profile_id=beer_profile.id))
+            for i in range(math.floor(n_beer_tills / 2))
+        ]
+        + [
+            (cocktail_node.id, NewTill(name=f"Cocktailkasse {i}", active_profile_id=cocktail_profile.id))
+            for i in range(n_cocktail_tills)
+        ]
+    )
+    for node_id, till in tills:
         terminal = await terminal_service.create_terminal(
             token=admin_token, node_id=event_node_id, terminal=NewTerminal(name=till.name, description="")
         )
         till.terminal_id = terminal.id
         await till_service.create_till(
             token=admin_token,
-            node_id=event_node_id,
+            node_id=node_id,
             till=till,
         )
 
@@ -409,6 +424,7 @@ async def _create_ticket_tills(
     terminal_service: TerminalService,
     n_tills: int,
     tax_rate_ust: TaxRate,
+    topup_ticket_node: Node,
 ):
     ticket = await ticket_service.create_ticket(
         conn=conn,
@@ -454,7 +470,7 @@ async def _create_ticket_tills(
         till.terminal_id = terminal.id
         await till_service.create_till(
             token=admin_token,
-            node_id=event_node_id,
+            node_id=topup_ticket_node.id,
             till=till,
         )
 
@@ -466,6 +482,7 @@ async def _create_topup_tills(
     till_service: TillService,
     terminal_service: TerminalService,
     n_tills: int,
+    topup_ticket_node: Node,
 ):
     layout = await till_service.layout.create_layout(
         conn=conn,
@@ -497,7 +514,7 @@ async def _create_topup_tills(
         till.terminal_id = terminal.id
         await till_service.create_till(
             token=admin_token,
-            node_id=event_node_id,
+            node_id=topup_ticket_node.id,
             till=till,
         )
 
@@ -526,7 +543,17 @@ class DatabaseSetup:
 
         self.db_pool: asyncpg.Pool | None = None
 
-    async def _create_tills(self, conn: Connection, admin_token: str, n_tills: int, tax_rate_ust: TaxRate):
+    async def _create_tills(
+        self,
+        conn: Connection,
+        admin_token: str,
+        n_tills: int,
+        tax_rate_ust: TaxRate,
+        cocktail_node: Node,
+        karussel_node: Node,
+        insel_node: Node,
+        topup_ticket_node: Node,
+    ):
         assert self.db_pool is not None
         auth_service = AuthService(db_pool=self.db_pool, config=self.config)
         till_service = TillService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
@@ -553,6 +580,9 @@ class DatabaseSetup:
             terminal_service=terminal_service,
             n_beer_tills=self.n_beer_tills,
             tax_rate_ust=tax_rate_ust,
+            insel_node=insel_node,
+            cocktail_node=cocktail_node,
+            karussel_node=karussel_node,
         )
         await _create_topup_tills(
             conn=conn,
@@ -561,6 +591,7 @@ class DatabaseSetup:
             till_service=till_service,
             n_tills=self.n_topup_tills,
             terminal_service=terminal_service,
+            topup_ticket_node=topup_ticket_node,
         )
         await _create_ticket_tills(
             conn=conn,
@@ -571,6 +602,7 @@ class DatabaseSetup:
             n_tills=self.n_entry_tills,
             tax_rate_ust=tax_rate_ust,
             terminal_service=terminal_service,
+            topup_ticket_node=topup_ticket_node,
         )
         for i in range(n_tills):
             await till_service.register.create_cash_register(
@@ -688,6 +720,8 @@ class DatabaseSetup:
                     sepa_sender_iban="DE89370400440532013000",
                     sepa_description="FestivalName, TagID: {user_tag_uid}",
                     sepa_allowed_country_codes=["DE"],
+                    sumup_topup_enabled=False,
+                    sumup_payment_enabled=False,
                 ),
             )
             beer_team_node = await create_node(
@@ -698,7 +732,7 @@ class DatabaseSetup:
                     description="",
                 ),
             )
-            await create_node(
+            insel_node = await create_node(
                 conn=conn,
                 parent_id=beer_team_node.id,
                 new_node=NewNode(
@@ -706,11 +740,27 @@ class DatabaseSetup:
                     description="",
                 ),
             )
-            await create_node(
+            karussel_node = await create_node(
+                conn=conn,
+                parent_id=beer_team_node.id,
+                new_node=NewNode(
+                    name="Weißbierkarussel",
+                    description="",
+                ),
+            )
+            cocktail_node = await create_node(
                 conn=conn,
                 parent_id=event_node.id,
                 new_node=NewNode(
                     name="Cocktailstand",
+                    description="",
+                ),
+            )
+            topup_ticket_node = await create_node(
+                conn=conn,
+                parent_id=event_node.id,
+                new_node=NewNode(
+                    name="Eintrittskassen",
                     description="",
                 ),
             )
@@ -726,7 +776,16 @@ class DatabaseSetup:
                 node_id=self.event_node_id,
                 tax_rate=NewTaxRate(name="ust", description="Umsatzsteuer", rate=0.19),
             )
-            await self._create_tills(conn=conn, admin_token=admin_token, n_tills=n_tills, tax_rate_ust=tax_rate_ust)
+            await self._create_tills(
+                conn=conn,
+                admin_token=admin_token,
+                n_tills=n_tills,
+                tax_rate_ust=tax_rate_ust,
+                cocktail_node=cocktail_node,
+                karussel_node=karussel_node,
+                insel_node=insel_node,
+                topup_ticket_node=topup_ticket_node,
+            )
             await self._create_cashiers(
                 conn=conn, user_service=user_service, admin_user=admin, admin_token=admin_token, n_cashiers=n_cashiers
             )

@@ -25,8 +25,8 @@ class _BaseEvent(BaseModel):
     end_date: datetime | None = None
     daily_end_time: time | None = None
 
-    sumup_topup_enabled: bool = False
-    sumup_payment_enabled: bool = False
+    sumup_topup_enabled: bool
+    sumup_payment_enabled: bool
 
     customer_portal_url: str
     customer_portal_about_page_url: str

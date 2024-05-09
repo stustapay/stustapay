@@ -21,13 +21,27 @@ import { TreeView } from "@mui/lab";
 import * as React from "react";
 import { useLocation } from "react-router-dom";
 import { NavigationTreeItem } from "./NavigationTreeItem";
-import { NodeMenu } from "./NodeMenu";
+import { NodeMenu, isMenuEntryValidAtNode, nodeMenuEntryDefinitions } from "./NodeMenu";
 
 const getNavigationTreeItemLabel = (node: Node) => {
   if (node.event) {
     return EventIcon;
   }
   return FolderIcon;
+};
+
+const computeMenuIds = (node: NodeSeenByUser) => {
+  let ids = [`/node/${node.id}`];
+  for (const menuEntry of nodeMenuEntryDefinitions) {
+    if (isMenuEntryValidAtNode(menuEntry, node)) {
+      const id = menuEntry.route(node);
+      ids.push(id);
+    }
+  }
+  for (const child of node.children) {
+    ids = [...ids, ...computeMenuIds(child)];
+  }
+  return ids;
 };
 
 export const NavigationTree: React.FC = () => {
@@ -59,6 +73,12 @@ export const NavigationTree: React.FC = () => {
     setSelected(nodeIds);
   };
 
+  const menuIds = React.useMemo(() => {
+    const result = computeMenuIds(tree);
+    result.sort().reverse();
+    return result;
+  }, [tree]);
+
   React.useEffect(() => {
     const match = location.pathname.match(nodeUrlBaseRegex);
     if (match) {
@@ -68,9 +88,14 @@ export const NavigationTree: React.FC = () => {
         return;
       }
       dispatch(extendExpandedNodes([nodeId, ...node.parent_ids.map((parent) => `/node/${parent}`)]));
-      setSelected([location.pathname]);
+      const firstMatchingMenuId = menuIds.find((val) => location.pathname.startsWith(val));
+      if (firstMatchingMenuId) {
+        setSelected([firstMatchingMenuId]);
+      } else {
+        setSelected([]);
+      }
     }
-  }, [location, tree, setSelected, dispatch]);
+  }, [location, tree, setSelected, dispatch, menuIds]);
 
   const renderTree = (node: NodeSeenByUser) => (
     <NavigationTreeItem
@@ -82,7 +107,7 @@ export const NavigationTree: React.FC = () => {
       suffixIcon={node.read_only ? EditOffIcon : undefined}
     >
       <NodeMenu node={node} />
-      {Array.isArray(node.children) ? node.children.map((node) => renderTree(node)) : null}
+      {node.children.map((node) => renderTree(node))}
     </NavigationTreeItem>
   );
 
