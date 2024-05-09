@@ -46,7 +46,13 @@ import {
   TillUpdate,
 } from "./routes/tills";
 import { TseCreate, TseDetail, TseList, TseUpdate } from "./routes/tse";
-import { FindUserTags, UserTagDetail, UserTagPageLayout } from "./routes/user-tags";
+import {
+  FindUserTags,
+  UserTagDetail,
+  UserTagPageLayout,
+  UserTagsCreate,
+  UserTagSecretCreate,
+} from "./routes/user-tags";
 import {
   UserCreate,
   UserDetail,
@@ -380,6 +386,14 @@ const router = createBrowserRouter([
           {
             index: true,
             element: <FindUserTags />,
+          },
+          {
+            path: "create-secret",
+            element: <UserTagSecretCreate />,
+          },
+          {
+            path: "create-tags",
+            element: <UserTagsCreate />,
           },
           {
             path: ":userTagId",

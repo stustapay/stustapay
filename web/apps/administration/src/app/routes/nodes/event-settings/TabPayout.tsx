@@ -10,20 +10,53 @@ import { toast } from "react-toastify";
 import { z } from "zod";
 import i18n from "@/i18n";
 
-export const PayoutSettingsSchema = z.object({
-  sepa_enabled: z.boolean(),
-  sepa_sender_name: z.string(),
-  sepa_sender_iban: z.string().superRefine((val, ctx) => {
-    if (!iban.isValid(val)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: i18n.t("settings.payout.ibanNotValid"),
-      });
+const requiredIssue = {
+  code: z.ZodIssueCode.custom,
+  message: "Required if payout is enabled",
+};
+
+export const PayoutSettingsSchema = z
+  .object({
+    sepa_enabled: z.boolean(),
+    sepa_sender_name: z
+      .string()
+      .optional()
+      .transform((val) => val ?? ""),
+    sepa_sender_iban: z
+      .string()
+      .optional()
+      .superRefine((val, ctx) => {
+        if (val != null && !iban.isValid(val)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: i18n.t("settings.payout.ibanNotValid"),
+          });
+        }
+      })
+      .transform((val) => val ?? ""),
+    sepa_description: z
+      .string()
+      .optional()
+      .transform((val) => val ?? ""),
+    sepa_allowed_country_codes: z.array(z.string()).default([]),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.sepa_enabled) {
+      return;
     }
-  }),
-  sepa_description: z.string(),
-  sepa_allowed_country_codes: z.array(z.string()).min(1),
-});
+    if (data.sepa_sender_name === "") {
+      ctx.addIssue({ ...requiredIssue, path: ["sepa_sender_name"] });
+    }
+    if (data.sepa_sender_iban === "") {
+      ctx.addIssue({ ...requiredIssue, path: ["sepa_sender_iban"] });
+    }
+    if (data.sepa_description === "") {
+      ctx.addIssue({ ...requiredIssue, path: ["sepa_description"] });
+    }
+    if (data.sepa_allowed_country_codes === undefined || data.sepa_allowed_country_codes.length === 0) {
+      ctx.addIssue({ ...requiredIssue, path: ["sepa_allowed_country_codes"] });
+    }
+  });
 
 export type PayoutSettings = z.infer<typeof PayoutSettingsSchema>;
 

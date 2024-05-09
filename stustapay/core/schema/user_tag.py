@@ -17,4 +17,4 @@ class UserTagSecret(NewUserTagSecret):
 class NewUserTag(BaseModel):
     pin: str
     restriction: ProductRestriction | None = None
-    secret_id: int | None = None
+    secret_id: int

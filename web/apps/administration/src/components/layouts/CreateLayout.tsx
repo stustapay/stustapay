@@ -1,7 +1,10 @@
 import { ChangeLayout, ChangeLayoutProps } from "./ChangeLayout";
 
-export type CreateLayoutProps<T extends Record<string, any>> = ChangeLayoutProps<T>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FormObject = Record<string, any>;
 
-export function CreateLayout<T extends Record<string, any>>(props: CreateLayoutProps<T>) {
+export type CreateLayoutProps<T extends FormObject> = ChangeLayoutProps<T>;
+
+export function CreateLayout<T extends FormObject>(props: CreateLayoutProps<T>) {
   return <ChangeLayout {...props} />;
 }

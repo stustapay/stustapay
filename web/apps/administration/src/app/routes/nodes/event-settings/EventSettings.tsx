@@ -50,7 +50,7 @@ export const EventSettings: React.FC = () => {
             toast.success(t("settings.archiveNode.success"));
           })
           .catch(() => {
-            toast.error(t("settings.archiveNode.success"));
+            toast.error(t("settings.archiveNode.error"));
           });
       },
     });

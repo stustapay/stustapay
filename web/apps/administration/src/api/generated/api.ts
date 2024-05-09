@@ -490,7 +490,7 @@ const injectedRtkApi = api
       listOrders: build.query<ListOrdersApiResponse, ListOrdersApiArg>({
         query: (queryArg) => ({
           url: `/orders`,
-          params: { customer_account_id: queryArg.customerAccountId, node_id: queryArg.nodeId },
+          params: { node_id: queryArg.nodeId, customer_account_id: queryArg.customerAccountId },
         }),
         providesTags: ["orders"],
       }),
@@ -530,7 +530,7 @@ const injectedRtkApi = api
       getCashierShiftStats: build.query<GetCashierShiftStatsApiResponse, GetCashierShiftStatsApiArg>({
         query: (queryArg) => ({
           url: `/cashiers/${queryArg.cashierId}/shift-stats`,
-          params: { shift_id: queryArg.shiftId, node_id: queryArg.nodeId },
+          params: { node_id: queryArg.nodeId, shift_id: queryArg.shiftId },
         }),
         providesTags: ["cashiers"],
       }),
@@ -620,6 +620,28 @@ const injectedRtkApi = api
           params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["tickets"],
+      }),
+      createUserTagSecret: build.mutation<CreateUserTagSecretApiResponse, CreateUserTagSecretApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tag-secrets`,
+          method: "POST",
+          body: queryArg.newUserTagSecret,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
+      listUserTagSecrets: build.query<ListUserTagSecretsApiResponse, ListUserTagSecretsApiArg>({
+        query: (queryArg) => ({ url: `/user-tag-secrets`, params: { node_id: queryArg.nodeId } }),
+        providesTags: ["user_tags"],
+      }),
+      createUserTags: build.mutation<CreateUserTagsApiResponse, CreateUserTagsApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tags`,
+          method: "POST",
+          body: queryArg.newUserTags,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["user_tags"],
       }),
       findUserTags: build.mutation<FindUserTagsApiResponse, FindUserTagsApiArg>({
         query: (queryArg) => ({
@@ -867,28 +889,28 @@ const injectedRtkApi = api
 export { injectedRtkApi as api };
 export type ListProductsApiResponse = /** status 200 Successful Response */ NormalizedListProductInt;
 export type ListProductsApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateProductApiResponse = /** status 200 Successful Response */ Product;
 export type CreateProductApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newProduct: NewProduct;
 };
 export type GetProductApiResponse = /** status 200 Successful Response */ Product;
 export type GetProductApiArg = {
   productId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type UpdateProductApiResponse = /** status 200 Successful Response */ Product;
 export type UpdateProductApiArg = {
   productId: number;
-  nodeId?: number | null;
+  nodeId: number;
   newProduct: NewProduct;
 };
 export type DeleteProductApiResponse = /** status 200 Successful Response */ any;
 export type DeleteProductApiArg = {
   productId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type ListUsersApiResponse = /** status 200 Successful Response */ NormalizedListUserInt;
 export type ListUsersApiArg = {
@@ -957,28 +979,28 @@ export type DeassociatedUserToRoleApiArg = {
 };
 export type ListTaxRatesApiResponse = /** status 200 Successful Response */ NormalizedListTaxRateInt;
 export type ListTaxRatesApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type CreateTaxRateApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newTaxRate: NewTaxRate;
 };
 export type GetTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type GetTaxRateApiArg = {
   taxRateId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type UpdateTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type UpdateTaxRateApiArg = {
   taxRateId: number;
-  nodeId?: number | null;
+  nodeId: number;
   newTaxRate: NewTaxRate;
 };
 export type DeleteTaxRateApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTaxRateApiArg = {
   taxRateId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type LoginApiResponse = /** status 200 Successful Response */ UserLoginResult;
 export type LoginApiArg = {
@@ -992,154 +1014,154 @@ export type LogoutApiResponse = unknown;
 export type LogoutApiArg = void;
 export type ListTillsApiResponse = /** status 200 Successful Response */ NormalizedListTillInt;
 export type ListTillsApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateTillApiResponse = /** status 200 Successful Response */ Till;
 export type CreateTillApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newTill: NewTill;
 };
 export type GetTillApiResponse = /** status 200 Successful Response */ Till;
 export type GetTillApiArg = {
   tillId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type UpdateTillApiResponse = /** status 200 Successful Response */ Till;
 export type UpdateTillApiArg = {
   tillId: number;
-  nodeId?: number | null;
+  nodeId: number;
   newTill: NewTill;
 };
 export type DeleteTillApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTillApiArg = {
   tillId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type ForceLogoutUserApiResponse = /** status 200 Successful Response */ any;
 export type ForceLogoutUserApiArg = {
   tillId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type ListTillLayoutsApiResponse = /** status 200 Successful Response */ NormalizedListTillLayoutInt;
 export type ListTillLayoutsApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateTillLayoutApiResponse = /** status 200 Successful Response */ NewTillLayout;
 export type CreateTillLayoutApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newTillLayout: NewTillLayout;
 };
 export type GetTillLayoutApiResponse = /** status 200 Successful Response */ TillLayout;
 export type GetTillLayoutApiArg = {
   layoutId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type UpdateTillLayoutApiResponse = /** status 200 Successful Response */ TillLayout;
 export type UpdateTillLayoutApiArg = {
   layoutId: number;
-  nodeId?: number | null;
+  nodeId: number;
   newTillLayout: NewTillLayout;
 };
 export type DeleteTillLayoutApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTillLayoutApiArg = {
   layoutId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type ListTillProfilesApiResponse = /** status 200 Successful Response */ NormalizedListTillProfileInt;
 export type ListTillProfilesApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateTillProfileApiResponse = /** status 200 Successful Response */ NewTillProfile;
 export type CreateTillProfileApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newTillProfile: NewTillProfile;
 };
 export type GetTillProfileApiResponse = /** status 200 Successful Response */ TillProfile;
 export type GetTillProfileApiArg = {
   profileId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type UpdateTillProfileApiResponse = /** status 200 Successful Response */ TillProfile;
 export type UpdateTillProfileApiArg = {
   profileId: number;
-  nodeId?: number | null;
+  nodeId: number;
   newTillProfile: NewTillProfile;
 };
 export type DeleteTillProfileApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTillProfileApiArg = {
   profileId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type ListTillButtonsApiResponse = /** status 200 Successful Response */ NormalizedListTillButtonInt;
 export type ListTillButtonsApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateTillButtonApiResponse = /** status 200 Successful Response */ NewTillButton;
 export type CreateTillButtonApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newTillButton: NewTillButton;
 };
 export type GetTillButtonApiResponse = /** status 200 Successful Response */ TillButton;
 export type GetTillButtonApiArg = {
   buttonId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type UpdateTillButtonApiResponse = /** status 200 Successful Response */ TillButton;
 export type UpdateTillButtonApiArg = {
   buttonId: number;
-  nodeId?: number | null;
+  nodeId: number;
   newTillButton: NewTillButton;
 };
 export type DeleteTillButtonApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTillButtonApiArg = {
   buttonId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type ListRegisterStockingsApiResponse =
   /** status 200 Successful Response */ NormalizedListCashRegisterStockingInt;
 export type ListRegisterStockingsApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateRegisterStockingApiResponse = /** status 200 Successful Response */ CashRegisterStocking;
 export type CreateRegisterStockingApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newCashRegisterStocking: NewCashRegisterStocking;
 };
 export type UpdateRegisterStockingApiResponse = /** status 200 Successful Response */ CashRegisterStocking;
 export type UpdateRegisterStockingApiArg = {
   stockingId: number;
-  nodeId?: number | null;
+  nodeId: number;
   newCashRegisterStocking: NewCashRegisterStocking;
 };
 export type DeleteRegisterStockingApiResponse = /** status 200 Successful Response */ any;
 export type DeleteRegisterStockingApiArg = {
   stockingId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type ListCashRegistersAdminApiResponse = /** status 200 Successful Response */ NormalizedListCashRegisterInt;
 export type ListCashRegistersAdminApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateRegisterApiResponse = /** status 200 Successful Response */ CashRegister;
 export type CreateRegisterApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newCashRegister: NewCashRegister;
 };
 export type TransferRegisterApiResponse = /** status 200 Successful Response */ any;
 export type TransferRegisterApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   transferRegisterPayload: TransferRegisterPayload;
 };
 export type UpdateRegisterApiResponse = /** status 200 Successful Response */ any;
 export type UpdateRegisterApiArg = {
   registerId: number;
-  nodeId?: number | null;
+  nodeId: number;
   newCashRegister: NewCashRegister;
 };
 export type DeleteRegisterApiResponse = /** status 200 Successful Response */ any;
 export type DeleteRegisterApiArg = {
   registerId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type GetPublicConfigApiResponse = /** status 200 Successful Response */ Config;
 export type GetPublicConfigApiArg = void;
@@ -1151,91 +1173,91 @@ export type SetConfigEntryApiArg = {
 };
 export type ListSystemAccountsApiResponse = /** status 200 Successful Response */ NormalizedListAccountInt;
 export type ListSystemAccountsApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type FindAccountsApiResponse = /** status 200 Successful Response */ NormalizedListAccountInt;
 export type FindAccountsApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   findAccountPayload: FindAccountPayload;
 };
 export type GetAccountApiResponse = /** status 200 Successful Response */ AccountRead;
 export type GetAccountApiArg = {
   accountId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type DisableAccountApiResponse = /** status 200 Successful Response */ any;
 export type DisableAccountApiArg = {
   accountId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type UpdateBalanceApiResponse = /** status 200 Successful Response */ any;
 export type UpdateBalanceApiArg = {
   accountId: number;
-  nodeId?: number | null;
+  nodeId: number;
   updateBalancePayload: UpdateBalancePayload;
 };
 export type UpdateVoucherAmountApiResponse = /** status 200 Successful Response */ any;
 export type UpdateVoucherAmountApiArg = {
   accountId: number;
-  nodeId?: number | null;
+  nodeId: number;
   updateVoucherAmountPayload: UpdateVoucherAmountPayload;
 };
 export type UpdateAccountCommentApiResponse = /** status 200 Successful Response */ AccountRead;
 export type UpdateAccountCommentApiArg = {
   accountId: number;
-  nodeId?: number | null;
+  nodeId: number;
   updateAccountCommentPayload: UpdateAccountCommentPayload;
 };
 export type ListOrdersByTillApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
 export type ListOrdersByTillApiArg = {
   tillId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type ListOrdersApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
 export type ListOrdersApiArg = {
+  nodeId: number;
   customerAccountId?: number | null;
-  nodeId?: number | null;
 };
 export type GetOrderApiResponse = /** status 200 Successful Response */ OrderRead;
 export type GetOrderApiArg = {
   orderId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CancelOrderApiResponse = /** status 200 Successful Response */ any;
 export type CancelOrderApiArg = {
   orderId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type EditOrderApiResponse = /** status 200 Successful Response */ CompletedSaleProductsRead;
 export type EditOrderApiArg = {
   orderId: number;
-  nodeId?: number | null;
+  nodeId: number;
   editSaleProducts: EditSaleProducts;
 };
 export type ListCashiersApiResponse = /** status 200 Successful Response */ NormalizedListCashierInt;
 export type ListCashiersApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type GetCashierApiResponse = /** status 200 Successful Response */ CashierRead;
 export type GetCashierApiArg = {
   cashierId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type GetCashierShiftsApiResponse = /** status 200 Successful Response */ NormalizedListCashierShiftInt;
 export type GetCashierShiftsApiArg = {
   cashierId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type GetCashierShiftStatsApiResponse = /** status 200 Successful Response */ CashierShiftStats;
 export type GetCashierShiftStatsApiArg = {
   cashierId: number;
+  nodeId: number;
   shiftId?: number | null;
-  nodeId?: number | null;
 };
 export type CloseOutCashierApiResponse = /** status 200 Successful Response */ CloseOutResult;
 export type CloseOutCashierApiArg = {
   cashierId: number;
-  nodeId?: number | null;
+  nodeId: number;
   closeOut: CloseOut;
 };
 export type GetProductStatsApiResponse = /** status 200 Successful Response */ ProductStats;
@@ -1264,58 +1286,72 @@ export type GetTopUpStatsApiArg = {
 };
 export type ListTicketsApiResponse = /** status 200 Successful Response */ NormalizedListTicketInt;
 export type ListTicketsApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateTicketApiResponse = /** status 200 Successful Response */ Ticket;
 export type CreateTicketApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newTicket: NewTicket;
 };
 export type GetTicketApiResponse = /** status 200 Successful Response */ Ticket;
 export type GetTicketApiArg = {
   ticketId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type UpdateTicketApiResponse = /** status 200 Successful Response */ Ticket;
 export type UpdateTicketApiArg = {
   ticketId: number;
-  nodeId?: number | null;
+  nodeId: number;
   newTicket: NewTicket;
 };
 export type DeleteTicketApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTicketApiArg = {
   ticketId: number;
-  nodeId?: number | null;
+  nodeId: number;
+};
+export type CreateUserTagSecretApiResponse = /** status 200 Successful Response */ UserTagSecret;
+export type CreateUserTagSecretApiArg = {
+  nodeId: number;
+  newUserTagSecret: NewUserTagSecret;
+};
+export type ListUserTagSecretsApiResponse = /** status 200 Successful Response */ UserTagSecret[];
+export type ListUserTagSecretsApiArg = {
+  nodeId: number;
+};
+export type CreateUserTagsApiResponse = /** status 200 Successful Response */ any;
+export type CreateUserTagsApiArg = {
+  nodeId: number;
+  newUserTags: NewUserTag[];
 };
 export type FindUserTagsApiResponse = /** status 200 Successful Response */ NormalizedListUserTagDetailInt;
 export type FindUserTagsApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   findUserTagPayload: FindUserTagPayload;
 };
 export type GetUserTagDetailApiResponse = /** status 200 Successful Response */ UserTagDetailRead;
 export type GetUserTagDetailApiArg = {
   userTagId: number;
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type UpdateUserTagCommentApiResponse = /** status 200 Successful Response */ UserTagDetailRead;
 export type UpdateUserTagCommentApiArg = {
   userTagId: number;
-  nodeId?: number | null;
+  nodeId: number;
   updateCommentPayload: UpdateCommentPayload;
 };
 export type ListTsesApiResponse = /** status 200 Successful Response */ NormalizedListTseInt;
 export type ListTsesApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
 };
 export type CreateTseApiResponse = /** status 200 Successful Response */ Tse;
 export type CreateTseApiArg = {
-  nodeId?: number | null;
+  nodeId: number;
   newTse: NewTse;
 };
 export type UpdateTseApiResponse = /** status 200 Successful Response */ Tse;
 export type UpdateTseApiArg = {
   tseId: number;
-  nodeId?: number | null;
+  nodeId: number;
   updateTse: UpdateTse;
 };
 export type ListPayoutRunsApiResponse = /** status 200 Successful Response */ NormalizedListPayoutRunWithStatsInt;
@@ -2137,6 +2173,23 @@ export type NewTicket = {
   is_locked: boolean;
   initial_top_up_amount: number;
 };
+export type UserTagSecret = {
+  key0: string;
+  key1: string;
+  description: string;
+  id: number;
+  node_id: number;
+};
+export type NewUserTagSecret = {
+  key0: string;
+  key1: string;
+  description: string;
+};
+export type NewUserTag = {
+  pin: string;
+  restriction?: ProductRestriction | null;
+  secret_id?: number | null;
+};
 export type UserTagAccountAssociation = {
   account_id: number;
   mapping_was_valid_until: string;
@@ -2662,6 +2715,10 @@ export const {
   useLazyGetTicketQuery,
   useUpdateTicketMutation,
   useDeleteTicketMutation,
+  useCreateUserTagSecretMutation,
+  useListUserTagSecretsQuery,
+  useLazyListUserTagSecretsQuery,
+  useCreateUserTagsMutation,
   useFindUserTagsMutation,
   useGetUserTagDetailQuery,
   useLazyGetUserTagDetailQuery,

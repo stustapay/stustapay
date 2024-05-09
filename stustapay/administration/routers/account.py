@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -16,9 +14,7 @@ router = APIRouter(
 
 
 @router.get("/system-accounts", response_model=NormalizedList[Account, int])
-async def list_system_accounts(
-    token: CurrentAuthToken, account_service: ContextAccountService, node_id: Optional[int] = None
-):
+async def list_system_accounts(token: CurrentAuthToken, account_service: ContextAccountService, node_id: int):
     return normalize_list(await account_service.list_system_accounts(token=token, node_id=node_id))
 
 
@@ -31,7 +27,7 @@ async def find_accounts(
     token: CurrentAuthToken,
     account_service: ContextAccountService,
     payload: FindAccountPayload,
-    node_id: Optional[int] = None,
+    node_id: int,
 ):
     return normalize_list(
         await account_service.find_accounts(token=token, search_term=payload.search_term, node_id=node_id)
@@ -39,15 +35,13 @@ async def find_accounts(
 
 
 @router.get("/accounts/{account_id}", response_model=Account)
-async def get_account(
-    token: CurrentAuthToken, account_service: ContextAccountService, account_id: int, node_id: Optional[int] = None
-):
+async def get_account(token: CurrentAuthToken, account_service: ContextAccountService, account_id: int, node_id: int):
     return await account_service.get_account(token=token, account_id=account_id, node_id=node_id)
 
 
 @router.post("/accounts/{account_id}/disable")
 async def disable_account(
-    token: CurrentAuthToken, account_service: ContextAccountService, account_id: int, node_id: Optional[int] = None
+    token: CurrentAuthToken, account_service: ContextAccountService, account_id: int, node_id: int
 ):
     await account_service.disable_account(token=token, account_id=account_id, node_id=node_id)
 
@@ -62,7 +56,7 @@ async def update_balance(
     account_service: ContextAccountService,
     account_id: int,
     payload: UpdateBalancePayload,
-    node_id: Optional[int] = None,
+    node_id: int,
 ):
     await account_service.update_account_balance(
         token=token, account_id=account_id, new_balance=payload.new_balance, node_id=node_id
@@ -79,7 +73,7 @@ async def update_voucher_amount(
     account_service: ContextAccountService,
     account_id: int,
     payload: UpdateVoucherAmountPayload,
-    node_id: Optional[int] = None,
+    node_id: int,
 ):
     await account_service.update_account_vouchers(
         token=token, account_id=account_id, new_voucher_amount=payload.new_voucher_amount, node_id=node_id
@@ -96,7 +90,7 @@ async def update_account_comment(
     account_service: ContextAccountService,
     account_id: int,
     payload: UpdateAccountCommentPayload,
-    node_id: Optional[int] = None,
+    node_id: int,
 ):
     return await account_service.update_account_comment(
         token=token, account_id=account_id, comment=payload.comment, node_id=node_id

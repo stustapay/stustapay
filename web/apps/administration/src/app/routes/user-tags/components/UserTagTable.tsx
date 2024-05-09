@@ -18,13 +18,23 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
   const columns: GridColDef<UserTagDetailRead>[] = [
     {
       field: "user_tag_id",
-      headerName: t("userTag.id") as string,
+      headerName: t("common.id") as string,
       renderCell: (params) => (
         <Link component={RouterLink} to={UserTagRoutes.detail(params.row.id)}>
           {params.row.id}
         </Link>
       ),
       minWidth: 250,
+    },
+    {
+      field: "pin",
+      headerName: t("userTag.pin") as string,
+      minWidth: 300,
+    },
+    {
+      field: "uid_hex",
+      headerName: t("userTag.uid") as string,
+      minWidth: 300,
     },
     {
       field: "account",
