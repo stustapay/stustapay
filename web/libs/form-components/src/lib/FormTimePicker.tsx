@@ -1,7 +1,6 @@
 import * as React from "react";
 import { TimePicker, TimePickerProps } from "@mui/x-date-pickers";
 import { FormikProps } from "formik";
-import { TextField } from "@mui/material";
 import { DateTime } from "luxon";
 
 export type FormTimePickerProps<Name extends string, Values> = {
@@ -24,15 +23,12 @@ export function FormTimePicker<Name extends string, Values extends Partial<Recor
       value={formik.values[name] != null ? DateTime.fromISO(formik.values[name]!) : null}
       ampm={false}
       onChange={handleChange}
-      slots={{
-        textField: (props) => (
-          <TextField
-            variant="standard"
-            error={formik.touched[name] && !!formik.errors[name]}
-            helperText={(formik.touched[name] && formik.errors[name]) as string}
-            {...props}
-          />
-        ),
+      slotProps={{
+        textField: {
+          variant: "standard",
+          error: formik.touched[name] && !!formik.errors[name],
+          helperText: (formik.touched[name] && formik.errors[name]) as string,
+        },
       }}
       {...props}
     />

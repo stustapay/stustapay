@@ -3,12 +3,13 @@ import { UserRoleRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 export const UserRoleList: React.FC = () => {
   const { t } = useTranslation();
@@ -51,7 +52,12 @@ export const UserRoleList: React.FC = () => {
     {
       field: "name",
       headerName: t("userRole.name") as string,
-      flex: 1,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={UserRoleRoutes.detail(params.row.id)}>
+          {params.row.name}
+        </Link>
+      ),
+      minWidth: 200,
     },
     {
       field: "is_privileged",
@@ -67,7 +73,7 @@ export const UserRoleList: React.FC = () => {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
       valueFormatter: ({ value }) => renderNode(value),
-      flex: 1,
+      minWidth: 200,
     },
   ];
 

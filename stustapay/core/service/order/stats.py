@@ -12,6 +12,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_node,
+    requires_terminal,
     requires_user,
     with_db_transaction,
 )
@@ -71,6 +72,13 @@ class ProductStats(BaseModel):
     hourly_intervals: list[StatInterval]
     product_daily_intervals: list[ProductTimeseries]
     product_hourly_intervals: list[ProductTimeseries]
+
+
+class RevenueStats(BaseModel):
+    from_time: datetime
+    to_time: datetime
+    daily_intervals: list[StatInterval]
+    hourly_intervals: list[StatInterval]
 
 
 def _get_time_bounds(query: TimeseriesStatsQuery, event: PublicEventSettings) -> tuple[datetime, datetime]:
@@ -245,7 +253,7 @@ class OrderStatsService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
     async def get_entry_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> TimeseriesStats:
         if node.event is None:
             raise InvalidArgument("Entry stats can only be computed for event nodes")
@@ -264,7 +272,7 @@ class OrderStatsService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
     async def get_top_up_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> TimeseriesStats:
         if node.event is None:
             raise InvalidArgument("Top up stats can only be computed for event nodes")
@@ -283,7 +291,7 @@ class OrderStatsService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
     async def get_voucher_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> VoucherStats:
         if node.event is None:
             raise InvalidArgument("voucher stats can only be computed for event nodes")
@@ -309,8 +317,8 @@ class OrderStatsService(DBService):
         return stats
 
     @with_db_transaction(read_only=True)
-    @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_node()
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
     async def get_product_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> ProductStats:
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = _get_time_bounds(query, event)
@@ -338,4 +346,19 @@ class OrderStatsService(DBService):
                 ProductTimeseries(product_id=p_id, intervals=intervals)
                 for p_id, intervals in daily_product_stats.items()
             ],
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_terminal(user_privileges=[Privilege.view_node_stats])
+    async def get_revenue_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> RevenueStats:
+        event = await fetch_event_for_node(conn=conn, node=node)
+        from_time, to_time = _get_time_bounds(query, event)
+        hourly_stats = await get_hourly_revenue_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
+
+        return RevenueStats(
+            from_time=hourly_stats.from_time,
+            to_time=hourly_stats.to_time,
+            hourly_intervals=hourly_stats.intervals,
+            daily_intervals=daily_stats.intervals,
         )

@@ -8,10 +8,11 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { UserRoleUpdateForm, UserRoleUpdateSchema, UserRoleUpdate as UserRoleUpdateType } from "./UserRoleUpdateForm";
 import { withPrivilegeGuard } from "@/app/layout";
+import { toast } from "react-toastify";
 
 export const UserRoleUpdate: React.FC = withPrivilegeGuard("user_management", () => {
   const { t } = useTranslation();
-  const { userId } = useParams();
+  const { roleId } = useParams();
   const { currentNode } = useCurrentNode();
   const [updateUserRole] = useUpdateUserRoleMutation();
   const { userRole, isLoading } = useListUserRolesQuery(
@@ -19,7 +20,7 @@ export const UserRoleUpdate: React.FC = withPrivilegeGuard("user_management", ()
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        userRole: data ? selectUserRoleById(data, Number(userId)) : undefined,
+        userRole: data ? selectUserRoleById(data, Number(roleId)) : undefined,
       }),
     }
   );
@@ -29,6 +30,7 @@ export const UserRoleUpdate: React.FC = withPrivilegeGuard("user_management", ()
   }
 
   if (!userRole) {
+    toast.error("error loading user role");
     return <Loading />;
   }
 
