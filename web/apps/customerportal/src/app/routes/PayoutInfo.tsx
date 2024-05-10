@@ -22,7 +22,7 @@ import { Formik, FormikHelpers } from "formik";
 import iban from "iban";
 import * as React from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { Navigate, Link as RouterLink, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
 
@@ -163,9 +163,7 @@ export const PayoutInfo: React.FC = () => {
                     label={
                       <Trans i18nKey="payout.privacyPolicyCheck">
                         please accept the
-                        {/* TODO: remove config */}
-                        {/* <Link href={config.data_privacy_url} target="_blank" rel="noopener"> */}
-                        <Link component={RouterLink} to="/datenschutz" target="_blank" rel="noopener">
+                        <Link href={config.data_privacy_url} target="_blank" rel="noopener">
                           privacy policy
                         </Link>
                       </Trans>

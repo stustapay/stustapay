@@ -63,9 +63,7 @@ Docs = "https://stustapay.de/docs"
 Source = "https://github.com/stustapay/stustapay"
 
 [tool.setuptools.packages.find]
-#where = [""]
 namespaces = false
-#include = ["stustapay*"]
 exclude = ["stustapay.tests*", "tests*"]
 
 [tool.pylint]

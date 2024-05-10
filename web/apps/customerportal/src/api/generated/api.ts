@@ -116,6 +116,31 @@ export type UserTagHistoryEntryRead = {
   mapping_was_valid_until: string;
   user_tag_uid_hex: string | null;
 };
+export type Payout = {
+  id: number;
+  customer_account_id: number;
+  iban: string | null;
+  account_name: string | null;
+  email: string | null;
+  user_tag_id: number;
+  user_tag_uid: number;
+  amount: number;
+  donation: number;
+  payout_run_id: number;
+};
+export type PayoutRead = {
+  id: number;
+  customer_account_id: number;
+  iban: string | null;
+  account_name: string | null;
+  email: string | null;
+  user_tag_id: number;
+  user_tag_uid: number;
+  amount: number;
+  donation: number;
+  payout_run_id: number;
+  user_tag_uid_hex: string | null;
+};
 export type Customer = {
   node_id: number;
   id: number;
@@ -133,10 +158,9 @@ export type Customer = {
   account_name: string | null;
   email: string | null;
   donation: number | null;
-  payout_error: string | null;
-  payout_run_id: number | null;
   payout_export: boolean | null;
   user_tag_pin: string | null;
+  payout: Payout | null;
 };
 export type CustomerRead = {
   node_id: number;
@@ -155,10 +179,9 @@ export type CustomerRead = {
   account_name: string | null;
   email: string | null;
   donation: number | null;
-  payout_error: string | null;
-  payout_run_id: number | null;
   payout_export: boolean | null;
   user_tag_pin: string | null;
+  payout: PayoutRead | null;
   user_tag_uid_hex: string | null;
 };
 export type LoginResponse = {
@@ -280,6 +303,7 @@ export type CustomerPortalApiConfig = {
   contact_email: string;
   about_page_url: string;
   payout_enabled: boolean;
+  currency_identifier: string;
   sumup_topup_enabled: boolean;
   allowed_country_codes: string[] | null;
   translation_texts: {
