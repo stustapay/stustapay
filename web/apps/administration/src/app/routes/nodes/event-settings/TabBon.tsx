@@ -60,8 +60,9 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
       const pdfUrl = (resp as any).data;
       if (pdfUrl === undefined) {
         toast.error("Error generating bon preview");
+      } else {
+        window.open(pdfUrl);
       }
-      window.open(pdfUrl);
     } catch {
       toast.error("Error generating bon preview");
     }

@@ -32,6 +32,7 @@ class CustomerPortalApiConfig(BaseModel):
     contact_email: str
     about_page_url: str
     payout_enabled: bool
+    currency_identifier: str
     sumup_topup_enabled: bool
     allowed_country_codes: Optional[list[str]]
     translation_texts: dict[Language, dict[str, str]]
@@ -201,6 +202,7 @@ class CustomerService(DBService):
             payout_enabled=node.event.sepa_enabled,
             sumup_topup_enabled=self.cfg.core.sumup_enabled and node.event.sumup_topup_enabled,
             translation_texts=node.event.translation_texts,
+            currency_identifier=node.event.currency_identifier,
         )
 
     @with_db_transaction
