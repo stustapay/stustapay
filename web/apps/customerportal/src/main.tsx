@@ -3,6 +3,7 @@ import * as ReactDOM from "react-dom/client";
 import { PersistGate } from "redux-persist/integration/react";
 import { Provider as StoreProvider } from "react-redux";
 import { store, persistor } from "./store";
+import { ModalProvider } from "@stustapay/modal-provider";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -19,7 +20,9 @@ root.render(
     <StoreProvider store={store}>
       <PersistGate persistor={persistor} loading={null}>
         <React.Suspense>
-          <App />
+          <ModalProvider>
+            <App />
+          </ModalProvider>
         </React.Suspense>
       </PersistGate>
     </StoreProvider>
