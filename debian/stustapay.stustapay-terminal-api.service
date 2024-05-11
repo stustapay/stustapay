@@ -3,6 +3,7 @@ Description=StuStaPay Terminal API
 After=postgresql.service
 
 [Service]
+ExecStartPre=/usr/bin/chown -R root:stustapay /etc/stustapay; /usr/bin/chmod u=rw,g=r,o= /etc/stustapay/config.yaml
 ExecStart=/usr/lib/stustapay/venv/bin/stustapay terminalserver-api
 User=stustapay
 Group=stustapay

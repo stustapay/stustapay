@@ -2,6 +2,6 @@
 
 set -e
 
-adduser --system --group --home /var/lib/stustapay stustapay
+adduser --system --group --home /var/lib/stustapay --shell /bin/bash stustapay
 
 exit 0
