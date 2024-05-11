@@ -10,6 +10,7 @@ import asyncpg.exceptions
 
 from stustapay.framework.database import REVISION_TABLE, SchemaRevision
 from stustapay.framework.database import apply_revisions as framework_apply_revisions
+from stustapay.framework.database import reload_db_code as framework_reload_db_code
 
 from .schema import DATA_PATH, DB_CODE_PATH, REVISION_PATH
 
@@ -52,6 +53,12 @@ async def apply_revisions(db_pool: asyncpg.Pool, until_revision: Optional[str] =
     await framework_apply_revisions(
         db_pool=db_pool, revision_path=REVISION_PATH, code_path=DB_CODE_PATH, until_revision=until_revision
     )
+
+
+async def reload_db_code(db_pool: asyncpg.Pool):
+    async with db_pool.acquire() as conn:
+        async with conn.transaction(isolation="serializable"):
+            await framework_reload_db_code(conn=conn, code_path=DB_CODE_PATH)
 
 
 async def rebuild_with(db_pool: asyncpg.Pool, sql_file: str):
