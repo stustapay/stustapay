@@ -134,11 +134,16 @@ async def drop_all_triggers(conn: asyncpg.Connection, schema: str):
 
 
 async def drop_all_functions(conn: asyncpg.Connection, schema: str):
-    result = await conn.fetch("select proname, prokind from pg_proc where pronamespace = $1::regnamespace;", schema)
+    result = await conn.fetch(
+        "select proname, pg_get_function_identity_arguments(oid) as signature, prokind from pg_proc "
+        "where pronamespace = $1::regnamespace;",
+        schema,
+    )
     drop_statements = []
     for row in result:
         kind = row["prokind"].decode("utf-8")
         name = row["proname"]
+        signature = row["signature"]
         if kind == "f" or kind == "w":
             drop_type = "function"
         elif kind == "a":
@@ -147,7 +152,8 @@ async def drop_all_functions(conn: asyncpg.Connection, schema: str):
             drop_type = "procedure"
         else:
             raise RuntimeError(f'Unknown postgres function type "{kind}"')
-        drop_statements.append(f"drop {drop_type} {name} cascade;")
+
+        drop_statements.append(f"drop {drop_type} {name}({signature}) cascade;")
 
     if len(drop_statements) == 0:
         return
@@ -278,11 +284,16 @@ class SchemaRevision:
         return sorted_revisions
 
 
-async def _apply_db_code(conn: asyncpg.Connection, code_path: Path):
+async def apply_db_code(conn: asyncpg.Connection, code_path: Path):
     for code_file in sorted(code_path.glob("*.sql")):
         logger.info(f"Applying database code file {code_file.name}")
         code = code_file.read_text("utf-8")
         await _run_postgres_code(conn, code, code_file)
+
+
+async def reload_db_code(conn: asyncpg.Connection, code_path: Path):
+    await drop_db_code(conn, schema="public")
+    await apply_db_code(conn, code_path)
 
 
 async def apply_revisions(
@@ -313,7 +324,7 @@ async def apply_revisions(
             if not found:
                 raise ValueError(f"Unknown revision {curr_revision} present in database")
 
-            await _apply_db_code(conn=conn, code_path=code_path)
+            await apply_db_code(conn=conn, code_path=code_path)
 
 
 T = TypeVar("T", bound=BaseModel)

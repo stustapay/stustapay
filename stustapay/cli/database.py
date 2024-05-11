@@ -7,7 +7,7 @@ from stustapay.core.config import Config
 from stustapay.core.database import add_data as add_data_
 from stustapay.core.database import apply_revisions
 from stustapay.core.database import list_revisions as list_revisions_
-from stustapay.core.database import reset_schema
+from stustapay.core.database import reload_db_code, reset_schema
 from stustapay.core.schema import DATA_PATH, DEFAULT_EXAMPLE_DATA_FILE
 from stustapay.framework.database import create_db_pool, psql_attach
 
@@ -91,3 +91,17 @@ def add_data(
 def list_revisions():
     """List all available database revisions."""
     list_revisions_()
+
+
+async def _reload_db_code(cfg: Config):
+    db_pool = await create_db_pool(cfg.database)
+    try:
+        await reload_db_code(db_pool=db_pool)
+    finally:
+        await db_pool.close()
+
+
+@database_cli.command()
+def reload_code(ctx: typer.Context):
+    """List all available database revisions."""
+    asyncio.run(_reload_db_code(ctx.obj.config))

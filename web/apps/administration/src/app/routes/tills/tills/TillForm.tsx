@@ -26,7 +26,7 @@ export function TillForm<T extends NewTill>(props: TillFormProps<T>) {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        terminals: data ? selectTerminalAll(data) : [],
+        terminals: data ? selectTerminalAll(data).filter((t) => t.till_id == null) : [],
       }),
     }
   );

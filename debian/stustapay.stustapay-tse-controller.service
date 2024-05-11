@@ -3,6 +3,7 @@ Description=StuStaPay TSE Controller
 After=postgresql.service
 
 [Service]
+ExecStartPre=/usr/bin/chown -R root:stustapay /etc/stustapay; /usr/bin/chmod u=rw,g=r,o= /etc/stustapay/config.yaml
 ExecStart=/usr/lib/stustapay/venv/bin/stustapay tse
 User=stustapay
 Group=stustapay
