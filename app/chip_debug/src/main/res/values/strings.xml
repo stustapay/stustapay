@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">SSP Chip Debug</string>
+
+    <string name="root_item_test">Test</string>
+    <string name="root_item_restart_app">Restart App</string>
+
+    <string name="nfc_scan_prompt">📡 Scan a Chip</string>
+    <string name="nfc_no_scan_active">No scan active.</string>
+    <string name="nfc_waiting_for_tag">Waiting for tag...</string>
+    <string name="nfc_scan_success">Scan success!</string>
+    <string name="nfc_error_reading_tag_s">Error reading tag: %s</string>
+    <string name="nfc_try_again_s">Try again! %s</string>
+    <string name="nfc_signature_mismatch">Signature mismatch!</string>
+</resources>

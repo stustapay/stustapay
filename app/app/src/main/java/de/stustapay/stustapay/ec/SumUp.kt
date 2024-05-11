@@ -9,11 +9,10 @@ import com.sumup.merchant.reader.api.SumUpPayment
 import com.sumup.merchant.reader.models.TransactionInfo
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
-import de.stustapay.stustapay.util.ActivityCallback
+import de.stustapay.libssp.util.ActivityCallback
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.sumup.merchant.reader.api.SumUpState as SumUpReaderState
@@ -229,14 +228,15 @@ class SumUp @Inject constructor(
         when (val terminalConfig = terminalConfigRepository.terminalConfigState.value) {
             is TerminalConfigState.Success -> {
                 val cfg = terminalConfig.config
-                if (cfg.till?.secrets == null) {
+                val secrets = cfg.till?.secrets
+                if (secrets == null) {
                     return SumUpConfigState.Error("no terminal ec secrets in config")
                 }
-                if (!cfg.till.secrets.sumupAffiliateKey.startsWith("sup_afk")) {
-                    return SumUpConfigState.Error("invalid affiliate key: ${cfg.till.secrets.sumupAffiliateKey}")
+                if (!secrets.sumupAffiliateKey.startsWith("sup_afk")) {
+                    return SumUpConfigState.Error("invalid affiliate key: ${secrets.sumupAffiliateKey}")
                 }
                 sumUpConfig = SumUpConfig(
-                    affiliateKey = cfg.till.secrets.sumupAffiliateKey,
+                    affiliateKey = secrets.sumupAffiliateKey,
                     terminal = ECTerminalConfig(
                         name = cfg.name,
                         id = cfg.id.toString()

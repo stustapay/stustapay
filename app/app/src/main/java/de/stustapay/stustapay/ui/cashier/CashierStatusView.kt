@@ -6,7 +6,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ListItem
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -21,10 +20,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
-import de.stustapay.stustapay.ui.common.rememberDialogDisplayState
+import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.ui.common.tagIDtoString
 import de.stustapay.stustapay.ui.nav.NavScaffold
-import de.stustapay.stustapay.util.formatCurrencyValue
+import de.stustapay.libssp.util.formatCurrencyValue
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)

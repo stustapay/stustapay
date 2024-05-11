@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.CloseContent
-import de.stustapay.stustapay.ui.common.Spinner
+import de.stustapay.libssp.ui.common.Spinner
 import de.stustapay.stustapay.ui.nav.NavDest
 
 

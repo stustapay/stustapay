@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
-import de.stustapay.stustapay.util.ResourcesProvider
+import de.stustapay.libssp.util.ResourcesProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -94,9 +94,9 @@ class UserCashRegisterTransferViewModel @Inject constructor(
 
         when (transferResult) {
             is Response.OK -> {
-
-                if (transferResult.data.currentCashierTagUid != targetTag.uid) {
-                    if (transferResult.data.currentCashierTagUid == null) {
+                val currentCashierTagUid = transferResult.data.currentCashierTagUid
+                if (currentCashierTagUid != targetTag.uid) {
+                    if (currentCashierTagUid == null) {
                         TransferCashRegisterState.Error(
                             resourcesProvider.getString(R.string.cash_register_notassigned)
                         )
@@ -105,8 +105,7 @@ class UserCashRegisterTransferViewModel @Inject constructor(
                             TransferCashRegisterState.Error(
                                 resourcesProvider.getString(R.string.cash_register_unexpected_assign)
                                     .format(
-                                        UserTag(transferResult.data.currentCashierTagUid),
-                                        UserTag(targetTag.uid)
+                                        UserTag(currentCashierTagUid), UserTag(targetTag.uid)
                                     )
                             )
                         }

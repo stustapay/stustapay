@@ -1,8 +1,8 @@
 package de.stustapay.stustapay
 
-import de.stustapay.stustapay.nfc.cmacMfulaes
-import de.stustapay.stustapay.nfc.genSessionKey
-import de.stustapay.stustapay.util.asBitVector
+import de.stustapay.libssp.nfc.cmacMfulaes
+import de.stustapay.libssp.nfc.genSessionKey
+import de.stustapay.libssp.util.asBitVector
 import org.junit.Assert
 import org.junit.Test
 

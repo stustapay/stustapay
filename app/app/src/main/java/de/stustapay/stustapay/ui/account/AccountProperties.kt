@@ -20,10 +20,10 @@ import de.stustapay.api.models.Customer
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.TagItem
-import de.stustapay.stustapay.ui.theme.AccountOverviewKeyStyle
-import de.stustapay.stustapay.ui.theme.AccountOverviewValueBigStyle
-import de.stustapay.stustapay.ui.theme.AccountOverviewValueStyle
-import de.stustapay.stustapay.ui.theme.MoneyAmountStyle
+import de.stustapay.libssp.ui.theme.AccountOverviewKeyStyle
+import de.stustapay.libssp.ui.theme.AccountOverviewValueBigStyle
+import de.stustapay.libssp.ui.theme.AccountOverviewValueStyle
+import de.stustapay.libssp.ui.theme.MoneyAmountStyle
 
 
 @Composable
@@ -93,9 +93,10 @@ fun AccountProperties(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (account.userTagUid != null) {
+                val userTagUid = account.userTagUid
+                if (userTagUid != null) {
                     TagItem(
-                        UserTag(account.userTagUid),
+                        UserTag(userTagUid),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp)
@@ -120,12 +121,13 @@ fun AccountProperties(
             Spacer(modifier = Modifier.height(5.dp))
         }
 
-        if (account.restriction != null) {
+        val restriction = account.restriction
+        if (restriction != null) {
             item {
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_restriction),
-                    when (account.restriction.value) {
+                    when (restriction.value) {
                         "under_18" -> {
                             stringResource(R.string.under_18_years)
                         }
@@ -134,28 +136,30 @@ fun AccountProperties(
                             stringResource(R.string.under_16_years)
                         }
 
-                        else -> account.restriction.value
+                        else -> restriction.value
                     },
                 )
             }
         }
 
-        if (account.name != null) {
+        val name = account.name
+        if (name != null) {
             item {
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_name),
-                    account.name,
+                    name,
                 )
             }
         }
 
-        if (showComment && !account.comment.isNullOrEmpty()) {
+        val comment = account.comment
+        if (showComment && !comment.isNullOrEmpty()) {
             item {
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_comment),
-                    account.comment,
+                    comment,
                     below = true,
                     small = true,
                 )

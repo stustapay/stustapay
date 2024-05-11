@@ -3,7 +3,7 @@ package de.stustapay.stustapay.repository
 import de.stustapay.api.models.Account
 import de.stustapay.api.models.Customer
 import de.stustapay.api.models.UserTag
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.CustomerRemoteDataSource
 import javax.inject.Inject
 import javax.inject.Singleton

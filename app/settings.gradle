@@ -15,3 +15,6 @@ dependencyResolutionManagement {
 }
 rootProject.name = "StuStaPay"
 include ':app'
+include ':api'
+include ':chip_debug'
+include ':libssp'

@@ -10,7 +10,7 @@ import de.stustapay.api.models.TransferCashRegisterPayload
 import de.stustapay.api.models.UserInfo
 import de.stustapay.api.models.UserInfoPayload
 import de.stustapay.api.models.UserTag
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 
@@ -18,18 +18,18 @@ class CashierRemoteDataSource @Inject constructor(
     private val terminalApiAccessor: TerminalApiAccessor
 ) {
     suspend fun getCashierStockings(): Response<List<CashRegisterStocking>> {
-        return terminalApiAccessor.execute { it.base().listCashRegisterStockings() }
+        return terminalApiAccessor.execute { it.base()?.listCashRegisterStockings() }
     }
 
     suspend fun equipCashier(tagId: ULong, registerId: ULong, stockingId: ULong): Response<Unit> {
         return terminalApiAccessor.execute {
-            it.base().stockUpCashRegister(RegisterStockUpPayload(tagId.toBigInteger(), registerId.toBigInteger(), stockingId.toBigInteger()))
+            it.base()?.stockUpCashRegister(RegisterStockUpPayload(tagId.toBigInteger(), registerId.toBigInteger(), stockingId.toBigInteger()))
         }
     }
 
     suspend fun bookTransport(cashierTagId: ULong, amount: Double): Response<Unit> {
         return terminalApiAccessor.execute {
-            it.cashier().changeCashRegisterBalance(
+            it.cashier()?.changeCashRegisterBalance(
                 CashierAccountChangePayload(cashierTagId.toBigInteger(), amount)
             )
         }
@@ -37,25 +37,25 @@ class CashierRemoteDataSource @Inject constructor(
 
     suspend fun bookVault(orgaTagId: ULong, amount: Double): Response<Unit> {
         return terminalApiAccessor.execute {
-            it.cashier().changeTransportAccountBalance(
+            it.cashier()?.changeTransportAccountBalance(
                 TransportAccountChangePayload(orgaTagId.toBigInteger(), amount)
             )
         }
     }
 
     suspend fun getUserInfo(tagId: ULong): Response<UserInfo> {
-        return terminalApiAccessor.execute { it.base().userInfo(UserInfoPayload(tagId.toBigInteger())) }
+        return terminalApiAccessor.execute { it.base()?.userInfo(UserInfoPayload(tagId.toBigInteger())) }
     }
 
     suspend fun transferCashRegister(
         sourceTag: UserTag, targetTag: UserTag
     ): Response<CashRegister> {
         return terminalApiAccessor.execute {
-            it.cashier().transferCashRegister(TransferCashRegisterPayload(sourceTag.uid, targetTag.uid))
+            it.cashier()?.transferCashRegister(TransferCashRegisterPayload(sourceTag.uid, targetTag.uid))
         }
     }
 
     suspend fun getRegisters(): Response<List<CashRegister>> {
-        return terminalApiAccessor.execute { it.base().listCashRegisters(hideAssigned = false) }
+        return terminalApiAccessor.execute { it.base()?.listCashRegisters(hideAssigned = false) }
     }
 }

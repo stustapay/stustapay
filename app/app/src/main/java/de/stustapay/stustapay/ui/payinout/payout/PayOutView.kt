@@ -12,7 +12,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
 import de.stustapay.stustapay.ui.common.pay.NoCashRegisterWarning
-import de.stustapay.stustapay.ui.common.rememberDialogDisplayState
+import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import kotlinx.coroutines.launch
 
 

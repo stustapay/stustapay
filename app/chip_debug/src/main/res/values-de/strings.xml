@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="root_item_test">Test</string>
+    <string name="root_item_restart_app">App Neustarten</string>
+
+    <string name="nfc_scan_prompt">📡 Chip scannen</string>
+    <string name="nfc_no_scan_active">Scan inaktiv.</string>
+    <string name="nfc_waiting_for_tag">Warte auf Chip...</string>
+    <string name="nfc_scan_success">Scan erfolgreich!</string>
+    <string name="nfc_error_reading_tag_s">Fehler beim Lesen: %s</string>
+    <string name="nfc_try_again_s">Nochmal scannen! %s</string>
+    <string name="nfc_signature_mismatch">Signatur falsch!</string>
+</resources>

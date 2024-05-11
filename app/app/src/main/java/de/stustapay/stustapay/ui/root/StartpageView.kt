@@ -26,7 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.Access
-import de.stustapay.stustapay.ui.common.Spinner
+import de.stustapay.libssp.ui.common.Spinner
 import de.stustapay.stustapay.ui.nav.NavDest
 import kotlinx.coroutines.launch
 

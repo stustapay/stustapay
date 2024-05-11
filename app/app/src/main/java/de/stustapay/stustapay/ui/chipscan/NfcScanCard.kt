@@ -26,7 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.theme.NfcScanStyle
+import de.stustapay.libssp.ui.theme.NfcScanStyle
 
 @Composable
 fun NfcScanCard(

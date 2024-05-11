@@ -16,7 +16,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.stustapay.stustapay.ui.theme.NumberKeyboardStyle
+import de.stustapay.libssp.ui.theme.NumberKeyboardStyle
 
 @Composable
 fun NumberKeyboardButton(

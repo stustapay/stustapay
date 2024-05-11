@@ -1,7 +1,7 @@
 package de.stustapay.stustapay.netsource
 
 
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import de.stustapay.api.models.LoginPayload
 import de.stustapay.api.models.NewUser
@@ -16,7 +16,7 @@ class UserRemoteDataSource @Inject constructor(
     private val terminalApiAccessor: TerminalApiAccessor
 ) {
     suspend fun currentUser(): UserState {
-        return when (val res = terminalApiAccessor.execute { it.user().getCurrentUser() }) {
+        return when (val res = terminalApiAccessor.execute { it.user()?.getCurrentUser() }) {
             is Response.OK -> {
                 UserState.LoggedIn(res.data)
             }
@@ -31,7 +31,7 @@ class UserRemoteDataSource @Inject constructor(
      * Login a user by token and desired role.
      */
     suspend fun checkLogin(tag: UserTag): UserRolesState {
-        return when (val res = terminalApiAccessor.execute { it.user().checkLoginUser(tag) }) {
+        return when (val res = terminalApiAccessor.execute { it.user()?.checkLoginUser(tag) }) {
             is Response.OK -> {
                 UserRolesState.OK(res.data.roles, res.data.userTag)
             }
@@ -46,7 +46,7 @@ class UserRemoteDataSource @Inject constructor(
      * Login a user by token and desired role.
      */
     suspend fun userLogin(loginPayload: LoginPayload): UserState {
-        return when (val res = terminalApiAccessor.execute { it.user().loginUser(loginPayload) }) {
+        return when (val res = terminalApiAccessor.execute { it.user()?.loginUser(loginPayload) }) {
             is Response.OK -> {
                 UserState.LoggedIn(res.data)
             }
@@ -62,7 +62,7 @@ class UserRemoteDataSource @Inject constructor(
      */
     suspend fun userLogout(): String? {
         return when (val userLogoutResponse =
-            terminalApiAccessor.execute { it.user().logoutUser() }) {
+            terminalApiAccessor.execute { it.user()?.logoutUser() }) {
             is Response.OK -> {
                 null
             }
@@ -77,7 +77,7 @@ class UserRemoteDataSource @Inject constructor(
      * Create a new user of any type.
      */
     suspend fun userCreate(newUser: NewUser): UserCreateState {
-        return when (val res = terminalApiAccessor.execute { it.user().createUser(newUser) }) {
+        return when (val res = terminalApiAccessor.execute { it.user()?.createUser(newUser) }) {
             is Response.OK -> {
                 UserCreateState.Created
             }

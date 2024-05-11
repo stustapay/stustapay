@@ -1,0 +1,101 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.serialization'
+    id 'kotlin-kapt'
+    id 'com.google.dagger.hilt.android'
+    id 'com.google.protobuf'
+}
+
+def getVersionCode = { ->
+    try {
+        def code = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-list', '--count', 'HEAD'
+            standardOutput = code
+        }
+        return code.toString().toInteger()
+    } catch (ignored) {
+        return -1
+    }
+}
+
+def getVersionName = { ->
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'describe', '--tags', '--dirty', '--always'
+            standardOutput = stdout
+        }
+        return stdout.toString().trim()
+    } catch (ignored) {
+        return null
+    }
+}
+
+android {
+    namespace 'de.stustapay.chip_debug'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "de.stustapay.chip_debug"
+        minSdk 28
+        targetSdk 33
+        versionCode getVersionCode()
+        versionName getVersionName()
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.4.2'
+    }
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+}
+
+dependencies {
+    implementation project(":api")
+    implementation project(":libssp")
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+    implementation 'androidx.activity:activity-compose:1.7.2'
+    implementation "androidx.compose.ui:ui:$compose_ui_version"
+    implementation "androidx.compose.ui:ui-tooling-preview:$compose_ui_version"
+    implementation 'androidx.compose.material:material:1.4.3'
+    implementation 'androidx.navigation:navigation-compose:2.6.0'
+    implementation 'androidx.preference:preference-ktx:1.2.0'
+    debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
+    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    kapt "com.google.dagger:hilt-compiler:$hilt_version"
+    kapt "androidx.hilt:hilt-compiler:$hilt_android_version"
+    annotationProcessor "androidx.hilt:hilt-compiler:$hilt_android_version"
+    implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version"
+    implementation "com.ionspin.kotlin:bignum:0.3.9"
+    implementation "com.ionspin.kotlin:bignum-serialization-kotlinx:0.3.2"
+}

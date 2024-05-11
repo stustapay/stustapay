@@ -3,12 +3,11 @@ package de.stustapay.stustapay.ui.history
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.Order
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.SaleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.time.ZonedDateTime
 import javax.inject.Inject
 
 @HiltViewModel

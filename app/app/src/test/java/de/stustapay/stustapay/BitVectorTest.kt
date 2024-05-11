@@ -1,7 +1,7 @@
 package de.stustapay.stustapay
 
-import de.stustapay.stustapay.util.BitVector
-import de.stustapay.stustapay.util.bv
+import de.stustapay.libssp.util.BitVector
+import de.stustapay.libssp.util.bv
 import org.junit.Assert
 import org.junit.Test
 

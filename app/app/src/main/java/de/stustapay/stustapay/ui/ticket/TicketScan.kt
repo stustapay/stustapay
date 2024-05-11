@@ -24,7 +24,7 @@ import de.stustapay.stustapay.ui.common.pay.NoCashRegisterWarning
 import de.stustapay.stustapay.ui.common.pay.ProductSelectionBottomBar
 import de.stustapay.stustapay.ui.nav.TopAppBar
 import de.stustapay.stustapay.ui.nav.TopAppBarIcon
-import de.stustapay.stustapay.ui.theme.NfcScanStyle
+import de.stustapay.libssp.ui.theme.NfcScanStyle
 import kotlinx.coroutines.launch
 
 @Composable

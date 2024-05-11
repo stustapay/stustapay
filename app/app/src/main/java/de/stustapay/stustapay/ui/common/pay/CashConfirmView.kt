@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
-import de.stustapay.stustapay.ui.theme.MoneyAmountStyle
+import de.stustapay.libssp.ui.theme.MoneyAmountStyle
 import kotlinx.coroutines.launch
 
 /**

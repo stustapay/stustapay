@@ -1,14 +1,14 @@
 package de.stustapay.stustapay.ui.settings
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.stustapay.model.RegistrationState
-import de.stustapay.stustapay.repository.ForceDeregisterState
 import de.stustapay.stustapay.repository.RegistrationRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
-import de.stustapay.stustapay.util.Result
-import de.stustapay.stustapay.util.asResult
+import de.stustapay.libssp.util.Result
+import de.stustapay.libssp.util.asResult
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
@@ -91,6 +91,10 @@ private fun registrationUiState(
                             RegistrationUiState.Error(
                                 msg = registerState.message,
                             )
+                        }
+
+                        is RegistrationState.Registering -> {
+                            RegistrationUiState.Loading
                         }
                     }
                 }

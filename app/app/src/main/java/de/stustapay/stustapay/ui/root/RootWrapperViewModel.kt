@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
-import de.stustapay.stustapay.util.mapState
+import de.stustapay.libssp.util.mapState
 import javax.inject.Inject
 
 sealed interface BorderState {

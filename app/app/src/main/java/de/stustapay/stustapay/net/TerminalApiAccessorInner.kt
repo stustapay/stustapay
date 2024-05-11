@@ -1,14 +1,16 @@
 package de.stustapay.stustapay.net
 
 import android.util.Log
+import com.ionspin.kotlin.bignum.serialization.kotlinx.biginteger.bigIntegerhumanReadableSerializerModule
 import de.stustapay.api.apis.AuthApi
 import de.stustapay.api.apis.BaseApi
 import de.stustapay.api.apis.CashierApi
 import de.stustapay.api.apis.CustomerApi
 import de.stustapay.api.apis.OrderApi
 import de.stustapay.api.apis.UserApi
+import de.stustapay.libssp.util.uuidSerializersModule
 import de.stustapay.stustapay.model.RegistrationState
-import de.stustapay.stustapay.storage.RegistrationLocalDataSource
+import de.stustapay.stustapay.repository.RegistrationRepositoryInner
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpRequestRetry
@@ -18,60 +20,109 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+
+
+data class APIs(
+    val authApi: AuthApi,
+    val baseApi: BaseApi,
+    val cashierApi: CashierApi,
+    val customerApi: CustomerApi,
+    val orderApi: OrderApi,
+    val userApi: UserApi,
+)
 
 class TerminalApiAccessorInner(
-    registrationLocalDataSource: RegistrationLocalDataSource,
+    registrationRepository: RegistrationRepositoryInner,
     private val retry: Boolean = false,
     private val logRequests: Boolean = true
 ) {
-    private var authApi: AuthApi? = null
-    private var baseApi: BaseApi? = null
-    private var cashierApi: CashierApi? = null
-    private var customerApi: CustomerApi? = null
-    private var orderApi: OrderApi? = null
-    private var userApi: UserApi? = null
+    // Unconfined because we need to see updates to the registration state here as soon as they are emitted
+    private val scope: CoroutineScope =
+        CoroutineScope(Dispatchers.Unconfined + CoroutineName("TerminalApiAccessorInner"))
 
-    init {
-        registrationLocalDataSource.registrationState.onEach {
-            when (it) {
-                is RegistrationState.Registered -> {
-                    if (authApi == null) {
-                        authApi =
-                            AuthApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
-                        baseApi =
-                            BaseApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
-                        cashierApi = CashierApi(it.apiUrl,
-                            CIO.create { this.https {} }) { configureApi(it) }
-                        customerApi = CustomerApi(it.apiUrl,
-                            CIO.create { this.https {} }) { configureApi(it) }
-                        orderApi =
-                            OrderApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
-                        userApi =
-                            UserApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
-                        authApi!!.setAccessToken(it.token)
-                        baseApi!!.setAccessToken(it.token)
-                        cashierApi!!.setAccessToken(it.token)
-                        customerApi!!.setAccessToken(it.token)
-                        orderApi!!.setAccessToken(it.token)
-                        userApi!!.setAccessToken(it.token)
-                    }
-                }
 
-                is RegistrationState.NotRegistered -> {}
-                is RegistrationState.Error -> {}
+    private var apis: StateFlow<APIs?> = registrationRepository.registrationState.map {
+        when (it) {
+            is RegistrationState.Registered -> {
+                val authApi = AuthApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                authApi.setAccessToken(it.token)
+
+                val baseApi = BaseApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                baseApi.setAccessToken(it.token)
+
+                val cashierApi =
+                    CashierApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                cashierApi.setAccessToken(it.token)
+
+                val customerApi =
+                    CustomerApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                customerApi.setAccessToken(it.token)
+
+                val orderApi =
+                    OrderApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                orderApi.setAccessToken(it.token)
+
+                val userApi = UserApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                userApi.setAccessToken(it.token)
+
+                APIs(
+                    authApi = authApi,
+                    baseApi = baseApi,
+                    cashierApi = cashierApi,
+                    customerApi = customerApi,
+                    orderApi = orderApi,
+                    userApi = userApi,
+                )
+            }
+
+            is RegistrationState.Registering -> {
+                APIs(
+                    authApi = AuthApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) },
+                    baseApi = BaseApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) },
+                    cashierApi = CashierApi(it.apiUrl, CIO.create { this.https {} }) {
+                        configureApi(
+                            it
+                        )
+                    },
+                    customerApi = CustomerApi(
+                        it.apiUrl,
+                        CIO.create { this.https {} }) { configureApi(it) },
+                    orderApi = OrderApi(
+                        it.apiUrl,
+                        CIO.create { this.https {} }) { configureApi(it) },
+                    userApi = UserApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) },
+                )
+            }
+
+            is RegistrationState.NotRegistered -> {
+                null
+            }
+
+            is RegistrationState.Error -> {
+                null
             }
         }
-    }
+    }.stateIn(scope, SharingStarted.Eagerly, null)
 
-    fun configureApi(conf: HttpClientConfig<*>) {
+    private fun configureApi(conf: HttpClientConfig<*>) {
         conf.install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
                 isLenient = true
                 ignoreUnknownKeys = true
+                serializersModule = SerializersModule {
+                    this.include(bigIntegerhumanReadableSerializerModule)
+                    this.include(uuidSerializersModule)
+                }
             })
         }
 
@@ -105,27 +156,27 @@ class TerminalApiAccessorInner(
         conf.install(Logging)
     }
 
-    fun auth(): AuthApi {
-        return authApi!!
+    fun auth(): AuthApi? {
+        return apis.value?.authApi
     }
 
-    fun base(): BaseApi {
-        return baseApi!!
+    fun base(): BaseApi? {
+        return apis.value?.baseApi
     }
 
-    fun cashier(): CashierApi {
-        return cashierApi!!
+    fun cashier(): CashierApi? {
+        return apis.value?.cashierApi
     }
 
-    fun customer(): CustomerApi {
-        return customerApi!!
+    fun customer(): CustomerApi? {
+        return apis.value?.customerApi
     }
 
-    fun order(): OrderApi {
-        return orderApi!!
+    fun order(): OrderApi? {
+        return apis.value?.orderApi
     }
 
-    fun user(): UserApi {
-        return userApi!!
+    fun user(): UserApi? {
+        return apis.value?.userApi
     }
 }

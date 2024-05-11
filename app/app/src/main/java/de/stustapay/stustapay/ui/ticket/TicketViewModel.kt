@@ -10,14 +10,14 @@ import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TicketRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
-import de.stustapay.stustapay.util.ResourcesProvider
-import de.stustapay.stustapay.util.mapState
+import de.stustapay.libssp.util.ResourcesProvider
+import de.stustapay.libssp.util.mapState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

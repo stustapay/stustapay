@@ -3,7 +3,7 @@ package de.stustapay.stustapay.repository
 import de.stustapay.api.models.CompletedPayOut
 import de.stustapay.api.models.NewPayOut
 import de.stustapay.api.models.PendingPayOut
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.PayOutRemoteDataSource
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -17,7 +17,7 @@ import de.stustapay.stustapay.ui.ticket.TicketView
 import de.stustapay.stustapay.ui.payinout.CashInOutView
 import de.stustapay.stustapay.ui.user.UserView
 import de.stustapay.stustapay.ui.reward.RewardView
-import de.stustapay.stustapay.util.SysUiController
+import de.stustapay.libssp.util.SysUiController
 
 
 @Composable

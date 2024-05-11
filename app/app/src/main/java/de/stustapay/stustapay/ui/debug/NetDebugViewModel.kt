@@ -5,7 +5,7 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 
@@ -17,7 +17,7 @@ class NetDebugViewModel @Inject constructor(
     var endpointURL: String = "http://10.0.2.2:8080/"
 
     suspend fun announceHealthStatus() {
-        val msg = when (val health = terminalApiAccessor.execute { it.base().health() }) {
+        val msg = when (val health = terminalApiAccessor.execute { it.base()?.health() }) {
             is Response.OK -> "Ok"
             is Response.Error -> health.msg()
         }

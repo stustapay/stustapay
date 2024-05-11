@@ -35,7 +35,7 @@ import de.stustapay.stustapay.ui.common.SuccessIcon
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
 import de.stustapay.stustapay.ui.common.amountselect.AmountSelectionDialog
 import de.stustapay.stustapay.ui.common.pay.ProductSelectionItem
-import de.stustapay.stustapay.ui.common.rememberDialogDisplayState
+import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
 

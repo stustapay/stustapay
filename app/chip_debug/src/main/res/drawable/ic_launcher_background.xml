@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <color android:name="ic_launcher_background"
+        tools:ignore="ExtraText">#FFFFFF</color>
+</resources>

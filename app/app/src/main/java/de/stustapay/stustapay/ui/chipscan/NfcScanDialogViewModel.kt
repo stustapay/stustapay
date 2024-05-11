@@ -6,12 +6,12 @@ import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.UserTag
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.NfcScanFailure
-import de.stustapay.stustapay.model.NfcScanResult
+import de.stustapay.libssp.model.NfcScanFailure
+import de.stustapay.libssp.model.NfcScanResult
 import de.stustapay.stustapay.repository.NfcRepository
 import de.stustapay.stustapay.repository.ReadMode
-import de.stustapay.stustapay.util.ResourcesProvider
-import de.stustapay.stustapay.util.mapState
+import de.stustapay.libssp.util.ResourcesProvider
+import de.stustapay.libssp.util.mapState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

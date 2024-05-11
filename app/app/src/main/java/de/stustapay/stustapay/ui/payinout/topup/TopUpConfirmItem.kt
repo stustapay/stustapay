@@ -15,8 +15,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustapay.stustapay.ui.theme.ProductConfirmItemBigStyle
-import de.stustapay.stustapay.ui.theme.ProductConfirmItemStyle
+import de.stustapay.libssp.ui.theme.ProductConfirmItemBigStyle
+import de.stustapay.libssp.ui.theme.ProductConfirmItemStyle
 
 
 @Preview

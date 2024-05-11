@@ -4,7 +4,7 @@ import de.stustapay.api.models.CompletedSale
 import de.stustapay.api.models.NewSale
 import de.stustapay.api.models.Order
 import de.stustapay.api.models.PendingSale
-import de.stustapay.stustapay.net.Response
+import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.SaleRemoteDataSource
 import javax.inject.Inject
 import javax.inject.Singleton
