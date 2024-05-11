@@ -199,7 +199,7 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
                 log.add(Pair("sig: decoded signature is \"" + sig.asByteArray().decodeToString() + "\"", false))
             }
 
-            val secret = mem.slice(mem.len - 56uL * 8uL, mem.len - 44uL * 8uL)
+            val secret = mem.slice(mem.len - 60uL * 8uL, mem.len - 48uL * 8uL)
             val check = secret.gle(0uL) or secret.gle(1uL) or secret.gle(2uL) or secret.gle(3uL) or secret.gle(4uL) or secret.gle(5uL) or secret.gle(6uL) or secret.gle(7uL)
             if (check != 0x00u.toUByte()) {
                 log.add(Pair("secret: secret pin found", true))
