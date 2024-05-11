@@ -6,6 +6,7 @@ type ModalContent = {
   type: "confirm";
   title: string;
   content?: React.ReactNode;
+  closeOnBackdropClick?: boolean;
   onConfirm?: () => boolean | void;
   onCancel?: () => void;
 };
@@ -26,13 +27,19 @@ export type ModalProviderProps = {
 export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   const [currModal, setCurrModal] = React.useState<ModalContent | undefined>();
 
-  const handleCloseModal = React.useCallback(() => {
-    if (!currModal) {
-      return;
-    }
-    currModal.onCancel?.();
-    setCurrModal(undefined);
-  }, [currModal]);
+  const handleCloseModal = React.useCallback(
+    (reason: "backdropClick" | "escapeKeyDown" | "closeButton") => {
+      if (!currModal) {
+        return;
+      }
+      if (currModal.closeOnBackdropClick === false && reason === "backdropClick") {
+        return;
+      }
+      currModal.onCancel?.();
+      setCurrModal(undefined);
+    },
+    [currModal]
+  );
 
   const handleConfirmModal = React.useCallback(() => {
     if (!currModal) {
@@ -59,11 +66,11 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   if (currModal) {
     // TODO: translations
     modal = (
-      <Dialog open={true} onClose={handleCloseModal}>
+      <Dialog open={true} onClose={(evt, reason) => handleCloseModal(reason)}>
         <DialogTitle>{currModal.title}</DialogTitle>
         {currModal.content && <DialogContent>{currModal.content}</DialogContent>}
         <DialogActions>
-          <Button color="error" onClick={handleCloseModal}>
+          <Button color="error" onClick={() => handleCloseModal("closeButton")}>
             Cancel
           </Button>
           <Button color="primary" onClick={handleConfirmModal}>

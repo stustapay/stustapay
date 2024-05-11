@@ -10,7 +10,6 @@ export const Agb = () => {
   const config = usePublicConfig();
   const { i18n } = useTranslation();
 
-  console.log(i18n.language);
   const agbContent = config.translation_texts[i18n.language]?.["agb"] ?? "";
 
   return (

@@ -1,4 +1,4 @@
-import { OrderWithBon, useGetOrdersQuery } from "@/api";
+import { OrderWithBon, OrderWithBonRead, useGetOrdersQuery } from "@/api";
 import { useDownloadBon } from "@/api/useDownloadBon";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
@@ -20,6 +20,13 @@ import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
+const normalizeOrderPrice = (order: OrderWithBon) => {
+  if (order.order_type !== "top_up") {
+    return -order.total_price;
+  }
+  return order.total_price;
+};
+
 export const OrderList: React.FC = () => {
   const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
@@ -34,11 +41,28 @@ export const OrderList: React.FC = () => {
     return <Alert severity="error">{t("order.loadingError")}</Alert>;
   }
 
-  const orderTotal = (order: OrderWithBon) => {
-    if (order.order_type !== "top_up") {
-      return -order.total_price;
+  const formatOrderTotal = (order: OrderWithBonRead) => {
+    let price = normalizeOrderPrice(order);
+    if (order.order_type === "ticket") {
+      price = order.line_items
+        .filter((lineItem) => lineItem.product.type === "topup")
+        .reduce((acc, li) => li.total_price + acc, 0);
+      if (price <= 0) {
+        return;
+      }
     }
-    return order.total_price;
+    return (
+      <Typography
+        style={{
+          textAlign: "right",
+          flexGrow: 1,
+          marginRight: "0.5em",
+          color: price >= 0 ? "green" : "inherit",
+        }}
+      >
+        {formatCurrency(price)}
+      </Typography>
+    );
   };
 
   return (
@@ -51,16 +75,7 @@ export const OrderList: React.FC = () => {
             id={`panel${order.id}a-header`}
           >
             <Typography>{t(`order.orderType.${order.order_type}` as const)}</Typography>
-            <Typography
-              style={{
-                textAlign: "right",
-                flexGrow: 1,
-                marginRight: "0.5em",
-                color: order.order_type === "top_up" ? "green" : "inherit",
-              }}
-            >
-              {formatCurrency(orderTotal(order))}
-            </Typography>
+            {formatOrderTotal(order)}
           </AccordionSummary>
           <AccordionDetails>
             <div style={{ width: "100%" }}>
@@ -94,6 +109,12 @@ export const OrderList: React.FC = () => {
                           <TableCell align="right">{formatCurrency(item.total_price)}</TableCell>
                         </TableRow>
                       ))}
+                      <TableRow>
+                        <TableCell align="left" colSpan={3} sx={{ fontWeight: "bold" }}>
+                          {t("order.total")}
+                        </TableCell>
+                        <TableCell align="right">{formatCurrency(order.total_price)}</TableCell>
+                      </TableRow>
                     </TableBody>
                   </Table>
                 </TableContainer>

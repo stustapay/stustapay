@@ -1160,7 +1160,9 @@ class OrderService(DBService):
                 # wtf, pylint does not recognise this member
                 top_up_line_item.product_price += ticket.initial_top_up_amount  # pylint: disable=no-member
 
-        line_items = list(ticket_line_items.values()) + [top_up_line_item]
+        line_items = list(ticket_line_items.values())
+        if top_up_line_item.product_price > 0:  # pylint: disable=no-member
+            line_items.append(top_up_line_item)
 
         return PendingTicketSale(
             uuid=new_ticket_sale.uuid,
@@ -1207,12 +1209,14 @@ class OrderService(DBService):
             raise InvalidArgument("No payment method provided")
 
         assert current_user.cashier_account_id is not None
-        pending_ticket_sale = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
-            conn=conn,
-            current_terminal=current_terminal,
-            node=node,
-            current_user=current_user,
-            new_ticket_sale=new_ticket_sale,
+        pending_ticket_sale: PendingTicketSale = (
+            await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
+                conn=conn,
+                current_terminal=current_terminal,
+                node=node,
+                current_user=current_user,
+                new_ticket_sale=new_ticket_sale,
+            )
         )
 
         # create a new customer account for the given tag ,

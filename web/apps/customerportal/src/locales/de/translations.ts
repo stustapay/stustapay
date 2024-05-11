@@ -72,8 +72,12 @@ export const translations: NestedPartialAsStrings<Translations> = {
     donationAmount: "Spendebetrag ",
     donationDescription:
       "Hat dir das Festival gefallen? Wir würden uns über eine Spende freuen, um unsere ehrenamtliche Arbeit zu unterstützen und zukünftige StuStaCula noch besser zu machen.",
-    donateRemainingBalanceOf: "Spende verbleibende Summe von ",
+    donateRemainingBalanceOf: "Spende verbleibende Summe von {{remainingBalance}}",
     submitPayoutData: "Bankdaten speichern",
+    confirmDonateAllTitle: "Gesamtes Restguthaben spenden?",
+    confirmDonateAllContent: "Wills Du dein gesamtes Restguthaben von {{remainingBalance}} spenden?",
+    confirmDonateAmountTitle: "Spenden?",
+    confirmDonateAmountContent: "Willst Du {{donation}} spenden?",
   },
   topup: {
     onlineTopUp: "Online-Aufladung",

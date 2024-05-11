@@ -68,8 +68,12 @@ export const translations = {
     donationAmount: "Donate amount",
     donationDescription:
       "If you appreciated our hard work to make this festival come true, we also welcome donations in order to support our future work",
-    donateRemainingBalanceOf: "Donate remaining balance of ",
+    donateRemainingBalanceOf: "Donate remaining balance of {{remainingBalance}}",
     submitPayoutData: "Save bank data",
+    confirmDonateAllTitle: "Donate remaining balance?",
+    confirmDonateAllContent: "Do you want to donate your remaining balance of {{remainingBalance}}?",
+    confirmDonateAmountTitle: "Donate?",
+    confirmDonateAmountContent: "Do you want to make a donation of {{donation}}?",
   },
   topup: {
     amount: "Amount",
