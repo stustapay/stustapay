@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
@@ -18,14 +19,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun AccountSwap(goBack: () -> Unit, viewModel: AccountViewModel) {
     val scanState = rememberNfcScanDialogState()
-    val newTagId by viewModel.newTagId.collectAsStateWithLifecycle()
+    val newTag by viewModel.newTag.collectAsStateWithLifecycle()
     val oldTagId by viewModel.oldTagId.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var comment by remember { mutableStateOf("") }
 
     NfcScanDialog(state = scanState, onScan = { tag ->
-        viewModel.setOldTagId(tag.uid.ulongValue())
+        viewModel.setOldTagId(tag.uid)
     })
 
     Scaffold(
@@ -49,12 +50,12 @@ fun AccountSwap(goBack: () -> Unit, viewModel: AccountViewModel) {
                             modifier = Modifier.padding(end = 20.dp)
                         )
                         TagTextField(
-                            newTagId,
+                            newTag.uid,
                             modifier = Modifier.fillMaxWidth(),
-                        ) { id ->
-                            if (id != null) {
+                        ) { tag ->
+                            if (tag != null) {
                                 scope.launch {
-                                    viewModel.setNewTagId(id)
+                                    viewModel.setNewTag(NfcTag(tag, newTag.pin))
                                 }
                             }
                         }

@@ -8,6 +8,7 @@ import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.ECPaymentRepository
@@ -130,12 +131,12 @@ class TopUpViewModel @Inject constructor(
         return ECPayment(
             id = newTopUp.uuid.toString(),
             amount = BigDecimal(newTopUp.amount),
-            tag = UserTag(newTopUp.customerTagUid),
+            tag = NfcTag(newTopUp.customerTagUid, null),
         )
     }
 
     /** called from the card payment button */
-    suspend fun topUpWithCard(context: Activity, tag: UserTag) {
+    suspend fun topUpWithCard(context: Activity, tag: NfcTag) {
         _status.update { "Card TopUp in progress..." }
 
         val newTopUp = NewTopUp(
@@ -189,7 +190,7 @@ class TopUpViewModel @Inject constructor(
     }
 
 
-    suspend fun topUpWithCash(tag: UserTag) {
+    suspend fun topUpWithCash(tag: NfcTag) {
         _status.update { "Cash TopUp in progress..." }
 
         val newTopUp = NewTopUp(

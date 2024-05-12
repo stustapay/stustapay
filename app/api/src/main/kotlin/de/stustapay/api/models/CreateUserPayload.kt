@@ -25,18 +25,14 @@ import kotlinx.serialization.Contextual
  *
  * @param login 
  * @param displayName 
- * @param nodeId 
- * @param id 
+ * @param roleIds 
  * @param userTagPin 
  * @param userTagUid 
  * @param description 
- * @param userTagId 
- * @param transportAccountId 
- * @param cashierAccountId 
  */
 @Serializable
 
-data class User (
+data class CreateUserPayload (
 
     @SerialName(value = "login")
     val login: kotlin.String,
@@ -44,11 +40,8 @@ data class User (
     @SerialName(value = "display_name")
     val displayName: kotlin.String,
 
-    @SerialName(value = "node_id")
-    val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
-
-    @SerialName(value = "id")
-    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+    @SerialName(value = "role_ids")
+    val roleIds: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>,
 
     @SerialName(value = "user_tag_pin")
     val userTagPin: kotlin.String? = null,
@@ -57,16 +50,7 @@ data class User (
     val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "description")
-    val description: kotlin.String? = null,
-
-    @SerialName(value = "user_tag_id")
-    val userTagId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
-
-    @SerialName(value = "transport_account_id")
-    val transportAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
-
-    @SerialName(value = "cashier_account_id")
-    val cashierAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null
+    val description: kotlin.String? = null
 
 )
 

@@ -1,6 +1,6 @@
 package de.stustapay.stustapay.ui.common.pay
 
-import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 
 /**
  * Callbacks after money was received successfully.
@@ -12,8 +12,8 @@ sealed interface CashECCallback {
      * User already has a tag.
      */
     data class Tag(
-        val onEC: (UserTag) -> Unit = {},
-        val onCash: (UserTag) -> Unit = {},
+        val onEC: (NfcTag) -> Unit = {},
+        val onCash: (NfcTag) -> Unit = {},
     ) : CashECCallback
 
     /**

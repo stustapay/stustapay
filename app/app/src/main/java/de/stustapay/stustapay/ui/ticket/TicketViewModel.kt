@@ -8,16 +8,18 @@ import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.NewTicketScan
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTag
+import de.stustapay.api.models.UserTagScan
+import de.stustapay.libssp.model.NfcTag
+import de.stustapay.libssp.net.Response
+import de.stustapay.libssp.util.ResourcesProvider
+import de.stustapay.libssp.util.mapState
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
-import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TicketRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
-import de.stustapay.libssp.util.ResourcesProvider
-import de.stustapay.libssp.util.mapState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -26,10 +28,7 @@ import javax.inject.Inject
 
 
 enum class TicketPage(val route: String) {
-    Scan("scan"),
-    Confirm("confirm"),
-    Done("done"),
-    Error("aborted"),
+    Scan("scan"), Confirm("confirm"), Done("done"), Error("aborted"),
 }
 
 sealed interface TagScanStatus {
@@ -68,8 +67,7 @@ class TicketViewModel @Inject constructor(
 
     // configuration infos from backend
     val terminalLoginState = terminalConfigRepository.terminalConfigState.mapState(
-        initialValue = TerminalLoginState(),
-        scope = viewModelScope
+        initialValue = TerminalLoginState(), scope = viewModelScope
     ) { terminal ->
         TerminalLoginState(terminal = terminal)
     }
@@ -90,7 +88,7 @@ class TicketViewModel @Inject constructor(
      *  test if a tag scan was successful, i.e. we didn't scan it previously.
      * if this returns false, the scan dialog will remain open.
      */
-    fun checkTagScan(tag: UserTag): Boolean {
+    fun checkTagScan(tag: NfcTag): Boolean {
         return if (_ticketDraft.value.tagKnown(tag)) {
             _tagScanStatus.update {
                 TagScanStatus.Duplicate
@@ -108,12 +106,13 @@ class TicketViewModel @Inject constructor(
      * when checkTagScan above returned true, we end up here after a successful tag scan.
      * this function is only called if the tag is not already known.
      */
-    suspend fun tagScanned(tag: UserTag) {
-        val response = ticketRepository.checkTicketScan(
-            NewTicketScan(
-                customerTagUids = listOf(tag.uid)
-            )
-        )
+    suspend fun tagScanned(tag: NfcTag) {
+        val response =
+            ticketRepository.checkTicketScan(NewTicketScan(customerTags = listOf(tag).mapNotNull {
+                UserTagScan(
+                    it.uid, it.pin ?: return@mapNotNull null
+                )
+            }))
 
         when (response) {
             is Response.OK -> {
@@ -133,8 +132,7 @@ class TicketViewModel @Inject constructor(
                     val newStatus = status.copy()
                     val ret = newStatus.addTicket(
                         ScannedTicket(
-                            tag = tag,
-                            ticket = scanResult.ticket
+                            tag = tag, ticket = scanResult.ticket
                         )
                     )
                     if (!ret) {

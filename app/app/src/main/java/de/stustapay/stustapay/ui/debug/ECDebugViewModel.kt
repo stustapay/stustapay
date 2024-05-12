@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.ec.SumUp
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,7 +45,7 @@ class ECDebugViewModel @Inject constructor(
             context = context,
             payment = ECPayment(
                 id = "test ${UUID.randomUUID()}",
-                tag = UserTag(0.toBigInteger()),
+                tag = NfcTag(0.toBigInteger(), null),
                 amount = BigDecimal(100),
             )
         )

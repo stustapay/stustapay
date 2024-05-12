@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustapay.api.models.Customer
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.TagItem
 import de.stustapay.libssp.ui.theme.AccountOverviewKeyStyle
@@ -96,7 +97,7 @@ fun AccountProperties(
                 val userTagUid = account.userTagUid
                 if (userTagUid != null) {
                     TagItem(
-                        UserTag(userTagUid),
+                        NfcTag(userTagUid, null),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp)

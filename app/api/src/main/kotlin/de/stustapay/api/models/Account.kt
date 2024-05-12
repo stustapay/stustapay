@@ -33,6 +33,7 @@ import kotlinx.serialization.Contextual
  * @param comment 
  * @param balance 
  * @param vouchers 
+ * @param userTagId 
  * @param userTagUid 
  * @param restriction 
  * @param tagHistory 
@@ -63,6 +64,9 @@ data class Account (
 
     @SerialName(value = "vouchers")
     val vouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
+    @SerialName(value = "user_tag_id")
+    val userTagId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "user_tag_uid")
     val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,

@@ -1,9 +1,11 @@
 package de.stustapay.stustapay.repository
 
+import com.ionspin.kotlin.bignum.integer.BigInteger
 import de.stustapay.api.models.CashRegister
 import de.stustapay.api.models.CashRegisterStocking
 import de.stustapay.api.models.UserInfo
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.CashierRemoteDataSource
 import javax.inject.Inject
@@ -27,11 +29,11 @@ class CashierRepository @Inject constructor(
         return cashierRemoteDataSource.bookVault(orgaTagId, amount)
     }
 
-    suspend fun getUserInfo(tagId: ULong): Response<UserInfo> {
-        return cashierRemoteDataSource.getUserInfo(tagId)
+    suspend fun getUserInfo(tag: NfcTag): Response<UserInfo> {
+        return cashierRemoteDataSource.getUserInfo(tag)
     }
 
-    suspend fun transferCashRegister(sourceTag: UserTag, targetTag: UserTag): Response<CashRegister> {
+    suspend fun transferCashRegister(sourceTag: NfcTag, targetTag: NfcTag): Response<CashRegister> {
         return cashierRemoteDataSource.transferCashRegister(sourceTag, targetTag)
     }
 

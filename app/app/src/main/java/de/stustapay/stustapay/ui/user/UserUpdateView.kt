@@ -1,10 +1,34 @@
 package de.stustapay.stustapay.ui.user
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Button
+import androidx.compose.material.Divider
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.ExposedDropdownMenuDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.ListItem
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,80 +67,68 @@ fun UserUpdateView(viewModel: UserViewModel) {
         }*/
     }
 
-    val isPrivileged = false
-    /*currentUserV.roleNames.mapNotNull { role ->
+    val isPrivileged = false/*currentUserV.roleNames.mapNotNull { role ->
         availableRoles.find { available -> available.name == role }?.isPrivileged
     }.contains(true)*/
 
-    Scaffold(
-        content = { padding ->
-            Box(modifier = Modifier.padding(padding)) {
-                Column(
+    Scaffold(content = { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp)
+            ) {
+                ListItem(text = { Text(stringResource(R.string.tag_uid)) },
+                    secondaryText = { Text(tagIDtoString(currentTag.uid.ulongValue(true))) })
+                ListItem(text = { Text(stringResource(R.string.user_username)) },
+                    secondaryText = { Text(currentUserV.login) })
+                ListItem(text = { Text(stringResource(R.string.user_displayname)) },
+                    secondaryText = { Text(currentUserV.displayName) })
+
+                Row(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(10.dp)
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    ListItem(
-                        text = { Text(stringResource(R.string.tag_uid)) },
-                        secondaryText = { Text(tagIDtoString(currentTag)) }
-                    )
-                    ListItem(
-                        text = { Text(stringResource(R.string.user_username)) },
-                        secondaryText = { Text(currentUserV.login) }
-                    )
-                    ListItem(
-                        text = { Text(stringResource(R.string.user_displayname)) },
-                        secondaryText = { Text(currentUserV.displayName) }
-                    )
+                    var expanded by remember { mutableStateOf(false) }
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        var expanded by remember { mutableStateOf(false) }
-
-                        ExposedDropdownMenuBox(
-                            expanded = expanded,
-                            onExpandedChange = { expanded = it }) {
-                            OutlinedTextField(
-                                label = { Text(stringResource(R.string.user_roles)) },
-                                readOnly = true,
-                                value = roles.map { id ->
-                                    availableRoles.find { r -> r.id.ulongValue() == id }?.name ?: ""
-                                }.reduceOrNull { acc, r -> "$acc, $r" }.orEmpty(),
-                                onValueChange = {},
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                        expanded = expanded
-                                    )
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }) {
-                                for (r in availableRoles) {
-                                    if (!r.isPrivileged!!) {
-                                        DropdownMenuItem(onClick = {
-                                            roles = if (roles.contains(r.id.ulongValue())) {
-                                                roles - r.id.ulongValue()
-                                            } else {
-                                                roles + r.id.ulongValue()
-                                            }
-                                            expanded = false
-                                        }) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.SpaceBetween
-                                            ) {
-                                                Text(r.name)
-                                                if (roles.contains(r.id.ulongValue())) {
-                                                    Icon(Icons.Filled.Check, null)
-                                                }
+                    ExposedDropdownMenuBox(expanded = expanded,
+                        onExpandedChange = { expanded = it }) {
+                        OutlinedTextField(label = { Text(stringResource(R.string.user_roles)) },
+                            readOnly = true,
+                            value = roles.map { id ->
+                                availableRoles.find { r -> r.id.ulongValue() == id }?.name ?: ""
+                            }.reduceOrNull { acc, r -> "$acc, $r" }.orEmpty(),
+                            onValueChange = {},
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = expanded
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(expanded = expanded,
+                            onDismissRequest = { expanded = false }) {
+                            for (r in availableRoles) {
+                                if (!r.isPrivileged!!) {
+                                    DropdownMenuItem(onClick = {
+                                        roles = if (roles.contains(r.id.ulongValue())) {
+                                            roles - r.id.ulongValue()
+                                        } else {
+                                            roles + r.id.ulongValue()
+                                        }
+                                        expanded = false
+                                    }) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(r.name)
+                                            if (roles.contains(r.id.ulongValue())) {
+                                                Icon(Icons.Filled.Check, null)
                                             }
                                         }
                                     }
@@ -124,66 +136,61 @@ fun UserUpdateView(viewModel: UserViewModel) {
                             }
                         }
                     }
-
-                    ListItem(
-                        text = { Text(stringResource(R.string.user_description)) },
-                        secondaryText = { Text(currentUserV.description ?: "") }
-                    )
                 }
-            }
-        },
-        bottomBar = {
-            Column {
-                Spacer(modifier = Modifier.height(10.dp))
-                Divider()
-                Spacer(modifier = Modifier.height(10.dp))
-                Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
-                    Column {
-                        val text = when (status) {
-                            is UserRequestState.Idle -> {
-                                stringResource(R.string.common_status_idle)
-                            }
 
-                            is UserRequestState.Fetching -> {
-                                stringResource(R.string.common_status_fetching)
-                            }
-
-                            is UserRequestState.Done -> {
-                                stringResource(R.string.common_status_done)
-                            }
-
-                            is UserRequestState.Failed -> {
-                                (status as UserRequestState.Failed).msg
-                            }
-                        }
-                        Text(text, fontSize = 24.sp)
-                        Spacer(modifier = Modifier.height(10.dp))
-                        if (isPrivileged) {
-                            Text(
-                                stringResource(R.string.user_privileged),
-                                fontSize = 24.sp,
-                                color = Color.Red
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Button(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                    enabled = !isPrivileged,
-                    onClick = {
-                        scope.launch {
-                            viewModel.update(
-                                currentTag,
-                                roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId } }
-                            )
-                        }
-                    }) {
-                    Text(text = stringResource(R.string.common_action_update), fontSize = 24.sp)
-                }
+                ListItem(text = { Text(stringResource(R.string.user_description)) },
+                    secondaryText = { Text(currentUserV.description ?: "") })
             }
         }
-    )
+    }, bottomBar = {
+        Column {
+            Spacer(modifier = Modifier.height(10.dp))
+            Divider()
+            Spacer(modifier = Modifier.height(10.dp))
+            Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+                Column {
+                    val text = when (status) {
+                        is UserRequestState.Idle -> {
+                            stringResource(R.string.common_status_idle)
+                        }
+
+                        is UserRequestState.Fetching -> {
+                            stringResource(R.string.common_status_fetching)
+                        }
+
+                        is UserRequestState.Done -> {
+                            stringResource(R.string.common_status_done)
+                        }
+
+                        is UserRequestState.Failed -> {
+                            (status as UserRequestState.Failed).msg
+                        }
+                    }
+                    Text(text, fontSize = 24.sp)
+                    Spacer(modifier = Modifier.height(10.dp))
+                    if (isPrivileged) {
+                        Text(
+                            stringResource(R.string.user_privileged),
+                            fontSize = 24.sp,
+                            color = Color.Red
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+                enabled = !isPrivileged,
+                onClick = {
+                    scope.launch {
+                        viewModel.update(currentTag,
+                            roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id })
+                    }
+                }) {
+                Text(text = stringResource(R.string.common_action_update), fontSize = 24.sp)
+            }
+        }
+    })
 }

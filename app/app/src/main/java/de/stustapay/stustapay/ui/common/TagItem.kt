@@ -4,15 +4,14 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 
 @Composable
 fun TagItem(
-    tag: UserTag,
-    modifier: Modifier = Modifier
+    tag: NfcTag, modifier: Modifier = Modifier
 ) {
     Text(
-        "ID: $tag",
+        "ID: ${tag.uid}",
         style = MaterialTheme.typography.h5,
         modifier = modifier,
     )

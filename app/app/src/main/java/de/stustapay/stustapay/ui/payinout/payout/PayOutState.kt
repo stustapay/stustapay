@@ -1,15 +1,14 @@
 package de.stustapay.stustapay.ui.payinout.payout
 
-import android.util.Log
 import de.stustapay.api.models.NewPayOut
 import de.stustapay.api.models.PendingPayOut
-import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import java.util.UUID
 
 
 data class PayOutState(
     /** what tag is this payout for? */
-    private var tag: UserTag? = null,
+    private var tag: NfcTag? = null,
 
     /**
      * desired cash-out amount in cents.

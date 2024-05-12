@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.CustomerRepository
@@ -53,7 +54,7 @@ class RewardViewModel @Inject constructor(
     private val _status = MutableStateFlow<RewardStatus>(RewardStatus.Idle)
     val status = _status.asStateFlow()
 
-    private suspend fun grantVouchers(tag: UserTag, vouchers: UInt) {
+    private suspend fun grantVouchers(tag: NfcTag, vouchers: UInt) {
         when (val resp = customerRepository.grantVouchers(tag, vouchers)) {
             is Response.OK -> {
                 _status.update {
@@ -70,7 +71,7 @@ class RewardViewModel @Inject constructor(
         }
     }
 
-    private suspend fun grantFreeTicket(tag: UserTag, vouchers: UInt) {
+    private suspend fun grantFreeTicket(tag: NfcTag, vouchers: UInt) {
         when (val resp = customerRepository.grantFreeTicket(tag, vouchers)) {
             is Response.OK -> {
                 val voucherAmount = if (vouchers > 0u) {
@@ -88,7 +89,7 @@ class RewardViewModel @Inject constructor(
         }
     }
 
-    suspend fun tagScanned(tag: UserTag) {
+    suspend fun tagScanned(tag: NfcTag) {
         if (_newTicket.value) {
             grantFreeTicket(tag, _vouchers.value)
         } else {

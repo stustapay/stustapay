@@ -2,23 +2,31 @@ package de.stustapay.stustapay.ui.user
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.UserInfo
-import de.stustapay.api.models.UserRole
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
+import de.stustapay.libssp.net.Response
+import de.stustapay.libssp.util.Result
+import de.stustapay.libssp.util.asResult
 import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.model.UserCreateState
 import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.model.UserUpdateState
-import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
 import de.stustapay.stustapay.repository.UserRepository
-import de.stustapay.libssp.util.Result
-import de.stustapay.libssp.util.asResult
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 
@@ -54,12 +62,11 @@ class UserViewModel @Inject constructor(
 ) : ViewModel() {
     val userUIState: StateFlow<UserUIState> = userUiState(
         userRepo = userRepository
+    ).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UserUIState.Error("Loading..."),
     )
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = UserUIState.Error("Loading..."),
-        )
 
     val userStatus = userRepository.status
     val userRoles = userRepository.userRoles
@@ -82,7 +89,7 @@ class UserViewModel @Inject constructor(
     private val _currentUser = MutableStateFlow<UserInfo?>(null)
     val currentUser = _currentUser.asStateFlow()
 
-    private val _currentTag = MutableStateFlow(0uL)
+    private val _currentTag = MutableStateFlow(NfcTag(0.toBigInteger(), null))
     val currentTag = _currentTag.asStateFlow()
 
     fun clearErrors() {
@@ -93,11 +100,11 @@ class UserViewModel @Inject constructor(
         userRepository.fetchLogin()
     }
 
-    suspend fun checkLogin(tag: UserTag) {
+    suspend fun checkLogin(tag: NfcTag) {
         userRepository.checkLogin(tag)
     }
 
-    suspend fun login(tag: UserTag, roleID: Int) {
+    suspend fun login(tag: NfcTag, roleID: BigInteger) {
         userRepository.login(tag, roleID)
     }
 
@@ -108,19 +115,16 @@ class UserViewModel @Inject constructor(
     fun idleState() {
         _status.update { UserRequestState.Idle }
         _currentUser.update { null }
-        _currentTag.update { 0uL }
+        _currentTag.update { NfcTag(0.toBigInteger(), null) }
     }
 
     suspend fun create(
-        login: String,
-        displayName: String,
-        tag: ULong,
-        roles: List<UserRole>,
-        description: String
+        login: String, displayName: String, tag: ULong, roles: List<BigInteger>, description: String
     ) {
         _status.update { UserRequestState.Fetching }
-        when (val res =
-            userRepository.create(login, displayName, UserTag(tag.toBigInteger()), roles, description)) {
+        when (val res = userRepository.create(
+            login, displayName, UserTag(tag.toBigInteger()), roles, description
+        )) {
             is UserCreateState.Created -> {
                 _status.update { UserRequestState.Done }
             }
@@ -131,9 +135,9 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    suspend fun update(tag: ULong, roles: List<UserRole>) {
+    suspend fun update(tag: NfcTag, roles: List<BigInteger>) {
         _status.update { UserRequestState.Fetching }
-        when (val res = userRepository.update(UserTag(tag.toBigInteger()), roles)) {
+        when (val res = userRepository.update(tag, roles)) {
             is UserUpdateState.Created -> {
                 _status.update { UserRequestState.Done }
             }
@@ -144,7 +148,7 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    suspend fun display(tag: ULong) {
+    suspend fun display(tag: NfcTag) {
         _status.update { UserRequestState.Fetching }
         _currentUser.update { null }
         when (val res = cashierRepository.getUserInfo(tag)) {
@@ -168,50 +172,48 @@ private fun userUiState(
     val regState: Flow<UserState> = userRepo.userState
 
     // convert the registration state to a ui registration state
-    return regState.asResult()
-        .map { userStateResult ->
-            when (userStateResult) {
-                is Result.Loading -> {
-                    UserUIState.Error("waiting...")
-                }
+    return regState.asResult().map { userStateResult ->
+        when (userStateResult) {
+            is Result.Loading -> {
+                UserUIState.Error("waiting...")
+            }
 
-                is Result.Success -> {
-                    when (val userState = userStateResult.data) {
-                        is UserState.LoggedIn -> {
-                            if (userState.user.activeRoleName != null) {
-                                UserUIState.LoggedIn(
-                                    username = userState.user.login,
-                                    activeRole = userState.user.activeRoleName!!,
-                                    showCreateUser = Access.canCreateUser(userState.user),
-                                    showLoginUser = Access.canLogInOtherUsers(userState.user),
-                                )
-                            } else {
-                                UserUIState.Error(
-                                    message = "no active role provided",
-                                )
-                            }
-
-                        }
-
-                        is UserState.NoLogin -> {
-                            UserUIState.NotLoggedIn
-                        }
-
-                        is UserState.Error -> {
+            is Result.Success -> {
+                when (val userState = userStateResult.data) {
+                    is UserState.LoggedIn -> {
+                        if (userState.user.activeRoleName != null) {
+                            UserUIState.LoggedIn(
+                                username = userState.user.login,
+                                activeRole = userState.user.activeRoleName!!,
+                                showCreateUser = Access.canCreateUser(userState.user),
+                                showLoginUser = Access.canLogInOtherUsers(userState.user),
+                            )
+                        } else {
                             UserUIState.Error(
-                                message = userState.msg,
+                                message = "no active role provided",
                             )
                         }
+
+                    }
+
+                    is UserState.NoLogin -> {
+                        UserUIState.NotLoggedIn
+                    }
+
+                    is UserState.Error -> {
+                        UserUIState.Error(
+                            message = userState.msg,
+                        )
                     }
                 }
+            }
 
-                is Result.Error -> {
-                    UserUIState.Error(
-                        userStateResult.exception?.localizedMessage
-                            ?: "unknown user state error"
-                    )
-                }
+            is Result.Error -> {
+                UserUIState.Error(
+                    userStateResult.exception?.localizedMessage ?: "unknown user state error"
+                )
             }
         }
+    }
 }
 

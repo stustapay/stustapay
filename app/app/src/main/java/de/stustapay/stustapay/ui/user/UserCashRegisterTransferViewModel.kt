@@ -3,6 +3,7 @@ package de.stustapay.stustapay.ui.user
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.repository.CashierRepository
@@ -15,7 +16,7 @@ import javax.inject.Inject
 
 sealed interface TransferCashRegisterState {
     object ScanSource : TransferCashRegisterState
-    data class ScanTarget(val sourceTag: UserTag) : TransferCashRegisterState
+    data class ScanTarget(val sourceTag: NfcTag) : TransferCashRegisterState
     data class Done(
         val cashRegisterName: String,
         val balance: Double,
@@ -43,7 +44,7 @@ class UserCashRegisterTransferViewModel @Inject constructor(
         _transferCashRegisterState.update { TransferCashRegisterState.ScanSource }
     }
 
-    fun checkScan(tag: UserTag): Boolean {
+    fun checkScan(tag: NfcTag): Boolean {
         when (val state = _transferCashRegisterState.value) {
             is TransferCashRegisterState.ScanTarget -> {
                 if (state.sourceTag == tag) {
@@ -64,7 +65,7 @@ class UserCashRegisterTransferViewModel @Inject constructor(
         }
     }
 
-    suspend fun tagScanned(tag: UserTag) {
+    suspend fun tagScanned(tag: NfcTag) {
         when (val state = _transferCashRegisterState.value) {
             is TransferCashRegisterState.ScanSource -> {
                 _transferCashRegisterState.update {
@@ -82,7 +83,7 @@ class UserCashRegisterTransferViewModel @Inject constructor(
         }
     }
 
-    private suspend fun transferCashRegisterSubmit(sourceTag: UserTag, targetTag: UserTag) {
+    private suspend fun transferCashRegisterSubmit(sourceTag: NfcTag, targetTag: NfcTag) {
 
         _status.update {
             resourcesProvider.getString(R.string.cash_register_transferring)
@@ -94,7 +95,7 @@ class UserCashRegisterTransferViewModel @Inject constructor(
 
         when (transferResult) {
             is Response.OK -> {
-                val currentCashierTagUid = transferResult.data.currentCashierTagUid
+                val currentCashierTagUid = transferResult.data.currentCashierId
                 if (currentCashierTagUid != targetTag.uid) {
                     if (currentCashierTagUid == null) {
                         TransferCashRegisterState.Error(

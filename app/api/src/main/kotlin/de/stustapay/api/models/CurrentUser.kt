@@ -29,10 +29,10 @@ import kotlinx.serialization.Contextual
  * @param login 
  * @param displayName 
  * @param privileges 
- * @param userTagUidHex 
  * @param activeRoleId 
  * @param activeRoleName 
  * @param description 
+ * @param userTagId 
  * @param userTagUid 
  * @param transportAccountId 
  * @param cashierAccountId 
@@ -57,9 +57,6 @@ data class CurrentUser (
     @SerialName(value = "privileges")
     val privileges: kotlin.collections.List<@Contextual Privilege>,
 
-    @SerialName(value = "user_tag_uid_hex")
-    val userTagUidHex: kotlin.String?,
-
     @SerialName(value = "active_role_id")
     val activeRoleId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
@@ -68,6 +65,9 @@ data class CurrentUser (
 
     @SerialName(value = "description")
     val description: kotlin.String? = null,
+
+    @SerialName(value = "user_tag_id")
+    val userTagId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "user_tag_uid")
     val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,

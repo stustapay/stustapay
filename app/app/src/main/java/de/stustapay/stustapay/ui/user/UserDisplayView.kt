@@ -47,7 +47,7 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
                         keepScanning = true,
                         onScan = { tag ->
                             scope.launch {
-                                viewModel.display(tag.uid.ulongValue())
+                                viewModel.display(tag)
                             }
                         }
                     )
@@ -100,7 +100,7 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
                     ) {
                         ListItem(
                             text = { Text(stringResource(R.string.tag_uid)) },
-                            secondaryText = { Text(tagIDtoString(currentTag)) }
+                            secondaryText = { Text(tagIDtoString(currentTag.uid.ulongValue(true))) }
                         )
                         ListItem(
                             text = { Text(stringResource(R.string.user_username)) },

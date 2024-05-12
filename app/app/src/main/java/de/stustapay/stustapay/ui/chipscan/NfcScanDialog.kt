@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.libssp.ui.common.DialogDisplayState
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
@@ -28,8 +29,8 @@ fun NfcScanDialog(
     viewModel: NfcScanDialogViewModel = hiltViewModel(),
     border: BorderStroke? = null,
     onDismiss: () -> Unit = {},
-    checkScan: (UserTag) -> Boolean = { true },
-    onScan: (UserTag) -> Unit = {},
+    checkScan: (NfcTag) -> Boolean = { true },
+    onScan: (NfcTag) -> Unit = {},
     content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
         Text(stringResource(R.string.nfc_scan_prompt), style = NfcScanStyle)

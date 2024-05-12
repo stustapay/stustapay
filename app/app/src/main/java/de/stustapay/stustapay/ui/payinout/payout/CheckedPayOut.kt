@@ -1,7 +1,7 @@
 package de.stustapay.stustapay.ui.payinout.payout
 
 import de.stustapay.api.models.NewPayOut
-import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import java.util.UUID
 
 data class CheckedPayOut(
@@ -12,7 +12,7 @@ data class CheckedPayOut(
     val amount: Double,
 
     /** what's the user's tag */
-    val tag: UserTag,
+    val tag: NfcTag,
 
     val uuid: String,
 ) {

@@ -23,12 +23,16 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
+ * @param userTagPin 
  * @param userTagUid 
  * @param initialVoucherAmount 
  */
 @Serializable
 
 data class NewFreeTicketGrant (
+
+    @SerialName(value = "user_tag_pin")
+    val userTagPin: kotlin.String,
 
     @SerialName(value = "user_tag_uid")
     val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,

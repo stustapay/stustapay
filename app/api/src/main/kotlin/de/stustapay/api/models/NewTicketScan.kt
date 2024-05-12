@@ -15,6 +15,7 @@
 
 package de.stustapay.api.models
 
+import de.stustapay.api.models.UserTagScan
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -23,14 +24,14 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param customerTagUids 
+ * @param customerTags 
  */
 @Serializable
 
 data class NewTicketScan (
 
-    @SerialName(value = "customer_tag_uids")
-    val customerTagUids: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>
+    @SerialName(value = "customer_tags")
+    val customerTags: kotlin.collections.List<UserTagScan>
 
 )
 

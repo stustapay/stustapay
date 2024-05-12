@@ -28,15 +28,6 @@ fun DebugNavView(nav: NavHostController) {
         Button(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             onClick = {
-                nav.navigateTo(DevelopNavDest.nfc.route)
-            }
-        ) {
-            Text( "NFC", fontSize = 24.sp)
-        }
-
-        Button(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            onClick = {
                 nav.navigateTo(DevelopNavDest.qr.route)
             }
         ) {

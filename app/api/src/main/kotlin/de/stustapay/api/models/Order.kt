@@ -39,6 +39,7 @@ import kotlinx.serialization.Contextual
  * @param tillId 
  * @param customerAccountId 
  * @param customerTagUid 
+ * @param customerTagId 
  * @param lineItems 
  * @param customerTagUidHex 
  */
@@ -84,6 +85,9 @@ data class Order (
 
     @SerialName(value = "customer_tag_uid")
     val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
+
+    @SerialName(value = "customer_tag_id")
+    val customerTagId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "line_items")
     val lineItems: kotlin.collections.List<LineItem>,

@@ -23,6 +23,8 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
+ * @param userTagId 
+ * @param userTagPin 
  * @param userTagUid 
  * @param accountId 
  * @param mappingWasValidUntil 
@@ -33,8 +35,14 @@ import kotlinx.serialization.Contextual
 
 data class UserTagHistoryEntry (
 
+    @SerialName(value = "user_tag_id")
+    val userTagId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
+    @SerialName(value = "user_tag_pin")
+    val userTagPin: kotlin.String,
+
     @SerialName(value = "user_tag_uid")
-    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "account_id")
     val accountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,

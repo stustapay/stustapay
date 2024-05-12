@@ -23,60 +23,43 @@ class NfcRepository @Inject constructor(
     private val nfcDataSource: NfcDataSource
 ) {
     // nfc communication secret keys
-    private val key0 =
-        MutableStateFlow<BitVector?>(0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv)
-    private val key1 =
-        MutableStateFlow<BitVector?>(0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv + 0x00.bv)
+    private val uidRetrKey =
+        MutableStateFlow<BitVector?>(0x00.bv + 0x10.bv + 0x20.bv + 0x30.bv + 0x40.bv + 0x50.bv + 0x60.bv + 0x70.bv + 0x80.bv + 0x90.bv + 0xa0.bv + 0xb0.bv + 0xc0.bv + 0xd0.bv + 0xe0.bv + 0xf0.bv)
+    private val dataProtKey =
+        MutableStateFlow<BitVector?>(0x00.bv + 0x01.bv + 0x02.bv + 0x03.bv + 0x04.bv + 0x05.bv + 0x06.bv + 0x07.bv + 0x08.bv + 0x09.bv + 0x0a.bv + 0x0b.bv + 0x0c.bv + 0x0d.bv + 0x0e.bv + 0x0f.bv)
 
     val tagContent = "StuStaPay - built by SSN & friends!\nglhf ;)\n"
 
     fun setTagKeys(secrets: UserTagSecret) {
-        key0.update { secrets.key0.decodeHex() }
-        key1.update { secrets.key1.decodeHex() }
+        uidRetrKey.update { secrets.key1.decodeHex() }
+        dataProtKey.update { secrets.key0.decodeHex() }
     }
 
-    suspend fun read(mode: ReadMode): NfcScanResult {
-        val key = key0.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
-        return when (mode) {
-            is ReadMode.Fast -> {
-                nfcDataSource.scan(NfcScanRequest.FastRead(key))
-            }
-
-            is ReadMode.Full -> {
-                nfcDataSource.scan(NfcScanRequest.Read(mode.auth, mode.cmac, key))
-            }
-        }
+    suspend fun read(): NfcScanResult {
+        return nfcDataSource.scan(
+            NfcScanRequest.Read(
+                uidRetrKey.value ?: return NfcScanResult.Fail(
+                    NfcScanFailure.NoKey
+                ), dataProtKey.value
+            )
+        )
     }
 
-    suspend fun readMultiKey(auth: Boolean, cmac: Boolean): NfcScanResult {
-        val key = key0.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
-        val keys = listOf(BitVector(128uL), BitVector(128uL), key)
-        return nfcDataSource.scan(NfcScanRequest.ReadMultiKey(auth, cmac, keys))
-    }
-
-    suspend fun writeSig(auth: Boolean, cmac: Boolean): NfcScanResult {
-        val key = key0.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
-        return nfcDataSource.scan(NfcScanRequest.WriteSig(auth, cmac, key, tagContent))
-    }
-
-    suspend fun writeKey(auth: Boolean, cmac: Boolean): NfcScanResult {
-        val key = key0.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
-        return nfcDataSource.scan(NfcScanRequest.WriteKey(auth, cmac, key))
-    }
-
-    suspend fun writeProtect(enable: Boolean, auth: Boolean, cmac: Boolean): NfcScanResult {
-        val key = key0.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
-        return nfcDataSource.scan(NfcScanRequest.WriteProtect(enable, auth, cmac, key))
-    }
-
-    suspend fun writeCmac(enable: Boolean, auth: Boolean, cmac: Boolean): NfcScanResult {
-        val key = key0.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
-        return nfcDataSource.scan(NfcScanRequest.WriteCmac(enable, auth, cmac, key))
+    suspend fun write(): NfcScanResult {
+        return nfcDataSource.scan(
+            NfcScanRequest.Write(
+                uidRetrKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey),
+                dataProtKey.value
+            )
+        )
     }
 
     suspend fun test(): NfcScanResult {
-        val k0 = key0.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
-        val k1 = key1.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
-        return nfcDataSource.scan(NfcScanRequest.Test(k0, k1))
+        return nfcDataSource.scan(
+            NfcScanRequest.Test(
+                uidRetrKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey),
+                dataProtKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
+            )
+        )
     }
 }

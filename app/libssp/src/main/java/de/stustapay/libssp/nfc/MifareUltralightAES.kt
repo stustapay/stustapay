@@ -3,6 +3,8 @@ package de.stustapay.libssp.nfc
 import android.nfc.Tag
 import android.nfc.tech.NfcA
 import android.nfc.tech.TagTechnology
+import com.ionspin.kotlin.bignum.integer.toBigInteger
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.util.*
 import java.io.IOException
 import java.security.SecureRandom
@@ -21,7 +23,13 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     var sessionKey: BitVector? = null
     var sessionCounter: UShort? = null
 
-    fun fastRead(key: BitVector): ULong {
+    fun fastRead(uidRetrKey: BitVector, dataProtKey: BitVector?): NfcTag {
+        val key = dataProtKey ?: uidRetrKey
+        var type = KeyType.DATA_PROT_KEY.code
+        if (dataProtKey == null) {
+            type = KeyType.UID_RETR_KEY.code
+        }
+
         if (key.len != 16uL * 8uL) { throw IllegalArgumentException() }
         if (chipState != ChipState.ACTIVE) { throw Exception("Already authenticated") }
 
@@ -32,7 +40,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
         val rndB: BitVector
 
         try {
-            val ekRndB = cmdAuthenticate1(KeyType.DATA_PROT_KEY.code, nfcaTag)
+            val ekRndB = cmdAuthenticate1(type, nfcaTag)
             rndB = ekRndB.aesDecrypt(key)
 
             val rndAB = rndA + rndB.rotl(8uL)
@@ -51,18 +59,29 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
         sessionKey = genSessionKey(key, rndA, rndB)
         sessionCounter = 0u
 
-        val readBuffer = cmdRead(0x00u, sessionKey!!, sessionCounter!!, nfcaTag)
+        var readBuffer = cmdRead(0x00u, sessionKey!!, sessionCounter!!, nfcaTag)
         sessionCounter = (sessionCounter!! + 2u).toUShort()
 
-        var ser = 0uL
+        var uid = 0uL
         for (i in 0uL until 3uL) {
-            ser = ser or (readBuffer.gbe(i).toULong() shl ((6u - i) * 8u).toInt())
+            uid = uid or (readBuffer.gbe(i).toULong() shl ((6u - i) * 8u).toInt())
         }
         for (i in 3uL until 7uL) {
-            ser = ser or (readBuffer.gbe(i + 1u).toULong() shl ((6u - i) * 8u).toInt())
+            uid = uid or (readBuffer.gbe(i + 1u).toULong() shl ((6u - i) * 8u).toInt())
         }
 
-        return ser
+        var pin: String? = null
+        if (dataProtKey != null) {
+            pin = ""
+
+            readBuffer = cmdRead(0x10u, sessionKey!!, sessionCounter!!, nfcaTag)
+
+            for (i in 0uL until 12uL) {
+                pin += readBuffer.gbe(i).toInt().toChar()
+            }
+        }
+
+        return NfcTag(uid.toBigInteger(), pin)
     }
 
     fun setAuth0(page: UByte) {
@@ -97,7 +116,7 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
             cmdRead(0x29u, nfcaTag)
         }
 
-        val a: UByte = if (enable) { 0x02u } else { 0x00u }
+        val a: UByte = if (enable) { 0x03u } else { 0x00u }
 
         if (sessionKey != null) {
             cmdWrite(0x29u, a, buf.gbe(1uL), buf.gbe(2uL), buf.gbe(3uL), sessionKey!!, sessionCounter!!, nfcaTag)
@@ -256,6 +275,45 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
             } else {
                 cmdWrite(
                     (i + 4u).toUByte(),
+                    writeBuffer.gbe(i * 4uL),
+                    writeBuffer.gbe(i * 4uL + 1uL),
+                    writeBuffer.gbe(i * 4uL + 2uL),
+                    writeBuffer.gbe(i * 4uL + 3uL),
+                    nfcaTag
+                )
+            }
+        }
+    }
+
+    fun writePin(content: String) {
+        if (!isConnected) { throw TagConnectionException() }
+        if (!isAuthenticated() && (auth0State == null || auth0State!! <= (4u + USER_BYTES / 4u))) { throw TagAuthException("Authentication required") }
+
+        val writeBuffer = BitVector(12uL * 8uL)
+        for (i in 0uL until 12uL) {
+            if (i < content.length.toUInt()) {
+                writeBuffer.sbe(i, content[i.toInt()].code.toUByte())
+            } else {
+                writeBuffer.sbe(i, 0x00u)
+            }
+        }
+
+        for (i in 0uL until 3uL) {
+            if (sessionKey != null) {
+                cmdWrite(
+                    (i + 16u).toUByte(),
+                    writeBuffer.gbe(i * 4uL),
+                    writeBuffer.gbe(i * 4uL + 1uL),
+                    writeBuffer.gbe(i * 4uL + 2uL),
+                    writeBuffer.gbe(i * 4uL + 3uL),
+                    sessionKey!!,
+                    sessionCounter!!,
+                    nfcaTag
+                )
+                sessionCounter = (sessionCounter!! + 2u).toUShort()
+            } else {
+                cmdWrite(
+                    (i + 16u).toUByte(),
                     writeBuffer.gbe(i * 4uL),
                     writeBuffer.gbe(i * 4uL + 1uL),
                     writeBuffer.gbe(i * 4uL + 2uL),

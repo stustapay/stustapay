@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.api.models.UserTag
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.libssp.ui.theme.NfcScanStyle
 
@@ -33,8 +34,8 @@ fun NfcScanCard(
     modifier: Modifier = Modifier,
     viewModel: NfcScanDialogViewModel = hiltViewModel(),
     border: BorderStroke? = null,
-    checkScan: (UserTag) -> Boolean = { true },
-    onScan: (UserTag) -> Unit,
+    checkScan: (NfcTag) -> Boolean = { true },
+    onScan: (NfcTag) -> Unit,
     scan: Boolean = true,  // is scanning active?
     keepScanning: Boolean = false,  // after a successful scan, keep on scanning?
     showStatus: Boolean = true,  // display scan status below the content.
