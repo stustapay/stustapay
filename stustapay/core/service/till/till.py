@@ -112,6 +112,18 @@ class TillService(DBService):
         if result is None:
             raise InvalidArgument("till does not exist")
 
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
+    async def remove_from_terminal(self, *, conn: Connection, node: Node, till_id: int):
+        result = await conn.fetchval(
+            "update till set terminal_id = null where id = $1 and node_id = $2 returning id",
+            till_id,
+            node.id,
+        )
+        if result is None:
+            raise InvalidArgument("till does not exist")
+
     @with_db_transaction(read_only=True)
     @requires_terminal()
     async def check_user_login(

@@ -9,8 +9,21 @@ admin_cli = typer.Typer()
 
 
 @admin_cli.command()
-def add_user(ctx: typer.Context, node_id: int):
+def add_user(
+    ctx: typer.Context,
+    node_id: Annotated[int, typer.Option(help="Id of the tree node the cash registers should be created at")],
+):
     asyncio.run(admin.add_user(config=ctx.obj.config, node_id=node_id))
+
+
+@admin_cli.command()
+def register_tag_with_user(
+    ctx: typer.Context,
+    user_id: Annotated[int, typer.Option()],
+    tag_pin: Annotated[str, typer.Option()],
+    tag_uid: Annotated[str, typer.Option()],
+):
+    asyncio.run(admin.register_tag_with_user(config=ctx.obj.config, user_id=user_id, tag_pin=tag_pin, tag_uid=tag_uid))
 
 
 @admin_cli.command()

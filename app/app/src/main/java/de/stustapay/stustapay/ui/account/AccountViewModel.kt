@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.api.models.Customer
+import de.stustapay.api.models.Account
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.model.UserState
@@ -28,7 +28,7 @@ data class CustomerStatusUiState(
 sealed interface CustomerStatusRequestState {
     object Idle : CustomerStatusRequestState
     object Fetching : CustomerStatusRequestState
-    data class Done(val account: Customer) : CustomerStatusRequestState
+    data class Done(val account: Account) : CustomerStatusRequestState
     data class Failed(val msg: String) : CustomerStatusRequestState
 }
 

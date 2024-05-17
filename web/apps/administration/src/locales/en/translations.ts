@@ -395,6 +395,8 @@ export const translations = {
     unregisterTill: "Force logout a terminal",
     unregisterTillDescription:
       "Force logout a terminal. This should NEVER be done while a cashier is still using the terminal",
+    removeFromTerminal: "Remove from terminal",
+    removeFromTerminalDescription: "Deassociate a this till from its terminal",
   },
   layout: {
     layout: "Layout",

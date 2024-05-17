@@ -5,10 +5,10 @@ from stustapay.framework.database import create_db_pool
 
 from . import database
 from .config import Config
-from .schema.user import NewUser, RoleToNode
+from .schema.user import NewUser, RoleToNode, User
 from .service.auth import AuthService
 from .service.tree.common import fetch_node
-from .service.user import UserService, list_user_roles
+from .service.user import UserService, fetch_user, list_user_roles, update_user
 
 
 async def add_user(config: Config, node_id: int):
@@ -54,5 +54,28 @@ async def add_user(config: Config, node_id: int):
 
         print("created new user:")
         pprint(user)
+    finally:
+        await db_pool.close()
+
+
+async def register_tag_with_user(config: Config, user_id: int, tag_pin: str, tag_uid: str):
+    db_pool = await create_db_pool(config.database)
+    try:
+        await database.check_revision_version(db_pool)
+        async with db_pool.acquire() as conn:
+            user = await conn.fetch_maybe_one(User, "select * from user_with_roles where id = $1", user_id)
+            node = await fetch_node(conn=conn, node_id=user.node_id)
+            assert node is not None
+            decoded_uid = int(tag_uid, 16)
+            new_user = NewUser(
+                login=user.login,
+                description=user.description,
+                user_tag_pin=tag_pin,
+                user_tag_uid=decoded_uid,
+                display_name=user.display_name,
+            )
+            await update_user(conn=conn, node=node, user_id=user_id, user=new_user)
+            final_user = await fetch_user(conn=conn, node=node, user_id=user_id)
+            pprint(final_user)
     finally:
         await db_pool.close()

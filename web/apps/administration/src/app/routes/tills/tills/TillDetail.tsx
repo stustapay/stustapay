@@ -10,6 +10,7 @@ import {
   useListTerminalsQuery,
   useListTillProfilesQuery,
   useListUsersQuery,
+  useRemoveFromTerminalMutation,
 } from "@/api";
 import { CashierRoutes, TerminalRoutes, TillProfileRoutes, TillRoutes } from "@/app/routes";
 import { ListItemLink } from "@/components";
@@ -36,6 +37,7 @@ export const TillDetail: React.FC = () => {
 
   const [forceLogoutUser] = useForceLogoutUserMutation();
   const [deleteTill] = useDeleteTillMutation();
+  const [removeFromTerminal] = useRemoveFromTerminalMutation();
   const { data: till, error: tillError } = useGetTillQuery({ nodeId: currentNode.id, tillId: Number(tillId) });
   const { orders, error: orderError } = useListOrdersByTillQuery(
     { nodeId: currentNode.id, tillId: Number(tillId) },
@@ -120,6 +122,17 @@ export const TillDetail: React.FC = () => {
     });
   };
 
+  const openConfirmRemoveFromTerminalDialog = () => {
+    openModal({
+      type: "confirm",
+      title: t("till.removeFromTerminal"),
+      content: t("till.removeFromTerminalDescription"),
+      onConfirm: () => {
+        removeFromTerminal({ nodeId: currentNode.id, tillId: Number(tillId) });
+      },
+    });
+  };
+
   return (
     <DetailLayout
       title={till.name}
@@ -127,6 +140,15 @@ export const TillDetail: React.FC = () => {
       elementNodeId={till.node_id}
       actions={[
         { label: t("edit"), onClick: () => navigate(TillRoutes.edit(tillId)), color: "primary", icon: <EditIcon /> },
+        ...(till.terminal_id != null
+          ? ([
+              {
+                label: t("till.removeFromTerminal"),
+                onClick: openConfirmRemoveFromTerminalDialog,
+                color: "warning",
+              } as const,
+            ] as const)
+          : []),
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >

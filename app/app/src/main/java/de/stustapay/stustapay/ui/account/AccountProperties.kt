@@ -16,8 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustapay.api.models.Customer
-import de.stustapay.api.models.UserTag
+import de.stustapay.api.models.Account
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.TagItem
@@ -81,7 +80,7 @@ fun SummaryEntry(
 
 @Composable
 fun AccountProperties(
-    account: Customer,
+    account: Account,
     showComment: Boolean,
 ) {
     LazyColumn(

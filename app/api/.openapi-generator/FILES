@@ -6,6 +6,7 @@ src/main/kotlin/de/stustapay/api/apis/AuthApi.kt
 src/main/kotlin/de/stustapay/api/apis/BaseApi.kt
 src/main/kotlin/de/stustapay/api/apis/CashierApi.kt
 src/main/kotlin/de/stustapay/api/apis/CustomerApi.kt
+src/main/kotlin/de/stustapay/api/apis/MgmtApi.kt
 src/main/kotlin/de/stustapay/api/apis/OrderApi.kt
 src/main/kotlin/de/stustapay/api/apis/UserApi.kt
 src/main/kotlin/de/stustapay/api/auth/ApiKeyAuth.kt
@@ -31,7 +32,6 @@ src/main/kotlin/de/stustapay/api/models/CompletedTicketSale.kt
 src/main/kotlin/de/stustapay/api/models/CompletedTopUp.kt
 src/main/kotlin/de/stustapay/api/models/CreateUserPayload.kt
 src/main/kotlin/de/stustapay/api/models/CurrentUser.kt
-src/main/kotlin/de/stustapay/api/models/Customer.kt
 src/main/kotlin/de/stustapay/api/models/GrantVoucherPayload.kt
 src/main/kotlin/de/stustapay/api/models/HTTPValidationError.kt
 src/main/kotlin/de/stustapay/api/models/LineItem.kt
@@ -55,6 +55,8 @@ src/main/kotlin/de/stustapay/api/models/Product.kt
 src/main/kotlin/de/stustapay/api/models/ProductRestriction.kt
 src/main/kotlin/de/stustapay/api/models/ProductType.kt
 src/main/kotlin/de/stustapay/api/models/RegisterStockUpPayload.kt
+src/main/kotlin/de/stustapay/api/models/RevenueStats.kt
+src/main/kotlin/de/stustapay/api/models/StatInterval.kt
 src/main/kotlin/de/stustapay/api/models/SwitchTagPayload.kt
 src/main/kotlin/de/stustapay/api/models/Terminal.kt
 src/main/kotlin/de/stustapay/api/models/TerminalButton.kt
@@ -66,6 +68,7 @@ src/main/kotlin/de/stustapay/api/models/TerminalTillConfig.kt
 src/main/kotlin/de/stustapay/api/models/Ticket.kt
 src/main/kotlin/de/stustapay/api/models/TicketScanResult.kt
 src/main/kotlin/de/stustapay/api/models/TicketScanResultEntry.kt
+src/main/kotlin/de/stustapay/api/models/TimeseriesStatsQuery.kt
 src/main/kotlin/de/stustapay/api/models/TransferCashRegisterPayload.kt
 src/main/kotlin/de/stustapay/api/models/TransportAccountChangePayload.kt
 src/main/kotlin/de/stustapay/api/models/UpdateUserPayload.kt
