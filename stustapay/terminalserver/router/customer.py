@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextAccountService, ContextTillService
-from stustapay.core.schema.customer import Customer
+from stustapay.core.schema.account import Account
 
 router = APIRouter(
     prefix="/customer",
@@ -34,7 +34,7 @@ async def switch_tag(
     )
 
 
-@router.get("/{customer_tag_uid}", summary="Obtain a customer by tag uid", response_model=Customer)
+@router.get("/{customer_tag_uid}", summary="Obtain a customer by tag uid", response_model=Account)
 async def get_customer(
     token: CurrentAuthToken,
     customer_tag_uid: int,

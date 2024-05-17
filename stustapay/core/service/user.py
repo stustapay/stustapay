@@ -50,6 +50,44 @@ class UserLoginResult(BaseModel):
     available_nodes: list[NodeChoice] | None
 
 
+async def fetch_user(*, conn: Connection, node: Node, user_id: int) -> User:
+    user = await conn.fetch_maybe_one(
+        User, "select * from user_with_roles where id = $1 and node_id = any($2)", user_id, node.ids_to_root
+    )
+    if user is None:
+        raise NotFound(element_typ="user", element_id=user_id)
+
+    return user
+
+
+async def update_user(*, conn: Connection, node: Node, user_id: int, user: NewUser) -> User:
+    user_tag_id = None
+    if user.user_tag_uid is not None:
+        user_tag_id = await get_or_assign_user_tag(conn=conn, node=node, pin=user.user_tag_pin, uid=user.user_tag_uid)
+
+    curr_user = await fetch_user(conn=conn, node=node, user_id=user_id)
+    if curr_user.user_tag_id is None and user_tag_id is not None:
+        await conn.execute(
+            "insert into account(user_tag_id, type, node_id) values ($1, 'private', $2)", user_tag_id, node.id
+        )
+
+    row = await conn.fetchrow(
+        "update usr "
+        "set login = $2, description = $3, display_name = $4, user_tag_id = $5 "
+        "where id = $1 and node_id = $6 returning id",
+        user_id,
+        user.login,
+        user.description,
+        user.display_name,
+        user_tag_id,
+        node.id,
+    )
+    if row is None:
+        raise NotFound(element_typ="user", element_id=str(user_id))
+
+    return await fetch_user(conn=conn, node=node, user_id=user_id)
+
+
 async def list_user_roles(*, conn: Connection, node: Node) -> list[UserRole]:
     return await conn.fetch_many(
         UserRole, "select * from user_role_with_privileges where node_id = any($1) order by name", node.ids_to_root
@@ -70,11 +108,14 @@ async def list_assignable_roles_for_user_at_node(*, conn: Connection, node: Node
     allow_privileged_roles = Privilege.allow_privileged_role_assignment in privileges
     valid_roles = []
     for role in all_roles:
-        if len(set(role.privileges).difference(privileges)) > 0:
-            continue
         if role.is_privileged and not allow_privileged_roles:
             continue
+
+        if len(set(role.privileges).difference(privileges)) > 0 and not allow_privileged_roles:
+            continue
+
         valid_roles.append(role)
+
     return valid_roles
 
 
@@ -376,48 +417,17 @@ class UserService(DBService):
             User, "select * from user_with_roles where node_id = any($1) order by login", node.ids_to_root
         )
 
-    @staticmethod
-    async def _get_user(*, conn: Connection, node: Node, user_id: int) -> User:
-        user = await conn.fetch_maybe_one(
-            User, "select * from user_with_roles where id = $1 and node_id = any($2)", user_id, node.ids_to_root
-        )
-        if user is None:
-            raise NotFound(element_typ="user", element_id=user_id)
-        return user
-
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.user_management])
     async def get_user(self, *, conn: Connection, node: Node, user_id: int) -> Optional[User]:
-        return await self._get_user(conn=conn, node=node, user_id=user_id)
-
-    async def _update_user(self, *, conn: Connection, node: Node, user_id: int, user: NewUser) -> User:
-        user_tag_id = None
-        if user.user_tag_uid is not None:
-            user_tag_id = await get_or_assign_user_tag(
-                conn=conn, node=node, pin=user.user_tag_pin, uid=user.user_tag_uid
-            )
-        row = await conn.fetchrow(
-            "update usr "
-            "set login = $2, description = $3, display_name = $4, user_tag_id = $5 "
-            "where id = $1 and node_id = $6 returning id",
-            user_id,
-            user.login,
-            user.description,
-            user.display_name,
-            user_tag_id,
-            node.id,
-        )
-        if row is None:
-            raise NotFound(element_typ="user", element_id=str(user_id))
-
-        return await self._get_user(conn=conn, node=node, user_id=user_id)
+        return await fetch_user(conn=conn, node=node, user_id=user_id)
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])
     @requires_user([Privilege.user_management])
     async def update_user(self, *, conn: Connection, node: Node, user_id: int, user: UserWithoutId) -> Optional[User]:
-        return await self._update_user(conn=conn, node=node, user_id=user_id, user=user)
+        return await update_user(conn=conn, node=node, user_id=user_id, user=user)
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])
@@ -435,7 +445,7 @@ class UserService(DBService):
         )
         if ret is None:
             raise InvalidArgument("User not found")
-        return await self._get_user(conn=conn, node=node, user_id=user_id)
+        return await fetch_user(conn=conn, node=node, user_id=user_id)
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])

@@ -248,6 +248,14 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tills"],
       }),
+      removeFromTerminal: build.mutation<RemoveFromTerminalApiResponse, RemoveFromTerminalApiArg>({
+        query: (queryArg) => ({
+          url: `/tills/${queryArg.tillId}/remove-from-terminal`,
+          method: "POST",
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["tills"],
+      }),
       listTillLayouts: build.query<ListTillLayoutsApiResponse, ListTillLayoutsApiArg>({
         query: (queryArg) => ({ url: `/till-layouts`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["till-layouts"],
@@ -1039,6 +1047,11 @@ export type DeleteTillApiArg = {
 };
 export type ForceLogoutUserApiResponse = /** status 200 Successful Response */ any;
 export type ForceLogoutUserApiArg = {
+  tillId: number;
+  nodeId: number;
+};
+export type RemoveFromTerminalApiResponse = /** status 200 Successful Response */ any;
+export type RemoveFromTerminalApiArg = {
   tillId: number;
   nodeId: number;
 };
@@ -2637,6 +2650,7 @@ export const {
   useUpdateTillMutation,
   useDeleteTillMutation,
   useForceLogoutUserMutation,
+  useRemoveFromTerminalMutation,
   useListTillLayoutsQuery,
   useLazyListTillLayoutsQuery,
   useCreateTillLayoutMutation,

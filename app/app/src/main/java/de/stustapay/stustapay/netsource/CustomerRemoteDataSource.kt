@@ -2,13 +2,10 @@ package de.stustapay.stustapay.netsource
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
-import de.stustapay.api.infrastructure.HttpResponse
 import de.stustapay.api.models.Account
-import de.stustapay.api.models.Customer
 import de.stustapay.api.models.GrantVoucherPayload
 import de.stustapay.api.models.NewFreeTicketGrant
 import de.stustapay.api.models.SwitchTagPayload
-import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
@@ -17,7 +14,7 @@ import javax.inject.Inject
 class CustomerRemoteDataSource @Inject constructor(
     private val terminalApiAccessor: TerminalApiAccessor
 ) {
-    suspend fun getCustomer(id: BigInteger): Response<Customer> {
+    suspend fun getCustomer(id: BigInteger): Response<Account> {
         return terminalApiAccessor.execute { it.customer()?.getCustomer(id) }
     }
 
