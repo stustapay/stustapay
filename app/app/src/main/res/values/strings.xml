@@ -71,6 +71,7 @@
     <string name="management_vault_return">Return\nBag -> Vault</string>
 
     <string name="nfc_scan_prompt">📡 Scan a Chip</string>
+    <string name="nfc_scan_cashier_prompt">📡 Scan Cashier Chip</string>
 
     <string name="user_title">User</string>
     <string name="user_login">Login</string>

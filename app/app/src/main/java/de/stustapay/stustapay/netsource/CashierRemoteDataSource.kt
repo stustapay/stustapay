@@ -23,24 +23,24 @@ class CashierRemoteDataSource @Inject constructor(
         return terminalApiAccessor.execute { it.base()?.listCashRegisterStockings() }
     }
 
-    suspend fun equipCashier(tagId: ULong, registerId: ULong, stockingId: ULong): Response<Unit> {
+    suspend fun equipCashier(tagId: BigInteger, registerId: BigInteger, stockingId: BigInteger): Response<Unit> {
         return terminalApiAccessor.execute {
-            it.base()?.stockUpCashRegister(RegisterStockUpPayload(tagId.toBigInteger(), registerId.toBigInteger(), stockingId.toBigInteger()))
+            it.base()?.stockUpCashRegister(RegisterStockUpPayload(tagId, registerId, stockingId))
         }
     }
 
-    suspend fun bookTransport(cashierTagId: ULong, amount: Double): Response<Unit> {
+    suspend fun bookTransport(cashierTagId: BigInteger, amount: Double): Response<Unit> {
         return terminalApiAccessor.execute {
             it.cashier()?.changeCashRegisterBalance(
-                CashierAccountChangePayload(cashierTagId.toBigInteger(), amount)
+                CashierAccountChangePayload(cashierTagId, amount)
             )
         }
     }
 
-    suspend fun bookVault(orgaTagId: ULong, amount: Double): Response<Unit> {
+    suspend fun bookVault(orgaTagId: BigInteger, amount: Double): Response<Unit> {
         return terminalApiAccessor.execute {
             it.cashier()?.changeTransportAccountBalance(
-                TransportAccountChangePayload(orgaTagId.toBigInteger(), amount)
+                TransportAccountChangePayload(orgaTagId, amount)
             )
         }
     }

@@ -17,15 +17,15 @@ class CashierRepository @Inject constructor(
         return cashierRemoteDataSource.getCashierStockings()
     }
 
-    suspend fun equipCashier(tagid: ULong, registerId: ULong, stockingId: ULong): Response<Unit> {
+    suspend fun equipCashier(tagid: BigInteger, registerId: BigInteger, stockingId: BigInteger): Response<Unit> {
         return cashierRemoteDataSource.equipCashier(tagid, registerId, stockingId)
     }
 
-    suspend fun bookTransport(cashierTagId: ULong, amount: Double): Response<Unit> {
+    suspend fun bookTransport(cashierTagId: BigInteger, amount: Double): Response<Unit> {
         return cashierRemoteDataSource.bookTransport(cashierTagId, amount)
     }
 
-    suspend fun bookVault(orgaTagId: ULong, amount: Double): Response<Unit> {
+    suspend fun bookVault(orgaTagId: BigInteger, amount: Double): Response<Unit> {
         return cashierRemoteDataSource.bookVault(orgaTagId, amount)
     }
 

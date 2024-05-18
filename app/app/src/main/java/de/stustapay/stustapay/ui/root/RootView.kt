@@ -4,21 +4,20 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.stustapay.stustapay.ui.cashiermanagement.CashierManagementView
-import de.stustapay.stustapay.ui.cashier.CashierStatusView
+import de.stustapay.libssp.util.SysUiController
+import de.stustapay.stustapay.ui.account.AccountView
+import de.stustapay.stustapay.ui.cashier.CashierView
 import de.stustapay.stustapay.ui.debug.DebugView
 import de.stustapay.stustapay.ui.history.SaleHistoryView
 import de.stustapay.stustapay.ui.nav.NavChangeHandler
 import de.stustapay.stustapay.ui.nav.navigateDestination
+import de.stustapay.stustapay.ui.payinout.CashInOutView
+import de.stustapay.stustapay.ui.reward.RewardView
 import de.stustapay.stustapay.ui.sale.SaleView
 import de.stustapay.stustapay.ui.settings.SettingsView
-import de.stustapay.stustapay.ui.account.AccountView
-import de.stustapay.stustapay.ui.ticket.TicketView
-import de.stustapay.stustapay.ui.payinout.CashInOutView
-import de.stustapay.stustapay.ui.user.UserView
-import de.stustapay.stustapay.ui.reward.RewardView
-import de.stustapay.libssp.util.SysUiController
 import de.stustapay.stustapay.ui.stats.StatsView
+import de.stustapay.stustapay.ui.ticket.TicketView
+import de.stustapay.stustapay.ui.user.UserView
 
 
 @Composable
@@ -36,13 +35,11 @@ fun RootView(uictrl: SysUiController? = null) {
         startDestination = RootNavDests.startpage.route,
     ) {
         composable(RootNavDests.startpage.route) {
-            StartpageView(
-                navigateTo = { navTo ->
-                    navController.navigateDestination(
-                        navTo
-                    )
-                }
-            )
+            StartpageView(navigateTo = { navTo ->
+                navController.navigateDestination(
+                    navTo
+                )
+            })
         }
         composable(RootNavDests.ticket.route) {
             TicketView(leaveView = { navController.navigateUp() })
@@ -74,11 +71,8 @@ fun RootView(uictrl: SysUiController? = null) {
         composable(RootNavDests.rewards.route) {
             RewardView(leaveView = { navController.navigateUp() })
         }
-        composable(RootNavDests.cashierManagement.route) {
-            CashierManagementView(leaveView = { navController.navigateUp() })
-        }
-        composable(RootNavDests.cashierStatus.route) {
-            CashierStatusView(leaveView = { navController.navigateUp() })
+        composable(RootNavDests.cashier.route) {
+            CashierView(leaveView = { navController.navigateUp() })
         }
     }
 }

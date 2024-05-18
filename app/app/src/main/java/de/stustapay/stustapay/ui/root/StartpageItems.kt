@@ -52,13 +52,7 @@ val startpageItems = listOf(
     StartpageItem(
         icon = Icons.Filled.ThumbUp,
         label = R.string.management_title,
-        navDestination = RootNavDests.cashierManagement,
-        canAccess = { u, _ -> Access.canManageCashiers(u) }
-    ),
-    StartpageItem(
-        icon = Icons.Filled.Info,
-        label = R.string.cashier_title,
-        navDestination = RootNavDests.cashierStatus,
+        navDestination = RootNavDests.cashier,
         canAccess = { u, t -> Access.canManageCashiers(u) or (t.till?.allowCashOut == true) or (t.till?.allowTopUp == true) or (t.till?.allowTicketSale == true) }
     )
 )

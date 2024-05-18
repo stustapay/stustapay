@@ -15,7 +15,7 @@ class TerminalLoginState(
 
     fun title(): TillName {
         return if (terminal is TerminalConfigState.Success) {
-            TillName(terminal.config.name, terminal.config.till?.profileName)
+            TillName(terminal.config.till?.name.orEmpty(), terminal.config.till?.profileName)
         } else {
             TillName("StuStaPay")
         }

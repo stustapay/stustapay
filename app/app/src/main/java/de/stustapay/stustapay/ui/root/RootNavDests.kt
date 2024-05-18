@@ -17,6 +17,5 @@ object RootNavDests : NavDestinations() {
     val history = NavDest("history")
     val stats = NavDest("stats")
     val rewards = NavDest("rewards")
-    val cashierManagement = NavDest("cashierManagement")
-    val cashierStatus = NavDest("cashierStatus")
+    val cashier = NavDest("cashier")
 }
