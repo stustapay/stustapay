@@ -80,7 +80,7 @@ class UserRepository @Inject constructor(
     suspend fun create(
         login: String,
         displayName: String,
-        userTag: UserTag,
+        userTag: NfcTag,
         roles: List<BigInteger>,
         description: String
     ): UserCreateState {
@@ -89,6 +89,7 @@ class UserRepository @Inject constructor(
                 login = login,
                 displayName = displayName,
                 userTagUid = userTag.uid,
+                userTagPin = userTag.pin,
                 description = description,
                 roleIds = roles
             )

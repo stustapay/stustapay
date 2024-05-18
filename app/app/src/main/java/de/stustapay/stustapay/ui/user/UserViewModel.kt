@@ -119,11 +119,15 @@ class UserViewModel @Inject constructor(
     }
 
     suspend fun create(
-        login: String, displayName: String, tag: ULong, roles: List<BigInteger>, description: String
+        login: String,
+        displayName: String,
+        tag: NfcTag,
+        roles: List<BigInteger>,
+        description: String
     ) {
         _status.update { UserRequestState.Fetching }
         when (val res = userRepository.create(
-            login, displayName, UserTag(tag.toBigInteger()), roles, description
+            login, displayName, tag, roles, description
         )) {
             is UserCreateState.Created -> {
                 _status.update { UserRequestState.Done }

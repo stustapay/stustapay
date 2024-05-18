@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.common.tagIDtoString
@@ -49,8 +50,9 @@ fun UserCreateView(viewModel: UserViewModel) {
     val scope = rememberCoroutineScope()
     val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
-    var currentTag: ULong? by remember { mutableStateOf(null) }
+    var currentTagState: NfcTag? by remember { mutableStateOf(null) }
 
+    val currentTag = currentTagState;
     if (currentTag == null) {
         Scaffold(content = { padding ->
             Box(
@@ -60,7 +62,7 @@ fun UserCreateView(viewModel: UserViewModel) {
             ) {
                 NfcScanCard(keepScanning = true, onScan = { tag ->
                     scope.launch {
-                        currentTag = tag.uid.ulongValue()
+                        currentTagState = tag
                     }
                 })
             }
@@ -93,6 +95,7 @@ fun UserCreateView(viewModel: UserViewModel) {
             }
         })
     } else {
+        currentTag.uid
         Scaffold(content = { padding ->
             Box(modifier = Modifier.padding(padding)) {
                 Column(
@@ -101,7 +104,7 @@ fun UserCreateView(viewModel: UserViewModel) {
                         .padding(10.dp)
                 ) {
                     ListItem(text = { Text(stringResource(R.string.tag_uid)) },
-                        secondaryText = { Text(tagIDtoString(currentTag!!)) })
+                        secondaryText = { Text(tagIDtoString(currentTag.uid.ulongValue())) })
 
                     Divider()
                     Spacer(modifier = Modifier.height(10.dp))
@@ -216,7 +219,7 @@ fun UserCreateView(viewModel: UserViewModel) {
                         viewModel.create(
                             login,
                             displayName,
-                            currentTag!!,
+                            currentTag,
                             roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id },
                             description
                         )
