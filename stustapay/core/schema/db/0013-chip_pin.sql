@@ -21,11 +21,11 @@ alter table user_tag drop column serial;
 alter table user_tag alter column pin set not null;
 
 -- 5. add back foreign keys
-alter table usr add column user_tag_id bigint references user_tag(id);
+alter table usr add column user_tag_id bigint references user_tag(id) unique;
 update usr set user_tag_id = u.id from user_tag u join usr usr2 on u.uid = usr2.user_tag_uid where usr.user_tag_uid = usr2.user_tag_uid;
 alter table usr drop user_tag_uid;
 
-alter table account add column user_tag_id bigint references user_tag(id);
+alter table account add column user_tag_id bigint references user_tag(id) unique;
 update account set user_tag_id = u.id from user_tag u join account a2 on u.uid = a2.user_tag_uid where account.user_tag_uid = a2.user_tag_uid;
 alter table account drop user_tag_uid;
 

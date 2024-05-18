@@ -27,6 +27,7 @@ class UserTagSecret(BaseModel):
 
 class TerminalSecrets(BaseModel):
     sumup_affiliate_key: str
+    sumup_api_key: str
     user_tag_secret: UserTagSecret
 
 

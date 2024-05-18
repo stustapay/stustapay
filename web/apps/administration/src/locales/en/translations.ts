@@ -103,7 +103,7 @@ export const translations = {
     create: "Create new user tags for this event",
     createButton: "Create new tags",
     uploadPinCsv: "Upload CSV with tag pins",
-    uploadPinCsvTooltip:
+    uploadPinCsvDescription:
       'Csv with one column "pin" containing the string encoded pins of all tags which are to be created',
     willCreate: "Will create {{nTags}} new user tags",
     firstNTags: "The following are the first {{actualNum}} tags which will be created",

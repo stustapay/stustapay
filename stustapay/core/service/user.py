@@ -74,12 +74,6 @@ async def update_user(*, conn: Connection, node: Node, user_id: int, user: NewUs
     if user.user_tag_uid is not None:
         user_tag_id = await get_or_assign_user_tag(conn=conn, node=node, pin=user.user_tag_pin, uid=user.user_tag_uid)
 
-    curr_user = await fetch_user(conn=conn, node=node, user_id=user_id)
-    if curr_user.user_tag_id is None and user_tag_id is not None:
-        await conn.execute(
-            "insert into account(user_tag_id, type, node_id) values ($1, 'private', $2)", user_tag_id, node.id
-        )
-
     row = await conn.fetchrow(
         "update usr "
         "set login = $2, description = $3, display_name = $4, user_tag_id = $5 "

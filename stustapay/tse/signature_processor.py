@@ -52,7 +52,9 @@ class SignatureProcessor:
 
             # initialize the TSE wrappers
             async with self.db_pool.acquire() as conn:
-                tses_in_db = await conn.fetch_many(Tse, "select * from tse")
+                tses_in_db = await conn.fetch_many(
+                    Tse, "select * from tse t join node n on t.node_id = n.id where not n.read_only"
+                )
                 for tse_in_db in tses_in_db:
                     factory = get_tse_handler(tse_in_db)
                     tse = TSEWrapper(name=tse_in_db.name, factory_function=factory)

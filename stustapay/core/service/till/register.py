@@ -199,7 +199,7 @@ class TillRegisterService(DBService):
         self, *, conn: Connection, current_till: Till, hide_assigned_registers=False
     ) -> list[CashRegister]:
         # TODO: TREE visibility
-        node = await fetch_node(conn=conn, node_id=current_till.id)
+        node = await fetch_node(conn=conn, node_id=current_till.node_id)
         assert node is not None
         return await _list_cash_registers(conn=conn, node=node, hide_assigned_registers=hide_assigned_registers)
 
