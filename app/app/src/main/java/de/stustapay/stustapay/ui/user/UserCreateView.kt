@@ -37,12 +37,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
+import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
+import de.stustapay.stustapay.ui.chipscan.NfcScanState
+import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun UserCreateView(viewModel: UserViewModel) {
+fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var roles by remember { mutableStateOf(listOf<ULong>()) }
@@ -51,6 +54,7 @@ fun UserCreateView(viewModel: UserViewModel) {
     val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     var currentTagState: NfcTag? by remember { mutableStateOf(null) }
+    val nfcScanState = rememberNfcScanDialogState()
 
     val _firstName = firstName.lowercase().replace(" ", "")
     val _lastName = lastName.lowercase().replace(" ", "")
@@ -58,20 +62,24 @@ fun UserCreateView(viewModel: UserViewModel) {
     val displayName =
         _firstName.replaceFirstChar { it.uppercase() } + " " + _lastName.replaceFirstChar { it.uppercase() }
 
+    NfcScanDialog(state = nfcScanState, onScan = { tag ->
+        scope.launch {
+            if (viewModel.checkCreate(tag)) {
+                goToUserDisplayView()
+            } else {
+                currentTagState = tag
+            }
+        }
+    })
+
     val currentTag = currentTagState;
     if (currentTag == null) {
+        nfcScanState.open()
+
         Scaffold(content = { padding ->
             Box(
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(20.dp)
-            ) {
-                NfcScanCard(keepScanning = true, onScan = { tag ->
-                    scope.launch {
-                        currentTagState = tag
-                    }
-                })
-            }
+                modifier = Modifier.padding(padding)
+            ) {}
         }, bottomBar = {
             Column {
                 Spacer(modifier = Modifier.height(10.dp))
@@ -101,7 +109,8 @@ fun UserCreateView(viewModel: UserViewModel) {
             }
         })
     } else {
-        currentTag.uid
+        nfcScanState.close()
+
         Scaffold(content = { padding ->
             Box(modifier = Modifier.padding(padding)) {
                 Column(
@@ -153,7 +162,8 @@ fun UserCreateView(viewModel: UserViewModel) {
                     ) {
                         var expanded by remember { mutableStateOf(false) }
 
-                        ExposedDropdownMenuBox(expanded = expanded,
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
                             onExpandedChange = { expanded = it }) {
                             OutlinedTextField(
                                 label = { Text(stringResource(R.string.user_roles)) },
@@ -169,7 +179,8 @@ fun UserCreateView(viewModel: UserViewModel) {
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                             )
-                            ExposedDropdownMenu(expanded = expanded,
+                            ExposedDropdownMenu(
+                                expanded = expanded,
                                 onDismissRequest = { expanded = false }) {
                                 for (r in availableRoles) {
                                     if (!r.isPrivileged!!) {
