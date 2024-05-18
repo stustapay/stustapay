@@ -12,7 +12,7 @@ import { toast } from "react-toastify";
 import { EventSettings } from "../event-settings";
 import { NodeSettingsSchema, ObjectTypeSchema, type NodeSettingsSchemaType } from "../types";
 
-const NodeConfiguration: React.FC = () => {
+export const NodeConfiguration: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
@@ -47,7 +47,12 @@ const NodeConfiguration: React.FC = () => {
         <Form>
           <Stack spacing={2}>
             <FormTextField label={t("settings.general.name")} name="name" formik={formik} />
-            <FormTextField label={t("settings.general.description")} name="description" formik={formik} />
+            <FormTextField
+              label={t("settings.general.description")}
+              name="description"
+              multiline={true}
+              formik={formik}
+            />
             <FormSelect
               label={t("settings.general.forbidden_objects_at_node")}
               name="forbidden_objects_at_node"

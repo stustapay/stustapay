@@ -108,7 +108,9 @@ class CustomerService(DBService):
     async def get_orders_with_bon(self, *, conn: Connection, current_customer: Customer) -> list[OrderWithBon]:
         return await conn.fetch_many(
             OrderWithBon,
-            "select * from order_value_with_bon where customer_account_id = $1 order by booked_at DESC",
+            "select * from order_value_prefiltered("
+            "   (select array_agg(o.id) from ordr o where customer_account_id = $1)"
+            ") o left join bon b ON o.id = b.id order by o.booked_at desc",
             current_customer.id,
         )
 

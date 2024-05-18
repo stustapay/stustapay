@@ -12,7 +12,7 @@ import {
   useListUsersQuery,
   useRemoveFromTerminalMutation,
 } from "@/api";
-import { CashierRoutes, TerminalRoutes, TillProfileRoutes, TillRoutes } from "@/app/routes";
+import { CashierRoutes, TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
 import { ListItemLink } from "@/components";
 import { OrderTable } from "@/components/features";
 import { DetailLayout } from "@/components/layouts";
@@ -155,9 +155,15 @@ export const TillDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("till.description")} secondary={till.description} />
           </ListItem>
-          <ListItem>
-            <ListItemText primary={t("till.tseSerial")} secondary={till.tse_serial} />
-          </ListItem>
+          {till.tse_id != null ? (
+            <ListItemLink to={TseRoutes.detail(till.tse_id)}>
+              <ListItemText primary={t("till.tseId")} secondary={till.tse_id} />
+            </ListItemLink>
+          ) : (
+            <ListItem>
+              <ListItemText primary={t("till.tseId")} secondary="No tse" />
+            </ListItem>
+          )}
           <ListItemLink to={TillProfileRoutes.detail(till.active_profile_id)}>
             <ListItemText primary={t("till.profile")} secondary={renderProfile(till.active_profile_id)} />
           </ListItemLink>

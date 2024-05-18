@@ -231,7 +231,7 @@ async def get_daily_stats(*, hourly_stats: Timeseries, event: PublicEventSetting
         revenue=0,
     )
     for hourly_stat in hourly_stats.intervals:
-        if hourly_stat.from_time > next_day:
+        while hourly_stat.from_time > next_day:
             stats.append(current_interval)
             current_interval = StatInterval(
                 from_time=next_day,

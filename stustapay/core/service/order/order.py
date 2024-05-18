@@ -1342,7 +1342,7 @@ class OrderService(DBService):
         if customer_account_id is not None:
             return await conn.fetch_many(
                 Order,
-                "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where customer_account_id = $1)) ",
+                "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where customer_account_id = $1))",
                 customer_account_id,
             )
         else:

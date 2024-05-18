@@ -37,6 +37,7 @@ export const translations = {
   userToRoles: "User to Roles",
   common: {
     id: "ID",
+    node: "Node",
     definedAtNode: "Node",
     loadingError: "Errors while loading page",
     configLoadFailed: "Something went wrong while loading the page configuration: {{what}}",

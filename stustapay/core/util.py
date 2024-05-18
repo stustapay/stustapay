@@ -16,7 +16,7 @@ def _to_string_nullable(t) -> Optional[str]:
     return str(t) if t is not None else None
 
 
-def log_setup(setting: int, default=1):
+def log_setup(setting: int, default=2):
     """
     Perform setup for the logger.
     Run before any logging.log thingy is called.

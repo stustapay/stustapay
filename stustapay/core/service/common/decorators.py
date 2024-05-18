@@ -409,14 +409,16 @@ def requires_terminal(
                 )
 
                 if user_privileges is not None:
+                    stringified_privileges = ", ".join(map(lambda x: x.name, user_privileges))
+
                     if till.active_user_id is None or logged_in_user is None:
                         raise AccessDenied(
                             f"no user is logged into this terminal but "
-                            f"the following privileges are required {user_privileges}"
+                            f"the following privileges are required {stringified_privileges}"
                         )
 
                     if not any([p in user_privileges for p in logged_in_user.privileges]):
-                        raise AccessDenied(f"user does not have any of the required privileges: {user_privileges}")
+                        raise AccessDenied(f"user does not have any of the required privileges: {stringified_privileges}")
 
                 if not func_is_read_only and node.read_only:
                     raise NodeIsReadOnly(f"{node.name} is read only")
