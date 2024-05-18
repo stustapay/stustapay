@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -22,10 +23,10 @@ fun TicketListItem(scannedTicket: ScannedTicket) {
         trailing = {
             Text(
                 "%.2f€".format(scannedTicket.ticket.price),
-                style = MaterialTheme.typography.h4,
+                style = MaterialTheme.typography.h5,
             )
         },
-        secondaryText = { Text(scannedTicket.tag.toString()) },
+        secondaryText = { Text(scannedTicket.tag.pin.orEmpty(), fontSize = 12.sp) },
         icon = {
             Icon(
                 Icons.Filled.DateRange,
