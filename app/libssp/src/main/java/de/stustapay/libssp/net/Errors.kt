@@ -14,6 +14,7 @@ suspend inline fun <reified T> transformResponse(response: HttpResponse): Respon
         in 200..299 -> Response.OK(response.body())
         in 300..399 -> Response.Error.Server("unhandled redirect", response.status.value)
         400 -> parseServiceException(response)
+        401 -> Response.Error.Access(parseException(response))
         403 -> Response.Error.Access(parseException(response))
         404 -> Response.Error.NotFound(parseDetailException(response))
         500 -> Response.Error.Server(parseException(response), response.status.value)
@@ -101,6 +102,17 @@ suspend fun parseException(response: HttpResponse): String {
             )
 
             val excContent = response.body() as Internal
+            excContent.message.ifEmpty { excContent.id }
+        }
+
+        "unauthorized" -> {
+            @Serializable
+            data class Unauthorized(
+                val id: String,
+                val message: String,
+            )
+
+            val excContent = response.body() as Unauthorized
             excContent.message.ifEmpty { excContent.id }
         }
 
