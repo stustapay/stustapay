@@ -58,12 +58,12 @@ class RoleToNode(BaseModel):
     role_id: int
 
 
-class NewUserToRole(BaseModel):
+class NewUserToRoles(BaseModel):
     user_id: int
-    role_id: int
+    role_ids: list[int]
 
 
-class UserToRole(NewUserToRole):
+class UserToRoles(NewUserToRoles):
     node_id: int
 
 

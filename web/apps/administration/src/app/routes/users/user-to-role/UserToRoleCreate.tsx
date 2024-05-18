@@ -1,20 +1,20 @@
-import { NewUserToRole, useAssociatedUserToRoleMutation } from "@/api";
+import { NewUserToRoles, useUpdateUserToRolesMutation } from "@/api";
 import { UserToRoleRoutes } from "@/app/routes";
 import { CreateLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { withPrivilegeGuard } from "@/app/layout";
 import { z } from "zod";
 import { FormikProps } from "formik";
 import { UserSelect, RoleSelect } from "@/components/features";
-import { withPrivilegeGuard } from "@/app/layout";
 
 const NewUserToRoleSchema = z.object({
   user_id: z.number().int(),
-  role_id: z.number().int(),
+  role_ids: z.array(z.number().int()),
 });
 
-const UserToRoleCreateForm: React.FC<FormikProps<NewUserToRole>> = ({ values, errors, setFieldValue, touched }) => {
+const UserToRoleCreateForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, errors, setFieldValue, touched }) => {
   const { t } = useTranslation();
   return (
     <>
@@ -27,24 +27,24 @@ const UserToRoleCreateForm: React.FC<FormikProps<NewUserToRole>> = ({ values, er
       />
       <RoleSelect
         label={t("user.roles")}
-        value={values.role_id}
-        onChange={(val) => setFieldValue("role_id", val)}
-        error={touched.role_id && !!errors.role_id}
-        helperText={(touched.role_id && errors.role_id) as string}
+        value={values.role_ids}
+        onChange={(val) => setFieldValue("role_ids", val)}
+        error={touched.role_ids && !!errors.role_ids}
+        helperText={(touched.role_ids && errors.role_ids) as string}
       />
     </>
   );
 };
 
-const initialValues: NewUserToRole = {
+const initialValues: NewUserToRoles = {
   user_id: undefined as unknown as number, // to circument typescript,
-  role_id: undefined as unknown as number, // to circument typescript,
+  role_ids: [],
 };
 
 export const UserToRoleCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const [createUserToRole] = useAssociatedUserToRoleMutation();
+  const [createUserToRole] = useUpdateUserToRolesMutation();
 
   return (
     <CreateLayout
@@ -53,7 +53,7 @@ export const UserToRoleCreate: React.FC = withPrivilegeGuard("node_administratio
       validationSchema={NewUserToRoleSchema}
       submitLabel={t("add")}
       successRoute={UserToRoleRoutes.list()}
-      onSubmit={(u) => createUserToRole({ nodeId: currentNode.id, newUserToRole: u })}
+      onSubmit={(u) => createUserToRole({ nodeId: currentNode.id, newUserToRoles: u })}
       form={UserToRoleCreateForm}
     />
   );

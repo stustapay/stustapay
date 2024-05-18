@@ -68,7 +68,7 @@ export const TillDetail: React.FC = () => {
     });
   };
 
-  if (till === undefined) {
+  if (till === undefined || terminals === undefined) {
     return <Loading />;
   }
 
@@ -98,18 +98,7 @@ export const TillDetail: React.FC = () => {
     return profile.name;
   };
 
-  const renderTerminal = (id?: number) => {
-    if (!terminals || id == null) {
-      return "";
-    }
-
-    const terminal = selectTerminalById(terminals, id);
-    if (!terminal) {
-      return "";
-    }
-
-    return terminal.name;
-  };
+  const terminal = till.terminal_id != null ? selectTerminalById(terminals, till.terminal_id) : undefined;
 
   const openConfirmLogoutDialog = () => {
     openModal({
@@ -123,10 +112,13 @@ export const TillDetail: React.FC = () => {
   };
 
   const openConfirmRemoveFromTerminalDialog = () => {
+    if (!terminal) {
+      return;
+    }
     openModal({
       type: "confirm",
       title: t("till.removeFromTerminal"),
-      content: t("till.removeFromTerminalDescription"),
+      content: t("till.removeFromTerminalDescription", { terminalName: terminal.name }),
       onConfirm: () => {
         removeFromTerminal({ nodeId: currentNode.id, tillId: Number(tillId) });
       },
@@ -169,9 +161,9 @@ export const TillDetail: React.FC = () => {
           <ListItemLink to={TillProfileRoutes.detail(till.active_profile_id)}>
             <ListItemText primary={t("till.profile")} secondary={renderProfile(till.active_profile_id)} />
           </ListItemLink>
-          {till.terminal_id != null && (
+          {terminal && (
             <ListItemLink to={TerminalRoutes.detail(till.terminal_id)}>
-              <ListItemText primary={t("till.terminal")} secondary={renderTerminal(till.terminal_id)} />
+              <ListItemText primary={t("till.terminal")} secondary={terminal.name} />
             </ListItemLink>
           )}
           {till.active_user_id != null && (

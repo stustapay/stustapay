@@ -124,6 +124,11 @@ class TillService(DBService):
         if result is None:
             raise InvalidArgument("till does not exist")
 
+        await conn.execute(
+            "update till set active_user_id = null, active_user_role_id = null where id = $1",
+            till_id,
+        )
+
     @with_db_transaction(read_only=True)
     @requires_terminal()
     async def check_user_login(

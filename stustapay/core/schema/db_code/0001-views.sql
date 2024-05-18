@@ -42,6 +42,15 @@ create view user_with_tag as
         usr
         left join user_tag ut on usr.user_tag_id = ut.id;
 
+create view user_to_roles_aggregated as
+    select
+        utr.user_id,
+        utr.node_id,
+        array_agg(utr.role_id) as role_ids
+    from
+        user_to_role utr
+    group by utr.user_id, utr.node_id;
+
 create view user_with_roles as
     select
         u.*,

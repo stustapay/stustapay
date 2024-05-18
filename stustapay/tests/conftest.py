@@ -38,7 +38,7 @@ from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     NewUser,
     NewUserRole,
-    NewUserToRole,
+    NewUserToRoles,
     Privilege,
     RoleToNode,
     User,
@@ -366,10 +366,10 @@ async def event_admin_user(
         ),
         password=password,
     )
-    await user_service.associate_user_to_role(
+    await user_service.update_user_to_roles(
         token=global_admin_token,
         node_id=event_node.id,
-        new_user_to_role=NewUserToRole(user_id=admin_user.id, role_id=ADMIN_ROLE_ID),
+        user_to_roles=NewUserToRoles(user_id=admin_user.id, role_ids=[ADMIN_ROLE_ID]),
     )
     return admin_user, password
 
@@ -436,7 +436,8 @@ async def cashier(
         conn=db_connection,
         node=event_node,
         current_user_id=admin.id,
-        new_user_to_role=NewUserToRole(user_id=cashier_user.id, role_id=cashier_role.id),
+        user_id=cashier_user.id,
+        role_id=cashier_role.id,
     )
     updated_cashier = await user_service.get_user(
         token=event_admin_token, node_id=event_node.id, user_id=cashier_user.id

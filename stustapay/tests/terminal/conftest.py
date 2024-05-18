@@ -22,7 +22,7 @@ from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     NewUser,
     NewUserRole,
-    NewUserToRole,
+    NewUserToRoles,
     Privilege,
     User,
     UserRole,
@@ -32,9 +32,9 @@ from stustapay.core.service.account import AccountService, get_system_account_fo
 from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
+from stustapay.core.service.user_tag import get_or_assign_user_tag
 from stustapay.framework.database import Connection
 
-from ...core.service.user_tag import get_or_assign_user_tag
 from ..conftest import Cashier, CreateRandomUserTag
 from ..conftest import UserTag as TestUserTag
 
@@ -256,15 +256,12 @@ async def finanzorga(
             display_name="Finanzorga",
         ),
     )
-    await user_service.associate_user_to_role(
+    await user_service.update_user_to_roles(
         token=event_admin_token,
         node_id=event_node.id,
-        new_user_to_role=NewUserToRole(role_id=finanzorga_role.id, user_id=finanzorga_user.id),
-    )
-    await user_service.associate_user_to_role(
-        token=event_admin_token,
-        node_id=event_node.id,
-        new_user_to_role=NewUserToRole(role_id=cashier.cashier_role.id, user_id=finanzorga_user.id),
+        user_to_roles=NewUserToRoles(
+            role_ids=[cashier.cashier_role.id, finanzorga_role.id], user_id=finanzorga_user.id
+        ),
     )
     updated_user = await user_service.get_user(
         token=event_admin_token, node_id=event_node.id, user_id=finanzorga_user.id
