@@ -24,9 +24,9 @@ class NfcRepository @Inject constructor(
 ) {
     // nfc communication secret keys
     private val uidRetrKey =
-        MutableStateFlow<BitVector?>(0x00.bv + 0x10.bv + 0x20.bv + 0x30.bv + 0x40.bv + 0x50.bv + 0x60.bv + 0x70.bv + 0x80.bv + 0x90.bv + 0xa0.bv + 0xb0.bv + 0xc0.bv + 0xd0.bv + 0xe0.bv + 0xf0.bv)
+        MutableStateFlow<BitVector?>("00102030405060708090a0b0c0d0e0f0".decodeHex())
     private val dataProtKey =
-        MutableStateFlow<BitVector?>(0x00.bv + 0x01.bv + 0x02.bv + 0x03.bv + 0x04.bv + 0x05.bv + 0x06.bv + 0x07.bv + 0x08.bv + 0x09.bv + 0x0a.bv + 0x0b.bv + 0x0c.bv + 0x0d.bv + 0x0e.bv + 0x0f.bv)
+        MutableStateFlow<BitVector?>("000102030405060708090a0b0c0d0e0f".decodeHex())
 
     fun setTagKeys(secrets: UserTagSecret) {
         uidRetrKey.update { secrets.key1.decodeHex() }
