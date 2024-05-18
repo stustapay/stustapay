@@ -242,7 +242,6 @@ alter table usr alter column node_id drop default;
 alter table user_to_role add column node_id bigint not null references node(id) default 1;
 alter table user_to_role alter column node_id drop default;
 
--- TODO: add synthetic numeric primary key to tax table
 alter table tax rename to tax_rate;
 alter table tax_rate add column id bigint not null generated always as identity (start with 1000) unique;
 

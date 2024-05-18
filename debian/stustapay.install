@@ -2,3 +2,4 @@ etc/config.yaml /usr/share/doc/stustapay/examples/
 etc/nginx/stustapay-admin /usr/share/doc/stustapay/examples/nginx/sites-available/
 etc/nginx/stustapay-customerportal /usr/share/doc/stustapay/examples/nginx/sites-available/
 etc/nginx/stustapay-terminalapi /usr/share/doc/stustapay/examples/nginx/sites-available/
+debian/systemd-exec-start-pre.sh /usr/lib/stustapay/
