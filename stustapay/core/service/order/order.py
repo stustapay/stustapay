@@ -1329,7 +1329,11 @@ class OrderService(DBService):
     @with_db_transaction(read_only=True)
     @requires_terminal([Privilege.can_book_orders])
     async def list_orders_terminal(self, *, conn: Connection, current_user: User) -> list[Order]:
-        return await conn.fetch_many(Order, "select * from order_value where cashier_id = $1", current_user.id)
+        return await conn.fetch_many(
+            Order,
+            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where cashier_id = $1))",
+            current_user.id,
+        )
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -1337,7 +1341,9 @@ class OrderService(DBService):
     async def list_orders(self, *, conn: Connection, customer_account_id: Optional[int] = None) -> list[Order]:
         if customer_account_id is not None:
             return await conn.fetch_many(
-                Order, "select * from order_value where customer_account_id = $1", customer_account_id
+                Order,
+                "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where customer_account_id = $1)) ",
+                customer_account_id,
             )
         else:
             return await conn.fetch_many(Order, "select * from order_value")
@@ -1346,7 +1352,11 @@ class OrderService(DBService):
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def list_orders_by_till(self, *, conn: Connection, till_id: int) -> list[Order]:
-        return await conn.fetch_many(Order, "select * from order_value where till_id = $1", till_id)
+        return await conn.fetch_many(
+            Order,
+            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where till_id = $1))",
+            till_id,
+        )
 
     @with_db_transaction(read_only=True)
     @requires_node()
