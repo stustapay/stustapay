@@ -3,7 +3,7 @@ Description=StuStaPay Bon Generator
 After=postgresql.service
 
 [Service]
-ExecStartPre=/usr/bin/chown -R root:stustapay /etc/stustapay; /usr/bin/chmod u=rw,g=r,o= /etc/stustapay/config.yaml
+ExecStartPre=/usr/lib/stustapay/systemd-exec-start-pre.sh
 ExecStart=/usr/lib/stustapay/venv/bin/stustapay bon
 User=stustapay
 Group=stustapay
