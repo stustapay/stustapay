@@ -3,8 +3,8 @@ import { useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
-export type RoleSelectProps = { value: number; onChange: (roleId: number) => void } & Omit<
-  SelectProps<UserRole, false>,
+export type RoleSelectProps = { value: number[]; onChange: (roleIds: number[]) => void } & Omit<
+  SelectProps<UserRole, true>,
   "options" | "formatOption" | "multiple" | "value" | "onChange"
 >;
 
@@ -21,19 +21,19 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({ value, onChange, ...prop
   );
 
   const handleChange = React.useCallback(
-    (role: UserRole | null) => {
-      if (role != null) {
-        onChange(role.id);
+    (roles: UserRole[] | null) => {
+      if (roles != null) {
+        onChange(roles.map((r) => r.id));
       }
     },
     [onChange]
   );
 
-  const selected = React.useMemo(() => roles.find((r) => r.id === value) ?? null, [roles, value]);
+  const selected = React.useMemo(() => roles.filter((r) => value.includes(r.id)) ?? null, [roles, value]);
 
   return (
     <Select
-      multiple={false}
+      multiple={true}
       value={selected}
       onChange={handleChange}
       options={roles}

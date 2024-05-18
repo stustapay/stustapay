@@ -27,7 +27,6 @@ from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
     NewUser,
     NewUserRole,
-    NewUserToRole,
     Privilege,
     RoleToNode,
     User,
@@ -115,13 +114,15 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
         conn=conn,
         node=event_node,
         current_user_id=global_admin.id,
-        new_user_to_role=NewUserToRole(user_id=node_admin.id, role_id=ADMIN_ROLE_ID),
+        user_id=node_admin.id,
+        role_id=ADMIN_ROLE_ID,
     )
     await associate_user_to_role(
         conn=conn,
         node=event_node,
         current_user_id=global_admin.id,
-        new_user_to_role=NewUserToRole(user_id=node_admin.id, role_id=finanzorga_role.id),
+        user_id=node_admin.id,
+        role_id=finanzorga_role.id,
     )
 
     finanzorga_tags = [NewUserTag(pin=secrets.token_hex(16), secret_id=secret.id) for _ in range(10, 16)]
@@ -142,7 +143,8 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
             conn=conn,
             node=event_node,
             current_user_id=global_admin.id,
-            new_user_to_role=NewUserToRole(user_id=finanzorga_user.id, role_id=finanzorga_role.id),
+            user_id=finanzorga_user.id,
+            role_id=finanzorga_role.id,
         )
 
     customer_tags = [NewUserTag(pin=secrets.token_hex(16), secret_id=secret.id) for _ in range(n_customer_tags)]
@@ -649,7 +651,8 @@ class DatabaseSetup:
                 conn=conn,
                 node=self.event_node,
                 current_user_id=admin_user.id,
-                new_user_to_role=NewUserToRole(user_id=cashier.id, role_id=cashier_role.id),
+                user_id=cashier.id,
+                role_id=cashier_role.id,
             )
 
     async def _create_tse(self, conn: Connection, admin_token: str):

@@ -7,6 +7,7 @@ export const addTagTypes = [
   "tax-rates",
   "auth",
   "tills",
+  "terminals",
   "till-layouts",
   "till-profiles",
   "till-buttons",
@@ -23,7 +24,6 @@ export const addTagTypes = [
   "payouts",
   "tree",
   "sumup",
-  "terminals",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -142,20 +142,11 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/user-to-roles`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["user-to-roles"],
       }),
-      associatedUserToRole: build.mutation<AssociatedUserToRoleApiResponse, AssociatedUserToRoleApiArg>({
+      updateUserToRoles: build.mutation<UpdateUserToRolesApiResponse, UpdateUserToRolesApiArg>({
         query: (queryArg) => ({
           url: `/user-to-roles`,
           method: "POST",
-          body: queryArg.newUserToRole,
-          params: { node_id: queryArg.nodeId },
-        }),
-        invalidatesTags: ["user-to-roles"],
-      }),
-      deassociatedUserToRole: build.mutation<DeassociatedUserToRoleApiResponse, DeassociatedUserToRoleApiArg>({
-        query: (queryArg) => ({
-          url: `/user-to-roles`,
-          method: "DELETE",
-          body: queryArg.newUserToRole,
+          body: queryArg.newUserToRoles,
           params: { node_id: queryArg.nodeId },
         }),
         invalidatesTags: ["user-to-roles"],
@@ -254,7 +245,7 @@ const injectedRtkApi = api
           method: "POST",
           params: { node_id: queryArg.nodeId },
         }),
-        invalidatesTags: ["tills"],
+        invalidatesTags: ["tills", "tills", "terminals"],
       }),
       listTillLayouts: build.query<ListTillLayoutsApiResponse, ListTillLayoutsApiArg>({
         query: (queryArg) => ({ url: `/till-layouts`, params: { node_id: queryArg.nodeId } }),
@@ -971,19 +962,14 @@ export type DeleteUserRoleApiArg = {
   userRoleId: number;
   nodeId: number;
 };
-export type ListUserToRoleApiResponse = /** status 200 Successful Response */ UserToRole[];
+export type ListUserToRoleApiResponse = /** status 200 Successful Response */ UserToRoles[];
 export type ListUserToRoleApiArg = {
   nodeId: number;
 };
-export type AssociatedUserToRoleApiResponse = /** status 200 Successful Response */ UserToRole;
-export type AssociatedUserToRoleApiArg = {
+export type UpdateUserToRolesApiResponse = /** status 200 Successful Response */ UserToRoles;
+export type UpdateUserToRolesApiArg = {
   nodeId: number;
-  newUserToRole: NewUserToRole;
-};
-export type DeassociatedUserToRoleApiResponse = /** status 200 Successful Response */ any;
-export type DeassociatedUserToRoleApiArg = {
-  nodeId: number;
-  newUserToRole: NewUserToRole;
+  newUserToRoles: NewUserToRoles;
 };
 export type ListTaxRatesApiResponse = /** status 200 Successful Response */ NormalizedListTaxRateInt;
 export type ListTaxRatesApiArg = {
@@ -1622,14 +1608,14 @@ export type UpdateUserRolePrivilegesPayload = {
   is_privileged: boolean;
   privileges: Privilege[];
 };
-export type UserToRole = {
+export type UserToRoles = {
   user_id: number;
-  role_id: number;
+  role_ids: number[];
   node_id: number;
 };
-export type NewUserToRole = {
+export type NewUserToRoles = {
   user_id: number;
-  role_id: number;
+  role_ids: number[];
 };
 export type TaxRate = {
   name: string;
@@ -2630,8 +2616,7 @@ export const {
   useDeleteUserRoleMutation,
   useListUserToRoleQuery,
   useLazyListUserToRoleQuery,
-  useAssociatedUserToRoleMutation,
-  useDeassociatedUserToRoleMutation,
+  useUpdateUserToRolesMutation,
   useListTaxRatesQuery,
   useLazyListTaxRatesQuery,
   useCreateTaxRateMutation,

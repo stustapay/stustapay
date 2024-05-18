@@ -9,11 +9,11 @@ from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.user import (
     NewUser,
     NewUserRole,
-    NewUserToRole,
+    NewUserToRoles,
     Privilege,
     User,
     UserRole,
-    UserToRole,
+    UserToRoles,
 )
 
 router = APIRouter(
@@ -168,36 +168,22 @@ async def delete_user_role(user_role_id: int, token: CurrentAuthToken, user_serv
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@user_to_role_router.get("", response_model=list[UserToRole])
+@user_to_role_router.get("", response_model=list[UserToRoles])
 async def list_user_to_role(token: CurrentAuthToken, user_service: ContextUserService, node_id: int):
     return await user_service.list_user_to_roles(token=token, node_id=node_id)
 
 
-@user_to_role_router.post("", response_model=UserToRole)
-async def associated_user_to_role(
-    payload: NewUserToRole,
+@user_to_role_router.post("", response_model=UserToRoles)
+async def update_user_to_roles(
+    payload: NewUserToRoles,
     token: CurrentAuthToken,
     user_service: ContextUserService,
     node_id: int,
 ):
-    return await user_service.associate_user_to_role(
+    return await user_service.update_user_to_roles(
         token=token,
         node_id=node_id,
-        new_user_to_role=payload,
-    )
-
-
-@user_to_role_router.delete("")
-async def deassociated_user_to_role(
-    payload: NewUserToRole,
-    token: CurrentAuthToken,
-    user_service: ContextUserService,
-    node_id: int,
-):
-    return await user_service.deassociate_user_from_role(
-        token=token,
-        node_id=node_id,
-        user_to_role=payload,
+        user_to_roles=payload,
     )
 
 
