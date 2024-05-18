@@ -54,7 +54,7 @@ export const UserList: React.FC = () => {
       headerName: t("userLogin") as string,
       flex: 1,
       renderCell: (params) => (
-        <Link component={RouterLink} to={UserRoutes.detail(params.row.id)}>
+        <Link component={RouterLink} to={UserRoutes.detail(params.row.id, params.row.node_id)}>
           {params.row.login}
         </Link>
       ),
@@ -101,7 +101,7 @@ export const UserList: React.FC = () => {
                 icon={<EditIcon />}
                 color="primary"
                 label={t("edit")}
-                onClick={() => navigate(UserRoutes.edit(params.row.id))}
+                onClick={() => navigate(UserRoutes.edit(params.row.id, params.row.node_id))}
               />,
               <GridActionsCellItem
                 icon={<DeleteIcon />}

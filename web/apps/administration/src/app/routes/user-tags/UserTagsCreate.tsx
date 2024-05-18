@@ -19,7 +19,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
   styled,
 } from "@mui/material";
@@ -136,18 +135,18 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
         onChange={(secret) => secret && setFieldValue("secret_id", secret.id)}
       />
 
-      <Tooltip title={t("userTag.uploadPinCsvTooltip")}>
-        <Button
-          component="label"
-          role={undefined}
-          variant="contained"
-          startIcon={<CloudUploadIcon />}
-          sx={{ maxWidth: 400 }}
-        >
-          {t("userTag.uploadPinCsv")}
-          <VisuallyHiddenInput type="file" onChange={(event) => handleCsvUpload(event)} />
-        </Button>
-      </Tooltip>
+      <Typography>{t("userTag.uploadPinCsvDescription")}</Typography>
+
+      <Button
+        component="label"
+        role={undefined}
+        variant="contained"
+        startIcon={<CloudUploadIcon />}
+        sx={{ maxWidth: 400 }}
+      >
+        {t("userTag.uploadPinCsv")}
+        <VisuallyHiddenInput type="file" onChange={(event) => handleCsvUpload(event)} />
+      </Button>
 
       {values.tags.length > 0 && (
         <Box>

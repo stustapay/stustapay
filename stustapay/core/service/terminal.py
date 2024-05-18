@@ -148,7 +148,7 @@ class TerminalService(DBService):
         return True
 
     @with_db_transaction
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def logout_terminal(self, *, conn: Connection, current_terminal: CurrentTerminal):
         await conn.fetchval(
             "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1",
@@ -207,11 +207,15 @@ class TerminalService(DBService):
             "limit 1",
             node.ids_to_event_node,
         )
-        sumup_key = ""
+        sumup_affiliate_key = ""
+        sumup_api_key = ""
         if profile.allow_ticket_sale or profile.allow_top_up:
-            sumup_key = event_settings.sumup_affiliate_key
+            sumup_affiliate_key = event_settings.sumup_affiliate_key
+            sumup_api_key = event_settings.sumup_api_key
 
-        secrets = TerminalSecrets(sumup_affiliate_key=sumup_key, user_tag_secret=user_tag_secret)
+        secrets = TerminalSecrets(
+            sumup_affiliate_key=sumup_affiliate_key, sumup_api_key=sumup_api_key, user_tag_secret=user_tag_secret
+        )
 
         available_roles = []
         if till.active_user_id is not None:

@@ -11,7 +11,7 @@ import { UserRoleRoutes, UserRoutes, UserToRoleRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Link } from "@mui/material";
+import { Box, Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -74,7 +74,7 @@ export const UserToRoleList: React.FC = () => {
     }
 
     return (
-      <Link component={RouterLink} to={UserRoutes.detail(id)}>
+      <Link component={RouterLink} to={UserRoutes.detail(id, user.node_id)}>
         {getUserName(user)}
       </Link>
     );
@@ -86,13 +86,17 @@ export const UserToRoleList: React.FC = () => {
     }
     const roles = ids.map((id) => selectUserRoleById(userRoles, id));
 
-    return roles.map(
-      (role) =>
-        role != null && (
-          <Link key={role.id} component={RouterLink} to={UserRoleRoutes.detail(role.id)}>
-            {role.name}
-          </Link>
-        )
+    return (
+      <Box sx={{ display: "grid", gap: 1, gridAutoFlow: "column" }}>
+        {roles.map(
+          (role) =>
+            role != null && (
+              <Link key={role.id} component={RouterLink} to={UserRoleRoutes.detail(role.id, role.node_id)}>
+                {role.name}
+              </Link>
+            )
+        )}
+      </Box>
     );
   };
 

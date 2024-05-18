@@ -74,12 +74,6 @@ async def update_user(*, conn: Connection, node: Node, user_id: int, user: NewUs
     if user.user_tag_uid is not None:
         user_tag_id = await get_or_assign_user_tag(conn=conn, node=node, pin=user.user_tag_pin, uid=user.user_tag_uid)
 
-    curr_user = await fetch_user(conn=conn, node=node, user_id=user_id)
-    if curr_user.user_tag_id is None and user_tag_id is not None:
-        await conn.execute(
-            "insert into account(user_tag_id, type, node_id) values ($1, 'private', $2)", user_tag_id, node.id
-        )
-
     row = await conn.fetchrow(
         "update usr "
         "set login = $2, description = $3, display_name = $4, user_tag_id = $5 "
@@ -265,12 +259,13 @@ class UserService(DBService):
         roles: list[RoleToNode] | None = None,
         password: Optional[str] = None,
     ) -> User:
+        user_tag_id = None
         if new_user.user_tag_uid is not None:
-            tag_id = await get_or_assign_user_tag(
+            user_tag_id = await get_or_assign_user_tag(
                 conn=conn, node=node, pin=new_user.user_tag_pin, uid=new_user.user_tag_uid
             )
 
-            existing_user = await conn.fetchrow("select * from user_with_roles where user_tag_id = $1", tag_id)
+            existing_user = await conn.fetchrow("select * from user_with_roles where user_tag_id = $1", user_tag_id)
             if existing_user is not None:
                 raise InvalidArgument(f"User with tag id {new_user.user_tag_pin} already exists")
 
@@ -279,18 +274,13 @@ class UserService(DBService):
             hashed_password = self._hash_password(password)
 
         customer_account_id = None
-        if new_user.user_tag_pin is not None:
+        if new_user.user_tag_uid is not None:
             customer_account_id = await conn.fetchval(
-                "select a.id from account a join user_tag ut on a.user_tag_id = ut.id where ut.pin = $1",
-                new_user.user_tag_pin,
+                "select a.id from account a join user_tag ut on a.user_tag_id = ut.id where ut.uid = $1",
+                new_user.user_tag_uid,
             )
 
-        user_tag_id = None
         if customer_account_id is None:
-            if new_user.user_tag_uid is not None:
-                user_tag_id = await get_or_assign_user_tag(
-                    conn=conn, node=node, pin=new_user.user_tag_pin, uid=new_user.user_tag_uid
-                )
             customer_account_id = await conn.fetchval(
                 "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
                 node.id,

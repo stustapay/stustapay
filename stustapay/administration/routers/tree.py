@@ -38,8 +38,8 @@ async def update_node(
 
 
 @router.post("/nodes/{node_id}/archive-node")
-async def archive_node(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int) -> Node:
-    return await tree_service.archive_node(token=token, node_id=node_id)
+async def archive_node(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    await tree_service.archive_node(token=token, node_id=node_id)
 
 
 @router.post("/nodes/{node_id}/create-event")
