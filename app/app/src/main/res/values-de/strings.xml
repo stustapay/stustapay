@@ -77,6 +77,8 @@
     <string name="user_id">ID</string>
     <string name="user_username">Benutzername</string>
     <string name="user_displayname">Name</string>
+    <string name="user_firstname">Vorname</string>
+    <string name="user_lastname">Nachname</string>
     <string name="user_roles">Rollen</string>
     <string name="user_privileged">Benutzer hat Sonderrechte und kann nicht bearbeitet werden</string>
     <string name="user_description">Beschreibung</string>

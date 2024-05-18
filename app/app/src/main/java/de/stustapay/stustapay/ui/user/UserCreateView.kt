@@ -43,14 +43,20 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun UserCreateView(viewModel: UserViewModel) {
-    var login by remember { mutableStateOf("") }
-    var displayName by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
     var roles by remember { mutableStateOf(listOf<ULong>()) }
     var description by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     var currentTagState: NfcTag? by remember { mutableStateOf(null) }
+
+    val _firstName = firstName.lowercase().replace(" ", "")
+    val _lastName = lastName.lowercase().replace(" ", "")
+    val userName = _firstName + "_" + _lastName
+    val displayName =
+        _firstName.replaceFirstChar { it.uppercase() } + " " + _lastName.replaceFirstChar { it.uppercase() }
 
     val currentTag = currentTagState;
     if (currentTag == null) {
@@ -110,17 +116,25 @@ fun UserCreateView(viewModel: UserViewModel) {
                     Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
-                        label = { Text(stringResource(R.string.user_username)) },
-                        value = login,
-                        onValueChange = { login = it },
+                        label = { Text(stringResource(R.string.user_firstname)) },
+                        value = firstName,
+                        onValueChange = { firstName = it },
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     OutlinedTextField(
-                        label = { Text(stringResource(R.string.user_displayname)) },
-                        value = displayName,
-                        onValueChange = { displayName = it },
+                        label = { Text(stringResource(R.string.user_lastname)) },
+                        value = lastName,
+                        onValueChange = { lastName = it },
                         modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    OutlinedTextField(
+                        label = { Text(stringResource(R.string.user_username)) },
+                        value = userName,
+                        onValueChange = {},
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = false
                     )
 
                     OutlinedTextField(
@@ -217,7 +231,7 @@ fun UserCreateView(viewModel: UserViewModel) {
                     .padding(10.dp), onClick = {
                     scope.launch {
                         viewModel.create(
-                            login,
+                            userName,
                             displayName,
                             currentTag,
                             roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id },

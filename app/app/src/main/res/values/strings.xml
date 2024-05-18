@@ -78,6 +78,8 @@
     <string name="user_id">ID</string>
     <string name="user_username">Username</string>
     <string name="user_displayname">Name</string>
+    <string name="user_firstname">First Name</string>
+    <string name="user_lastname">Last Name</string>
     <string name="user_roles">Roles</string>
     <string name="user_privileged">User is privileged and can not be edited</string>
     <string name="user_description">Description</string>
