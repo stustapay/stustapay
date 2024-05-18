@@ -45,6 +45,12 @@ sealed class Response<out T> {
             }
         }
 
+        data class BadResponse(val msg: String) : Error() {
+            override fun msg(): String {
+                return "bad response: $msg"
+            }
+        }
+
         data class Request(val msg: String? = null, val throwable: Throwable? = null) : Error() {
             init {
                 require((msg != null) != (throwable != null)) {
