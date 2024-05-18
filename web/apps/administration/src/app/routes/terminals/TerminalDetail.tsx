@@ -4,6 +4,7 @@ import {
   useGetTerminalQuery,
   useListTillsQuery,
   useLogoutTerminalMutation,
+  useRemoveFromTerminalMutation,
 } from "@/api";
 import { config } from "@/api/common";
 import { TerminalRoutes, TillRoutes } from "@/app/routes";
@@ -29,6 +30,7 @@ export const TerminalDetail: React.FC = () => {
 
   const [deleteTerminal] = useDeleteTerminalMutation();
   const [logoutTerminal] = useLogoutTerminalMutation();
+  const [removeFromTerminal] = useRemoveFromTerminalMutation();
   const { data: terminal, error: terminalError } = useGetTerminalQuery({
     nodeId: currentNode.id,
     terminalId: Number(terminalId),
@@ -73,6 +75,20 @@ export const TerminalDetail: React.FC = () => {
   }
   const till = terminal.till_id != null ? selectTillById(tills, terminal.till_id) : undefined;
 
+  const openConfirmRemoveTillDialog = () => {
+    if (!till) {
+      return;
+    }
+    openModal({
+      type: "confirm",
+      title: t("terminal.removeTill"),
+      content: t("terminal.removeTillDescription", { tillName: till.name }),
+      onConfirm: () => {
+        removeFromTerminal({ nodeId: till.node_id, tillId: till.id });
+      },
+    });
+  };
+
   return (
     <DetailLayout
       title={terminal.name}
@@ -92,6 +108,15 @@ export const TerminalDetail: React.FC = () => {
           icon: <LogoutIcon />,
           hidden: terminal.session_uuid == null,
         },
+        ...(till != null
+          ? ([
+              {
+                label: t("terminal.removeTill"),
+                onClick: openConfirmRemoveTillDialog,
+                color: "warning",
+              } as const,
+            ] as const)
+          : []),
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >

@@ -51,7 +51,7 @@ async def force_logout_user(till_id: int, token: CurrentAuthToken, till_service:
     await till_service.force_logout_user(token=token, till_id=till_id, node_id=node_id)
 
 
-@router.post("/{till_id}/remove-from-terminal")
+@router.post("/{till_id}/remove-from-terminal", tags=["tills", "terminals"])
 async def remove_from_terminal(till_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
     await till_service.remove_from_terminal(token=token, till_id=till_id, node_id=node_id)
 

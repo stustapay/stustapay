@@ -603,6 +603,9 @@ export const translations = {
     unregisterTerminal: "Force logout a terminal",
     unregisterTerminalDescription:
       "Force logout a terminal. This should NEVER be done while a cashier is still using the terminal",
+    removeTill: "Remove till",
+    removeTillDescription:
+      'Deassociate till "{{tillName}}" from this terminal. This should NEVER be done while a cashier is still using the terminal.',
   },
 };
 
