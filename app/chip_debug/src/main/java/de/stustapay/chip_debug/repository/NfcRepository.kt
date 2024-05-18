@@ -28,8 +28,6 @@ class NfcRepository @Inject constructor(
     private val dataProtKey =
         MutableStateFlow<BitVector?>(0x00.bv + 0x01.bv + 0x02.bv + 0x03.bv + 0x04.bv + 0x05.bv + 0x06.bv + 0x07.bv + 0x08.bv + 0x09.bv + 0x0a.bv + 0x0b.bv + 0x0c.bv + 0x0d.bv + 0x0e.bv + 0x0f.bv)
 
-    val tagContent = "StuStaPay - built by SSN & friends!\nglhf ;)\n"
-
     fun setTagKeys(secrets: UserTagSecret) {
         uidRetrKey.update { secrets.key1.decodeHex() }
         dataProtKey.update { secrets.key0.decodeHex() }

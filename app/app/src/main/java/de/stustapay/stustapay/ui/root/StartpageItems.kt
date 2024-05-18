@@ -38,6 +38,12 @@ val startpageItems = listOf(
         canAccess = { u, t -> Access.canSell(u, t) }
     ),
     StartpageItem(
+        icon = Icons.Filled.DateRange,
+        label = R.string.root_item_stats,
+        navDestination = RootNavDests.stats,
+        canAccess = { u, _ -> Access.canViewStats(u) }
+    ),
+    StartpageItem(
         icon = Icons.Filled.Favorite,
         label = R.string.root_item_rewards,
         navDestination = RootNavDests.rewards,

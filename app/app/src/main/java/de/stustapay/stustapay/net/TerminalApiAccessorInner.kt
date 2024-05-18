@@ -6,8 +6,10 @@ import de.stustapay.api.apis.AuthApi
 import de.stustapay.api.apis.BaseApi
 import de.stustapay.api.apis.CashierApi
 import de.stustapay.api.apis.CustomerApi
+import de.stustapay.api.apis.MgmtApi
 import de.stustapay.api.apis.OrderApi
 import de.stustapay.api.apis.UserApi
+import de.stustapay.libssp.util.offsetDateTimeSerializerModule
 import de.stustapay.libssp.util.uuidSerializersModule
 import de.stustapay.stustapay.model.RegistrationState
 import de.stustapay.stustapay.repository.RegistrationRepositoryInner
@@ -38,6 +40,7 @@ data class APIs(
     val customerApi: CustomerApi,
     val orderApi: OrderApi,
     val userApi: UserApi,
+    val mgmtApi: MgmtApi
 )
 
 class TerminalApiAccessorInner(
@@ -74,6 +77,9 @@ class TerminalApiAccessorInner(
                 val userApi = UserApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
                 userApi.setAccessToken(it.token)
 
+                val mgmtApi = MgmtApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) }
+                mgmtApi.setAccessToken(it.token)
+
                 APIs(
                     authApi = authApi,
                     baseApi = baseApi,
@@ -81,12 +87,13 @@ class TerminalApiAccessorInner(
                     customerApi = customerApi,
                     orderApi = orderApi,
                     userApi = userApi,
+                    mgmtApi = mgmtApi
                 )
             }
 
             is RegistrationState.Registering -> {
-                APIs(
-                    authApi = AuthApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) },
+                APIs(authApi = AuthApi(it.apiUrl,
+                    CIO.create { this.https {} }) { configureApi(it) },
                     baseApi = BaseApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) },
                     cashierApi = CashierApi(it.apiUrl, CIO.create { this.https {} }) {
                         configureApi(
@@ -100,7 +107,7 @@ class TerminalApiAccessorInner(
                         it.apiUrl,
                         CIO.create { this.https {} }) { configureApi(it) },
                     userApi = UserApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) },
-                )
+                    mgmtApi = MgmtApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) })
             }
 
             is RegistrationState.NotRegistered -> {
@@ -122,6 +129,7 @@ class TerminalApiAccessorInner(
                 serializersModule = SerializersModule {
                     this.include(bigIntegerhumanReadableSerializerModule)
                     this.include(uuidSerializersModule)
+                    this.include(offsetDateTimeSerializerModule)
                 }
             })
         }
@@ -151,6 +159,8 @@ class TerminalApiAccessorInner(
             }
         }
 
+        conf.followRedirects = true
+
         conf.expectSuccess = false
 
         conf.install(Logging)
@@ -178,5 +188,9 @@ class TerminalApiAccessorInner(
 
     fun user(): UserApi? {
         return apis.value?.userApi
+    }
+
+    fun mgmt(): MgmtApi? {
+        return apis.value?.mgmtApi
     }
 }

@@ -140,7 +140,7 @@ class NfcHandler @Inject constructor(
                     tag.setCMAC(true)
                     tag.setAuth0(0x10u)
                     tag.writeUserMemory("StuStaPay at StuStaCulum 2024\n".toByteArray(Charset.forName("UTF-8")).asBitVector())
-                    tag.writePin("DDDDDDDDDDDD")
+                    tag.writePin("WWWWWWWWWWWW")
                     tag.writeDataProtKey(req.dataProtKey)
                     tag.writeUidRetrKey(req.uidRetrKey)
                     dataSource.setScanResult(NfcScanResult.Write)

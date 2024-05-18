@@ -46,8 +46,12 @@ object Access {
         return user.privileges.contains(Privilege.nodeAdministration)
     }
 
-    fun canSwap(user: de.stustapay.api.models.CurrentUser): Boolean {
+    fun canSwap(user: CurrentUser): Boolean {
         return user.privileges.contains(Privilege.userManagement)
+    }
+
+    fun canViewStats(user: CurrentUser): Boolean {
+        return user.privileges.contains(Privilege.viewNodeStats)
     }
 
     // Till features

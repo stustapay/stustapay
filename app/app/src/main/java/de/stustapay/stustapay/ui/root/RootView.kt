@@ -18,6 +18,7 @@ import de.stustapay.stustapay.ui.payinout.CashInOutView
 import de.stustapay.stustapay.ui.user.UserView
 import de.stustapay.stustapay.ui.reward.RewardView
 import de.stustapay.libssp.util.SysUiController
+import de.stustapay.stustapay.ui.stats.StatsView
 
 
 @Composable
@@ -66,6 +67,9 @@ fun RootView(uictrl: SysUiController? = null) {
         }
         composable(RootNavDests.history.route) {
             SaleHistoryView(leaveView = { navController.navigateUp() })
+        }
+        composable(RootNavDests.stats.route) {
+            StatsView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.rewards.route) {
             RewardView(leaveView = { navController.navigateUp() })
