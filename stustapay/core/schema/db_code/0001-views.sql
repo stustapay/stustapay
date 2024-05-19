@@ -175,10 +175,12 @@ create view user_tag_with_history as
         ut.pin,
         ut.comment,
         a.id                                       as account_id,
+        u.id                                       as user_id,
         coalesce(hist.account_history, '[]'::json) as account_history
     from
         user_tag ut
         left join account a on a.user_tag_id = ut.id
+        left join usr u on ut.id = u.user_tag_id
         left join (
             select
                 atah.user_tag_id,
