@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
-from stustapay.core.schema.order import OrderType, PaymentMethod
+from stustapay.core.schema.order import Order, OrderType, PaymentMethod
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege, User
 from stustapay.core.service.common.dbservice import DBService
@@ -19,6 +19,7 @@ from stustapay.core.service.common.decorators import (
 )
 from stustapay.framework.database import Connection
 
+from ..schema.product import Product
 from .account import get_system_account_for_node
 from .common.error import NotFound, ServiceException
 from .order.booking import (
@@ -28,7 +29,7 @@ from .order.booking import (
     book_money_transfer,
     book_order,
 )
-from .product import fetch_money_difference_product, fetch_product
+from .product import fetch_money_difference_product
 from .till.common import fetch_virtual_till
 from .user import AuthService
 
@@ -135,7 +136,7 @@ class CashierService(DBService):
         self.auth_service = auth_service
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def list_cashiers(self, *, conn: Connection, node: Node) -> list[Cashier]:
         return await conn.fetch_many(
@@ -143,7 +144,7 @@ class CashierService(DBService):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def get_cashier(self, *, conn: Connection, node: Node, cashier_id: int) -> Optional[Cashier]:
         return await conn.fetch_maybe_one(
@@ -157,7 +158,7 @@ class CashierService(DBService):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def get_cashier_shifts(
         self, *, conn: Connection, current_user: User, node: Node, cashier_id: int
@@ -183,7 +184,7 @@ class CashierService(DBService):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def get_cashier_shift_stats(
         self,
@@ -192,54 +193,60 @@ class CashierService(DBService):
         node: Node,
         cashier_id: int,
         shift_id: Optional[int] = None,
-    ) -> Optional[CashierShiftStats]:
-        # TODO: TREE visibility
+    ) -> CashierShiftStats:
+        cashier_exists = await conn.fetchval(
+            "select exists(select from cashier where id = $1 and node_id = $2)", cashier_id, node.id
+        )
+        if not cashier_exists:
+            raise NotFound(element_typ="cashier", element_id=cashier_id)
         shift_end = None
         if shift_id is None:
             shift_start = await self._get_current_cashier_shift_start(conn=conn, cashier_id=cashier_id)
         else:
             shift = await self._get_cashier_shift(conn=conn, cashier_id=cashier_id, shift_id=shift_id)
             if shift is None:
-                raise NotFound(element_typ="cashier_shift", element_id=str(shift_id))
+                raise NotFound(element_typ="cashier_shift", element_id=shift_id)
             shift_start = shift.started_at
             shift_end = shift.ended_at
 
-        if shift_end is None:
-            rows = await conn.fetch(
-                "select li.product_id, sum(li.quantity) as quantity "
-                "from line_item li join ordr o on li.order_id = o.id "
-                "where o.cashier_id = $1 and o.booked_at >= $2 "
-                "group by li.product_id",
-                cashier_id,
-                shift_start,
-            )
-        else:
-            rows = await conn.fetch(
-                "select li.product_id, sum(li.quantity) as quantity "
-                "from line_item li join ordr o on li.order_id = o.id "
-                "where o.cashier_id = $1 and o.booked_at >= $2 and o.booked_at <= $3 "
-                "group by li.product_id",
-                cashier_id,
-                shift_start,
-                shift_end,
-            )
-        stats = CashierShiftStats(booked_products=[])
+        rows = await conn.fetch(
+            "select li.product_id, sum(li.quantity) as quantity "
+            "from line_item li join ordr o on li.order_id = o.id "
+            "where o.cashier_id = $1 and o.booked_at >= $2 and ($3::timestamptz is null or o.booked_at <= $3::timestamptz) "
+            "group by li.product_id "
+            "order by quantity desc",
+            cashier_id,
+            shift_start,
+            shift_end,
+        )
+
+        booked_products = []
         for row in rows:
-            product = await fetch_product(conn=conn, node=node, product_id=row["product_id"])
+            product = await conn.fetch_maybe_one(
+                Product, "select * from product_with_tax_and_restrictions p where id = $1", row["product_id"]
+            )
             if product is None:
                 continue
-            stats.booked_products.append(
-                CashierShiftStats.CashierProductStats(product=product, quantity=row["quantity"])
-            )
-        return stats
+            booked_products.append(CashierShiftStats.CashierProductStats(product=product, quantity=row["quantity"]))
+
+        orders = await conn.fetch_many(
+            Order,
+            "select * from order_value_prefiltered("
+            "   (select array_agg(o.id) from ordr o "
+            "   where o.cashier_id = $1 and booked_at >= $2 and ($3::timestamptz is null or booked_at <= $3::timestamptz))"
+            ")",
+            cashier_id,
+            shift_start,
+            shift_end,
+        )
+        return CashierShiftStats(booked_products=booked_products, orders=orders)
 
     @with_retryable_db_transaction()
-    @requires_node(object_types=[ObjectType.user])
+    @requires_node(event_only=True, object_types=[ObjectType.user])
     @requires_user([Privilege.node_administration])
     async def close_out_cashier(
         self, *, conn: Connection, current_user: CurrentUser, node: Node, cashier_id: int, close_out: CloseOut
     ) -> CloseOutResult:
-        # TODO: TREE visibility
         cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
             conn=conn, current_user=current_user, node=node, cashier_id=cashier_id
         )

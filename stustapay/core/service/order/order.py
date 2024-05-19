@@ -1328,11 +1328,15 @@ class OrderService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_terminal([Privilege.can_book_orders])
-    async def list_orders_terminal(self, *, conn: Connection, current_user: User) -> list[Order]:
+    async def list_orders_terminal(
+        self, *, conn: Connection, current_user: User, current_terminal: CurrentTerminal
+    ) -> list[Order]:
+        assert current_terminal.till is not None
         return await conn.fetch_many(
             Order,
-            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where cashier_id = $1))",
+            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where o.cashier_id = $1 and o.till_id = $2))",
             current_user.id,
+            current_terminal.till.id,
         )
 
     @with_db_transaction(read_only=True)

@@ -51,22 +51,6 @@ create view user_to_roles_aggregated as
         user_to_role utr
     group by utr.user_id, utr.node_id;
 
-create view user_with_roles as
-    select
-        u.*,
-        coalesce(roles.roles, '{}'::text array) as role_names
-    from
-        user_with_tag u
-        left join (
-            select
-                utr.user_id        as user_id,
-                array_agg(ur.name) as roles
-            from
-                user_to_role utr
-                join user_role ur on utr.role_id = ur.id
-            group by utr.user_id
-        ) roles on u.id = roles.user_id;
-
 create view user_with_privileges as
     select
         u.*,
@@ -207,7 +191,7 @@ create view cashier as
         a.balance                                    as cash_drawer_balance,
         coalesce(tills.till_ids, '{}'::bigint array) as till_ids
     from
-        user_with_roles u
+        user_with_tag u
         join account a on u.cashier_account_id = a.id
         left join (
             select

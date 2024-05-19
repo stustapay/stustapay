@@ -27,8 +27,15 @@ user_to_role_router = APIRouter(prefix="/user-to-roles", tags=["user-to-roles"])
 
 
 @user_router.get("", response_model=NormalizedList[User, int])
-async def list_users(token: CurrentAuthToken, user_service: ContextUserService, node_id: int):
-    return normalize_list(await user_service.list_users(token=token, node_id=node_id))
+async def list_users(
+    token: CurrentAuthToken,
+    user_service: ContextUserService,
+    node_id: int,
+    filter_privilege: Privilege | None = None,
+):
+    return normalize_list(
+        await user_service.list_users(token=token, node_id=node_id, filter_privilege=filter_privilege)
+    )
 
 
 class UpdateUserPayload(BaseModel):
