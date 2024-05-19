@@ -21,13 +21,11 @@ PAYMENT_METHOD_TO_ZAHLUNGSART = {"cash": "Bar", "sumup": "Unbar", "tag": "Unbar"
 
 
 class TSEWrapper:
-    def __init__(self, name: str, factory_function: Callable[[], TSEHandler]):
+    def __init__(self, tse_id: int, factory_function: Callable[[], TSEHandler]):
         # most of these members will be set in run().
-
-        # The TSE name (database TSE_name and TSE config entry)
-        self.name = name
         # The TSE_id (database tse_id), references to tills and transactions
-        self.tse_id: typing.Optional[int] = None
+        self.tse_id = tse_id
+        self.name: str | None = None
         # The factory function that constructs the inner TSE handler object
         self._factory_function = factory_function
         # Inner TSE handler (constructed by factory function)
@@ -59,6 +57,7 @@ class TSEWrapper:
         """
         async with contextlib.AsyncExitStack() as es:
             conn: Connection = await es.enter_async_context(db_pool.acquire())
+            self.name = await conn.fetchval("select name from tse where id = $1", self.tse_id)
             while True:
                 # connect to the TSE
                 try:
@@ -74,11 +73,6 @@ class TSEWrapper:
 
                 ##############################################
                 LOGGER.error("checking for new transactions and fail those older than 10 seconds")
-                self.tse_id = await conn.fetchval("select id from tse where name=$1", self.name)
-                if self.tse_id is None:
-                    LOGGER.error(f"ERROR: TSE {self.name} is not in Database, cannot start, retrying in 10 seconds")
-                    await asyncio.sleep(10)
-                    continue
 
                 new_sig_requests = await conn.fetch(
                     """
@@ -148,8 +142,8 @@ class TSEWrapper:
         assert self._tse_handler is not None
 
         # get tse_id of the configured TSE
-        self.tse_id, tse_status = await conn.fetchrow("select id, status from tse where name=$1", self.name)
-        assert self.tse_id is not None
+        self.name, tse_status = await conn.fetchrow("select name, status from tse where id = $1", self.tse_id)
+        assert self.name is not None
         assert tse_status is not None
 
         # get master data
@@ -182,7 +176,7 @@ class TSEWrapper:
             LOGGER.info("New TSE registered in database")
         elif tse_status == "active":
             # check public key
-            tse_public_key_in_db = await conn.fetchval("select public_key from tse where name=$1", self.name)
+            tse_public_key_in_db = await conn.fetchval("select public_key from tse where id = $1", self.tse_id)
             if tse_public_key_in_db != masterdata.tse_public_key:
                 LOGGER.error(f"TSE public key:  {masterdata.tse_public_key}\nKey in database: {tse_public_key_in_db}")
                 raise RuntimeError(
@@ -198,7 +192,7 @@ class TSEWrapper:
                 f"TSE {self.name} is recorded as failed in database. Help! Do something!, but apparently we can connect, so we check and then set to active again"
             )
             # check public key
-            tse_public_key_in_db = await conn.fetchval("select public_key from tse where name=$1", self.name)
+            tse_public_key_in_db = await conn.fetchval("select public_key from tse where id = $1", self.tse_id)
             if tse_public_key_in_db != masterdata.tse_public_key:
                 LOGGER.error(f"TSE public key:  {masterdata.tse_public_key}\nKey in database: {tse_public_key_in_db}")
                 raise RuntimeError(
@@ -208,7 +202,7 @@ class TSEWrapper:
 
             LOGGER.warning(f"setting TSE {self.name} to active again")
             # only reactivate a failed tse, dont reactivate it, when it was set disabled
-            await conn.execute("update tse set status='active' where name=$1 and status='failed'", self.name)
+            await conn.execute("update tse set status='active' where id = $1 and status='failed'", self.tse_id)
 
         else:
             raise RuntimeError("TSE has no state, forbidden db state")
@@ -220,7 +214,7 @@ class TSEWrapper:
         # listed as assigned to the TSE in the database.
         # These tills need to be unregistered from the TSE.
         extra_tills = set(self._tills)
-        for row in await conn.fetch("select id from till where tse_id=$1", self.tse_id):
+        for row in await conn.fetch("select id from till where tse_id = $1", self.tse_id):
             till = str(row["id"])
             extra_tills.discard(till)  # no need to unregister this till
             if till not in self._tills:

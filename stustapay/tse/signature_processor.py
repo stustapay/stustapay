@@ -19,7 +19,7 @@ LOGGER = logging.getLogger(__name__)
 class SignatureProcessor:
     def __init__(self, config: Config):
         self.config = config
-        self.tses: dict[str, TSEWrapper] = {}
+        self.tses: dict[int, TSEWrapper] = {}  # tse_id -> Tse
         self.db_pool: asyncpg.Pool | None = None
         # contains event objects for each object that is waiting for new events.
 
@@ -53,14 +53,14 @@ class SignatureProcessor:
             # initialize the TSE wrappers
             async with self.db_pool.acquire() as conn:
                 tses_in_db = await conn.fetch_many(
-                    Tse, "select * from tse t join node n on t.node_id = n.id where not n.read_only"
+                    Tse, "select t.* from tse t join node n on t.node_id = n.id where not n.read_only"
                 )
                 for tse_in_db in tses_in_db:
                     factory = get_tse_handler(tse_in_db)
-                    tse = TSEWrapper(name=tse_in_db.name, factory_function=factory)
+                    tse = TSEWrapper(tse_id=tse_in_db.id, factory_function=factory)
                     tse.start(self.db_pool)
                     aes.push_async_callback(tse.stop)
-                    self.tses[tse.name] = tse
+                    self.tses[tse_in_db.id] = tse
 
             # TODO Task to assign feral tills to a TSE
             LOGGER.info(f"Configured TSEs: {self.tses}")

@@ -52,7 +52,7 @@ export const PayoutRunList: React.FC = () => {
     {
       field: "created_by",
       headerName: t("payoutRun.createdBy") as string,
-      minWidth: 200,
+      flex: 1,
       renderCell: (params) =>
         params.row.created_by && (
           <Link component={RouterLink} to={UserRoutes.detail(params.row.created_by)}>
