@@ -19,13 +19,12 @@ jobs:
       - name: build with gradle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: assemble
+          arguments: assembleDebug
           build-root-directory: app/
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: app debug build
-          # release variant: ./app/app/build/outputs/apk/release/app-release-unsigned.apk
           path: ./app/app/build/outputs/apk/debug/app-debug.apk
 
   test:
