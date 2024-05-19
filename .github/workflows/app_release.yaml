@@ -1,5 +1,5 @@
 name: App Release
-on: [workflow_dispatch, workflow_call]
+on: [workflow_call]
 
 jobs:
   build:
@@ -16,18 +16,22 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
       - name: decode keystore
         env:
-            ENCODED_STRING: ${{ secrets.KEYSTORE }}
+          ANDROID_KEY_STORE: ${{ secrets.ANDROID_KEY_STORE }}
+          ANDROID_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: ./app
         run: |
-            TMP_KEYSTORE_FILE_PATH="${RUNNER_TEMP}"/keystore
-            mkdir "${TMP_KEYSTORE_FILE_PATH}"
-            echo $ENCODED_STRING | base64 -di > "${TMP_KEYSTORE_FILE_PATH}"/keystore.jks
+          echo $ANDROID_KEY_STORE | base64 --decode > keystore.jks
+          mkdir -p ~/.gradle
+          echo "ANDROID_KEY_STORE_FILE=$(pwd)/keystore.jks" >> ~/.gradle/gradle.properties
+          echo "ANDROID_KEY_STORE_PASSWORD=${ANDROID_KEY_STORE_PASSWORD}" >> ~/.gradle/gradle.properties
+          echo "ANDROID_KEY_ALIAS=${ANDROID_KEY_ALIAS}" >> ~/.gradle/gradle.properties
+          echo "ANDROID_KEY_PASSWORD=${ANDROID_KEY_PASSWORD}" >> ~/.gradle/gradle.properties
+          ./gradlew app:signingReport
       - name: build app
         working-directory: ./app
         run: ./gradlew app:assembleRelease
-        env:
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
       - name: upload apk
         uses: actions/upload-artifact@v3
         with:
