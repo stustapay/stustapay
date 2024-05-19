@@ -55,6 +55,7 @@ export const translations = {
     info: "Please enter your bank account information so we can transfer your leftover balance. You can also donate parts or your whole remaining balance to support our volunteer work. Kulturleben in der Studentenstadt e. V. is a student-run non-profit organization which annually holds the StuStaCulum festival. The first payout is planned approximately 3 weeks after the end of the festival.",
     ibanNotValid: "IBAN is not valid",
     countryCodeNotSupported: "Provided IBAN country code is not supported",
+    nameHasSpecialChars: "Provided account name contains invalid special characters",
     mustAcceptPrivacyPolicy: "You must accept the privacy policy",
     privacyPolicyCheck: "I have read and agree to StuStaCulum's <1>privacy policy</1>.",
     errorFetchingData: "Error fetching data.",

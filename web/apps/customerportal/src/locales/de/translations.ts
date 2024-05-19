@@ -59,6 +59,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     info: "Damit wir dein Restguthaben überweisen können, trage bitte deine Bankdaten hier ein. Du kannst auch einen Teil oder Dein gesamtes Guthaben an uns spenden, um unser ehrenamtliches Engagement zu unterstützen. Kulturleben in der Studentenstadt e.V. is ein von Studierenden betriebener gemeinnütziger Verein, welcher jährlich das StuStaCulum-Festival organisiert. Die erste Auszahlung findet voraussichtlich 3 Wochen nach Festivalende statt.",
     ibanNotValid: "ungültige IBAN",
     countryCodeNotSupported: "IBAN Ländercode wird nicht unterstützt",
+    nameHasSpecialChars: "Der Accountname enthält nicht valide Sonderzeichen",
     mustAcceptPrivacyPolicy: "Sie müssen die Datenschutserklärung akzeptieren",
     privacyPolicyCheck: "Ich habe die <1>Datenschutzerklärung</1> des StuStaCulum gelesen und akzeptiere sie.",
     errorFetchingData: "Fehler beim laden der Daten.",

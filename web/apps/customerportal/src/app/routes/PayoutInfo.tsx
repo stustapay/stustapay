@@ -65,7 +65,14 @@ export const PayoutInfo: React.FC = () => {
         });
       }
     }),
-    account_name: z.string(),
+    account_name: z.string().superRefine((val, ctx) => {
+      if (!RegExp("^[a-zA-Z0-9':?,\\-()\\/ ÄäÖöÜüß&$%]+$").test(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t("payout.nameHasSpecialChars"),
+        });
+      }
+    }),
     email: z.string().email(),
     privacy_policy: z.boolean().refine((val) => val, {
       message: t("payout.mustAcceptPrivacyPolicy"),

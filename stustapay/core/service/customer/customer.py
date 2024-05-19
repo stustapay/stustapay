@@ -144,6 +144,10 @@ class CustomerService(DBService):
         if customer_bank.donation > current_customer.balance:
             raise InvalidArgument("Donation cannot be higher then your balance")
 
+        # check sepa name
+        if not re.match(r"^[a-zA-Z0-9\'\:\?\,-\(\)\/\ ÄäÖöÜüß\&\$\%]+$", customer_bank.account_name):
+            raise InvalidArgument("Provided account name contains invalid special characters")
+
         # check email
         if not re.match(r"[^@]+@[^@]+\.[^@]+", customer_bank.email):
             raise InvalidArgument("Provided email is not valid")
