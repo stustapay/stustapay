@@ -21,7 +21,9 @@ import {
   UserTagDetailRead,
   api as generatedApi,
   GenerateTestBonApiArg,
+  GenerateTestReportApiArg,
   Terminal,
+  GenerateRevenueReportApiArg,
 } from "./generated/api";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
@@ -180,6 +182,28 @@ export const api = generatedApi.enhanceEndpoints({
     generateTestBon: {
       query: (queryArg: GenerateTestBonApiArg) => ({
         url: `/tree/events/${queryArg.nodeId}/generate-test-bon`,
+        method: "POST",
+        responseHandler: async (resp: Response) => {
+          const blob = await resp.blob();
+          return window.URL.createObjectURL(blob);
+        },
+      }),
+      invalidatesTags: [],
+    },
+    generateTestReport: {
+      query: (queryArg: GenerateTestReportApiArg) => ({
+        url: `/tree/events/${queryArg.nodeId}/generate-test-report`,
+        method: "POST",
+        responseHandler: async (resp: Response) => {
+          const blob = await resp.blob();
+          return window.URL.createObjectURL(blob);
+        },
+      }),
+      invalidatesTags: [],
+    },
+    generateRevenueReport: {
+      query: (queryArg: GenerateRevenueReportApiArg) => ({
+        url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`,
         method: "POST",
         responseHandler: async (resp: Response) => {
           const blob = await resp.blob();

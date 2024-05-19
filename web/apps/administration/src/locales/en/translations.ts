@@ -224,6 +224,7 @@ export const translations = {
     showRevenue: "Show revenue",
     warningEventDatesNeedConfiguration:
       "Please configure the start / end times for this event as well as the daily end time in the event settings",
+    generateRevenueReport: "Generate revenue report",
   },
   ticket: {
     name: "Name",
@@ -334,6 +335,7 @@ export const translations = {
       address: "Bon address",
       title: "Bon title",
       previewBon: "Preview Bon",
+      previewReport: "Preview Revenue Report",
     },
     sumup: {
       tabLabel: "SumUp",

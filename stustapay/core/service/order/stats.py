@@ -81,7 +81,7 @@ class RevenueStats(BaseModel):
     hourly_intervals: list[StatInterval]
 
 
-def _get_time_bounds(query: TimeseriesStatsQuery, event: PublicEventSettings) -> tuple[datetime, datetime]:
+def get_event_time_bounds(query: TimeseriesStatsQuery, event: PublicEventSettings) -> tuple[datetime, datetime]:
     if query.from_time is not None and query.to_time is not None and query.from_time > query.to_time:
         raise InvalidArgument("Stats start time must be before end time")
 
@@ -156,14 +156,11 @@ async def get_hourly_revenue_stats(
         "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
         "   sum(li.quantity) as count,"
         "   round(sum(li.total_price), 2) as revenue "
-        "from order_value o "
-        "join till t on o.till_id = t.id "
+        "from orders_at_node_and_children($3) o "
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
-        "join node n on t.node_id = n.id "
         "where o.booked_at >= $1 and o.booked_at <= $2 "
-        "   and p.type = 'user_defined' "
-        "   and ($3 = any(n.parent_ids) or n.id = $3) "
+        "   and (p.type = 'user_defined' or p.type = 'discount') "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
@@ -259,7 +256,7 @@ class OrderStatsService(DBService):
             raise InvalidArgument("Entry stats can only be computed for event nodes")
 
         event = await fetch_event_for_node(conn=conn, node=node)
-        from_time, to_time = _get_time_bounds(query, event)
+        from_time, to_time = get_event_time_bounds(query, event)
 
         hourly_stats = await get_hourly_entry_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
@@ -278,7 +275,7 @@ class OrderStatsService(DBService):
             raise InvalidArgument("Top up stats can only be computed for event nodes")
 
         event = await fetch_event_for_node(conn=conn, node=node)
-        from_time, to_time = _get_time_bounds(query, event)
+        from_time, to_time = get_event_time_bounds(query, event)
 
         hourly_stats = await get_hourly_top_up_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
@@ -297,7 +294,7 @@ class OrderStatsService(DBService):
             raise InvalidArgument("voucher stats can only be computed for event nodes")
 
         event = await fetch_event_for_node(conn=conn, node=node)
-        from_time, to_time = _get_time_bounds(query, event)
+        from_time, to_time = get_event_time_bounds(query, event)
 
         stats = await conn.fetch_one(
             VoucherStats,
@@ -321,7 +318,7 @@ class OrderStatsService(DBService):
     @requires_user([Privilege.node_administration, Privilege.view_node_stats])
     async def get_product_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> ProductStats:
         event = await fetch_event_for_node(conn=conn, node=node)
-        from_time, to_time = _get_time_bounds(query, event)
+        from_time, to_time = get_event_time_bounds(query, event)
         hourly_stats = await get_hourly_revenue_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
@@ -352,7 +349,7 @@ class OrderStatsService(DBService):
     @requires_terminal(user_privileges=[Privilege.view_node_stats])
     async def get_revenue_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> RevenueStats:
         event = await fetch_event_for_node(conn=conn, node=node)
-        from_time, to_time = _get_time_bounds(query, event)
+        from_time, to_time = get_event_time_bounds(query, event)
         hourly_stats = await get_hourly_revenue_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 

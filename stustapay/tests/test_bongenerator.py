@@ -2,8 +2,13 @@
 import datetime
 import uuid
 
-from stustapay.bon.bon import BonConfig, BonTemplateContext, TaxRateAggregation
-from stustapay.bon.pdflatex import OrderWithTse, render_template
+from stustapay.bon.bon import (
+    BonConfig,
+    BonTemplateContext,
+    OrderWithTse,
+    TaxRateAggregation,
+)
+from stustapay.bon.pdflatex import render_template
 from stustapay.core.schema.order import LineItem, OrderType, PaymentMethod
 from stustapay.core.schema.product import Product, ProductType
 from stustapay.core.schema.tree import Node

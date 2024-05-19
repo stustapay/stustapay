@@ -33,7 +33,7 @@ export const TillButtonUpdate: React.FC = withPrivilegeGuard("node_administratio
     <EditLayout
       title={t("button.update")}
       submitLabel={t("update")}
-      successRoute={TillButtonsRoutes.detail(button.id)}
+      successRoute={TillButtonsRoutes.list()}
       initialValues={button}
       validationSchema={UpdateTillButtonSchema}
       onSubmit={(b) => updateButton({ nodeId: currentNode.id, buttonId: button.id, newTillButton: b })}

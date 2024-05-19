@@ -418,7 +418,9 @@ def requires_terminal(
                         )
 
                     if not any([p in user_privileges for p in logged_in_user.privileges]):
-                        raise AccessDenied(f"user does not have any of the required privileges: {stringified_privileges}")
+                        raise AccessDenied(
+                            f"user does not have any of the required privileges: {stringified_privileges}"
+                        )
 
                 if not func_is_read_only and node.read_only:
                     raise NodeIsReadOnly(f"{node.name} is read only")

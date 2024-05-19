@@ -1,4 +1,9 @@
-import { RestrictedEventSettings, useGenerateTestBonMutation, useUpdateEventMutation } from "@/api";
+import {
+  RestrictedEventSettings,
+  useGenerateTestBonMutation,
+  useGenerateTestReportMutation,
+  useUpdateEventMutation,
+} from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { FormTextField } from "@stustapay/form-components";
@@ -36,6 +41,7 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
   const [previewBon, { isLoading: bonPreviewGenerating }] = useGenerateTestBonMutation();
+  const [previewReport, { isLoading: reportPreviewGenerating }] = useGenerateTestReportMutation();
 
   const handleSubmit = (values: BonSettings, { setSubmitting }: FormikHelpers<BonSettings>) => {
     setSubmitting(true);
@@ -65,6 +71,24 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
       }
     } catch {
       toast.error("Error generating bon preview");
+    }
+  };
+
+  const openReportPreview = async () => {
+    try {
+      console.log("starting report preview");
+      const resp = await previewReport({
+        nodeId,
+      });
+      const pdfUrl = (resp as any).data;
+      if (pdfUrl === undefined) {
+        console.log(resp);
+        toast.error("Error generating report preview");
+      } else {
+        window.open(pdfUrl);
+      }
+    } catch (e) {
+      toast.error("Error generating report preview");
     }
   };
 
@@ -101,6 +125,15 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
         loadingPosition="start"
       >
         {t("settings.bon.previewBon")}
+      </LoadingButton>
+      <LoadingButton
+        variant="contained"
+        onClick={openReportPreview}
+        loading={reportPreviewGenerating}
+        startIcon={<ReceiptIcon />}
+        loadingPosition="start"
+      >
+        {t("settings.bon.previewReport")}
       </LoadingButton>
     </Stack>
   );

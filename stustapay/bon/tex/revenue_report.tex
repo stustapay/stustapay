@@ -1,0 +1,188 @@
+\documentclass[a4paper]{article}
+\usepackage[PUTF,T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage[table]{xcolor}
+\usepackage{graphicx}
+\usepackage{datetime}
+\usepackage{libertine}
+\usepackage{ngerman}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{xpatch}
+\usepackage{seqsplit}
+
+\usepackage{avant} %use helvetica?
+
+
+\usepackage{geometry}
+\geometry{
+  a4paper,
+  total={170mm,257mm},
+  left=20mm,
+  top=35mm,
+  bottom=35mm,
+  heightrounded,
+ }
+ 
+ %Thanks, Ulrike: https://github.com/u-fischer/putfenc
+ \makeatletter
+
+% Unterdrücken der aux-Ausgabe:
+\def\qr@writebinarymatrixtoauxfile#1{}%
+\makeatother
+
+\DeclareFontFamily{PUTF}{pdf}{}%
+\DeclareFontShape{PUTF}{pdf}{m}{n}{ <-> ecrm1000 }{}%
+\DeclareFontSubstitution{PUTF}{pdf}{m}{n}%
+
+
+\definecolor{papercolor}{rgb}{1,1,1}
+\definecolor{bgcolor}{rgb}{1,1,1}
+\definecolor{textcolor}{rgb}{0,0,0}
+
+\pagecolor{bgcolor}
+
+
+\usepackage[xetex,%
+            colorlinks=true,linkcolor=blue,citecolor=blue,%
+            anchorcolor=red,urlcolor=blue,bookmarks=true,%
+            bookmarksopen=true,bookmarksopenlevel=0,plainpages=false,%
+            bookmarksnumbered=true,hyperindex=false,pdfstartview=,%
+            pdfauthor={StuStaPay},%
+            pdftitle={StuStaPay Umsatzbericht},%
+            %pdfsubject={StuStaPay Umsatzbericht}%
+]{hyperref}
+
+
+% for deterministic build
+\special{pdf:trailerid [
+    <00112233445566778899aabbccddeeff>
+    <00112233445566778899aabbccddeeff>
+]}
+
+\begin{document}
+    \color{textcolor}
+
+    \newgeometry{
+      a4paper,
+      total={170mm,257mm},
+      left=20mm,
+      top=0mm,
+      bottom=35mm,
+      heightrounded,
+    }
+
+    \pagestyle{fancy}
+    \fancypagestyle{plain}{ % pages containing chapter start
+        \fancyhf{}
+        \fancyhead{} % clear all header fields
+        \renewcommand{\headrulewidth}{0pt}
+    }
+    \fancyfoot[C]{\includegraphics[width=3cm]{logo} \\\textcolor{textcolor}Seite \thepage/\pageref*{LastPage}}
+
+
+    \noindent
+    \makebox[17cm]{
+    \vspace{-35mm}
+    \includegraphics[width=21cm,trim={15.5cm 0 10.15cm 0},clip]{stustaculum24_wristband.pdf}
+    }
+    \vspace{1em}
+
+    \begin{center}
+        \LARGE\textsf{StuStaPay} \\
+        \Huge{Umsatzbericht} \\
+        \LARGE\textsf{StuStaCulum 2024}
+    \end{center}
+    \vspace{2em}
+
+    % Addresse und Steuer ID
+    \begin{flushright}
+        \VAR[config.issuer|latex] \\
+        \VAR[config.address.strip()|latex] \\
+        USt-IdNr. \VAR[config.ust_id|latex] \\
+    \end{flushright}
+
+    \noindent
+    \VAR[node.name] \\
+    \VAR[node.description] \\
+
+    \vspace{2em}
+
+    \begin{center}
+        \LARGE\textbf{Übersicht} \\
+    \end{center}
+    \vspace{2em}
+
+    {
+    \large
+    \begin{tabular*}{10cm}{ p{6cm} p{6cm} }
+        Beginn                             & \VAR[from_time|datetime] \\
+        Letzter berücksichtigter Zeitpunkt & \VAR[to_time|datetime] \\
+        Gesamtumsatz                       & \VAR[total_revenue|money] \\
+        Gebühren                           & \VAR[fees|money] (\VAR[fees_percent|percent]) \\
+        Auszahlung nach Gebühren           & \VAR[revenue_minus_fees|money] \\
+    \end{tabular*}
+    }
+
+    \vspace{2em}
+
+    \begin{center}
+        \LARGE\textbf{Nach Tagen} \\
+    \end{center}
+    \vspace{2em}
+    
+    % Auflistung nach Tagen
+    \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+    \rowcolors{2}{}{bgcolor!80}
+    \begin{tabularx}{\textwidth}{ R R R R R }
+        \textbf{Datum} & \textbf{Anzahl Transaktionen} & \textbf{Gesamtumsatz} & \textbf{Gebühren} & \textbf{Auszahlung} \\
+        \hline
+        \BLOCK[ for daily in daily_revenue_stats ]
+        \VAR[daily.day] & \VAR[daily.num_transactions] & \VAR[daily.revenue|money] & \VAR[daily.fees|money] & \VAR[daily.revenue_minus_fees|money] \\
+        \BLOCK[endfor]
+    \end{tabularx}
+
+    \vfill
+    \restoregeometry
+    \pagebreak
+
+    % hier ist null abstand oben.
+    % vermutlich wegen dem fancy header, hatte keine zeit mehr das zu fixen
+    % null abstand oben haben wir auch bei natürlichen page brakes
+    % muss korrigiert werden
+
+    \begin{center}
+        \LARGE\textbf{Einzelauflistung} \\
+    \end{center}
+    \vspace{1em}
+
+    \rowcolors{0}{}{}
+
+    \begin{center}
+    \begin{longtable}{lllll}
+    \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} & \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline 
+    \endfirsthead
+    
+    \hline
+    \multicolumn{5}{l}
+    {{... Fortsetzung von der vorherigen Seite}} \\
+    \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} & \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline
+    \endhead
+    
+    \hline \multicolumn{5}{r}{{Fortsetzung auf der nächsten Seite ...}} \\ \hline
+    \endfoot
+    
+    \hline \hline
+    \endlastfoot
+        \BLOCK[ for order in orders ]
+        \VAR[order.booked_at|datetime] & \VAR["{:010}".format(order.id)] & \VAR[order.total_price|money] & \VAR[order.fees|money] & \VAR[order.total_price_minus_fees|money] \\
+        \BLOCK[endfor]
+    \end{longtable}
+    \end{center}
+
+    \begin{tabularx}{\textwidth}{ RRRRR }
+    \end{tabularx}
+
+\end{document}
