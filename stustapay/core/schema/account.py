@@ -57,6 +57,7 @@ class UserTagDetail(BaseModel):
 
     comment: Optional[str] = None
     account_id: Optional[int] = None
+    user_id: Optional[int] = None
 
     account_history: list[UserTagAccountAssociation]
 

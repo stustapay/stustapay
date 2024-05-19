@@ -121,7 +121,7 @@ class UserTagService(DBService):
     async def get_user_tag_detail(self, *, conn: Connection, node: Node, user_tag_id: int) -> Optional[UserTagDetail]:
         return await conn.fetch_maybe_one(
             UserTagDetail,
-            "select * from user_tag_with_history utwh where id = $1 and node_id = any($2)",
+            "select * from user_tag_with_history utwh where utwh.id = $1 and utwh.node_id = any($2)",
             user_tag_id,
             node.ids_to_event_node,
         )
@@ -149,7 +149,7 @@ class UserTagService(DBService):
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
         return await conn.fetch_many(
             UserTagDetail,
-            "select * from user_tag_with_history "
+            "select * from user_tag_with_history utwh "
             "where ((uid is not null and to_hex(uid::bigint) like $1) or lower(pin) like $1) and node_id = any($2)",
             f"%{search_term.lower()}%",
             node.ids_to_event_node,

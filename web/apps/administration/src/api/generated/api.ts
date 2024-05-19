@@ -2216,6 +2216,7 @@ export type UserTagDetail = {
   node_id: number;
   comment?: string | null;
   account_id?: number | null;
+  user_id?: number | null;
   account_history: UserTagAccountAssociation[];
 };
 export type UserTagDetailRead = {
@@ -2225,6 +2226,7 @@ export type UserTagDetailRead = {
   node_id: number;
   comment?: string | null;
   account_id?: number | null;
+  user_id?: number | null;
   account_history: UserTagAccountAssociation[];
   uid_hex: string | null;
 };

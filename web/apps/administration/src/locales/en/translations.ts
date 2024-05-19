@@ -101,6 +101,8 @@ export const translations = {
     comment: "Comment",
     noAccount: "No account associated",
     account: "Account",
+    user: "User",
+    noUser: "No user associated",
     accountHistory: "Account association history",
     restriction: "User Tag restriction",
     secret: "Secret these tags use",

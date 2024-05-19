@@ -1,5 +1,5 @@
 import { useDeleteUserMutation, useGetUserQuery } from "@/api";
-import { UserRoutes, UserTagRoutes } from "@/app/routes";
+import { CashierRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ListItemLink } from "@/components";
 import { DetailLayout } from "@/components/layouts";
 import { useCurrentNode } from "@/hooks";
@@ -37,6 +37,9 @@ export const UserDetail: React.FC = () => {
 
   if (user === undefined) {
     return <Loading />;
+  }
+  if (user.cashier_account_id != null) {
+    return <Navigate to={CashierRoutes.detail(user.id, user.node_id)} />;
   }
 
   return (
