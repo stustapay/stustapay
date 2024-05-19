@@ -13,7 +13,6 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - name: setup gradle
-        working-directory: ./app
         uses: gradle/actions/setup-gradle@v3
       - name: build app
         working-directory: ./app
