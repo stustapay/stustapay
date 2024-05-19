@@ -52,6 +52,9 @@ export const translations = {
     status: "Status",
     yes: "Yes",
     no: "No",
+    cashier: "Cashier",
+    till: "Till",
+    create: "Create",
   },
   nodes: {
     overview: "Overview",
@@ -196,6 +199,8 @@ export const translations = {
     cancelError: "Error cancelling order: {{what}}",
     editOrderInfo:
       "Editing an order can only be done as long as it has not been cancelled. After editing, the original order will be cancelled and a new one will be created.",
+    noCashier: "No cashier assocated with this order",
+    noTill: "No till associated with this order, this is weird!!!",
   },
   item: {
     product: "Product",
