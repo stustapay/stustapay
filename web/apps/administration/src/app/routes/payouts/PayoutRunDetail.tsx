@@ -204,6 +204,7 @@ export const PayoutRunDetail: React.FC = () => {
       onClick: () => setShowSepaModal(true),
       color: "success",
       icon: <FileDownloadIcon />,
+      disabled: payoutRun.done || payoutRun.revoked,
     },
     {
       label: t("payoutRun.downloadPreviousSepa"),

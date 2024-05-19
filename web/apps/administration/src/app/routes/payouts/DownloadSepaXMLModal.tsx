@@ -49,6 +49,7 @@ export const DownloadSepaXMLModal: React.FC<DownloadSepaXMLModalProps> = ({ payo
       link.setAttribute("download", `sepa__run_${payoutRunId}__${values.execution_date}.xml`);
       link.click();
       link.remove();
+      onClose();
     } catch {
       toast.error("Error downloading sepa xml");
     }
