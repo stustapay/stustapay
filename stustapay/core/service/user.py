@@ -388,9 +388,23 @@ class UserService(DBService):
         user_tag_uid: int,
         role_ids: list[int],
     ) -> User:
-        user_id = await conn.fetchval("select id from user_with_roles where user_tag_uid = $1", user_tag_uid)
+        user_id = await conn.fetchval(
+            "select id from user_with_roles where user_tag_uid = $1 and node_id = any($2)",
+            user_tag_uid,
+            node.ids_to_root,
+        )
         if user_id is None:
             raise InvalidArgument(f"User with tag uid {format_user_tag_uid(user_tag_uid)} does not exist")
+
+        roles = await conn.fetch_many(
+            UserRole,
+            "select ur.* from user_role ur join user_to_role utr on ur.id = utr.role_id "
+            "where utr.node_id = $1 and utr.user_id = $2",
+            node.id,
+            user_id,
+        )
+        if any([role.is_privileged for role in roles]):
+            raise InvalidArgument("This user has privileged roles assigned, updates are not allowed at a terminal")
 
         await self.update_user_to_roles(
             conn=conn,
@@ -399,7 +413,7 @@ class UserService(DBService):
             user_to_roles=NewUserToRoles(user_id=user_id, role_ids=role_ids),
         )
 
-        return await conn.fetch_one(User, "select * from user_with_roles where user_tag_uid = $1", user_tag_uid)
+        return await conn.fetch_one(User, "select * from user_with_roles where id = $1", user_id)
 
     @with_db_transaction(read_only=True)
     @requires_node()

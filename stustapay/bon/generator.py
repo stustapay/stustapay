@@ -65,8 +65,11 @@ class GeneratorWorker:
         async with self.pool.acquire() as conn:
             missing_bons = await conn.fetch(
                 "select bon.id, o.uuid "
-                "from bon join ordr o on bon.id = o.id "
-                "where not generated and error is null and bon.id % $1 = $2",
+                "from bon "
+                "join ordr o on bon.id = o.id "
+                "join till t on o.till_id = t.id "
+                "join node n on t.node_id = n.id "
+                "where not generated and error is null and bon.id % $1 = $2 and not n.read_only",
                 self.n_workers,
                 self.worker_id,
             )
