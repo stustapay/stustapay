@@ -57,7 +57,6 @@ fun UserLoginView(
     val userRolesV = userRoles
 
     val scanState = rememberNfcScanDialogState()
-    var showCashRegisterTransfer = rememberNfcScanDialogState()
 
     LaunchedEffect(Unit) {
         scope.launch {
@@ -99,8 +98,6 @@ fun UserLoginView(
                 }
             }
         }
-
-        UserCashRegisterTransferDialog(showCashRegisterTransfer)
 
         when (userRolesV) {
             is UserRolesState.OK -> {
@@ -214,21 +211,6 @@ fun UserLoginView(
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center
                 )
-            }
-        }
-
-        if (userUIStateV !is UserUIState.LoggedIn) {
-            Divider()
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                onClick = {
-                    viewModel.clearErrors()
-                    showCashRegisterTransfer.open()
-                },
-            ) {
-                Text(stringResource(R.string.hand_over_cash_register), fontSize = 24.sp)
             }
         }
 

@@ -25,6 +25,7 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param sumupAffiliateKey 
+ * @param sumupApiKey 
  * @param userTagSecret 
  */
 @Serializable
@@ -33,6 +34,9 @@ data class TerminalSecrets (
 
     @SerialName(value = "sumup_affiliate_key")
     val sumupAffiliateKey: kotlin.String,
+
+    @SerialName(value = "sumup_api_key")
+    val sumupApiKey: kotlin.String,
 
     @SerialName(value = "user_tag_secret")
     val userTagSecret: UserTagSecret

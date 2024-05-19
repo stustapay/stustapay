@@ -118,6 +118,16 @@ class UserViewModel @Inject constructor(
         _currentTag.update { NfcTag(0.toBigInteger(), null) }
     }
 
+    suspend fun checkCreate(tag: NfcTag): Boolean {
+        return when (cashierRepository.getUserInfo(tag)) {
+            is Response.OK -> {
+                display(tag)
+                true
+            }
+            is Response.Error -> false
+        }
+    }
+
     suspend fun create(
         login: String,
         displayName: String,

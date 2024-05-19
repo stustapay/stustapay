@@ -66,11 +66,14 @@
     <string name="management_transport_title">Transport</string>
     <string name="management_transport_withdraw">Withdraw\nCashier -> Bag</string>
     <string name="management_transport_deposit">Deposit\nBag -> Cashier</string>
-    <string name="management_vault_title">Vault</string>
-    <string name="management_vault_take">Take\nVault -> Bag</string>
-    <string name="management_vault_return">Return\nBag -> Vault</string>
+
+    <string name="management_vault_title">Vault Management</string>
+    <string name="management_vault_take">Withdraw\nVault -> Bag</string>
+    <string name="management_vault_return">Deposit\nBag -> Vault</string>
 
     <string name="nfc_scan_prompt">📡 Scan a Chip</string>
+    <string name="nfc_scan_cashier_prompt">📡 Scan Cashier Chip</string>
+    <string name="nfc_scan_transfer_prompt">📡 Scan Transfer Target Chip</string>
 
     <string name="user_title">User</string>
     <string name="user_login">Login</string>
@@ -78,6 +81,8 @@
     <string name="user_id">ID</string>
     <string name="user_username">Username</string>
     <string name="user_displayname">Name</string>
+    <string name="user_firstname">First Name</string>
+    <string name="user_lastname">Last Name</string>
     <string name="user_roles">Roles</string>
     <string name="user_privileged">User is privileged and can not be edited</string>
     <string name="user_description">Description</string>

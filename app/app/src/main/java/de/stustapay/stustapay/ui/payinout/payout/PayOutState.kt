@@ -47,10 +47,13 @@ data class PayOutState(
         // pass null (meaning max amount) if we didn't change the amount locally.
         val amount = currentAmount?.let { it.toDouble() / -100 }
 
+        val _checkedPayOut = checkedPayOut
         return NewPayOut(
-            uuid = UUID.fromString(checkedPayOut?.uuid) ?: UUID.randomUUID(),
-            customerTagUid = tagV.uid,
-            amount = amount
+            uuid = if (_checkedPayOut != null) {
+                UUID.fromString(_checkedPayOut.uuid)
+            } else {
+                UUID.randomUUID()
+            }, customerTagUid = tagV.uid, amount = amount
         )
     }
 

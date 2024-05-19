@@ -44,8 +44,7 @@ fun UserView(
         modifier = Modifier.fillMaxSize()
     ) {
         composable(UserNavDest.info.route) {
-            NavScaffold(
-                title = { Text(stringResource(R.string.user_title)) },
+            NavScaffold(title = { Text(stringResource(R.string.user_title)) },
                 state = scaffoldState,
                 navigateBack = {
                     if (navController.currentDestination?.route == UserNavDest.info.route) {
@@ -54,38 +53,33 @@ fun UserView(
                     } else {
                         navController.popBackStack()
                     }
-                }
-            ) {
+                }) {
                 Box(modifier = Modifier.padding(it)) {
-                    UserLoginView(
-                        viewModel,
-                        goToUserCreateView = {
-                            viewModel.idleState()
-                            navController.navigateTo(UserNavDest.create.route)
-                        },
-                        goToUserDisplayView = {
-                            viewModel.idleState()
-                            navController.navigateTo(UserNavDest.display.route)
-                        }
-                    )
+                    UserLoginView(viewModel, goToUserCreateView = {
+                        viewModel.idleState()
+                        navController.navigateTo(UserNavDest.create.route)
+                    }, goToUserDisplayView = {
+                        viewModel.idleState()
+                        navController.navigateTo(UserNavDest.display.route)
+                    })
                 }
             }
         }
         composable(UserNavDest.create.route) {
-            NavScaffold(
-                title = { Text(stringResource(R.string.user_create_title)) },
+            NavScaffold(title = { Text(stringResource(R.string.user_create_title)) },
                 navigateBack = {
                     viewModel.idleState()
                     navController.navigateTo(UserNavDest.info.route)
                 }) {
                 Box(modifier = Modifier.padding(it)) {
-                    UserCreateView(viewModel)
+                    UserCreateView(viewModel = viewModel, goToUserDisplayView = {
+                        navController.navigateTo(UserNavDest.display.route)
+                    })
                 }
             }
         }
         composable(UserNavDest.update.route) {
-            NavScaffold(
-                title = { Text(stringResource(R.string.user_update_title)) },
+            NavScaffold(title = { Text(stringResource(R.string.user_update_title)) },
                 navigateBack = {
                     viewModel.idleState()
                     navController.navigateTo(UserNavDest.info.route)
@@ -96,19 +90,15 @@ fun UserView(
             }
         }
         composable(UserNavDest.display.route) {
-            NavScaffold(
-                title = { Text(stringResource(R.string.user_display_title)) },
+            NavScaffold(title = { Text(stringResource(R.string.user_display_title)) },
                 navigateBack = {
                     viewModel.idleState()
                     navController.navigateTo(UserNavDest.info.route)
                 }) {
                 Box(modifier = Modifier.padding(it)) {
-                    UserDisplayView(
-                        viewModel = viewModel,
-                        goToUserUpdateView = {
-                            navController.navigateTo(UserNavDest.update.route)
-                        }
-                    )
+                    UserDisplayView(viewModel = viewModel, goToUserUpdateView = {
+                        navController.navigateTo(UserNavDest.update.route)
+                    })
                 }
             }
         }
