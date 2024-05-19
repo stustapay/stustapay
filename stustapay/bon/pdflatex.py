@@ -6,19 +6,17 @@ import asyncio
 import os
 import re
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional
 
 import jinja2
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel
 from pylatexenc.latexencode import (
     RULE_REGEX,
     UnicodeToLatexConversionRule,
     UnicodeToLatexEncoder,
 )
-
-from stustapay.core.schema.order import Order
 
 # https://pylatexenc.readthedocs.io/en/latest/latexencode/
 LatexEncoder = UnicodeToLatexEncoder(
@@ -42,17 +40,24 @@ LatexEncoder = UnicodeToLatexEncoder(
 TEX_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tex")
 
 
-def jfilter_money(value: float):
-    # how are the money values printed in the pdf
-    return f"{value:8.2f}".replace(".", ",")
-
-
 def jfilter_percent(value: float):
     # format percentages as ' 7,00%'
     return f"{value * 100:5.2f}\\%".replace(".", ",")
 
 
-def setup_jinja_env():
+def jfilter_datetime(t: datetime):
+    return LatexEncoder.unicode_to_latex(t.strftime("%Y-%m-%d %H:%M:%S"))
+
+
+def setup_jinja_env(currency_symbol: str):
+    def jfilter_money(value: float):
+        # how are the money values printed in the pdf
+        return f"{value:8.2f}{currency_symbol}".replace(".", ",")
+
+    def jfilter_money_no_currency(value: float):
+        # how are the money values printed in the pdf
+        return f"{value:8.2f}".replace(".", ",")
+
     env = jinja2.Environment(
         block_start_string="\\BLOCK[",
         block_end_string="]",
@@ -66,76 +71,31 @@ def setup_jinja_env():
         loader=jinja2.FileSystemLoader(TEX_PATH),
     )
     env.filters["money"] = jfilter_money
+    env.filters["money_wo_currency"] = jfilter_money_no_currency
     env.filters["percent"] = jfilter_percent
+    env.filters["datetime"] = jfilter_datetime
     env.filters["latex"] = LatexEncoder.unicode_to_latex
     return env
 
 
-class BonConfig(BaseModel):
-    title: str
-    issuer: str
-    address: str
-    ust_id: str
-
-
-class TaxRateAggregation(BaseModel):
-    tax_name: str
-    tax_rate: float
-    total_price: float
-    total_tax: float
-    total_no_tax: float
-
-
-class OrderWithTse(Order):
-    signature_status: str  # new | pending | done | failure
-    transaction_process_type: Optional[str] = None
-    transaction_process_data: Optional[str] = None
-    tse_transaction: Optional[str] = None
-    tse_signaturenr: Optional[str] = None
-    tse_start: Optional[str] = None
-    tse_end: Optional[str] = None
-    tse_hashalgo: Optional[str] = None
-    tse_time_format: Optional[str] = None
-    tse_signature: Optional[str] = None
-    tse_public_key: Optional[str] = None
-    node_id: int
-
-    @computed_field  # type: ignore[misc]
-    @property
-    def tse_qr_code_text(self) -> str:
-        return (
-            f"V0;{self.till_id};{self.transaction_process_type};{self.transaction_process_data};"
-            f"{self.tse_transaction};{self.tse_signaturenr};{self.tse_start};{self.tse_end};{self.tse_hashalgo};"
-            f"{self.tse_time_format};{self.tse_signature};{self.tse_public_key}"
-        )
-
-
-class BonTemplateContext(BaseModel):
-    order: OrderWithTse
-
-    tax_rate_aggregations: list[TaxRateAggregation]
-
-    config: BonConfig
-
-
-async def render_template(tex_tpl_name: str, context: BonTemplateContext) -> str:
-    env = setup_jinja_env()
+async def render_template(tex_tpl_name: str, context, currency_symbol: str) -> str:
+    env = setup_jinja_env(currency_symbol=currency_symbol)
     tpl = env.get_template(tex_tpl_name)
     return tpl.render(context)
 
 
-class RenderedBon(BaseModel):
+class RenderedPdf(BaseModel):
     mime_type: str
     content: bytes
 
 
-class BonRenderResult(BaseModel):
+class PdfRenderResult(BaseModel):
     success: bool
     msg: str = ""
-    bon: RenderedBon | None = None
+    bon: RenderedPdf | None = None
 
 
-async def pdflatex(file_content: str) -> BonRenderResult:
+async def pdflatex(file_content: str) -> PdfRenderResult:
     """
     renders the given latex template with the context and saves the resulting pdf to out_file
     returns <True, ""> if the pdf was compiled successfully
@@ -163,15 +123,15 @@ async def pdflatex(file_content: str) -> BonRenderResult:
             stdout, _ = await proc.communicate()
             # latex failed
             if proc.returncode != 0:
-                return BonRenderResult(success=False, msg=stdout.decode("utf-8")[-800:])
+                return PdfRenderResult(success=False, msg=stdout.decode("utf-8")[-800:])
         except subprocess.SubprocessError as e:
-            return BonRenderResult(success=False, msg=f"latex failed with error {e}")
+            return PdfRenderResult(success=False, msg=f"latex failed with error {e}")
 
         output_pdf = Path(tmp_dir) / "main.pdf"
 
         try:
             pdf_content = output_pdf.read_bytes()
         except Exception as e:
-            return BonRenderResult(success=False, msg=str(e))
+            return PdfRenderResult(success=False, msg=str(e))
 
-        return BonRenderResult(success=True, bon=RenderedBon(mime_type="application/pdf", content=pdf_content))
+        return PdfRenderResult(success=True, bon=RenderedPdf(mime_type="application/pdf", content=pdf_content))

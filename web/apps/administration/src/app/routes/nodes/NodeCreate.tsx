@@ -86,7 +86,7 @@ export const NodeCreate: React.FC = withPrivilegeGuard("node_administration", ()
                 variant="contained"
                 disabled={formik.isSubmitting || Object.keys(formik.touched).length === 0}
               >
-                {t("create")}
+                {t("common.create")}
               </Button>
             </Stack>
           </Form>

@@ -76,3 +76,33 @@ async def generate_test_bon(token: CurrentAuthToken, tree_service: ContextTreeSe
     mime_type, content = await tree_service.generate_test_bon(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="test_bon.pdf"'}
     return Response(content, headers=headers, media_type=mime_type)
+
+
+@router.post(
+    "/events/{node_id}/generate-test-report",
+    responses={
+        "200": {
+            "description": "Successful Response",
+            "content": {"application/pdf": {}},
+        }
+    },
+)
+async def generate_test_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    mime_type, content = await tree_service.generate_test_report(token=token, node_id=node_id)
+    headers = {"Content-Disposition": 'inline; filename="test_report.pdf"'}
+    return Response(content, headers=headers, media_type=mime_type)
+
+
+@router.post(
+    "/nodes/{node_id}/generate-revenue-report",
+    responses={
+        "200": {
+            "description": "Successful Response",
+            "content": {"application/pdf": {}},
+        }
+    },
+)
+async def generate_revenue_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    mime_type, content = await tree_service.generate_revenue_report(token=token, node_id=node_id)
+    headers = {"Content-Disposition": 'inline; filename="revenue_report.pdf"'}
+    return Response(content, headers=headers, media_type=mime_type)

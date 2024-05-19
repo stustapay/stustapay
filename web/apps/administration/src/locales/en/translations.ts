@@ -37,6 +37,7 @@ export const translations = {
   userToRoles: "User to Roles",
   common: {
     id: "ID",
+    node: "Node",
     definedAtNode: "Node",
     loadingError: "Errors while loading page",
     configLoadFailed: "Something went wrong while loading the page configuration: {{what}}",
@@ -51,6 +52,9 @@ export const translations = {
     status: "Status",
     yes: "Yes",
     no: "No",
+    cashier: "Cashier",
+    till: "Till",
+    create: "Create",
   },
   nodes: {
     overview: "Overview",
@@ -195,6 +199,8 @@ export const translations = {
     cancelError: "Error cancelling order: {{what}}",
     editOrderInfo:
       "Editing an order can only be done as long as it has not been cancelled. After editing, the original order will be cancelled and a new one will be created.",
+    noCashier: "No cashier assocated with this order",
+    noTill: "No till associated with this order, this is weird!!!",
   },
   item: {
     product: "Product",
@@ -223,6 +229,7 @@ export const translations = {
     showRevenue: "Show revenue",
     warningEventDatesNeedConfiguration:
       "Please configure the start / end times for this event as well as the daily end time in the event settings",
+    generateRevenueReport: "Generate revenue report",
   },
   ticket: {
     name: "Name",
@@ -333,6 +340,7 @@ export const translations = {
       address: "Bon address",
       title: "Bon title",
       previewBon: "Preview Bon",
+      previewReport: "Preview Revenue Report",
     },
     sumup: {
       tabLabel: "SumUp",

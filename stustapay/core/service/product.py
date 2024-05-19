@@ -87,7 +87,11 @@ class ProductService(DBService):
             product.tax_rate_id,
             product.target_account_id,
             product.fixed_price,
-            product.price_in_vouchers,
+            (
+                product.price_in_vouchers
+                if product.price_in_vouchers is not None and product.price_in_vouchers > 0
+                else None
+            ),
             product.is_locked,
             product.is_returnable,
         )
@@ -153,7 +157,11 @@ class ProductService(DBService):
             product.tax_rate_id,
             product.target_account_id,
             product.fixed_price,
-            product.price_in_vouchers,
+            (
+                product.price_in_vouchers
+                if product.price_in_vouchers is not None and product.price_in_vouchers > 0
+                else None
+            ),
             product.is_locked,
             product.is_returnable,
         )

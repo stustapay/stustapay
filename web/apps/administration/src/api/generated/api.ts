@@ -799,6 +799,14 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-bon`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
+      generateTestReport: build.mutation<GenerateTestReportApiResponse, GenerateTestReportApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-report`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
+      generateRevenueReport: build.mutation<GenerateRevenueReportApiResponse, GenerateRevenueReportApiArg>({
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
       listSumupCheckouts: build.query<ListSumupCheckoutsApiResponse, ListSumupCheckoutsApiArg>({
         query: (queryArg) => ({ url: `/sumup/checkouts`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["sumup"],
@@ -1409,7 +1417,7 @@ export type UpdateNodeApiArg = {
   nodeId: number;
   newNode: NewNode;
 };
-export type ArchiveNodeApiResponse = /** status 200 Successful Response */ Node;
+export type ArchiveNodeApiResponse = /** status 200 Successful Response */ any;
 export type ArchiveNodeApiArg = {
   nodeId: number;
 };
@@ -1429,6 +1437,14 @@ export type GetRestrictedEventSettingsApiArg = {
 };
 export type GenerateTestBonApiResponse = /** status 200 Successful Response */ any;
 export type GenerateTestBonApiArg = {
+  nodeId: number;
+};
+export type GenerateTestReportApiResponse = /** status 200 Successful Response */ any;
+export type GenerateTestReportApiArg = {
+  nodeId: number;
+};
+export type GenerateRevenueReportApiResponse = /** status 200 Successful Response */ any;
+export type GenerateRevenueReportApiArg = {
   nodeId: number;
 };
 export type ListSumupCheckoutsApiResponse = /** status 200 Successful Response */ SumUpCheckout[];
@@ -2748,6 +2764,8 @@ export const {
   useGetRestrictedEventSettingsQuery,
   useLazyGetRestrictedEventSettingsQuery,
   useGenerateTestBonMutation,
+  useGenerateTestReportMutation,
+  useGenerateRevenueReportMutation,
   useListSumupCheckoutsQuery,
   useLazyListSumupCheckoutsQuery,
   useListSumupTransactionsQuery,

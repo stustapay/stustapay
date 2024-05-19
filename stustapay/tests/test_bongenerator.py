@@ -2,8 +2,13 @@
 import datetime
 import uuid
 
-from stustapay.bon.bon import BonConfig, BonTemplateContext, TaxRateAggregation
-from stustapay.bon.pdflatex import OrderWithTse, render_template
+from stustapay.bon.bon import (
+    BonConfig,
+    BonTemplateContext,
+    OrderWithTse,
+    TaxRateAggregation,
+)
+from stustapay.bon.pdflatex import render_template
 from stustapay.core.schema.order import LineItem, OrderType, PaymentMethod
 from stustapay.core.schema.product import Product, ProductType
 from stustapay.core.schema.tree import Node
@@ -11,6 +16,7 @@ from stustapay.core.schema.tree import Node
 
 async def test_pdflatex_bon(event_node: Node):
     context = BonTemplateContext(
+        currency_symbol="€",
         order=OrderWithTse(
             id=1,
             node_id=event_node.id,
@@ -131,5 +137,5 @@ async def test_pdflatex_bon(event_node: Node):
         ),
     )
 
-    rendered = await render_template("bon.tex", context=context)
+    rendered = await render_template("bon.tex", context=context, currency_symbol=context.currency_symbol)
     assert rendered is not None

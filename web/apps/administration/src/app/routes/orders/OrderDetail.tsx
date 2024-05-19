@@ -1,5 +1,12 @@
-import { useCancelOrderMutation, useGetOrderQuery } from "@/api";
-import { CustomerRoutes, OrderRoutes, UserTagRoutes } from "@/app/routes";
+import {
+  selectTillById,
+  selectUserById,
+  useCancelOrderMutation,
+  useGetOrderQuery,
+  useListTillsQuery,
+  useListUsersQuery,
+} from "@/api";
+import { CashierRoutes, CustomerRoutes, OrderRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailLayout, ListItemLink } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
 import { useCurrentNode } from "@/hooks";
@@ -7,7 +14,7 @@ import { Cancel as CancelIcon, Edit as EditIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
-import { formatUserTagUid } from "@stustapay/models";
+import { formatUserTagUid, getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -27,12 +34,14 @@ export const OrderDetail: React.FC = () => {
     error,
     isLoading: isOrderLoading,
   } = useGetOrderQuery({ nodeId: currentNode.id, orderId: Number(orderId) });
+  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
+  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
 
-  if (isOrderLoading) {
+  if (isOrderLoading || isTillsLoading || isUsersLoading) {
     return <Loading />;
   }
 
-  if (error || !order) {
+  if (error || !order || !users || !tills) {
     navigate(-1);
     return null;
   }
@@ -51,6 +60,9 @@ export const OrderDetail: React.FC = () => {
       },
     });
   };
+
+  const till = order.till_id != null ? selectTillById(tills, order.till_id) : undefined;
+  const cashier = order.cashier_id != null ? selectUserById(users, order.cashier_id) : undefined;
 
   return (
     <DetailLayout
@@ -87,6 +99,24 @@ export const OrderDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("order.bookedAt")} secondary={order.booked_at} />
           </ListItem>
+          {cashier ? (
+            <ListItemLink to={CashierRoutes.detail(cashier.id, cashier.node_id)}>
+              <ListItemText primary={t("common.cashier")} secondary={getUserName(cashier)} />
+            </ListItemLink>
+          ) : (
+            <ListItem>
+              <ListItemText primary={t("common.cashier")} secondary={t("order.noCashier")} />
+            </ListItem>
+          )}
+          {till ? (
+            <ListItemLink to={TillRoutes.detail(till.id, till.node_id)}>
+              <ListItemText primary={t("common.till")} secondary={till.name} />
+            </ListItemLink>
+          ) : (
+            <ListItem>
+              <ListItemText primary={t("common.till")} secondary={t("order.noTill")} />
+            </ListItem>
+          )}
           {order.customer_account_id != null && (
             <ListItemLink to={CustomerRoutes.detail(order.customer_account_id)}>
               <ListItemText primary={t("order.customerAccountId")} secondary={order.customer_account_id} />

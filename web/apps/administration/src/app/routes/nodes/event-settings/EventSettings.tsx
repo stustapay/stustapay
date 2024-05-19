@@ -17,10 +17,11 @@ import { TabSumUp } from "./TabSumUp";
 import { Link as RouterLink } from "react-router-dom";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { toast } from "react-toastify";
+import { NodeConfiguration } from "../node-settings";
 
 export const EventSettings: React.FC = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useQueryVar("tab", "general");
+  const [activeTab, setActiveTab] = useQueryVar("tab", "node");
   const { currentNode } = useCurrentNode();
   const { data: eventSettings, isLoading, error } = useGetRestrictedEventSettingsQuery({ nodeId: currentNode.id });
   const [archiveNode] = useArchiveNodeMutation();
@@ -70,6 +71,7 @@ export const EventSettings: React.FC = () => {
         <Box display="grid" gridTemplateColumns="min-content auto">
           <Box sx={{ borderRight: 1, borderColor: "divider" }}>
             <TabList onChange={(_, tab) => setActiveTab(tab)} orientation="vertical">
+              <Tab label={t("common.node")} value="node" />
               <Tab label={t("settings.general.tabLabel")} value="general" />
               <Tab label={t("settings.customerPortal.tabLabel")} value="customerPortal" />
               <Tab label={t("settings.agb.tabLabel")} value="agb" />
@@ -80,6 +82,9 @@ export const EventSettings: React.FC = () => {
               <Tab label={t("settings.email.tabLabel")} value="email" />
             </TabList>
           </Box>
+          <TabPanel value="node">
+            <NodeConfiguration />
+          </TabPanel>
           <TabPanel value="general">
             <TabGeneral nodeId={currentNode.id} eventSettings={eventSettings} />
           </TabPanel>

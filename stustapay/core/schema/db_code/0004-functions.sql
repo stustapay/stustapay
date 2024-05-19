@@ -138,3 +138,21 @@ begin
 end;
 $$ language plpgsql
     set search_path = "$user", public;
+
+create or replace function orders_at_node_and_children(
+    node_id bigint
+) returns setof order_value as
+$$
+
+select
+    o.*
+from order_value o
+    join till t on o.till_id = t.id
+    join node n on n.id = t.node_id
+where
+    orders_at_node_and_children.node_id = any(n.parent_ids) or n.id = orders_at_node_and_children.node_id;
+
+$$ language sql
+    stable
+    security invoker
+    set search_path = "$user", public;

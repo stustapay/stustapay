@@ -41,7 +41,6 @@ export const TabGeneral: React.FC<{ nodeId: number; eventSettings: RestrictedEve
   const [updateEvent] = useUpdateEventMutation();
 
   const handleSubmit = (values: GeneralSettings, { setSubmitting }: FormikHelpers<GeneralSettings>) => {
-    console.log("foobar");
     setSubmitting(true);
     updateEvent({ nodeId: nodeId, updateEvent: { ...eventSettings, ...values } })
       .unwrap()

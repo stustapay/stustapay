@@ -23,6 +23,9 @@ const getActiveTab = (nodeId: number, location: string) => {
   if (location.startsWith(`/node/${nodeId}/settings-legacy`)) {
     return `/node/${nodeId}/settings-legacy`;
   }
+  if (location.startsWith(`/node/${nodeId}/system-accounts`)) {
+    return `/node/${nodeId}/system-accounts`;
+  }
   if (location.startsWith(PayoutRunRoutes.list(nodeId))) {
     return PayoutRunRoutes.list(nodeId);
   }
