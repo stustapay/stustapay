@@ -12,8 +12,6 @@ jobs:
   build_app_release:
     uses: ./.github/workflows/app_release.yaml
     secrets: inherit
-    needs:
-      - build_and_test_app
 
   build_and_test_backend:
     uses: ./.github/workflows/core.yaml
