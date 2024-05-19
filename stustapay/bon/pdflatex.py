@@ -3,6 +3,7 @@ Helper Functions to generate pdfs from latex templates and store the result as f
 """
 
 import asyncio
+import logging
 import os
 import re
 import subprocess
@@ -17,6 +18,8 @@ from pylatexenc.latexencode import (
     UnicodeToLatexConversionRule,
     UnicodeToLatexEncoder,
 )
+
+logger = logging.getLogger(__name__)
 
 # https://pylatexenc.readthedocs.io/en/latest/latexencode/
 LatexEncoder = UnicodeToLatexEncoder(
@@ -123,8 +126,11 @@ async def pdflatex(file_content: str) -> PdfRenderResult:
             stdout, _ = await proc.communicate()
             # latex failed
             if proc.returncode != 0:
-                return PdfRenderResult(success=False, msg=stdout.decode("utf-8")[-800:])
+                msg = stdout.decode("utf-8")[-800:]
+                logger.debug(f"Error generating latex pdf: {msg}")
+                return PdfRenderResult(success=False, msg=msg)
         except subprocess.SubprocessError as e:
+            logger.debug(f"Error generating latex pdf: {e}")
             return PdfRenderResult(success=False, msg=f"latex failed with error {e}")
 
         output_pdf = Path(tmp_dir) / "main.pdf"
@@ -132,6 +138,7 @@ async def pdflatex(file_content: str) -> PdfRenderResult:
         try:
             pdf_content = output_pdf.read_bytes()
         except Exception as e:
+            logger.debug(f"Error generating latex pdf: {e}")
             return PdfRenderResult(success=False, msg=str(e))
 
         return PdfRenderResult(success=True, bon=RenderedPdf(mime_type="application/pdf", content=pdf_content))
