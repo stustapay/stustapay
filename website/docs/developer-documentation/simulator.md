@@ -7,7 +7,7 @@ sidebar_position: 1
 Follow instructions in [Installation](./index.mdx) 
 for setting up the general development environment.
 
-Set up the simulation enviroment (customize parameters if needed)
+Set up the simulation environment (customize parameters if needed)
 ```shell
 python3 -m stustapay -c etc/config.devel.yaml simulate setup
 ```
@@ -26,4 +26,4 @@ username: global-admin
 pw: admin
 ```
 
-The customer portal can be accessed on [http://localhost:4300/](http://localhost:4300/) (default port config). The pin is always `pin` for all customer accounts. Existing user tags can be looked up in the admin interface under "User Tags". `186A0` should have been created if you used the simulator before.
+The customer portal can be accessed on [http://localhost:4300/](http://localhost:4300/) (default port config). You can lookup a generated pin in the admin frontend, [see this page](./index.mdx).
