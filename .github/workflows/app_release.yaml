@@ -14,9 +14,20 @@ jobs:
           cache: gradle
       - name: setup gradle
         uses: gradle/actions/setup-gradle@v3
+      - name: decode keystore
+        env:
+            ENCODED_STRING: ${{ secrets.KEYSTORE }}
+        run: |
+            TMP_KEYSTORE_FILE_PATH="${RUNNER_TEMP}"/keystore
+            mkdir "${TMP_KEYSTORE_FILE_PATH}"
+            echo $ENCODED_STRING | base64 -di > "${TMP_KEYSTORE_FILE_PATH}"/keystore.jks
       - name: build app
         working-directory: ./app
-        run: ./gradlew app:bundleRelease
+        run: ./gradlew app:buildRelease
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
       - name: upload apk
         uses: actions/upload-artifact@v3
         with:
