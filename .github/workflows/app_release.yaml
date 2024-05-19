@@ -1,4 +1,5 @@
 name: App Release
+on: workflow_dispatch
 
 jobs:
   build:
