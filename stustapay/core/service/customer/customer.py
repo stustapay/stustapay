@@ -150,9 +150,9 @@ class CustomerService(DBService):
 
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(
-            "insert into customer_info (customer_account_id, iban, account_name, email, donation) "
-            "values ($1, $2, $3, $4, $5) "
-            "on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4, donation = $5",
+            "insert into customer_info (customer_account_id, iban, account_name, email, donation, donate_all, has_entered_info) "
+            "values ($1, $2, $3, $4, $5, false, true) "
+            "on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4, donation = $5, donate_all = false, has_entered_info = true",
             current_customer.id,
             iban.compact,
             customer_bank.account_name,
@@ -175,13 +175,10 @@ class CustomerService(DBService):
     @requires_customer
     async def update_customer_info_donate_all(self, *, conn: Connection, current_customer: Customer) -> None:
         await self.check_payout_run(conn, current_customer)
-
-        # if customer_info does not exist create it, otherwise update it
         await conn.execute(
-            "insert into customer_info (customer_account_id, donation) values ($1, $2) "
-            "on conflict (customer_account_id) do update set donation = $2",
+            "insert into customer_info (customer_account_id, donation, donate_all, has_entered_info) values ($1, null, true, true) "
+            "on conflict (customer_account_id) do update set donation_all = true, has_entered_info = true",
             current_customer.id,
-            round(current_customer.balance, 2),
         )
 
     @with_db_transaction(read_only=True)

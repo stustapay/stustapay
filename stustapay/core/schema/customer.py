@@ -17,6 +17,8 @@ class Customer(Account):
     donation: Optional[float]
     payout_export: Optional[bool]
     user_tag_pin: Optional[str]
+    donate_all: bool
+    has_entered_info: bool
 
     payout: Payout | None
 

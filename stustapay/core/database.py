@@ -16,7 +16,7 @@ from .schema import DATA_PATH, DB_CODE_PATH, REVISION_PATH
 
 logger = logging.getLogger(__name__)
 
-CURRENT_REVISION = "70095e33"
+CURRENT_REVISION = "2b0f2fb3"
 
 
 def list_revisions():
