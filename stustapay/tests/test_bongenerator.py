@@ -16,6 +16,7 @@ from stustapay.core.schema.tree import Node
 
 async def test_pdflatex_bon(event_node: Node):
     context = BonTemplateContext(
+        currency_symbol="€",
         order=OrderWithTse(
             id=1,
             node_id=event_node.id,
@@ -136,5 +137,5 @@ async def test_pdflatex_bon(event_node: Node):
         ),
     )
 
-    rendered = await render_template("bon.tex", context=context)
+    rendered = await render_template("bon.tex", context=context, currency_symbol=context.currency_symbol)
     assert rendered is not None

@@ -9,19 +9,14 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional
 
 import jinja2
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel
 from pylatexenc.latexencode import (
     RULE_REGEX,
     UnicodeToLatexConversionRule,
     UnicodeToLatexEncoder,
 )
-
-from stustapay.core.currency import get_currency_symbol
-from stustapay.core.schema.order import Order
-from stustapay.core.schema.tree import PublicEventSettings
 
 # https://pylatexenc.readthedocs.io/en/latest/latexencode/
 LatexEncoder = UnicodeToLatexEncoder(
@@ -48,6 +43,7 @@ TEX_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tex")
 def jfilter_percent(value: float):
     # format percentages as ' 7,00%'
     return f"{value * 100:5.2f}\\%".replace(".", ",")
+
 
 def jfilter_datetime(t: datetime):
     return LatexEncoder.unicode_to_latex(t.strftime("%Y-%m-%d %H:%M:%S"))

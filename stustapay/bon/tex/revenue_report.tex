@@ -137,10 +137,10 @@
     \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
     \rowcolors{2}{}{bgcolor!80}
     \begin{tabularx}{\textwidth}{ R R R R R }
-        \textbf{Datum} & \textbf{Anzahl Transaktionen} & \textbf{Gesamtumsatz} & \textbf{Gebühren} & \textbf{Auszahlung} \\
+        \textbf{Datum} & \textbf{Gesamtumsatz} & \textbf{Gebühren} & \textbf{Auszahlung} \\
         \hline
         \BLOCK[ for daily in daily_revenue_stats ]
-        \VAR[daily.day] & \VAR[daily.num_transactions] & \VAR[daily.revenue|money] & \VAR[daily.fees|money] & \VAR[daily.revenue_minus_fees|money] \\
+        \VAR[daily.day] & \VAR[daily.revenue|money] & \VAR[daily.fees|money] & \VAR[daily.revenue_minus_fees|money] \\
         \BLOCK[endfor]
     \end{tabularx}
 

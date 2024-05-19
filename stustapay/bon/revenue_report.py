@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from pydantic import BaseModel
@@ -20,7 +19,6 @@ from stustapay.framework.database import Connection
 
 class DailyRevenue(BaseModel):
     day: str
-    num_transactions: int
     revenue: float
     fees: float
     revenue_minus_fees: float
@@ -93,14 +91,12 @@ async def generate_dummy_report(node_id: int, event: RestrictedEventSettings) ->
             DailyRevenue(
                 day="Monday 2024-10-10",
                 revenue=10212,
-                num_transactions=23,
                 fees=10212 * fee,
                 revenue_minus_fees=10212 - 10212 * fee,
             ),
             DailyRevenue(
                 day="Tuesday 2024-10-11",
                 revenue=3000.23,
-                num_transactions=14,
                 fees=3000.23 * fee,
                 revenue_minus_fees=3000.23 - 3000.23 * fee,
             ),
