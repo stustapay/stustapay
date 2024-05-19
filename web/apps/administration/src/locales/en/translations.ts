@@ -160,6 +160,8 @@ export const translations = {
     expectedCashDrawerBalance: "Final Expected Cash Drawer Balance",
     cashDrawerImbalance: "Final Cash Drawer Imbalance",
     soldProductQuantity: "Quantity",
+    bookedProducts: "Booked products",
+    orders: "Orders",
   },
   closeOut: {
     start: "Start",

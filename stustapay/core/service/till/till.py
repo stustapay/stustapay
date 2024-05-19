@@ -206,7 +206,7 @@ class TillService(DBService):
         if not any(x.id == user_role_id for x in available_roles):
             raise AccessDenied("The user does not have the requested role")
 
-        user_id = await conn.fetchval("select id from user_with_roles where user_tag_uid = $1", user_tag.uid)
+        user_id = await conn.fetchval("select id from user_with_tag where user_tag_uid = $1", user_tag.uid)
         assert user_id is not None
 
         t_id = await conn.fetchval(
@@ -259,7 +259,7 @@ class TillService(DBService):
             "   transp_a.balance as transport_account_balance, "
             "   cr.id as cash_register_id, "
             "   cr.name as cash_register_name "
-            "from user_with_roles u "
+            "from user_with_tag u "
             "left join account cash_a on cash_a.id = u.cashier_account_id "
             "left join account transp_a on transp_a.id = u.transport_account_id "
             "left join cash_register cr on u.cash_register_id = cr.id "

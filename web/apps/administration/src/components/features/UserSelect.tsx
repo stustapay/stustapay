@@ -12,7 +12,7 @@ export type UserSelectProps = {
 export const UserSelect: React.FC<UserSelectProps> = ({ value, onChange, ...props }) => {
   const { currentNode } = useCurrentNode();
   const { users } = useListUsersQuery(
-    { nodeId: currentNode.id },
+    { nodeId: currentNode.id, filterPrivilege: "node_administration" },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,

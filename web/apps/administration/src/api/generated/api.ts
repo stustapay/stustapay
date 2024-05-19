@@ -66,7 +66,10 @@ const injectedRtkApi = api
         invalidatesTags: ["products"],
       }),
       listUsers: build.query<ListUsersApiResponse, ListUsersApiArg>({
-        query: (queryArg) => ({ url: `/users`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/users`,
+          params: { node_id: queryArg.nodeId, filter_privilege: queryArg.filterPrivilege },
+        }),
         providesTags: ["users"],
       }),
       createUser: build.mutation<CreateUserApiResponse, CreateUserApiArg>({
@@ -922,6 +925,7 @@ export type DeleteProductApiArg = {
 export type ListUsersApiResponse = /** status 200 Successful Response */ NormalizedListUserInt;
 export type ListUsersApiArg = {
   nodeId: number;
+  filterPrivilege?: Privilege | null;
 };
 export type CreateUserApiResponse = /** status 200 Successful Response */ User;
 export type CreateUserApiArg = {
@@ -1255,7 +1259,7 @@ export type GetCashierShiftsApiArg = {
   cashierId: number;
   nodeId: number;
 };
-export type GetCashierShiftStatsApiResponse = /** status 200 Successful Response */ CashierShiftStats;
+export type GetCashierShiftStatsApiResponse = /** status 200 Successful Response */ CashierShiftStatsRead;
 export type GetCashierShiftStatsApiArg = {
   cashierId: number;
   nodeId: number;
@@ -1572,6 +1576,20 @@ export type NormalizedListUserInt = {
     [key: string]: User;
   };
 };
+export type Privilege =
+  | "node_administration"
+  | "customer_management"
+  | "payout_management"
+  | "create_user"
+  | "allow_privileged_role_assignment"
+  | "user_management"
+  | "view_node_stats"
+  | "cash_transport"
+  | "terminal_login"
+  | "supervised_terminal_login"
+  | "can_book_orders"
+  | "grant_free_tickets"
+  | "grant_vouchers";
 export type CreateUserPayload = {
   login: string;
   display_name: string;
@@ -1588,20 +1606,6 @@ export type UpdateUserPayload = {
 export type ChangeUserPasswordPayload = {
   new_password: string;
 };
-export type Privilege =
-  | "node_administration"
-  | "customer_management"
-  | "payout_management"
-  | "create_user"
-  | "allow_privileged_role_assignment"
-  | "user_management"
-  | "view_node_stats"
-  | "cash_transport"
-  | "terminal_login"
-  | "supervised_terminal_login"
-  | "can_book_orders"
-  | "grant_free_tickets"
-  | "grant_vouchers";
 export type UserRole = {
   name: string;
   is_privileged?: boolean;
@@ -2123,6 +2127,11 @@ export type CashierProductStats = {
 };
 export type CashierShiftStats = {
   booked_products: CashierProductStats[];
+  orders: Order[];
+};
+export type CashierShiftStatsRead = {
+  booked_products: CashierProductStats[];
+  orders: OrderRead[];
 };
 export type CloseOutResult = {
   cashier_id: number;

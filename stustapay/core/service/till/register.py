@@ -267,7 +267,7 @@ class TillRegisterService(DBService):
             raise InvalidArgument("cash register stocking template does not exist")
 
         row = await conn.fetchrow(
-            "select id, cashier_account_id, cash_register_id from user_with_roles where user_tag_uid = $1",
+            "select id, cashier_account_id, cash_register_id from user_with_tag where user_tag_uid = $1",
             cashier_tag_uid,
         )
         if row is None:
@@ -312,7 +312,7 @@ class TillRegisterService(DBService):
     ):
         row = await conn.fetchrow(
             "select u.cash_register_id, t.id as till_id, a.* "
-            "from user_with_roles u "
+            "from user_with_tag u "
             "join till t on u.id = t.active_user_id "
             "join account_with_history a on u.cashier_account_id = a.id "
             "where u.user_tag_uid = $1 and u.node_id = any($2)",
@@ -471,12 +471,12 @@ class TillRegisterService(DBService):
         target_cashier_tag_uid: int,
     ):
         source_cashier_id = await conn.fetchval(
-            "select id from user_with_roles where user_tag_uid = $1 and node_id = any($2)",
+            "select id from user_with_tag where user_tag_uid = $1 and node_id = any($2)",
             source_cashier_tag_uid,
             node.ids_to_event_node,
         )
         target_cashier_id = await conn.fetchval(
-            "select id from user_with_roles where user_tag_uid = $1 and node_id = any($2)",
+            "select id from user_with_tag where user_tag_uid = $1 and node_id = any($2)",
             target_cashier_tag_uid,
             node.ids_to_event_node,
         )

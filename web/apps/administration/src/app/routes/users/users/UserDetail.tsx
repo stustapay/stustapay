@@ -39,7 +39,7 @@ export const UserDetail: React.FC = () => {
     return <Loading />;
   }
   if (user.cashier_account_id != null) {
-    return <Navigate to={CashierRoutes.detail(user.id, user.node_id)} />;
+    return <Navigate to={CashierRoutes.detail(user.id, user.node_id)} replace />;
   }
 
   return (
