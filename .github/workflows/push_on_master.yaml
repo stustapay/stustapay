@@ -12,6 +12,8 @@ jobs:
   build_app_release:
     uses: ./.github/workflows/app_release.yaml
     secrets: inherit
+    needs:
+      - build_and_test_app
 
   build_and_test_backend:
     uses: ./.github/workflows/core.yaml
@@ -96,6 +98,7 @@ jobs:
     if: ${{ !failure() && !cancelled() && startsWith(github.ref, 'refs/tags/') }}
     needs:
       - build_and_test_app
+      - build_app_release
       - build_and_test_backend
       - build_and_test_webfrontend
       - build-debs
