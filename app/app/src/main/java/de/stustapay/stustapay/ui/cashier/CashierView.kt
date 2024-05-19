@@ -20,6 +20,9 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,15 +70,13 @@ fun CashierView(
         viewModel.reset()
     }
 
-    NavScaffold(
-        navigateBack = leaveView,
+    NavScaffold(navigateBack = leaveView,
         title = { Text(stringResource(R.string.management_title)) }) {
         Box(modifier = Modifier.padding(it)) {
             Scaffold(content = {
                 Box(modifier = Modifier.padding(it)) {
                     if (uiState.nav is CashierNavState.Scan) {
-                        NfcScanDialog(
-                            state = uiState.scanState,
+                        NfcScanDialog(state = uiState.scanState,
                             onDismiss = leaveView,
                             onScan = { tag ->
                                 scope.launch {
@@ -104,7 +105,11 @@ fun CashierView(
 
                     when (uiState.nav) {
                         CashierNavState.Scan, CashierNavState.Root, CashierNavState.Transfer -> {
-                            CloseContent(modifier = Modifier.fillMaxSize(), onClose = {
+                            CloseContent(icon = if (uiState.privileged) {
+                                Icons.Filled.Clear
+                            } else {
+                                Icons.Filled.Refresh
+                            }, modifier = Modifier.fillMaxSize(), onClose = {
                                 scope.launch { viewModel.reset() }
                             }) {
                                 if (userInfo != null) {
@@ -425,7 +430,9 @@ fun CashierView(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
-                                    Text("Transfer successfull", style = MaterialTheme.typography.h5)
+                                    Text(
+                                        "Transfer successfull", style = MaterialTheme.typography.h5
+                                    )
                                 }
                             }
                         }

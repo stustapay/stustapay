@@ -1,0 +1,24 @@
+name: App Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: get java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: setup gradle
+        working-directory: ./app
+        uses: gradle/actions/setup-gradle@v3
+      - name: build app
+        working-directory: ./app
+        run: ./gradlew app:bundleRelease
+      - name: upload apk
+        uses: actions/upload-artifact@v3
+        with:
+          name: app release build
+          path: ./app/app/build/outputs/

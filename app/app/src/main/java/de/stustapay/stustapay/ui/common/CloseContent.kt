@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import de.stustapay.libssp.ui.theme.errorButtonColors
 
@@ -17,6 +18,7 @@ import de.stustapay.libssp.ui.theme.errorButtonColors
 @Composable
 fun CloseContent(
     onClose: () -> Unit,
+    icon: ImageVector = Icons.Filled.Clear,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -34,7 +36,7 @@ fun CloseContent(
                 .width(80.dp)
                 .padding(10.dp),
         ) {
-            Icon(Icons.Filled.Clear, "close")
+            Icon(icon, "close")
         }
     }
 }

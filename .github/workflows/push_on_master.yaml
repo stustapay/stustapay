@@ -9,6 +9,10 @@ jobs:
     uses: ./.github/workflows/app.yaml
     secrets: inherit
 
+  build_app_release:
+    uses: ./.github/workflows/app_release.yaml
+    secrets: inherit
+
   build_and_test_backend:
     uses: ./.github/workflows/core.yaml
     secrets: inherit

@@ -58,7 +58,9 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
 
     val _firstName = firstName.lowercase().replace(" ", "")
     val _lastName = lastName.lowercase().replace(" ", "")
-    val userName = _firstName + "_" + _lastName
+    val userName = _firstName.replace("ü", "ue").replace("ö", "oe").replace("ä", "ae")
+        .replace("ß", "ss") + "." + _lastName.replace("ü", "ue").replace("ö", "oe")
+        .replace("ä", "ae").replace("ß", "ss")
     val displayName =
         _firstName.replaceFirstChar { it.uppercase() } + " " + _lastName.replaceFirstChar { it.uppercase() }
 
