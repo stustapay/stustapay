@@ -66,9 +66,10 @@
     <string name="management_transport_title">Transport</string>
     <string name="management_transport_withdraw">Withdraw\nCashier -> Bag</string>
     <string name="management_transport_deposit">Deposit\nBag -> Cashier</string>
-    <string name="management_vault_title">Vault</string>
-    <string name="management_vault_take">Take\nVault -> Bag</string>
-    <string name="management_vault_return">Return\nBag -> Vault</string>
+
+    <string name="management_vault_title">Vault Management</string>
+    <string name="management_vault_take">Withdraw\nVault -> Bag</string>
+    <string name="management_vault_return">Deposit\nBag -> Vault</string>
 
     <string name="nfc_scan_prompt">📡 Scan a Chip</string>
     <string name="nfc_scan_cashier_prompt">📡 Scan Cashier Chip</string>

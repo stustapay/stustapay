@@ -18,6 +18,7 @@ import de.stustapay.stustapay.ui.settings.SettingsView
 import de.stustapay.stustapay.ui.stats.StatsView
 import de.stustapay.stustapay.ui.ticket.TicketView
 import de.stustapay.stustapay.ui.user.UserView
+import de.stustapay.stustapay.ui.vault.VaultView
 
 
 @Composable
@@ -73,6 +74,9 @@ fun RootView(uictrl: SysUiController? = null) {
         }
         composable(RootNavDests.cashier.route) {
             CashierView(leaveView = { navController.navigateUp() })
+        }
+        composable(RootNavDests.vault.route) {
+            VaultView(leaveView = { navController.navigateUp() })
         }
     }
 }

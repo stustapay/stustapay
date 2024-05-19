@@ -65,7 +65,8 @@
     <string name="management_transport_title">Rucksack / Kasse</string>
     <string name="management_transport_withdraw">Abschöpfen</string>
     <string name="management_transport_deposit">Bestücken</string>
-    <string name="management_vault_title">Keller / Rucksack</string>
+
+    <string name="management_vault_title">Tresorverwaltung</string>
     <string name="management_vault_take">Einpacken</string>
     <string name="management_vault_return">Auspacken</string>
 
