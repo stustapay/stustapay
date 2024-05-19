@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.libssp.ui.theme.MoneyAmountStyle
 import de.stustapay.libssp.ui.theme.NfcScanStyle
 import de.stustapay.stustapay.R
@@ -44,6 +43,7 @@ import de.stustapay.stustapay.ui.common.CloseContent
 import de.stustapay.stustapay.ui.common.SuccessIcon
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
 import de.stustapay.stustapay.ui.common.amountselect.AmountSelection
+import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustapay.stustapay.ui.common.tagIDtoString
 import de.stustapay.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
@@ -55,7 +55,6 @@ fun CashierView(
 ) {
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val scanState = rememberDialogDisplayState()
 
     val userInfo = uiState.userInfo
     val hasRegister = userInfo?.cashRegisterId != null
@@ -74,10 +73,39 @@ fun CashierView(
         Box(modifier = Modifier.padding(it)) {
             Scaffold(content = {
                 Box(modifier = Modifier.padding(it)) {
+                    if (uiState.nav is CashierNavState.Scan) {
+                        NfcScanDialog(
+                            state = uiState.scanState,
+                            onDismiss = leaveView,
+                            onScan = { tag ->
+                                scope.launch {
+                                    viewModel.fetchTag(tag)
+                                }
+                            }) {
+                            Text(
+                                stringResource(R.string.nfc_scan_cashier_prompt),
+                                style = NfcScanStyle
+                            )
+                        }
+                    } else if (uiState.nav is CashierNavState.Transfer) {
+                        NfcScanDialog(state = uiState.scanState,
+                            onDismiss = { viewModel.returnToRoot() },
+                            onScan = { tag ->
+                                scope.launch {
+                                    viewModel.completeTransfer(tag)
+                                }
+                            }) {
+                            Text(
+                                stringResource(R.string.nfc_scan_transfer_prompt),
+                                style = NfcScanStyle
+                            )
+                        }
+                    }
+
                     when (uiState.nav) {
-                        CashierNavState.Root -> {
+                        CashierNavState.Scan, CashierNavState.Root, CashierNavState.Transfer -> {
                             CloseContent(modifier = Modifier.fillMaxSize(), onClose = {
-                                viewModel.reset()
+                                scope.launch { viewModel.reset() }
                             }) {
                                 if (userInfo != null) {
                                     Column(
@@ -143,26 +171,15 @@ fun CashierView(
                             }
                         }
 
-                        CashierNavState.Scan -> {
-                            scanState.open()
-                            NfcScanDialog(state = scanState, onScan = { tag ->
-                                scope.launch {
-                                    scanState.close()
-                                    viewModel.fetchTag(tag)
-                                }
-                            }) {
-                                Text(
-                                    stringResource(R.string.nfc_scan_cashier_prompt),
-                                    style = NfcScanStyle
-                                )
-                            }
-                        }
-
                         CashierNavState.Equip -> {
                             CloseContent(modifier = Modifier.fillMaxSize(), onClose = {
-                                viewModel.reset()
+                                scope.launch { viewModel.reset() }
                             }) {
-                                Column(modifier = Modifier.padding(10.dp)) {
+                                Column(
+                                    modifier = Modifier.padding(
+                                        top = 70.dp, start = 10.dp, end = 10.dp
+                                    )
+                                ) {
                                     var stockingExpanded by remember { mutableStateOf(false) }
                                     ExposedDropdownMenuBox(
                                         expanded = stockingExpanded,
@@ -258,7 +275,7 @@ fun CashierView(
 
                         CashierNavState.Withdraw -> {
                             CloseContent(modifier = Modifier.fillMaxSize(), onClose = {
-                                viewModel.reset()
+                                scope.launch { viewModel.reset() }
                             }) {
                                 Column(modifier = Modifier.fillMaxSize()) {
                                     Spacer(modifier = Modifier.height(40.dp))
@@ -286,7 +303,7 @@ fun CashierView(
 
                         CashierNavState.Deposit -> {
                             CloseContent(modifier = Modifier.fillMaxSize(), onClose = {
-                                viewModel.reset()
+                                scope.launch { viewModel.reset() }
                             }) {
                                 Column(modifier = Modifier.fillMaxSize()) {
                                     Spacer(modifier = Modifier.height(40.dp))
@@ -314,28 +331,36 @@ fun CashierView(
 
                         CashierNavState.EquipComplete -> {
                             CloseContent(modifier = Modifier.fillMaxSize(), onClose = {
-                                viewModel.reset()
+                                scope.launch { viewModel.reset() }
                             }) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(50.dp),
+                                        .padding(top = 50.dp, start = 20.dp, end = 20.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
                                     Text("Equip successfull", style = MaterialTheme.typography.h5)
+                                    Text(
+                                        "%.02f€".format(uiState.userInfo?.cashDrawerBalance),
+                                        modifier = Modifier.padding(
+                                            top = 20.dp, bottom = 10.dp
+                                        ),
+                                        style = MoneyAmountStyle,
+                                    )
+                                    Text("in cash register", fontSize = 36.sp)
                                 }
                             }
                         }
 
                         CashierNavState.WithdrawComplete -> {
                             CloseContent(modifier = Modifier.fillMaxSize(), onClose = {
-                                viewModel.reset()
+                                scope.launch { viewModel.reset() }
                             }) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(50.dp),
+                                        .padding(top = 50.dp, start = 20.dp, end = 20.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
@@ -343,22 +368,64 @@ fun CashierView(
                                         "Withdrawal successfull",
                                         style = MaterialTheme.typography.h5
                                     )
+                                    ProductConfirmItem(
+                                        name = "Withdrawn",
+                                        price = uiState.amount.toDouble() / 100.0,
+                                        bigStyle = true,
+                                    )
+                                    Text(
+                                        "%.02f€".format(uiState.userInfo?.cashDrawerBalance),
+                                        modifier = Modifier.padding(
+                                            top = 20.dp, bottom = 10.dp
+                                        ),
+                                        style = MoneyAmountStyle,
+                                    )
+                                    Text("in cash register", fontSize = 36.sp)
                                 }
                             }
                         }
 
                         CashierNavState.DepositComplete -> {
                             CloseContent(modifier = Modifier.fillMaxSize(), onClose = {
-                                viewModel.reset()
+                                scope.launch { viewModel.reset() }
                             }) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(50.dp),
+                                        .padding(top = 50.dp, start = 20.dp, end = 20.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
                                     Text("Deposit successfull", style = MaterialTheme.typography.h5)
+                                    ProductConfirmItem(
+                                        name = "Deposited",
+                                        price = uiState.amount.toDouble() / 100.0,
+                                        bigStyle = true,
+                                    )
+                                    Text(
+                                        "%.02f€".format(uiState.userInfo?.cashDrawerBalance),
+                                        modifier = Modifier.padding(
+                                            top = 20.dp, bottom = 10.dp
+                                        ),
+                                        style = MoneyAmountStyle,
+                                    )
+                                    Text("in cash register", fontSize = 36.sp)
+                                }
+                            }
+                        }
+
+                        CashierNavState.TransferComplete -> {
+                            CloseContent(modifier = Modifier.fillMaxSize(), onClose = {
+                                scope.launch { viewModel.reset() }
+                            }) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(top = 50.dp, start = 20.dp, end = 20.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    SuccessIcon(modifier = Modifier.size(120.dp))
+                                    Text("Transfer successfull", style = MaterialTheme.typography.h5)
                                 }
                             }
                         }
@@ -367,7 +434,7 @@ fun CashierView(
             }, bottomBar = {
                 Column {
                     when (uiState.nav) {
-                        CashierNavState.Root -> {
+                        CashierNavState.Root, CashierNavState.Transfer -> {
                             Column(
                                 modifier = Modifier.padding(
                                     top = 10.dp, start = 10.dp, end = 10.dp
@@ -378,7 +445,7 @@ fun CashierView(
 
                                 Button(modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(bottom = 10.dp),
+                                    .padding(bottom = 5.dp),
                                     enabled = !hasRegister and uiState.privileged,
                                     onClick = {
                                         scope.launch {
@@ -386,6 +453,18 @@ fun CashierView(
                                         }
                                     }) {
                                     Text(stringResource(R.string.management_equip_equip))
+                                }
+
+                                Button(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 5.dp),
+                                    enabled = hasRegister and uiState.privileged,
+                                    onClick = {
+                                        scope.launch {
+                                            viewModel.transfer()
+                                        }
+                                    }) {
+                                    Text(stringResource(R.string.transfer_cash_register))
                                 }
 
                                 Row(modifier = Modifier.fillMaxWidth()) {
@@ -422,7 +501,7 @@ fun CashierView(
                             }
                         }
 
-                        CashierNavState.Scan, CashierNavState.Equip, CashierNavState.Withdraw, CashierNavState.Deposit, CashierNavState.EquipComplete, CashierNavState.WithdrawComplete, CashierNavState.DepositComplete -> {}
+                        CashierNavState.Scan, CashierNavState.Equip, CashierNavState.Withdraw, CashierNavState.Deposit, CashierNavState.EquipComplete, CashierNavState.WithdrawComplete, CashierNavState.DepositComplete, CashierNavState.TransferComplete -> {}
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))

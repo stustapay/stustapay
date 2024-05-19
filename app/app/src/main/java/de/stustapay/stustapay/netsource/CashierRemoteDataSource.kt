@@ -58,6 +58,6 @@ class CashierRemoteDataSource @Inject constructor(
     }
 
     suspend fun getRegisters(): Response<List<CashRegister>> {
-        return terminalApiAccessor.execute { it.base()?.listCashRegisters(hideAssigned = false) }
+        return terminalApiAccessor.execute { it.base()?.listCashRegisters(hideAssigned = true) }
     }
 }

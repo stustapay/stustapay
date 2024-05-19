@@ -8,6 +8,7 @@ import de.stustapay.api.models.CashRegisterStocking
 import de.stustapay.api.models.UserInfo
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
+import de.stustapay.libssp.ui.common.DialogDisplayState
 import de.stustapay.libssp.util.combine
 import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.model.UserState
@@ -23,7 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CashierViewModel @Inject constructor(
-    private val cashierRepository: CashierRepository, userRepository: UserRepository
+    private val cashierRepository: CashierRepository, private val userRepository: UserRepository
 ) : ViewModel() {
     private val _requestState = MutableStateFlow<CashierRequestState>(CashierRequestState.Done)
     private val _navState = MutableStateFlow<CashierNavState>(CashierNavState.Scan)
@@ -40,6 +41,7 @@ class CashierViewModel @Inject constructor(
             UserState.NoLogin -> false
         }
     }
+    private val _scanState = MutableStateFlow(DialogDisplayState())
 
     val uiState = combine(
         _requestState.asStateFlow(),
@@ -50,9 +52,21 @@ class CashierViewModel @Inject constructor(
         _selectedRegister.asStateFlow(),
         _stockings.asStateFlow(),
         _registers.asStateFlow(),
-        _privileged
-    ) { requestState, navState, userInfo, amount, selectedStocking, selectedRegister, stockings, registers, privileged ->
-        CashierUiState(requestState, navState, userInfo, amount, selectedStocking, selectedRegister, stockings, registers, privileged)
+        _privileged,
+        _scanState.asStateFlow()
+    ) { requestState, navState, userInfo, amount, selectedStocking, selectedRegister, stockings, registers, privileged, scanState ->
+        CashierUiState(
+            requestState,
+            navState,
+            userInfo,
+            amount,
+            selectedStocking,
+            selectedRegister,
+            stockings,
+            registers,
+            privileged,
+            scanState
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -60,25 +74,64 @@ class CashierViewModel @Inject constructor(
     )
 
     suspend fun fetchTag(tag: NfcTag) {
-        _navState.update { CashierNavState.Root }
         _requestState.update { CashierRequestState.Fetching }
         when (val res = cashierRepository.getUserInfo(tag)) {
             is Response.OK -> {
                 _userInfo.update { res.data }
+                _navState.update { CashierNavState.Root }
                 _requestState.update { CashierRequestState.Done }
+                _scanState.update {
+                    val state = DialogDisplayState()
+                    state.close()
+                    state
+                }
             }
 
             is Response.Error -> {
                 _requestState.update { CashierRequestState.Failed(res.msg()) }
+                _scanState.update {
+                    val state = DialogDisplayState()
+                    state.open()
+                    state
+                }
             }
         }
     }
 
-    fun reset() {
+    suspend fun reset() {
         _navState.update { CashierNavState.Scan }
         _requestState.update { CashierRequestState.Done }
         _userInfo.update { null }
         _amount.update { 0u }
+
+        val userState = userRepository.userState.value
+        if (userState is UserState.LoggedIn && !Access.canManageCashiers(userState.user)) {
+            val tagUid = userState.user.userTagUid
+            if (tagUid != null) {
+                fetchTag(NfcTag(tagUid, null))
+                _scanState.update {
+                    val state = DialogDisplayState()
+                    state.close()
+                    state
+                }
+                return
+            }
+        }
+
+        _scanState.update {
+            val state = DialogDisplayState()
+            state.open()
+            state
+        }
+    }
+
+    fun returnToRoot() {
+        _navState.update { CashierNavState.Root }
+        _scanState.update {
+            val state = DialogDisplayState()
+            state.close()
+            state
+        }
     }
 
     suspend fun equip() {
@@ -113,18 +166,31 @@ class CashierViewModel @Inject constructor(
         _navState.update { CashierNavState.Deposit }
     }
 
+    fun transfer() {
+        _scanState.update {
+            val state = DialogDisplayState()
+            state.open()
+            state
+        }
+        _navState.update { CashierNavState.Transfer }
+    }
+
     suspend fun completeEquip() {
         _requestState.update { CashierRequestState.Fetching }
         when (val res = cashierRepository.equipCashier(
-            _userInfo.value!!.userTagUid, _registers.value.get(_selectedRegister.value).id, _stockings.value.get(_selectedStocking.value).id
+            _userInfo.value!!.userTagUid,
+            _registers.value.get(_selectedRegister.value).id,
+            _stockings.value.get(_selectedStocking.value).id
         )) {
             is Response.OK -> {
                 _navState.update { CashierNavState.EquipComplete }
                 _requestState.update { CashierRequestState.Done }
+                updateCurrentUserInfo()
             }
 
             is Response.Error -> {
                 _requestState.update { CashierRequestState.Failed(res.msg()) }
+                returnToRoot()
             }
         }
     }
@@ -137,10 +203,12 @@ class CashierViewModel @Inject constructor(
             is Response.OK -> {
                 _navState.update { CashierNavState.WithdrawComplete }
                 _requestState.update { CashierRequestState.Done }
+                updateCurrentUserInfo()
             }
 
             is Response.Error -> {
                 _requestState.update { CashierRequestState.Failed(res.msg()) }
+                returnToRoot()
             }
         }
     }
@@ -153,10 +221,33 @@ class CashierViewModel @Inject constructor(
             is Response.OK -> {
                 _navState.update { CashierNavState.DepositComplete }
                 _requestState.update { CashierRequestState.Done }
+                updateCurrentUserInfo()
             }
 
             is Response.Error -> {
                 _requestState.update { CashierRequestState.Failed(res.msg()) }
+                returnToRoot()
+            }
+        }
+    }
+
+    suspend fun completeTransfer(tag: NfcTag) {
+        _scanState.update {
+            val state = DialogDisplayState()
+            state.close()
+            state
+        }
+        when (val res = cashierRepository.transferCashRegister(
+            NfcTag(_userInfo.value!!.userTagUid, null), tag
+        )) {
+            is Response.OK -> {
+                _navState.update { CashierNavState.TransferComplete }
+                _requestState.update { CashierRequestState.Done }
+            }
+
+            is Response.Error -> {
+                _requestState.update { CashierRequestState.Failed(res.msg()) }
+                returnToRoot()
             }
         }
     }
@@ -172,6 +263,22 @@ class CashierViewModel @Inject constructor(
     fun setRegister(register: Int) {
         _selectedRegister.update { register }
     }
+
+    private suspend fun updateCurrentUserInfo() {
+        val tagUid = _userInfo.value?.userTagUid
+        if (tagUid != null) {
+            when (val res = cashierRepository.getUserInfo(NfcTag(tagUid, null))) {
+                is Response.OK -> {
+                    _userInfo.update { res.data }
+                    _requestState.update { CashierRequestState.Done }
+                }
+
+                is Response.Error -> {
+                    _requestState.update { CashierRequestState.Failed(res.msg()) }
+                }
+            }
+        }
+    }
 }
 
 data class CashierUiState(
@@ -183,7 +290,8 @@ data class CashierUiState(
     val selectedRegister: Int = 0,
     val stockings: List<CashRegisterStocking> = listOf(),
     val registers: List<CashRegister> = listOf(),
-    val privileged: Boolean = false
+    val privileged: Boolean = false,
+    val scanState: DialogDisplayState = DialogDisplayState()
 )
 
 sealed interface CashierNavState {
@@ -192,9 +300,11 @@ sealed interface CashierNavState {
     object Equip : CashierNavState
     object Withdraw : CashierNavState
     object Deposit : CashierNavState
+    object Transfer : CashierNavState
     object EquipComplete : CashierNavState
     object WithdrawComplete : CashierNavState
     object DepositComplete : CashierNavState
+    object TransferComplete : CashierNavState
 }
 
 sealed interface CashierRequestState {

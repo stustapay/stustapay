@@ -71,6 +71,7 @@
 
     <string name="nfc_scan_prompt">📡 Chip scannen</string>
     <string name="nfc_scan_cashier_prompt">📡 Kassierer-Chip scannen</string>
+    <string name="nfc_scan_transfer_prompt">📡 Neuen Kassierer-Chip scannen</string>
 
     <string name="user_title">Benutzer</string>
     <string name="user_login">Einloggen</string>
