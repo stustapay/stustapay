@@ -30,7 +30,6 @@ fun AccountStatus(
     viewModel: AccountViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val swapVisible by viewModel.swapVisible.collectAsStateWithLifecycle()
     val commentVisible by viewModel.commentVisible.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -73,7 +72,7 @@ fun AccountStatus(
         bottomBar = {
             Column {
                 Divider(modifier = Modifier.padding(vertical = 10.dp))
-                Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+                Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)) {
                     val text = when (val state = uiState.customer) {
                         is CustomerStatusRequestState.Idle -> {
                             stringResource(R.string.common_status_idle)
@@ -92,24 +91,6 @@ fun AccountStatus(
                         }
                     }
                     Text(text, fontSize = 24.sp)
-                }
-
-                if (swapVisible) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Button(
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .fillMaxWidth(),
-                        onClick = {
-                            viewModel.idleState()
-                            navigateTo(CustomerStatusNavDests.swap)
-                        }
-                    ) {
-                        Text(
-                            stringResource(R.string.customer_swap),
-                            fontSize = 24.sp
-                        )
-                    }
                 }
             }
         }

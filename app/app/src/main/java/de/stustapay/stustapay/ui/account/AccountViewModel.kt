@@ -45,22 +45,6 @@ class AccountViewModel @Inject constructor(
             CustomerStatusUiState(result)
         }
 
-    val swapVisible = userRepository.userState.mapState(false, viewModelScope) {
-        when (it) {
-            is UserState.LoggedIn -> {
-                Access.canSwap(it.user)
-            }
-
-            is UserState.NoLogin -> {
-                false
-            }
-
-            is UserState.Error -> {
-                false
-            }
-        }
-    }
-
     val commentVisible = userRepository.userState.mapState(false, viewModelScope) {
         when (it) {
             is UserState.LoggedIn -> {
@@ -77,48 +61,15 @@ class AccountViewModel @Inject constructor(
         }
     }
 
-    private val _newTag = MutableStateFlow(NfcTag(0uL.toBigInteger(), null))
-    val newTag = _newTag.asStateFlow()
-    private val _oldTagId = MutableStateFlow(0uL.toBigInteger())
-    val oldTagId = _oldTagId.asStateFlow()
-
     fun idleState() {
         _requestState.update { CustomerStatusRequestState.Idle }
     }
 
-    suspend fun setNewTag(tag: NfcTag) {
+    suspend fun fetchAccount(tag: NfcTag) {
         _requestState.update { CustomerStatusRequestState.Fetching }
-        _newTag.update { tag }
         when (val customer = customerRepository.getCustomer(tag.uid)) {
             is Response.OK -> {
                 _requestState.update { CustomerStatusRequestState.Done(customer.data) }
-            }
-
-            is Response.Error -> {
-                _requestState.update { CustomerStatusRequestState.Failed(customer.msg()) }
-            }
-        }
-    }
-
-    fun setOldTagId(id: BigInteger) {
-        _oldTagId.update { id }
-    }
-
-    suspend fun swap(comment: String) {
-        _requestState.update { CustomerStatusRequestState.Fetching }
-        when (val customer = customerRepository.getCustomer(oldTagId.value)) {
-            is Response.OK -> {
-                when (val switch = customerRepository.switchTag(
-                    customer.data.id.ulongValue(), newTag.value, comment
-                )) {
-                    is Response.OK -> {
-                        _requestState.update { CustomerStatusRequestState.Done(customer.data) }
-                    }
-
-                    is Response.Error -> {
-                        _requestState.update { CustomerStatusRequestState.Failed(switch.msg()) }
-                    }
-                }
             }
 
             is Response.Error -> {

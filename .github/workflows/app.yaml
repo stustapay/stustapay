@@ -25,7 +25,9 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: app debug build
-          path: ./app/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            ./app/app/build/outputs/apk/debug/app-debug.apk
+            ./app/chip_debug/build/outputs/apk/debug/chip_debug-debug.apk
 
   test:
     runs-on: ubuntu-latest

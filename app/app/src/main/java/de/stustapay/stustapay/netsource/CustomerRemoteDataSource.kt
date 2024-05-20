@@ -42,11 +42,11 @@ class CustomerRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun switchTag(customerID: ULong, newTag: NfcTag, comment: String): Response<Unit> {
+    suspend fun switchTag(oldTag: NfcTag, newTag: NfcTag, comment: String): Response<Unit> {
         return terminalApiAccessor.execute {
             it.customer()?.switchTag(
                 SwitchTagPayload(
-                    customerId = customerID.toBigInteger(),
+                    oldUserTagPin = oldTag.pin ?: return@execute null,
                     newUserTagUid = newTag.uid,
                     newUserTagPin = newTag.pin ?: return@execute null,
                     comment = comment

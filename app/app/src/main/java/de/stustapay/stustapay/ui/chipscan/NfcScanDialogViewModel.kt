@@ -112,7 +112,7 @@ class NfcScanDialogViewModel @Inject constructor(
                 while (trying) {
                     // perform fast read only (no content tamper check)
                     // cmac + auth enable
-                    val res = nfcRepository.read(ReadMode.Fast)
+                    val res = nfcRepository.read()
 
                     when (res) {
                         is NfcScanResult.Read -> {
