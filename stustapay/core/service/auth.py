@@ -72,9 +72,9 @@ class AuthService(DBService):
 
         return await conn.fetch_maybe_one(
             CurrentUser,
-            "select u.*, null as active_role_id "
-            "from user_with_privileges u join usr_session s on u.id = s.usr "
-            "where u.id = $1 and s.id = $2",
+            "select u.*, null as active_role_id, '{}'::text array as privileges "
+            "from user_with_tag u join usr_session s on u.id = s.usr "
+            "where u.id = $1 and s.id = $2 ",
             token_payload.user_id,
             token_payload.session_id,
         )

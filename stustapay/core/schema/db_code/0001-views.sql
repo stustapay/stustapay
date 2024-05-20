@@ -51,23 +51,6 @@ create view user_to_roles_aggregated as
         user_to_role utr
     group by utr.user_id, utr.node_id;
 
-create view user_with_privileges as
-    select
-        u.*,
-        coalesce(privs.privileges, '{}'::text array) as privileges
-    from
-        user_with_tag u
-        left join user_tag ut on u.user_tag_id = ut.id
-        left join (
-            select
-                utr.user_id,
-                array_agg(urtp.privilege) as privileges
-            from
-                user_to_role utr
-                join user_role_to_privilege urtp on utr.role_id = urtp.role_id
-            group by utr.user_id
-        ) privs on u.id = privs.user_id;
-
 create view account_with_history as
     select
         a.*,
