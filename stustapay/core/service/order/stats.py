@@ -160,7 +160,8 @@ async def get_hourly_revenue_stats(
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
         "where o.booked_at >= $1 and o.booked_at <= $2 "
-        "   and (p.type = 'user_defined' or p.type = 'discount') "
+        "   and (p.type = 'user_defined' or p.type = 'discount')"
+        "   and o.payment_method = 'tag' "
         "group by from_time, to_time "
         "order by from_time",
         from_time,

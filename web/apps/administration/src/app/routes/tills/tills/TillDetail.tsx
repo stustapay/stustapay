@@ -14,10 +14,10 @@ import {
 } from "@/api";
 import { CashierRoutes, TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
 import { ListItemLink } from "@/components";
-import { OrderTable } from "@/components/features";
+import { OrderTable, TillSwitchTerminal } from "@/components/features";
 import { DetailLayout } from "@/components/layouts";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon, Smartphone as SmartphoneIcon } from "@mui/icons-material";
 import { Button, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -51,6 +51,7 @@ export const TillDetail: React.FC = () => {
   const { data: profiles, error: profileError } = useListTillProfilesQuery({ nodeId: currentNode.id });
   const { data: users, error: userError } = useListUsersQuery({ nodeId: currentNode.id });
   const { data: terminals, error: terminalError } = useListTerminalsQuery({ nodeId: currentNode.id });
+  const [switchTerminalOpen, setSwitchTerminalOpen] = React.useState(false);
 
   if (tillError || orderError || userError || profileError || terminalError) {
     toast.error("Error loading tills or orders");
@@ -132,12 +133,19 @@ export const TillDetail: React.FC = () => {
       elementNodeId={till.node_id}
       actions={[
         { label: t("edit"), onClick: () => navigate(TillRoutes.edit(tillId)), color: "primary", icon: <EditIcon /> },
+        {
+          label: t("till.switchTerminal"),
+          onClick: () => setSwitchTerminalOpen(true),
+          color: "warning",
+          icon: <SmartphoneIcon />,
+        },
         ...(till.terminal_id != null
           ? ([
               {
                 label: t("till.removeFromTerminal"),
                 onClick: openConfirmRemoveFromTerminalDialog,
                 color: "warning",
+                icon: <SmartphoneIcon />,
               } as const,
             ] as const)
           : []),
@@ -200,6 +208,7 @@ export const TillDetail: React.FC = () => {
         </List>
       </Paper>
       <OrderTable orders={orders ?? []} />
+      <TillSwitchTerminal open={switchTerminalOpen} tillId={till.id} onClose={() => setSwitchTerminalOpen(false)} />
     </DetailLayout>
   );
 };

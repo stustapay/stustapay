@@ -7,3 +7,5 @@ export * from "./ThemeSelect";
 export * from "./UserSelect";
 export * from "./TaxRateSelect";
 export * from "./CurrencyIdentifierSelect";
+export * from "./TillSwitchTerminal";
+export * from "./TerminalSwitchTill";

@@ -24,9 +24,11 @@ async def create_till(*, conn: Connection, node_id: int, till: NewTill) -> Till:
 async def fetch_till(*, conn: Connection, node: Node, till_id: int) -> Optional[Till]:
     return await conn.fetch_maybe_one(
         Till,
-        "select * from till_with_cash_register where id = $1 and node_id = any($2)",
+        "select t.* from till_with_cash_register t join node n on t.node_id = n.id "
+        "where t.id = $1 and (n.id = any($2) or $3 = any(n.parent_ids))",
         till_id,
         node.ids_to_event_node,
+        node.id,
     )
 
 

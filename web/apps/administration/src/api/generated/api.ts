@@ -250,6 +250,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tills", "tills", "terminals"],
       }),
+      switchTerminal: build.mutation<SwitchTerminalApiResponse, SwitchTerminalApiArg>({
+        query: (queryArg) => ({
+          url: `/tills/${queryArg.tillId}/switch-terminal`,
+          method: "POST",
+          body: queryArg.switchTerminalPayload,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["tills", "tills", "terminals"],
+      }),
       listTillLayouts: build.query<ListTillLayoutsApiResponse, ListTillLayoutsApiArg>({
         query: (queryArg) => ({ url: `/till-layouts`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["till-layouts"],
@@ -893,6 +902,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["terminals"],
       }),
+      switchTill: build.mutation<SwitchTillApiResponse, SwitchTillApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal/${queryArg.terminalId}/switch-till`,
+          method: "POST",
+          body: queryArg.switchTillPayload,
+          params: { node_id: queryArg.nodeId },
+        }),
+        invalidatesTags: ["terminals", "tills", "terminals"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1052,6 +1070,12 @@ export type RemoveFromTerminalApiResponse = /** status 200 Successful Response *
 export type RemoveFromTerminalApiArg = {
   tillId: number;
   nodeId: number;
+};
+export type SwitchTerminalApiResponse = /** status 200 Successful Response */ any;
+export type SwitchTerminalApiArg = {
+  tillId: number;
+  nodeId: number;
+  switchTerminalPayload: SwitchTerminalPayload;
 };
 export type ListTillLayoutsApiResponse = /** status 200 Successful Response */ NormalizedListTillLayoutInt;
 export type ListTillLayoutsApiArg = {
@@ -1514,6 +1538,12 @@ export type LogoutTerminalApiArg = {
   terminalId: number;
   nodeId: number;
 };
+export type SwitchTillApiResponse = /** status 200 Successful Response */ any;
+export type SwitchTillApiArg = {
+  terminalId: number;
+  nodeId: number;
+  switchTillPayload: SwitchTillPayload;
+};
 export type ProductRestriction = "under_16" | "under_18";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
@@ -1735,6 +1765,9 @@ export type NewTill = {
   active_shift?: string | null;
   active_profile_id: number;
   terminal_id?: number | null;
+};
+export type SwitchTerminalPayload = {
+  new_terminal_id: number;
 };
 export type TillLayout = {
   name: string;
@@ -2635,6 +2668,9 @@ export type NewTerminal = {
   name: string;
   description?: string | null;
 };
+export type SwitchTillPayload = {
+  new_till_id: number;
+};
 export const {
   useListProductsQuery,
   useLazyListProductsQuery,
@@ -2678,6 +2714,7 @@ export const {
   useDeleteTillMutation,
   useForceLogoutUserMutation,
   useRemoveFromTerminalMutation,
+  useSwitchTerminalMutation,
   useListTillLayoutsQuery,
   useLazyListTillLayoutsQuery,
   useCreateTillLayoutMutation,
@@ -2811,4 +2848,5 @@ export const {
   useUpdateTerminalMutation,
   useDeleteTerminalMutation,
   useLogoutTerminalMutation,
+  useSwitchTillMutation,
 } = injectedRtkApi;
