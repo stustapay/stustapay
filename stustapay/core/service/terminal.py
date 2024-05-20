@@ -141,13 +141,14 @@ class TerminalService(DBService):
     async def logout_terminal_id(self, *, conn: Connection, node: Node, terminal_id: int) -> bool:
         row = await conn.fetchrow(
             "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null "
-            "where id = $1 and node_id = $2 returning id, till_id",
+            "where id = $1 and node_id = $2 returning id",
             terminal_id,
             node.id,
         )
         if row is None:
             raise NotFound(element_typ="terminal", element_id=terminal_id)
-        till_id = row["till_id"]
+
+        till_id = await conn.fetchval("select id from till where terminal_id = $1", terminal_id)
         if till_id is not None:
             till_node_id = await conn.fetchval("select node_id from till where id = $1", till_id)
             await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=till_id)
