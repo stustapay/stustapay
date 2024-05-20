@@ -145,7 +145,7 @@ class CustomerService(DBService):
             raise InvalidArgument("Donation cannot be higher then your balance")
 
         # check sepa name
-        if not re.match(r"^[a-zA-Z0-9\'\:\?\,-\(\)\/\ ÄäÖöÜüß\&\$\%]+$", customer_bank.account_name):
+        if not re.match(r"^[a-zA-Z0-9\'\:\?,\-\(\)\/\ ÄäÖöÜüß\&\$\%]+$", customer_bank.account_name):
             raise InvalidArgument("Provided account name contains invalid special characters")
 
         # check email
@@ -181,7 +181,7 @@ class CustomerService(DBService):
         await self.check_payout_run(conn, current_customer)
         await conn.execute(
             "insert into customer_info (customer_account_id, donation, donate_all, has_entered_info) values ($1, null, true, true) "
-            "on conflict (customer_account_id) do update set donation_all = true, has_entered_info = true",
+            "on conflict (customer_account_id) do update set donate_all = true, has_entered_info = true",
             current_customer.id,
         )
 

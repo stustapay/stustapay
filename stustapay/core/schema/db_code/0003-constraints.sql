@@ -390,3 +390,6 @@ alter table user_tag add constraint uid_is_unique check(check_unique_in_tree(id,
 
 alter table event add constraint end_date_gt_start_date
     check((start_date is null and end_date is null) or (start_date is not null and end_date is not null and end_date > start_date));
+
+alter table customer_info add constraint account_name_charset
+    check ( account_name ~ '^[a-zA-Z0-9''\:\?,\-\(\)\/ ÄäÖöÜüß&\$%]+$' );
