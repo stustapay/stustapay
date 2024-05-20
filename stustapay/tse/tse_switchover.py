@@ -42,14 +42,14 @@ async def draw_meters(meters, db):
 
         # assigned tills
         assigned_tills = list()
-        tills = await db.fetch("select id from till where tse_id=$1 order by id", tses[i]["tse_id"])
+        tills = await db.fetch("select id from till where tse_id=$1 order by id", tses[i]["id"])
         for till in tills:
             assigned_tills.append(till["id"])
 
         # last signctr und transactionnr
         last_order = await db.fetchrow(
             "select tse_signaturenr, tse_transaction from tse_signature where tse_id=$1 and signature_status='done' order by id desc limit 1",
-            tses[i]["tse_id"],
+            tses[i]["id"],
         )
         if last_order:
             transactionnr = last_order["tse_transaction"]
@@ -60,9 +60,9 @@ async def draw_meters(meters, db):
 
         meters[i].box()
         meters[i].bkgd(" ", colorscheme)
-        meters[i].addstr(0, 0, f"name: {tses[i]['tse_name']}")
-        meters[i].addstr(1, 1, f"Status: {tses[i]['tse_status']}", colorscheme)
-        meters[i].addstr(2, 1, f"Serial: {tses[i]['tse_serial']}", colorscheme)
+        meters[i].addstr(0, 0, f"name: {tses[i]['name']}")
+        meters[i].addstr(1, 1, f"Status: {tses[i]['status']}", colorscheme)
+        meters[i].addstr(2, 1, f"Serial: {tses[i]['serial']}", colorscheme)
         meters[i].addstr(3, 1, f"Last Transaction Nr: {transactionnr}, Signature Nr: {signctr}", colorscheme)
         meters[i].addstr(4, 1, f"Assigned Tills: {assigned_tills}", colorscheme)
         meters[i].refresh()
@@ -169,8 +169,8 @@ class TseSwitchover:
 
                 manualfailed = ""
 
-                if tse["tse_status"] != "failed":
-                    print(f"TSE is currently in status {tse['tse_status']}")
+                if tse["status"] != "failed":
+                    print(f"TSE is currently in status {tse['status']}")
                     print("Only a TSE in status 'failed' can be disabled")
                     print("Do you want to set the TSE to status 'failed' anyway and then disable it?")
                     manualfailed = input("Type 'yes' in uppercase: ")
@@ -183,7 +183,7 @@ class TseSwitchover:
                 print("These tills are currently assigned to this TSE:\n\n")
                 tills = await psql.fetch(
                     "select till.id as id, name, active_user_id, display_name from till join cashier on till.active_user_id=cashier.id where tse_id=$1 order by id",
-                    tse["tse_id"],
+                    tse["id"],
                 )
                 for till in tills:
                     print(
@@ -196,7 +196,7 @@ class TseSwitchover:
                 # check again for logout
                 tills = await psql.fetch(
                     "select till.id as id, name, active_user_id, display_name from till join cashier on till.active_user_id=cashier.id where tse_id=$1 order by id",
-                    tse["tse_id"],
+                    tse["id"],
                 )
                 still_logged_in_tills = 0
                 force_logout = ""
@@ -219,7 +219,7 @@ class TseSwitchover:
                     print("All cashiers are logged out.")
 
                 # are you really sure?
-                print(f"Disabling TSE {self.tse_to_disable}, Serial {tse['tse_serial']}")
+                print(f"Disabling TSE {self.tse_to_disable}, Serial {tse['serial']}")
                 print("THIS CAN NOT BE UNDONE")
                 print("DO YOU REALY WANT TO PROCEED?")
                 confirmation = input("THIS IS THE LAST CONFIRMATION! Type 'yes' in uppercase: ")
@@ -241,7 +241,7 @@ class TseSwitchover:
 
                 # check
                 tse = await psql.fetchrow("select * from tse where name=$1", self.tse_to_disable)
-                if tse["tse_status"] == "disabled":
+                if tse["status"] == "disabled":
                     print("SUCCESS: TSE set to 'disabled'")
                 else:
                     print("ERROR: could not set TSE to 'disabled', perhaps it was not in state failed")
@@ -252,7 +252,7 @@ class TseSwitchover:
                 still_logged_in_tills = 0
                 tills = await psql.fetch(
                     "select till.id as id, name, active_user_id, display_name from till join cashier on till.active_user_id=cashier.id where tse_id=$1 order by id",
-                    tse["tse_id"],
+                    tse["id"],
                 )
                 for till in tills:
                     print(
@@ -277,7 +277,7 @@ class TseSwitchover:
                     print("Forcing logout of cashiers for the assigned tills...")
                     force_logout_result = await psql.fetch(
                         "update till set active_user_id = null, active_user_role_id = null where tse_id = $1 returning id",
-                        tse["tse_id"],
+                        tse["id"],
                     )
                     if force_logout_result is not None:
                         print("SUCCESS: Forced logout of still logged in cashiers.")
@@ -286,11 +286,11 @@ class TseSwitchover:
 
                 # reset till to tse assignment
                 print("Resetting till to TSE assignment")
-                await psql.execute("update till set tse_id=NULL where tse_id=$1", tse["tse_id"])
+                await psql.execute("update till set tse_id=NULL where tse_id=$1", tse["id"])
 
                 # check
                 print("checking...")
-                tills = await psql.fetch("select id, name from till where tse_id=$1 order by id", tse["tse_id"])
+                tills = await psql.fetch("select id, name from till where tse_id=$1 order by id", tse["id"])
                 if tills:
                     print("ERROR: There are still tills assigned to this TSE:")
                     for till in tills:
