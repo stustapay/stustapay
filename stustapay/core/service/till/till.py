@@ -6,7 +6,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.order import Order
 from stustapay.core.schema.terminal import CurrentTerminal
-from stustapay.core.schema.till import NewTill, Till, UserInfo
+from stustapay.core.schema.till import NewTill, Till, UserInfo, UserRoleInfo
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import (
     CurrentUser,
@@ -267,7 +267,9 @@ class TillService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_terminal()
-    async def get_user_info(self, *, conn: Connection, current_user: CurrentUser, user_tag_uid: int) -> UserInfo:
+    async def get_user_info(
+        self, *, conn: Connection, current_user: CurrentUser, node: Node, user_tag_uid: int
+    ) -> UserInfo:
         if (
             Privilege.node_administration not in current_user.privileges
             and Privilege.user_management not in current_user.privileges
@@ -282,7 +284,8 @@ class TillService(DBService):
             "   cash_a.balance as cash_drawer_balance, "
             "   transp_a.balance as transport_account_balance, "
             "   cr.id as cash_register_id, "
-            "   cr.name as cash_register_name "
+            "   cr.name as cash_register_name,"
+            "   '[]'::json as assigned_roles "
             "from user_with_tag u "
             "left join account cash_a on cash_a.id = u.cashier_account_id "
             "left join account transp_a on transp_a.id = u.transport_account_id "
@@ -292,6 +295,24 @@ class TillService(DBService):
         )
         if info is None:
             raise InvalidArgument(f"There is no user registered for tag {format_user_tag_uid(user_tag_uid)}")
+
+        assigned_roles = await conn.fetch_many(
+            UserRoleInfo,
+            "select "
+            "   ur.*, "
+            "   utr.node_id,"
+            "   n.name as node_name, "
+            "   utr.node_id = $3 as is_at_current_node "
+            "from user_role_with_privileges ur "
+            "join user_to_role utr on ur.id = utr.role_id "
+            "join node n on utr.node_id = n.id "
+            "where n.id = any($2) and utr.user_id = $1",
+            info.id,
+            node.ids_to_root,
+            node.id,
+        )
+
+        info.assigned_roles = assigned_roles
         return info
 
     @with_db_transaction(read_only=True)

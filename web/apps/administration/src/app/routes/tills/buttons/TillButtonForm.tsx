@@ -43,7 +43,13 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
           </ListItemSecondaryAction>
         </ListItem>
       ))}
-      <ProductSelect label={t("button.addProductToButton")} variant="standard" value={null} onChange={addProduct} />
+      <ProductSelect
+        label={t("button.addProductToButton")}
+        variant="standard"
+        value={null}
+        onChange={addProduct}
+        onlyLocked
+      />
     </List>
   );
 };

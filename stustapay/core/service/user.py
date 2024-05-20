@@ -398,7 +398,7 @@ class UserService(DBService):
 
         roles = await conn.fetch_many(
             UserRole,
-            "select ur.* from user_role ur join user_to_role utr on ur.id = utr.role_id "
+            "select ur.* from user_role_with_privileges ur join user_to_role utr on ur.id = utr.role_id "
             "where utr.node_id = $1 and utr.user_id = $2",
             node.id,
             user_id,
