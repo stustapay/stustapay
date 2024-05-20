@@ -197,8 +197,9 @@ class TerminalService(DBService):
         allow_ticket_sale = layout_has_tickets and profile.allow_ticket_sale
 
         user_privileges = await conn.fetchval(
-            "select privileges from user_with_privileges where id = $1",
+            "select privileges_at_node as privileges from user_privileges_at_node($1) where node_id = $2",
             till.active_user_id,
+            till.node_id,
         )
         buttons = await conn.fetch_many(
             TerminalButton,

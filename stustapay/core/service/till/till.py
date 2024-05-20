@@ -187,12 +187,14 @@ class TillService(DBService):
                 "have permission to login at a terminal"
             )
 
+        new_user_id = await conn.fetchval("select id from user_with_tag where user_tag_uid = $1", user_tag.uid)
+        assert new_user_id is not None
+
         new_user_is_supervisor = await conn.fetchval(
-            "select true from user_with_privileges "
-            "where user_tag_uid = $1 and $2 = any(privileges) and node_id = any($3)",
-            user_tag.uid,
+            "select true from user_privileges_at_node($1) where $2 = any(privileges_at_node) and node_id = $3",
+            new_user_id,
             Privilege.terminal_login.name,
-            node.ids_to_root,
+            node.id,
         )
         if not new_user_is_supervisor:
             if current_user is None or Privilege.terminal_login not in current_user.privileges:
