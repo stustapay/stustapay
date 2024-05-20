@@ -1,4 +1,4 @@
-import { useUpdateNodeMutation } from "@/api";
+import { useDeleteNodeMutation, useUpdateNodeMutation } from "@/api";
 import { isErrorResp } from "@/api/utils";
 import { useCurrentNode } from "@/hooks";
 import { Button, Container, LinearProgress, Stack } from "@mui/material";
@@ -7,10 +7,11 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { EventSettings } from "../event-settings";
 import { NodeSettingsSchema, ObjectTypeSchema, type NodeSettingsSchemaType } from "../types";
+import { useOpenModal } from "@stustapay/modal-provider";
 
 export const NodeConfiguration: React.FC = () => {
   const { t } = useTranslation();
@@ -90,10 +91,32 @@ export const NodeConfiguration: React.FC = () => {
 export const NodeSettings: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const openModal = useOpenModal();
+  const [deleteNode] = useDeleteNodeMutation();
+  const navigate = useNavigate();
 
   if (currentNode.event != null) {
     return <EventSettings />;
   }
+
+  const openConfirmDeleteNodeDialog = () => {
+    openModal({
+      type: "confirm",
+      title: t("settings.deleteNode.confirmTitle"),
+      content: t("settings.deleteNode.confirmContent", { nodeName: currentNode.name }),
+      onConfirm: () => {
+        deleteNode({ nodeId: currentNode.id })
+          .unwrap()
+          .then(() => {
+            navigate(`/node/${currentNode.parent}`);
+            toast.success(t("settings.deleteNode.success"));
+          })
+          .catch(() => {
+            toast.error(t("settings.deleteNode.error"));
+          });
+      },
+    });
+  };
 
   return (
     <Container maxWidth="md">
@@ -106,6 +129,9 @@ export const NodeSettings: React.FC = () => {
           )}
           <Button variant="outlined" component={RouterLink} to={`/node/${currentNode.id}/create-node`}>
             {t("settings.createNode.link")}
+          </Button>
+          <Button variant="outlined" color="error" onClick={openConfirmDeleteNodeDialog}>
+            {t("settings.deleteNode.button")}
           </Button>
         </Stack>
         <NodeConfiguration />

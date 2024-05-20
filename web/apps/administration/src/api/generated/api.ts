@@ -807,6 +807,10 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/settings` }),
         providesTags: ["tree"],
       }),
+      deleteNode: build.mutation<DeleteNodeApiResponse, DeleteNodeApiArg>({
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}`, method: "DELETE" }),
+        invalidatesTags: ["tree"],
+      }),
       generateTestBon: build.mutation<GenerateTestBonApiResponse, GenerateTestBonApiArg>({
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-bon`, method: "POST" }),
         invalidatesTags: ["tree"],
@@ -1461,6 +1465,10 @@ export type UpdateEventApiArg = {
 };
 export type GetRestrictedEventSettingsApiResponse = /** status 200 Successful Response */ RestrictedEventSettings;
 export type GetRestrictedEventSettingsApiArg = {
+  nodeId: number;
+};
+export type DeleteNodeApiResponse = /** status 200 Successful Response */ any;
+export type DeleteNodeApiArg = {
   nodeId: number;
 };
 export type GenerateTestBonApiResponse = /** status 200 Successful Response */ any;
@@ -2826,6 +2834,7 @@ export const {
   useUpdateEventMutation,
   useGetRestrictedEventSettingsQuery,
   useLazyGetRestrictedEventSettingsQuery,
+  useDeleteNodeMutation,
   useGenerateTestBonMutation,
   useGenerateTestReportMutation,
   useGenerateRevenueReportMutation,

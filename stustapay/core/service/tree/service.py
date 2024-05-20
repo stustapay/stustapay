@@ -28,17 +28,81 @@ from stustapay.core.service.tree.common import (
 from stustapay.framework.database import Connection
 
 
-async def _update_forbidden_objects_in_subtree(conn: Connection, node_id: int, allowed: list[ObjectType]):
-    for t in allowed:
+async def _check_if_object_exists(conn: Connection, node: Node, object_type: ObjectType, in_subtree: bool):
+    if in_subtree:
+        query_string = "select exists(select from {} t join node n on t.node_id = n.id where $1 = any(n.parent_ids))"
+    else:
+        query_string = "select exists(select from {} t where t.node_id = $1)"
+
+    if object_type == ObjectType.terminal:
+        return await conn.fetchval(query_string.format("terminal"), node.id)
+    if object_type == ObjectType.till:
+        if await conn.fetchval(query_string.format("till"), node.id):
+            return True
+        if await conn.fetchval(query_string.format("till_layout"), node.id):
+            return True
+        if await conn.fetchval(query_string.format("till_button"), node.id):
+            return True
+        if await conn.fetchval(query_string.format("till_profile"), node.id):
+            return True
+        return False
+    if object_type == ObjectType.product:
+        return await conn.fetchval(query_string.format("product"), node.id)
+    if object_type == ObjectType.ticket:
+        return await conn.fetchval(query_string.format("ticket"), node.id)
+    if object_type == ObjectType.tse:
+        return await conn.fetchval(query_string.format("tse"), node.id)
+    if object_type == ObjectType.user:
+        return await conn.fetchval(query_string.format("usr"), node.id)
+    if object_type == ObjectType.user_role:
+        return await conn.fetchval(query_string.format("user_role"), node.id)
+    if object_type == ObjectType.tax_rate:
+        return await conn.fetchval(query_string.format("tax_rate"), node.id)
+    if object_type == ObjectType.account:
+        return await conn.fetchval(query_string.format("account"), node.id)
+    if object_type == ObjectType.user_tag:
+        return await conn.fetchval(query_string.format("user_tag"), node.id)
+
+    return False
+
+
+async def _update_forbidden_objects_in_subtree(conn: Connection, node: Node, forbidden: set[ObjectType]):
+    current = set(node.forbidden_objects_in_subtree)
+
+    to_add = forbidden.difference(current)
+    to_remove = current.difference(forbidden)
+
+    for t in to_remove:
         await conn.execute(
-            "insert into forbidden_objects_in_subtree_at_node (object_name, node_id) values ($1, $2)", t.value, node_id
+            "delete from forbidden_objects_in_subtree_at_node where node_id = $1 and object_name = $2", node.id, t.name
+        )
+
+    for t in to_add:
+        object_exists = await _check_if_object_exists(conn=conn, node=node, object_type=t, in_subtree=True)
+        if object_exists:
+            raise InvalidArgument(f"Cannot forbid {t.name} at this node as objects already exist")
+        await conn.execute(
+            "insert into forbidden_objects_in_subtree_at_node (object_name, node_id) values ($1, $2)", t.value, node.id
         )
 
 
-async def _update_forbidden_objects_at_node(conn: Connection, node_id: int, allowed: list[ObjectType]):
-    for t in allowed:
+async def _update_forbidden_objects_at_node(conn: Connection, node: Node, forbidden: set[ObjectType]):
+    current = set(node.forbidden_objects_at_node)
+
+    to_add = forbidden.difference(current)
+    to_remove = current.difference(forbidden)
+
+    for t in to_remove:
         await conn.execute(
-            "insert into forbidden_objects_at_node (object_name, node_id) values ($1, $2)", t.value, node_id
+            "delete from forbidden_objects_at_node where node_id = $1 and object_name = $2", node.id, t.name
+        )
+
+    for t in to_add:
+        object_exists = await _check_if_object_exists(conn=conn, node=node, object_type=t, in_subtree=False)
+        if object_exists:
+            raise InvalidArgument(f"Cannot forbid {t.name} at this node as objects already exist")
+        await conn.execute(
+            "insert into forbidden_objects_at_node (object_name, node_id) values ($1, $2)", t.value, node.id
         )
 
 
@@ -50,9 +114,11 @@ async def create_node(conn: Connection, parent_id: int, new_node: NewNode, event
         new_node.description,
         event_id,
     )
-    await _update_forbidden_objects_at_node(conn=conn, node_id=new_node_id, allowed=new_node.forbidden_objects_at_node)
+    result = await fetch_node(conn=conn, node_id=new_node_id)
+    assert result is not None
+    await _update_forbidden_objects_at_node(conn=conn, node=result, forbidden=set(new_node.forbidden_objects_at_node))
     await _update_forbidden_objects_in_subtree(
-        conn=conn, node_id=new_node_id, allowed=new_node.forbidden_objects_in_subtree
+        conn=conn, node=result, forbidden=set(new_node.forbidden_objects_in_subtree)
     )
     result = await fetch_node(conn=conn, node_id=new_node_id)
     assert result is not None
@@ -183,11 +249,6 @@ class TreeService(DBService):
     @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
     async def update_node(self, conn: Connection, node: Node, updated_node: NewNode) -> Node:
-        if any([x not in node.forbidden_objects_at_node for x in updated_node.forbidden_objects_at_node]):
-            raise InvalidArgument("Adding new forbidden object types to existing node is not allowed")
-        if any([x not in node.forbidden_objects_in_subtree for x in updated_node.forbidden_objects_in_subtree]):
-            raise InvalidArgument("Adding new forbidden object types to subtree is not allowed")
-
         await conn.execute(
             "update node set name = $2, description = $3 where id = $1",
             node.id,
@@ -195,10 +256,10 @@ class TreeService(DBService):
             updated_node.description,
         )
         await _update_forbidden_objects_at_node(
-            conn=conn, node_id=node.id, allowed=updated_node.forbidden_objects_at_node
+            conn=conn, node=node, forbidden=set(updated_node.forbidden_objects_at_node)
         )
         await _update_forbidden_objects_in_subtree(
-            conn=conn, node_id=node.id, allowed=updated_node.forbidden_objects_in_subtree
+            conn=conn, node=node, forbidden=set(updated_node.forbidden_objects_in_subtree)
         )
         result = await fetch_node(conn=conn, node_id=node.id)
         assert result is not None
@@ -322,3 +383,9 @@ class TreeService(DBService):
             raise InvalidArgument("Node is already read only")
 
         await conn.execute("update node set read_only = true where id = $1 or $1 = any(parent_ids)", node.id)
+
+    @with_db_transaction
+    @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
+    async def delete_node(self, *, conn: Connection, node: Node):
+        await conn.execute("delete from node where id = $1", node.id)

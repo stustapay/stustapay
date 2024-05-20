@@ -307,6 +307,13 @@ export const translations = {
       success: "Sucessfully archived node",
       error: "Error while archiving node",
     },
+    deleteNode: {
+      button: "Delete node",
+      confirmTitle: "Confirm delete node",
+      confirmContent: 'Are you sure you want to delete the node "{{nodeName}}". This is irreversible!!!!!!!',
+      success: "Sucessfully deleted node",
+      error: "Error while deleting node",
+    },
     general: {
       tabLabel: "General",
       name: "Name",
