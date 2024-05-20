@@ -63,6 +63,11 @@ async def get_restricted_event_settings(
     return await tree_service.get_restricted_event_settings(token=token, node_id=node_id)
 
 
+@router.delete("/nodes/{node_id}")
+async def delete_node(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    return await tree_service.delete_node(token=token, node_id=node_id)
+
+
 @router.post(
     "/events/{node_id}/generate-test-bon",
     responses={

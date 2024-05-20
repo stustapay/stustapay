@@ -15,8 +15,30 @@ import { useNavigate } from "react-router-dom";
 const initialValues: NodeSettingsSchemaType = {
   name: "",
   description: "",
-  forbidden_objects_at_node: [],
-  forbidden_objects_in_subtree: [],
+  forbidden_objects_at_node: [
+    "account",
+    "product",
+    "tax_rate",
+    "terminal",
+    "ticket",
+    "till",
+    "tse",
+    "user",
+    "user_role",
+    "user_tag",
+  ],
+  forbidden_objects_in_subtree: [
+    "account",
+    "product",
+    "tax_rate",
+    "terminal",
+    "ticket",
+    "till",
+    "tse",
+    "user",
+    "user_role",
+    "user_tag",
+  ],
 };
 
 export const NodeCreate: React.FC = withPrivilegeGuard("node_administration", () => {
