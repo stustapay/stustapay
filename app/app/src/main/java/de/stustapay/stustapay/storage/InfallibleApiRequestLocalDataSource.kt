@@ -26,7 +26,7 @@ class InfallibleApiRequestLocalDataSource @Inject constructor(
 
     suspend fun remove(id: UUID) {
         infallibleApiRequestStore.updateData {
-            InfallibleApiRequests(requests = it.requests.filter { it.key != id })
+            InfallibleApiRequests(requests = it.requests.filter { req -> req.key != id })
         }
     }
 

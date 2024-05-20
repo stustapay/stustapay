@@ -4,13 +4,13 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.api.models.PendingTopUp
+import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
-import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.libssp.net.Response
+import de.stustapay.stustapay.model.InfallibleResult
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.TerminalConfigRepository
@@ -61,7 +61,7 @@ class TopUpViewModel @Inject constructor(
     val topUpState = _topUpState.asStateFlow()
 
     // when we finished a sale
-    private val _topUpCompleted = MutableStateFlow<PendingTopUp?>(null)
+    private val _topUpCompleted = MutableStateFlow<CompletedTopUp?>(null)
     val topUpCompleted = _topUpCompleted.asStateFlow()
 
     // configuration infos from backend
@@ -116,7 +116,6 @@ class TopUpViewModel @Inject constructor(
         return when (val response = topUpRepository.checkTopUp(newTopUp)) {
             is Response.OK -> {
                 _status.update { "TopUp possible" }
-                _topUpCompleted.update { response.data }
                 true
             }
 
@@ -182,13 +181,8 @@ class TopUpViewModel @Inject constructor(
             }
         }
 
-        infallibleRepository.bookTopUp(newTopUp)
-
-        clearDraft()
-        _status.update { "Card TopUp successful" }
-        _navState.update { TopUpPage.Done }
+        bookTopUp("Card", newTopUp)
     }
-
 
     suspend fun topUpWithCash(tag: NfcTag) {
         _status.update { "Cash TopUp in progress..." }
@@ -206,11 +200,32 @@ class TopUpViewModel @Inject constructor(
             return
         }
 
-        infallibleRepository.bookTopUp(newTopUp)
+        bookTopUp("Cash", newTopUp)
+    }
 
-        clearDraft()
-        _navState.update { TopUpPage.Done }
-        _status.update { "Cash TopUp successful!" }
+    private suspend fun bookTopUp(topUpType: String, newTopUp: NewTopUp) {
+        when (val result = infallibleRepository.bookTopUp(newTopUp)) {
+            is InfallibleResult.OK -> {
+                when (val response = result.data) {
+                    is Response.OK -> {
+                        clearDraft()
+                        _topUpCompleted.update { response.data }
+                        _status.update { "${topUpType} TopUp successful" }
+                        _navState.update { TopUpPage.Done }
+                    }
+
+                    is Response.Error -> {
+                        _status.update { "${topUpType} TopUp failed! ${response.msg()}" }
+                        _navState.update { TopUpPage.Failure }
+                    }
+                }
+            }
+
+            is InfallibleResult.TooManyTries -> {
+                // and the infallible popup will show
+                _navState.update { TopUpPage.Failure }
+            }
+        }
     }
 
     fun navigateTo(target: TopUpPage) {

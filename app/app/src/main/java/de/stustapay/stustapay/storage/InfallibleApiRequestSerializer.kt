@@ -60,8 +60,8 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequests> {
                                 id, InfallibleApiRequest(
                                     InfallibleApiRequestKind.TicketSale(
                                         NewTicketSale(
-                                            customerTags = it.ticketSale.customerTagsList.map {
-                                                UserTagScan(BigInteger.parseString(it.uid), it.pin)
+                                            customerTags = it.ticketSale.customerTagsList.map { tag ->
+                                                UserTagScan(BigInteger.parseString(tag.uid), tag.pin)
                                             },
                                             paymentMethod = PaymentMethod.decode(it.ticketSale.paymentMethod)!!,
                                             uuid = id,

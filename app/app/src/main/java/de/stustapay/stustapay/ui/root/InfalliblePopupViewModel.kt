@@ -27,6 +27,18 @@ class InfalliblePopupViewModel @Inject constructor(
         initialValue = null,
     )
 
+    val resultTopUp = infallibleRepository.resultTopUp.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = null,
+    )
+
+    val resultTicketSale = infallibleRepository.resultTicketSale.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = null,
+    )
+
     private val clickCounter = MutableStateFlow(0)
 
     fun reset() {

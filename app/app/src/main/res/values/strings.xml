@@ -149,4 +149,5 @@
     <string name="ticket_valid">Ticket is valid.</string>
     <string name="infallible_popup_transaction_pending">Transaction pending:</string>
     <string name="infallible_popup_restart">Try restarting the app.</string>
+    <string name="infallible_popup_but_no_request">too many submit failures, but no active request</string>
 </resources>

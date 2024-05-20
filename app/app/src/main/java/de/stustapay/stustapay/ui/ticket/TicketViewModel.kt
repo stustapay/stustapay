@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.NewTicketScan
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.PendingTicketSale
@@ -65,7 +66,7 @@ class TicketViewModel @Inject constructor(
     val ticketDraft = _ticketDraft.asStateFlow()
 
     // when we finished a ticket sale
-    private val _saleCompleted = MutableStateFlow<PendingTicketSale?>(null)
+    private val _saleCompleted = MutableStateFlow<CompletedTicketSale?>(null)
     val saleCompleted = _saleCompleted.asStateFlow()
 
     // configuration infos from backend
@@ -195,7 +196,6 @@ class TicketViewModel @Inject constructor(
         val selection = _ticketDraft.value
 
         _status.update { resourcesProvider.getString(R.string.order_checking) }
-        _saleCompleted.update { null }
 
         // check if the sale is nice and well
         val response = ticketRepository.checkTicketSale(
@@ -210,7 +210,6 @@ class TicketViewModel @Inject constructor(
                     newSale
                 }
                 _status.update { resourcesProvider.getString(R.string.ticket_order_validated) }
-                _saleCompleted.update { response.data }
                 _navState.update { TicketPage.Confirm }
             }
 
@@ -273,8 +272,30 @@ class TicketViewModel @Inject constructor(
     private suspend fun bookSale(paymentMethod: PaymentMethod) {
         infallibleRepository.bookTicketSale(_ticketDraft.value.getNewTicketSale(paymentMethod))
 
-        clearDraft()
-        _status.update { resourcesProvider.getString(R.string.ticket_order_booked) }
-        _navState.update { TicketPage.Done }
+        _saleCompleted.update { null }
+
+        val response = ticketRepository.bookTicketSale(
+            _ticketDraft.value.getNewTicketSale(paymentMethod)
+        )
+
+        when (response) {
+            is Response.OK -> {
+                // delete the sale draft
+                clearDraft()
+                _status.update { resourcesProvider.getString(R.string.ticket_order_booked) }
+                // now we have a completed sale
+                _saleCompleted.update { response.data }
+                _navState.update { TicketPage.Done }
+            }
+
+            is Response.Error.Service -> {
+                _navState.update { TicketPage.Error }
+                _status.update { response.msg() }
+            }
+
+            is Response.Error -> {
+                _status.update { response.msg() }
+            }
+        }
     }
 }
