@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextAccountService, ContextTillService
 from stustapay.core.schema.account import Account
+from stustapay.core.schema.order import Order
 
 router = APIRouter(
     prefix="/customer",
@@ -41,3 +42,14 @@ async def get_customer(
     till_service: ContextTillService,
 ):
     return await till_service.get_customer(token=token, customer_tag_uid=customer_tag_uid)
+
+
+@router.get(
+    "/{customer_tag_uid}/orders", summary="Obtain all orders of a customer by tag uid", response_model=list[Order]
+)
+async def get_customer_orders(
+    token: CurrentAuthToken,
+    customer_tag_uid: int,
+    till_service: ContextTillService,
+):
+    return await till_service.get_customer_orders(token=token, customer_tag_uid=customer_tag_uid)
