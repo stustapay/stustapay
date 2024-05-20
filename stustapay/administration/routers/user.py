@@ -94,9 +94,7 @@ async def update_user(
     node_id: int,
 ):
     user_tag_uid = (
-        int(user.user_tag_uid_hex, 16)
-        if user.user_tag_uid_hex is not None and user.user_tag_uid_hex != ""
-        else None
+        int(user.user_tag_uid_hex, 16) if user.user_tag_uid_hex is not None and user.user_tag_uid_hex != "" else None
     )
     updated_user = await user_service.update_user(
         token=token,

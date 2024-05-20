@@ -13,7 +13,7 @@ router = APIRouter(
 
 
 class SwitchTagPayload(BaseModel):
-    customer_id: int
+    old_user_tag_pin: str
     new_user_tag_uid: int
     new_user_tag_pin: str
     comment: str
@@ -27,7 +27,7 @@ async def switch_tag(
 ):
     await account_service.switch_account_tag_uid_terminal(
         token=token,
-        account_id=payload.customer_id,
+        old_user_tag_pin=payload.old_user_tag_pin,
         new_user_tag_uid=payload.new_user_tag_uid,
         new_user_tag_pin=payload.new_user_tag_pin,
         comment=payload.comment,
