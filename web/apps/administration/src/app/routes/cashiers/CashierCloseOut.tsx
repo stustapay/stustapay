@@ -239,8 +239,7 @@ export const CashierCloseOut: React.FC = () => {
                   label={t("closeOut.closingOutUser")}
                   value={formik.values.closingOutUserId}
                   onBlur={formik.handleBlur}
-                  // TODO: readd filter once roles are again propagated with users
-                  // filterRole="finanzorga"
+                  filterPrivilege="node_administration"
                   onChange={(val) => formik.setFieldValue("closingOutUserId", val)}
                   error={formik.touched.closingOutUserId && !!formik.errors.closingOutUserId}
                   helperText={(formik.touched.closingOutUserId && formik.errors.closingOutUserId) as string}
