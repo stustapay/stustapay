@@ -3,16 +3,18 @@ import { useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
-export type ProductSelectProps = Omit<SelectProps<Product, false>, "options" | "formatOption" | "multiple">;
+export type ProductSelectProps = {
+  onlyLocked?: boolean;
+} & Omit<SelectProps<Product, false>, "options" | "formatOption" | "multiple">;
 
-export const ProductSelect: React.FC<ProductSelectProps> = (props) => {
+export const ProductSelect: React.FC<ProductSelectProps> = ({ onlyLocked = false, ...props }) => {
   const { currentNode } = useCurrentNode();
   const { products } = useListProductsQuery(
     { nodeId: currentNode.id },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        products: data ? selectProductAll(data) : [],
+        products: data ? selectProductAll(data).filter((p) => p.is_locked || !onlyLocked) : [],
       }),
     }
   );

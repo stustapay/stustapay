@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from stustapay.core.schema.user import UserWithoutId
+from stustapay.core.schema.user import Privilege, User
 
 
 class NewTillButton(BaseModel):
@@ -101,9 +101,23 @@ class CashRegisterStocking(NewCashRegisterStocking):
     total: float
 
 
-class UserInfo(UserWithoutId):
+class UserRoleInfo(BaseModel):
+    id: int
+    name: str
+    is_privileged: bool
+    privileges: list[Privilege]
+
+    node_id: int
+    node_name: str
+
+    is_at_current_node: bool
+
+
+class UserInfo(User):
     user_tag_uid: int
     cash_register_id: Optional[int] = None
     cash_register_name: Optional[str] = None
     cash_drawer_balance: Optional[float] = None
     transport_account_balance: Optional[float] = None
+
+    assigned_roles: list[UserRoleInfo]
