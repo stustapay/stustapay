@@ -32,7 +32,7 @@ class NfcRepository @Inject constructor(
         dataProtKey.update { secrets.key0.decodeHex() }
     }
 
-    suspend fun read(mode: ReadMode): NfcScanResult {
+    suspend fun read(): NfcScanResult {
         return nfcDataSource.scan(
             NfcScanRequest.Read(
                 uidRetrKey.value ?: return NfcScanResult.Fail(

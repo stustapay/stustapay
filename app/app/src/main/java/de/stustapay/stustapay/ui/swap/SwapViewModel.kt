@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SwapViewModel @Inject constructor(
-    private val customerRepository: CustomerRepository, userRepository: UserRepository
+    private val customerRepository: CustomerRepository
 ) : ViewModel() {
     private val _requestState = MutableStateFlow<SwapRequestState>(SwapRequestState.Done)
     private val _navState = MutableStateFlow<SwapNavState>(SwapNavState.Root)
