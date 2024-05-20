@@ -512,6 +512,7 @@ export const translations = {
       new_password: "New Password",
       new_password_confirm: "Confirm New Password",
     },
+    cashierDetails: "Cashier Details",
   },
   userRole: {
     name: "Name",
