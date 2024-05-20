@@ -1041,7 +1041,7 @@ class OrderService(DBService):
         customer_pins = list(map(lambda x: x.tag_pin, new_ticket_scan.customer_tags))
 
         known_tag_ids = await conn.fetch(
-            "select u.pin as user_tag_uid "
+            "select u.pin as user_tag_pin "
             "from account a join user_tag u on a.user_tag_id = u.id "
             "where u.pin = any($1) and u.node_id = any($2)",
             customer_pins,
@@ -1049,7 +1049,7 @@ class OrderService(DBService):
         )
 
         if len(known_tag_ids) > 0:
-            formatted_pins = ", ".join(a["pin"] for a in known_tag_ids)
+            formatted_pins = ", ".join(a["user_tag_pin"] for a in known_tag_ids)
             raise InvalidArgument(f"Ticket already has account: {formatted_pins}")
 
         known_pins = await conn.fetch(
