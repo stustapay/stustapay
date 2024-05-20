@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
@@ -54,6 +55,23 @@ async def force_logout_user(till_id: int, token: CurrentAuthToken, till_service:
 @router.post("/{till_id}/remove-from-terminal", tags=["tills", "terminals"])
 async def remove_from_terminal(till_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
     await till_service.remove_from_terminal(token=token, till_id=till_id, node_id=node_id)
+
+
+class SwitchTerminalPayload(BaseModel):
+    new_terminal_id: int
+
+
+@router.post("/{till_id}/switch-terminal", tags=["tills", "terminals"])
+async def switch_terminal(
+    till_id: int,
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
+    node_id: int,
+    payload: SwitchTerminalPayload,
+):
+    await till_service.switch_terminal(
+        token=token, till_id=till_id, node_id=node_id, new_terminal_id=payload.new_terminal_id
+    )
 
 
 @router.delete("/{till_id}")

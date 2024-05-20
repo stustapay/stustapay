@@ -120,7 +120,7 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRende
     orders = await conn.fetch_many(
         OrderWithFees,
         "select o.*, o.total_price * $2 as fees, o.total_price - o.total_price * $2 as total_price_minus_fees "
-        "from orders_at_node_and_children($1) o",
+        "from orders_at_node_and_children($1) o where o.payment_method = 'tag'",
         node_id,
         fees,
     )

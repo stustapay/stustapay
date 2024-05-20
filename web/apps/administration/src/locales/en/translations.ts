@@ -409,6 +409,9 @@ export const translations = {
       "Force logout a terminal. This should NEVER be done while a cashier is still using the terminal",
     removeFromTerminal: "Remove from terminal",
     removeFromTerminalDescription: "Deassociate a this till from its terminal",
+    switchTerminal: "Switch terminal",
+    switchTerminalDescription:
+      "Switch the terminal associated with this till. This should NEVER be done while a cashier is still using the terminal",
   },
   layout: {
     layout: "Layout",
@@ -619,6 +622,9 @@ export const translations = {
     removeTill: "Remove till",
     removeTillDescription:
       'Deassociate till "{{tillName}}" from this terminal. This should NEVER be done while a cashier is still using the terminal.',
+    switchTill: "Switch till",
+    switchTillDescription:
+      "Switch the till associated with this terminal. This should NEVER be done while a cashier is still using the terminal.",
   },
 };
 

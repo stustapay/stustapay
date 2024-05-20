@@ -27,6 +27,10 @@ from stustapay.core.service.common.decorators import (
     with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, NotFound
+from stustapay.core.service.till.till import (
+    assign_till_to_terminal,
+    remove_terminal_from_till,
+)
 from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
@@ -135,17 +139,33 @@ class TerminalService(DBService):
     @requires_node(object_types=[ObjectType.terminal])
     @requires_user([Privilege.node_administration])
     async def logout_terminal_id(self, *, conn: Connection, node: Node, terminal_id: int) -> bool:
-        # TODO: TREE visibility
-        id_ = await conn.fetchval(
+        row = await conn.fetchrow(
             "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null "
-            "where id = $1 and node_id = $2 returning id",
+            "where id = $1 and node_id = $2 returning id, till_id",
             terminal_id,
             node.id,
         )
-        if id_ is None:
+        if row is None:
             raise NotFound(element_typ="terminal", element_id=terminal_id)
-        await conn.execute("update till set terminal_id = null where terminal_id = $1", terminal_id)
+        till_id = row["till_id"]
+        if till_id is not None:
+            till_node_id = await conn.fetchval("select node_id from till where id = $1", till_id)
+            await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=till_id)
+
         return True
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def switch_till(self, *, conn: Connection, node: Node, terminal_id: int, new_till_id: int):
+        terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
+        if terminal is None:
+            raise NotFound(element_typ="terminal", element_id=terminal_id)
+        if terminal.till_id is not None:
+            till_node_id = await conn.fetchval("select node_id from till where id = $1", terminal.till_id)
+            await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=terminal.till_id)
+
+        await assign_till_to_terminal(conn=conn, node=node, till_id=new_till_id, terminal_id=terminal_id)
 
     @with_db_transaction
     @requires_terminal(requires_till=False)
@@ -154,7 +174,10 @@ class TerminalService(DBService):
             "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1",
             current_terminal.id,
         )
-        await conn.execute("update till set terminal_id = null where terminal_id = $1", current_terminal.id)
+        if current_terminal.till is not None:
+            await remove_terminal_from_till(
+                conn=conn, node_id=current_terminal.till.node_id, till_id=current_terminal.till.id
+            )
 
     @staticmethod
     async def _get_terminal_till_config(conn: Connection, till: Till) -> TerminalTillConfig:

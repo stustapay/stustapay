@@ -33,6 +33,37 @@ from stustapay.core.service.user import AuthService
 from stustapay.framework.database import Connection
 
 
+async def logout_user_from_till(conn: Connection, node_id: int, till_id: int):
+    result = await conn.fetchval(
+        "update till set active_user_id = null, active_user_role_id = null "
+        "where id = $1 and node_id = $2 returning id",
+        till_id,
+        node_id,
+    )
+    if result is None:
+        raise InvalidArgument("till does not exist")
+
+
+async def remove_terminal_from_till(conn: Connection, node_id: int, till_id: int):
+    result = await conn.fetchval(
+        "update till set terminal_id = null where id = $1 and node_id = $2 returning id",
+        till_id,
+        node_id,
+    )
+    if result is None:
+        raise InvalidArgument("till does not exist")
+
+    await logout_user_from_till(conn=conn, node_id=node_id, till_id=till_id)
+
+
+async def assign_till_to_terminal(conn: Connection, node: Node, till_id: int, terminal_id: int):
+    till = await fetch_till(conn=conn, node=node, till_id=till_id)
+    assert till is not None
+    if till.terminal_id is not None:
+        raise InvalidArgument(f"Till {till.name} already has a terminal assigned")
+    await conn.execute("update till set terminal_id = $1 where id = $2", terminal_id, till_id)
+
+
 class TillService(DBService):
     def __init__(
         self,
@@ -60,7 +91,8 @@ class TillService(DBService):
         return await conn.fetch_many(
             Till,
             "select t.* from till_with_cash_register t join node n on t.node_id = n.id "
-            "where (t.node_id = any($1) or $2 = any(n.parent_ids)) and not t.is_virtual order by t.name",
+            "where (t.node_id = any($1) or $2 = any(n.parent_ids)) and not t.is_virtual "
+            "order by t.name",
             node.ids_to_event_node,
             node.id,
         )
@@ -75,16 +107,16 @@ class TillService(DBService):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def update_till(self, *, conn: Connection, node: Node, till_id: int, till: NewTill) -> Till:
-        # TODO: TREE visibility
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5, terminal_id = $6 "
-            "where id = $1 returning id",
+            "where id = $1 and node_id = $7 returning id",
             till_id,
             till.name,
             till.description,
             till.active_shift,
             till.active_profile_id,
             till.terminal_id,
+            node.id,
         )
         if row is None:
             raise NotFound(element_typ="till", element_id=till_id)
@@ -104,31 +136,20 @@ class TillService(DBService):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def force_logout_user(self, *, conn: Connection, node: Node, till_id: int):
-        result = await conn.fetchval(
-            "update till set active_user_id = null, active_user_role_id = null "
-            "where id = $1 and node_id = $2 returning id",
-            till_id,
-            node.id,
-        )
-        if result is None:
-            raise InvalidArgument("till does not exist")
+        await logout_user_from_till(conn=conn, node_id=node.id, till_id=till_id)
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def remove_from_terminal(self, *, conn: Connection, node: Node, till_id: int):
-        result = await conn.fetchval(
-            "update till set terminal_id = null where id = $1 and node_id = $2 returning id",
-            till_id,
-            node.id,
-        )
-        if result is None:
-            raise InvalidArgument("till does not exist")
+        await remove_terminal_from_till(conn=conn, node_id=node.id, till_id=till_id)
 
-        await conn.execute(
-            "update till set active_user_id = null, active_user_role_id = null where id = $1",
-            till_id,
-        )
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.till])
+    @requires_user([Privilege.node_administration])
+    async def switch_terminal(self, *, conn: Connection, node: Node, till_id: int, new_terminal_id: int):
+        await remove_terminal_from_till(conn=conn, node_id=node.id, till_id=till_id)
+        await assign_till_to_terminal(conn=conn, node=node, till_id=till_id, terminal_id=new_terminal_id)
 
     @with_db_transaction(read_only=True)
     @requires_terminal()
