@@ -18,8 +18,8 @@ class RouteBuilder implements IRouteBuilder {
     public objectType?: ObjectType
   ) {}
 
-  private base = (nodeId?: number) => {
-    if (nodeId !== undefined) {
+  private base = (nodeId?: number | null) => {
+    if (nodeId != null) {
       return `/node/${nodeId}/${this.resourceUrl}`;
     }
     const match = window.location.pathname.match(nodeUrlBaseRegex);
@@ -29,19 +29,19 @@ class RouteBuilder implements IRouteBuilder {
     return `${match[0]}/${this.resourceUrl}`;
   };
 
-  public list = (nodeId?: number) => {
+  public list = (nodeId?: number | null) => {
     return this.base(nodeId);
   };
-  public add = (nodeId?: number) => {
+  public add = (nodeId?: number | null) => {
     return this.base(nodeId) + `/new`;
   };
-  public action = (action: string, nodeId?: number) => {
+  public action = (action: string, nodeId?: number | null) => {
     return `${this.base(nodeId)}/${action}`;
   };
-  public edit = (id?: string | number | null, nodeId?: number) => {
+  public edit = (id?: string | number | null, nodeId?: number | null) => {
     return this.base(nodeId) + `/${id}/edit`;
   };
-  public detail = (id?: string | number | null, nodeId?: number) => {
+  public detail = (id?: string | number | null, nodeId?: number | null) => {
     return this.base(nodeId) + `/${id}`;
   };
 
