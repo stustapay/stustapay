@@ -38,9 +38,6 @@ export const UserDetail: React.FC = () => {
   if (user === undefined) {
     return <Loading />;
   }
-  if (user.cashier_account_id != null) {
-    return <Navigate to={CashierRoutes.detail(user.id, user.node_id)} replace />;
-  }
 
   return (
     <DetailLayout
@@ -74,6 +71,11 @@ export const UserDetail: React.FC = () => {
             <ListItem>
               <ListItemText primary={t("user.tagId")} secondary={t("user.noTagAssigned")} />
             </ListItem>
+          )}
+          {user.cashier_account_id != null && (
+            <ListItemLink to={CashierRoutes.detail(user.id, user.node_id)}>
+              <ListItemText primary={t("user.cashierDetails")} />
+            </ListItemLink>
           )}
         </List>
       </Paper>

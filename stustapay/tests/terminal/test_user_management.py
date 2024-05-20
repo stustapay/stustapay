@@ -154,7 +154,7 @@ async def test_switch_user_tag(
     assert user_tag.uid == acc.user_tag_uid
     await account_service.switch_account_tag_uid_terminal(
         token=terminal_token,
-        account_id=account_id,
+        old_user_tag_pin=user_tag.pin,
         new_user_tag_uid=new_user_tag.uid,
         new_user_tag_pin=new_user_tag.pin,
         comment="foobar",

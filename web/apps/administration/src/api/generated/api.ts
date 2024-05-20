@@ -927,17 +927,17 @@ export type ListUsersApiArg = {
   nodeId: number;
   filterPrivilege?: Privilege | null;
 };
-export type CreateUserApiResponse = /** status 200 Successful Response */ User;
+export type CreateUserApiResponse = /** status 200 Successful Response */ UserRead;
 export type CreateUserApiArg = {
   nodeId: number;
   createUserPayload: CreateUserPayload;
 };
-export type GetUserApiResponse = /** status 200 Successful Response */ User;
+export type GetUserApiResponse = /** status 200 Successful Response */ UserRead;
 export type GetUserApiArg = {
   userId: number;
   nodeId: number;
 };
-export type UpdateUserApiResponse = /** status 200 Successful Response */ User;
+export type UpdateUserApiResponse = /** status 200 Successful Response */ UserRead;
 export type UpdateUserApiArg = {
   userId: number;
   nodeId: number;
@@ -948,7 +948,7 @@ export type DeleteUserApiArg = {
   userId: number;
   nodeId: number;
 };
-export type ChangeUserPasswordApiResponse = /** status 200 Successful Response */ User;
+export type ChangeUserPasswordApiResponse = /** status 200 Successful Response */ UserRead;
 export type ChangeUserPasswordApiArg = {
   userId: number;
   nodeId: number;
@@ -1570,6 +1570,19 @@ export type User = {
   cashier_account_id?: number | null;
   id: number;
 };
+export type UserRead = {
+  login: string;
+  display_name: string;
+  user_tag_pin?: string | null;
+  user_tag_uid?: number | null;
+  description?: string | null;
+  node_id: number;
+  user_tag_id?: number | null;
+  transport_account_id?: number | null;
+  cashier_account_id?: number | null;
+  id: number;
+  user_tag_uid_hex: string | null;
+};
 export type NormalizedListUserInt = {
   ids: number[];
   entities: {
@@ -1595,6 +1608,7 @@ export type CreateUserPayload = {
   display_name: string;
   description?: string | null;
   user_tag_pin?: string | null;
+  user_tag_uid_hex?: string | null;
   password?: string | null;
 };
 export type UpdateUserPayload = {
@@ -1602,6 +1616,7 @@ export type UpdateUserPayload = {
   display_name: string;
   description?: string | null;
   user_tag_pin?: string | null;
+  user_tag_uid_hex?: string | null;
 };
 export type ChangeUserPasswordPayload = {
   new_password: string;

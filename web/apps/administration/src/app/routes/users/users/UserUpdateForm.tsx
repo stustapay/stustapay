@@ -12,6 +12,8 @@ export function UserUpdateForm<T extends UpdateUserPayload>(props: UserUpdateFor
       <FormTextField autoFocus name="login" label={t("userLogin")} formik={props} />
       <FormTextField name="display_name" label={t("userDisplayName")} formik={props} />
       <FormTextField name="description" label={t("userDescription")} formik={props} />
+      <FormTextField name="user_tag_uid_hex" label={t("userTag.uid")} formik={props} />
+      <FormTextField name="user_tag_pin" label={t("userTag.pin")} formik={props} />
     </>
   );
 }

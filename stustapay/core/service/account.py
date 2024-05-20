@@ -310,18 +310,22 @@ class AccountService(DBService):
         *,
         conn: Connection,
         node: Node,
-        account_id: int,
+        old_user_tag_pin: str,
         new_user_tag_pin: str,
         new_user_tag_uid: int,
         comment: Optional[str],
     ):
-        account_exists = await conn.fetchval("select exists(select from account where id = $1)", account_id)
-        if not account_exists:
-            raise NotFound(element_typ="account", element_id=account_id)
-
-        old_user_tag_id = await conn.fetchval(
-            "select user_tag_id from account where id = $1 and node_id = any($2)", account_id, node.ids_to_root
+        row = await conn.fetchrow(
+            "select a.id as account_id, u.id as user_tag_id "
+            "from account a join user_tag u on a.user_tag_id = u.id "
+            "where u.pin = $1 and a.node_id = any($2)",
+            old_user_tag_pin,
+            node.ids_to_event_node,
         )
+        if not row:
+            raise NotFound(element_typ="user_tag", element_id=old_user_tag_pin)
+        account_id, old_user_tag_id = row
+
         new_user_tag_id = await conn.fetchval(
             "select id from user_tag where pin = $1 and node_id = any($2)", new_user_tag_pin, node.ids_to_root
         )
@@ -353,7 +357,7 @@ class AccountService(DBService):
         *,
         conn: Connection,
         node: Node,
-        account_id: int,
+        old_user_tag_pin: str,
         new_user_tag_pin: str,
         new_user_tag_uid: int,
         comment: Optional[str],
@@ -361,7 +365,7 @@ class AccountService(DBService):
         await self._switch_account_tag_uid(
             conn=conn,
             node=node,
-            account_id=account_id,
+            old_user_tag_pin=old_user_tag_pin,
             new_user_tag_pin=new_user_tag_pin,
             new_user_tag_uid=new_user_tag_uid,
             comment=comment,

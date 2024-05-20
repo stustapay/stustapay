@@ -13,7 +13,8 @@ const initialValues: NewUser = {
   display_name: "",
   description: "",
   password: "",
-  role_names: [],
+  user_tag_uid_hex: undefined,
+  user_tag_pin: undefined,
 };
 
 export const UserCreate: React.FC = withPrivilegeGuard("user_management", () => {

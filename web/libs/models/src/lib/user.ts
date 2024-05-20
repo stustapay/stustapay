@@ -44,26 +44,33 @@ export const UserRoleSchema = NewUserRoleSchema.merge(
 
 export type UserRole = z.infer<typeof UserRoleSchema>;
 
-export const NewUserSchema = z.object({
-  login: z.string().min(1),
-  display_name: z.string(),
-  description: z.string().optional(),
-  role_names: z.array(z.string()),
-  password: z.string().optional().nullable(),
-  transport_account_id: z.number().optional().nullable(),
-  cashier_account_id: z.number().optional().nullable(),
-});
-
-export type NewUser = z.infer<typeof NewUserSchema>;
-
-export const UserSchema = z.object({
-  id: z.number(),
+const CommonUserSchema = z.object({
   login: z.string().min(1),
   display_name: z.string(),
   description: z.string().optional().nullable(),
+  user_tag_uid_hex: z
+    .string()
+    .regex(/[0-9a-fA-F]+/, "user tag uid must be a hexadecimal number")
+    .optional()
+    .nullable(),
+  user_tag_pin: z.string().optional().nullable(),
 });
 
+export const UserSchema = CommonUserSchema.merge(
+  z.object({
+    id: z.number(),
+  })
+);
+
 export type User = z.infer<typeof UserSchema>;
+
+export const NewUserSchema = CommonUserSchema.merge(
+  z.object({
+    password: z.string().optional().nullable(),
+  })
+);
+
+export type NewUser = z.infer<typeof NewUserSchema>;
 
 export const getUserName = (user?: Pick<User, "login" | "display_name">) => {
   if (!user) {

@@ -1,7 +1,7 @@
 import enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 ADMIN_ROLE_ID = 0
 ADMIN_ROLE_NAME = "admin"
@@ -90,6 +90,11 @@ class UserWithoutId(NewUser):
     user_tag_id: Optional[int] = None
     transport_account_id: Optional[int] = None
     cashier_account_id: Optional[int] = None
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def user_tag_uid_hex(self) -> Optional[str]:
+        return format_user_tag_uid(self.user_tag_uid)
 
 
 class User(UserWithoutId):

@@ -4,6 +4,7 @@ import asyncpg
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account
+from stustapay.core.schema.order import Order
 from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.till import NewTill, Till, UserInfo
 from stustapay.core.schema.tree import Node, ObjectType
@@ -286,3 +287,25 @@ class TillService(DBService):
         if customer is None:
             raise InvalidArgument(f"Customer with tag uid {format_user_tag_uid(customer_tag_uid)} does not exist")
         return customer
+
+    @with_db_transaction(read_only=True)
+    @requires_terminal(user_privileges=[Privilege.customer_management])
+    async def get_customer_orders(
+        self, *, conn: Connection, current_terminal: CurrentTerminal, customer_tag_uid: int
+    ) -> list[Order]:
+        node = await fetch_node(conn=conn, node_id=current_terminal.node_id)
+        assert node is not None
+        customer_id = await conn.fetchval(
+            "select id from account_with_history a where a.user_tag_uid = $1 and node_id = any($2)",
+            customer_tag_uid,
+            node.ids_to_event_node,
+        )
+        if customer_id is None:
+            raise InvalidArgument(f"Customer with tag uid {format_user_tag_uid(customer_tag_uid)} does not exist")
+
+        orders = await conn.fetch_many(
+            Order,
+            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where customer_account_id = $1))",
+            customer_id,
+        )
+        return orders
