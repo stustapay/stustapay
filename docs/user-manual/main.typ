@@ -146,7 +146,7 @@ Hierzu muss das Eintrittsbändchen des Kunden gescannt werden.
 
 #figure(
   image("assets/img/account_status.png", height: 15em),
-  caption: [Details pro Transaktion. Nur die letzte (oberste in der Liste) kann storniert werden.]
+  caption: [Kontostandansicht nach Scannen des Eintrittsbändchens]
 )
 
 #pagebreak()
@@ -164,7 +164,7 @@ Dies sollte allerdings nur im Ausnahmefall getan werden und stattdessen schon in
   )],
   [#figure(
     image("assets/img/history_detail.png", height: 15em),
-    caption: [Details pro Transaktion. Nur die letzte (oberste in der Liste) kann storniert werden.]
+    caption: [Details pro Transaktion. Nur die letzte (oberste in der Liste) kann storniert werden]
   )]
 )
 
