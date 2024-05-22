@@ -32,6 +32,7 @@ from stustapay.core.service.till.till import (
     remove_terminal_from_till,
 )
 from stustapay.core.service.tree.common import (
+    fetch_event_node_for_node,
     fetch_node,
     fetch_restricted_event_settings_for_node,
 )
@@ -184,6 +185,7 @@ class TerminalService(DBService):
     async def _get_terminal_till_config(conn: Connection, till: Till) -> TerminalTillConfig:
         node = await fetch_node(conn=conn, node_id=till.node_id)
         assert node is not None
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=node.id)
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         profile = await conn.fetch_one(
             TillProfile,
@@ -251,6 +253,7 @@ class TerminalService(DBService):
         return TerminalTillConfig(
             id=till.id,
             name=till.name,
+            event_name=event_node.name,
             description=till.description,
             cash_register_id=cash_register_id,
             cash_register_name=cash_register_name,
