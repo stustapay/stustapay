@@ -36,16 +36,12 @@ sealed interface SumUpConfigState {
 }
 
 enum class SumUpAction {
-    None,
-    Login,
-    TokenLogin,
-    Checkout,
-    OldSettings,
-    CardReader,
+    None, Login, TokenLogin, Checkout, OldSettings, CardReader,
 }
 
 val sumUpActionDependencies: Map<SumUpAction, List<SumUpAction>> = mapOf(
     Pair(SumUpAction.Login, listOf()),
+    Pair(SumUpAction.TokenLogin, listOf()),
     Pair(SumUpAction.Checkout, listOf(SumUpAction.Login)),
     Pair(SumUpAction.OldSettings, listOf(SumUpAction.Login)),
     Pair(SumUpAction.CardReader, listOf(SumUpAction.Login)),
@@ -92,20 +88,16 @@ class SumUp @Inject constructor(
     val loginStatus = _loginStatus.asStateFlow()
 
     enum class SumUpResultCode(val code: Int) {
-        SUCCESSFUL(1),
-        ERROR_TRANSACTION_FAILED(2),
-        ERROR_GEOLOCATION_REQUIRED(3),
-        ERROR_INVALID_PARAM(4),
-        ERROR_INVALID_TOKEN(5),
-        ERROR_NO_CONNECTIVITY(6),
-        ERROR_PERMISSION_DENIED(7),
-        ERROR_NOT_LOGGED_IN(8),
-        ERROR_DUPLICATE_FOREIGN_TX_ID(9),
-        ERROR_INVALID_AFFILIATE_KEY(10),
-        ERROR_ALREADY_LOGGED_IN(11),
-        ERROR_INVALID_AMOUNT_DECIMALS(12),
-        ERROR_API_LEVEL_TOO_LOW(13),
-        ;
+        SUCCESSFUL(1), ERROR_TRANSACTION_FAILED(2), ERROR_GEOLOCATION_REQUIRED(3), ERROR_INVALID_PARAM(
+            4
+        ),
+        ERROR_INVALID_TOKEN(5), ERROR_NO_CONNECTIVITY(6), ERROR_PERMISSION_DENIED(7), ERROR_NOT_LOGGED_IN(
+            8
+        ),
+        ERROR_DUPLICATE_FOREIGN_TX_ID(9), ERROR_INVALID_AFFILIATE_KEY(10), ERROR_ALREADY_LOGGED_IN(
+            11
+        ),
+        ERROR_INVALID_AMOUNT_DECIMALS(12), ERROR_API_LEVEL_TOO_LOW(13), ;
 
         companion object {
             private val map = SumUpResultCode.values().associateBy(SumUpResultCode::code)
@@ -159,8 +151,7 @@ class SumUp @Inject constructor(
         val deps = sumUpActionDependencies[sumUpPaymentState.targetAction]
         if (deps == null) {
             Log.e(
-                "StuStaPay",
-                "unknown ec action dependencies for ${sumUpPaymentState.targetAction}"
+                "StuStaPay", "unknown ec action dependencies for ${sumUpPaymentState.targetAction}"
             )
             return
         }
@@ -178,7 +169,12 @@ class SumUp @Inject constructor(
         }
 
         // record the soon-done action.
-        sumUpPaymentState.actionsDone.add(nextAction)
+        sumUpPaymentState.actionsDone.add(
+            when (nextAction) {
+                SumUpAction.TokenLogin -> SumUpAction.Login
+                else -> nextAction
+            }
+        )
 
         when (nextAction) {
             SumUpAction.None -> {}
@@ -445,8 +441,7 @@ class SumUp @Inject constructor(
 
         val sumUpPayment = SumUpPayment.builder()
             // minimum 1.00
-            .total(payment.amount)
-            .currency(SumUpPayment.Currency.EUR)
+            .total(payment.amount).currency(SumUpPayment.Currency.EUR)
             // optional: include a tip amount in addition to the total
             .tip(payment.tip)
             .title("${cfg.terminal.eventName} ${payment.tag.uidHex()} ${payment.id}")
@@ -491,8 +486,8 @@ class SumUp @Inject constructor(
 
                 // TODO: when we have apilevel 33:
                 // val txInfo = extras.getParcelable(SumUpAPI.Response.TX_INFO, TransactionInfo::class.java)
-                @Suppress("DEPRECATION")
-                val txInfo = extras.getParcelable<TransactionInfo>(SumUpAPI.Response.TX_INFO)
+                @Suppress("DEPRECATION") val txInfo =
+                    extras.getParcelable<TransactionInfo>(SumUpAPI.Response.TX_INFO)
                 _paymentStatus.update {
                     SumUpState.Success(
                         msg = resultString ?: "no info",
@@ -521,8 +516,10 @@ class SumUp @Inject constructor(
      */
     private fun openOldSettings(context: Activity) {
         // settings for sumup, e.g. pairing with the card terminal
-        @Suppress("DEPRECATION")
-        SumUpAPI.openPaymentSettingsActivity(context, ecSettingsActivityCallbackId)
+        @Suppress("DEPRECATION") SumUpAPI.openPaymentSettingsActivity(
+            context,
+            ecSettingsActivityCallbackId
+        )
     }
 
     private fun settingsResult(context: Activity, resultCode: Int, extras: Bundle?) {
