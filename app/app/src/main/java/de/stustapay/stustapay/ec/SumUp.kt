@@ -7,9 +7,9 @@ import com.sumup.merchant.reader.api.SumUpAPI
 import com.sumup.merchant.reader.api.SumUpLogin
 import com.sumup.merchant.reader.api.SumUpPayment
 import com.sumup.merchant.reader.models.TransactionInfo
+import de.stustapay.libssp.util.ActivityCallback
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
-import de.stustapay.libssp.util.ActivityCallback
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -17,9 +17,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.sumup.merchant.reader.api.SumUpState as SumUpReaderState
 
+
 data class ECTerminalConfig(
     val name: String,
     val id: String,
+    val eventName: String,
 )
 
 data class SumUpConfig(
@@ -36,15 +38,16 @@ sealed interface SumUpConfigState {
 enum class SumUpAction {
     None,
     Login,
+    TokenLogin,
     Checkout,
-    Settings,
+    OldSettings,
     CardReader,
 }
 
 val sumUpActionDependencies: Map<SumUpAction, List<SumUpAction>> = mapOf(
     Pair(SumUpAction.Login, listOf()),
     Pair(SumUpAction.Checkout, listOf(SumUpAction.Login)),
-    Pair(SumUpAction.Settings, listOf(SumUpAction.Login)),
+    Pair(SumUpAction.OldSettings, listOf(SumUpAction.Login)),
     Pair(SumUpAction.CardReader, listOf(SumUpAction.Login)),
 )
 
@@ -78,11 +81,15 @@ class SumUp @Inject constructor(
     /** payment progress */
     val paymentStatus = _paymentStatus.asStateFlow()
 
-    private val _status = MutableStateFlow("loading...")
+    private val _status = MutableStateFlow("no status")
 
     /** status message */
     val status = _status.asStateFlow()
 
+    private val _loginStatus = MutableStateFlow<String?>(null)
+
+    /** login username/merchant status */
+    val loginStatus = _loginStatus.asStateFlow()
 
     enum class SumUpResultCode(val code: Int) {
         SUCCESSFUL(1),
@@ -129,11 +136,15 @@ class SumUp @Inject constructor(
         activityCallback.registerHandler(ecCardReaderActivityCallbackId) { resultCode, extras ->
             cardReaderResult(activity, resultCode, extras)
         }
+
+        updateLoginInfo()
+
+        _status.update { "sumup api initialized" }
     }
 
     private fun checkResultCode(stage: String, resultCode: Int): Boolean {
         // the activity result code seems to equals the sumup result code
-        // and the sumup result codes are custom, hence >= than the first user result code.
+        // and the sumup result codes are custom, hence >= than the first user definable result code.
         // -1 is default success, 0 is aborted, which we both don't expect.
         if (resultCode < Activity.RESULT_FIRST_USER) {
             _paymentStatus.update { SumUpState.Started("bad $stage intent result: $resultCode") }
@@ -147,7 +158,10 @@ class SumUp @Inject constructor(
     private fun nextAction(context: Activity) {
         val deps = sumUpActionDependencies[sumUpPaymentState.targetAction]
         if (deps == null) {
-            Log.e("StuStaPay", "unknown ec action dependencies for ${sumUpPaymentState.targetAction}")
+            Log.e(
+                "StuStaPay",
+                "unknown ec action dependencies for ${sumUpPaymentState.targetAction}"
+            )
             return
         }
 
@@ -171,14 +185,21 @@ class SumUp @Inject constructor(
             SumUpAction.Login -> {
                 openLogin(context)
             }
+
+            SumUpAction.TokenLogin -> {
+                openTokenLogin(context)
+            }
+
             SumUpAction.Checkout -> {
                 openCheckout(context)
             }
+
             SumUpAction.CardReader -> {
                 openCardReaderPage(context)
             }
-            SumUpAction.Settings -> {
-                openSettings(context)
+
+            SumUpAction.OldSettings -> {
+                openOldSettings(context)
             }
         }
     }
@@ -196,6 +217,7 @@ class SumUp @Inject constructor(
                 _paymentStatus.update { SumUpState.Started("done: $resultMsg") }
                 nextAction(context)
             }
+
             else -> {
                 _paymentStatus.update { SumUpState.Error("bad sumup result: $result: $resultMsg") }
             }
@@ -208,6 +230,7 @@ class SumUp @Inject constructor(
                 _paymentStatus.update { SumUpState.Failed("failed fetching sumup configuration: ${sumUpConfig.msg}") }
                 false
             }
+
             is SumUpConfigState.OK -> {
                 _paymentStatus.update { SumUpState.None }
 
@@ -241,10 +264,12 @@ class SumUp @Inject constructor(
                     apiKey = secrets.sumupApiKey,
                     terminal = ECTerminalConfig(
                         name = cfg.name,
-                        id = cfg.id.toString()
+                        id = cfg.id.toString(),
+                        eventName = "StuStaCulum 2024",  // TODO: get from terminal config
                     )
                 )
             }
+
             else -> {
                 return SumUpConfigState.Error("no terminal configuration for ec")
             }
@@ -265,10 +290,23 @@ class SumUp @Inject constructor(
     }
 
     /**
+     * log in via access token
+     */
+    suspend fun tokenLogin(
+        context: Activity,
+    ) {
+        if (setState(target = SumUpAction.TokenLogin, payment = null)) {
+            nextAction(context)
+        }
+    }
+
+    /**
      * logout from sumup account.
      */
     suspend fun logout() {
         SumUpAPI.logout()
+        _loginStatus.update { null }
+        _status.update { "logged out." }
     }
 
     /**
@@ -287,15 +325,12 @@ class SumUp @Inject constructor(
     }
 
     /**
-     * initiates a ec payment.
-     *
-     * first, creates the payment definition,
-     * then launches the sumup payment activity.
+     * show the deprecated settings menu
      */
-    suspend fun settings(
+    suspend fun settingsOld(
         context: Activity
     ) {
-        if (setState(target = SumUpAction.Settings, payment = null)) {
+        if (setState(target = SumUpAction.OldSettings, payment = null)) {
             nextAction(context)
         }
     }
@@ -325,6 +360,22 @@ class SumUp @Inject constructor(
             return
         }
 
+        val sumupLogin = SumUpLogin.builder(cfg.affiliateKey).build()
+
+        SumUpAPI.openLoginActivity(context, sumupLogin, ecLoginActivityCallbackId)
+    }
+
+    /**
+     * perform login at sumup api.
+     * calls back to loginResult.
+     */
+    private fun openTokenLogin(context: Activity) {
+        val cfg = sumUpPaymentState.config
+        if (cfg == null) {
+            _paymentStatus.update { SumUpState.Error("no config present in login") }
+            return
+        }
+
         val sumupLogin = SumUpLogin.builder(cfg.affiliateKey).accessToken(cfg.apiKey).build()
 
         SumUpAPI.openLoginActivity(context, sumupLogin, ecLoginActivityCallbackId)
@@ -346,15 +397,21 @@ class SumUp @Inject constructor(
         val resultMsg = extras.getString(SumUpAPI.Response.MESSAGE)
         when (val result = SumUpResultCode.fromInt(extras.getInt(SumUpAPI.Response.RESULT_CODE))) {
             SumUpResultCode.SUCCESSFUL -> {
-                _paymentStatus.update { SumUpState.Started("logged in...") }
+
+                val merchantInfo = updateLoginInfo()
+
+                _paymentStatus.update { SumUpState.Started("logged in: ${merchantInfo}...") }
                 nextAction(context)
             }
+
             SumUpResultCode.ERROR_ALREADY_LOGGED_IN -> {
                 nextAction(context)
             }
+
             SumUpResultCode.ERROR_INVALID_TOKEN -> {
                 _paymentStatus.update { SumUpState.Error("sumup login token invalid: $resultMsg") }
             }
+
             else -> {
                 _paymentStatus.update { SumUpState.Error("sumup login result: $result: $resultMsg") }
             }
@@ -392,16 +449,16 @@ class SumUp @Inject constructor(
             .currency(SumUpPayment.Currency.EUR)
             // optional: include a tip amount in addition to the total
             .tip(payment.tip)
-            .title("StuStaCulum 2023 ${payment.tag.toString()} ${payment.id}")
+            .title("${cfg.terminal.eventName} ${payment.tag.uidHex()} ${payment.id}")
             //.receiptEmail("dummy@sft.lol") // todo: pre-set if the user has provided their email
             //.receiptSMS("+00000000000")
             .addAdditionalInfo("Terminal", cfg.terminal.name)
             .addAdditionalInfo("TerminalID", cfg.terminal.id)
-            .addAdditionalInfo("Tag UID", payment.tag.toString())
+            .addAdditionalInfo("Tag", payment.tag.toString())
             // stustapay order uuid
             .foreignTransactionId(payment.id)
             // optional: skip the success screen
-            //.skipSuccessScreen()
+            .skipSuccessScreen()
             // optional: skip the failed screen
             //.skipFailedScreen()
             .build()
@@ -449,6 +506,7 @@ class SumUp @Inject constructor(
 
                 nextAction(context)
             }
+
             else -> {
                 _paymentStatus.update {
                     SumUpState.Error("checkout result: $result: $resultMsg")
@@ -461,7 +519,7 @@ class SumUp @Inject constructor(
      * open the sumup settings.
      * calls back to settingsresult.
      */
-    private fun openSettings(context: Activity) {
+    private fun openOldSettings(context: Activity) {
         // settings for sumup, e.g. pairing with the card terminal
         @Suppress("DEPRECATION")
         SumUpAPI.openPaymentSettingsActivity(context, ecSettingsActivityCallbackId)
@@ -492,5 +550,18 @@ class SumUp @Inject constructor(
         }
 
         nextActionIfOk(context, extras)
+    }
+
+    private fun updateLoginInfo(): String {
+        val loggedInMerchant = SumUpAPI.getCurrentMerchant()
+        val merchantInfo = if (loggedInMerchant != null) { // == isLoggedIn()
+            val loginId = loggedInMerchant.merchantCode
+            val currency = loggedInMerchant.currency.isoCode
+            "$loginId ($currency)"
+        } else {
+            "no logged in merchant"
+        }
+        _loginStatus.update { merchantInfo }
+        return merchantInfo
     }
 }

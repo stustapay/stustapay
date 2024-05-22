@@ -17,10 +17,16 @@ class ECSettingsViewModel @Inject constructor(
     private val _status = MutableStateFlow("loading...")
     val status = _status.asStateFlow()
     val sumUpState = sumUp.paymentStatus
+    val sumUpLogin = sumUp.loginStatus
 
     suspend fun openLogin(context: Activity) {
         _status.update { "opening login..." }
         sumUp.login(context)
+    }
+
+    suspend fun performTokenLogin(context: Activity) {
+        _status.update { "logging in with token..." }
+        sumUp.tokenLogin(context)
     }
 
     suspend fun logout() {
@@ -28,9 +34,9 @@ class ECSettingsViewModel @Inject constructor(
         sumUp.logout()
     }
 
-    suspend fun openSettings(context: Activity) {
-        _status.update { "opening settings..." }
-        sumUp.settings(context)
+    suspend fun openOldSettings(context: Activity) {
+        _status.update { "opening old settings menu..." }
+        sumUp.settingsOld(context)
     }
 
     suspend fun openCardReader(context: Activity) {

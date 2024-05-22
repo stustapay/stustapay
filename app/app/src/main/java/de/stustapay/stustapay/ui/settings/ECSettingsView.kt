@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
+import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 fun ECSettingsView(viewModel: ECSettingsViewModel = hiltViewModel()) {
     val status by viewModel.status.collectAsStateWithLifecycle()
     val sumUpState by viewModel.sumUpState.collectAsStateWithLifecycle()
+    val sumUpLoginState by viewModel.sumUpLogin.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
 
@@ -30,6 +32,9 @@ fun ECSettingsView(viewModel: ECSettingsViewModel = hiltViewModel()) {
         modifier = Modifier.padding(20.dp),
         title = { Text("EC Payment Settings") }
     ) {
+
+        Text(sumUpLoginState ?: "No login info", fontSize = 20.sp)
+
         Text(status, fontSize = 24.sp)
 
         Text(sumUpState.msg(), fontSize = 20.sp)
@@ -38,8 +43,17 @@ fun ECSettingsView(viewModel: ECSettingsViewModel = hiltViewModel()) {
             onClick = { scope.launch { viewModel.openLogin(context) } },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("SumUp Login")
+            Text("SumUp User/Password Login")
         }
+
+        Button(
+            onClick = { scope.launch { viewModel.performTokenLogin(context) } },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("SumUp Login with Token")
+        }
+
+        Divider(thickness = 2.dp, modifier = Modifier.fillMaxWidth().padding(top = 40.dp))
 
         Button(
             onClick = { scope.launch { viewModel.logout() } },
@@ -48,18 +62,22 @@ fun ECSettingsView(viewModel: ECSettingsViewModel = hiltViewModel()) {
             Text("SumUp Logout")
         }
 
-        Button(
-            onClick = { scope.launch { viewModel.openSettings(context) } },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("SumUp Settings")
-        }
+        Divider(thickness = 2.dp, modifier = Modifier.fillMaxWidth().padding(top = 100.dp))
 
         Button(
             onClick = { scope.launch { viewModel.openCardReader(context) } },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("SumUp Card Reader Settings")
+        }
+
+        Divider(thickness = 2.dp, modifier = Modifier.fillMaxWidth().padding(top = 40.dp))
+
+        Button(
+            onClick = { scope.launch { viewModel.openOldSettings(context) } },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Deprecated SumUp Settings")
         }
     }
 }
