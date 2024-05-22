@@ -71,6 +71,8 @@ class _RestrictedEventMetadata(BaseModel):
     sumup_api_key: str = ""
     sumup_affiliate_key: str = ""
     sumup_merchant_code: str = ""
+    sumup_oauth_client_id: str = ""
+    sumup_oauth_client_secret: str = ""
 
 
 class UpdateEvent(_BaseEvent, _RestrictedEventMetadata):
@@ -85,6 +87,7 @@ class PublicEventSettings(_BaseEvent):
 class RestrictedEventSettings(_BaseEvent, _RestrictedEventMetadata):
     id: int
     languages: list[Language]
+    sumup_oauth_refresh_token: str
 
 
 class ObjectType(enum.Enum):

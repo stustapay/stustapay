@@ -2,6 +2,8 @@
 
 import argparse
 import os
+import re
+from pathlib import Path
 
 from stustapay.core.schema import REVISION_PATH
 from stustapay.framework.database import SchemaRevision
@@ -14,6 +16,14 @@ def main(name: str):
     file_path = REVISION_PATH / filename
     with file_path.open("w+") as f:
         f.write(f"-- revision: {new_revision_version}\n-- requires: {revisions[-1].version}\n")
+
+    database_py_file = Path(__file__).parent / "stustapay" / "core" / "database.py"
+    with open(database_py_file, "rw") as f:
+        content = f.read()
+        new_content = re.sub(
+            'CURRENT_REVISION = "[a-f0-9]+"\n', f'CURRENT_REVISION = "{new_revision_version}"', content
+        )
+        f.write(new_content)
 
 
 if __name__ == "__main__":

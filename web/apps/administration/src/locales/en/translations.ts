@@ -360,6 +360,10 @@ export const translations = {
       sumup_api_key: "SumUp API Key",
       sumup_merchant_code: "SumUp Merchant Code",
       sumup_affiliate_key: "SumUp Affiliate Key",
+      sumup_oauth_client_id: "SumUp OAuth Client ID",
+      sumup_oauth_client_secret: "SumUp OAuth Client Secret",
+      sumup_redirect_url: "This is the sumup redirect url: {{redirectUrl}}",
+      login_with_sumup: "Login with sumup",
     },
     payout: {
       tabLabel: "Payout",
