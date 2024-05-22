@@ -26,6 +26,7 @@ from stustapay.core.service.tree.common import (
     get_tree_for_current_user,
 )
 from stustapay.framework.database import Connection
+from stustapay.payment.sumup.api import fetch_refresh_token_from_auth_code
 
 
 async def _check_if_object_exists(conn: Connection, node: Node, object_type: ObjectType, in_subtree: bool):
@@ -189,8 +190,9 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         "bon_address, bon_title, customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban, "
         "sepa_description, sepa_allowed_country_codes, customer_portal_url, customer_portal_about_page_url, "
         "customer_portal_data_privacy_url, sumup_payment_enabled, sumup_api_key, sumup_affiliate_key, "
-        "sumup_merchant_code, start_date, end_date, daily_end_time) "
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) "
+        "sumup_merchant_code, start_date, end_date, daily_end_time, sumup_oauth_client_id, sumup_oauth_client_secret) "
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, "
+        "   $23, $24, $25) "
         "returning id",
         event.currency_identifier,
         event.sumup_topup_enabled,
@@ -215,6 +217,8 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.start_date,
         event.end_date,
         event.daily_end_time,
+        event.sumup_oauth_client_id,
+        event.sumup_oauth_client_secret,
     )
     for lang_code, translation in event.translation_texts.items():
         for text_type, content in translation.items():
@@ -275,7 +279,6 @@ class TreeService(DBService):
     @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
     async def update_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
-        # TODO: privilege
         event_id = await conn.fetchval("select event_id from node where id = $1", node.id)
         if event_id is None:
             raise NotFound(element_typ="event", element_id=node.id)
@@ -287,7 +290,7 @@ class TreeService(DBService):
             "   sepa_allowed_country_codes = $14, customer_portal_url = $15, customer_portal_about_page_url = $16,"
             "   customer_portal_data_privacy_url = $17, sumup_payment_enabled = $18, sumup_api_key = $19, "
             "   sumup_affiliate_key = $20, sumup_merchant_code = $21, start_date = $22, end_date = $23, "
-            "   daily_end_time = $24 "
+            "   daily_end_time = $24, sumup_oauth_client_id = $25, sumup_oauth_client_secret = $26 "
             "where id = $1",
             event_id,
             event.currency_identifier,
@@ -313,6 +316,8 @@ class TreeService(DBService):
             event.start_date,
             event.end_date,
             event.daily_end_time,
+            event.sumup_oauth_client_id,
+            event.sumup_oauth_client_secret,
         )
         await conn.execute("delete from translation_text where event_id = $1", event_id)
         for lang_code, translation in event.translation_texts.items():
@@ -389,3 +394,19 @@ class TreeService(DBService):
     @requires_user(privileges=[Privilege.node_administration])
     async def delete_node(self, *, conn: Connection, node: Node):
         await conn.execute("delete from node where id = $1", node.id)
+
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def sumup_auth_code_flow(self, *, conn: Connection, node: Node, authorization_code: str):
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+
+        token = await fetch_refresh_token_from_auth_code(
+            client_id=event_settings.sumup_oauth_client_id,
+            client_secret=event_settings.sumup_oauth_client_secret,
+            authorization_code=authorization_code,
+        )
+        assert node.event is not None
+        await conn.execute(
+            "update event set sumup_oauth_refresh_token = $1 where id = $2", token.refresh_token, node.event.id
+        )

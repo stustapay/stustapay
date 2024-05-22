@@ -823,6 +823,14 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
+      configureSumupToken: build.mutation<ConfigureSumupTokenApiResponse, ConfigureSumupTokenApiArg>({
+        query: (queryArg) => ({
+          url: `/tree/nodes/${queryArg.nodeId}/configure-sumup-token`,
+          method: "POST",
+          body: queryArg.sumUpTokenPayload,
+        }),
+        invalidatesTags: ["tree"],
+      }),
       listSumupCheckouts: build.query<ListSumupCheckoutsApiResponse, ListSumupCheckoutsApiArg>({
         query: (queryArg) => ({ url: `/sumup/checkouts`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["sumup"],
@@ -1482,6 +1490,11 @@ export type GenerateTestReportApiArg = {
 export type GenerateRevenueReportApiResponse = /** status 200 Successful Response */ any;
 export type GenerateRevenueReportApiArg = {
   nodeId: number;
+};
+export type ConfigureSumupTokenApiResponse = /** status 200 Successful Response */ any;
+export type ConfigureSumupTokenApiArg = {
+  nodeId: number;
+  sumUpTokenPayload: SumUpTokenPayload;
 };
 export type ListSumupCheckoutsApiResponse = /** status 200 Successful Response */ SumUpCheckout[];
 export type ListSumupCheckoutsApiArg = {
@@ -2489,6 +2502,8 @@ export type NewEvent = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
   sumup_merchant_code?: string;
+  sumup_oauth_client_id?: string;
+  sumup_oauth_client_secret?: string;
   currency_identifier: string;
   max_account_balance: number;
   start_date?: string | null;
@@ -2524,6 +2539,8 @@ export type UpdateEvent = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
   sumup_merchant_code?: string;
+  sumup_oauth_client_id?: string;
+  sumup_oauth_client_secret?: string;
   currency_identifier: string;
   max_account_balance: number;
   start_date?: string | null;
@@ -2555,6 +2572,8 @@ export type RestrictedEventSettings = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
   sumup_merchant_code?: string;
+  sumup_oauth_client_id?: string;
+  sumup_oauth_client_secret?: string;
   currency_identifier: string;
   max_account_balance: number;
   start_date?: string | null;
@@ -2583,6 +2602,10 @@ export type RestrictedEventSettings = {
   };
   id: number;
   languages: Language[];
+  sumup_oauth_refresh_token: string;
+};
+export type SumUpTokenPayload = {
+  authorization_code: string;
 };
 export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
 export type SumUpTransaction = {
@@ -2838,6 +2861,7 @@ export const {
   useGenerateTestBonMutation,
   useGenerateTestReportMutation,
   useGenerateRevenueReportMutation,
+  useConfigureSumupTokenMutation,
   useListSumupCheckoutsQuery,
   useLazyListSumupCheckoutsQuery,
   useListSumupTransactionsQuery,

@@ -1,5 +1,7 @@
 import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
-import { Button, LinearProgress, Stack } from "@mui/material";
+import { config } from "@/api/common";
+import { useCurrentNode } from "@/hooks";
+import { Button, LinearProgress, Stack, Typography, ListItem, ListItemText } from "@mui/material";
 import { FormSwitch, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
@@ -29,6 +31,14 @@ export const SumUpSettingsSchema = z
       .string()
       .optional()
       .transform((val) => val ?? ""),
+    sumup_oauth_client_id: z
+      .string()
+      .optional()
+      .transform((val) => val ?? ""),
+    sumup_oauth_client_secret: z
+      .string()
+      .optional()
+      .transform((val) => val ?? ""),
   })
   .superRefine((data, ctx) => {
     if (!data.sumup_topup_enabled && !data.sumup_payment_enabled) {
@@ -43,6 +53,12 @@ export const SumUpSettingsSchema = z
     if (data.sumup_merchant_code === "") {
       ctx.addIssue({ ...requiredIssue, path: ["sumup_merchant_code"] });
     }
+    if (data.sumup_oauth_client_id === "") {
+      ctx.addIssue({ ...requiredIssue, path: ["sumup_oauth_client_id"] });
+    }
+    if (data.sumup_oauth_client_secret === "") {
+      ctx.addIssue({ ...requiredIssue, path: ["sumup_oauth_client_secret"] });
+    }
   });
 
 export type SumUpSettings = z.infer<typeof SumUpSettingsSchema>;
@@ -56,16 +72,31 @@ export const SumupSettingsForm: React.FC<FormikProps<SumUpSettings>> = (formik) 
       <FormTextField label={t("settings.sumup.sumup_affiliate_key")} name="sumup_affiliate_key" formik={formik} />
       <FormTextField label={t("settings.sumup.sumup_api_key")} name="sumup_api_key" formik={formik} />
       <FormTextField label={t("settings.sumup.sumup_merchant_code")} name="sumup_merchant_code" formik={formik} />
+      <FormTextField label={t("settings.sumup.sumup_oauth_client_id")} name="sumup_oauth_client_id" formik={formik} />
+      <FormTextField
+        label={t("settings.sumup.sumup_oauth_client_secret")}
+        name="sumup_oauth_client_secret"
+        formik={formik}
+      />
     </>
   );
+};
+
+const getSumupOauthUrl = (eventSettings: RestrictedEventSettings, redirectUrl: string) => {
+  const nonce = "fsadffffnwefmvsnef";
+
+  return `https://api.sumup.com/authorize?response_type=code&client_id=${eventSettings.sumup_oauth_client_id}&redirect_uri=${redirectUrl}&state=${nonce}`;
 };
 
 export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
   nodeId,
   eventSettings,
 }) => {
+  const { currentNode } = useCurrentNode();
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
+
+  const sumupRedirectUrl = `${config.adminBaseUrl}/node/${currentNode.id}/settings/sumup-redirect`;
 
   const handleSubmit = (values: SumUpSettings, { setSubmitting }: FormikHelpers<SumUpSettings>) => {
     setSubmitting(true);
@@ -81,29 +112,41 @@ export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEvent
       });
   };
 
+  const handleLoginWithSumup = () => {
+    const sumupUrl = getSumupOauthUrl(eventSettings, sumupRedirectUrl);
+    window.location.href = sumupUrl;
+  };
+
   return (
-    <Formik
-      initialValues={eventSettings as SumUpSettings} // TODO: figure out a way of not needing to cast this
-      onSubmit={handleSubmit}
-      validationSchema={toFormikValidationSchema(SumUpSettingsSchema)}
-      enableReinitialize={true}
-    >
-      {(formik) => (
-        <Form onSubmit={formik.handleSubmit}>
-          <Stack spacing={2}>
-            <SumupSettingsForm {...formik} />
-            {formik.isSubmitting && <LinearProgress />}
-            <Button
-              type="submit"
-              color="primary"
-              variant="contained"
-              disabled={formik.isSubmitting || Object.keys(formik.touched).length === 0}
-            >
-              {t("save")}
-            </Button>
-          </Stack>
-        </Form>
-      )}
-    </Formik>
+    <Stack spacing={2}>
+      <Formik
+        initialValues={eventSettings as SumUpSettings} // TODO: figure out a way of not needing to cast this
+        onSubmit={handleSubmit}
+        validationSchema={toFormikValidationSchema(SumUpSettingsSchema)}
+        enableReinitialize={true}
+      >
+        {(formik) => (
+          <Form onSubmit={formik.handleSubmit}>
+            <Stack spacing={2}>
+              <SumupSettingsForm {...formik} />
+              <ListItem>
+                <ListItemText primary="Sumup refresh token" secondary={eventSettings.sumup_oauth_refresh_token} />
+              </ListItem>
+              {formik.isSubmitting && <LinearProgress />}
+              <Button
+                type="submit"
+                color="primary"
+                variant="contained"
+                disabled={formik.isSubmitting || Object.keys(formik.touched).length === 0}
+              >
+                {t("save")}
+              </Button>
+            </Stack>
+          </Form>
+        )}
+      </Formik>
+      <Typography>{t("settings.sumup.sumup_redirect_url", { redirectUrl: sumupRedirectUrl })}</Typography>
+      <Button onClick={handleLoginWithSumup}>{t("settings.sumup.login_with_sumup")}</Button>
+    </Stack>
   );
 };

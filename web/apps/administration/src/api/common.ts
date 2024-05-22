@@ -6,6 +6,7 @@ import { type Config as BackendConfig } from "./api";
 
 export const siteHost = window.location.host;
 export const siteProtocol = window.location.protocol;
+const adminBaseUrl = `${siteProtocol}//${siteHost}`;
 const adminApiBaseUrl = `${siteProtocol}//${siteHost}/api`;
 
 export const prepareAuthHeaders = (
@@ -23,6 +24,7 @@ export const ConfigSchema = z.object({
   testMode: z.boolean(),
   testModeMessage: z.string(),
   adminApiBaseUrl: z.string(),
+  adminBaseUrl: z.string(),
   terminalApiBaseUrl: z.string(),
 });
 
@@ -34,6 +36,7 @@ const generateConfig = (publicApiConfig: BackendConfig): Config => {
   return {
     terminalApiBaseUrl: publicApiConfig.terminal_api_endpoint,
     adminApiBaseUrl: adminApiBaseUrl,
+    adminBaseUrl: adminBaseUrl,
     testMode: publicApiConfig.test_mode,
     testModeMessage: publicApiConfig.test_mode_message,
   };
