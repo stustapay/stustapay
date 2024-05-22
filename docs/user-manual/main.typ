@@ -1,9 +1,7 @@
 #set text(lang: "de")
 
 #v(4em)
-#align(center, text(30pt)[
-  *StuStaPay Nutzerhandbuch*
-])
+#align(center, text(30pt)[*StuStaPay Nutzerhandbuch*])
 #align(center, text(18pt)[
   _Das StuStaPay Team_
 
@@ -15,14 +13,24 @@
 #v(4em)
 
 #outline()
+#v(4em)
+
+#text(18pt)[*Kontakt*]
+#v(0em)
+Falls ein Problem mit dem Terminal auftritt sollte als erstes die App mit dem Knopf in der Home-Ansicht neu gestartet werden.
+
+Wenn das Problem danach weiterhin besteht, sollte umgehend unser Team kontaktiert werden. (Kontaktdaten hier einfügen)
 
 #pagebreak()
 
-#set page(header: [
-  StuStaPay Nutzerhandbuch
-  #h(1fr)
-  #datetime.today().display()
-])
+#set page(
+  header: [
+    StuStaPay Nutzerhandbuch
+    #h(1fr)
+    #datetime.today().display()
+  ],
+  numbering: "1"
+)
 
 = Registrierung
 Die initiale Registrierung der Terminals muss von den Admins der jeweiligen StuStaPay Instanz vorgenommen werden.
@@ -37,11 +45,11 @@ Jeder Standbetreiber und Kassierer braucht ein registriertes Eintrittsbändchen,
 #grid(
   columns: (1fr, 1fr),
   [#figure(
-    image("assets/img/not_registered.png", height: 15em),
+    image("assets/img/not_registered.png", height: 18em),
     caption: [Ein nicht-registriertes Terminal]
   )],
   [#figure(
-    image("assets/img/no_login.png", height: 15em),
+    image("assets/img/no_login.png", height: 18em),
     caption: [Ein registriertes Terminal]
   )]
 )
@@ -55,28 +63,28 @@ Auf Druck des Knopfes "Einloggen" erscheint ein Dialog, der einen zum scannen de
 #grid(
   columns: (1fr, 1fr),
   [#figure(
-    image("assets/img/login_button.png", height: 15em),
+    image("assets/img/login_button.png", height: 18em),
     caption: [Die Benutzer-Ansicht vor dem Einloggen]
   )],
   [#figure(
-    image("assets/img/login_scan.png", height: 15em),
+    image("assets/img/login_scan.png", height: 18em),
     caption: [Der Scan-Dialog in der Benutzer-Ansicht]
   )]
 )
 
-Falls das Benutzerkonto mehrere Rollen besitz erscheint nun ein Dialog, mit dem man die Rolle auswählen kann.
+Falls das Benutzerkonto mehrere Rollen besitzt erscheint nun ein Dialog, mit dem man die Rolle auswählen kann.
 Verschiedene Rollen haben üblicherweise Zugriff auf unterschiedliche Teile des Systems.
-Die Kassierer-Rolle kann zum Beispiel die Rechte haben, Produkte zu verkaufen. während eine Standbetreiber-Rolle meistens nicht verkaufen, dafür aber Umsätze einsehen oder weitere Benutzer erstellen kann.
+Die Kassierer-Rolle kann zum Beispiel die Rechte haben, Produkte zu verkaufen, während eine Standbetreiber-Rolle meistens nicht verkaufen, dafür aber Umsätze einsehen oder weitere Benutzer erstellen kann.
 Standbetreiber haben meistens mehrere Rollen, um sowohl auf die Verwaltungsfunktionen, als auch die Kassierfunktionen des Systems zugreifen zu können.
 
 #grid(
   columns: (1fr, 1fr),
   [#figure(
-    image("assets/img/login_role.png", height: 15em),
+    image("assets/img/login_role.png", height: 18em),
     caption: [Die Rollen-Auswahl nach dem Scannen]
   )],
   [#figure(
-    image("assets/img/change_role.png", height: 15em),
+    image("assets/img/change_role.png", height: 18em),
     caption: [Die Benutzer-Ansicht nach dem Einloggen]
   )]
 )
@@ -93,11 +101,11 @@ Je nach eingeloggter Rolle sind hier unterschiedliche Menüpunkte verfügbar.
 #grid(
   columns: (1fr, 1fr),
   [#figure(
-    image("assets/img/cashier_home.png", height: 15em),
+    image("assets/img/cashier_home.png", height: 18em),
     caption: [Die Home-Ansicht eines Kassierers]
   )],
   [#figure(
-    image("assets/img/orga_home.png", height: 15em),
+    image("assets/img/orga_home.png", height: 18em),
     caption: [Die Home-Ansicht eines Orgas]
   )]
 )
@@ -105,18 +113,18 @@ Je nach eingeloggter Rolle sind hier unterschiedliche Menüpunkte verfügbar.
 #pagebreak()
 
 = Kassieren
-Um Kassieren zu können, muss man als Kassierer-Rolle eingeloggt sein.
+Um kassieren zu können, muss man als Kassierer-Rolle eingeloggt sein.
 Wenn dies der Fall ist, ist auf der Home-Ansicht das Menü "Verkauf" sichtbar.
 Dieses beinhaltet die Verkaufsansicht mit einer Liste an allen verfügbaren Produkten oder einem Freipreisfeld, je nach registriertem Layout.
 
 #grid(
   columns: (1fr, 1fr),
   [#figure(
-    image("assets/img/order.png", height: 15em),
+    image("assets/img/order.png", height: 18em),
     caption: [Die Kassierer-Ansicht mit einem Freipreisfeld]
   )],
   [#figure(
-    image("assets/img/order_confirm.png", height: 15em),
+    image("assets/img/order_confirm.png", height: 18em),
     caption: [Übersicht über den Verkauf nach dem Scan]
   )]
 )
@@ -124,16 +132,16 @@ Dieses beinhaltet die Verkaufsansicht mit einer Liste an allen verfügbaren Prod
 Den Kauf bestätigt man mit der blauen Taste unten rechts, woraufhin ein Scan-Dialog erscheint.
 Nun muss der Kassierer das Eintrittsbändchen des Kunden scannen.
 Wenn der Kunde genügend Guthaben für den Verkauf hat, wird nun eine Bestätigungsansicht angezeigt.
-Diese Sollte dem Kunden vor dem Bestätigen präsentiert werden.
+Diese sollte dem Kunden vor dem Bestätigen präsentiert werden.
 
 #grid(
   columns: (1fr, 1fr),
   [#figure(
-    image("assets/img/order_success.png", height: 15em),
+    image("assets/img/order_success.png", height: 18em),
     caption: [Bestätigung des Verkaufs]
   )],
   [#figure(
-    image("assets/img/order_not_enough_funds.png", height: 15em),
+    image("assets/img/order_not_enough_funds.png", height: 18em),
     caption: [Fehlermeldung, wenn der Kunde nicht genügend Guthaben hat]
   )]
 )
@@ -141,11 +149,11 @@ Diese Sollte dem Kunden vor dem Bestätigen präsentiert werden.
 #pagebreak()
 
 = Kontostand
-Falls ein Kunde seinen Kontostand sehen möchte, kann dieser Über den Menüpunkt "Kontostand" eingesehen werden.
+Falls ein Kunde seinen Kontostand sehen möchte, kann dieser über den Menüpunkt "Kontostand" eingesehen werden.
 Hierzu muss das Eintrittsbändchen des Kunden gescannt werden.
 
 #figure(
-  image("assets/img/account_status.png", height: 15em),
+  image("assets/img/account_status.png", height: 18em),
   caption: [Kontostandansicht nach Scannen des Eintrittsbändchens]
 )
 
@@ -159,11 +167,11 @@ Dies sollte allerdings nur im Ausnahmefall getan werden und stattdessen schon in
 #grid(
   columns: (1fr, 1fr),
   [#figure(
-    image("assets/img/history.png", height: 15em),
+    image("assets/img/history.png", height: 18em),
     caption: [Bestellverlauf]
   )],
   [#figure(
-    image("assets/img/history_detail.png", height: 15em),
+    image("assets/img/history_detail.png", height: 18em),
     caption: [Details pro Transaktion. Nur die letzte (oberste in der Liste) kann storniert werden]
   )]
 )
@@ -172,17 +180,17 @@ Dies sollte allerdings nur im Ausnahmefall getan werden und stattdessen schon in
 
 = Umsatzübersicht
 Unter dem Menü "Statistik" (nur als Standbetreiber-Rolle einsehbar) befinden sich Umsatzberichte in täglicher und stündlicher Auflösung.
-Die Statistiken beinhalten den Umsatz vom gesamten Stand.
-Falls ein Stand also mehrere Terminals hat ist hier die Summe von den Verkäufen aller Terminals zu sehen.
+Die Statistiken beinhalten den Umsatz des gesamten Standes.
+Falls ein Stand also mehrere Terminals hat ist hier die Summe der Verkäufe aller Terminals zu sehen.
 
 #grid(
   columns: (1fr, 1fr),
   [#figure(
-    image("assets/img/stats.png", height: 15em),
+    image("assets/img/stats.png", height: 18em),
     caption: [Die Statistik-Ansicht]
   )],
   [#figure(
-    image("assets/img/stats_hourly.png", height: 15em),
+    image("assets/img/stats_hourly.png", height: 18em),
     caption: [Stündlicher Umsatz in der Statistik-Ansicht]
   )]
 )
