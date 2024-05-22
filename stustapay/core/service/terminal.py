@@ -186,6 +186,7 @@ class TerminalService(DBService):
         node = await fetch_node(conn=conn, node_id=till.node_id)
         assert node is not None
         event_node = await fetch_event_node_for_node(conn=conn, node_id=node.id)
+        assert event_node is not None
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         profile = await conn.fetch_one(
             TillProfile,
