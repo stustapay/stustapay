@@ -53,7 +53,7 @@ fun ECSettingsView(viewModel: ECSettingsViewModel = hiltViewModel()) {
             Text("SumUp Login with Token")
         }
 
-        Divider(thickness = 2.dp, modifier = Modifier.fillMaxWidth().padding(top = 40.dp))
+        Divider(thickness = 2.dp, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp))
 
         Button(
             onClick = { scope.launch { viewModel.logout() } },
@@ -62,7 +62,7 @@ fun ECSettingsView(viewModel: ECSettingsViewModel = hiltViewModel()) {
             Text("SumUp Logout")
         }
 
-        Divider(thickness = 2.dp, modifier = Modifier.fillMaxWidth().padding(top = 100.dp))
+        Divider(thickness = 2.dp, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp))
 
         Button(
             onClick = { scope.launch { viewModel.openCardReader(context) } },
@@ -71,7 +71,7 @@ fun ECSettingsView(viewModel: ECSettingsViewModel = hiltViewModel()) {
             Text("SumUp Card Reader Settings")
         }
 
-        Divider(thickness = 2.dp, modifier = Modifier.fillMaxWidth().padding(top = 40.dp))
+        Divider(thickness = 2.dp, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp))
 
         Button(
             onClick = { scope.launch { viewModel.openOldSettings(context) } },
