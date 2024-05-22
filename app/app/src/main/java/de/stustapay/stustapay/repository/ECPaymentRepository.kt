@@ -57,9 +57,6 @@ class ECPaymentRepository @Inject constructor(
             }
         }
 
-        // TODO log the payment locally on the terminal,
-        //      if core communication now fails!
-
         return ret
     }
 }

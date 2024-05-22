@@ -7,16 +7,17 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
-import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.libssp.net.Response
+import de.stustapay.stustapay.model.InfallibleResult
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TopUpRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
+import de.stustapay.stustapay.repository.InfallibleRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -45,9 +46,10 @@ data class TopUpState(
 @HiltViewModel
 class TopUpViewModel @Inject constructor(
     private val topUpRepository: TopUpRepository,
-    private val terminalConfigRepository: TerminalConfigRepository,
-    private val userRepository: UserRepository,
+    terminalConfigRepository: TerminalConfigRepository,
+    userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
+    private val infallibleRepository: InfallibleRepository
 ) : ViewModel() {
     private val _navState = MutableStateFlow(TopUpPage.Selection)
     val navState = _navState.asStateFlow()
@@ -72,6 +74,12 @@ class TopUpViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = TerminalLoginState(),
+    )
+
+    val infallibleBusy = infallibleRepository.busy.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = false,
     )
 
     fun setAmount(amount: UInt) {
@@ -173,22 +181,8 @@ class TopUpViewModel @Inject constructor(
             }
         }
 
-        // TODO: maybe retry - but this should be done in http layer already...
-        when (val response = topUpRepository.bookTopUp(newTopUp)) {
-            is Response.OK -> {
-                clearDraft()
-                _topUpCompleted.update { response.data }
-                _status.update { "Card TopUp successful" }
-                _navState.update { TopUpPage.Done }
-            }
-
-            is Response.Error -> {
-                _status.update { "Card TopUp failed! ${response.msg()}" }
-                _navState.update { TopUpPage.Failure }
-            }
-        }
+        bookTopUp("Card", newTopUp)
     }
-
 
     suspend fun topUpWithCash(tag: NfcTag) {
         _status.update { "Cash TopUp in progress..." }
@@ -206,16 +200,29 @@ class TopUpViewModel @Inject constructor(
             return
         }
 
-        when (val response = topUpRepository.bookTopUp(newTopUp)) {
-            is Response.OK -> {
-                clearDraft()
-                _topUpCompleted.update { response.data }
-                _navState.update { TopUpPage.Done }
-                _status.update { "Cash TopUp successful!" }
+        bookTopUp("Cash", newTopUp)
+    }
+
+    private suspend fun bookTopUp(topUpType: String, newTopUp: NewTopUp) {
+        when (val result = infallibleRepository.bookTopUp(newTopUp)) {
+            is InfallibleResult.OK -> {
+                when (val response = result.data) {
+                    is Response.OK -> {
+                        clearDraft()
+                        _topUpCompleted.update { response.data }
+                        _status.update { "${topUpType} TopUp successful" }
+                        _navState.update { TopUpPage.Done }
+                    }
+
+                    is Response.Error -> {
+                        _status.update { "${topUpType} TopUp failed! ${response.msg()}" }
+                        _navState.update { TopUpPage.Failure }
+                    }
+                }
             }
 
-            is Response.Error -> {
-                _status.update { "Cash TopUp failed! ${response.msg()}" }
+            is InfallibleResult.TooManyTries -> {
+                // and the infallible popup will show
                 _navState.update { TopUpPage.Failure }
             }
         }

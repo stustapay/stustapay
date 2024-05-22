@@ -121,7 +121,6 @@ class NfcHandler @Inject constructor(
                     dataSource.setScanResult(NfcScanResult.Read(tag.fastRead(req.uidRetrKey, req.dataProtKey)))
                 }
                 is NfcScanRequest.Write -> {
-                    Log.e("SSP", "Hell")
                     try {
                         tag.connect()
                     } catch (e: TagIncompatibleException) {

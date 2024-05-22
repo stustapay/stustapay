@@ -99,7 +99,8 @@ class NotEnoughVouchersException(ServiceException):
     The customer has not enough vouchers on his account to complete the order
     """
 
-    def __init__(self, available_vouchers: int):
+    def __init__(self, used_vouchers: int, available_vouchers: int):
+        self.used_vouchers = used_vouchers
         self.available_vouchers = available_vouchers
 
     def __str__(self):
@@ -160,6 +161,20 @@ class CustomerNotFound(ServiceException):
 
     def __str__(self):
         return f"Customer not found: {format_user_tag_uid(self.uid)}"
+
+
+class AlreadyProcessedException(ServiceException):
+    """
+    The order was already processed, since the UUID is booked.
+    """
+
+    id = "AlreadyProcessed"
+
+    def __init__(self, msg: str):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
 
 
 class BookedButton(BaseModel):
@@ -346,7 +361,7 @@ class OrderService(DBService):
 
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_topup.uuid)
         if uuid_exists:
-            raise InvalidArgument("This order has already been booked, duplicate order uuid")
+            raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
 
         customer_account = await self._fetch_customer_by_user_tag(
             conn=conn, node=node, customer_tag_uid=new_topup.customer_tag_uid
@@ -472,7 +487,7 @@ class OrderService(DBService):
         """
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_sale.uuid)
         if uuid_exists:
-            raise InvalidArgument("This order has already been booked, duplicate order uuid")
+            raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
 
         customer_account = await self._fetch_customer_by_user_tag(
             conn=conn, node=node, customer_tag_uid=new_sale.customer_tag_uid
@@ -500,7 +515,9 @@ class OrderService(DBService):
         vouchers_to_use = customer_account.vouchers
         if new_sale.used_vouchers is not None:
             if new_sale.used_vouchers > customer_account.vouchers:
-                raise NotEnoughVouchersException(available_vouchers=customer_account.vouchers)
+                raise NotEnoughVouchersException(
+                    used_vouchers=new_sale.used_vouchers, available_vouchers=customer_account.vouchers
+                )
             vouchers_to_use = new_sale.used_vouchers
         discount_product = await fetch_discount_product(conn=conn, node=node)
         voucher_usage = self.voucher_service.compute_optimal_voucher_usage(
@@ -922,7 +939,7 @@ class OrderService(DBService):
 
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_pay_out.uuid)
         if uuid_exists:
-            raise InvalidArgument("This order has already been booked, duplicate order uuid")
+            raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
 
         can_pay_out = await conn.fetchval(
             "select allow_cash_out from till_profile where id = $1", current_till.active_profile_id
@@ -1098,7 +1115,7 @@ class OrderService(DBService):
     ) -> PendingTicketSale:
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_ticket_sale.uuid)
         if uuid_exists:
-            raise InvalidArgument("This order has already been booked, duplicate order uuid")
+            raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
 
         if new_ticket_sale.payment_method is not None:
             if new_ticket_sale.payment_method == PaymentMethod.tag:

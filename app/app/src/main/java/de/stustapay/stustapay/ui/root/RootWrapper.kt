@@ -21,8 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun RootWrapper(
-    viewModel: RootWrapperViewModel = hiltViewModel(),
-    content: @Composable () -> Unit
+    viewModel: RootWrapperViewModel = hiltViewModel(), content: @Composable () -> Unit
 ) {
     val borderState by viewModel.borderState.collectAsStateWithLifecycle()
 
@@ -39,9 +38,11 @@ fun RootWrapper(
                     .padding(borderSize)
             ) {
                 Column {
-                    Row(modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colors.error)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colors.error)
+                    ) {
                         Text(
                             border.msg,
                             style = MaterialTheme.typography.h6,
@@ -50,6 +51,7 @@ fun RootWrapper(
                             color = MaterialTheme.colors.onError,
                         )
                     }
+                    InfalliblePopup()
                     content()
                 }
             }

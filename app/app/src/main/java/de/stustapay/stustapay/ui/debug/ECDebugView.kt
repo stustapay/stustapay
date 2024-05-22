@@ -47,14 +47,28 @@ fun ECDebugView(viewModel: ECDebugViewModel = hiltViewModel()) {
             onClick = {  scope.launch { viewModel.openLogin(context) } },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("SumUp Login")
+            Text("SumUp Login with User/Password")
         }
 
         Button(
-            onClick = {  scope.launch { viewModel.openSettings(context) } },
+            onClick = {  scope.launch { viewModel.tokenLogin(context) } },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("SumUp Settings")
+            Text("SumUp Token Login")
+        }
+
+        Button(
+            onClick = {  scope.launch { viewModel.logout(context) } },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("SumUp Logout")
+        }
+
+        Button(
+            onClick = {  scope.launch { viewModel.openSettingsDeprecated(context) } },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("SumUp Deprecated Settings")
         }
 
         Button(

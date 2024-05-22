@@ -5,12 +5,25 @@ import kotlinx.serialization.Serializable
 /**
  * communication api response result type.
  * T: success type
- * E: deserialized error body type
  */
 sealed class Response<out T> {
-    data class OK<T>(val data: T) : Response<T>()
+    /**
+     * true if the request was "delivered" to the server successfully.
+     * returns false when there were e.g. network problems so we can retry critical transactions.
+     */
+    abstract fun submitSuccess(): Boolean
+
+    data class OK<T>(val data: T) : Response<T>() {
+        override fun submitSuccess(): Boolean {
+            return true
+        }
+    }
+
     sealed class Error : Response<Nothing>() {
         abstract fun msg(): String
+        override fun submitSuccess(): Boolean {
+            return true
+        }
 
         @Serializable
         sealed class Service(val msg: String) : Error() {
@@ -25,12 +38,10 @@ sealed class Response<out T> {
                 val needed_fund: Double,
                 val available_fund: Double
             ) : Service("not enough funds. needed: $needed_fund available: $available_fund")
-        }
 
-        data class Server(val msg: String, val code: Int) : Error() {
-            override fun msg(): String {
-                return "server error $code: $msg"
-            }
+            class AlreadyProcessed(
+                msg: String
+            ) : Service(msg)
         }
 
         data class Access(val msg: String) : Error() {
@@ -51,6 +62,7 @@ sealed class Response<out T> {
             }
         }
 
+        /** when the request failed because of exceptions and network errors */
         data class Request(val msg: String? = null, val throwable: Throwable? = null) : Error() {
             init {
                 require((msg != null) != (throwable != null)) {
@@ -64,6 +76,21 @@ sealed class Response<out T> {
                 } else {
                     "request error: $msg"
                 }
+            }
+
+            override fun submitSuccess(): Boolean {
+                return false
+            }
+        }
+
+        /** server sent a 5xx message */
+        data class Server(val msg: String, val code: Int) : Error() {
+            override fun msg(): String {
+                return "server error $code: $msg"
+            }
+
+            override fun submitSuccess(): Boolean {
+                return false
             }
         }
     }

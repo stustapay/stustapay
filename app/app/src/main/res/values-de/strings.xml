@@ -146,4 +146,7 @@
     <string name="ticket_order_cleared_success">Bereit für neue Bestellung.</string>
     <string name="ticket_unknown">Ticket unbekannt.</string>
     <string name="ticket_valid">Ticket gültig.</string>
+    <string name="infallible_popup_transaction_pending">Buchung läuft noch:</string>
+    <string name="infallible_popup_restart">App Neustart empfohlen</string>
+    <string name="infallible_popup_but_no_request">Zu viele fehlgeschlagene Anfragen, obwohl keine Buchung vorhanden ist</string>
 </resources>

@@ -6,12 +6,9 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import de.stustapay.api.models.UserTag
 import de.stustapay.chip_debug.R
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.ui.common.DialogDisplayState

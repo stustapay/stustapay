@@ -6,6 +6,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
 import de.stustapay.libssp.util.mapState
+import de.stustapay.stustapay.repository.InfallibleRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 sealed interface BorderState {
@@ -15,7 +18,7 @@ sealed interface BorderState {
 
 @HiltViewModel
 class RootWrapperViewModel @Inject constructor(
-    terminalConfigRepository: TerminalConfigRepository
+    terminalConfigRepository: TerminalConfigRepository,
 ) : ViewModel() {
     // updates to this are triggered by any config-fetch, e.g. from rootview refresh button.
     val borderState = terminalConfigRepository.terminalConfigState.mapState(

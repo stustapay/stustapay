@@ -1,7 +1,9 @@
 package de.stustapay.libssp.net
 
-import io.ktor.client.call.*
-import io.ktor.client.statement.*
+import io.ktor.client.call.body
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.serialization.JsonConvertException
 import kotlinx.serialization.Serializable
 
 
@@ -10,6 +12,10 @@ import kotlinx.serialization.Serializable
  * Format is defined in the api server's exception handlers.
  */
 suspend inline fun <reified T> transformResponse(response: HttpResponse): Response<T> {
+    // TODO when response status is 2xx, we can be sure the request was ok.
+    // for some things we can then assume it worked, even if we encounter json parse errors
+    // -> new response status "okwithparseerror" that has no content, but must be handled as success
+    // we should generate openapi in CI and let the build fail
     return when (response.status.value) {
         in 200..299 -> Response.OK(response.body())
         in 300..399 -> Response.Error.Server("unhandled redirect", response.status.value)
@@ -31,7 +37,7 @@ data class ExceptionType(
 )
 
 suspend fun parseServiceException(response: HttpResponse): Response.Error.Service {
-    return when (val excType = (response.body() as ExceptionType).type) {
+    return when (val excType = response.body<ExceptionType>().type) {
         "service" -> {
             @Serializable
             data class Service(
@@ -39,10 +45,14 @@ suspend fun parseServiceException(response: HttpResponse): Response.Error.Servic
                 val message: String,
             )
 
-            val excContent = response.body() as Service
+            val excContent = response.body<Service>()
             when (excContent.id) {
-                "TODO NotEnoughFunds" -> {
-                    return response.body() as Response.Error.Service.NotEnoughFunds
+                "NotEnoughFunds" -> {
+                    return response.body<Response.Error.Service.NotEnoughFunds>()
+                }
+
+                "AlreadyProcessed" -> {
+                    return response.body<Response.Error.Service.AlreadyProcessed>()
                 }
 
                 else ->
@@ -63,15 +73,14 @@ suspend fun parseDetailException(response: HttpResponse): String {
         val detail: String
     )
 
-    return (response.body() as ExceptionDetail).detail
+    return response.body<ExceptionDetail>().detail
 }
 
 /**
  * Parses error messages as provided from the API.
- * todo: we should check the exception type against the http code...
  */
 suspend fun parseException(response: HttpResponse): String {
-    return when (val excType = (response.body() as ExceptionType).type) {
+    return when (val excType = response.body<ExceptionType>().type) {
         "access" -> {
             @Serializable
             data class Access(
@@ -79,7 +88,7 @@ suspend fun parseException(response: HttpResponse): String {
                 val message: String,
             )
 
-            val excContent = response.body() as Access
+            val excContent = response.body<Access>()
             excContent.message.ifEmpty { excContent.id }
         }
 
@@ -90,7 +99,7 @@ suspend fun parseException(response: HttpResponse): String {
                 val message: String,
             )
 
-            val excContent = response.body() as NotFound
+            val excContent = response.body<NotFound>()
             excContent.message.ifEmpty { excContent.id }
         }
 
@@ -101,7 +110,7 @@ suspend fun parseException(response: HttpResponse): String {
                 val message: String,
             )
 
-            val excContent = response.body() as Internal
+            val excContent = response.body<Internal>()
             excContent.message.ifEmpty { excContent.id }
         }
 

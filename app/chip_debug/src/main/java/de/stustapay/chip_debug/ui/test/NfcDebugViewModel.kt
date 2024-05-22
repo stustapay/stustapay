@@ -3,10 +3,9 @@ package de.stustapay.chip_debug.ui.test
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.chip_debug.repository.NfcRepository
 import de.stustapay.libssp.model.NfcScanFailure
 import de.stustapay.libssp.model.NfcScanResult
-import de.stustapay.chip_debug.repository.NfcRepository
-import de.stustapay.chip_debug.repository.ReadMode
 import de.stustapay.libssp.model.NfcTag
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
