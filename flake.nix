@@ -17,6 +17,7 @@
             pip
           ]))
           nodejs
+          typst
         ];
       };
 
