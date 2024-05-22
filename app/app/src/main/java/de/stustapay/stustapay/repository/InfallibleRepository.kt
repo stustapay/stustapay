@@ -69,7 +69,7 @@ class InfallibleRepository @Inject constructor(
             dataSource.requests.collect { pendingRequests ->
                 _tooManyFailures.update { false }
 
-                val toSubmit = pendingRequests.toMutableMap()
+                val toSubmit = pendingRequests
 
                 val reqErrors = mutableMapOf<UUID, Response.Error>()
 
@@ -86,7 +86,7 @@ class InfallibleRepository @Inject constructor(
 
                                 if (result.submitSuccess()) {
                                     resultsTopUp[id] = InfallibleResult.OK(result)
-                                    toSubmit.remove(id)
+                                    dataSource.remove(id)
                                 } else {
                                     reqErrors[id] = result as Response.Error
                                 }
@@ -97,7 +97,7 @@ class InfallibleRepository @Inject constructor(
 
                                 if (result.submitSuccess()) {
                                     resultsTicketSale[id] = InfallibleResult.OK(result)
-                                    toSubmit.remove(id)
+                                    dataSource.remove(id)
                                 } else {
                                     reqErrors[id] = result as Response.Error
                                 }
