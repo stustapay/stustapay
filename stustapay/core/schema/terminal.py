@@ -46,6 +46,7 @@ class TerminalTillConfig(BaseModel):
     id: int
     name: str
     description: Optional[str]
+    event_name: str
     profile_name: str
     user_privileges: Optional[list[Privilege]]
     cash_register_id: Optional[int]

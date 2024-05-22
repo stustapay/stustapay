@@ -26,7 +26,9 @@ class SumUpError(ServiceException):
 
 
 class _SumUpErrorFormat(BaseModel):
-    error: str
+    code: str
+    message: str | None = None
+    error: str | None = None
 
 
 class _SumUpOAuthTokenResp(BaseModel):
@@ -183,11 +185,11 @@ class SumUpApi:
     async def _get(self, url: str, query: dict | None = None) -> dict:
         async with aiohttp.ClientSession(trust_env=True, headers=self._get_sumup_auth_headers()) as session:
             try:
-                async with session.get(url, params=query, timeout=2) as response:
+                async with session.get(url, params=query, timeout=10) as response:
                     if not response.ok:
                         resp = await response.json()
                         err = _SumUpErrorFormat.model_validate(resp)
-                        raise SumUpError(f"SumUp API returned an error: {err.error}")
+                        raise SumUpError(f"SumUp API returned an error: {err.code} - {err.message}")
                     return await response.json()
             except asyncio.TimeoutError as e:
                 raise SumUpError("SumUp API timeout") from e
@@ -202,7 +204,7 @@ class SumUpApi:
             headers=self._get_sumup_auth_headers(),
         ) as session:
             try:
-                async with session.post(url, data=data.model_dump_json(), params=query, timeout=2) as response:
+                async with session.post(url, data=data.model_dump_json(), params=query, timeout=10) as response:
                     if not response.ok:
                         try:
                             resp = await response.json()
