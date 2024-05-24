@@ -33,11 +33,9 @@ sealed class Response<out T> {
 
             class Generic(msg: String) : Service(msg)
 
-            @Serializable
-            data class NotEnoughFunds(
-                val needed_fund: Double,
-                val available_fund: Double
-            ) : Service("not enough funds. needed: $needed_fund available: $available_fund")
+            class NotEnoughFunds(
+                msg: String
+            ) : Service(msg)
 
             class AlreadyProcessed(
                 msg: String

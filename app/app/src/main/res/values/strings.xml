@@ -59,6 +59,7 @@
     <string name="customer_oldtag">Old Tag</string>
     <string name="customer_newtag">New Tag</string>
     <string name="customer_scanoldtag">Scan Old Tag</string>
+    <string name="customer_details">Transaction History</string>
 
     <string name="management_title">Cashier Management</string>
     <string name="management_equip_title">Equip Cashier</string>

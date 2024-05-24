@@ -15,6 +15,7 @@
 
 package de.stustapay.api.models
 
+import de.stustapay.api.models.UserRoleInfo
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -27,6 +28,8 @@ import kotlinx.serialization.Contextual
  * @param displayName 
  * @param userTagUid 
  * @param nodeId 
+ * @param id 
+ * @param assignedRoles 
  * @param userTagUidHex 
  * @param userTagPin 
  * @param description 
@@ -53,6 +56,12 @@ data class UserInfo (
 
     @SerialName(value = "node_id")
     val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
+    @SerialName(value = "id")
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
+    @SerialName(value = "assigned_roles")
+    val assignedRoles: kotlin.collections.List<UserRoleInfo>,
 
     @SerialName(value = "user_tag_uid_hex")
     val userTagUidHex: kotlin.String?,

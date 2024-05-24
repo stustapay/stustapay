@@ -29,6 +29,7 @@ import kotlinx.serialization.Contextual
  * @param id 
  * @param name 
  * @param description 
+ * @param eventName 
  * @param profileName 
  * @param userPrivileges 
  * @param cashRegisterId 
@@ -53,6 +54,9 @@ data class TerminalTillConfig (
 
     @SerialName(value = "description")
     val description: kotlin.String?,
+
+    @SerialName(value = "event_name")
+    val eventName: kotlin.String,
 
     @SerialName(value = "profile_name")
     val profileName: kotlin.String,
