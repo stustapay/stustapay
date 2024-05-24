@@ -1,38 +1,106 @@
 package de.stustapay.stustapay.ui.account
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Button
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
 import androidx.compose.material.Divider
+import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.api.models.Order
+import de.stustapay.api.models.OrderType
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.CloseContent
 import de.stustapay.stustapay.ui.common.TagItem
+import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustapay.stustapay.ui.nav.NavDest
-import kotlinx.coroutines.launch
+import java.time.format.DateTimeFormatter
+import java.util.TimeZone
 
 @Composable
 fun AccountDetails(
     navigateTo: (NavDest) -> Unit, viewModel: AccountViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var detailOrder by remember { mutableStateOf<Order?>(null) }
+
+    if (detailOrder != null) {
+        val sale = detailOrder!!
+        Dialog(onDismissRequest = { detailOrder = null }) {
+            Card(
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.width(350.dp),
+                elevation = 8.dp,
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            sale.bookedAt.toZonedDateTime()
+                                .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                                .format(DateTimeFormatter.ofPattern("dd-MM-yyyy")), fontSize = 24.sp
+                        )
+
+                        Text(
+                            sale.bookedAt.toZonedDateTime()
+                                .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                                .format(DateTimeFormatter.ofPattern("HH:mm:ss")), fontSize = 24.sp
+                        )
+                    }
+
+                    Divider()
+
+                    for (item in sale.lineItems) {
+                        ProductConfirmItem(
+                            name = item.product.name,
+                            price = item.productPrice,
+                            quantity = item.quantity.intValue()
+                        )
+                    }
+
+                    Divider()
+
+                    ProductConfirmItem(
+                        name = stringResource(R.string.history_sum),
+                        price = sale.totalPrice,
+                    )
+                }
+            }
+        }
+    }
 
     Scaffold(content = {
         CloseContent(
@@ -41,8 +109,7 @@ fun AccountDetails(
                 .fillMaxSize()
                 .padding(10.dp),
             onClose = {
-                viewModel.idleState()
-                navigateTo(CustomerStatusNavDests.scan)
+                navigateTo(CustomerStatusNavDests.status)
             },
         ) {
             Column {
@@ -63,7 +130,9 @@ fun AccountDetails(
                     LazyColumn {
                         for (order in customer.orders.reversed()) {
                             item {
-                                OrderListEntry(order)
+                                OrderListEntry(order, onClick = {
+                                    detailOrder = order
+                                })
                             }
                         }
                     }
@@ -102,10 +171,40 @@ fun AccountDetails(
 }
 
 @Composable
-fun OrderListEntry(order: Order) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .padding(5.dp)) {
-        Text("%.02f€".format(order.totalPrice))
+fun OrderListEntry(order: Order, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(5.dp)
+            .clickable {
+                onClick()
+            }, horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row {
+            when (order.orderType) {
+                OrderType.sale -> Icon(Icons.Filled.ShoppingCart, "")
+                OrderType.cancelSale -> Icon(Icons.Filled.Clear, "")
+                OrderType.topUp -> Icon(Icons.Filled.KeyboardArrowUp, "")
+                OrderType.payOut -> Icon(Icons.Filled.KeyboardArrowDown, "")
+                OrderType.ticket -> Icon(Icons.Filled.Face, "")
+                OrderType.moneyTransfer -> Icon(Icons.Filled.Warning, "")
+                OrderType.moneyTransferImbalance -> Icon(Icons.Filled.Warning, "")
+            }
+
+            Spacer(modifier = Modifier.width(5.dp))
+
+            when (order.orderType) {
+                OrderType.sale -> Text(stringResource(R.string.root_item_sale))
+                OrderType.cancelSale -> Text(stringResource(R.string.common_action_cancel))
+                OrderType.topUp -> Text(stringResource(R.string.topup))
+                OrderType.payOut -> Text(stringResource(R.string.payout))
+                OrderType.ticket -> Text(stringResource(R.string.root_item_ticket))
+                OrderType.moneyTransfer -> Text(stringResource(R.string.management_transport_title))
+                OrderType.moneyTransferImbalance -> Text(stringResource(R.string.management_transport_title))
+            }
+        }
+
+
+        Text(text = "%.02f€".format(-order.totalPrice), fontSize = 20.sp)
     }
 }
