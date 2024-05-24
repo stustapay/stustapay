@@ -70,7 +70,8 @@ async def _create_system_accounts(conn: Connection, node_id: int):
         "   ('cash_imbalance', 'Cash Imbalanace', 'used to correct cash imbalances, e.g. when closing out cash-handling tills ', $1), "
         "   ('cash_vault', 'Cash Vault', 'represents the cash vault of an event', $1), "
         "   ('cash_topup_source', 'Cash Top Up Source', 'account used when altering customer balances based on cash payments / payouts', $1), "
-        "   ('voucher_create', 'Voucher Create', 'Source / Target account for voucher creations / deletions', $1)",
+        "   ('voucher_create', 'Voucher Create', 'Source / Target account for voucher creations / deletions', $1), "
+        "   ('donation_exit', 'Donation Exit', 'target account when donation exits the system', $1)",
         node_id,
     )
 

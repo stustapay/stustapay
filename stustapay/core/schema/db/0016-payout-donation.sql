@@ -24,13 +24,16 @@ values
 ('donation_exit');
 
 insert into account (
-    id, user_tag_uid, type, name, comment, node_id
-) overriding system value
-values
-(10, null, 'donation_exit', "Donation Exit", "target account when donation exits the system", 
-    (
-        select id
-        from node
-        where event <> null
-    )
+    node_id, type, name, comment
+)
+select
+    id, 'donation_exit', 'donation exit', 'target account when donation exits the system'
+from
+    node
+where
+    event_id is not null
+    and not exists (
+        select 1
+        from account
+        where node_id = node.id and type = 'donation_exit'
 );
