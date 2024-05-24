@@ -5,6 +5,7 @@ import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.Account
 import de.stustapay.api.models.GrantVoucherPayload
 import de.stustapay.api.models.NewFreeTicketGrant
+import de.stustapay.api.models.Order
 import de.stustapay.api.models.SwitchTagPayload
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
@@ -16,6 +17,10 @@ class CustomerRemoteDataSource @Inject constructor(
 ) {
     suspend fun getCustomer(id: BigInteger): Response<Account> {
         return terminalApiAccessor.execute { it.customer()?.getCustomer(id) }
+    }
+
+    suspend fun getCustomerOrders(id: BigInteger): Response<List<Order>> {
+        return terminalApiAccessor.execute { it.customer()?.getCustomerOrders(id) }
     }
 
     suspend fun grantFreeTicket(

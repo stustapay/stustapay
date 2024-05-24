@@ -58,6 +58,7 @@
     <string name="customer_oldtag">Alt</string>
     <string name="customer_newtag">Neu</string>
     <string name="customer_scanoldtag">Altes Bändchen Scannen</string>
+    <string name="customer_details">Transaktionsverlauf</string>
 
     <string name="management_title">Kassenverwaltung</string>
     <string name="management_equip_title">Bestücken</string>

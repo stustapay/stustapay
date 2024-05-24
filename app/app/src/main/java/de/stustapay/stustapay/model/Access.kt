@@ -54,6 +54,10 @@ object Access {
         return user.privileges.contains(Privilege.viewNodeStats)
     }
 
+    fun canViewCustomerOrders(user: CurrentUser): Boolean {
+        return user.privileges.contains(Privilege.customerManagement)
+    }
+
     // Till features
     fun canSellTicket(terminal: TerminalConfig, user: CurrentUser): Boolean {
         return terminal.till?.allowTicketSale == true && user.privileges.contains(Privilege.canBookOrders)

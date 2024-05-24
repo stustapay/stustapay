@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 object CustomerStatusNavDests : NavDestinations() {
     val scan = NavDest("scan")
     val status = NavDest("status")
+    val details = NavDest("details")
 }
 
 
@@ -38,8 +39,7 @@ fun AccountView(
     }
 
     NavScaffold(
-        title = { Text(stringResource(R.string.customer_title)) },
-        navigateBack = leaveView
+        title = { Text(stringResource(R.string.customer_title)) }, navigateBack = leaveView
     ) {
         NavHost(navController = nav, startDestination = CustomerStatusNavDests.scan.route) {
             composable(CustomerStatusNavDests.scan.route) {
@@ -54,8 +54,13 @@ fun AccountView(
             composable(CustomerStatusNavDests.status.route) {
                 AccountStatus(
                     viewModel = viewModel,
-                    navigateTo = { dest -> nav.navigateTo(dest.route) }
-                )
+                    navigateTo = { dest -> nav.navigateTo(dest.route) })
+            }
+
+            composable(CustomerStatusNavDests.details.route) {
+                AccountDetails(
+                    viewModel = viewModel,
+                    navigateTo = { dest -> nav.navigateTo(dest.route) })
             }
         }
     }
