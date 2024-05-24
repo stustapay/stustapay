@@ -22,6 +22,10 @@ class Customer(Account):
 
     payout: Payout | None
 
+class PayoutInfo(BaseModel):
+    registered_for_payout: bool
+    payout_date: datetime.date | None
+
 
 class OrderWithBon(Order):
     bon_generated: Optional[bool]

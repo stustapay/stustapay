@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from schwifty import IBAN
 
 from stustapay.core.config import Config
-from stustapay.core.schema.customer import Customer, OrderWithBon
+from stustapay.core.schema.customer import Customer, OrderWithBon, PayoutInfo
 from stustapay.core.schema.tree import Language
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
@@ -102,6 +102,22 @@ class CustomerService(DBService):
     @requires_customer
     async def get_customer(self, *, current_customer: Customer) -> Optional[Customer]:
         return current_customer
+
+    @with_db_transaction(read_only=True)
+    @requires_customer
+    async def payout_info(self, *, conn: Connection, current_customer: Customer) -> PayoutInfo:
+        # is customer registered for payout
+        return await conn.fetch_one(
+            PayoutInfo,
+            "select "
+            "   exists(select from payout where customer_account_id = $1) as registered_for_payout, "
+            "   ( "
+            "       select pr.set_done_at "
+            "       from payout_run pr left join payout p on pr.id = p.payout_run_id left join customer c on p.customer_account_id = c.id"
+            "       where c.id = $1 "
+            "    ) as payout_date",
+            current_customer.id
+        )
 
     @with_db_transaction(read_only=True)
     @requires_customer
