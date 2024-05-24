@@ -285,13 +285,30 @@ class PayoutService(DBService):
             "   order_id => null,"
             "   source_account_id => p.customer_account_id,"
             "   target_account_id => $2,"
-            "   amount => (p.amount + p.donation),"
+            "   amount => p.amount,"  # this amount already includes the donation (see payout creation query)
             "   vouchers_amount => 0,"
             "   conducting_user_id => $3,"
             "   description => format('payout run %s', $1::bigint)) "
             "from payout_view p where payout_run_id = $1",
             payout_run_id,
             money_exit_acc.id,
+            current_user.id,
+        )
+        donation_exit_acc = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.donation_exit
+        )
+        await conn.execute(
+            "select book_transaction("
+            "   order_id => null,"
+            "   source_account_id => p.customer_account_id,"
+            "   target_account_id => $2,"
+            "   amount => p.donation,"
+            "   vouchers_amount => 0,"
+            "   conducting_user_id => $3,"
+            "   description => format('payout run %s', $1::bigint)) "
+            "from payout_view p where payout_run_id = $1",
+            payout_run_id,
+            donation_exit_acc.id,
             current_user.id,
         )
         # TODO: send emails to customers
@@ -370,7 +387,14 @@ class PayoutService(DBService):
         await conn.fetchval(
             "with scheduled_payouts as ("
             "    insert into payout (customer_account_id, iban, account_name, email, amount, donation, payout_run_id) "
-            "    select c.id, c.iban, c.account_name, c.email, c.balance - c.donation, c.donation, $1 "
+            "    select "
+            "        c.id, "
+            "        c.iban, "
+            "        c.account_name, "
+            "        c.email, "
+            "        case when c.donate_all then 0 else max(0, c.amount - c.donation), "
+            "        case when c.donate_all then c.amount else min(c.donation, c.amount), "
+            "        $1 "
             "    from customer c "
             "    where c.customer_account_id in ( "
             "        select customer_account_id from ( "
@@ -379,7 +403,7 @@ class PayoutService(DBService):
             "               count(*) over (order by customer_account_id rows between unbounded preceding and current row) as index, "
             "               sum(balance - donation) over (order by customer_account_id rows between unbounded preceding and current row) as running_total "
             "           from customers_without_payout_run p "
-            "           where p.node_id = $3 and p.payout_export "
+            "           where p.node_id = $3 and p.payout_export and p.balance > 0"
             "           order by customer_account_id "
             "        ) as agr where running_total <= $2 and index <= $4 "
             "    )"
