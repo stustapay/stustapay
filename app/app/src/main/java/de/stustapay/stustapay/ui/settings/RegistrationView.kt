@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -116,14 +115,13 @@ fun RegistrationOverview(
         var endpointUrl: String? = null
         var message: String? = null
         when (registrationUiState) {
-            Loading -> {
-                message = "loading..."
+            Idle -> {
+                message = "waiting for input"
             }
-
-            is Error -> {
+            is Message -> {
                 message = registrationUiState.msg
             }
-            is Registered -> {
+            is HasEndpoint -> {
                 endpointUrl = registrationUiState.endpointUrl
                 message = registrationUiState.msg
             }
@@ -143,7 +141,7 @@ fun RegistrationOverview(
         Spacer(modifier = Modifier.height(15.dp))
 
         Row {
-            if (registrationUiState is Registered) {
+            if (registrationUiState is HasEndpoint) {
                 Registered(
                     onDeregister = onDeregister,
                     allowForceDeregister = allowForceDeregister,

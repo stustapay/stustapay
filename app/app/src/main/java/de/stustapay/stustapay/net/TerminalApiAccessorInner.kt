@@ -92,6 +92,7 @@ class TerminalApiAccessorInner(
             }
 
             is RegistrationState.Registering -> {
+                // TODO: can probably just be initialized for baseApi
                 APIs(authApi = AuthApi(it.apiUrl,
                     CIO.create { this.https {} }) { configureApi(it) },
                     baseApi = BaseApi(it.apiUrl, CIO.create { this.https {} }) { configureApi(it) },

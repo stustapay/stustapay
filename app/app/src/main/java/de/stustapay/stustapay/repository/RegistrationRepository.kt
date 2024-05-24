@@ -3,14 +3,13 @@ package de.stustapay.stustapay.repository
 
 import android.util.Base64
 import android.util.Log
+import de.stustapay.libssp.util.merge
 import de.stustapay.stustapay.model.DeregistrationState
 import de.stustapay.stustapay.model.RegisterQRCodeContent
 import de.stustapay.stustapay.model.RegistrationState
 import de.stustapay.stustapay.netsource.RegistrationRemoteDataSource
 import de.stustapay.stustapay.storage.RegistrationLocalDataSource
-import de.stustapay.libssp.util.merge
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.SerializationException
@@ -38,14 +37,15 @@ class RegistrationRepository @Inject constructor(
     suspend fun register(
         qrcodeB64: String,
     ): Boolean {
-        registrationRepositoryInner.tryEmit(RegistrationState.NotRegistered("Registering..."))
+        registrationRepositoryInner.tryEmit(RegistrationState.NotRegistered("Starting registration..."))
         forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
 
-        val state = registerAsState(qrcodeB64)
+        // sets state to registering...
+        val state = registerAtCore(qrcodeB64)
 
         // only persist if registration was successful
         return if (state is RegistrationState.Registered) {
-            registrationRepositoryInner.setState(state)
+            registrationRepositoryInner.storeState(state)
             true
         } else {
             registrationRepositoryInner.tryEmit(state)
@@ -77,7 +77,7 @@ class RegistrationRepository @Inject constructor(
         }
     }
 
-    private suspend fun registerAsState(qrcodeB64: String): RegistrationState {
+    private suspend fun registerAtCore(qrcodeB64: String): RegistrationState {
         try {
             val regCode: RegisterQRCodeContent
             try {
@@ -114,7 +114,8 @@ class RegistrationRepositoryInner @Inject constructor(
     private val registrationLocalDataSource: RegistrationLocalDataSource,
 ) {
     // for local insertions of values without the datasources
-    private var _regState = MutableSharedFlow<RegistrationState>()
+    private var _regState =
+        MutableStateFlow<RegistrationState>(RegistrationState.NotRegistered("initialization"))
     var registrationState: Flow<RegistrationState> =
         registrationLocalDataSource.registrationState.merge(_regState)
 
@@ -122,7 +123,7 @@ class RegistrationRepositoryInner @Inject constructor(
         return try {
             val regState = registrationLocalDataSource.registrationState.first()
             regState is RegistrationState.Registered
-        } catch (e : NoSuchElementException) {
+        } catch (e: NoSuchElementException) {
             false
         }
     }
@@ -135,7 +136,8 @@ class RegistrationRepositoryInner @Inject constructor(
         _regState.emit(s)
     }
 
-    suspend fun setState(s: RegistrationState.Registered) {
+    suspend fun storeState(s: RegistrationState.Registered) {
+        // this will also emit
         registrationLocalDataSource.setState(s)
     }
 
