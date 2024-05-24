@@ -261,7 +261,7 @@ class SumUp @Inject constructor(
                     terminal = ECTerminalConfig(
                         name = cfg.name,
                         id = cfg.id.toString(),
-                        eventName = "StuStaCulum 2024",  // TODO: get from terminal config
+                        eventName = cfg.till?.eventName ?: "StuStaPay event",
                     )
                 )
             }
