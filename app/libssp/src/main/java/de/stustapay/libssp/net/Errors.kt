@@ -48,11 +48,11 @@ suspend fun parseServiceException(response: HttpResponse): Response.Error.Servic
             val excContent = response.body<Service>()
             when (excContent.id) {
                 "NotEnoughFunds" -> {
-                    return response.body<Response.Error.Service.NotEnoughFunds>()
+                    Response.Error.Service.NotEnoughFunds(excContent.message.ifEmpty { excContent.id })
                 }
 
                 "AlreadyProcessed" -> {
-                    return response.body<Response.Error.Service.AlreadyProcessed>()
+                    Response.Error.Service.AlreadyProcessed(excContent.message.ifEmpty { excContent.id })
                 }
 
                 else ->
