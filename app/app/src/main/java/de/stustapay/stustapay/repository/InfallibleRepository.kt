@@ -62,7 +62,8 @@ class InfallibleRepository @Inject constructor(
 
     private val _resultsTicketSale =
         MutableStateFlow<Map<UUID, InfallibleResult<CompletedTicketSale>>>(mapOf())
-    val resultTicketSale = _resultsTopUp.asStateFlow().mapState(null, scope) { it.values.firstOrNull() }
+    val resultTicketSale =
+        _resultsTopUp.asStateFlow().mapState(null, scope) { it.values.firstOrNull() }
 
     fun launch() {
         runner = scope.launch {
@@ -112,6 +113,10 @@ class InfallibleRepository @Inject constructor(
                     // retry delay
                     delay(1000)
                 }
+
+                // remove successful items
+                // in one update step, so the datasource flow will only emit one new state
+                dataSource.remove(resultsTopUp.keys.union(resultsTicketSale.keys))
 
                 // some requests were not successful -> transform the errors to results
                 if (toSubmit.isNotEmpty()) {

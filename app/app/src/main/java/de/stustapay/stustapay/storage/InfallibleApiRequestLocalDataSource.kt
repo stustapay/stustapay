@@ -24,9 +24,9 @@ class InfallibleApiRequestLocalDataSource @Inject constructor(
     val requests: Flow<Map<UUID, InfallibleApiRequest>> =
         infallibleApiRequestStore.data.map { it.requests }
 
-    suspend fun remove(id: UUID) {
+    suspend fun remove(ids: Set<UUID>) {
         infallibleApiRequestStore.updateData {
-            InfallibleApiRequests(requests = it.requests.filter { req -> req.key != id })
+            InfallibleApiRequests(requests = it.requests.filterKeys { key -> key !in ids })
         }
     }
 
