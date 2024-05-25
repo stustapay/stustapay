@@ -1,5 +1,5 @@
 -- revision: 2b0f2fb3
--- requires: 70095e33
+-- requires: d1dd53bd
 
 alter table customer_info add column donate_all boolean default false not null;
 alter table customer_info add column has_entered_info boolean default false not null;
