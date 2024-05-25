@@ -598,6 +598,17 @@ const injectedRtkApi = api
         }),
         providesTags: ["stats"],
       }),
+      getPayOutStats: build.query<GetPayOutStatsApiResponse, GetPayOutStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/pay-outs`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
       listTickets: build.query<ListTicketsApiResponse, ListTicketsApiArg>({
         query: (queryArg) => ({ url: `/tickets`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["tickets"],
@@ -1327,6 +1338,12 @@ export type GetEntryStatsApiArg = {
 };
 export type GetTopUpStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetTopUpStatsApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+};
+export type GetPayOutStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
+export type GetPayOutStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
@@ -2824,6 +2841,8 @@ export const {
   useLazyGetEntryStatsQuery,
   useGetTopUpStatsQuery,
   useLazyGetTopUpStatsQuery,
+  useGetPayOutStatsQuery,
+  useLazyGetPayOutStatsQuery,
   useListTicketsQuery,
   useLazyListTicketsQuery,
   useCreateTicketMutation,

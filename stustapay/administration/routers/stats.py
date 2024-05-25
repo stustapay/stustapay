@@ -75,3 +75,18 @@ async def get_top_up_stats(
         query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp),
         node_id=node_id,
     )
+
+
+@router.get("/pay-outs", response_model=TimeseriesStats)
+async def get_pay_out_stats(
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+    node_id: int,
+    to_timestamp: Optional[datetime] = None,
+    from_timestamp: Optional[datetime] = None,
+):
+    return await order_service.stats.get_pay_out_stats(
+        token=token,
+        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp),
+        node_id=node_id,
+    )
