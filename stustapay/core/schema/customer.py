@@ -24,7 +24,7 @@ class Customer(Account):
 
 
 class PayoutInfo(BaseModel):
-    registered_for_payout: bool
+    in_payout_run: bool
     payout_date: datetime.date | None
 
 

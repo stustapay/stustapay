@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useGetCustomerQuery, useUpdateCustomerInfoDonateAllMutation, useUpdateCustomerInfoMutation } from "@/api";
+import { useGetCustomerQuery, usePayoutInfoQuery, useUpdateCustomerInfoDonateAllMutation, useUpdateCustomerInfoMutation } from "@/api";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCurrencySymbol } from "@/hooks/useCurrencySymbol";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
@@ -37,6 +37,7 @@ export const PayoutInfo: React.FC = () => {
 
   const [updateCustomerInfo] = useUpdateCustomerInfoMutation();
   const [updateCustomerDonateAll] = useUpdateCustomerInfoDonateAllMutation();
+  const { data: payoutInfo, error: payoutInfoError, isLoading: isPayoutInfoLoading } = usePayoutInfoQuery();
 
   const formatCurrency = useCurrencyFormatter();
   const currencySymbol = useCurrencySymbol();
@@ -46,6 +47,10 @@ export const PayoutInfo: React.FC = () => {
   }
 
   if (customerError || !customer) {
+    toast.error(t("payout.errorFetchingData"));
+    return <Navigate to="/" />;
+  }
+  if (payoutInfoError || !payoutInfo) {
     toast.error(t("payout.errorFetchingData"));
     return <Navigate to="/" />;
   }
@@ -162,7 +167,7 @@ export const PayoutInfo: React.FC = () => {
             {t("payout.info")}
           </Alert>
           <Typography variant="h5">{t("payout.donationTitle")}</Typography>
-          <Button variant="contained" color="primary" sx={{ width: "100%" }} onClick={onAllTipClick}>
+          <Button variant="contained" color="primary" sx={{ width: "100%" }} disabled={payoutInfo.in_payout_run} onClick={onAllTipClick}>
             {t("payout.donateRemainingBalanceOf", { remainingBalance: formatCurrency(customer.balance) })}
           </Button>
 
@@ -175,14 +180,15 @@ export const PayoutInfo: React.FC = () => {
             {(formik) => (
               <form onSubmit={formik.handleSubmit}>
                 <Stack spacing={2}>
-                  <FormTextField name="iban" label={t("payout.iban")} variant="outlined" formik={formik} />
+                  <FormTextField name="iban" label={t("payout.iban")} variant="outlined" formik={formik} disabled={payoutInfo.in_payout_run} />
                   <FormTextField
                     name="account_name"
                     label={t("payout.bankAccountHolder")}
                     variant="outlined"
                     formik={formik}
+                    disabled={payoutInfo.in_payout_run}
                   />
-                  <FormTextField name="email" label={t("payout.email")} variant="outlined" formik={formik} />
+                  <FormTextField name="email" label={t("payout.email")} variant="outlined" formik={formik} disabled={payoutInfo.in_payout_run}/>
                   <FormControl error={Boolean(formik.errors.privacy_policy)}>
                     <FormControlLabel
                       control={
@@ -191,6 +197,7 @@ export const PayoutInfo: React.FC = () => {
                           checked={formik.values.privacy_policy}
                           onChange={formik.handleChange}
                           color="primary"
+                          disabled={payoutInfo.in_payout_run}
                         />
                       }
                       label={
@@ -215,8 +222,9 @@ export const PayoutInfo: React.FC = () => {
                     InputProps={{
                       endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment>,
                     }}
+                    disabled={payoutInfo.in_payout_run}
                   />
-                  <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
+                  <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting || payoutInfo.in_payout_run}>
                     {formik.isSubmitting ? "Submitting" : t("payout.submitPayoutData")}
                   </Button>
                 </Stack>

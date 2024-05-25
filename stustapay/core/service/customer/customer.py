@@ -29,7 +29,11 @@ from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.payout import PayoutService
 from stustapay.core.service.customer.sumup import SumupService
-from stustapay.core.service.tree.common import fetch_event_node_for_node
+from stustapay.core.service.mail import MailService
+from stustapay.core.service.tree.common import (
+    fetch_event_node_for_node,
+    fetch_restricted_event_settings_for_node,
+)
 from stustapay.framework.database import Connection
 
 
@@ -118,7 +122,7 @@ class CustomerService(DBService):
         return await conn.fetch_one(
             PayoutInfo,
             "select "
-            "   exists(select from payout where customer_account_id = $1) as registered_for_payout, "
+            "   exists(select from payout where customer_account_id = $1) as in_payout_run, "
             "   ( "
             "       select pr.set_done_at "
             "       from payout_run pr left join payout p on pr.id = p.payout_run_id left join customer c on p.customer_account_id = c.id"
