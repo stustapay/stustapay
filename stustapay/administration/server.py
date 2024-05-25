@@ -11,6 +11,7 @@ from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
+from stustapay.core.service.mail import MailService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.sumup import SumUpService
@@ -104,6 +105,7 @@ class Api:
         till_service = TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
         order_service = OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
         config_service = ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
+        mail_service = MailService(db_pool=db_pool, config=self.cfg)
 
         context = Context(
             config=self.cfg,
@@ -125,9 +127,11 @@ class Api:
             ),
             sumup_service=SumUpService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             terminal_service=TerminalService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            mail_service=mail_service,
         )
         try:
             self.server.add_task(asyncio.create_task(run_healthcheck(db_pool=db_pool, service_name="administration")))
+            self.server.add_task(asyncio.create_task(mail_service.run_mail_service()))
             await self.server.run(self.cfg, context)
         finally:
             await db_pool.close()

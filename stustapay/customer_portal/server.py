@@ -9,6 +9,7 @@ from stustapay.core.http.context import Context
 from stustapay.core.http.server import Server
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
+from stustapay.core.service.mail import MailService
 from stustapay.core.service.user import AuthService
 
 from .routers import auth, base, sumup
@@ -49,17 +50,20 @@ class Api:
         customer_service = CustomerService(
             db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service
         )
+        mail_service = MailService(db_pool=db_pool, config=self.cfg)
 
         context = Context(
             config=self.cfg,
             db_pool=db_pool,
             config_service=ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             customer_service=customer_service,
+            mail_service=mail_service,
         )
 
         try:
             self.server.add_task(asyncio.create_task(run_healthcheck(db_pool=db_pool, service_name="customer_portal")))
             self.server.add_task(asyncio.create_task(customer_service.sumup.run_sumup_checkout_processing()))
+            self.server.add_task(asyncio.create_task(mail_service.run_mail_service()))
             await self.server.run(self.cfg, context)
         finally:
             await db_pool.close()

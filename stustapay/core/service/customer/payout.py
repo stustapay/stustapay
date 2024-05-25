@@ -30,6 +30,7 @@ from stustapay.core.service.common.decorators import (
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.common import fetch_customer
+from stustapay.core.service.mail import MailService
 from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
     fetch_restricted_event_settings_for_node,
@@ -265,7 +266,7 @@ class PayoutService(DBService):
     @requires_node(event_only=True)
     @requires_user([Privilege.payout_management])
     async def set_payout_run_as_done(
-        self, *, conn: Connection, node: Node, current_user: CurrentUser, payout_run_id: int
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, payout_run_id: int, mail_service: MailService
     ):
         payout_run = await fetch_payout_run(conn=conn, node=node, payout_run_id=payout_run_id)
         if payout_run.done:
@@ -311,7 +312,22 @@ class PayoutService(DBService):
             donation_exit_acc.id,
             current_user.id,
         )
-        # TODO: send emails to customers
+
+        payouts = await conn.fetch_many(
+            Payout,
+            "select * from payout_view p " "where p.payout_run_id = $1",
+            payout_run_id,
+        )
+
+        res_config = await fetch_restricted_event_settings_for_node(conn, node.id)
+        for payout in payouts:
+            mail_service.send_mail(
+                subject=res_config.payout_done_subject,
+                message=res_config.payout_done_message.format(payout.model_dump()),
+                from_email=res_config.payout_sender,
+                to_email=payout.email,
+                node_id=node.id,
+            )
 
     @with_db_transaction
     @requires_node(event_only=True)

@@ -37,3 +37,16 @@ where
         from account
         where node_id = node.id and type = 'donation_exit'
 );
+
+alter table event add column email_enabled boolean default true not null;
+alter table event add column email_default_sender text default 'tobias.juelg@stusta.de';
+alter table event add column email_smtp_host text default 'mail.stusta.de';
+alter table event add column email_smtp_port text default '465';
+alter table event add column email_smtp_username text;
+alter table event add column email_smtp_password text;
+alter table event add column payout_done_subject text default '[StuStaPay] Payout Completed' not null;
+alter table event add column payout_done_message text default 'Thank you for your patients. The payout process has been completed and the funds should arrive within the next days to your specifed bank account.' not null;
+alter table event add column payout_registered_subject text default '[StuStaPay] Registered for Payout' not null;
+alter table event add column payout_registered_message text default 'Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transfered to the specified bank account in our next manual payout. You will receive another email once we transfered the funds.' not null;
+alter table event add column payout_sender text;
+

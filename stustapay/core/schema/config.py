@@ -21,3 +21,10 @@ class SEPAConfig(BaseModel):
     description: str
     allowed_country_codes: list[str]
     max_num_payouts_in_run: int
+
+
+class SMTPConfig(BaseModel):
+    smtp_host: str
+    smtp_port: int
+    smtp_username: str
+    smtp_password: str | None

@@ -32,11 +32,10 @@
       "type": "debugpy",
       "request": "launch",
       "module": "stustapay",
-      "justMyCode": true,
+      "justMyCode": false,
       "args": [
         "-c",
-        "server.yaml",
-        "-vvv",
+        "etc/config.devel.yaml",
         "simulate",
         "api",
         "--no-tse",
