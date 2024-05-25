@@ -46,11 +46,11 @@ class _BaseEvent(BaseModel):
     sepa_allowed_country_codes: list[str]
 
     # email configs
-    email_enabled: bool = False
+    email_enabled: bool
     email_default_sender: str | None = None
     email_smtp_host: str | None = None
     email_smtp_port: int | None = None
-    email_smtp_username: str | None = ""
+    email_smtp_username: str | None = None
 
     payout_done_subject: str
     payout_done_message: str
@@ -84,7 +84,8 @@ class _RestrictedEventMetadata(BaseModel):
     sumup_api_key: str = ""
     sumup_affiliate_key: str = ""
     sumup_merchant_code: str = ""
-    email_smtp_password: str | None = ""
+
+    email_smtp_password: str | None = None
 
 
 class UpdateEvent(_BaseEvent, _RestrictedEventMetadata):

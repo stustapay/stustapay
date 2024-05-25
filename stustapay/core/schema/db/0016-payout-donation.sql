@@ -38,7 +38,7 @@ where
         where node_id = node.id and type = 'donation_exit'
 );
 
-alter table event add column email_enabled boolean default true not null;
+alter table event add column email_enabled boolean default false not null;
 alter table event add column email_default_sender text default 'tobias.juelg@stusta.de';
 alter table event add column email_smtp_host text default 'mail.stusta.de';
 alter table event add column email_smtp_port text default '465';

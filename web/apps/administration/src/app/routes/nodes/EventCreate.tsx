@@ -27,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { withPrivilegeGuard } from "@/app/layout";
 import i18n from "@/i18n";
+import { MailSettings, MailSettingsForm, MailSettingsSchema } from "./event-settings/TabMail";
 
 const GeneralFormSchema = z
   .object({
@@ -116,6 +117,20 @@ const sumupFormStep: FormStep = {
   form: SumupSettingsForm,
 };
 
+const emailFormStep: FormStep = {
+  title: "E-Mail",
+  initialValues: {
+    email_enabled: false,
+    email_smtp_host: null,
+    email_smtp_port: null,
+    email_smtp_default_sender: null,
+    email_smtp_username: null,
+    email_smtp_password: null,
+  },
+  schema: MailSettingsSchema,
+  form: MailSettingsForm,
+};
+
 const payoutFormStep: FormStep = {
   title: "Payout",
   initialValues: {
@@ -152,9 +167,21 @@ const customerPortalFormStep: FormStep = {
   form: CustomerPortalSettingsForm,
 };
 
-const steps = [generalFormStep, customerPortalFormStep, sumupFormStep, bonFormStep, payoutFormStep] as const;
+const steps = [
+  generalFormStep,
+  customerPortalFormStep,
+  sumupFormStep,
+  bonFormStep,
+  emailFormStep,
+  payoutFormStep,
+] as const;
 
-type FormValues = GeneralFormValues & SumUpSettings & BonSettings & CustomerPortalSettings & PayoutSettings;
+type FormValues = GeneralFormValues &
+  SumUpSettings &
+  BonSettings &
+  CustomerPortalSettings &
+  MailSettings &
+  PayoutSettings;
 
 export const EventCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
