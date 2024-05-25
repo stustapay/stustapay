@@ -114,7 +114,7 @@ async def generate_dummy_report(node_id: int, event: RestrictedEventSettings) ->
 
 
 def _check_order_revenue_consistency(hourly_sales_stats: Timeseries, orders: list[OrderWithFees], total: float):
-    stats_sum = 0
+    stats_sum = 0.0
     for interval in hourly_sales_stats.intervals:
         stats_sum += interval.revenue
 
