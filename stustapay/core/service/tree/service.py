@@ -127,7 +127,7 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         "sumup_merchant_code, start_date, end_date, daily_end_time, email_enabled, email_default_sender, "
         "email_smtp_host, email_smtp_port, email_smtp_username, email_smtp_password, payout_done_subject, "
         "payout_done_message, payout_registered_subject, payout_registered_message, payout_sender) "
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24 "
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, "
         " $25, $26, $27, $28, $29, $30, $31, $32, $33, $34)"
         "returning id",
         event.currency_identifier,

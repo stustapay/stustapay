@@ -41,7 +41,7 @@ where
 alter table event add column email_enabled boolean default false not null;
 alter table event add column email_default_sender text default 'tobias.juelg@stusta.de';
 alter table event add column email_smtp_host text default 'mail.stusta.de';
-alter table event add column email_smtp_port text default '465';
+alter table event add column email_smtp_port int default 465;
 alter table event add column email_smtp_username text;
 alter table event add column email_smtp_password text;
 alter table event add column payout_done_subject text default '[StuStaPay] Payout Completed' not null;
