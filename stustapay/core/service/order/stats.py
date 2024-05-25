@@ -17,7 +17,7 @@ from stustapay.core.service.common.decorators import (
     with_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument
-from stustapay.core.service.product import fetch_top_up_product
+from stustapay.core.service.product import fetch_pay_out_product, fetch_top_up_product
 from stustapay.core.service.tree.common import fetch_event_for_node
 from stustapay.framework.database import Connection
 
@@ -65,13 +65,21 @@ class ProductTimeseries(BaseModel):
     intervals: list[StatInterval]
 
 
+class ProductOverallStats(BaseModel):
+    product_id: int
+    count: int
+    revenue: float
+
+
 class ProductStats(BaseModel):
     from_time: datetime
     to_time: datetime
     daily_intervals: list[StatInterval]
     hourly_intervals: list[StatInterval]
-    product_daily_intervals: list[ProductTimeseries]
     product_hourly_intervals: list[ProductTimeseries]
+    product_overall_stats: list[ProductOverallStats]
+    deposit_hourly_intervals: list[ProductTimeseries]
+    deposit_overall_stats: list[ProductOverallStats]
 
 
 class RevenueStats(BaseModel):
@@ -98,13 +106,10 @@ async def get_hourly_entry_stats(*, conn: Connection, node: Node, from_time: dat
         "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
         "   sum(li.quantity) as count,"
         "   round(sum(li.total_price), 2) as revenue "
-        "from order_value o "
-        "join till t on o.till_id = t.id "
+        "from orders_at_node_and_children($3) o "
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
-        "join node n on t.node_id = n.id "
         "where p.ticket_metadata_id is not null and o.booked_at >= $1 and o.booked_at <= $2 "
-        "   and ($3 = any(n.parent_ids) or n.id = $3) "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
@@ -127,13 +132,10 @@ async def get_hourly_top_up_stats(
         "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
         "   sum(li.quantity) as count,"
         "   round(sum(li.total_price), 2) as revenue "
-        "from order_value o "
-        "join till t on o.till_id = t.id "
+        "from orders_at_node_and_children($3) o "
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
-        "join node n on t.node_id = n.id "
         "where p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
-        "   and ($3 = any(n.parent_ids) or n.id = $3) "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
@@ -145,9 +147,10 @@ async def get_hourly_top_up_stats(
     return Timeseries(from_time=from_time, to_time=to_time, intervals=stats)
 
 
-async def get_hourly_revenue_stats(
+async def get_hourly_pay_out_stats(
     *, conn: Connection, node: Node, from_time: datetime, to_time: datetime
 ) -> Timeseries:
+    pay_out_product = await fetch_pay_out_product(conn=conn, node=node)
 
     stats = await conn.fetch_many(
         StatInterval,
@@ -159,9 +162,37 @@ async def get_hourly_revenue_stats(
         "from orders_at_node_and_children($3) o "
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
-        "where o.booked_at >= $1 and o.booked_at <= $2 "
-        "   and (p.type = 'user_defined' or p.type = 'discount')"
-        "   and o.payment_method = 'tag' "
+        "where p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
+        "group by from_time, to_time "
+        "order by from_time",
+        from_time,
+        to_time,
+        node.id,
+        pay_out_product.id,
+    )
+
+    return Timeseries(from_time=from_time, to_time=to_time, intervals=stats)
+
+
+async def get_hourly_sales_stats(*, conn: Connection, node: Node, from_time: datetime, to_time: datetime) -> Timeseries:
+    """
+    We are interested in general sales revenue excluding all topups, payouts and ticket sales.
+
+    Therefore, we filter the orders for payment type 'tag' which will result in only including actual vending products.
+    We currently assume that only payments made with a tag are actual vending payments (since anything else is
+    currently not possible in the system).
+    """
+
+    stats = await conn.fetch_many(
+        StatInterval,
+        "select "
+        "   date_trunc('hour', o.booked_at) as from_time, "
+        "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
+        "   sum(li.quantity) as count,"
+        "   round(sum(li.total_price), 2) as revenue "
+        "from orders_at_node_and_children($3) o "
+        "join line_item li on o.id = li.order_id "
+        "where o.booked_at >= $1 and o.booked_at <= $2 and o.payment_method = 'tag' "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
@@ -173,7 +204,7 @@ async def get_hourly_revenue_stats(
 
 
 async def get_hourly_product_stats(
-    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime
+    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime, returnable=False
 ) -> list[ProductTimeseries]:
     result = await conn.fetch(
         "select "
@@ -190,12 +221,13 @@ async def get_hourly_product_stats(
         "where o.booked_at >= $1 and o.booked_at <= $2 "
         "   and p.type = 'user_defined' "
         "   and ($3 = any(n.parent_ids) or n.id = $3) "
-        "   and not p.is_returnable "
+        "   and p.is_returnable = $4 "
         "group by p.id, from_time, to_time "
         "order by from_time",
         from_time,
         to_time,
         node.id,
+        returnable,
     )
     product_timeseries_map: dict[int, list[StatInterval]] = {}
     for row in result:
@@ -290,6 +322,25 @@ class OrderStatsService(DBService):
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    async def get_pay_out_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> TimeseriesStats:
+        if node.event is None:
+            raise InvalidArgument("Top up stats can only be computed for event nodes")
+
+        event = await fetch_event_for_node(conn=conn, node=node)
+        from_time, to_time = get_event_time_bounds(query, event)
+
+        hourly_stats = await get_hourly_pay_out_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
+        return TimeseriesStats(
+            from_time=hourly_stats.from_time,
+            to_time=hourly_stats.to_time,
+            hourly_intervals=hourly_stats.intervals,
+            daily_intervals=daily_stats.intervals,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
     async def get_voucher_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> VoucherStats:
         if node.event is None:
             raise InvalidArgument("voucher stats can only be computed for event nodes")
@@ -320,19 +371,31 @@ class OrderStatsService(DBService):
     async def get_product_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> ProductStats:
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = get_event_time_bounds(query, event)
-        hourly_stats = await get_hourly_revenue_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_sales_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
         hourly_product_stats = await get_hourly_product_stats(
-            conn=conn, node=node, from_time=from_time, to_time=to_time
+            conn=conn, node=node, from_time=from_time, to_time=to_time, returnable=False
         )
-        daily_product_stats = {}
+        hourly_deposit_stats = await get_hourly_product_stats(
+            conn=conn, node=node, from_time=from_time, to_time=to_time, returnable=True
+        )
+
+        product_overall_stats = []
         for hourly_product in hourly_product_stats:
-            d = await get_daily_stats(
-                hourly_stats=Timeseries(from_time=from_time, to_time=to_time, intervals=hourly_product.intervals),
-                event=event,
-            )
-            daily_product_stats[hourly_product.product_id] = d.intervals
+            s = ProductOverallStats(product_id=hourly_product.product_id, count=0, revenue=0)
+            for interval in hourly_product.intervals:
+                s.count += interval.count  # pylint: disable=no-member
+                s.revenue += interval.revenue  # pylint: disable=no-member
+            product_overall_stats.append(s)
+
+        deposit_overall_stats = []
+        for hourly_deposit in hourly_deposit_stats:
+            s = ProductOverallStats(product_id=hourly_deposit.product_id, count=0, revenue=0)
+            for interval in hourly_deposit.intervals:
+                s.count += interval.count  # pylint: disable=no-member
+                s.revenue += interval.revenue  # pylint: disable=no-member
+            deposit_overall_stats.append(s)
 
         return ProductStats(
             from_time=hourly_stats.from_time,
@@ -340,10 +403,9 @@ class OrderStatsService(DBService):
             hourly_intervals=hourly_stats.intervals,
             daily_intervals=daily_stats.intervals,
             product_hourly_intervals=hourly_product_stats,
-            product_daily_intervals=[
-                ProductTimeseries(product_id=p_id, intervals=intervals)
-                for p_id, intervals in daily_product_stats.items()
-            ],
+            product_overall_stats=product_overall_stats,
+            deposit_hourly_intervals=hourly_deposit_stats,
+            deposit_overall_stats=deposit_overall_stats,
         )
 
     @with_db_transaction(read_only=True)
@@ -351,7 +413,7 @@ class OrderStatsService(DBService):
     async def get_revenue_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> RevenueStats:
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = get_event_time_bounds(query, event)
-        hourly_stats = await get_hourly_revenue_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_sales_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
         return RevenueStats(

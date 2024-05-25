@@ -1,9 +1,10 @@
 import * as React from "react";
 import { DateTime } from "luxon";
 import { Card, CardContent, Grid, Skeleton, Typography } from "@mui/material";
-import { useGetEntryStatsQuery, useGetTopUpStatsQuery } from "@/api";
+import { useGetEntryStatsQuery, useGetPayOutStatsQuery, useGetTopUpStatsQuery } from "@/api";
 import { DailyStatsTable, HourlyGraph } from "@/components";
 import { useCurrentNode } from "@/hooks";
+import { VoucherStatsCard } from "../event-overview/VoucherStatsCard";
 
 const EntryStats: React.FC<{
   nodeId: number;
@@ -97,6 +98,52 @@ const TopUpStats: React.FC<{
   return;
 };
 
+const PayOutStats: React.FC<{
+  nodeId: number;
+  fromTimestamp?: DateTime;
+  toTimestamp?: DateTime;
+  groupByDay: boolean;
+  dailyEndTime: string;
+  useRevenue: boolean;
+}> = ({ nodeId, fromTimestamp, toTimestamp, groupByDay, dailyEndTime, useRevenue }) => {
+  const { data } = useGetPayOutStatsQuery({
+    nodeId: nodeId,
+    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+    toTimestamp: toTimestamp?.toISO() ?? undefined,
+  });
+
+  if (!data) {
+    return (
+      <>
+        <Typography variant="h5">Pay out Stats</Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={9} height={300}>
+            <Skeleton variant="rounded" height={300} />
+          </Grid>
+          <Grid item xs={12} md={3} height={300}>
+            <Skeleton variant="rounded" height={300} />
+          </Grid>
+        </Grid>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Typography variant="h5">Pay Out Stats</Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={9} height={300}>
+          <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
+        </Grid>
+        <Grid item xs={12} md={3} height={300}>
+          <DailyStatsTable data={data} useRevenue={useRevenue} />
+        </Grid>
+      </Grid>
+    </>
+  );
+  return;
+};
+
 export type EventStatsProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
@@ -116,6 +163,12 @@ export const EventStats: React.FC<EventStatsProps> = ({
 
   return (
     <>
+      <Grid item xs={4}>
+        <VoucherStatsCard
+          fromTimestamp={fromTimestamp?.toISO() ?? undefined}
+          toTimestamp={toTimestamp?.toISO() ?? undefined}
+        />
+      </Grid>
       <Grid item xs={12}>
         <Card>
           <CardContent>
@@ -134,6 +187,20 @@ export const EventStats: React.FC<EventStatsProps> = ({
         <Card>
           <CardContent>
             <TopUpStats
+              nodeId={currentNode.id}
+              dailyEndTime={dailyEndTime}
+              fromTimestamp={fromTimestamp}
+              toTimestamp={toTimestamp}
+              groupByDay={groupByDay}
+              useRevenue={useRevenue}
+            />
+          </CardContent>
+        </Card>
+      </Grid>
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <PayOutStats
               nodeId={currentNode.id}
               dailyEndTime={dailyEndTime}
               fromTimestamp={fromTimestamp}

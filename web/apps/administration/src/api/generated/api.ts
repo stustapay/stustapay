@@ -598,6 +598,17 @@ const injectedRtkApi = api
         }),
         providesTags: ["stats"],
       }),
+      getPayOutStats: build.query<GetPayOutStatsApiResponse, GetPayOutStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/pay-outs`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
       listTickets: build.query<ListTicketsApiResponse, ListTicketsApiArg>({
         query: (queryArg) => ({ url: `/tickets`, params: { node_id: queryArg.nodeId } }),
         providesTags: ["tickets"],
@@ -1327,6 +1338,12 @@ export type GetEntryStatsApiArg = {
 };
 export type GetTopUpStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetTopUpStatsApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+};
+export type GetPayOutStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
+export type GetPayOutStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
@@ -2221,13 +2238,20 @@ export type ProductTimeseries = {
   product_id: number;
   intervals: StatInterval[];
 };
+export type ProductOverallStats = {
+  product_id: number;
+  count: number;
+  revenue: number;
+};
 export type ProductStats = {
   from_time: string;
   to_time: string;
   daily_intervals: StatInterval[];
   hourly_intervals: StatInterval[];
-  product_daily_intervals: ProductTimeseries[];
   product_hourly_intervals: ProductTimeseries[];
+  product_overall_stats: ProductOverallStats[];
+  deposit_hourly_intervals: ProductTimeseries[];
+  deposit_overall_stats: ProductOverallStats[];
 };
 export type VoucherStats = {
   vouchers_issued: number;
@@ -2817,6 +2841,8 @@ export const {
   useLazyGetEntryStatsQuery,
   useGetTopUpStatsQuery,
   useLazyGetTopUpStatsQuery,
+  useGetPayOutStatsQuery,
+  useLazyGetPayOutStatsQuery,
   useListTicketsQuery,
   useLazyListTicketsQuery,
   useCreateTicketMutation,

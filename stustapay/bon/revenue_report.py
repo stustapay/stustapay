@@ -8,10 +8,11 @@ from stustapay.core.currency import get_currency_symbol
 from stustapay.core.schema.order import Order
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.service.order.stats import (
+    Timeseries,
     TimeseriesStatsQuery,
     get_daily_stats,
     get_event_time_bounds,
-    get_hourly_revenue_stats,
+    get_hourly_sales_stats,
 )
 from stustapay.core.service.tree.common import fetch_event_for_node, fetch_node
 from stustapay.framework.database import Connection
@@ -112,6 +113,23 @@ async def generate_dummy_report(node_id: int, event: RestrictedEventSettings) ->
     return await render_report(context=ctx)
 
 
+def _check_order_revenue_consistency(hourly_sales_stats: Timeseries, orders: list[OrderWithFees], total: float):
+    stats_sum = 0.0
+    for interval in hourly_sales_stats.intervals:
+        stats_sum += interval.revenue
+
+    orders_sum = sum([o.total_price for o in orders])
+    if abs(orders_sum - stats_sum) > 1e-09:
+        raise RuntimeError(
+            f"Revenue statistics are not consistent between order list and aggregated stats. Order sum: {orders_sum}, stats sum: {stats_sum}"
+        )
+
+    if abs(stats_sum - total) > 1e-09:
+        raise RuntimeError(
+            f"Revenue statistics are not consistent between computed total and aggregated stats. Stats sum: {stats_sum}, total: {total}"
+        )
+
+
 async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRenderResult:
     node = await fetch_node(conn=conn, node_id=node_id)
     assert node is not None
@@ -127,7 +145,7 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRende
 
     config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
 
-    hourly_revenue_stats = await get_hourly_revenue_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+    hourly_revenue_stats = await get_hourly_sales_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
     revenue_stats = await get_daily_stats(hourly_stats=hourly_revenue_stats, event=event)
     daily_revenue = []
     total = 0.0
@@ -142,6 +160,8 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRende
             )
         )
         total += stats.revenue
+
+    _check_order_revenue_consistency(hourly_revenue_stats, orders, total)
 
     fees_of_total = total * fees
     context = NodeReportContext(
