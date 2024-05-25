@@ -288,7 +288,7 @@ class PayoutService(DBService):
             "   amount => p.amount,"  # this amount already includes the donation (see payout creation query)
             "   vouchers_amount => 0,"
             "   conducting_user_id => $3,"
-            "   description => format('payout run %s', $1::bigint)) "
+            "   description => format('payout run %s cash exit', $1::bigint)) "
             "from payout_view p where payout_run_id = $1",
             payout_run_id,
             money_exit_acc.id,
@@ -305,7 +305,7 @@ class PayoutService(DBService):
             "   amount => p.donation,"
             "   vouchers_amount => 0,"
             "   conducting_user_id => $3,"
-            "   description => format('payout run %s', $1::bigint)) "
+            "   description => format('payout run %s donation exit', $1::bigint)) "
             "from payout_view p where payout_run_id = $1",
             payout_run_id,
             donation_exit_acc.id,

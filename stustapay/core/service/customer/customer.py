@@ -9,12 +9,20 @@ from pydantic import BaseModel
 from schwifty import IBAN
 
 from stustapay.core.config import Config
-from stustapay.core.schema.customer import Customer, OrderWithBon, PayoutInfo
-from stustapay.core.schema.tree import Language
+from stustapay.core.schema.account import AccountType
+from stustapay.core.schema.customer import (
+    Customer,
+    OrderWithBon,
+    PayoutInfo,
+    PayoutTransaction,
+)
+from stustapay.core.schema.tree import Language, Node
+from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_customer,
+    requires_node,
     with_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
@@ -116,7 +124,7 @@ class CustomerService(DBService):
             "       from payout_run pr left join payout p on pr.id = p.payout_run_id left join customer c on p.customer_account_id = c.id"
             "       where c.id = $1 "
             "    ) as payout_date",
-            current_customer.id
+            current_customer.id,
         )
 
     @with_db_transaction(read_only=True)
@@ -127,6 +135,17 @@ class CustomerService(DBService):
             "select o.*, b.generated as bon_generated from order_value_prefiltered("
             "   (select array_agg(o.id) from ordr o where customer_account_id = $1)"
             ") o left join bon b ON o.id = b.id order by o.booked_at desc",
+            current_customer.id,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_customer
+    async def get_payout_transactions(self, *, conn: Connection, current_customer: Customer) -> list[PayoutTransaction]:
+        return await conn.fetch_many(
+            PayoutTransaction,
+            "select t.amount, t.booked_at, a.name as target_account_name, a.account_type as target_account_type "
+            "from transaction t join account a on t.target_account_id = a.id "
+            "where t.source_account_id = $1 and t.destination_account_id = (select id from account where account_type = 'cash_exit' or account_type = 'donation_exit)",
             current_customer.id,
         )
 

@@ -6,7 +6,12 @@ from fastapi import APIRouter, Response, status
 
 from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
-from stustapay.core.schema.customer import Customer, OrderWithBon, PayoutInfo
+from stustapay.core.schema.customer import (
+    Customer,
+    OrderWithBon,
+    PayoutInfo,
+    PayoutTransaction,
+)
 from stustapay.core.service.customer.customer import (
     CustomerBank,
     CustomerPortalApiConfig,
@@ -59,16 +64,25 @@ async def update_customer_info_donate_all(
 ):
     await customer_service.update_customer_info_donate_all(token=token)
 
-@router.get(
-    "/payout_info",
-    summary="info about current state of payout",
-    response_model=PayoutInfo
-)
+
+@router.get("/payout_info", summary="info about current state of payout", response_model=PayoutInfo)
 async def payout_info(
     token: CurrentAuthToken,
     customer_service: ContextCustomerService,
 ):
     return await customer_service.payout_info(token=token)
+
+
+@router.get(
+    "/get_payout_transactions",
+    summary="transactions booked for payout if payout already happened",
+    response_model=list[PayoutTransaction],
+)
+async def get_payout_transactions(
+    token: CurrentAuthToken,
+    customer_service: ContextCustomerService,
+):
+    return await customer_service.get_payout_transactions(token=token)
 
 
 @router.get("/config", summary="get customer customer portal config", response_model=CustomerPortalApiConfig)
