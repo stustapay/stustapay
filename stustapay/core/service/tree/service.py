@@ -124,8 +124,11 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         "bon_address, bon_title, customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban, "
         "sepa_description, sepa_allowed_country_codes, customer_portal_url, customer_portal_about_page_url, "
         "customer_portal_data_privacy_url, sumup_payment_enabled, sumup_api_key, sumup_affiliate_key, "
-        "sumup_merchant_code, start_date, end_date, daily_end_time) "
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) "
+        "sumup_merchant_code, start_date, end_date, daily_end_time, email_enabled, email_default_sender, "
+        "email_smtp_host, email_smtp_port, email_smtp_username, email_smtp_password, payout_done_subject, "
+        "payout_done_message, payout_registered_subject, payout_registered_message, payout_sender) "
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24 "
+        " $25, $26, $27, $28, $29, $30, $31, $32, $33, $34)"
         "returning id",
         event.currency_identifier,
         event.sumup_topup_enabled,
@@ -150,6 +153,17 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.start_date,
         event.end_date,
         event.daily_end_time,
+        event.email_enabled,
+        event.email_default_sender,
+        event.email_smtp_host,
+        event.email_smtp_port,
+        event.email_smtp_username,
+        event.email_smtp_password,
+        event.payout_done_subject,
+        event.payout_done_message,
+        event.payout_registered_subject,
+        event.payout_registered_message,
+        event.payout_sender,
     )
     for lang_code, translation in event.translation_texts.items():
         for text_type, content in translation.items():
@@ -227,7 +241,10 @@ class TreeService(DBService):
             "   sepa_allowed_country_codes = $14, customer_portal_url = $15, customer_portal_about_page_url = $16,"
             "   customer_portal_data_privacy_url = $17, sumup_payment_enabled = $18, sumup_api_key = $19, "
             "   sumup_affiliate_key = $20, sumup_merchant_code = $21, start_date = $22, end_date = $23, "
-            "   daily_end_time = $24 "
+            "   daily_end_time = $24, email_enabled = $25, email_default_sender = $26, email_smtp_host = $27, "
+            "   email_smtp_port = $28, email_smtp_username = $29, email_smtp_password = $30, "
+            "   payout_done_subject = $31, payout_done_message = $32, payout_registered_subject = $33, "
+            "   payout_registered_message = $34, payout_sender = $35 "
             "where id = $1",
             event_id,
             event.currency_identifier,
@@ -253,6 +270,18 @@ class TreeService(DBService):
             event.start_date,
             event.end_date,
             event.daily_end_time,
+            event.email_enabled,
+            event.email_default_sender,
+            event.email_smtp_host,
+            event.email_smtp_port,
+            event.email_smtp_username,
+            event.email_smtp_password,
+            event.payout_done_subject,
+            event.payout_done_message,
+            event.payout_registered_subject,
+            event.payout_registered_message,
+            event.payout_sender,
+
         )
         await conn.execute("delete from translation_text where event_id = $1", event_id)
         for lang_code, translation in event.translation_texts.items():
