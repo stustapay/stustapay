@@ -1,17 +1,37 @@
 import * as React from "react";
 import { DateTime } from "luxon";
-import { useTranslation } from "react-i18next";
-import { Alert, AlertTitle, Card, CardContent, Grid, Skeleton, Typography } from "@mui/material";
+import {
+  Alert,
+  AlertTitle,
+  Card,
+  CardContent,
+  Grid,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { DailyStatsTable, HourlyGraph, NodeSelect } from "@/components";
-import { useGetProductStatsQuery, useListProductsQuery, selectProductById, ProductStats } from "@/api";
+import {
+  useGetProductStatsQuery,
+  useListProductsQuery,
+  selectProductById,
+  ProductTimeseries,
+  ProductOverallStats,
+} from "@/api";
 import { DatumValue, ResponsiveLine } from "@nivo/line";
 
 const IndividualProductStats: React.FC<{
   nodeId: number;
-  data: ProductStats;
+  hourly_intervals: ProductTimeseries[];
+  overall_stats: ProductOverallStats[];
   useRevenue: boolean;
-}> = ({ data, nodeId, useRevenue }) => {
+}> = ({ hourly_intervals, overall_stats, nodeId, useRevenue }) => {
   const { data: products, isLoading: isProductsLoading } = useListProductsQuery({
     nodeId: nodeId,
   });
@@ -21,14 +41,14 @@ const IndividualProductStats: React.FC<{
       return [];
     }
 
-    return data.product_hourly_intervals.map((productData) => ({
+    return hourly_intervals.map((productData) => ({
       id: selectProductById(products, productData.product_id)?.name ?? "",
       data: productData.intervals.map((interval) => ({
         x: DateTime.fromISO(interval.to_time).toJSDate(),
         y: useRevenue ? interval.revenue : interval.count,
       })),
     }));
-  }, [data, products, useRevenue]);
+  }, [hourly_intervals, products, useRevenue]);
 
   const formatCurrency = useCurrencyFormatter();
 
@@ -50,7 +70,7 @@ const IndividualProductStats: React.FC<{
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} height={300}>
+      <Grid item xs={9} height={300}>
         <ResponsiveLine
           animate={false}
           data={hourlyData}
@@ -108,6 +128,28 @@ const IndividualProductStats: React.FC<{
           ]}
         />
       </Grid>
+      <Grid item xs={3}>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Product (total)</TableCell>
+                <TableCell align="right">{useRevenue ? "Revenue" : "Count"}</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {overall_stats.map((row) => (
+                <TableRow key={row.product_id}>
+                  <TableCell component="th" scope="row">
+                    {selectProductById(products, row.product_id)?.name ?? "unknown product"}
+                  </TableCell>
+                  <TableCell align="right">{useRevenue ? formatCurrency(row.revenue) : row.count}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Grid>
     </Grid>
   );
 };
@@ -156,7 +198,9 @@ export const NodeSpecificStats: React.FC<NodeSpecificStatsProps> = ({
       <Card>
         <CardContent>
           <NodeSelect label="Node" value={node} onChange={(val) => val && setNode(val)} />
-          <Typography variant="h5">Total revenue through sales</Typography>
+          <Typography variant="h5" sx={{ mt: 2 }}>
+            Total revenue through sales
+          </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={9} height={300}>
               <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={true} data={productStats} />
@@ -165,7 +209,21 @@ export const NodeSpecificStats: React.FC<NodeSpecificStatsProps> = ({
               <DailyStatsTable data={productStats} useRevenue={true} />
             </Grid>
           </Grid>
-          <IndividualProductStats nodeId={node.id} data={productStats} useRevenue={useRevenue} />
+          <IndividualProductStats
+            nodeId={node.id}
+            hourly_intervals={productStats.product_hourly_intervals}
+            overall_stats={productStats.product_overall_stats}
+            useRevenue={useRevenue}
+          />
+          <Typography variant="h5" sx={{ mt: 2 }}>
+            Stats for deposit products
+          </Typography>
+          <IndividualProductStats
+            nodeId={node.id}
+            hourly_intervals={productStats.deposit_hourly_intervals}
+            overall_stats={productStats.deposit_overall_stats}
+            useRevenue={useRevenue}
+          />
         </CardContent>
       </Card>
     </Grid>

@@ -4,6 +4,7 @@ import { Card, CardContent, Grid, Skeleton, Typography } from "@mui/material";
 import { useGetEntryStatsQuery, useGetTopUpStatsQuery } from "@/api";
 import { DailyStatsTable, HourlyGraph } from "@/components";
 import { useCurrentNode } from "@/hooks";
+import { VoucherStatsCard } from "../event-overview/VoucherStatsCard";
 
 const EntryStats: React.FC<{
   nodeId: number;
@@ -116,6 +117,12 @@ export const EventStats: React.FC<EventStatsProps> = ({
 
   return (
     <>
+      <Grid item xs={4}>
+        <VoucherStatsCard
+          fromTimestamp={fromTimestamp?.toISO() ?? undefined}
+          toTimestamp={toTimestamp?.toISO() ?? undefined}
+        />
+      </Grid>
       <Grid item xs={12}>
         <Card>
           <CardContent>

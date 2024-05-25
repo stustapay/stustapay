@@ -2221,13 +2221,20 @@ export type ProductTimeseries = {
   product_id: number;
   intervals: StatInterval[];
 };
+export type ProductOverallStats = {
+  product_id: number;
+  count: number;
+  revenue: number;
+};
 export type ProductStats = {
   from_time: string;
   to_time: string;
   daily_intervals: StatInterval[];
   hourly_intervals: StatInterval[];
-  product_daily_intervals: ProductTimeseries[];
   product_hourly_intervals: ProductTimeseries[];
+  product_overall_stats: ProductOverallStats[];
+  deposit_hourly_intervals: ProductTimeseries[];
+  deposit_overall_stats: ProductOverallStats[];
 };
 export type VoucherStats = {
   vouchers_issued: number;

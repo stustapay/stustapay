@@ -65,13 +65,21 @@ class ProductTimeseries(BaseModel):
     intervals: list[StatInterval]
 
 
+class ProductOverallStats(BaseModel):
+    product_id: int
+    count: int
+    revenue: float
+
+
 class ProductStats(BaseModel):
     from_time: datetime
     to_time: datetime
     daily_intervals: list[StatInterval]
     hourly_intervals: list[StatInterval]
-    product_daily_intervals: list[ProductTimeseries]
     product_hourly_intervals: list[ProductTimeseries]
+    product_overall_stats: list[ProductOverallStats]
+    deposit_hourly_intervals: list[ProductTimeseries]
+    deposit_overall_stats: list[ProductOverallStats]
 
 
 class RevenueStats(BaseModel):
@@ -173,7 +181,7 @@ async def get_hourly_revenue_stats(
 
 
 async def get_hourly_product_stats(
-    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime
+    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime, returnable=False
 ) -> list[ProductTimeseries]:
     result = await conn.fetch(
         "select "
@@ -190,12 +198,13 @@ async def get_hourly_product_stats(
         "where o.booked_at >= $1 and o.booked_at <= $2 "
         "   and p.type = 'user_defined' "
         "   and ($3 = any(n.parent_ids) or n.id = $3) "
-        "   and not p.is_returnable "
+        "   and p.is_returnable = $4 "
         "group by p.id, from_time, to_time "
         "order by from_time",
         from_time,
         to_time,
         node.id,
+        returnable,
     )
     product_timeseries_map: dict[int, list[StatInterval]] = {}
     for row in result:
@@ -324,15 +333,27 @@ class OrderStatsService(DBService):
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
         hourly_product_stats = await get_hourly_product_stats(
-            conn=conn, node=node, from_time=from_time, to_time=to_time
+            conn=conn, node=node, from_time=from_time, to_time=to_time, returnable=False
         )
-        daily_product_stats = {}
+        hourly_deposit_stats = await get_hourly_product_stats(
+            conn=conn, node=node, from_time=from_time, to_time=to_time, returnable=True
+        )
+
+        product_overall_stats = []
         for hourly_product in hourly_product_stats:
-            d = await get_daily_stats(
-                hourly_stats=Timeseries(from_time=from_time, to_time=to_time, intervals=hourly_product.intervals),
-                event=event,
-            )
-            daily_product_stats[hourly_product.product_id] = d.intervals
+            s = ProductOverallStats(product_id=hourly_product.product_id, count=0, revenue=0)
+            for interval in hourly_product.intervals:
+                s.count += interval.count
+                s.revenue += interval.revenue
+            product_overall_stats.append(s)
+
+        deposit_overall_stats = []
+        for hourly_deposit in hourly_deposit_stats:
+            s = ProductOverallStats(product_id=hourly_deposit.product_id, count=0, revenue=0)
+            for interval in hourly_deposit.intervals:
+                s.count += interval.count
+                s.revenue += interval.revenue
+            deposit_overall_stats.append(s)
 
         return ProductStats(
             from_time=hourly_stats.from_time,
@@ -340,10 +361,9 @@ class OrderStatsService(DBService):
             hourly_intervals=hourly_stats.intervals,
             daily_intervals=daily_stats.intervals,
             product_hourly_intervals=hourly_product_stats,
-            product_daily_intervals=[
-                ProductTimeseries(product_id=p_id, intervals=intervals)
-                for p_id, intervals in daily_product_stats.items()
-            ],
+            product_overall_stats=product_overall_stats,
+            deposit_hourly_intervals=hourly_deposit_stats,
+            deposit_overall_stats=deposit_overall_stats,
         )
 
     @with_db_transaction(read_only=True)

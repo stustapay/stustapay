@@ -28,7 +28,9 @@ async def get_product_stats(
     from_timestamp: Optional[datetime] = None,
 ):
     return await order_service.stats.get_product_stats(
-        token=token, query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp), node_id=node_id
+        token=token,
+        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp),
+        node_id=node_id,
     )
 
 
