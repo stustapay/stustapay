@@ -152,7 +152,7 @@ class CustomerService(DBService):
     @with_db_transaction
     @requires_customer
     async def update_customer_info(
-        self, *, conn: Connection, current_customer: Customer, customer_bank: CustomerBank
+        self, *, conn: Connection, current_customer: Customer, customer_bank: CustomerBank, mail_service: MailService
     ) -> None:
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
         assert event_node is not None
@@ -198,6 +198,7 @@ class CustomerService(DBService):
             customer_bank.email,
             round(customer_bank.donation, 2),
         )
+        await self.send_mail_payout_registered(conn, current_customer, mail_service)
 
     async def check_payout_run(self, conn: Connection, current_customer: Customer) -> None:
         # if a payout is assigned, disallow updates.
@@ -212,12 +213,27 @@ class CustomerService(DBService):
 
     @with_db_transaction
     @requires_customer
-    async def update_customer_info_donate_all(self, *, conn: Connection, current_customer: Customer) -> None:
+    async def update_customer_info_donate_all(
+        self, *, conn: Connection, current_customer: Customer, mail_service: MailService
+    ) -> None:
         await self.check_payout_run(conn, current_customer)
         await conn.execute(
             "insert into customer_info (customer_account_id, donation, donate_all, has_entered_info) values ($1, null, true, true) "
             "on conflict (customer_account_id) do update set donate_all = true, has_entered_info = true",
             current_customer.id,
+        )
+        await self.send_mail_payout_registered(conn, current_customer, mail_service)
+
+    async def send_mail_payout_registered(
+        self, conn: Connection, current_customer: Customer, mail_service: MailService
+    ) -> None:
+        res_config = await fetch_restricted_event_settings_for_node(conn, current_customer.node_id)
+        mail_service.send_mail(
+            subject=res_config.payout_registered_subject,
+            message=res_config.payout_registered_message.format(current_customer.model_dump()),
+            from_email=res_config.payout_sender,
+            to_email=current_customer.email,
+            node_id=current_customer.node_id,
         )
 
     @with_db_transaction(read_only=True)

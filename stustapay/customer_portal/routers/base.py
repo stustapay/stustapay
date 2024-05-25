@@ -48,9 +48,10 @@ async def get_orders(
 async def update_customer_info(
     token: CurrentAuthToken,
     customer_service: ContextCustomerService,
+    mail_service: ContextCustomerService,
     customer_bank: CustomerBank,
 ):
-    await customer_service.update_customer_info(customer_bank=customer_bank, token=token)
+    await customer_service.update_customer_info(customer_bank=customer_bank, token=token, mail_service=mail_service)
 
 
 @router.post(
@@ -61,8 +62,9 @@ async def update_customer_info(
 async def update_customer_info_donate_all(
     token: CurrentAuthToken,
     customer_service: ContextCustomerService,
+    mail_service: ContextCustomerService,
 ):
-    await customer_service.update_customer_info_donate_all(token=token)
+    await customer_service.update_customer_info_donate_all(token=token, mail_service=mail_service)
 
 
 @router.get("/payout_info", summary="info about current state of payout", response_model=PayoutInfo)
