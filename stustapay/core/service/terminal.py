@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 from typing import Optional
 
 import asyncpg
@@ -189,7 +190,7 @@ class TerminalService(DBService):
 
     async def _get_terminal_sumup_oauth_token(
         self, terminal_id: int, node: Node, event_settings: RestrictedEventSettings
-    ) -> str | None:
+    ) -> SumUpOAuthToken | None:
         del terminal_id
         if not event_settings.sumup_payment_enabled:
             return None
@@ -202,17 +203,21 @@ class TerminalService(DBService):
         current_token = self.sumup_oauth_cache.get(event_node_id, None)
         if current_token and current_token.is_valid():
             logger.info(f"Refreshing SumUp Oauth token for event with ID {event_node_id}")
-            return current_token.access_token
+            return current_token
 
-        current_token = await fetch_new_oauth_token(
+        new_token = await fetch_new_oauth_token(
             client_id=event_settings.sumup_oauth_client_id,
             client_secret=event_settings.sumup_oauth_client_secret,
             refresh_token=event_settings.sumup_oauth_refresh_token,
         )
-        if current_token is None:
+        if new_token is None and current_token is not None and current_token.is_valid(tolerance=timedelta(minutes=2)):
+            return current_token
+
+        if new_token is None:
             return None
-        self.sumup_oauth_cache[node.id] = current_token
-        return current_token.access_token
+
+        self.sumup_oauth_cache[node.id] = new_token
+        return new_token
 
     async def _get_terminal_till_config(self, conn: Connection, terminal_id: int, till: Till) -> TerminalTillConfig:
         node = await fetch_node(conn=conn, node_id=till.node_id)
@@ -268,18 +273,21 @@ class TerminalService(DBService):
             node.ids_to_event_node,
         )
         sumup_affiliate_key = ""
-        sumup_api_key = ""
+        sumup_api_oauth_token = ""
+        sumup_api_oauth_valid_until = None
         if event_settings.sumup_payment_enabled and (profile.allow_ticket_sale or profile.allow_top_up):
             sumup_affiliate_key = event_settings.sumup_affiliate_key
-            sumup_api_key = (
-                await self._get_terminal_sumup_oauth_token(
-                    terminal_id=terminal_id, node=node, event_settings=event_settings
-                )
-                or ""
+            oauth_token = await self._get_terminal_sumup_oauth_token(
+                terminal_id=terminal_id, node=node, event_settings=event_settings
             )
+            sumup_api_oauth_token = oauth_token.access_token if oauth_token is not None else ""
+            sumup_api_oauth_valid_until = oauth_token.expires_at if oauth_token is not None else None
 
         secrets = TerminalSecrets(
-            sumup_affiliate_key=sumup_affiliate_key, sumup_api_key=sumup_api_key, user_tag_secret=user_tag_secret
+            sumup_affiliate_key=sumup_affiliate_key,
+            sumup_api_key=sumup_api_oauth_token,
+            sumup_api_key_expires_at=sumup_api_oauth_valid_until,
+            user_tag_secret=user_tag_secret,
         )
 
         available_roles = []

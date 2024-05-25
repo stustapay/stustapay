@@ -9,6 +9,8 @@ from pydantic import BaseModel
 
 from stustapay.core.service.common.error import ServiceException
 
+logger = logging.getLogger(__name__)
+
 SUMUP_API_BASE_URL = "https://api.sumup.com"
 SUMUP_API_URL = f"{SUMUP_API_BASE_URL}/v0.1"
 SUMUP_CHECKOUT_URL = f"{SUMUP_API_URL}/checkouts"
@@ -41,8 +43,8 @@ class _SumUpOAuthTokenResp(BaseModel):
 class SumUpOAuthToken(_SumUpOAuthTokenResp):
     expires_at: datetime
 
-    def is_valid(self):
-        return datetime.now() < self.expires_at - SUMUP_OAUTH_VALIDITY_TOLERANCE
+    def is_valid(self, tolerance=SUMUP_OAUTH_VALIDITY_TOLERANCE):
+        return datetime.now() < self.expires_at - tolerance
 
 
 class SumUpCreateCheckout(BaseModel):
@@ -142,7 +144,7 @@ async def fetch_new_oauth_token(client_id: str, client_secret: str, refresh_toke
 
     async with aiohttp.ClientSession(trust_env=True) as session:
         try:
-            async with session.post(url, data=payload, timeout=10) as response:
+            async with session.post(url, data=payload, timeout=1) as response:
                 if not response.ok:
                     try:
                         resp = await response.json()
@@ -162,11 +164,11 @@ async def fetch_new_oauth_token(client_id: str, client_secret: str, refresh_toke
                 )
                 return token
         except asyncio.TimeoutError as e:
-            raise SumUpError("SumUp API timeout") from e
+            logger.warning(f"Timeout while fetching SumUp access token {e}")
+            return None
         except Exception as e:  # pylint: disable=bare-except
-            if isinstance(e, SumUpError):
-                raise e
-            raise SumUpError(f"SumUp API returned an unknown error {e}") from e
+            logger.warning(f"Unexpected error while fetching SumUp access token {e}")
+            return None
 
 
 class SumUpApi:
