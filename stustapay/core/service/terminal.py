@@ -202,9 +202,9 @@ class TerminalService(DBService):
 
         current_token = self.sumup_oauth_cache.get(event_node_id, None)
         if current_token and current_token.is_valid():
-            logger.info(f"Refreshing SumUp Oauth token for event with ID {event_node_id}")
             return current_token
 
+        logger.info(f"Refreshing SumUp Oauth token for event with ID {event_node_id}")
         new_token = await fetch_new_oauth_token(
             client_id=event_settings.sumup_oauth_client_id,
             client_secret=event_settings.sumup_oauth_client_secret,

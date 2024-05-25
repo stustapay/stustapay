@@ -273,6 +273,7 @@ class TillService(DBService):
         if (
             Privilege.node_administration not in current_user.privileges
             and Privilege.user_management not in current_user.privileges
+            and Privilege.create_user not in current_user.privileges
             and user_tag_uid != current_user.user_tag_uid
         ):
             raise AccessDenied("cannot retrieve user info for someone other than yourself")

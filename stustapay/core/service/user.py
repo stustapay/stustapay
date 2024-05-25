@@ -335,7 +335,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])
-    @requires_user([Privilege.create_user])
+    @requires_user([Privilege.create_user, Privilege.user_management])
     async def create_user(
         self,
         *,
@@ -354,7 +354,7 @@ class UserService(DBService):
         )
 
     @with_db_transaction
-    @requires_terminal([Privilege.create_user], requires_event_privileges=True)
+    @requires_terminal([Privilege.create_user, Privilege.user_management])
     async def create_user_terminal(
         self,
         *,
