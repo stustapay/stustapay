@@ -44,6 +44,7 @@ fun StartpageView(
 ) {
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
+    val infallibleBusy by viewModel.infallibleBusy.collectAsStateWithLifecycle()
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
     val scope = rememberCoroutineScope()
     val activity = LocalContext.current as Activity
@@ -57,8 +58,6 @@ fun StartpageView(
     LaunchedEffect(Unit) {
         viewModel.fetchAccessData()
     }
-
-
 
     Box(
         modifier = Modifier
@@ -77,7 +76,7 @@ fun StartpageView(
             },
             enabled = !configLoading,
         ) {
-            if (configLoading) {
+            if (configLoading || infallibleBusy) {
                 Spinner()
             } else {
                 Icon(Icons.Filled.Refresh, "Refresh")

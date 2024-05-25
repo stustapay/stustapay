@@ -104,7 +104,7 @@ class Simulator:
             int(row["user_tag_uid"])
             for row in await self.db_pool.fetch(
                 "select u.user_tag_uid "
-                "from user_with_roles u "
+                "from user_with_tag u "
                 "join account a on u.cashier_account_id = a.id "
                 "left join till t on u.id = t.active_user_id "
                 "where t.id is null"
@@ -269,7 +269,7 @@ class Simulator:
 
     async def _stock_up_cashier(self, cashier_tag_uid: int):
         till_id = await self.db_pool.fetchval(
-            "select till.id from till join user_with_roles u on till.active_user_id = u.id where u.user_tag_uid = $1",
+            "select till.id from till join user_with_tag u on till.active_user_id = u.id where u.user_tag_uid = $1",
             cashier_tag_uid,
         )
         await self.db_pool.execute(
@@ -277,7 +277,7 @@ class Simulator:
         )
         stocking_id = await self.db_pool.fetchval("select id from cash_register_stocking limit 1")
         has_cash_register = await self.db_pool.fetchval(
-            "select exists (select from user_with_roles where user_tag_uid = $1 and cash_register_id is not null)",
+            "select exists (select from user_with_tag where user_tag_uid = $1 and cash_register_id is not null)",
             cashier_tag_uid,
         )
         terminal = random.choice(self.admin_terminals)
@@ -614,8 +614,7 @@ class Simulator:
 
         self.admin_tag_uid = int(
             await self.db_pool.fetchval(
-                "select user_tag_uid from user_with_roles where $1 = any(role_names) and node_id = $2 limit 1",
-                "admin",
+                "select user_tag_uid from user_with_tag where login = 'admin' and node_id = $1 limit 1",
                 self.event_node_id,
             )
         )

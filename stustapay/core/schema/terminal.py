@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -28,6 +29,7 @@ class UserTagSecret(BaseModel):
 class TerminalSecrets(BaseModel):
     sumup_affiliate_key: str
     sumup_api_key: str
+    sumup_api_key_expires_at: datetime | None
     user_tag_secret: UserTagSecret
 
 
@@ -46,6 +48,7 @@ class TerminalTillConfig(BaseModel):
     id: int
     name: str
     description: Optional[str]
+    event_name: str
     profile_name: str
     user_privileges: Optional[list[Privilege]]
     cash_register_id: Optional[int]

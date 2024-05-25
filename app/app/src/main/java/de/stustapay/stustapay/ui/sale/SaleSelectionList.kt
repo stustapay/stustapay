@@ -63,8 +63,21 @@ fun SaleSelectionList(
 
         for (button in saleConfig.buttons) {
             item {
+
+                // sale captions can contain "product///return" so we can set the return button caption
+                // TODO: we should have an extra caption field for this anyway
+                var returnCaption = "Extra Glas"
+                val saleCaption = if (button.value.price is SaleItemPrice.Returnable) {
+                    val captionSplit = button.value.caption.split("///", limit=2)
+                    if (captionSplit.size == 2) {
+                        returnCaption = captionSplit[1]
+                    }
+                    captionSplit[0]
+                } else {
+                    button.value.caption
+                }
                 SaleSelectionItem(
-                    caption = button.value.caption,
+                    caption = saleCaption,
                     type = when (val price = button.value.price) {
                         is SaleItemPrice.FixedPrice -> {
                             SaleSelectionItemType.FixedPrice(
@@ -82,8 +95,7 @@ fun SaleSelectionList(
                                 amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
                                 onIncr = { viewModel.incrementButton(button.value.id) },
                                 onDecr = { viewModel.decrementButton(button.value.id) },
-                                // TODO: i'd like a customizable text here :)
-                                incrementText = "Extra Glas",
+                                incrementText = returnCaption,
                             )
                         }
 

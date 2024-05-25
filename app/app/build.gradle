@@ -54,25 +54,21 @@ android {
 
     signingConfigs {
         release {
-            def tmpFilePath = System.getProperty("user.home") + "/work/_temp/keystore/"
-            def allFilesFromDir = new File(tmpFilePath).listFiles()
-
-            if (allFilesFromDir != null) {
-                def keystoreFile = allFilesFromDir.first()
-                keystoreFile.renameTo("keystore/keystore.jks")
+            if (project.hasProperty('ANDROID_KEY_STORE_FILE')) {
+                storeFile file(ANDROID_KEY_STORE_FILE)
+                storePassword ANDROID_KEY_STORE_PASSWORD
+                keyAlias ANDROID_KEY_ALIAS
+                keyPassword ANDROID_KEY_PASSWORD
             }
-
-            storeFile = file("keystore/keystore.jks")
-            storePassword System.getenv("SIGNING_STORE_PASSWORD")
-            keyAlias System.getenv("SIGNING_KEY_ALIAS")
-            keyPassword System.getenv("SIGNING_KEY_PASSWORD")
         }
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            if (project.hasProperty('ANDROID_KEY_STORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
         }
     }
     compileOptions {
@@ -120,7 +116,8 @@ dependencies {
     implementation 'androidx.databinding:databinding-runtime:8.0.2'
     implementation 'androidx.datastore:datastore:1.0.0'
     implementation 'com.sumup:merchant-api:1.4.0'
-    implementation 'com.sumup:merchant-sdk:4.0.3'
+    implementation 'com.sumup:merchant-sdk:5.0.0'
+    implementation 'net.openid:appauth:0.11.1'
     implementation "com.google.protobuf:protobuf-javalite:$protobuf_version"
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
@@ -161,3 +158,7 @@ protobuf {
         }
     }
 }
+
+android.defaultConfig.manifestPlaceholders = [
+        'appAuthRedirectScheme': 'de.stustapay.stustapay'
+]

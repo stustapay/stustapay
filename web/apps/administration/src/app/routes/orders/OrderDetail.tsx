@@ -118,12 +118,12 @@ export const OrderDetail: React.FC = () => {
             </ListItem>
           )}
           {order.customer_account_id != null && (
-            <ListItemLink to={CustomerRoutes.detail(order.customer_account_id)}>
+            <ListItemLink to={CustomerRoutes.detail(order.customer_account_id, currentNode.event_node_id)}>
               <ListItemText primary={t("order.customerAccountId")} secondary={order.customer_account_id} />
             </ListItemLink>
           )}
           {order.customer_tag_uid_hex != null && (
-            <ListItemLink to={UserTagRoutes.detail(order.customer_tag_id)}>
+            <ListItemLink to={UserTagRoutes.detail(order.customer_tag_id, currentNode.event_node_id)}>
               <ListItemText
                 primary={t("order.customerTagUid")}
                 secondary={formatUserTagUid(order.customer_tag_uid_hex)}

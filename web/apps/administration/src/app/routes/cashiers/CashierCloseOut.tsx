@@ -129,7 +129,9 @@ export const CashierCloseOut: React.FC = () => {
           <AlertTitle>{t("closeOut.warningStillLoggedInTitle")}</AlertTitle>
           {t("closeOut.warningStillLoggedIn")}
           {cashier.till_ids.map((till_id) => (
-            <RouterLink to={TillRoutes.detail(till_id, getTill(till_id)?.node_id)}>{getTill(till_id)?.name}</RouterLink>
+            <RouterLink key={till_id} to={TillRoutes.detail(till_id, getTill(till_id)?.node_id)}>
+              {getTill(till_id)?.name}
+            </RouterLink>
           ))}
         </Alert>
       )}
@@ -145,7 +147,6 @@ export const CashierCloseOut: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>{t("closeOut.start")}</TableCell>
                     <TableCell>{t("closeOut.targetInDrawer")}</TableCell>
                     <TableCell colSpan={3}>{t("closeOut.countedInDrawer")}</TableCell>
                     <TableCell>{t("closeOut.difference")}</TableCell>
@@ -153,7 +154,7 @@ export const CashierCloseOut: React.FC = () => {
                 </TableHead>
                 <TableBody>
                   <TableRow>
-                    <TableCell rowSpan={7} colSpan={2} />
+                    <TableCell rowSpan={7} />
                     <TableCell align="right">{t("closeOut.coins")}</TableCell>
                     <TableCell>
                       <FormNumericInput
@@ -213,10 +214,9 @@ export const CashierCloseOut: React.FC = () => {
                     <TableCell sx={{ fontWeight: (theme) => theme.typography.fontWeightBold }}>
                       {t("closeOut.sum")}
                     </TableCell>
-                    <TableCell colSpan={5} />
+                    <TableCell colSpan={4} />
                   </TableRow>
                   <TableRow>
-                    <TableCell align="right">{formatCurrency(0)}</TableCell>
                     <TableCell align="right">{formatCurrency(cashier.cash_drawer_balance)}</TableCell>
                     <TableCell colSpan={2} />
                     <TableCell align="right">{formatCurrency(computeSum(formik.values))}</TableCell>
@@ -239,8 +239,7 @@ export const CashierCloseOut: React.FC = () => {
                   label={t("closeOut.closingOutUser")}
                   value={formik.values.closingOutUserId}
                   onBlur={formik.handleBlur}
-                  // TODO: readd filter once roles are again propagated with users
-                  // filterRole="finanzorga"
+                  filterPrivilege="node_administration"
                   onChange={(val) => formik.setFieldValue("closingOutUserId", val)}
                   error={formik.touched.closingOutUserId && !!formik.errors.closingOutUserId}
                   helperText={(formik.touched.closingOutUserId && formik.errors.closingOutUserId) as string}

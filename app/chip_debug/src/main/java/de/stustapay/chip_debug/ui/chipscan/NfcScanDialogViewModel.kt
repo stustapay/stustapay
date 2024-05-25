@@ -2,14 +2,11 @@ package de.stustapay.chip_debug.ui.chipscan
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ionspin.kotlin.bignum.integer.toBigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.api.models.UserTag
 import de.stustapay.chip_debug.R
+import de.stustapay.chip_debug.repository.NfcRepository
 import de.stustapay.libssp.model.NfcScanFailure
 import de.stustapay.libssp.model.NfcScanResult
-import de.stustapay.chip_debug.repository.NfcRepository
-import de.stustapay.chip_debug.repository.ReadMode
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.util.ResourcesProvider
 import de.stustapay.libssp.util.mapState

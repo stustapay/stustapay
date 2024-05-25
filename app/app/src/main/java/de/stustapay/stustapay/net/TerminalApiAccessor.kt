@@ -1,6 +1,5 @@
 package de.stustapay.stustapay.net
 
-import com.sumup.android.logging.Log
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,11 +29,12 @@ open class TerminalApiAccessor(
 
     internal suspend inline fun <reified O : Any> execute(fn: ((acc: TerminalApiAccessorInner) -> HttpResponse<O>?)): Response<O> {
         return try {
+            // res will only be null when TerminalApiAccessorInner.<subapi> is not set (because we're not registered)
             val res = fn(this.inner)
             if (res != null) {
                 transformResponse(res.response)
             } else {
-                Response.Error.Request("not registered")
+                Response.Error.Access("terminal not registered")
             }
         } catch (e: JsonConvertException) {
             Response.Error.BadResponse(e.localizedMessage.orEmpty())

@@ -14,6 +14,7 @@ import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 import de.stustapay.stustapay.ec.SumUp
 import de.stustapay.libssp.nfc.NfcHandler
+import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.ui.Main
 import de.stustapay.libssp.util.ActivityCallback
 import de.stustapay.libssp.util.SysUiController
@@ -30,6 +31,9 @@ class MainActivity : ComponentActivity(), SysUiController {
     @Inject
     lateinit var sumUp: SumUp
 
+    @Inject
+    lateinit var infallible: InfallibleRepository
+
     val viewModel: MainActivityViewModel by viewModels()
 
     @SuppressLint("SourceLockedOrientationActivity")
@@ -42,6 +46,8 @@ class MainActivity : ComponentActivity(), SysUiController {
         // things that need the activity
         nfcHandler.onCreate(this)
         sumUp.init(activityCallback)
+
+        infallible.launch()
 
         setContent {
             Main(this)

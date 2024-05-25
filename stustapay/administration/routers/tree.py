@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Response
+from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTreeService
@@ -63,6 +64,11 @@ async def get_restricted_event_settings(
     return await tree_service.get_restricted_event_settings(token=token, node_id=node_id)
 
 
+@router.delete("/nodes/{node_id}")
+async def delete_node(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    return await tree_service.delete_node(token=token, node_id=node_id)
+
+
 @router.post(
     "/events/{node_id}/generate-test-bon",
     responses={
@@ -106,3 +112,16 @@ async def generate_revenue_report(token: CurrentAuthToken, tree_service: Context
     mime_type, content = await tree_service.generate_revenue_report(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="revenue_report.pdf"'}
     return Response(content, headers=headers, media_type=mime_type)
+
+
+class SumUpTokenPayload(BaseModel):
+    authorization_code: str
+
+
+@router.post("/nodes/{node_id}/configure-sumup-token")
+async def configure_sumup_token(
+    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, payload: SumUpTokenPayload
+):
+    return await tree_service.sumup_auth_code_flow(
+        token=token, node_id=node_id, authorization_code=payload.authorization_code
+    )

@@ -58,6 +58,7 @@
     <string name="customer_oldtag">Alt</string>
     <string name="customer_newtag">Neu</string>
     <string name="customer_scanoldtag">Altes Bändchen Scannen</string>
+    <string name="customer_details">Transaktionsverlauf</string>
 
     <string name="management_title">Kassenverwaltung</string>
     <string name="management_equip_title">Bestücken</string>
@@ -73,6 +74,7 @@
     <string name="nfc_scan_prompt">📡 Chip scannen</string>
     <string name="nfc_scan_cashier_prompt">📡 Kassierer-Chip scannen</string>
     <string name="nfc_scan_transfer_prompt">📡 Neuen Kassierer-Chip scannen</string>
+    <string name="nfc_scan_new_prompt">📡 Neuen Chip scannen</string>
 
     <string name="user_title">Benutzer</string>
     <string name="user_login">Einloggen</string>
@@ -145,4 +147,7 @@
     <string name="ticket_order_cleared_success">Bereit für neue Bestellung.</string>
     <string name="ticket_unknown">Ticket unbekannt.</string>
     <string name="ticket_valid">Ticket gültig.</string>
+    <string name="infallible_popup_transaction_pending">Buchung läuft noch:</string>
+    <string name="infallible_popup_restart">App Neustart empfohlen</string>
+    <string name="infallible_popup_but_no_request">Zu viele fehlgeschlagene Anfragen, obwohl keine Buchung vorhanden ist</string>
 </resources>

@@ -1,5 +1,5 @@
 import { useDeleteUserMutation, useGetUserQuery } from "@/api";
-import { UserRoutes, UserTagRoutes } from "@/app/routes";
+import { CashierRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ListItemLink } from "@/components";
 import { DetailLayout } from "@/components/layouts";
 import { useCurrentNode } from "@/hooks";
@@ -71,6 +71,11 @@ export const UserDetail: React.FC = () => {
             <ListItem>
               <ListItemText primary={t("user.tagId")} secondary={t("user.noTagAssigned")} />
             </ListItem>
+          )}
+          {user.cashier_account_id != null && (
+            <ListItemLink to={CashierRoutes.detail(user.id, user.node_id)}>
+              <ListItemText primary={t("user.cashierDetails")} />
+            </ListItemLink>
           )}
         </List>
       </Paper>

@@ -1,6 +1,5 @@
 package de.stustapay.stustapay.ec
 
-import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import java.math.BigDecimal
 

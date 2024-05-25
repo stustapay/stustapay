@@ -11,7 +11,7 @@ fun TagItem(
     tag: NfcTag, modifier: Modifier = Modifier
 ) {
     Text(
-        "ID: ${tag.uid}",
+        "ID: ${tagIDtoString(tag.uid.ulongValue())}",
         style = MaterialTheme.typography.h5,
         modifier = modifier,
     )

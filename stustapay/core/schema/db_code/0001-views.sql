@@ -51,39 +51,6 @@ create view user_to_roles_aggregated as
         user_to_role utr
     group by utr.user_id, utr.node_id;
 
-create view user_with_roles as
-    select
-        u.*,
-        coalesce(roles.roles, '{}'::text array) as role_names
-    from
-        user_with_tag u
-        left join (
-            select
-                utr.user_id        as user_id,
-                array_agg(ur.name) as roles
-            from
-                user_to_role utr
-                join user_role ur on utr.role_id = ur.id
-            group by utr.user_id
-        ) roles on u.id = roles.user_id;
-
-create view user_with_privileges as
-    select
-        u.*,
-        coalesce(privs.privileges, '{}'::text array) as privileges
-    from
-        user_with_tag u
-        left join user_tag ut on u.user_tag_id = ut.id
-        left join (
-            select
-                utr.user_id,
-                array_agg(urtp.privilege) as privileges
-            from
-                user_to_role utr
-                join user_role_to_privilege urtp on utr.role_id = urtp.role_id
-            group by utr.user_id
-        ) privs on u.id = privs.user_id;
-
 create view account_with_history as
     select
         a.*,
@@ -175,10 +142,12 @@ create view user_tag_with_history as
         ut.pin,
         ut.comment,
         a.id                                       as account_id,
+        u.id                                       as user_id,
         coalesce(hist.account_history, '[]'::json) as account_history
     from
         user_tag ut
         left join account a on a.user_tag_id = ut.id
+        left join usr u on ut.id = u.user_tag_id
         left join (
             select
                 atah.user_tag_id,
@@ -205,7 +174,7 @@ create view cashier as
         a.balance                                    as cash_drawer_balance,
         coalesce(tills.till_ids, '{}'::bigint array) as till_ids
     from
-        user_with_roles u
+        user_with_tag u
         join account a on u.cashier_account_id = a.id
         left join (
             select

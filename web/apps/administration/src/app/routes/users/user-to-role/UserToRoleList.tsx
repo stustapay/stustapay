@@ -85,6 +85,9 @@ export const UserToRoleList: React.FC = () => {
       return "";
     }
     const roles = ids.map((id) => selectUserRoleById(userRoles, id));
+    roles.sort((lhs, rhs) =>
+      lhs !== undefined && rhs && undefined ? lhs.name.toLowerCase().localeCompare(rhs.name.toLowerCase()) : -1
+    );
 
     return (
       <Box sx={{ display: "grid", gap: 1, gridAutoFlow: "column" }}>

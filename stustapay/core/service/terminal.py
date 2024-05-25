@@ -1,3 +1,5 @@
+import logging
+from datetime import timedelta
 from typing import Optional
 
 import asyncpg
@@ -15,7 +17,7 @@ from stustapay.core.schema.terminal import (
     UserTagSecret,
 )
 from stustapay.core.schema.till import Till, TillProfile
-from stustapay.core.schema.tree import Node, ObjectType
+from stustapay.core.schema.tree import Node, ObjectType, RestrictedEventSettings
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService, TerminalTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
@@ -27,12 +29,20 @@ from stustapay.core.service.common.decorators import (
     with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, NotFound
+from stustapay.core.service.till.till import (
+    assign_till_to_terminal,
+    remove_terminal_from_till,
+)
 from stustapay.core.service.tree.common import (
+    fetch_event_node_for_node,
     fetch_node,
     fetch_restricted_event_settings_for_node,
 )
 from stustapay.core.service.user import list_assignable_roles_for_user_at_node
 from stustapay.framework.database import Connection
+from stustapay.payment.sumup.api import SumUpOAuthToken, fetch_new_oauth_token
+
+logger = logging.getLogger(__name__)
 
 
 async def _fetch_terminal(conn: Connection, node: Node, terminal_id: int) -> Terminal | None:
@@ -49,6 +59,8 @@ class TerminalService(DBService):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
+
+        self.sumup_oauth_cache: dict[int, SumUpOAuthToken] = {}
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.terminal])
@@ -135,17 +147,34 @@ class TerminalService(DBService):
     @requires_node(object_types=[ObjectType.terminal])
     @requires_user([Privilege.node_administration])
     async def logout_terminal_id(self, *, conn: Connection, node: Node, terminal_id: int) -> bool:
-        # TODO: TREE visibility
-        id_ = await conn.fetchval(
+        row = await conn.fetchrow(
             "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null "
             "where id = $1 and node_id = $2 returning id",
             terminal_id,
             node.id,
         )
-        if id_ is None:
+        if row is None:
             raise NotFound(element_typ="terminal", element_id=terminal_id)
-        await conn.execute("update till set terminal_id = null where terminal_id = $1", terminal_id)
+
+        till_id = await conn.fetchval("select id from till where terminal_id = $1", terminal_id)
+        if till_id is not None:
+            till_node_id = await conn.fetchval("select node_id from till where id = $1", till_id)
+            await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=till_id)
+
         return True
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def switch_till(self, *, conn: Connection, node: Node, terminal_id: int, new_till_id: int):
+        terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
+        if terminal is None:
+            raise NotFound(element_typ="terminal", element_id=terminal_id)
+        if terminal.till_id is not None:
+            till_node_id = await conn.fetchval("select node_id from till where id = $1", terminal.till_id)
+            await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=terminal.till_id)
+
+        await assign_till_to_terminal(conn=conn, node=node, till_id=new_till_id, terminal_id=terminal_id)
 
     @with_db_transaction
     @requires_terminal(requires_till=False)
@@ -154,12 +183,47 @@ class TerminalService(DBService):
             "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1",
             current_terminal.id,
         )
-        await conn.execute("update till set terminal_id = null where terminal_id = $1", current_terminal.id)
+        if current_terminal.till is not None:
+            await remove_terminal_from_till(
+                conn=conn, node_id=current_terminal.till.node_id, till_id=current_terminal.till.id
+            )
 
-    @staticmethod
-    async def _get_terminal_till_config(conn: Connection, till: Till) -> TerminalTillConfig:
+    async def _get_terminal_sumup_oauth_token(
+        self, terminal_id: int, node: Node, event_settings: RestrictedEventSettings
+    ) -> SumUpOAuthToken | None:
+        del terminal_id
+        if not event_settings.sumup_payment_enabled:
+            return None
+        if event_settings.sumup_oauth_client_id == "" or event_settings.sumup_oauth_client_secret == "":
+            return None
+
+        event_node_id = node.event_node_id
+        assert event_node_id is not None
+
+        current_token = self.sumup_oauth_cache.get(event_node_id, None)
+        if current_token and current_token.is_valid():
+            return current_token
+
+        logger.info(f"Refreshing SumUp Oauth token for event with ID {event_node_id}")
+        new_token = await fetch_new_oauth_token(
+            client_id=event_settings.sumup_oauth_client_id,
+            client_secret=event_settings.sumup_oauth_client_secret,
+            refresh_token=event_settings.sumup_oauth_refresh_token,
+        )
+        if new_token is None and current_token is not None and current_token.is_valid(tolerance=timedelta(minutes=2)):
+            return current_token
+
+        if new_token is None:
+            return None
+
+        self.sumup_oauth_cache[node.id] = new_token
+        return new_token
+
+    async def _get_terminal_till_config(self, conn: Connection, terminal_id: int, till: Till) -> TerminalTillConfig:
         node = await fetch_node(conn=conn, node_id=till.node_id)
         assert node is not None
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=node.id)
+        assert event_node is not None
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         profile = await conn.fetch_one(
             TillProfile,
@@ -173,8 +237,9 @@ class TerminalService(DBService):
         allow_ticket_sale = layout_has_tickets and profile.allow_ticket_sale
 
         user_privileges = await conn.fetchval(
-            "select privileges from user_with_privileges where id = $1",
+            "select privileges_at_node as privileges from user_privileges_at_node($1) where node_id = $2",
             till.active_user_id,
+            till.node_id,
         )
         buttons = await conn.fetch_many(
             TerminalButton,
@@ -208,13 +273,21 @@ class TerminalService(DBService):
             node.ids_to_event_node,
         )
         sumup_affiliate_key = ""
-        sumup_api_key = ""
-        if profile.allow_ticket_sale or profile.allow_top_up:
+        sumup_api_oauth_token = ""
+        sumup_api_oauth_valid_until = None
+        if event_settings.sumup_payment_enabled and (profile.allow_ticket_sale or profile.allow_top_up):
             sumup_affiliate_key = event_settings.sumup_affiliate_key
-            sumup_api_key = event_settings.sumup_api_key
+            oauth_token = await self._get_terminal_sumup_oauth_token(
+                terminal_id=terminal_id, node=node, event_settings=event_settings
+            )
+            sumup_api_oauth_token = oauth_token.access_token if oauth_token is not None else ""
+            sumup_api_oauth_valid_until = oauth_token.expires_at if oauth_token is not None else None
 
         secrets = TerminalSecrets(
-            sumup_affiliate_key=sumup_affiliate_key, sumup_api_key=sumup_api_key, user_tag_secret=user_tag_secret
+            sumup_affiliate_key=sumup_affiliate_key,
+            sumup_api_key=sumup_api_oauth_token,
+            sumup_api_key_expires_at=sumup_api_oauth_valid_until,
+            user_tag_secret=user_tag_secret,
         )
 
         available_roles = []
@@ -226,6 +299,7 @@ class TerminalService(DBService):
         return TerminalTillConfig(
             id=till.id,
             name=till.name,
+            event_name=event_node.name,
             description=till.description,
             cash_register_id=cash_register_id,
             cash_register_name=cash_register_name,
@@ -247,7 +321,9 @@ class TerminalService(DBService):
     ) -> TerminalConfig | None:
         till_config = None
         if current_terminal.till is not None:
-            till_config = await self._get_terminal_till_config(conn=conn, till=current_terminal.till)
+            till_config = await self._get_terminal_till_config(
+                conn=conn, terminal_id=current_terminal.id, till=current_terminal.till
+            )
 
         return TerminalConfig(
             id=current_terminal.id,

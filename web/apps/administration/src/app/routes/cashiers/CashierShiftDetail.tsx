@@ -5,7 +5,7 @@ import {
   useGetCashierShiftsQuery,
   useListUsersQuery,
 } from "@/api";
-import { DetailLayout } from "@/components";
+import { DetailLayout, ListItemLink } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -14,7 +14,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
-import { CashierRoutes } from "@/app/routes";
+import { CashierRoutes, UserRoutes } from "@/app/routes";
 
 export const CashierShiftDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -38,18 +38,7 @@ export const CashierShiftDetail: React.FC = () => {
     return <Loading />;
   }
 
-  const renderUser = (id?: number | null) => {
-    if (id == null || users == null) {
-      return "";
-    }
-
-    const user = selectUserById(users, id);
-    if (!user) {
-      return "";
-    }
-
-    return getUserName(user);
-  };
+  const closingOutUser = selectUserById(users, cashierShift.closing_out_user_id);
 
   return (
     <DetailLayout title={getUserName(cashier)} routes={CashierRoutes}>
@@ -64,12 +53,9 @@ export const CashierShiftDetail: React.FC = () => {
           <ListItem>
             <ListItemText primary={t("shift.endedAt")} secondary={cashierShift.ended_at} />
           </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("closeOut.closingOutUser")}
-              secondary={renderUser(cashierShift.closing_out_user_id)}
-            />
-          </ListItem>
+          <ListItemLink to={UserRoutes.detail(cashierShift.closing_out_user_id)}>
+            <ListItemText primary={t("closeOut.closingOutUser")} secondary={getUserName(closingOutUser)} />
+          </ListItemLink>
           <ListItem>
             <ListItemText
               primary={t("shift.actualCashDrawerBalance")}

@@ -19,6 +19,7 @@ import kotlinx.serialization.Contextual
 
 import de.stustapay.api.models.Account
 
+import de.stustapay.api.models.Order
 import de.stustapay.api.models.SwitchTagPayload
 
 import de.stustapay.api.infrastructure.*
@@ -58,6 +59,39 @@ import io.ktor.http.ParametersBuilder
             val localVariableConfig = RequestConfig<kotlin.Any?>(
             RequestMethod.GET,
             "/customer/{customer_tag_uid}".replace("{" + "customer_tag_uid" + "}", "$customerTagUid"),
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+            )
+
+            return request(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+            ).wrap()
+            }
+
+        /**
+        * Obtain all orders of a customer by tag uid
+        * 
+         * @param customerTagUid  
+         * @return kotlin.collections.List<Order>
+        */
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun getCustomerOrders(customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<kotlin.collections.List<Order>> {
+
+            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
+
+            val localVariableBody = 
+                    io.ktor.client.utils.EmptyContent
+
+            val localVariableQuery = mutableMapOf<String, List<String>>()
+
+            val localVariableHeaders = mutableMapOf<String, String>()
+
+            val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.GET,
+            "/customer/{customer_tag_uid}/orders".replace("{" + "customer_tag_uid" + "}", "$customerTagUid"),
             query = localVariableQuery,
             headers = localVariableHeaders,
             requiresAuthentication = true,

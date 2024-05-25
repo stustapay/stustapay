@@ -101,6 +101,8 @@ export const translations = {
     comment: "Comment",
     noAccount: "No account associated",
     account: "Account",
+    user: "User",
+    noUser: "No user associated",
     accountHistory: "Account association history",
     restriction: "User Tag restriction",
     secret: "Secret these tags use",
@@ -158,6 +160,8 @@ export const translations = {
     expectedCashDrawerBalance: "Final Expected Cash Drawer Balance",
     cashDrawerImbalance: "Final Cash Drawer Imbalance",
     soldProductQuantity: "Quantity",
+    bookedProducts: "Booked products",
+    orders: "Orders",
   },
   closeOut: {
     start: "Start",
@@ -303,6 +307,13 @@ export const translations = {
       success: "Sucessfully archived node",
       error: "Error while archiving node",
     },
+    deleteNode: {
+      button: "Delete node",
+      confirmTitle: "Confirm delete node",
+      confirmContent: 'Are you sure you want to delete the node "{{nodeName}}". This is irreversible!!!!!!!',
+      success: "Sucessfully deleted node",
+      error: "Error while deleting node",
+    },
     general: {
       tabLabel: "General",
       name: "Name",
@@ -349,6 +360,10 @@ export const translations = {
       sumup_api_key: "SumUp API Key",
       sumup_merchant_code: "SumUp Merchant Code",
       sumup_affiliate_key: "SumUp Affiliate Key",
+      sumup_oauth_client_id: "SumUp OAuth Client ID",
+      sumup_oauth_client_secret: "SumUp OAuth Client Secret",
+      sumup_redirect_url: "This is the sumup redirect url: {{redirectUrl}}",
+      login_with_sumup: "Login with sumup",
     },
     payout: {
       tabLabel: "Payout",
@@ -416,6 +431,9 @@ export const translations = {
       "Force logout a terminal. This should NEVER be done while a cashier is still using the terminal",
     removeFromTerminal: "Remove from terminal",
     removeFromTerminalDescription: "Deassociate a this till from its terminal",
+    switchTerminal: "Switch terminal",
+    switchTerminalDescription:
+      "Switch the terminal associated with this till. This should NEVER be done while a cashier is still using the terminal",
   },
   layout: {
     layout: "Layout",
@@ -519,6 +537,7 @@ export const translations = {
       new_password: "New Password",
       new_password_confirm: "Confirm New Password",
     },
+    cashierDetails: "Cashier Details",
   },
   userRole: {
     name: "Name",
@@ -625,6 +644,9 @@ export const translations = {
     removeTill: "Remove till",
     removeTillDescription:
       'Deassociate till "{{tillName}}" from this terminal. This should NEVER be done while a cashier is still using the terminal.',
+    switchTill: "Switch till",
+    switchTillDescription:
+      "Switch the till associated with this terminal. This should NEVER be done while a cashier is still using the terminal.",
   },
 };
 

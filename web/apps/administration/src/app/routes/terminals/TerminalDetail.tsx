@@ -9,10 +9,16 @@ import {
 import { config } from "@/api/common";
 import { TerminalRoutes, TillRoutes } from "@/app/routes";
 import { ListItemLink } from "@/components";
+import { TerminalSwitchTill } from "@/components/features";
 import { DetailLayout } from "@/components/layouts";
 import { encodeTerminalRegistrationQrCode } from "@/core";
 import { useCurrentNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon, Logout as LogoutIcon } from "@mui/icons-material";
+import {
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Logout as LogoutIcon,
+  PointOfSale as PointOfSaleIcon,
+} from "@mui/icons-material";
 import { Box, Checkbox, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -36,6 +42,7 @@ export const TerminalDetail: React.FC = () => {
     terminalId: Number(terminalId),
   });
   const { data: tills, error: tillError } = useListTillsQuery({ nodeId: currentNode.id });
+  const [switchTillOpen, setSwitchTillOpen] = React.useState(false);
 
   const openModal = useOpenModal();
 
@@ -102,11 +109,10 @@ export const TerminalDetail: React.FC = () => {
           icon: <EditIcon />,
         },
         {
-          label: t("terminal.logout"),
-          onClick: openUnregisterTerminalDialog,
+          label: t("terminal.switchTill"),
+          onClick: () => setSwitchTillOpen(true),
           color: "warning",
-          icon: <LogoutIcon />,
-          hidden: terminal.session_uuid == null,
+          icon: <PointOfSaleIcon />,
         },
         ...(till != null
           ? ([
@@ -114,9 +120,17 @@ export const TerminalDetail: React.FC = () => {
                 label: t("terminal.removeTill"),
                 onClick: openConfirmRemoveTillDialog,
                 color: "warning",
+                icon: <PointOfSaleIcon />,
               } as const,
             ] as const)
           : []),
+        {
+          label: t("terminal.logout"),
+          onClick: openUnregisterTerminalDialog,
+          color: "warning",
+          icon: <LogoutIcon />,
+          hidden: terminal.session_uuid == null,
+        },
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >
@@ -168,6 +182,7 @@ export const TerminalDetail: React.FC = () => {
           </Box>
         </Paper>
       )}
+      <TerminalSwitchTill open={switchTillOpen} terminalId={terminal.id} onClose={() => setSwitchTillOpen(false)} />
     </DetailLayout>
   );
 };

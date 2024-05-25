@@ -63,7 +63,7 @@ async def register_tag_with_user(config: Config, user_id: int, tag_pin: str, tag
     try:
         await database.check_revision_version(db_pool)
         async with db_pool.acquire() as conn:
-            user = await conn.fetch_maybe_one(User, "select * from user_with_roles where id = $1", user_id)
+            user = await conn.fetch_maybe_one(User, "select * from user_with_tag where id = $1", user_id)
             node = await fetch_node(conn=conn, node_id=user.node_id)
             assert node is not None
             decoded_uid = int(tag_uid, 16)

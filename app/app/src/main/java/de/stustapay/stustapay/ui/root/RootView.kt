@@ -16,6 +16,7 @@ import de.stustapay.stustapay.ui.reward.RewardView
 import de.stustapay.stustapay.ui.sale.SaleView
 import de.stustapay.stustapay.ui.settings.SettingsView
 import de.stustapay.stustapay.ui.stats.StatsView
+import de.stustapay.stustapay.ui.swap.SwapView
 import de.stustapay.stustapay.ui.ticket.TicketView
 import de.stustapay.stustapay.ui.user.UserView
 import de.stustapay.stustapay.ui.vault.VaultView
@@ -71,6 +72,9 @@ fun RootView(uictrl: SysUiController? = null) {
         }
         composable(RootNavDests.rewards.route) {
             RewardView(leaveView = { navController.navigateUp() })
+        }
+        composable(RootNavDests.swap.route) {
+            SwapView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.cashier.route) {
             CashierView(leaveView = { navController.navigateUp() })

@@ -7,7 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.NewTicketScan
 import de.stustapay.api.models.PaymentMethod
-import de.stustapay.api.models.UserTag
+import de.stustapay.api.models.PendingTicketSale
 import de.stustapay.api.models.UserTagScan
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
@@ -17,11 +17,14 @@ import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
+import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TicketRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -41,9 +44,10 @@ sealed interface TagScanStatus {
 @HiltViewModel
 class TicketViewModel @Inject constructor(
     private val ticketRepository: TicketRepository,
-    private val terminalConfigRepository: TerminalConfigRepository,
+    terminalConfigRepository: TerminalConfigRepository,
     private val ecPaymentRepository: ECPaymentRepository,
     private val resourcesProvider: ResourcesProvider,
+    private val infallibleRepository: InfallibleRepository
 ) : ViewModel() {
 
     // navigation in views
@@ -71,6 +75,12 @@ class TicketViewModel @Inject constructor(
     ) { terminal ->
         TerminalLoginState(terminal = terminal)
     }
+
+    val infallibleBusy = infallibleRepository.busy.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = false,
+    )
 
     fun navTo(page: TicketPage) {
         _navState.update { page }
@@ -260,6 +270,8 @@ class TicketViewModel @Inject constructor(
     }
 
     private suspend fun bookSale(paymentMethod: PaymentMethod) {
+        infallibleRepository.bookTicketSale(_ticketDraft.value.getNewTicketSale(paymentMethod))
+
         _saleCompleted.update { null }
 
         val response = ticketRepository.bookTicketSale(

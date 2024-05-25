@@ -76,6 +76,7 @@ src/main/kotlin/de/stustapay/api/models/User.kt
 src/main/kotlin/de/stustapay/api/models/UserInfo.kt
 src/main/kotlin/de/stustapay/api/models/UserInfoPayload.kt
 src/main/kotlin/de/stustapay/api/models/UserRole.kt
+src/main/kotlin/de/stustapay/api/models/UserRoleInfo.kt
 src/main/kotlin/de/stustapay/api/models/UserTag.kt
 src/main/kotlin/de/stustapay/api/models/UserTagHistoryEntry.kt
 src/main/kotlin/de/stustapay/api/models/UserTagScan.kt

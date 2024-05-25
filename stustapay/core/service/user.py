@@ -61,7 +61,7 @@ async def fetch_user_to_roles(*, conn: Connection, node: Node, user_id: int) -> 
 
 async def fetch_user(*, conn: Connection, node: Node, user_id: int) -> User:
     user = await conn.fetch_maybe_one(
-        User, "select * from user_with_roles where id = $1 and node_id = any($2)", user_id, node.ids_to_root
+        User, "select * from user_with_tag where id = $1 and node_id = any($2)", user_id, node.ids_to_root
     )
     if user is None:
         raise NotFound(element_typ="user", element_id=user_id)
@@ -265,7 +265,7 @@ class UserService(DBService):
                 conn=conn, node=node, pin=new_user.user_tag_pin, uid=new_user.user_tag_uid
             )
 
-            existing_user = await conn.fetchrow("select * from user_with_roles where user_tag_id = $1", user_tag_id)
+            existing_user = await conn.fetchrow("select * from user_with_tag where user_tag_id = $1", user_tag_id)
             if existing_user is not None:
                 raise InvalidArgument(f"User with tag id {new_user.user_tag_pin} already exists")
 
@@ -315,7 +315,7 @@ class UserService(DBService):
                 role_id=role.role_id,
             )
 
-        return await conn.fetch_one(User, "select * from user_with_roles where id = $1", user_id)
+        return await conn.fetch_one(User, "select * from user_with_tag where id = $1", user_id)
 
     @with_db_transaction
     async def create_user_no_auth(
@@ -335,7 +335,7 @@ class UserService(DBService):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])
-    @requires_user([Privilege.create_user])
+    @requires_user([Privilege.create_user, Privilege.user_management])
     async def create_user(
         self,
         *,
@@ -354,7 +354,7 @@ class UserService(DBService):
         )
 
     @with_db_transaction
-    @requires_terminal([Privilege.create_user], requires_event_privileges=True)
+    @requires_terminal([Privilege.create_user, Privilege.user_management])
     async def create_user_terminal(
         self,
         *,
@@ -389,7 +389,7 @@ class UserService(DBService):
         role_ids: list[int],
     ) -> User:
         user_id = await conn.fetchval(
-            "select id from user_with_roles where user_tag_uid = $1 and node_id = any($2)",
+            "select id from user_with_tag where user_tag_uid = $1 and node_id = any($2)",
             user_tag_uid,
             node.ids_to_root,
         )
@@ -398,7 +398,7 @@ class UserService(DBService):
 
         roles = await conn.fetch_many(
             UserRole,
-            "select ur.* from user_role ur join user_to_role utr on ur.id = utr.role_id "
+            "select ur.* from user_role_with_privileges ur join user_to_role utr on ur.id = utr.role_id "
             "where utr.node_id = $1 and utr.user_id = $2",
             node.id,
             user_id,
@@ -413,14 +413,32 @@ class UserService(DBService):
             user_to_roles=NewUserToRoles(user_id=user_id, role_ids=role_ids),
         )
 
-        return await conn.fetch_one(User, "select * from user_with_roles where id = $1", user_id)
+        return await conn.fetch_one(User, "select * from user_with_tag where id = $1", user_id)
 
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user()
-    async def list_users(self, *, conn: Connection, node: Node) -> list[User]:
+    async def list_users(
+        self, *, conn: Connection, node: Node, filter_privilege: Privilege | None = None
+    ) -> list[User]:
+        if filter_privilege is None:
+            return await conn.fetch_many(
+                User, "select * from user_with_tag where node_id = any($1) order by login", node.ids_to_root
+            )
+
         return await conn.fetch_many(
-            User, "select * from user_with_roles where node_id = any($1) order by login", node.ids_to_root
+            User,
+            "with users_by_privilege as ("
+            "   select "
+            "       u.*, "
+            "       (select exists(select from user_privileges_at_node(u.id) up "
+            "       where $2 = any(up.privileges_at_node) and up.node_id = any($1))) as has_privilege "
+            "   from user_with_tag u "
+            "   where u.node_id = any($1)"
+            ")"
+            "select * from users_by_privilege where has_privilege",
+            node.ids_to_root,
+            filter_privilege.name if filter_privilege is not None else None,
         )
 
     @with_db_transaction(read_only=True)

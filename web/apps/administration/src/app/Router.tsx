@@ -72,6 +72,7 @@ import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransact
 import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
 import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch } from "./routes/customers";
 import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
+import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 
 const router = createBrowserRouter([
   {
@@ -96,6 +97,10 @@ const router = createBrowserRouter([
           {
             path: "settings-legacy",
             element: <SettingsLegacy />,
+          },
+          {
+            path: "settings/sumup-redirect",
+            element: <SumupOauthCallback />,
           },
           {
             path: "settings",

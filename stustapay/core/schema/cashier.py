@@ -3,6 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, computed_field
 
+from stustapay.core.schema.order import Order
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.user import format_user_tag_uid
 
@@ -34,6 +35,7 @@ class CashierShiftStats(BaseModel):
         quantity: int
 
     booked_products: list[CashierProductStats]
+    orders: list[Order]
 
 
 class CashierShift(BaseModel):

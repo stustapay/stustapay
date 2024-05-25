@@ -9,7 +9,7 @@ import {
   useListTillsQuery,
   useListUsersQuery,
 } from "@/api";
-import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
+import { CashierRoutes, TillRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ButtonLink, DetailLayout, ListItemLink } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
@@ -173,7 +173,7 @@ export const CashierDetail: React.FC = () => {
         },
         {
           label: t("edit"),
-          onClick: () => navigate(CashierRoutes.edit(cashier.id)),
+          onClick: () => navigate(UserRoutes.edit(cashier.id, cashier.node_id)),
           color: "primary",
           icon: <EditIcon />,
         },

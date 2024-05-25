@@ -33,7 +33,6 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
     val status by viewModel.status.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val currentTag by viewModel.currentTag.collectAsStateWithLifecycle()
-    val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
 
     if (currentUser == null) {
         Scaffold(

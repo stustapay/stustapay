@@ -27,8 +27,15 @@ user_to_role_router = APIRouter(prefix="/user-to-roles", tags=["user-to-roles"])
 
 
 @user_router.get("", response_model=NormalizedList[User, int])
-async def list_users(token: CurrentAuthToken, user_service: ContextUserService, node_id: int):
-    return normalize_list(await user_service.list_users(token=token, node_id=node_id))
+async def list_users(
+    token: CurrentAuthToken,
+    user_service: ContextUserService,
+    node_id: int,
+    filter_privilege: Privilege | None = None,
+):
+    return normalize_list(
+        await user_service.list_users(token=token, node_id=node_id, filter_privilege=filter_privilege)
+    )
 
 
 class UpdateUserPayload(BaseModel):
@@ -36,6 +43,7 @@ class UpdateUserPayload(BaseModel):
     display_name: str
     description: Optional[str] = None
     user_tag_pin: Optional[str] = None
+    user_tag_uid_hex: Optional[str] = None
 
 
 class CreateUserPayload(UpdateUserPayload):
@@ -49,6 +57,11 @@ async def create_user(
     user_service: ContextUserService,
     node_id: int,
 ):
+    user_tag_uid = (
+        int(new_user.user_tag_uid_hex, 16)
+        if new_user.user_tag_uid_hex is not None and new_user.user_tag_uid_hex != ""
+        else None
+    )
     return await user_service.create_user(
         token=token,
         new_user=NewUser(
@@ -56,6 +69,7 @@ async def create_user(
             display_name=new_user.display_name,
             description=new_user.description,
             user_tag_pin=new_user.user_tag_pin,
+            user_tag_uid=user_tag_uid,
         ),
         password=new_user.password,
         node_id=node_id,
@@ -79,6 +93,9 @@ async def update_user(
     user_service: ContextUserService,
     node_id: int,
 ):
+    user_tag_uid = (
+        int(user.user_tag_uid_hex, 16) if user.user_tag_uid_hex is not None and user.user_tag_uid_hex != "" else None
+    )
     updated_user = await user_service.update_user(
         token=token,
         user_id=user_id,
@@ -87,6 +104,7 @@ async def update_user(
             display_name=user.display_name,
             description=user.description,
             user_tag_pin=user.user_tag_pin,
+            user_tag_uid=user_tag_uid,
         ),
         node_id=node_id,
     )

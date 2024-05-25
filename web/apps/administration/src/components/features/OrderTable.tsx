@@ -46,7 +46,7 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
     {
       field: "order_type",
       headerName: t("order.type") as string,
-      width: 100,
+      width: 140,
       renderCell: ({ row }) => {
         const icon = orderTypeToIcon[row.order_type];
         if (icon) {

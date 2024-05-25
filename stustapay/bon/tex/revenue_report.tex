@@ -13,8 +13,8 @@
 \usepackage{xpatch}
 \usepackage{seqsplit}
 
-\usepackage{avant} %use helvetica?
-
+% use sans serif font
+\renewcommand{\familydefault}{\sfdefault}
 
 \usepackage{geometry}
 \geometry{
@@ -105,8 +105,8 @@
     \end{flushright}
 
     \noindent
-    \VAR[node.name] \\
-    \VAR[node.description] \\
+    \VAR[node.name|latex] \\
+    \VAR[node.description|latex] \\
 
     \vspace{2em}
 
@@ -167,7 +167,7 @@
     
     \hline
     \multicolumn{5}{l}
-    {{... Fortsetzung von der vorherigen Seite}} \\
+    {{... Fortsetzung der vorherigen Seite}} \\
     \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} & \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline
     \endhead
     
