@@ -325,7 +325,7 @@ class PayoutService(DBService):
                 subject=res_config.payout_done_subject,
                 message=res_config.payout_done_message.format(**payout.model_dump()),
                 from_email=res_config.payout_sender,
-                to_email=payout.email, # type: ignore
+                to_email=payout.email,  # type: ignore
                 node_id=node.id,
             )
 

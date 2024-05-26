@@ -1,5 +1,6 @@
 """Module to handle mail sending.
 """
+
 # pylint: disable=unexpected-keyword-arg
 # pylint: disable=unused-argument
 # pylint: disable=missing-kwoa
@@ -117,9 +118,9 @@ class MailService(DBService):
 
         try:
             context = ssl.create_default_context()
-            with smtplib.SMTP_SSL(smtp_config.smtp_host, smtp_config.smtp_port, context=context) as server: # type: ignore
+            with smtplib.SMTP_SSL(smtp_config.smtp_host, smtp_config.smtp_port, context=context) as server:  # type: ignore
                 if smtp_config.smtp_password:
-                    server.login(smtp_config.smtp_username, smtp_config.smtp_password) # type: ignore
+                    server.login(smtp_config.smtp_username, smtp_config.smtp_password)  # type: ignore
                 server.sendmail(message["From"], message["To"], message.as_string())
         except Exception as e:
             self.logger.exception(f"Failed to send mail to {mail.to_email} with error {type(e)}")

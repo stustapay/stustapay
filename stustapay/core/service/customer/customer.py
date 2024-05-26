@@ -238,7 +238,7 @@ class CustomerService(DBService):
             subject=res_config.payout_registered_subject,
             message=res_config.payout_registered_message.format(**current_customer.model_dump()),
             from_email=res_config.payout_sender,
-            to_email=current_customer.email, # type: ignore
+            to_email=current_customer.email,  # type: ignore
             node_id=current_customer.node_id,
         )
 
