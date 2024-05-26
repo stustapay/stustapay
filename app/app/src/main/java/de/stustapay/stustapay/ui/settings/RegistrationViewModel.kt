@@ -1,29 +1,30 @@
 package de.stustapay.stustapay.ui.settings
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.stustapay.model.RegistrationState
 import de.stustapay.stustapay.repository.RegistrationRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
-import de.stustapay.libssp.util.Result
-import de.stustapay.libssp.util.asResult
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 
 sealed interface RegistrationUiState {
-    data class Registered(
+    data class HasEndpoint(
         val msg: String? = null,
         val endpointUrl: String? = null,
     ) : RegistrationUiState
 
-    data class Error(
+    data class Message(
         val msg: String
     ) : RegistrationUiState
 
-    object Loading : RegistrationUiState
+    object Idle : RegistrationUiState
 }
 
 
@@ -41,7 +42,7 @@ class RegistrationViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = RegistrationUiState.Loading,
+            initialValue = RegistrationUiState.Idle,
         )
 
     val allowForceDeregister = registrationRepo.forceDeregisterState
@@ -69,46 +70,32 @@ private fun registrationUiState(
     val regState: Flow<RegistrationState> = registrationRepo.registrationState
 
     // convert the registration state to a ui registration state
-    return regState.asResult()
-        .map { registerStateResult ->
-            when (registerStateResult) {
-                is Result.Success -> {
-                    when (val registerState = registerStateResult.data) {
-                        is RegistrationState.Registered -> {
-                            RegistrationUiState.Registered(
-                                endpointUrl = registerState.apiUrl,
-                                msg = registerState.message,
-                            )
-                        }
+    return regState.map { registerState ->
+        when (registerState) {
+            is RegistrationState.Registered -> {
+                RegistrationUiState.HasEndpoint(
+                    endpointUrl = registerState.apiUrl,
+                    msg = registerState.message,
+                )
+            }
 
-                        is RegistrationState.Error -> {
-                            RegistrationUiState.Error(
-                                msg = registerState.message,
-                            )
-                        }
+            is RegistrationState.Error -> {
+                RegistrationUiState.Message(
+                    msg = registerState.message,
+                )
+            }
 
-                        is RegistrationState.NotRegistered -> {
-                            RegistrationUiState.Error(
-                                msg = registerState.message,
-                            )
-                        }
+            is RegistrationState.NotRegistered -> {
+                RegistrationUiState.Message(
+                    msg = registerState.message,
+                )
+            }
 
-                        is RegistrationState.Registering -> {
-                            RegistrationUiState.Loading
-                        }
-                    }
-                }
-
-                is Result.Loading -> {
-                    RegistrationUiState.Loading
-                }
-
-                is Result.Error -> {
-                    RegistrationUiState.Error(
-                        registerStateResult.exception?.localizedMessage
-                            ?: "unknown registration error"
-                    )
-                }
+            is RegistrationState.Registering -> {
+                RegistrationUiState.Message(
+                    msg = "registering to ${registerState.apiUrl}..."
+                )
             }
         }
+    }
 }

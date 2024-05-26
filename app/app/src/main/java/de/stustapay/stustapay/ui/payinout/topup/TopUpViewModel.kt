@@ -10,7 +10,6 @@ import de.stustapay.api.models.PaymentMethod
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.libssp.net.Response
-import de.stustapay.stustapay.model.InfallibleResult
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.TerminalConfigRepository
@@ -74,12 +73,6 @@ class TopUpViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = TerminalLoginState(),
-    )
-
-    val infallibleBusy = infallibleRepository.busy.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = false,
     )
 
     fun setAmount(amount: UInt) {
@@ -147,6 +140,11 @@ class TopUpViewModel @Inject constructor(
     suspend fun topUpWithCard(context: Activity, tag: NfcTag) {
         _status.update { "Card TopUp in progress..." }
 
+        // wake the soon-needed reader :)
+        // TODO: move this before the chip scan
+        // CashECPay could get a prepareEC callback function for that.
+        ecPaymentRepository.wakeup()
+
         val newTopUp = NewTopUp(
             amount = _topUpState.value.currentAmount.toDouble() / 100,
             customerTagUid = tag.uid,
@@ -170,6 +168,7 @@ class TopUpViewModel @Inject constructor(
         // https://stackoverflow.com/questions/60868912
         delay(1000)
 
+        // perform ec transaction
         when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
             is ECPaymentResult.Failure -> {
                 _status.update { paymentResult.msg }
@@ -181,6 +180,7 @@ class TopUpViewModel @Inject constructor(
             }
         }
 
+        // when successful, book the transaction
         bookTopUp("Card", newTopUp)
     }
 
@@ -204,29 +204,23 @@ class TopUpViewModel @Inject constructor(
     }
 
     private suspend fun bookTopUp(topUpType: String, newTopUp: NewTopUp) {
-        when (val result = infallibleRepository.bookTopUp(newTopUp)) {
-            is InfallibleResult.OK -> {
-                when (val response = result.data) {
-                    is Response.OK -> {
-                        clearDraft()
-                        _topUpCompleted.update { response.data }
-                        _status.update { "${topUpType} TopUp successful" }
-                        _navState.update { TopUpPage.Done }
-                    }
-
-                    is Response.Error -> {
-                        _status.update { "${topUpType} TopUp failed! ${response.msg()}" }
-                        _navState.update { TopUpPage.Failure }
-                    }
-                }
+        // TODO: use infallible repo!
+        // when (val response = infallibleRepository.bookTopUp(newTopUp)) {
+        when (val response = topUpRepository.bookTopUp(newTopUp)) {
+            is Response.OK -> {
+                clearDraft()
+                _topUpCompleted.update { response.data }
+                _status.update { "${topUpType} TopUp successful!" }
+                _navState.update { TopUpPage.Done }
             }
 
-            is InfallibleResult.TooManyTries -> {
-                // and the infallible popup will show
+            is Response.Error -> {
+                _status.update { "${topUpType} TopUp failed! ${response.msg()}" }
                 _navState.update { TopUpPage.Failure }
             }
         }
     }
+
 
     fun navigateTo(target: TopUpPage) {
         _navState.update { target }

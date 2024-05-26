@@ -1,10 +1,10 @@
 package de.stustapay.stustapay.repository
 
 import android.app.Activity
+import de.stustapay.libssp.util.waitFor
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.ec.SumUp
 import de.stustapay.stustapay.ec.SumUpState
-import de.stustapay.libssp.util.waitFor
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,6 +18,10 @@ sealed interface ECPaymentResult {
 class ECPaymentRepository @Inject constructor(
     private val sumUp: SumUp,
 ) {
+    suspend fun wakeup() {
+        sumUp.wakeup()
+    }
+
     suspend fun pay(context: Activity, ecPayment: ECPayment): ECPaymentResult {
 
         // perform sumup flow

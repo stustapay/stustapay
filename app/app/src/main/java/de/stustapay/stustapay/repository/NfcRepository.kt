@@ -26,8 +26,8 @@ class NfcRepository @Inject constructor(
     private val dataProtKey = MutableStateFlow<BitVector?>(null)
 
     fun setTagKeys(secrets: UserTagSecret) {
-        uidRetrKey.update { secrets.key1.decodeHex() }
         dataProtKey.update { secrets.key0.decodeHex() }
+        uidRetrKey.update { secrets.key1.decodeHex() }
     }
 
     suspend fun read(): NfcScanResult {

@@ -1,9 +1,7 @@
 package de.stustapay.stustapay.ui.root
 
 import android.app.Activity
-import android.content.ComponentName
-import android.content.Intent
-import android.content.pm.PackageManager
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -28,27 +26,29 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.ui.theme.StartpageItemStyle
+import de.stustapay.libssp.util.restartApp
 import de.stustapay.stustapay.R
+import de.stustapay.stustapay.model.InfallibleApiRequest
+import de.stustapay.stustapay.model.InfallibleApiResponse
 
 @Composable
 fun InfalliblePopup(
     viewModel: InfalliblePopupViewModel = hiltViewModel()
 ) {
-    val infallibleTooManyFailures by viewModel.infallibleTooManyFailues.collectAsStateWithLifecycle()
-    val infallibleRequest_ by viewModel.infallibleRequest.collectAsStateWithLifecycle()
-    val infallibleRequest = infallibleRequest_
+    val state_ by viewModel.state.collectAsStateWithLifecycle()
+    val state = state_
 
     val activity = LocalContext.current as Activity
 
-    val resultTopUp by viewModel.resultTopUp.collectAsStateWithLifecycle()
-    val resultTicketSale by viewModel.resultTicketSale.collectAsStateWithLifecycle()
-
-    LaunchedEffect(infallibleTooManyFailures) {
-        viewModel.reset()
+    LaunchedEffect(state) {
+        if (state is PopupState.CanRetry) {
+            viewModel.resetClicker()
+        }
     }
 
-    if (infallibleTooManyFailures) {
+    if (state != PopupState.Hide) {
         Dialog(onDismissRequest = {}) {
             Card(
                 shape = RoundedCornerShape(10.dp),
@@ -61,57 +61,140 @@ fun InfalliblePopup(
                     contentAlignment = Alignment.Center,
                 ) {
                     LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
-                        item {
-                            if (infallibleRequest != null) {
-                                Text(
-                                    stringResource(R.string.infallible_popup_transaction_pending),
-                                    fontSize = 25.sp,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Left
-                                )
-                                Text(
-                                    infallibleRequest.msg(),
-                                    fontSize = 25.sp,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Left
-                                )
-                            } else {
-                                Text(
-                                    stringResource(R.string.infallible_popup_but_no_request),
-                                    fontSize = 25.sp,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Left
-                                )
-                            }
-                            
-                            // TODO information about the current pending request
-                            // and its submission confirmation
 
-                            Spacer(modifier = Modifier.height(20.dp))
-                            // queue clearing backdoor button
-                            Text(
-                                stringResource(R.string.infallible_popup_restart),
-                                fontSize = 25.sp,
-                                modifier = Modifier
-                                    .clickable { viewModel.click() }
-                                    .fillMaxWidth(),
-                                textAlign = TextAlign.Left,
-                            )
-                            Spacer(modifier = Modifier.height(20.dp))
-                            Button(onClick = {
-                                val packageManager: PackageManager = activity.packageManager
-                                val intent: Intent =
-                                    packageManager.getLaunchIntentForPackage(activity.packageName)!!
-                                val componentName: ComponentName = intent.component!!
-                                val restartIntent: Intent =
-                                    Intent.makeRestartActivityTask(componentName)
-                                activity.startActivity(restartIntent)
-                                Runtime.getRuntime().exit(0)
-                            }) {
-                                Text(
-                                    text = stringResource(id = R.string.root_item_restart_app),
-                                    style = StartpageItemStyle,
-                                )
+                        when (state) {
+                            is PopupState.CanRetry -> {
+                                item {
+                                    Text(
+                                        stringResource(R.string.infallible_popup_transaction_pending),
+                                        fontSize = 25.sp,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Left
+                                    )
+
+                                    // TODO :) nicer ui
+                                    when (state.request) {
+                                        is InfallibleApiRequest.TopUp -> {
+                                            Text(
+                                                state.request.msg(),
+                                                fontSize = 25.sp,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Left
+                                            )
+                                        }
+
+                                        is InfallibleApiRequest.TicketSale -> {
+                                            Text(
+                                                state.request.msg(),
+                                                fontSize = 25.sp,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Left
+                                            )
+                                        }
+                                    }
+                                }
+
+                                item {
+                                    Button(onClick = {
+                                        viewModel.retry()
+                                    }) {
+                                        Text(
+                                            text = "Retry request",
+                                            style = StartpageItemStyle,
+                                        )
+                                    }
+                                }
+
+                                item {
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    // queue clearing backdoor button
+                                    Text(
+                                        stringResource(R.string.infallible_popup_restart),
+                                        fontSize = 25.sp,
+                                        modifier = Modifier
+                                            .clickable { viewModel.bypass() }
+                                            .fillMaxWidth(),
+                                        textAlign = TextAlign.Left,
+                                    )
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Button(onClick = {
+                                        restartApp(activity)
+                                    }) {
+                                        Text(
+                                            text = stringResource(id = R.string.root_item_restart_app),
+                                            style = StartpageItemStyle,
+                                        )
+                                    }
+                                }
+                            }
+
+                            is PopupState.RetrySuccess -> {
+                                item {
+                                    when (val resp = state.response) {
+                                        is InfallibleApiResponse.TopUp -> {
+                                            Text(
+                                                when (val topUp = resp.topUp) {
+                                                    is Response.OK -> {
+                                                        "TopUp of %.2f successful!".format(topUp.data.amount)
+                                                    }
+
+                                                    is Response.Error.Service.AlreadyProcessed -> {
+                                                        "TopUp successful! %s".format(topUp.msg())
+                                                    }
+
+                                                    is Response.Error -> {
+                                                        "Contact Finanzteam! TopUp aborted: %s".format(
+                                                            topUp.msg()
+                                                        )
+                                                    }
+                                                },
+                                                fontSize = 25.sp,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Left
+                                            )
+                                        }
+
+                                        is InfallibleApiResponse.TicketSale -> {
+                                            Text(
+                                                when (val ticketSale = resp.ticketSale) {
+                                                    is Response.OK -> {
+                                                        "Ticket sale successful!"
+                                                    }
+
+                                                    is Response.Error.Service.AlreadyProcessed -> {
+                                                        "Ticket sale successful! (was already booked)"
+                                                    }
+
+                                                    is Response.Error -> {
+                                                        "Contact Finanzteam! Ticket sale aborted: %s".format(
+                                                            ticketSale.msg()
+                                                        )
+                                                    }
+                                                },
+                                                fontSize = 25.sp,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Left
+                                            )
+                                        }
+                                    }
+                                }
+
+                                item {
+                                    Spacer(modifier = Modifier.height(40.dp))
+                                    Button(onClick = {
+                                        viewModel.dismiss()
+                                    }) {
+                                        Text(
+                                            // SPARKLING HEART
+                                            text = "Continue \u0001\uf496",
+                                            style = StartpageItemStyle,
+                                        )
+                                    }
+                                }
+                            }
+
+                            is PopupState.Hide -> {
+                                error("popup is show even though it should be hidden")
                             }
                         }
                     }

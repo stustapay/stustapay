@@ -7,7 +7,7 @@ sealed interface SumUpState {
 
     object None : SumUpState {
         override fun msg(): String {
-            return "idle"
+            return "sumup idle"
         }
     }
 
@@ -15,7 +15,7 @@ sealed interface SumUpState {
         val transactionId: String
     ) : SumUpState {
         override fun msg(): String {
-            return "transaction started: $transactionId"
+            return "sumup transaction started: $transactionId"
         }
     }
 
@@ -23,7 +23,7 @@ sealed interface SumUpState {
         val msg: String
     ) : SumUpState {
         override fun msg(): String {
-            return "transaction failed: $msg"
+            return "sumup transaction failed: $msg"
         }
     }
 
@@ -33,7 +33,7 @@ sealed interface SumUpState {
         val txInfo: TransactionInfo?,
     ) : SumUpState {
         override fun msg(): String {
-            return "transaction success: $msg"
+            return "sumup transaction success: $msg"
         }
     }
 
@@ -41,7 +41,7 @@ sealed interface SumUpState {
         val msg: String
     ) : SumUpState {
         override fun msg(): String {
-            return "transaction error: $msg"
+            return "sumup transaction error: $msg"
         }
     }
 }

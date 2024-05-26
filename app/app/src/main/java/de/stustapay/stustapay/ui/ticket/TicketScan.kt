@@ -121,7 +121,7 @@ fun TicketScan(
                 status = {
                     StatusText(status)
                 },
-                ready = config.isTerminalReady(),
+                ready = config.isTerminalReady() && ticketStatus.scans.isNotEmpty(),
                 onAbort = {
                     scope.launch {
                         viewModel.clearDraft()

@@ -16,10 +16,12 @@ class NfcRepository @Inject constructor(
     private val nfcDataSource: NfcDataSource
 ) {
     // nfc communication secret keys
-    private val uidRetrKey =
-        MutableStateFlow<BitVector?>("00102030405060708090a0b0c0d0e0f0".decodeHex())
+    // "key0"
     private val dataProtKey =
         MutableStateFlow<BitVector?>("000102030405060708090a0b0c0d0e0f".decodeHex())
+    // "key1"
+    private val uidRetrKey =
+        MutableStateFlow<BitVector?>("00102030405060708090a0b0c0d0e0f0".decodeHex())
 
     suspend fun read(): NfcScanResult {
         return nfcDataSource.scan(

@@ -31,7 +31,7 @@ class RootWrapperViewModel @Inject constructor(
             }
 
             is TerminalConfigState.Error -> {
-                BorderState.Border("config error")
+                BorderState.Border("config error: ${state.message}")
             }
 
             is TerminalConfigState.Success -> {

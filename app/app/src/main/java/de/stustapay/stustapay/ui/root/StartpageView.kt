@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.Access
 import de.stustapay.libssp.ui.common.Spinner
+import de.stustapay.libssp.util.restartApp
 import de.stustapay.stustapay.ui.nav.NavDest
 import kotlinx.coroutines.launch
 
@@ -44,7 +45,6 @@ fun StartpageView(
 ) {
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
-    val infallibleBusy by viewModel.infallibleBusy.collectAsStateWithLifecycle()
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
     val scope = rememberCoroutineScope()
     val activity = LocalContext.current as Activity
@@ -76,7 +76,7 @@ fun StartpageView(
             },
             enabled = !configLoading,
         ) {
-            if (configLoading || infallibleBusy) {
+            if (configLoading) {
                 Spinner()
             } else {
                 Icon(Icons.Filled.Refresh, "Refresh")
@@ -167,14 +167,7 @@ fun StartpageView(
                         navDestination = RootNavDests.startpage,
                     ),
                     navigateTo = {
-                        val packageManager: PackageManager = activity.packageManager
-                        val intent: Intent =
-                            packageManager.getLaunchIntentForPackage(activity.packageName)!!
-                        val componentName: ComponentName = intent.component!!
-                        val restartIntent: Intent =
-                            Intent.makeRestartActivityTask(componentName)
-                        activity.startActivity(restartIntent)
-                        Runtime.getRuntime().exit(0)
+                        restartApp(activity)
                     }
                 )
             }

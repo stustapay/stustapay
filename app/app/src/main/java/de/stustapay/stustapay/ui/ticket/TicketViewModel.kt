@@ -76,12 +76,6 @@ class TicketViewModel @Inject constructor(
         TerminalLoginState(terminal = terminal)
     }
 
-    val infallibleBusy = infallibleRepository.busy.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = false,
-    )
-
     fun navTo(page: TicketPage) {
         _navState.update { page }
     }
@@ -270,13 +264,12 @@ class TicketViewModel @Inject constructor(
     }
 
     private suspend fun bookSale(paymentMethod: PaymentMethod) {
-        infallibleRepository.bookTicketSale(_ticketDraft.value.getNewTicketSale(paymentMethod))
-
         _saleCompleted.update { null }
 
-        val response = ticketRepository.bookTicketSale(
-            _ticketDraft.value.getNewTicketSale(paymentMethod)
-        )
+        val newSale = _ticketDraft.value.getNewTicketSale(paymentMethod)
+        // TODO: use infallible repository
+        // val response = infallibleRepository.bookTicketSale(newSale)
+        val response = ticketRepository.bookTicketSale(newSale)
 
         when (response) {
             is Response.OK -> {

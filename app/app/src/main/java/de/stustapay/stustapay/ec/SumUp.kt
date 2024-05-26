@@ -36,15 +36,16 @@ sealed interface SumUpConfigState {
 }
 
 enum class SumUpAction {
-    None, Login, TokenLogin, Checkout, OldSettings, CardReader,
+    None, LoginUserPassword, LoginToken, Checkout, OldSettings, CardReader,
 }
 
-val sumUpActionDependencies: Map<SumUpAction, List<SumUpAction>> = mapOf(
-    Pair(SumUpAction.Login, listOf()),
-    Pair(SumUpAction.TokenLogin, listOf()),
-    Pair(SumUpAction.Checkout, listOf(SumUpAction.Login)),
-    Pair(SumUpAction.OldSettings, listOf(SumUpAction.Login)),
-    Pair(SumUpAction.CardReader, listOf(SumUpAction.Login)),
+/** if the action is requested, does it need a login? */
+val sumUpActionDependencies: Map<SumUpAction, Boolean> = mapOf(
+    Pair(SumUpAction.LoginUserPassword, false),
+    Pair(SumUpAction.LoginToken, false),
+    Pair(SumUpAction.Checkout, true),
+    Pair(SumUpAction.OldSettings, true),
+    Pair(SumUpAction.CardReader, true),
 )
 
 data class SumUpPaymentState(
@@ -88,16 +89,19 @@ class SumUp @Inject constructor(
     val loginStatus = _loginStatus.asStateFlow()
 
     enum class SumUpResultCode(val code: Int) {
-        SUCCESSFUL(1), ERROR_TRANSACTION_FAILED(2), ERROR_GEOLOCATION_REQUIRED(3), ERROR_INVALID_PARAM(
-            4
-        ),
-        ERROR_INVALID_TOKEN(5), ERROR_NO_CONNECTIVITY(6), ERROR_PERMISSION_DENIED(7), ERROR_NOT_LOGGED_IN(
-            8
-        ),
-        ERROR_DUPLICATE_FOREIGN_TX_ID(9), ERROR_INVALID_AFFILIATE_KEY(10), ERROR_ALREADY_LOGGED_IN(
-            11
-        ),
-        ERROR_INVALID_AMOUNT_DECIMALS(12), ERROR_API_LEVEL_TOO_LOW(13), ;
+        SUCCESSFUL(1),
+        ERROR_TRANSACTION_FAILED(2),
+        ERROR_GEOLOCATION_REQUIRED(3),
+        ERROR_INVALID_PARAM(4),
+        ERROR_INVALID_TOKEN(5),
+        ERROR_NO_CONNECTIVITY(6),
+        ERROR_PERMISSION_DENIED(7),
+        ERROR_NOT_LOGGED_IN(8),
+        ERROR_DUPLICATE_FOREIGN_TX_ID(9),
+        ERROR_INVALID_AFFILIATE_KEY(10),
+        ERROR_ALREADY_LOGGED_IN(11),
+        ERROR_INVALID_AMOUNT_DECIMALS(12),
+        ERROR_API_LEVEL_TOO_LOW(13), ;
 
         companion object {
             private val map = SumUpResultCode.values().associateBy(SumUpResultCode::code)
@@ -148,10 +152,11 @@ class SumUp @Inject constructor(
 
 
     private fun nextAction(context: Activity) {
-        val deps = sumUpActionDependencies[sumUpPaymentState.targetAction]
-        if (deps == null) {
+        val needsLogin = sumUpActionDependencies[sumUpPaymentState.targetAction]
+        if (needsLogin == null) {
             Log.e(
-                "StuStaPay", "unknown ec action dependencies for ${sumUpPaymentState.targetAction}"
+                "StuStaPay",
+                "unknown ec action login requirement for ${sumUpPaymentState.targetAction}"
             )
             return
         }
@@ -161,28 +166,23 @@ class SumUp @Inject constructor(
             return
         }
 
-        for (elem in deps) {
-            if (elem !in sumUpPaymentState.actionsDone) {
-                nextAction = elem
-                break
-            }
+        // if needed, perform token login.
+        if (needsLogin && !SumUpAPI.isLoggedIn()) {
+            nextAction = SumUpAction.LoginToken
         }
 
         // record the soon-done action.
         sumUpPaymentState.actionsDone.add(
-            when (nextAction) {
-                SumUpAction.TokenLogin -> SumUpAction.Login
-                else -> nextAction
-            }
+            nextAction
         )
 
         when (nextAction) {
             SumUpAction.None -> {}
-            SumUpAction.Login -> {
+            SumUpAction.LoginUserPassword -> {
                 openLogin(context)
             }
 
-            SumUpAction.TokenLogin -> {
+            SumUpAction.LoginToken -> {
                 openTokenLogin(context)
             }
 
@@ -253,7 +253,7 @@ class SumUp @Inject constructor(
                     return SumUpConfigState.Error("no terminal ec secrets in config")
                 }
                 if (!secrets.sumupAffiliateKey.startsWith("sup_afk")) {
-                    return SumUpConfigState.Error("invalid affiliate key: ${secrets.sumupAffiliateKey}")
+                    return SumUpConfigState.Error("invalid affiliate key: '${secrets.sumupAffiliateKey}'")
                 }
                 sumUpConfig = SumUpConfig(
                     affiliateKey = secrets.sumupAffiliateKey,
@@ -261,7 +261,7 @@ class SumUp @Inject constructor(
                     terminal = ECTerminalConfig(
                         name = cfg.name,
                         id = cfg.id.toString(),
-                        eventName = "StuStaCulum 2024",  // TODO: get from terminal config
+                        eventName = cfg.till?.eventName ?: "StuStaPay event",
                     )
                 )
             }
@@ -280,7 +280,7 @@ class SumUp @Inject constructor(
     suspend fun login(
         context: Activity,
     ) {
-        if (setState(target = SumUpAction.Login, payment = null)) {
+        if (setState(target = SumUpAction.LoginUserPassword, payment = null)) {
             nextAction(context)
         }
     }
@@ -291,7 +291,7 @@ class SumUp @Inject constructor(
     suspend fun tokenLogin(
         context: Activity,
     ) {
-        if (setState(target = SumUpAction.TokenLogin, payment = null)) {
+        if (setState(target = SumUpAction.LoginToken, payment = null)) {
             nextAction(context)
         }
     }
@@ -317,6 +317,16 @@ class SumUp @Inject constructor(
     ) {
         if (setState(target = SumUpAction.Checkout, payment = payment)) {
             nextAction(context)
+        }
+    }
+
+    /**
+     * for quicker payments, wake the ec reader in advance.
+     */
+    suspend fun wakeup() {
+        // wake the device for a faster experience
+        if (SumUpAPI.isLoggedIn()) {
+            SumUpAPI.prepareForCheckout()
         }
     }
 

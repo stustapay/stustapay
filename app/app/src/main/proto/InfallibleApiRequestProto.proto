@@ -3,18 +3,29 @@ syntax = "proto3";
 option java_package = "de.stustapay.stustapay.proto";
 option java_multiple_files = true;
 
+message InfallibleApiStorageProto {
+  bool stored = 1;
+  optional InfallibleApiRequestProto request = 2;
+}
+
 message InfallibleApiRequestProto {
   string id = 1;
   InfallibleApiRequestKindProto kind = 2;
+  InfallibleApiRequestStatus status = 3;
   oneof content {
-    InfallibleApiRequestTopUpProto top_up = 3;
-    InfallibleApiRequestTicketSaleProto ticket_sale = 4;
+    InfallibleApiRequestTopUpProto top_up = 4;
+    InfallibleApiRequestTicketSaleProto ticket_sale = 5;
   }
 }
 
+enum InfallibleApiRequestStatus {
+  STATUS_NORMAL = 0;
+  STATUS_FAILED = 1;
+}
+
 enum InfallibleApiRequestKindProto {
-  TOP_UP = 0;
-  TICKET_SALE = 1;
+  KIND_TOP_UP = 0;
+  KIND_TICKET_SALE = 1;
 }
 
 message InfallibleApiRequestTopUpProto {
@@ -31,8 +42,4 @@ message InfallibleApiRequestTicketSaleProto {
 message InfallibleApiRequestTagProto {
   string uid = 1;
   string pin = 2;
-}
-
-message InfallibleApiRequestsProto {
-  repeated InfallibleApiRequestProto requests = 1;
 }
