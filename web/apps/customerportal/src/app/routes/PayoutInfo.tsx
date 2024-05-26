@@ -42,15 +42,11 @@ export const PayoutInfo: React.FC = () => {
   const formatCurrency = useCurrencyFormatter();
   const currencySymbol = useCurrencySymbol();
 
-  if (isCustomerLoading || (!customer && !customerError)) {
+  if (isCustomerLoading || (!customer && !customerError) || isPayoutInfoLoading || (!payoutInfo && !payoutInfoError)) {
     return <Loading />;
   }
 
-  if (customerError || !customer) {
-    toast.error(t("payout.errorFetchingData"));
-    return <Navigate to="/" />;
-  }
-  if (payoutInfoError || !payoutInfo) {
+  if (customerError || !customer || payoutInfoError || !payoutInfo) {
     toast.error(t("payout.errorFetchingData"));
     return <Navigate to="/" />;
   }
@@ -159,12 +155,30 @@ export const PayoutInfo: React.FC = () => {
     });
   };
 
+  let info_text: string;
+  if (payoutInfo.in_payout_run && !payoutInfo.payout_date){
+    info_text = t("payout.infoPayoutScheduled");
+  }else if (payoutInfo.in_payout_run && payoutInfo.payout_date){
+    info_text = t("payout.infoPayoutCompleted", { payout_date: new Date(payoutInfo.payout_date).toLocaleString() });
+  } else if (customer.has_entered_info) {
+    info_text = t("payout.infoPayoutInitiated");
+  } else {
+    info_text = t("payout.info");
+  }
+
+  let submit_text: string;
+  if (!customer.has_entered_info){
+    submit_text = t("payout.submitPayoutData");
+  } else {
+    submit_text = t("payout.submitPayoutDataEdit");
+  }
+
   return (
     <Grid container justifyItems="center" justifyContent="center" sx={{ paddingX: 0.5 }}>
       <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
         <Stack spacing={2}>
           <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
-            {t("payout.info")}
+            {info_text}
           </Alert>
           <Typography variant="h5">{t("payout.donationTitle")}</Typography>
           <Button variant="contained" color="primary" sx={{ width: "100%" }} disabled={payoutInfo.in_payout_run} onClick={onAllTipClick}>
@@ -225,7 +239,7 @@ export const PayoutInfo: React.FC = () => {
                     disabled={payoutInfo.in_payout_run}
                   />
                   <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting || payoutInfo.in_payout_run}>
-                    {formik.isSubmitting ? "Submitting" : t("payout.submitPayoutData")}
+                    {formik.isSubmitting ? "Submitting" : submit_text}
                   </Button>
                 </Stack>
               </form>
