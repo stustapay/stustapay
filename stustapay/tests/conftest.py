@@ -49,6 +49,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
+from stustapay.core.service.mail import MailService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
@@ -67,10 +68,10 @@ from stustapay.framework.database import Connection, DatabaseConfig, create_db_p
 
 def get_test_db_config() -> DatabaseConfig:
     return DatabaseConfig(
-        user=os.environ.get("TEST_DB_USER", None),
-        password=os.environ.get("TEST_DB_PASSWORD", None),
-        host=os.environ.get("TEST_DB_HOST", None),
-        port=int(os.environ.get("TEST_DB_PORT", 0)) or None,
+        user="stustapay_test", #os.environ.get("TEST_DB_USER", None),
+        password="stustapay_test", #os.environ.get("TEST_DB_PASSWORD", None),
+        host="localhost", #os.environ.get("TEST_DB_HOST", None),
+        port=5434, #int(os.environ.get("TEST_DB_PORT", 0)) or None,
         dbname=os.environ.get("TEST_DB_DATABASE", "stustapay_test"),
     )
 
@@ -297,6 +298,14 @@ async def customer_service(
 ) -> CustomerService:
     return CustomerService(
         db_pool=setup_test_db_pool, config=config, auth_service=auth_service, config_service=config_service
+    )
+
+@pytest.fixture(scope="session")
+async def mail_service(
+    setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, config_service: ConfigService
+) -> MailService:
+    return MailService(
+        db_pool=setup_test_db_pool, config=config
     )
 
 
