@@ -265,7 +265,11 @@ class TicketViewModel @Inject constructor(
 
     private suspend fun bookSale(paymentMethod: PaymentMethod) {
         _saleCompleted.update { null }
-        val response = infallibleRepository.bookTicketSale(_ticketDraft.value.getNewTicketSale(paymentMethod))
+
+        val newSale = _ticketDraft.value.getNewTicketSale(paymentMethod)
+        // TODO: use infallible repository
+        // val response = infallibleRepository.bookTicketSale(newSale)
+        val response = ticketRepository.bookTicketSale(newSale)
 
         when (response) {
             is Response.OK -> {

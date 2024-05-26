@@ -204,7 +204,9 @@ class TopUpViewModel @Inject constructor(
     }
 
     private suspend fun bookTopUp(topUpType: String, newTopUp: NewTopUp) {
-        when (val response = infallibleRepository.bookTopUp(newTopUp)) {
+        // TODO: use infallible repo!
+        // when (val response = infallibleRepository.bookTopUp(newTopUp)) {
+        when (val response = topUpRepository.bookTopUp(newTopUp)) {
             is Response.OK -> {
                 clearDraft()
                 _topUpCompleted.update { response.data }
