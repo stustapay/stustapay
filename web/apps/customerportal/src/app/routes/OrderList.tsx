@@ -77,7 +77,7 @@ export const OrderList: React.FC = () => {
 
   }
 
-  let payout_transactions = (
+  const payout_transactions = (
     payoutTransactions.filter((payoutTransaction) => payoutTransaction.amount > 0).map((payoutTransaction) => (
     <Accordion>
         <AccordionSummary

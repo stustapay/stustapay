@@ -315,7 +315,7 @@ class PayoutService(DBService):
 
         payouts = await conn.fetch_many(
             Payout,
-            "select * from payout_view p " "where p.payout_run_id = $1",
+            "select * from payout_view p where p.payout_run_id = $1",
             payout_run_id,
         )
 
@@ -325,7 +325,7 @@ class PayoutService(DBService):
                 subject=res_config.payout_done_subject,
                 message=res_config.payout_done_message.format(**payout.model_dump()),
                 from_email=res_config.payout_sender,
-                to_email=payout.email,
+                to_email=payout.email, # type: ignore
                 node_id=node.id,
             )
 

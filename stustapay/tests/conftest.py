@@ -148,6 +148,17 @@ async def event_node(db_connection: Connection) -> Node:
             sumup_api_key="",
             sumup_merchant_code="",
             ust_id="",
+            email_enabled=False,
+            email_default_sender=None,
+            email_smtp_host=None,
+            email_smtp_port=None,
+            email_smtp_username=None,
+            email_smtp_password=None,
+            payout_done_subject="[StuStaPay] Payout Completed",
+            payout_done_message="Thank you for your patience. The payout process has been completed and the funds should arrive within the next days to your specified bank account.",
+            payout_registered_subject="[StuStaPay] Registered for Payout",
+            payout_registered_message="Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transferred to the specified bank account in our next manual payout. You will receive another email once we transferred the funds.",
+            payout_sender=None,
         ),
     )
 

@@ -1,13 +1,8 @@
 """Module to handle mail sending.
-
-Brainstorming: What should the mail system be able to do?
-- Send mail to a user
-- optionally fail silently
-- mass email without "to" field
-- send in background (async)
-- login via config file -> for this we need a service
 """
-
+# pylint: disable=unexpected-keyword-arg
+# pylint: disable=unused-argument
+# pylint: disable=missing-kwoa
 import asyncio
 import logging
 import smtplib
@@ -28,11 +23,10 @@ from stustapay.core.service.common.decorators import with_db_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 
 # TODO(jobi):
-# - implement mass mail sending in the background
 # - implement native async mail sending: e.g. aiosmtplib
 # - support for html and markdown messages
 # - implement as native service, which uses the database to handle mail state
-# - add attachements
+# - add attachments
 # - config in db?
 
 
@@ -65,7 +59,7 @@ class MailService(DBService):
         from_email: str | None = None,
         # markdown_message: bool = True,
         # attachments: Optional[dict[str, bytes]] = None,
-    ) -> bool:
+    ):
         self.mail_buffer.append(
             Mail(
                 subject=subject,
@@ -123,9 +117,9 @@ class MailService(DBService):
 
         try:
             context = ssl.create_default_context()
-            with smtplib.SMTP_SSL(smtp_config.smtp_host, smtp_config.smtp_port, context=context) as server:
+            with smtplib.SMTP_SSL(smtp_config.smtp_host, smtp_config.smtp_port, context=context) as server: # type: ignore
                 if smtp_config.smtp_password:
-                    server.login(smtp_config.smtp_username, smtp_config.smtp_password)
+                    server.login(smtp_config.smtp_username, smtp_config.smtp_password) # type: ignore
                 server.sendmail(message["From"], message["To"], message.as_string())
         except Exception as e:
             self.logger.exception(f"Failed to send mail to {mail.to_email} with error {type(e)}")

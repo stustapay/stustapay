@@ -9,20 +9,17 @@ from pydantic import BaseModel
 from schwifty import IBAN
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.customer import (
     Customer,
     OrderWithBon,
     PayoutInfo,
     PayoutTransaction,
 )
-from stustapay.core.schema.tree import Language, Node
-from stustapay.core.service.account import get_system_account_for_node
+from stustapay.core.schema.tree import Language
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_customer,
-    requires_node,
     with_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
@@ -241,7 +238,7 @@ class CustomerService(DBService):
             subject=res_config.payout_registered_subject,
             message=res_config.payout_registered_message.format(**current_customer.model_dump()),
             from_email=res_config.payout_sender,
-            to_email=current_customer.email,
+            to_email=current_customer.email, # type: ignore
             node_id=current_customer.node_id,
         )
 
