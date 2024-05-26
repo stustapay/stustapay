@@ -172,6 +172,39 @@ fun AccountDetails(
 
 @Composable
 fun OrderListEntry(order: Order, onClick: () -> Unit) {
+    var icon = Icons.Filled.Warning
+    var label = R.string.error
+    var amount = 0.0;
+    when (order.orderType) {
+        OrderType.sale -> {
+            icon = Icons.Filled.ShoppingCart
+            label = R.string.root_item_sale
+            amount = -order.totalPrice
+        }
+        OrderType.cancelSale -> {
+            icon = Icons.Filled.Clear
+            label = R.string.common_action_cancel
+            amount = -order.totalPrice
+        }
+        OrderType.topUp -> {
+            icon = Icons.Filled.KeyboardArrowUp
+            label = R.string.topup
+            amount = order.totalPrice
+        }
+        OrderType.payOut -> {
+            icon = Icons.Filled.KeyboardArrowDown
+            label = R.string.payout
+            amount = -order.totalPrice
+        }
+        OrderType.ticket -> {
+            icon = Icons.Filled.Face
+            label = R.string.root_item_ticket
+            amount = -order.totalPrice
+        }
+        OrderType.moneyTransfer -> {}
+        OrderType.moneyTransferImbalance -> {}
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,30 +214,11 @@ fun OrderListEntry(order: Order, onClick: () -> Unit) {
             }, horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row {
-            when (order.orderType) {
-                OrderType.sale -> Icon(Icons.Filled.ShoppingCart, "")
-                OrderType.cancelSale -> Icon(Icons.Filled.Clear, "")
-                OrderType.topUp -> Icon(Icons.Filled.KeyboardArrowUp, "")
-                OrderType.payOut -> Icon(Icons.Filled.KeyboardArrowDown, "")
-                OrderType.ticket -> Icon(Icons.Filled.Face, "")
-                OrderType.moneyTransfer -> Icon(Icons.Filled.Warning, "")
-                OrderType.moneyTransferImbalance -> Icon(Icons.Filled.Warning, "")
-            }
-
+            Icon(icon, "")
             Spacer(modifier = Modifier.width(5.dp))
-
-            when (order.orderType) {
-                OrderType.sale -> Text(stringResource(R.string.root_item_sale))
-                OrderType.cancelSale -> Text(stringResource(R.string.common_action_cancel))
-                OrderType.topUp -> Text(stringResource(R.string.topup))
-                OrderType.payOut -> Text(stringResource(R.string.payout))
-                OrderType.ticket -> Text(stringResource(R.string.root_item_ticket))
-                OrderType.moneyTransfer -> Text(stringResource(R.string.management_transport_title))
-                OrderType.moneyTransferImbalance -> Text(stringResource(R.string.management_transport_title))
-            }
+            Text(stringResource(label))
         }
 
-
-        Text(text = "%.02f€".format(-order.totalPrice), fontSize = 20.sp)
+        Text(text = "%.02f€".format(amount), fontSize = 20.sp)
     }
 }
