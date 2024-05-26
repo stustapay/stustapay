@@ -168,7 +168,9 @@ async def test_get_orders_with_bon(customer_service: CustomerService, order_with
     assert resulting_order_with_bon.bon_generated
 
 
-async def test_update_customer_info(test_customer: Customer, customer_service: CustomerService, mail_service: MailService):
+async def test_update_customer_info(
+    test_customer: Customer, customer_service: CustomerService, mail_service: MailService
+):
     auth = await customer_service.login_customer(pin=test_customer.user_tag_pin)
     assert auth is not None
 
@@ -245,4 +247,6 @@ async def test_update_customer_info(test_customer: Customer, customer_service: C
 
     # test if update_customer_info with wrong token raises Unauthorized error
     with pytest.raises(Unauthorized):
-        await customer_service.update_customer_info(token="wrong", customer_bank=customer_bank, mail_service=mail_service)
+        await customer_service.update_customer_info(
+            token="wrong", customer_bank=customer_bank, mail_service=mail_service
+        )
