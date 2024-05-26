@@ -66,7 +66,7 @@ class TerminalTillConfig(BaseModel):
 class TerminalConfig(BaseModel):
     id: int
     name: str
-    description: str
+    description: str | None
 
     till: TerminalTillConfig | None
 
@@ -83,5 +83,5 @@ class CurrentTerminal(BaseModel):
     id: int
     node_id: int
     name: str
-    description: str
+    description: str | None
     till: Till | None

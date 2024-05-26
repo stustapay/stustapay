@@ -42,7 +42,7 @@ data class TerminalConfig (
     val name: kotlin.String,
 
     @SerialName(value = "description")
-    val description: kotlin.String,
+    val description: kotlin.String?,
 
     @SerialName(value = "till")
     val till: TerminalTillConfig?,

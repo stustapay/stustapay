@@ -26,6 +26,7 @@ import kotlinx.serialization.Contextual
  *
  * @param sumupAffiliateKey 
  * @param sumupApiKey 
+ * @param sumupApiKeyExpiresAt 
  * @param userTagSecret 
  */
 @Serializable
@@ -37,6 +38,9 @@ data class TerminalSecrets (
 
     @SerialName(value = "sumup_api_key")
     val sumupApiKey: kotlin.String,
+
+    @Contextual @SerialName(value = "sumup_api_key_expires_at")
+    val sumupApiKeyExpiresAt: java.time.OffsetDateTime?,
 
     @SerialName(value = "user_tag_secret")
     val userTagSecret: UserTagSecret
