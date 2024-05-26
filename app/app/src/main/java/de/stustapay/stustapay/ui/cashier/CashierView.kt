@@ -465,7 +465,7 @@ fun CashierView(
                                 Button(modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 5.dp),
-                                    enabled = hasRegister and uiState.privileged,
+                                    enabled = hasRegister,
                                     onClick = {
                                         scope.launch {
                                             viewModel.transfer()
