@@ -31,20 +31,13 @@ sealed interface LoginProfileUIState {
 @HiltViewModel
 class StartpageViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val terminalConfigRepository: TerminalConfigRepository,
-    infallibleRepository: InfallibleRepository
+    private val terminalConfigRepository: TerminalConfigRepository
 ) : ViewModel() {
     private val _user = userRepository.userState
     private val _terminal = terminalConfigRepository.terminalConfigState
 
     private val _configLoading = MutableStateFlow(false)
     val configLoading = _configLoading.asStateFlow()
-
-    val infallibleBusy = infallibleRepository.busy.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = false,
-    )
 
     val uiState = combine(_user, _terminal) { user, terminal ->
         TerminalLoginState(user, terminal)

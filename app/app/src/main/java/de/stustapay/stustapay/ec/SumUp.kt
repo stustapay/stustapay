@@ -39,12 +39,13 @@ enum class SumUpAction {
     None, LoginUserPassword, LoginToken, Checkout, OldSettings, CardReader,
 }
 
-val sumUpActionDependencies: Map<SumUpAction, List<SumUpAction>> = mapOf(
-    Pair(SumUpAction.LoginUserPassword, listOf()),
-    Pair(SumUpAction.LoginToken, listOf()),
-    Pair(SumUpAction.Checkout, listOf(SumUpAction.LoginToken)),
-    Pair(SumUpAction.OldSettings, listOf(SumUpAction.LoginToken)),
-    Pair(SumUpAction.CardReader, listOf(SumUpAction.LoginToken)),
+/** if the action is requested, does it need a login? */
+val sumUpActionDependencies: Map<SumUpAction, Boolean> = mapOf(
+    Pair(SumUpAction.LoginUserPassword, false),
+    Pair(SumUpAction.LoginToken, false),
+    Pair(SumUpAction.Checkout, true),
+    Pair(SumUpAction.OldSettings, true),
+    Pair(SumUpAction.CardReader, true),
 )
 
 data class SumUpPaymentState(
@@ -151,10 +152,11 @@ class SumUp @Inject constructor(
 
 
     private fun nextAction(context: Activity) {
-        val deps = sumUpActionDependencies[sumUpPaymentState.targetAction]
-        if (deps == null) {
+        val needsLogin = sumUpActionDependencies[sumUpPaymentState.targetAction]
+        if (needsLogin == null) {
             Log.e(
-                "StuStaPay", "unknown ec action dependencies for ${sumUpPaymentState.targetAction}"
+                "StuStaPay",
+                "unknown ec action login requirement for ${sumUpPaymentState.targetAction}"
             )
             return
         }
@@ -164,21 +166,14 @@ class SumUp @Inject constructor(
             return
         }
 
-        for (elem in deps) {
-            if (elem !in sumUpPaymentState.actionsDone) {
-                nextAction = elem
-                break
-            }
+        // if needed, perform token login.
+        if (needsLogin && !SumUpAPI.isLoggedIn()) {
+            nextAction = SumUpAction.LoginToken
         }
 
         // record the soon-done action.
         sumUpPaymentState.actionsDone.add(
-            when (nextAction) {
-                // special case: when we do user-password logins, record that we did a token login
-                // since that's the dependency of the other actions.
-                SumUpAction.LoginUserPassword -> SumUpAction.LoginToken
-                else -> nextAction
-            }
+            nextAction
         )
 
         when (nextAction) {
@@ -326,6 +321,16 @@ class SumUp @Inject constructor(
     }
 
     /**
+     * for quicker payments, wake the ec reader in advance.
+     */
+    suspend fun wakeup() {
+        // wake the device for a faster experience
+        if (SumUpAPI.isLoggedIn()) {
+            SumUpAPI.prepareForCheckout()
+        }
+    }
+
+    /**
      * show the deprecated settings menu
      */
     suspend fun settingsOld(
@@ -376,8 +381,6 @@ class SumUp @Inject constructor(
             _paymentStatus.update { SumUpState.Error("no config present in login") }
             return
         }
-
-        // maybe do the next action if SumUpAPI.isLoggedIn()
 
         val sumupLogin = SumUpLogin.builder(cfg.affiliateKey).accessToken(cfg.apiKey).build()
 

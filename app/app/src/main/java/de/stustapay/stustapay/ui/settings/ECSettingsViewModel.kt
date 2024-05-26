@@ -14,7 +14,7 @@ import javax.inject.Inject
 class ECSettingsViewModel @Inject constructor(
     private val sumUp: SumUp,
 ) : ViewModel() {
-    private val _status = MutableStateFlow("loading...")
+    private val _status = MutableStateFlow("idle")
     val status = _status.asStateFlow()
     val sumUpState = sumUp.paymentStatus
     val sumUpLogin = sumUp.loginStatus

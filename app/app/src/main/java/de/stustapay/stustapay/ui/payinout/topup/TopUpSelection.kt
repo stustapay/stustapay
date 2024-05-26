@@ -30,7 +30,6 @@ fun TopUpSelection(
     val status by viewModel.status.collectAsStateWithLifecycle()
     val topUpState by viewModel.topUpState.collectAsStateWithLifecycle()
     val topUpConfig by viewModel.terminalLoginState.collectAsStateWithLifecycle()
-    val infallibleBusy by viewModel.infallibleBusy.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current as Activity
 
@@ -52,7 +51,7 @@ fun TopUpSelection(
                 }
             },
         ),
-        ready = topUpConfig.hasConfig() && !infallibleBusy,
+        ready = topUpConfig.hasConfig(),
         getAmount = { topUpState.currentAmount },
     ) { paddingValues ->
         val scrollState = rememberScrollState()

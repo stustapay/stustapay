@@ -23,11 +23,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.stustapay.libssp.ui.theme.LargeButtonStyle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.nav.navigateTo
-import de.stustapay.libssp.ui.theme.LargeButtonStyle
 
 enum class CashECPage(val route: String) {
     Selection("selection"),

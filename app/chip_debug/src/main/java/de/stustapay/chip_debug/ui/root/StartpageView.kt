@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import de.stustapay.chip_debug.R
 import de.stustapay.chip_debug.ui.nav.NavDest
+import de.stustapay.libssp.util.restartApp
 
 @Preview
 @Composable
@@ -96,13 +97,7 @@ fun StartpageView(
                     label = R.string.root_item_restart_app,
                     navDestination = RootNavDests.startpage,
                 ), navigateTo = {
-                    val packageManager: PackageManager = activity.packageManager
-                    val intent: Intent =
-                        packageManager.getLaunchIntentForPackage(activity.packageName)!!
-                    val componentName: ComponentName = intent.component!!
-                    val restartIntent: Intent = Intent.makeRestartActivityTask(componentName)
-                    activity.startActivity(restartIntent)
-                    Runtime.getRuntime().exit(0)
+                    restartApp(activity)
                 })
             }
         }

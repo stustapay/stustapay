@@ -44,7 +44,7 @@ class SumUpOAuthToken(_SumUpOAuthTokenResp):
     expires_at: datetime
 
     def is_valid(self, tolerance=SUMUP_OAUTH_VALIDITY_TOLERANCE):
-        return datetime.now() < self.expires_at - tolerance
+        return datetime.now().astimezone() < self.expires_at - tolerance
 
 
 class SumUpCreateCheckout(BaseModel):
@@ -121,7 +121,7 @@ async def fetch_refresh_token_from_auth_code(client_id: str, client_secret: str,
                     access_token=validated_resp.access_token,
                     refresh_token=validated_resp.refresh_token,
                     expires_in=validated_resp.expires_in,
-                    expires_at=datetime.now() + timedelta(seconds=validated_resp.expires_in),
+                    expires_at=datetime.now().astimezone() + timedelta(seconds=validated_resp.expires_in),
                 )
                 return token
         except asyncio.TimeoutError as e:
@@ -160,7 +160,7 @@ async def fetch_new_oauth_token(client_id: str, client_secret: str, refresh_toke
                     access_token=validated_resp.access_token,
                     refresh_token=validated_resp.refresh_token,
                     expires_in=validated_resp.expires_in,
-                    expires_at=datetime.now() + timedelta(seconds=validated_resp.expires_in),
+                    expires_at=datetime.now().astimezone() + timedelta(seconds=validated_resp.expires_in),
                 )
                 return token
         except asyncio.TimeoutError as e:

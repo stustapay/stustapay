@@ -1,41 +1,29 @@
 package de.stustapay.stustapay.repository
 
+import android.util.Log
 import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.libssp.net.Response
-import de.stustapay.libssp.util.mapState
 import de.stustapay.libssp.util.waitFor
 import de.stustapay.stustapay.model.InfallibleApiRequest
-import de.stustapay.stustapay.model.InfallibleApiRequestKind
-import de.stustapay.stustapay.model.InfallibleResult
+import de.stustapay.stustapay.model.InfallibleApiResponse
 import de.stustapay.stustapay.storage.InfallibleApiRequestLocalDataSource
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 
-/**
- * this is architecturally wrong and needs a rewrite
- * we want to guarantee that there's only one pending request ever.
- * this request should be persisted and then ensured to be submitted.
- * and this should be implemented in a generic way for other transactions.
- *
- * currently it can store and handle multiple pending transactions,
- * but not report status about them.
- */
 @Singleton
 class InfallibleRepository @Inject constructor(
     private val dataSource: InfallibleApiRequestLocalDataSource,
@@ -46,67 +34,52 @@ class InfallibleRepository @Inject constructor(
         CoroutineScope(Dispatchers.Default + CoroutineName("infallible"))
     private lateinit var runner: Job
 
-    val busy: Flow<Boolean> = dataSource.requests.map { it.isNotEmpty() }
-    val currentRequest: Flow<InfallibleApiRequest?> =
-        dataSource.requests.map { it.values.firstOrNull() }
+    val request = dataSource.request
 
-    // when this is true, show the overlay popup that blocks all other actions.
-    private val _tooManyFailures = MutableStateFlow(false)
-    val tooManyFailures: Flow<Boolean> = _tooManyFailures
-
-    // so we can pick out attempted jobs
-
-    private val _resultsTopUp =
-        MutableStateFlow<Map<UUID, InfallibleResult<CompletedTopUp>>>(mapOf())
-    val resultTopUp = _resultsTopUp.asStateFlow().mapState(null, scope) { it.values.firstOrNull() }
-
-    private val _resultsTicketSale =
-        MutableStateFlow<Map<UUID, InfallibleResult<CompletedTicketSale>>>(mapOf())
-    val resultTicketSale =
-        _resultsTopUp.asStateFlow().mapState(null, scope) { it.values.firstOrNull() }
+    // not null when we have a response from successful submission
+    private val _response = MutableStateFlow<InfallibleApiResponse?>(null)
+    val response = _response.asStateFlow()
 
     fun launch() {
         runner = scope.launch {
-            dataSource.requests.collect { pendingRequests ->
-                _tooManyFailures.update { false }
 
-                val toSubmit = pendingRequests.toMutableMap()
+            // pending requests are tried to be sent here
+            dataSource.request.collect { request ->
+                if (request == null) {
+                    return@collect
+                }
 
-                val reqErrors = mutableMapOf<UUID, Response.Error>()
+                Log.i("InfallibleRequest", "handling pending request ${request.msg()}")
 
-                // todo: please somebody generalize...
-                val resultsTopUp = mutableMapOf<UUID, InfallibleResult<CompletedTopUp>>()
-                val resultsTicketSale = mutableMapOf<UUID, InfallibleResult<CompletedTicketSale>>()
+                // don't retry sending failed requests (unless manually requested)
+                if (request.status is InfallibleApiRequest.Status.Failed) {
+                    return@collect
+                }
+
+                Log.i("InfallibleRequest", "trying to send request...")
+
+                _response.update { null }
+
+                var response: InfallibleApiResponse? = null
+                var success = false
 
                 val maxAttempts = 3
                 for (attempt in 1..maxAttempts) {
-                    for ((id, request) in toSubmit) {
-                        when (request.kind) {
-                            is InfallibleApiRequestKind.TopUp -> {
-                                val result = topUpRepository.bookTopUp(request.kind.content)
+                    response = when (request) {
+                        is InfallibleApiRequest.TopUp -> {
+                            val repoResponse = topUpRepository.bookTopUp(request.topUp)
+                            success = repoResponse.submitSuccess()
+                            InfallibleApiResponse.TopUp(repoResponse)
+                        }
 
-                                if (result.submitSuccess()) {
-                                    resultsTopUp[id] = InfallibleResult.OK(result)
-                                    toSubmit.remove(id)
-                                } else {
-                                    reqErrors[id] = result as Response.Error
-                                }
-                            }
-
-                            is InfallibleApiRequestKind.TicketSale -> {
-                                val result = ticketRepository.bookTicketSale(request.kind.content)
-
-                                if (result.submitSuccess()) {
-                                    resultsTicketSale[id] = InfallibleResult.OK(result)
-                                    toSubmit.remove(id)
-                                } else {
-                                    reqErrors[id] = result as Response.Error
-                                }
-                            }
+                        is InfallibleApiRequest.TicketSale -> {
+                            val repoResponse = ticketRepository.bookTicketSale(request.ticketSale)
+                            success = repoResponse.submitSuccess()
+                            InfallibleApiResponse.TicketSale(repoResponse)
                         }
                     }
 
-                    if (toSubmit.isEmpty()) {
+                    if (success) {
                         break
                     }
 
@@ -114,61 +87,57 @@ class InfallibleRepository @Inject constructor(
                     delay(1000)
                 }
 
-                // remove successful items
-                // in one update step, so the datasource flow will only emit one new state
-                dataSource.remove(resultsTopUp.keys.union(resultsTicketSale.keys))
-
-                // some requests were not successful -> transform the errors to results
-                if (toSubmit.isNotEmpty()) {
-                    for ((id, request) in toSubmit) {
-                        when (request.kind) {
-                            is InfallibleApiRequestKind.TopUp -> {
-                                // all remaining toSubmit entries were ensured to convert to errors
-                                resultsTicketSale[id] =
-                                    InfallibleResult.TooManyTries(maxAttempts, reqErrors[id]!!)
-                            }
-
-                            is InfallibleApiRequestKind.TicketSale -> {
-                                resultsTopUp[id] =
-                                    InfallibleResult.TooManyTries(maxAttempts, reqErrors[id]!!)
-                            }
-                        }
-                    }
-                    // when failed too often:
-                    _tooManyFailures.update { true }
+                if (success) {
+                    // remove successful pending request
+                    dataSource.clear()
+                    _response.update { response!! }
+                } else {
+                    // let it show up as warning
+                    request.markFailed()
+                    dataSource.update(
+                        request
+                    )
                 }
-
-                // results
-                _resultsTopUp.emit(resultsTopUp)
-                _resultsTicketSale.emit(resultsTicketSale)
             }
         }
     }
 
-    suspend fun bookTopUp(newTopUp: NewTopUp): InfallibleResult<CompletedTopUp> {
-        busy.waitFor { !it }
-        dataSource.push(
-            newTopUp.uuid, InfallibleApiRequest(InfallibleApiRequestKind.TopUp(newTopUp))
+    suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp> {
+        // make sure no other request is running
+        _response.waitFor { it == null }
+
+        dataSource.update(
+            InfallibleApiRequest.TopUp(newTopUp)
         )
 
-        return _resultsTopUp.waitFor {
-            it.containsKey(newTopUp.uuid)
-        }[newTopUp.uuid]!!
+        val ret = _response.waitFor { it != null }!!
+        return (ret as InfallibleApiResponse.TopUp).topUp
     }
 
-    suspend fun bookTicketSale(newTicketSale: NewTicketSale): InfallibleResult<CompletedTicketSale> {
-        busy.waitFor { !it }
-        dataSource.push(
-            newTicketSale.uuid,
-            InfallibleApiRequest(InfallibleApiRequestKind.TicketSale(newTicketSale))
+    suspend fun bookTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
+        // make sure no other request is running
+        _response.waitFor { it == null }
+
+        dataSource.update(
+            InfallibleApiRequest.TicketSale(newTicketSale)
         )
 
-        return _resultsTicketSale.waitFor {
-            it.containsKey(newTicketSale.uuid)
-        }[newTicketSale.uuid]!!
+        val ret = _response.waitFor { it != null }!!
+        return (ret as InfallibleApiResponse.TicketSale).ticketSale
     }
 
     suspend fun clear() {
+        // forget the request
         dataSource.clear()
+    }
+
+    suspend fun retry() {
+        val req = dataSource.request.first()
+        if (req != null) {
+            req.markNormal()
+            dataSource.update(
+                req
+            )
+        }
     }
 }

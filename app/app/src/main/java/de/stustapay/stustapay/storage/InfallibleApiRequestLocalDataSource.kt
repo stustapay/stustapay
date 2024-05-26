@@ -2,37 +2,24 @@ package de.stustapay.stustapay.storage
 
 import androidx.datastore.core.DataStore
 import de.stustapay.stustapay.model.InfallibleApiRequest
-import de.stustapay.stustapay.model.InfallibleApiRequests
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class InfallibleApiRequestLocalDataSource @Inject constructor(
-    private val infallibleApiRequestStore: DataStore<InfallibleApiRequests>
+    private val infallibleApiRequestStore: DataStore<InfallibleApiRequest?>
 ) {
-    suspend fun push(id: UUID, request: InfallibleApiRequest) {
-        infallibleApiRequestStore.updateData {
-            InfallibleApiRequests(
-                requests = it.requests + Pair(id, request)
-            )
-        }
-    }
+    val request: Flow<InfallibleApiRequest?> =
+        infallibleApiRequestStore.data
 
-    val requests: Flow<Map<UUID, InfallibleApiRequest>> =
-        infallibleApiRequestStore.data.map { it.requests }
-
-    suspend fun remove(ids: Set<UUID>) {
+    suspend fun update(request: InfallibleApiRequest) {
         infallibleApiRequestStore.updateData {
-            InfallibleApiRequests(requests = it.requests.filterKeys { key -> key !in ids })
+            request
         }
     }
 
     suspend fun clear() {
-        infallibleApiRequestStore.updateData {
-            InfallibleApiRequests(mapOf())
-        }
+        infallibleApiRequestStore.updateData { null }
     }
 }

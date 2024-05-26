@@ -2,41 +2,46 @@ package de.stustapay.stustapay.model
 
 import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.NewTopUp
-import de.stustapay.libssp.net.Response
-import java.util.UUID
 
-data class InfallibleApiRequests(
-    val requests: Map<UUID, InfallibleApiRequest>
-)
-
-data class InfallibleApiRequest(
-    val kind: InfallibleApiRequestKind
+sealed class InfallibleApiRequest(
+    var status: Status = Status.Normal
 ) {
-    fun msg(): String {
-        return when (this.kind) {
-            is InfallibleApiRequestKind.TicketSale -> {
-                "Ticket sale for " + this.kind.content.customerTags.joinToString { it.tagPin }
-            }
+    abstract fun msg(): String
 
-            is InfallibleApiRequestKind.TopUp -> {
-                "Top-Up of " + this.kind.content.amount + "€ for " + this.kind.content.customerTagUid.toString()
-            }
+    /** when the request has failed, record it */
+    fun markFailed() {
+        status = Status.Failed
+    }
+
+    fun markNormal() {
+        status = Status.Normal
+    }
+
+    sealed interface Status {
+        object Normal : Status
+        object Failed : Status
+    }
+
+    class TopUp(
+        val topUp: NewTopUp,
+        status: Status = Status.Normal,
+    ) : InfallibleApiRequest(status) {
+        override fun msg(): String {
+            return "Top-Up %.2f€ with %s for %s".format(
+                topUp.amount,
+                topUp.paymentMethod,
+                topUp.customerTagUid.toString(16).uppercase()
+            )
         }
     }
-}
 
-sealed interface InfallibleApiRequestKind {
-    data class TopUp(
-        val content: NewTopUp
-    ) : InfallibleApiRequestKind
+    class TicketSale(
+        val ticketSale: NewTicketSale,
+        status: Status = Status.Normal,
+    ) : InfallibleApiRequest(status) {
 
-    data class TicketSale(
-        val content: NewTicketSale
-    ) : InfallibleApiRequestKind
-}
-
-sealed class InfallibleResult<out T> {
-    data class OK<T>(val data: Response<T>) : InfallibleResult<T>()
-    data class TooManyTries(val tries: Int, val lasterror: Response.Error) :
-        InfallibleResult<Nothing>()
+        override fun msg(): String {
+            return "Ticket sale for %s".format(ticketSale.customerTags.joinToString { it.tagPin })
+        }
+    }
 }
