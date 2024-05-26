@@ -24,7 +24,7 @@ class SEPAConfig(BaseModel):
 
 
 class SMTPConfig(BaseModel):
-    smtp_host: str
-    smtp_port: int
-    smtp_username: str
+    smtp_host: str | None
+    smtp_port: int | None
+    smtp_username: str | None
     smtp_password: str | None

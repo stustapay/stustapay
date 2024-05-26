@@ -1,6 +1,6 @@
 import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
-import { FormSwitch, FormTextField } from "@stustapay/form-components";
+import { FormNumericInput, FormSwitch, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import * as React from "react";
@@ -47,7 +47,7 @@ export const MailSettingsForm: React.FC<FormikProps<MailSettings>> = (formik) =>
       <FormSwitch label={t("settings.email.enabled")} name="email_enabled" formik={formik} />
       <FormTextField label={t("settings.email.default_sender")} name="email_default_sender" formik={formik} />
       <FormTextField label={t("settings.email.smtp_host")} name="email_smtp_host" formik={formik} />
-      <FormTextField label={t("settings.email.smtp_port")} name="email_smtp_port" formik={formik} />
+      <FormNumericInput label={t("settings.email.smtp_port")} name="email_smtp_port" formik={formik} />
       <FormTextField label={t("settings.email.smtp_username")} name="email_smtp_username" formik={formik} />
       <FormTextField label={t("settings.email.smtp_password")} name="email_smtp_password" formik={formik} />
     </>

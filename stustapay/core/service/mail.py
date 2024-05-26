@@ -71,9 +71,7 @@ class MailService(DBService):
                 subject=subject,
                 message=message,
                 to_email=to_email,
-                # from_email=from_email if from_email else res_config.email_default_sender,
                 from_email=from_email,
-                # smpt_config=res_config.smtp_config,
                 node_id=node_id,
             )
         )
@@ -81,11 +79,14 @@ class MailService(DBService):
     async def run_mail_service(self):
         self.logger.info("Staring periodic job to send mails.")
         while True:
-            await asyncio.sleep(self.MAIL_SEND_CHECK_INTERVAL.seconds)
-            if len(self.mail_buffer) == 0:
-                continue
-            await self._send_mail(mail=self.mail_buffer.pop(0))
-            await asyncio.sleep(self.MAIL_SEND_INTERVAL.seconds)
+            try:
+                await asyncio.sleep(self.MAIL_SEND_CHECK_INTERVAL.seconds)
+                if len(self.mail_buffer) == 0:
+                    continue
+                await self._send_mail(mail=self.mail_buffer.pop(0))
+                await asyncio.sleep(self.MAIL_SEND_INTERVAL.seconds)
+            except Exception as e:
+                self.logger.exception(f"Failed to send mail with error {type(e)}")
 
     @with_db_transaction(read_only=True)
     async def _send_mail(
@@ -127,6 +128,6 @@ class MailService(DBService):
                     server.login(smtp_config.smtp_username, smtp_config.smtp_password)
                 server.sendmail(message["From"], message["To"], message.as_string())
         except Exception as e:
-            self.logger.exception("Failed to send mail to {to_email} with error {type(e)}")
+            self.logger.exception(f"Failed to send mail to {mail.to_email} with error {type(e)}")
             return False
         return True

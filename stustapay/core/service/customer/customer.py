@@ -147,9 +147,9 @@ class CustomerService(DBService):
     async def get_payout_transactions(self, *, conn: Connection, current_customer: Customer) -> list[PayoutTransaction]:
         return await conn.fetch_many(
             PayoutTransaction,
-            "select t.amount, t.booked_at, a.name as target_account_name, a.account_type as target_account_type "
-            "from transaction t join account a on t.target_account_id = a.id "
-            "where t.source_account_id = $1 and t.destination_account_id = (select id from account where account_type = 'cash_exit' or account_type = 'donation_exit)",
+            "select t.amount, t.booked_at, a.name as target_account_name, a.type as target_account_type "
+            "from transaction t join account a on t.target_account = a.id "
+            "where t.source_account = $1 and t.target_account in (select id from account where type = 'cash_exit' or type = 'donation_exit')",
             current_customer.id,
         )
 
@@ -202,6 +202,12 @@ class CustomerService(DBService):
             customer_bank.email,
             round(customer_bank.donation, 2),
         )
+        # get updated customer
+        current_customer = await conn.fetch_one(
+            Customer,
+            "select * from customer where id = $1",
+            current_customer.id,
+        )
         await self.send_mail_payout_registered(conn, current_customer, mail_service)
 
     async def check_payout_run(self, conn: Connection, current_customer: Customer) -> None:
@@ -226,7 +232,6 @@ class CustomerService(DBService):
             "on conflict (customer_account_id) do update set donate_all = true, has_entered_info = true",
             current_customer.id,
         )
-        await self.send_mail_payout_registered(conn, current_customer, mail_service)
 
     async def send_mail_payout_registered(
         self, conn: Connection, current_customer: Customer, mail_service: MailService
@@ -234,7 +239,7 @@ class CustomerService(DBService):
         res_config = await fetch_restricted_event_settings_for_node(conn, current_customer.node_id)
         mail_service.send_mail(
             subject=res_config.payout_registered_subject,
-            message=res_config.payout_registered_message.format(current_customer.model_dump()),
+            message=res_config.payout_registered_message.format(**current_customer.model_dump()),
             from_email=res_config.payout_sender,
             to_email=current_customer.email,
             node_id=current_customer.node_id,

@@ -25,7 +25,7 @@ class Customer(Account):
 
 class PayoutInfo(BaseModel):
     in_payout_run: bool
-    payout_date: datetime.date | None
+    payout_date: datetime.datetime | None
 
 
 class OrderWithBon(Order):

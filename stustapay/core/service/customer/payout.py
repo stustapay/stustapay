@@ -323,7 +323,7 @@ class PayoutService(DBService):
         for payout in payouts:
             mail_service.send_mail(
                 subject=res_config.payout_done_subject,
-                message=res_config.payout_done_message.format(payout.model_dump()),
+                message=res_config.payout_done_message.format(**payout.model_dump()),
                 from_email=res_config.payout_sender,
                 to_email=payout.email,
                 node_id=node.id,
@@ -379,7 +379,7 @@ class PayoutService(DBService):
             "   select "
             "       customer_account_id, "
             "       sum(balance - donation) over (order by customer_account_id rows between unbounded preceding and current row) as running_total "
-            "   from customers_without_payout_run p where p.node_id = $2 and p.payout_export "
+            "   from customers_without_payout_run p where p.node_id = $2 and p.payout_export and p.balance > 0 "
             "   order by customer_account_id "
             ") as agr "
             "where running_total <= $1",
