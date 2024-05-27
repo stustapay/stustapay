@@ -200,7 +200,11 @@ class SumupService(DBService):
     async def _get_pending_checkouts(*, conn: Connection) -> list[CustomerCheckout]:
         return await conn.fetch_many(
             CustomerCheckout,
-            "select * from customer_sumup_checkout where status = $1",
+            "select c.* from customer_sumup_checkout c "
+            "join account a on c.customer_account_id = a.id "
+            "join node n on n.id = a.node_id "
+            "join event e on n.event_id = n.event_id "
+            "where c.status = $1 and not n.read_only and e.sumup_topup_enabled",
             SumUpCheckoutStatus.PENDING.value,
         )
 
