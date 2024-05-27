@@ -725,6 +725,17 @@ class DatabaseSetup:
                     sepa_allowed_country_codes=["DE"],
                     sumup_topup_enabled=False,
                     sumup_payment_enabled=False,
+                    email_enabled=False,
+                    email_default_sender=None,
+                    email_smtp_host=None,
+                    email_smtp_port=None,
+                    email_smtp_username=None,
+                    email_smtp_password=None,
+                    payout_done_subject="[StuStaPay] Payout Completed",
+                    payout_done_message="Thank you for your patience. The payout process has been completed and the funds should arrive within the next days to your specified bank account.",
+                    payout_registered_subject="[StuStaPay] Registered for Payout",
+                    payout_registered_message="Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transferred to the specified bank account in our next manual payout. You will receive another email once we transferred the funds.",
+                    payout_sender=None,
                 ),
             )
             beer_team_node = await create_node(

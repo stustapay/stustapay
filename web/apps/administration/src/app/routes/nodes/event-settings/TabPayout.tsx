@@ -39,6 +39,11 @@ export const PayoutSettingsSchema = z
       .optional()
       .transform((val) => val ?? ""),
     sepa_allowed_country_codes: z.array(z.string()).default([]),
+    payout_done_subject: z.string(),
+    payout_done_message: z.string(),
+    payout_registered_subject: z.string(),
+    payout_registered_message: z.string(),
+    payout_sender: z.string().email().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     if (!data.sepa_enabled) {
@@ -77,6 +82,25 @@ export const PayoutSettingsForm: React.FC<FormikProps<PayoutSettings>> = (formik
         options={Object.keys(iban.countries)}
         formatOption={(iban) => iban}
       />
+      <FormTextField label={t("settings.payout.payout_done_subject")} name="payout_done_subject" formik={formik} />
+      <FormTextField
+        label={t("settings.payout.payout_done_message")}
+        name="payout_done_message"
+        multiline
+        formik={formik}
+      />
+      <FormTextField
+        label={t("settings.payout.payout_registered_subject")}
+        name="payout_registered_subject"
+        formik={formik}
+      />
+      <FormTextField
+        label={t("settings.payout.payout_registered_message")}
+        name="payout_registered_message"
+        multiline
+        formik={formik}
+      />
+      <FormTextField label={t("settings.payout.payout_sender")} name="payout_sender" formik={formik} />
     </>
   );
 };

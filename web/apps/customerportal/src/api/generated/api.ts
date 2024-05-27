@@ -33,6 +33,14 @@ const injectedRtkApi = api
         query: () => ({ url: `/customer_all_donation`, method: "POST" }),
         invalidatesTags: ["base"],
       }),
+      payoutInfo: build.query<PayoutInfoApiResponse, PayoutInfoApiArg>({
+        query: () => ({ url: `/payout_info` }),
+        providesTags: ["base"],
+      }),
+      getPayoutTransactions: build.query<GetPayoutTransactionsApiResponse, GetPayoutTransactionsApiArg>({
+        query: () => ({ url: `/get_payout_transactions` }),
+        providesTags: ["base"],
+      }),
       getCustomerConfig: build.query<GetCustomerConfigApiResponse, GetCustomerConfigApiArg>({
         query: (queryArg) => ({ url: `/config`, params: { base_url: queryArg.baseUrl } }),
         providesTags: ["base"],
@@ -69,6 +77,10 @@ export type UpdateCustomerInfoApiArg = {
 };
 export type UpdateCustomerInfoDonateAllApiResponse = unknown;
 export type UpdateCustomerInfoDonateAllApiArg = void;
+export type PayoutInfoApiResponse = /** status 200 Successful Response */ PayoutInfo;
+export type PayoutInfoApiArg = void;
+export type GetPayoutTransactionsApiResponse = /** status 200 Successful Response */ PayoutTransaction[];
+export type GetPayoutTransactionsApiArg = void;
 export type GetCustomerConfigApiResponse = /** status 200 Successful Response */ CustomerPortalApiConfig;
 export type GetCustomerConfigApiArg = {
   baseUrl: string;
@@ -97,7 +109,8 @@ export type AccountType =
   | "sumup_online_entry"
   | "transport"
   | "cashier"
-  | "voucher_create";
+  | "voucher_create"
+  | "donation_exit";
 export type ProductRestriction = "under_16" | "under_18";
 export type UserTagHistoryEntry = {
   user_tag_id: number;
@@ -160,6 +173,8 @@ export type Customer = {
   donation: number | null;
   payout_export: boolean | null;
   user_tag_pin: string | null;
+  donate_all: boolean;
+  has_entered_info: boolean;
   payout: Payout | null;
 };
 export type CustomerRead = {
@@ -181,6 +196,8 @@ export type CustomerRead = {
   donation: number | null;
   payout_export: boolean | null;
   user_tag_pin: string | null;
+  donate_all: boolean;
+  has_entered_info: boolean;
   payout: PayoutRead | null;
   user_tag_uid_hex: string | null;
 };
@@ -296,6 +313,17 @@ export type CustomerBank = {
   email: string;
   donation?: number;
 };
+export type PayoutInfo = {
+  in_payout_run: boolean;
+  payout_date: string | null;
+};
+export type PayoutTransaction = {
+  amount: number;
+  booked_at: string;
+  target_account_name: string;
+  target_account_type: string;
+  transaction_id: number;
+};
 export type CustomerPortalApiConfig = {
   test_mode: boolean;
   test_mode_message: string;
@@ -334,6 +362,10 @@ export const {
   useLazyGetOrdersQuery,
   useUpdateCustomerInfoMutation,
   useUpdateCustomerInfoDonateAllMutation,
+  usePayoutInfoQuery,
+  useLazyPayoutInfoQuery,
+  useGetPayoutTransactionsQuery,
+  useLazyGetPayoutTransactionsQuery,
   useGetCustomerConfigQuery,
   useLazyGetCustomerConfigQuery,
   useGetBonQuery,

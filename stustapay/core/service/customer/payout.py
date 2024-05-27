@@ -30,6 +30,7 @@ from stustapay.core.service.common.decorators import (
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.common import fetch_customer
+from stustapay.core.service.mail import MailService
 from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
     fetch_restricted_event_settings_for_node,
@@ -265,7 +266,7 @@ class PayoutService(DBService):
     @requires_node(event_only=True)
     @requires_user([Privilege.payout_management])
     async def set_payout_run_as_done(
-        self, *, conn: Connection, node: Node, current_user: CurrentUser, payout_run_id: int
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, payout_run_id: int, mail_service: MailService
     ):
         payout_run = await fetch_payout_run(conn=conn, node=node, payout_run_id=payout_run_id)
         if payout_run.done:
@@ -285,16 +286,50 @@ class PayoutService(DBService):
             "   order_id => null,"
             "   source_account_id => p.customer_account_id,"
             "   target_account_id => $2,"
-            "   amount => (p.amount + p.donation),"
+            "   amount => p.amount,"  # this is customers balance minus donation (see payout creation)
             "   vouchers_amount => 0,"
             "   conducting_user_id => $3,"
-            "   description => format('payout run %s', $1::bigint)) "
+            "   description => format('payout run %s cash exit', $1::bigint)) "
             "from payout_view p where payout_run_id = $1",
             payout_run_id,
             money_exit_acc.id,
             current_user.id,
         )
-        # TODO: send emails to customers
+        donation_exit_acc = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.donation_exit
+        )
+        await conn.execute(
+            "select book_transaction("
+            "   order_id => null,"
+            "   source_account_id => p.customer_account_id,"
+            "   target_account_id => $2,"
+            "   amount => p.donation,"
+            "   vouchers_amount => 0,"
+            "   conducting_user_id => $3,"
+            "   description => format('payout run %s donation exit', $1::bigint)) "
+            "from payout_view p where payout_run_id = $1",
+            payout_run_id,
+            donation_exit_acc.id,
+            current_user.id,
+        )
+
+        payouts = await conn.fetch_many(
+            Payout,
+            "select * from payout_view p where p.payout_run_id = $1",
+            payout_run_id,
+        )
+
+        res_config = await fetch_restricted_event_settings_for_node(conn, node.id)
+        for payout in payouts:
+            if payout.email is None:
+                continue
+            mail_service.send_mail(
+                subject=res_config.payout_done_subject,
+                message=res_config.payout_done_message.format(**payout.model_dump()),
+                from_email=res_config.payout_sender,
+                to_email=payout.email,
+                node_id=node.id,
+            )
 
     @with_db_transaction
     @requires_node(event_only=True)
@@ -346,7 +381,7 @@ class PayoutService(DBService):
             "   select "
             "       customer_account_id, "
             "       sum(balance - donation) over (order by customer_account_id rows between unbounded preceding and current row) as running_total "
-            "   from customers_without_payout_run p where p.node_id = $2 and p.payout_export "
+            "   from customers_without_payout_run p where p.node_id = $2 and p.payout_export and p.balance > 0 "
             "   order by customer_account_id "
             ") as agr "
             "where running_total <= $1",
@@ -370,7 +405,14 @@ class PayoutService(DBService):
         await conn.fetchval(
             "with scheduled_payouts as ("
             "    insert into payout (customer_account_id, iban, account_name, email, amount, donation, payout_run_id) "
-            "    select c.id, c.iban, c.account_name, c.email, c.balance - c.donation, c.donation, $1 "
+            "    select "
+            "        c.id, "
+            "        c.iban, "
+            "        c.account_name, "
+            "        c.email, "
+            "        case when c.donate_all then 0.0 else greatest(0.0, c.balance - c.donation) end, "
+            "        case when c.donate_all then c.balance else least(c.balance, c.donation) end, "
+            "        $1 "
             "    from customer c "
             "    where c.customer_account_id in ( "
             "        select customer_account_id from ( "
@@ -379,7 +421,7 @@ class PayoutService(DBService):
             "               count(*) over (order by customer_account_id rows between unbounded preceding and current row) as index, "
             "               sum(balance - donation) over (order by customer_account_id rows between unbounded preceding and current row) as running_total "
             "           from customers_without_payout_run p "
-            "           where p.node_id = $3 and p.payout_export "
+            "           where p.node_id = $3 and p.payout_export and p.balance > 0 "
             "           order by customer_account_id "
             "        ) as agr where running_total <= $2 and index <= $4 "
             "    )"

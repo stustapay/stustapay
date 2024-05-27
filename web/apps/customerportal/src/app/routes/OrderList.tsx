@@ -1,4 +1,4 @@
-import { OrderWithBon, OrderWithBonRead, useGetOrdersQuery } from "@/api";
+import { OrderWithBon, OrderWithBonRead, PayoutTransaction, useGetOrdersQuery, useGetPayoutTransactionsQuery } from "@/api";
 import { useDownloadBon } from "@/api/useDownloadBon";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
@@ -31,13 +31,14 @@ export const OrderList: React.FC = () => {
   const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
   const { data: orders, error: orderError, isLoading: isOrdersLoading } = useGetOrdersQuery();
+  const { data: payoutTransactions, error: payoutTransactionsError, isLoading: isPayoutTransactionsLoading } = useGetPayoutTransactionsQuery();
   const downloadBon = useDownloadBon();
 
-  if (isOrdersLoading || (!orders && !orderError)) {
+  if (isOrdersLoading || (!orders && !orderError) || isPayoutTransactionsLoading || (!payoutTransactions && !payoutTransactionsError)) {
     return <Loading />;
   }
 
-  if (!orders) {
+  if (!orders || !payoutTransactions) {
     return <Alert severity="error">{t("order.loadingError")}</Alert>;
   }
 
@@ -65,8 +66,50 @@ export const OrderList: React.FC = () => {
     );
   };
 
+  const getTransactionName = (transaction: PayoutTransaction) => {
+    if (transaction.target_account_type === "cash_exit") {
+      return t("transaction.cashExit");
+    } else if (transaction.target_account_type === "donation_exit") {
+      return t("transaction.donationExit");
+    } else {
+      return "Payout";
+    }
+
+  }
+
+  const payout_transactions = (
+    payoutTransactions.filter((payoutTransaction) => payoutTransaction.amount > 0).map((payoutTransaction) => (
+    <Accordion key={`transaction-${payoutTransaction.transaction_id}`}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1-content"
+          id="panel1-header"
+        >
+          <Typography>{getTransactionName(payoutTransaction)}</Typography>
+          <Typography
+            style={{
+              textAlign: "right",
+              flexGrow: 1,
+              marginRight: "0.5em",
+              color: "inherit",
+            }}
+          >
+            {formatCurrency(-payoutTransaction.amount)}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Typography variant="subtitle2">
+            {t("order.bookedAt", { date: new Date(payoutTransaction.booked_at).toLocaleString() })}
+          </Typography>
+        </AccordionDetails>
+      </Accordion>
+      ))
+  );
+
+
   return (
     <>
+      {payout_transactions}
       {orders.map((order) => (
         <Accordion key={order.id}>
           <AccordionSummary

@@ -531,3 +531,21 @@ create trigger prevent_parent_change_trigger
     for each row
     when (OLD.parent is distinct from NEW.parent)
 execute function noupdate();
+
+
+-- creates a customer_info record for account with type private when it is created
+create or replace function create_customer_info() returns trigger as
+$$
+begin
+    insert into customer_info (customer_account_id) values (NEW.id);
+    return NEW;
+end
+$$ language plpgsql set search_path = "$user", public;
+
+drop trigger if exists create_customer_info_trigger on account;
+create trigger create_customer_info_trigger
+    after insert
+    on account
+    for each row
+    when (NEW.type = 'private')
+execute function create_customer_info();

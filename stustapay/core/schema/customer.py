@@ -17,12 +17,27 @@ class Customer(Account):
     donation: Optional[float]
     payout_export: Optional[bool]
     user_tag_pin: Optional[str]
+    donate_all: bool
+    has_entered_info: bool
 
     payout: Payout | None
 
 
+class PayoutInfo(BaseModel):
+    in_payout_run: bool
+    payout_date: datetime.datetime | None
+
+
 class OrderWithBon(Order):
     bon_generated: Optional[bool]
+
+
+class PayoutTransaction(BaseModel):
+    amount: float
+    booked_at: datetime.datetime
+    target_account_name: str
+    target_account_type: str
+    transaction_id: int
 
 
 class CustomerCheckout(BaseModel):

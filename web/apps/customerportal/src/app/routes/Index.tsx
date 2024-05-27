@@ -1,4 +1,4 @@
-import { useGetCustomerQuery } from "@/api";
+import { useGetCustomerQuery, usePayoutInfoQuery } from "@/api";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Alert, AlertTitle, Grid, Link, Paper, Stack, Typography } from "@mui/material";
@@ -18,18 +18,38 @@ export const Index: React.FC = () => {
   const formatCurrency = useCurrencyFormatter();
 
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
+  const { data: payoutInfo, error: payoutInfoError, isLoading: isPayoutInfoLoading } = usePayoutInfoQuery();
 
-  if (isCustomerLoading || (!customer && !customerError)) {
+  if (isCustomerLoading || (!customer && !customerError) || isPayoutInfoLoading || (!payoutInfo && !payoutInfoError)) {
     return <Loading />;
   }
 
-  if (customerError || !customer) {
+  if (customerError || !customer || payoutInfoError || !payoutInfo) {
     toast.error(t("errorLoadingCustomer"));
     return null;
   }
 
   // TODO: depending on the order_type we want to show different stuff
   // we also might want to show the balance of the account after each order
+
+
+  let payout_info;
+  if (payoutInfo.in_payout_run && !payoutInfo.payout_date){
+    payout_info = t("payout.infoPayoutScheduled");
+  }else if (payoutInfo.in_payout_run && payoutInfo.payout_date){
+    payout_info = t("payout.infoPayoutCompleted", { payout_date: new Date(payoutInfo.payout_date).toLocaleString() });
+  } else if (customer.has_entered_info) {
+    payout_info = t("payout.infoPayoutInitiated");
+  } else {
+    payout_info = (
+      <Trans i18nKey="payoutInfo">
+        to get your payout
+        <Link component={RouterLink} to="/payout-info">
+          enter bank account details here
+        </Link>
+      </Trans>
+  )
+  }
 
   return (
     <Grid container justifyItems="center" justifyContent="center" spacing={2} sx={{ paddingX: 0.5 }}>
@@ -88,12 +108,7 @@ export const Index: React.FC = () => {
 
       <Grid item xs={12} sm={8}>
         <Alert severity="info" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
-          <Trans i18nKey="payoutInfo">
-            to get your payout
-            <Link component={RouterLink} to="/payout-info">
-              enter bank account details here
-            </Link>
-          </Trans>
+          { payout_info }
         </Alert>
       </Grid>
 

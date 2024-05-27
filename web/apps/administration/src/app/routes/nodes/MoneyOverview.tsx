@@ -88,6 +88,9 @@ export const MoneyOverview: React.FC = () => {
       <Grid item sm={4} md={2}>
         <BalanceCard account={selectAccountByType("cash_entry")} />
       </Grid>
+      <Grid item sm={4} md={2}>
+        <BalanceCard account={selectAccountByType("donation_exit")} />
+      </Grid>
     </Grid>
   );
 };

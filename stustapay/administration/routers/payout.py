@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
-from stustapay.core.http.context import ContextCustomerService
+from stustapay.core.http.context import ContextCustomerService, ContextMailService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.payout import (
     NewPayoutRun,
@@ -98,12 +98,14 @@ async def set_payout_run_as_done(
     token: CurrentAuthToken,
     payout_run_id: int,
     customer_service: ContextCustomerService,
+    mail_service: ContextMailService,
     node_id: int,
 ):
     return await customer_service.payout.set_payout_run_as_done(
         token=token,
         node_id=node_id,
         payout_run_id=payout_run_id,
+        mail_service=mail_service,
     )
 
 

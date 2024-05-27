@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 from stustapay.core.config import CoreConfig
-from stustapay.core.schema.config import SEPAConfig
+from stustapay.core.schema.config import SEPAConfig, SMTPConfig
 from stustapay.core.schema.user import Privilege
 
 ROOT_NODE_ID = 0
@@ -45,6 +45,19 @@ class _BaseEvent(BaseModel):
     sepa_max_num_payouts_in_run: int
     sepa_allowed_country_codes: list[str]
 
+    # email configs
+    email_enabled: bool
+    email_default_sender: str | None = None
+    email_smtp_host: str | None = None
+    email_smtp_port: int | None = None
+    email_smtp_username: str | None = None
+
+    payout_done_subject: str
+    payout_done_message: str
+    payout_registered_subject: str
+    payout_registered_message: str
+    payout_sender: str | None = None
+
     # map of lang_code -> [text type -> text content]
     translation_texts: dict[Language, dict[str, str]] = {}
 
@@ -74,6 +87,8 @@ class _RestrictedEventMetadata(BaseModel):
     sumup_oauth_client_id: str = ""
     sumup_oauth_client_secret: str = ""
 
+    email_smtp_password: str | None = None
+
 
 class UpdateEvent(_BaseEvent, _RestrictedEventMetadata):
     sepa_max_num_payouts_in_run: int | None = None  # type: ignore
@@ -88,6 +103,17 @@ class RestrictedEventSettings(_BaseEvent, _RestrictedEventMetadata):
     id: int
     languages: list[Language]
     sumup_oauth_refresh_token: str
+
+    @property
+    def smtp_config(self) -> SMTPConfig | None:
+        if not self.email_enabled:
+            return None
+        return SMTPConfig(
+            smtp_host=self.email_smtp_host,
+            smtp_port=self.email_smtp_port,
+            smtp_username=self.email_smtp_username,
+            smtp_password=self.email_smtp_password,
+        )
 
 
 class ObjectType(enum.Enum):

@@ -1962,7 +1962,8 @@ export type AccountType =
   | "sumup_online_entry"
   | "transport"
   | "cashier"
-  | "voucher_create";
+  | "voucher_create"
+  | "donation_exit";
 export type UserTagHistoryEntry = {
   user_tag_id: number;
   user_tag_pin: string;
@@ -2462,6 +2463,16 @@ export type PublicEventSettings = {
   sepa_description: string;
   sepa_max_num_payouts_in_run: number;
   sepa_allowed_country_codes: string[];
+  email_enabled: boolean;
+  email_default_sender?: string | null;
+  email_smtp_host?: string | null;
+  email_smtp_port?: number | null;
+  email_smtp_username?: string | null;
+  payout_done_subject: string;
+  payout_done_message: string;
+  payout_registered_subject: string;
+  payout_registered_message: string;
+  payout_sender?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -2526,6 +2537,7 @@ export type NewEvent = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
   sumup_merchant_code?: string;
+  email_smtp_password?: string | null;
   sumup_oauth_client_id?: string;
   sumup_oauth_client_secret?: string;
   currency_identifier: string;
@@ -2549,6 +2561,16 @@ export type NewEvent = {
   sepa_description: string;
   sepa_max_num_payouts_in_run?: number | null;
   sepa_allowed_country_codes: string[];
+  email_enabled: boolean;
+  email_default_sender?: string | null;
+  email_smtp_host?: string | null;
+  email_smtp_port?: number | null;
+  email_smtp_username?: string | null;
+  payout_done_subject: string;
+  payout_done_message: string;
+  payout_registered_subject: string;
+  payout_registered_message: string;
+  payout_sender?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -2563,6 +2585,7 @@ export type UpdateEvent = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
   sumup_merchant_code?: string;
+  email_smtp_password?: string | null;
   sumup_oauth_client_id?: string;
   sumup_oauth_client_secret?: string;
   currency_identifier: string;
@@ -2586,6 +2609,16 @@ export type UpdateEvent = {
   sepa_description: string;
   sepa_max_num_payouts_in_run?: number | null;
   sepa_allowed_country_codes: string[];
+  email_enabled: boolean;
+  email_default_sender?: string | null;
+  email_smtp_host?: string | null;
+  email_smtp_port?: number | null;
+  email_smtp_username?: string | null;
+  payout_done_subject: string;
+  payout_done_message: string;
+  payout_registered_subject: string;
+  payout_registered_message: string;
+  payout_sender?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -2596,6 +2629,7 @@ export type RestrictedEventSettings = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
   sumup_merchant_code?: string;
+  email_smtp_password?: string | null;
   sumup_oauth_client_id?: string;
   sumup_oauth_client_secret?: string;
   currency_identifier: string;
@@ -2619,6 +2653,16 @@ export type RestrictedEventSettings = {
   sepa_description: string;
   sepa_max_num_payouts_in_run: number;
   sepa_allowed_country_codes: string[];
+  email_enabled: boolean;
+  email_default_sender?: string | null;
+  email_smtp_host?: string | null;
+  email_smtp_port?: number | null;
+  email_smtp_username?: string | null;
+  payout_done_subject: string;
+  payout_done_message: string;
+  payout_registered_subject: string;
+  payout_registered_message: string;
+  payout_sender?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -2677,6 +2721,8 @@ export type Customer = {
   donation: number | null;
   payout_export: boolean | null;
   user_tag_pin: string | null;
+  donate_all: boolean;
+  has_entered_info: boolean;
   payout: Payout | null;
 };
 export type CustomerRead = {
@@ -2698,6 +2744,8 @@ export type CustomerRead = {
   donation: number | null;
   payout_export: boolean | null;
   user_tag_pin: string | null;
+  donate_all: boolean;
+  has_entered_info: boolean;
   payout: PayoutRead | null;
   user_tag_uid_hex: string | null;
 };

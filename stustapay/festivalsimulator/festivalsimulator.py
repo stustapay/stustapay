@@ -171,7 +171,11 @@ class Simulator:
             async with client.post(
                 "/user/login", json={"user_tag": {"uid": user_tag_uid}, "user_role_id": role_id}
             ) as resp:
-                if resp.status != 200:
+                if resp.status == 503:
+                    self.logger.warning(f"User with uid {user_tag_uid} problem logging in, {await resp.text()}")
+                    await self.sleep()
+                    return await self._login_user(terminal=terminal, user_tag_uid=user_tag_uid, role_id=role_id)
+                elif resp.status != 200:
                     self.logger.critical(
                         f"Failed to login {user_tag_uid} on terminal {terminal.terminal.name}. " f"{await resp.text()}"
                     )
@@ -557,7 +561,11 @@ class Simulator:
     async def login_customer(self, pin: str) -> str:
         async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
             async with client.post("/auth/login", json={"pin": pin}) as resp:
-                if resp.status != 200:
+                if resp.status == 503:
+                    self.logger.warning(f"Customer with pin {pin} problem logging in, {await resp.text()}")
+                    await self.sleep()
+                    return await self.login_customer(pin)
+                elif resp.status != 200:
                     raise RuntimeError(f"Error trying to log in customer with pin {pin}")
                 payload = await resp.json()
             return payload["access_token"]
@@ -565,7 +573,11 @@ class Simulator:
     async def logout_customer(self, pin: str, token: str):
         async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
             async with client.post("/auth/logout", headers={"Authorization": f"Bearer {token}"}) as resp:
-                if resp.status != 204:
+                if resp.status == 503:
+                    self.logger.warning(f"Customer with pin {pin} problem logging out, {await resp.text()}")
+                    await self.sleep()
+                    return await self.logout_customer(pin, token)
+                elif resp.status != 204:
                     raise RuntimeError(f"Error trying to log out customer with pin {pin}")
 
     async def _prepare_admin_terminals(self):

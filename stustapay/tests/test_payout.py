@@ -16,6 +16,7 @@ from stustapay.core.schema.user import format_user_tag_uid
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.customer.payout import Payout, dump_payout_run_as_sepa_xml
+from stustapay.core.service.mail import MailService
 from stustapay.core.service.user_tag import get_or_assign_user_tag
 from stustapay.framework.database import Connection
 from stustapay.tests.conftest import CreateRandomUserTag
@@ -32,6 +33,8 @@ class CustomerTestInfo:
     email: str
     donation: float
     payout_export: bool
+    donation_all: bool
+    has_entered_info: bool
 
 
 @pytest.fixture
@@ -47,6 +50,8 @@ async def customers(
         email = "rolf@lol.de"
         donation = balance if i == n_customers - 1 else 1.0 * i
         payout_export = True
+        donation_all = False
+        has_entered_info = True
         tag = await create_random_user_tag()
         await get_or_assign_user_tag(conn=db_connection, node=event_node, uid=tag.uid, pin=tag.pin)
         account_id = await db_connection.fetchval(
@@ -59,14 +64,16 @@ async def customers(
         )
 
         await db_connection.execute(
-            "insert into customer_info (customer_account_id, iban, account_name, email, donation, payout_export) "
-            "values ($1, $2, $3, $4, $5, $6)",
+            "update customer_info set iban = $2, account_name = $3, email = $4, donation = $5, payout_export = $6, donate_all = $7, has_entered_info = $8"
+            "where customer_account_id = $1",
             account_id,
             iban,
             account_name,
             email,
             donation,
             payout_export,
+            donation_all,
+            has_entered_info,
         )
         customers.append(
             CustomerTestInfo(
@@ -79,6 +86,8 @@ async def customers(
                 email=email,
                 account_name=account_name,
                 payout_export=payout_export,
+                donation_all=donation_all,
+                has_entered_info=has_entered_info,
             )
         )
     return customers
@@ -257,6 +266,7 @@ async def test_revoke_payout(
     customers: list[CustomerTestInfo],
     event_admin_token: str,
     customer_service: CustomerService,
+    mail_service: MailService,
 ):
     del customers  # we just need the fixture to be setup to populate the database
     payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
@@ -287,6 +297,7 @@ async def test_revoke_payout(
             token=event_admin_token,
             node_id=event_node.id,
             payout_run_id=payout_run.id,
+            mail_service=mail_service,
         )
 
 
@@ -296,6 +307,7 @@ async def test_set_payout_to_done(
     event_node: Node,
     event_admin_token: str,
     customer_service: CustomerService,
+    mail_service: MailService,
 ):
     payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
         token=event_admin_token,
@@ -306,6 +318,7 @@ async def test_set_payout_to_done(
         token=event_admin_token,
         node_id=event_node.id,
         payout_run_id=payout_run.id,
+        mail_service=mail_service,
     )
 
     for customer in customers:

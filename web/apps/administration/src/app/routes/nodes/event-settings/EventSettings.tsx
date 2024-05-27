@@ -107,7 +107,7 @@ export const EventSettings: React.FC = () => {
             <TabBon nodeId={currentNode.id} eventSettings={eventSettings} />
           </TabPanel>
           <TabPanel value="email">
-            <TabMail />
+            <TabMail nodeId={currentNode.id} eventSettings={eventSettings} />
           </TabPanel>
         </Box>
       </TabContext>

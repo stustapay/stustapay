@@ -28,15 +28,15 @@
       "args": ["-c", "server.yaml", "-vvv", "simulate", "setup"]
     },
     {
-      "name": "FestivalSimulator Simulate",
+      "name": "FestivalSimulator Simulate API",
       "type": "debugpy",
       "request": "launch",
       "module": "stustapay",
-      "justMyCode": true,
+      "justMyCode": false,
       "args": [
-        "-c",
-        "server.yaml",
         "-vvv",
+        "-c",
+        "etc/config.devel.yaml",
         "simulate",
         "api",
         "--no-tse",
@@ -44,7 +44,7 @@
       ]
     },
     {
-      "name": "FestivalSimulator Simulate",
+      "name": "FestivalSimulator Simulate Festival",
       "type": "debugpy",
       "request": "launch",
       "module": "stustapay",

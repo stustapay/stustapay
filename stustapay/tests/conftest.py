@@ -49,6 +49,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
+from stustapay.core.service.mail import MailService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
@@ -148,6 +149,17 @@ async def event_node(db_connection: Connection) -> Node:
             sumup_api_key="",
             sumup_merchant_code="",
             ust_id="",
+            email_enabled=False,
+            email_default_sender=None,
+            email_smtp_host=None,
+            email_smtp_port=None,
+            email_smtp_username=None,
+            email_smtp_password=None,
+            payout_done_subject="[StuStaPay] Payout Completed",
+            payout_done_message="Thank you for your patience. The payout process has been completed and the funds should arrive within the next days to your specified bank account.",
+            payout_registered_subject="[StuStaPay] Registered for Payout",
+            payout_registered_message="Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transferred to the specified bank account in our next manual payout. You will receive another email once we transferred the funds.",
+            payout_sender=None,
         ),
     )
 
@@ -287,6 +299,11 @@ async def customer_service(
     return CustomerService(
         db_pool=setup_test_db_pool, config=config, auth_service=auth_service, config_service=config_service
     )
+
+
+@pytest.fixture(scope="session")
+async def mail_service(setup_test_db_pool: asyncpg.Pool, config: Config) -> MailService:
+    return MailService(db_pool=setup_test_db_pool, config=config)
 
 
 @pytest.fixture

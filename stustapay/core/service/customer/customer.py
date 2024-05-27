@@ -9,7 +9,12 @@ from pydantic import BaseModel
 from schwifty import IBAN
 
 from stustapay.core.config import Config
-from stustapay.core.schema.customer import Customer, OrderWithBon
+from stustapay.core.schema.customer import (
+    Customer,
+    OrderWithBon,
+    PayoutInfo,
+    PayoutTransaction,
+)
 from stustapay.core.schema.tree import Language
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.dbservice import DBService
@@ -21,7 +26,11 @@ from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.payout import PayoutService
 from stustapay.core.service.customer.sumup import SumupService
-from stustapay.core.service.tree.common import fetch_event_node_for_node
+from stustapay.core.service.mail import MailService
+from stustapay.core.service.tree.common import (
+    fetch_event_node_for_node,
+    fetch_restricted_event_settings_for_node,
+)
 from stustapay.framework.database import Connection
 
 
@@ -105,6 +114,22 @@ class CustomerService(DBService):
 
     @with_db_transaction(read_only=True)
     @requires_customer
+    async def payout_info(self, *, conn: Connection, current_customer: Customer) -> PayoutInfo:
+        # is customer registered for payout
+        return await conn.fetch_one(
+            PayoutInfo,
+            "select "
+            "   exists(select from payout where customer_account_id = $1) as in_payout_run, "
+            "   ( "
+            "       select pr.set_done_at "
+            "       from payout_run pr left join payout p on pr.id = p.payout_run_id left join customer c on p.customer_account_id = c.id"
+            "       where c.id = $1 "
+            "    ) as payout_date",
+            current_customer.id,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_customer
     async def get_orders_with_bon(self, *, conn: Connection, current_customer: Customer) -> list[OrderWithBon]:
         return await conn.fetch_many(
             OrderWithBon,
@@ -114,10 +139,21 @@ class CustomerService(DBService):
             current_customer.id,
         )
 
+    @with_db_transaction(read_only=True)
+    @requires_customer
+    async def get_payout_transactions(self, *, conn: Connection, current_customer: Customer) -> list[PayoutTransaction]:
+        return await conn.fetch_many(
+            PayoutTransaction,
+            "select t.amount, t.booked_at, a.name as target_account_name, a.type as target_account_type, t.id as transaction_id "
+            "from transaction t join account a on t.target_account = a.id "
+            "where t.order_id is null and t.source_account = $1 and t.target_account in (select id from account where type = 'cash_exit' or type = 'donation_exit')",
+            current_customer.id,
+        )
+
     @with_db_transaction
     @requires_customer
     async def update_customer_info(
-        self, *, conn: Connection, current_customer: Customer, customer_bank: CustomerBank
+        self, *, conn: Connection, current_customer: Customer, customer_bank: CustomerBank, mail_service: MailService
     ) -> None:
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
         assert event_node is not None
@@ -150,15 +186,29 @@ class CustomerService(DBService):
 
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(
-            "insert into customer_info (customer_account_id, iban, account_name, email, donation) "
-            "values ($1, $2, $3, $4, $5) "
-            "on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4, donation = $5",
+            "update customer_info set iban=$2, account_name=$3, email=$4, donation=$5, donate_all=false, has_entered_info=true "
+            "where customer_account_id = $1",
             current_customer.id,
             iban.compact,
             customer_bank.account_name,
             customer_bank.email,
             round(customer_bank.donation, 2),
         )
+        # get updated customer
+        current_customer = await conn.fetch_one(
+            Customer,
+            "select * from customer where id = $1",
+            current_customer.id,
+        )
+        if current_customer.email is not None:
+            res_config = await fetch_restricted_event_settings_for_node(conn, current_customer.node_id)
+            mail_service.send_mail(
+                subject=res_config.payout_registered_subject,
+                message=res_config.payout_registered_message.format(**current_customer.model_dump()),
+                from_email=res_config.payout_sender,
+                to_email=current_customer.email,
+                node_id=current_customer.node_id,
+            )
 
     async def check_payout_run(self, conn: Connection, current_customer: Customer) -> None:
         # if a payout is assigned, disallow updates.
@@ -173,15 +223,14 @@ class CustomerService(DBService):
 
     @with_db_transaction
     @requires_customer
-    async def update_customer_info_donate_all(self, *, conn: Connection, current_customer: Customer) -> None:
+    async def update_customer_info_donate_all(
+        self, *, conn: Connection, current_customer: Customer, mail_service: MailService
+    ) -> None:
         await self.check_payout_run(conn, current_customer)
-
-        # if customer_info does not exist create it, otherwise update it
         await conn.execute(
-            "insert into customer_info (customer_account_id, donation) values ($1, $2) "
-            "on conflict (customer_account_id) do update set donation = $2",
+            "update customer_info set donation=null, donate_all=true, has_entered_info=true "
+            "where customer_account_id = $1",
             current_customer.id,
-            round(current_customer.balance, 2),
         )
 
     @with_db_transaction(read_only=True)

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useGetCustomerQuery, useUpdateCustomerInfoDonateAllMutation, useUpdateCustomerInfoMutation } from "@/api";
+import { useGetCustomerQuery, usePayoutInfoQuery, useUpdateCustomerInfoDonateAllMutation, useUpdateCustomerInfoMutation } from "@/api";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCurrencySymbol } from "@/hooks/useCurrencySymbol";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
@@ -37,15 +37,16 @@ export const PayoutInfo: React.FC = () => {
 
   const [updateCustomerInfo] = useUpdateCustomerInfoMutation();
   const [updateCustomerDonateAll] = useUpdateCustomerInfoDonateAllMutation();
+  const { data: payoutInfo, error: payoutInfoError, isLoading: isPayoutInfoLoading } = usePayoutInfoQuery();
 
   const formatCurrency = useCurrencyFormatter();
   const currencySymbol = useCurrencySymbol();
 
-  if (isCustomerLoading || (!customer && !customerError)) {
+  if (isCustomerLoading || (!customer && !customerError) || isPayoutInfoLoading || (!payoutInfo && !payoutInfoError)) {
     return <Loading />;
   }
 
-  if (customerError || !customer) {
+  if (customerError || !customer || payoutInfoError || !payoutInfo) {
     toast.error(t("payout.errorFetchingData"));
     return <Navigate to="/" />;
   }
@@ -65,7 +66,14 @@ export const PayoutInfo: React.FC = () => {
         });
       }
     }),
-    account_name: z.string(),
+    account_name: z.string().superRefine((val, ctx) => {
+      if (!RegExp("^[a-zA-Z0-9':,\\-()\\/ .]+$").test(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t("payout.nameHasSpecialChars"),
+        });
+      }
+    }),
     email: z.string().email(),
     privacy_policy: z.boolean().refine((val) => val, {
       message: t("payout.mustAcceptPrivacyPolicy"),
@@ -147,15 +155,33 @@ export const PayoutInfo: React.FC = () => {
     });
   };
 
+  let info_text: string;
+  if (payoutInfo.in_payout_run && !payoutInfo.payout_date){
+    info_text = t("payout.infoPayoutScheduled");
+  }else if (payoutInfo.in_payout_run && payoutInfo.payout_date){
+    info_text = t("payout.infoPayoutCompleted", { payout_date: new Date(payoutInfo.payout_date).toLocaleString() });
+  } else if (customer.has_entered_info) {
+    info_text = t("payout.infoPayoutInitiated");
+  } else {
+    info_text = t("payout.info");
+  }
+
+  let submit_text: string;
+  if (!customer.has_entered_info){
+    submit_text = t("payout.submitPayoutData");
+  } else {
+    submit_text = t("payout.submitPayoutDataEdit");
+  }
+
   return (
     <Grid container justifyItems="center" justifyContent="center" sx={{ paddingX: 0.5 }}>
       <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
         <Stack spacing={2}>
           <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
-            {t("payout.info")}
+            {info_text}
           </Alert>
           <Typography variant="h5">{t("payout.donationTitle")}</Typography>
-          <Button variant="contained" color="primary" sx={{ width: "100%" }} onClick={onAllTipClick}>
+          <Button variant="contained" color="primary" sx={{ width: "100%" }} disabled={payoutInfo.in_payout_run} onClick={onAllTipClick}>
             {t("payout.donateRemainingBalanceOf", { remainingBalance: formatCurrency(customer.balance) })}
           </Button>
 
@@ -168,14 +194,15 @@ export const PayoutInfo: React.FC = () => {
             {(formik) => (
               <form onSubmit={formik.handleSubmit}>
                 <Stack spacing={2}>
-                  <FormTextField name="iban" label={t("payout.iban")} variant="outlined" formik={formik} />
+                  <FormTextField name="iban" label={t("payout.iban")} variant="outlined" formik={formik} disabled={payoutInfo.in_payout_run} />
                   <FormTextField
                     name="account_name"
                     label={t("payout.bankAccountHolder")}
                     variant="outlined"
                     formik={formik}
+                    disabled={payoutInfo.in_payout_run}
                   />
-                  <FormTextField name="email" label={t("payout.email")} variant="outlined" formik={formik} />
+                  <FormTextField name="email" label={t("payout.email")} variant="outlined" formik={formik} disabled={payoutInfo.in_payout_run}/>
                   <FormControl error={Boolean(formik.errors.privacy_policy)}>
                     <FormControlLabel
                       control={
@@ -184,6 +211,7 @@ export const PayoutInfo: React.FC = () => {
                           checked={formik.values.privacy_policy}
                           onChange={formik.handleChange}
                           color="primary"
+                          disabled={payoutInfo.in_payout_run}
                         />
                       }
                       label={
@@ -208,9 +236,10 @@ export const PayoutInfo: React.FC = () => {
                     InputProps={{
                       endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment>,
                     }}
+                    disabled={payoutInfo.in_payout_run}
                   />
-                  <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
-                    {formik.isSubmitting ? "Submitting" : t("payout.submitPayoutData")}
+                  <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting || payoutInfo.in_payout_run}>
+                    {formik.isSubmitting ? "Submitting" : submit_text}
                   </Button>
                 </Stack>
               </form>

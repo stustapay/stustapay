@@ -16,6 +16,7 @@ from stustapay.core.service.common.error import (
 )
 from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.customer.customer import CustomerBank, CustomerService
+from stustapay.core.service.mail import MailService
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.core.service.product import ProductService
@@ -167,7 +168,9 @@ async def test_get_orders_with_bon(customer_service: CustomerService, order_with
     assert resulting_order_with_bon.bon_generated
 
 
-async def test_update_customer_info(test_customer: Customer, customer_service: CustomerService):
+async def test_update_customer_info(
+    test_customer: Customer, customer_service: CustomerService, mail_service: MailService
+):
     auth = await customer_service.login_customer(pin=test_customer.user_tag_pin)
     assert auth is not None
 
@@ -183,6 +186,7 @@ async def test_update_customer_info(test_customer: Customer, customer_service: C
     await customer_service.update_customer_info(
         token=auth.token,
         customer_bank=customer_bank,
+        mail_service=mail_service,
     )
 
     # test if get_customer returns the updated data
@@ -200,6 +204,7 @@ async def test_update_customer_info(test_customer: Customer, customer_service: C
         await customer_service.update_customer_info(
             token=auth.token,
             customer_bank=customer_bank,
+            mail_service=mail_service,
         )
 
     # test not allowed country codes
@@ -208,6 +213,7 @@ async def test_update_customer_info(test_customer: Customer, customer_service: C
         await customer_service.update_customer_info(
             token=auth.token,
             customer_bank=customer_bank,
+            mail_service=mail_service,
         )
 
     # test invalid email
@@ -216,6 +222,7 @@ async def test_update_customer_info(test_customer: Customer, customer_service: C
         await customer_service.update_customer_info(
             token=auth.token,
             customer_bank=customer_bank,
+            mail_service=mail_service,
         )
 
     # test negative donation
@@ -224,6 +231,7 @@ async def test_update_customer_info(test_customer: Customer, customer_service: C
         await customer_service.update_customer_info(
             token=auth.token,
             customer_bank=customer_bank,
+            mail_service=mail_service,
         )
 
     # test more donation than balance
@@ -234,8 +242,11 @@ async def test_update_customer_info(test_customer: Customer, customer_service: C
         await customer_service.update_customer_info(
             token=auth.token,
             customer_bank=customer_bank,
+            mail_service=mail_service,
         )
 
     # test if update_customer_info with wrong token raises Unauthorized error
     with pytest.raises(Unauthorized):
-        await customer_service.update_customer_info(token="wrong", customer_bank=customer_bank)
+        await customer_service.update_customer_info(
+            token="wrong", customer_bank=customer_bank, mail_service=mail_service
+        )
