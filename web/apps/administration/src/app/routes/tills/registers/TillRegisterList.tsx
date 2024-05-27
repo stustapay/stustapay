@@ -15,6 +15,7 @@ import {
   useCurrentNode,
   useCurrentUserHasPrivilege,
   useCurrentUserHasPrivilegeAtNode,
+  useRenderNode,
 } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
@@ -34,6 +35,7 @@ export const TillRegisterList: React.FC = () => {
   const navigate = useNavigate();
   const formatCurrency = useCurrencyFormatter();
   const openModal = useOpenModal();
+  const renderNode = useRenderNode();
 
   const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
   const { data: cashiers } = useListCashiersQuery({ nodeId: currentNode.id });
@@ -121,6 +123,12 @@ export const TillRegisterList: React.FC = () => {
       type: "number",
       valueFormatter: ({ value }) => formatCurrency(value),
       width: 200,
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
   ];
 

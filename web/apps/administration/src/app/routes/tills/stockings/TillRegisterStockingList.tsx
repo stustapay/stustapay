@@ -11,6 +11,7 @@ import {
   useCurrentNode,
   useCurrentUserHasPrivilege,
   useCurrentUserHasPrivilegeAtNode,
+  useRenderNode,
 } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -28,6 +29,7 @@ export const TillRegisterStockingList: React.FC = () => {
   const canManageStockingsAtNode = useCurrentUserHasPrivilegeAtNode(TillStockingsRoutes.privilege);
   const formatCurrency = useCurrencyFormatter();
   const openModal = useOpenModal();
+  const renderNode = useRenderNode();
 
   const { stockings, isLoading } = useListRegisterStockingsQuery(
     { nodeId: currentNode.id },
@@ -68,6 +70,12 @@ export const TillRegisterStockingList: React.FC = () => {
       headerName: t("register.stockingTotal") as string,
       type: "number",
       valueFormatter: ({ value }) => formatCurrency(value),
+    },
+    {
+      field: "node_id",
+      headerName: t("common.definedAtNode") as string,
+      valueFormatter: ({ value }) => renderNode(value),
+      flex: 1,
     },
   ];
 
