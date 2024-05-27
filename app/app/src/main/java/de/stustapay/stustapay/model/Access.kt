@@ -38,6 +38,10 @@ object Access {
         return user.privileges.contains(Privilege.cashTransport)
     }
 
+    fun canViewCashier(user: CurrentUser): Boolean {
+        return user.privileges.contains(Privilege.createUser) or user.privileges.contains(Privilege.userManagement)
+    }
+
     fun canLogInOtherUsers(user: CurrentUser): Boolean {
         return user.privileges.contains(Privilege.terminalLogin)
     }

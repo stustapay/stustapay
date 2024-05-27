@@ -105,7 +105,7 @@ fun CashierView(
 
                     when (uiState.nav) {
                         CashierNavState.Scan, CashierNavState.Root, CashierNavState.Transfer -> {
-                            CloseContent(icon = if (uiState.privileged) {
+                            CloseContent(icon = if (uiState.canViewCashier) {
                                 Icons.Filled.Clear
                             } else {
                                 Icons.Filled.Refresh
@@ -453,7 +453,7 @@ fun CashierView(
                                 Button(modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 5.dp),
-                                    enabled = !hasRegister and uiState.privileged,
+                                    enabled = !hasRegister and uiState.canManageCashiers,
                                     onClick = {
                                         scope.launch {
                                             viewModel.equip()
@@ -465,7 +465,7 @@ fun CashierView(
                                 Button(modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 5.dp),
-                                    enabled = hasRegister,
+                                    enabled = hasRegister and uiState.canViewCashier,
                                     onClick = {
                                         scope.launch {
                                             viewModel.transfer()
@@ -479,7 +479,7 @@ fun CashierView(
                                         .weight(1.0f)
                                         .padding(end = 5.dp)
                                         .height(80.dp),
-                                        enabled = hasRegister and uiState.privileged,
+                                        enabled = hasRegister and uiState.canManageCashiers,
                                         onClick = {
                                             viewModel.withdraw()
                                         }) {
@@ -494,7 +494,7 @@ fun CashierView(
                                         .weight(1.0f)
                                         .padding(start = 5.dp)
                                         .height(80.dp),
-                                        enabled = hasRegister and uiState.privileged,
+                                        enabled = hasRegister and uiState.canManageCashiers,
                                         onClick = {
                                             viewModel.deposit()
                                         }) {

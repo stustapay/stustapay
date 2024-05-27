@@ -20,7 +20,8 @@ import javax.inject.Singleton
 
 @Singleton
 class UserRepository @Inject constructor(
-    private val userRemoteDataSource: UserRemoteDataSource
+    private val userRemoteDataSource: UserRemoteDataSource,
+    private val terminalConfigRepository: TerminalConfigRepository
 ) {
     private var _userState = MutableStateFlow<UserState>(UserState.Error("loading..."))
     var userState = _userState.asStateFlow()
@@ -63,6 +64,7 @@ class UserRepository @Inject constructor(
             is UserState.LoggedIn, is UserState.NoLogin -> {
                 status.update { null }
                 _userState.update { loginResult }
+                terminalConfigRepository.fetchConfig()
             }
         }
     }

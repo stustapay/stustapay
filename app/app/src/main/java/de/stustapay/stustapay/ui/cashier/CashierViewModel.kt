@@ -34,10 +34,17 @@ class CashierViewModel @Inject constructor(
     private val _selectedRegister = MutableStateFlow(0)
     private val _stockings = MutableStateFlow<List<CashRegisterStocking>>(listOf())
     private val _registers = MutableStateFlow<List<CashRegister>>(listOf())
-    private val _privileged = userRepository.userState.map {
+    private val _canManageCashiers = userRepository.userState.map {
         when (it) {
             is UserState.Error -> false
             is UserState.LoggedIn -> Access.canManageCashiers(it.user)
+            UserState.NoLogin -> false
+        }
+    }
+    private val _canViewCashier = userRepository.userState.map {
+        when (it) {
+            is UserState.Error -> false
+            is UserState.LoggedIn -> Access.canViewCashier(it.user)
             UserState.NoLogin -> false
         }
     }
@@ -52,9 +59,10 @@ class CashierViewModel @Inject constructor(
         _selectedRegister.asStateFlow(),
         _stockings.asStateFlow(),
         _registers.asStateFlow(),
-        _privileged,
+        _canManageCashiers,
+        _canViewCashier,
         _scanState.asStateFlow()
-    ) { requestState, navState, userInfo, amount, selectedStocking, selectedRegister, stockings, registers, privileged, scanState ->
+    ) { requestState, navState, userInfo, amount, selectedStocking, selectedRegister, stockings, registers, canManageCashiers, canViewCashier, scanState ->
         CashierUiState(
             requestState,
             navState,
@@ -64,7 +72,8 @@ class CashierViewModel @Inject constructor(
             selectedRegister,
             stockings,
             registers,
-            privileged,
+            canManageCashiers,
+            canViewCashier,
             scanState
         )
     }.stateIn(
@@ -105,7 +114,7 @@ class CashierViewModel @Inject constructor(
         _amount.update { 0u }
 
         val userState = userRepository.userState.value
-        if (userState is UserState.LoggedIn && !Access.canManageCashiers(userState.user)) {
+        if (userState is UserState.LoggedIn && !(Access.canViewCashier(userState.user) || Access.canManageCashiers(userState.user))) {
             val tagUid = userState.user.userTagUid
             if (tagUid != null) {
                 fetchTag(NfcTag(tagUid, null))
@@ -290,7 +299,8 @@ data class CashierUiState(
     val selectedRegister: Int = 0,
     val stockings: List<CashRegisterStocking> = listOf(),
     val registers: List<CashRegister> = listOf(),
-    val privileged: Boolean = false,
+    val canManageCashiers: Boolean = false,
+    val canViewCashier: Boolean = false,
     val scanState: DialogDisplayState = DialogDisplayState()
 )
 
