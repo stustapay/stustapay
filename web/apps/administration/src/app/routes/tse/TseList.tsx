@@ -1,17 +1,21 @@
 import { Tse, selectTseAll, useListTsesQuery } from "@/api";
 import { TseRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrentNode, useRenderNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Edit as EditIcon } from "@mui/icons-material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export const TseList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const canManageTses = useCurrentUserHasPrivilege(TseRoutes.privilege);
+  const canManageTsesAtNode = useCurrentUserHasPrivilegeAtNode(TseRoutes.privilege);
+  const navigate = useNavigate();
 
   const { tses, isLoading: isTsesLoading } = useListTsesQuery(
     { nodeId: currentNode.id },
@@ -68,6 +72,26 @@ export const TseList: React.FC = () => {
       flex: 1,
     },
   ];
+
+  if (canManageTses) {
+    columns.push({
+      field: "actions",
+      type: "actions",
+      headerName: t("actions") as string,
+      width: 150,
+      getActions: (params) =>
+        canManageTsesAtNode(params.row.node_id)
+          ? [
+              <GridActionsCellItem
+                icon={<EditIcon />}
+                color="primary"
+                label={t("edit")}
+                onClick={() => navigate(TseRoutes.edit(params.row.id, params.row.node_id))}
+              />,
+            ]
+          : [],
+    });
+  }
 
   return (
     <ListLayout title={t("tse.tses")} routes={TseRoutes}>

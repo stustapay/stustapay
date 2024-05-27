@@ -2237,10 +2237,12 @@ export type StatInterval = {
 };
 export type ProductTimeseries = {
   product_id: number;
+  product_name: string;
   intervals: StatInterval[];
 };
 export type ProductOverallStats = {
   product_id: number;
+  product_name: string;
   count: number;
   revenue: number;
 };
@@ -2537,9 +2539,9 @@ export type NewEvent = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
   sumup_merchant_code?: string;
-  email_smtp_password?: string | null;
   sumup_oauth_client_id?: string;
   sumup_oauth_client_secret?: string;
+  email_smtp_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
   start_date?: string | null;
@@ -2585,9 +2587,9 @@ export type UpdateEvent = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
   sumup_merchant_code?: string;
-  email_smtp_password?: string | null;
   sumup_oauth_client_id?: string;
   sumup_oauth_client_secret?: string;
+  email_smtp_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
   start_date?: string | null;
@@ -2629,9 +2631,9 @@ export type RestrictedEventSettings = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
   sumup_merchant_code?: string;
-  email_smtp_password?: string | null;
   sumup_oauth_client_id?: string;
   sumup_oauth_client_secret?: string;
+  email_smtp_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
   start_date?: string | null;

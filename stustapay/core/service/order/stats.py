@@ -62,11 +62,13 @@ class TimeseriesStatsQuery(BaseModel):
 
 class ProductTimeseries(BaseModel):
     product_id: int
+    product_name: str
     intervals: list[StatInterval]
 
 
 class ProductOverallStats(BaseModel):
     product_id: int
+    product_name: str
     count: int
     revenue: float
 
@@ -207,7 +209,8 @@ async def get_hourly_product_stats(
     *, conn: Connection, node: Node, from_time: datetime, to_time: datetime, returnable=False
 ) -> list[ProductTimeseries]:
     result = await conn.fetch(
-        "select "
+        "select s.*, prod.name as product_name "
+        "from (select "
         "   p.id as product_id, "
         "   date_trunc('hour', o.booked_at) as from_time, "
         "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
@@ -223,19 +226,24 @@ async def get_hourly_product_stats(
         "   and ($3 = any(n.parent_ids) or n.id = $3) "
         "   and p.is_returnable = $4 "
         "group by p.id, from_time, to_time "
-        "order by from_time",
+        "order by from_time) s "
+        "join product prod on s.product_id = prod.id "
+        "join node nod on prod.node_id = nod.id",
         from_time,
         to_time,
         node.id,
         returnable,
     )
     product_timeseries_map: dict[int, list[StatInterval]] = {}
+    product_names: dict[int, str] = {}
     for row in result:
         product_timeseries_map.setdefault(row["product_id"], []).append(
             StatInterval(from_time=row["from_time"], to_time=row["to_time"], count=row["count"], revenue=row["revenue"])
         )
+        product_names[row["product_id"]] = row["product_name"]
     return [
-        ProductTimeseries(product_id=p_id, intervals=intervals) for p_id, intervals in product_timeseries_map.items()
+        ProductTimeseries(product_id=p_id, intervals=intervals, product_name=product_names[p_id])
+        for p_id, intervals in product_timeseries_map.items()
     ]
 
 
@@ -383,7 +391,9 @@ class OrderStatsService(DBService):
 
         product_overall_stats = []
         for hourly_product in hourly_product_stats:
-            s = ProductOverallStats(product_id=hourly_product.product_id, count=0, revenue=0)
+            s = ProductOverallStats(
+                product_id=hourly_product.product_id, count=0, revenue=0, product_name=hourly_product.product_name
+            )
             for interval in hourly_product.intervals:
                 s.count += interval.count  # pylint: disable=no-member
                 s.revenue += interval.revenue  # pylint: disable=no-member
@@ -391,7 +401,9 @@ class OrderStatsService(DBService):
 
         deposit_overall_stats = []
         for hourly_deposit in hourly_deposit_stats:
-            s = ProductOverallStats(product_id=hourly_deposit.product_id, count=0, revenue=0)
+            s = ProductOverallStats(
+                product_id=hourly_deposit.product_id, count=0, revenue=0, product_name=hourly_deposit.product_name
+            )
             for interval in hourly_deposit.intervals:
                 s.count += interval.count  # pylint: disable=no-member
                 s.revenue += interval.revenue  # pylint: disable=no-member

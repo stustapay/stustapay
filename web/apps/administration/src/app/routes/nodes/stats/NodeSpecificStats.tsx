@@ -17,13 +17,7 @@ import {
 } from "@mui/material";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { DailyStatsTable, HourlyGraph, NodeSelect } from "@/components";
-import {
-  useGetProductStatsQuery,
-  useListProductsQuery,
-  selectProductById,
-  ProductTimeseries,
-  ProductOverallStats,
-} from "@/api";
+import { useGetProductStatsQuery, ProductTimeseries, ProductOverallStats } from "@/api";
 import { DatumValue, ResponsiveLine } from "@nivo/line";
 
 const IndividualProductStats: React.FC<{
@@ -32,41 +26,17 @@ const IndividualProductStats: React.FC<{
   overall_stats: ProductOverallStats[];
   useRevenue: boolean;
 }> = ({ hourly_intervals, overall_stats, nodeId, useRevenue }) => {
-  const { data: products, isLoading: isProductsLoading } = useListProductsQuery({
-    nodeId: nodeId,
-  });
-
   const hourlyData = React.useMemo(() => {
-    if (!products) {
-      return [];
-    }
-
     return hourly_intervals.map((productData) => ({
-      id: selectProductById(products, productData.product_id)?.name ?? "",
+      id: productData.product_name,
       data: productData.intervals.map((interval) => ({
         x: DateTime.fromISO(interval.to_time).toJSDate(),
         y: useRevenue ? interval.revenue : interval.count,
       })),
     }));
-  }, [hourly_intervals, products, useRevenue]);
+  }, [hourly_intervals, useRevenue]);
 
   const formatCurrency = useCurrencyFormatter();
-
-  if (isProductsLoading) {
-    return (
-      <Grid item xs={12}>
-        <Skeleton variant="rounded" height={300} />
-      </Grid>
-    );
-  }
-
-  if (!products) {
-    return (
-      <Alert severity="error">
-        <AlertTitle>Error loading list of products</AlertTitle>
-      </Alert>
-    );
-  }
 
   return (
     <Grid container spacing={2}>
@@ -141,7 +111,7 @@ const IndividualProductStats: React.FC<{
               {overall_stats.map((row) => (
                 <TableRow key={row.product_id}>
                   <TableCell component="th" scope="row">
-                    {selectProductById(products, row.product_id)?.name ?? "unknown product"}
+                    {row.product_name}
                   </TableCell>
                   <TableCell align="right">{useRevenue ? formatCurrency(row.revenue) : row.count}</TableCell>
                 </TableRow>
