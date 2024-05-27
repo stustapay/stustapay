@@ -37,7 +37,7 @@ export const TillRegisterUpdate: React.FC = withPrivilegeGuard("node_administrat
     <EditLayout
       title={t("register.update")}
       submitLabel={t("update")}
-      successRoute={TillRegistersRoutes.detail(register.id)}
+      successRoute={TillRegistersRoutes.list()}
       initialValues={register}
       validationSchema={TillRegisterSchema}
       onSubmit={(r) => update({ nodeId: currentNode.id, registerId: register.id, newCashRegister: r })}
