@@ -91,7 +91,7 @@ export const TillRegisterList: React.FC = () => {
     }
 
     return (
-      <Link component={RouterLink} to={CashierRoutes.detail(cashier.id)}>
+      <Link component={RouterLink} to={CashierRoutes.detail(cashier.id, cashier.node_id)}>
         {getUserName(cashier)}
       </Link>
     );
