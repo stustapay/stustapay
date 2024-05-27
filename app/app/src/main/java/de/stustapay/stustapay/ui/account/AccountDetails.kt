@@ -194,7 +194,7 @@ fun OrderListEntry(order: Order, onClick: () -> Unit) {
         OrderType.payOut -> {
             icon = Icons.Filled.KeyboardArrowDown
             label = R.string.payout
-            amount = -order.totalPrice
+            amount = order.totalPrice
         }
         OrderType.ticket -> {
             icon = Icons.Filled.Face
