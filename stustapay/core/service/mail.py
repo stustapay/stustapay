@@ -121,7 +121,7 @@ class MailService(DBService):
         try:
             context = ssl.create_default_context()
             assert smtp_config.smtp_host is not None and smtp_config.smtp_port is not None
-            with smtplib.SMTP(host=smtp_config.smtp_host, port=smtp_config.smtp_port, timeout=1.0) as server:
+            with smtplib.SMTP(host=smtp_config.smtp_host, port=smtp_config.smtp_port, timeout=10.0) as server:
                 server.starttls(context=context)
                 if smtp_config.smtp_password and smtp_config.smtp_username:
                     server.login(smtp_config.smtp_username, smtp_config.smtp_password)
