@@ -322,6 +322,7 @@ export type PayoutTransaction = {
   booked_at: string;
   target_account_name: string;
   target_account_type: string;
+  transaction_id: number;
 };
 export type CustomerPortalApiConfig = {
   test_mode: boolean;

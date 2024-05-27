@@ -67,7 +67,7 @@ export const translations = {
     privacyPolicyCheck: "I have read and agree to StuStaCulum's <1>privacy policy</1>.",
     errorFetchingData: "Error fetching data.",
     updatedBankData:
-      "Successfully updated bank data. The first payout is expected to happen approximately 3 weeks after the end of the festival.",
+      "Successfully updated bank data. Your payout is expected to happen approximately within a month.",
     errorWhileUpdatingBankData: "Error occurred while updating bank data.",
     donationMustBePositive: "Donation must be positive",
     donationExceedsBalance: "Donation cannot exceed your balance",

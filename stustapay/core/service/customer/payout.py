@@ -286,7 +286,7 @@ class PayoutService(DBService):
             "   order_id => null,"
             "   source_account_id => p.customer_account_id,"
             "   target_account_id => $2,"
-            "   amount => p.amount,"  # this amount already includes the donation (see payout creation query)
+            "   amount => p.amount,"  # this is customers balance minus donation (see payout creation)
             "   vouchers_amount => 0,"
             "   conducting_user_id => $3,"
             "   description => format('payout run %s cash exit', $1::bigint)) "
@@ -321,11 +321,13 @@ class PayoutService(DBService):
 
         res_config = await fetch_restricted_event_settings_for_node(conn, node.id)
         for payout in payouts:
+            if payout.email is None:
+                continue
             mail_service.send_mail(
                 subject=res_config.payout_done_subject,
                 message=res_config.payout_done_message.format(**payout.model_dump()),
                 from_email=res_config.payout_sender,
-                to_email=payout.email,  # type: ignore
+                to_email=payout.email,
                 node_id=node.id,
             )
 

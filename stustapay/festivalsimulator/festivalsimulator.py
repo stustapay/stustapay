@@ -174,7 +174,7 @@ class Simulator:
                 if resp.status == 503:
                     self.logger.warning(f"User with uid {user_tag_uid} problem logging in, {await resp.text()}")
                     await self.sleep()
-                    await self._login_user(terminal=terminal, user_tag_uid=user_tag_uid, role_id=role_id)
+                    return await self._login_user(terminal=terminal, user_tag_uid=user_tag_uid, role_id=role_id)
                 elif resp.status != 200:
                     self.logger.critical(
                         f"Failed to login {user_tag_uid} on terminal {terminal.terminal.name}. " f"{await resp.text()}"
@@ -576,7 +576,7 @@ class Simulator:
                 if resp.status == 503:
                     self.logger.warning(f"Customer with pin {pin} problem logging out, {await resp.text()}")
                     await self.sleep()
-                    await self.logout_customer(pin, token)
+                    return await self.logout_customer(pin, token)
                 elif resp.status != 204:
                     raise RuntimeError(f"Error trying to log out customer with pin {pin}")
 

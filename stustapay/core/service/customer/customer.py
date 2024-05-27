@@ -144,9 +144,9 @@ class CustomerService(DBService):
     async def get_payout_transactions(self, *, conn: Connection, current_customer: Customer) -> list[PayoutTransaction]:
         return await conn.fetch_many(
             PayoutTransaction,
-            "select t.amount, t.booked_at, a.name as target_account_name, a.type as target_account_type "
+            "select t.amount, t.booked_at, a.name as target_account_name, a.type as target_account_type, t.id as transaction_id "
             "from transaction t join account a on t.target_account = a.id "
-            "where t.source_account = $1 and t.target_account in (select id from account where type = 'cash_exit' or type = 'donation_exit')",
+            "where t.order_id is null and t.source_account = $1 and t.target_account in (select id from account where type = 'cash_exit' or type = 'donation_exit')",
             current_customer.id,
         )
 
@@ -180,19 +180,14 @@ class CustomerService(DBService):
         if customer_bank.donation > current_customer.balance:
             raise InvalidArgument("Donation cannot be higher then your balance")
 
-        # check sepa name
-        if not re.match(r"^[a-zA-Z0-9\'\:\?,\-\(\)\/\ ÄäÖöÜüß\&\$\%]+$", customer_bank.account_name):
-            raise InvalidArgument("Provided account name contains invalid special characters")
-
         # check email
         if not re.match(r"[^@]+@[^@]+\.[^@]+", customer_bank.email):
             raise InvalidArgument("Provided email is not valid")
 
         # if customer_info does not exist create it, otherwise update it
         await conn.execute(
-            "insert into customer_info (customer_account_id, iban, account_name, email, donation, donate_all, has_entered_info) "
-            "values ($1, $2, $3, $4, $5, false, true) "
-            "on conflict (customer_account_id) do update set iban = $2, account_name = $3, email = $4, donation = $5, donate_all = false, has_entered_info = true",
+            "update customer_info set iban=$2, account_name=$3, email=$4, donation=$5, donate_all=false, has_entered_info=true "
+            "where customer_account_id = $1",
             current_customer.id,
             iban.compact,
             customer_bank.account_name,
@@ -205,7 +200,15 @@ class CustomerService(DBService):
             "select * from customer where id = $1",
             current_customer.id,
         )
-        await self.send_mail_payout_registered(conn, current_customer, mail_service)
+        if current_customer.email is not None:
+            res_config = await fetch_restricted_event_settings_for_node(conn, current_customer.node_id)
+            mail_service.send_mail(
+                subject=res_config.payout_registered_subject,
+                message=res_config.payout_registered_message.format(**current_customer.model_dump()),
+                from_email=res_config.payout_sender,
+                to_email=current_customer.email,
+                node_id=current_customer.node_id,
+            )
 
     async def check_payout_run(self, conn: Connection, current_customer: Customer) -> None:
         # if a payout is assigned, disallow updates.
@@ -225,21 +228,9 @@ class CustomerService(DBService):
     ) -> None:
         await self.check_payout_run(conn, current_customer)
         await conn.execute(
-            "insert into customer_info (customer_account_id, donation, donate_all, has_entered_info) values ($1, null, true, true) "
-            "on conflict (customer_account_id) do update set donate_all = true, has_entered_info = true",
+            "update customer_info set donation=null, donate_all=true, has_entered_info=true "
+            "where customer_account_id = $1",
             current_customer.id,
-        )
-
-    async def send_mail_payout_registered(
-        self, conn: Connection, current_customer: Customer, mail_service: MailService
-    ) -> None:
-        res_config = await fetch_restricted_event_settings_for_node(conn, current_customer.node_id)
-        mail_service.send_mail(
-            subject=res_config.payout_registered_subject,
-            message=res_config.payout_registered_message.format(**current_customer.model_dump()),
-            from_email=res_config.payout_sender,
-            to_email=current_customer.email,  # type: ignore
-            node_id=current_customer.node_id,
         )
 
     @with_db_transaction(read_only=True)

@@ -79,7 +79,7 @@ export const OrderList: React.FC = () => {
 
   const payout_transactions = (
     payoutTransactions.filter((payoutTransaction) => payoutTransaction.amount > 0).map((payoutTransaction) => (
-    <Accordion>
+    <Accordion key={`transaction-${payoutTransaction.transaction_id}`}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1-content"

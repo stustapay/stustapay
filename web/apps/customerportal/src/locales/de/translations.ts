@@ -71,7 +71,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     privacyPolicyCheck: "Ich habe die <1>Datenschutzerklärung</1> des StuStaCulum gelesen und akzeptiere sie.",
     errorFetchingData: "Fehler beim laden der Daten.",
     updatedBankData:
-      "Bankdaten erfolgreich aktualisiert. Die erste Auszahlung erfolgt voraussichtlich 3 Wochen nach Festivalende.",
+      "Bankdaten erfolgreich aktualisiert. Deine Ausahlung erfolgt voraussichtlich innheralb von einem Monat.",
     errorWhileUpdatingBankData: "Fehler beim aktualisieren der Bankdaten.",
     donationMustBePositive: "Das Spende muss positiv sein",
     donationExceedsBalance: "Die Spende darf nicht den Kontostand überschreiten",

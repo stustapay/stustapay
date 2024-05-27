@@ -37,6 +37,7 @@ class PayoutTransaction(BaseModel):
     booked_at: datetime.datetime
     target_account_name: str
     target_account_type: str
+    transaction_id: int
 
 
 class CustomerCheckout(BaseModel):

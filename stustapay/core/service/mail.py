@@ -70,6 +70,7 @@ class MailService(DBService):
                 node_id=node_id,
             )
         )
+        self.logger.debug(f"Added mail to buffer for {to_email}")
 
     async def run_mail_service(self):
         self.logger.info("Staring periodic job to send mails.")
@@ -81,7 +82,7 @@ class MailService(DBService):
                 await self._send_mail(mail=self.mail_buffer.pop(0))
                 await asyncio.sleep(self.MAIL_SEND_INTERVAL.seconds)
             except Exception as e:
-                self.logger.exception(f"Failed to send mail with error {type(e)}")
+                self.logger.exception(f"Failed to send mail with error {e}")
 
     @with_db_transaction(read_only=True)
     async def _send_mail(
@@ -90,6 +91,7 @@ class MailService(DBService):
         conn: asyncpg.Connection,
         mail: Mail,
     ) -> bool:
+        self.logger.debug(f"Sending mail to {mail.to_email}")
         res_config = await fetch_restricted_event_settings_for_node(conn, mail.node_id)
         smtp_config = res_config.smtp_config
         if not smtp_config:
@@ -118,11 +120,13 @@ class MailService(DBService):
 
         try:
             context = ssl.create_default_context()
-            with smtplib.SMTP_SSL(smtp_config.smtp_host, smtp_config.smtp_port, context=context) as server:  # type: ignore
-                if smtp_config.smtp_password:
-                    server.login(smtp_config.smtp_username, smtp_config.smtp_password)  # type: ignore
+            assert smtp_config.smtp_host is not None and smtp_config.smtp_port is not None
+            with smtplib.SMTP(host=smtp_config.smtp_host, port=smtp_config.smtp_port, timeout=1.0) as server:
+                server.starttls(context=context)
+                if smtp_config.smtp_password and smtp_config.smtp_username:
+                    server.login(smtp_config.smtp_username, smtp_config.smtp_password)
                 server.sendmail(message["From"], message["To"], message.as_string())
         except Exception as e:
-            self.logger.exception(f"Failed to send mail to {mail.to_email} with error {type(e)}")
+            self.logger.exception(f"Failed to send mail to {mail.to_email} with error {e}")
             return False
         return True
