@@ -271,7 +271,6 @@ class TicketViewModel @Inject constructor(
         _saleCompleted.update { null }
 
         val newSale = _ticketDraft.value.getNewTicketSale(paymentMethod)
-        // val response = ticketRepository.bookTicketSale(newSale)
         val response = infallibleRepository.bookTicketSale(newSale)
 
         when (response) {
