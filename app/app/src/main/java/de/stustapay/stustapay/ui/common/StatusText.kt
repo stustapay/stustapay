@@ -30,8 +30,8 @@ fun StatusText(
 
     val mod = if (scrollable) {
         modifier
-            .verticalScroll(scrollState)
             .heightIn(min = 30.dp, max = 65.dp)
+            .verticalScroll(scrollState)
     } else {
         modifier
     }

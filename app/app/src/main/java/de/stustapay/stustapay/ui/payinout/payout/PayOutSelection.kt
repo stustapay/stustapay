@@ -1,7 +1,6 @@
 package de.stustapay.stustapay.ui.payinout.payout
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
@@ -17,7 +16,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.TagSelectedItem
@@ -91,7 +89,7 @@ fun PayOutSelection(
                 ) {
                     Text(
                         // unicode "Coin"
-                        "\uD83E\uDE99 Auszahlen...", fontSize = 28.sp,
+                        stringResource(R.string.payout_payout), fontSize = 28.sp,
                         textAlign = TextAlign.Center,
                     )
                 }

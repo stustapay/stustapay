@@ -40,7 +40,7 @@ fun NoCashRegisterWarning(
                     stringResource(R.string.no_cash_register),
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colors.onError,
-                    style = if (bigStyle) {MaterialTheme.typography.h3 } else {MaterialTheme.typography.h5}
+                    style = if (bigStyle) {MaterialTheme.typography.h4 } else {MaterialTheme.typography.h5}
                 )
             }
         }

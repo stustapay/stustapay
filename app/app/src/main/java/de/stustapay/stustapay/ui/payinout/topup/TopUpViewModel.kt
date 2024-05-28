@@ -64,6 +64,8 @@ class TopUpViewModel @Inject constructor(
     private val _topUpCompleted = MutableStateFlow<CompletedTopUp?>(null)
     val topUpCompleted = _topUpCompleted.asStateFlow()
 
+    val requestActive = infallibleRepository.active
+
     // configuration infos from backend
     val terminalLoginState = combine(
         userRepository.userState,

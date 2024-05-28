@@ -36,6 +36,7 @@ fun TicketScan(
     val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
     val ticketStatus by viewModel.ticketDraft.collectAsStateWithLifecycle()
     val tagScanStatus by viewModel.tagScanStatus.collectAsStateWithLifecycle()
+    val requestActive by viewModel.requestActive.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
@@ -121,7 +122,7 @@ fun TicketScan(
                 status = {
                     StatusText(status)
                 },
-                ready = config.isTerminalReady() && ticketStatus.scans.isNotEmpty(),
+                ready = config.isTerminalReady() && ticketStatus.scans.isNotEmpty() && !requestActive,
                 onAbort = {
                     scope.launch {
                         viewModel.clearDraft()

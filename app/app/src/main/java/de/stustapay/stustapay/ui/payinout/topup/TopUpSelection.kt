@@ -30,6 +30,7 @@ fun TopUpSelection(
     val status by viewModel.status.collectAsStateWithLifecycle()
     val topUpState by viewModel.topUpState.collectAsStateWithLifecycle()
     val topUpConfig by viewModel.terminalLoginState.collectAsStateWithLifecycle()
+    val requestActive by viewModel.requestActive.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current as Activity
 
@@ -51,11 +52,11 @@ fun TopUpSelection(
                 }
             },
         ),
-        ready = topUpConfig.hasConfig(),
+        ready = topUpConfig.hasConfig() && !requestActive,
         getAmount = { topUpState.currentAmount },
     ) { paddingValues ->
         val scrollState = rememberScrollState()
-        Column(modifier = Modifier.verticalScroll(scrollState)) {
+        Column(modifier = Modifier.verticalScroll(scrollState, reverseScrolling = true)) {
             if (!topUpConfig.canHandleCash()) {
                 NoCashRegisterWarning(modifier = Modifier.padding(4.dp))
             }

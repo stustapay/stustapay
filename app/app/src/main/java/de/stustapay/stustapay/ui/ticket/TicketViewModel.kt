@@ -55,6 +55,8 @@ class TicketViewModel @Inject constructor(
     private val _status = MutableStateFlow("")
     val status = _status.asStateFlow()
 
+    val requestActive = infallibleRepository.active
+
     // tag scanning
     private val _tagScanStatus = MutableStateFlow<TagScanStatus>(TagScanStatus.Scan)
     val tagScanStatus = _tagScanStatus.asStateFlow()
