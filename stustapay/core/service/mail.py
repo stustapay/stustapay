@@ -6,13 +6,11 @@
 # pylint: disable=missing-kwoa
 import asyncio
 import logging
-import smtplib
-import ssl
 from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
-
-# import aiosmtplib
 from email.mime.text import MIMEText
+
+import aiosmtplib
 
 # import markdown
 import asyncpg
@@ -24,7 +22,6 @@ from stustapay.core.service.common.decorators import with_db_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 
 # TODO(jobi):
-# - implement native async mail sending: e.g. aiosmtplib
 # - support for html and markdown messages
 # - implement as native service, which uses the database to handle mail state
 # - add attachments
@@ -77,10 +74,9 @@ class MailService(DBService):
         while True:
             try:
                 await asyncio.sleep(self.MAIL_SEND_CHECK_INTERVAL.seconds)
-                if len(self.mail_buffer) == 0:
-                    continue
-                await self._send_mail(mail=self.mail_buffer.pop(0))
-                await asyncio.sleep(self.MAIL_SEND_INTERVAL.seconds)
+                while len(self.mail_buffer) > 0:
+                    await self._send_mail(mail=self.mail_buffer.pop(0))
+                    await asyncio.sleep(self.MAIL_SEND_INTERVAL.seconds)
             except Exception as e:
                 self.logger.exception(f"Failed to send mail with error {e}")
 
@@ -104,7 +100,7 @@ class MailService(DBService):
         message["To"] = mail.to_email
         # message['Reply-To']
 
-        msg = MIMEText(mail.message, "plain")
+        msg = MIMEText(mail.message, "plain", "utf-8")
         message.attach(msg)
         # if mail.attachments is None:
         #     mail.attachments = {}
@@ -119,13 +115,15 @@ class MailService(DBService):
         #     message.attach(part)
 
         try:
-            context = ssl.create_default_context()
             assert smtp_config.smtp_host is not None and smtp_config.smtp_port is not None
-            with smtplib.SMTP(host=smtp_config.smtp_host, port=smtp_config.smtp_port, timeout=10.0) as server:
-                server.starttls(context=context)
-                if smtp_config.smtp_password and smtp_config.smtp_username:
-                    server.login(smtp_config.smtp_username, smtp_config.smtp_password)
-                server.sendmail(message["From"], message["To"], message.as_string())
+            await aiosmtplib.send(
+                message,
+                hostname=smtp_config.smtp_host,
+                port=smtp_config.smtp_port,
+                username=smtp_config.smtp_username,
+                password=smtp_config.smtp_password,
+                start_tls=True,
+            )
         except Exception as e:
             self.logger.exception(f"Failed to send mail to {mail.to_email} with error {e}")
             return False
