@@ -144,9 +144,9 @@ class TerminalApiAccessorInner(
         }
 
         conf.install(HttpTimeout) {
-            connectTimeoutMillis = 5000
-            requestTimeoutMillis = 10000
-            socketTimeoutMillis = 5000
+            connectTimeoutMillis = 1000  // initial connect duration
+            requestTimeoutMillis = 10000 // overall request duration
+            socketTimeoutMillis = 2000   // inactivity
         }
 
         if (logRequests) {
