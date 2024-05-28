@@ -41,7 +41,7 @@ object RegistrationStateSerializer : Serializer<RegistrationState> {
     }
 
     override suspend fun writeTo(t: RegistrationState, output: OutputStream) {
-        when(t) {
+        when (t) {
             is RegistrationState.Registered -> {
                 val regState = RegistrationStateProto.newBuilder()
                     .setRegistered(true)
@@ -50,12 +50,15 @@ object RegistrationStateSerializer : Serializer<RegistrationState> {
                     .build()
                 regState.writeTo(output);
             }
+
             is RegistrationState.NotRegistered -> {
-                val regState = RegistrationStateProto.newBuilder().clear().setRegistered(false).build()
+                val regState =
+                    RegistrationStateProto.newBuilder().clear().setRegistered(false).build()
                 regState.writeTo(output);
             }
+
             else -> {
-                throw java.lang.RuntimeException("Tried to serialize invalid RegistrationState");
+                error("Tried to serialize invalid RegistrationState: $t")
             }
         }
     }

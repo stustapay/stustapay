@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,20 +64,26 @@ fun InfalliblePopup(
                     LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
 
                         when (state) {
-                            is PopupState.CanRetry -> {
+                            is PopupState.CanRetry, is PopupState.Retrying -> {
+                                val request = when (state) {
+                                    is PopupState.CanRetry -> state.request
+                                    is PopupState.Retrying -> state.request
+                                    else -> error("unreachable")
+                                }
                                 item {
                                     Text(
                                         stringResource(R.string.infallible_popup_transaction_pending),
                                         fontSize = 25.sp,
+                                        fontWeight = FontWeight.Bold,
                                         modifier = Modifier.fillMaxWidth(),
                                         textAlign = TextAlign.Left
                                     )
 
                                     // TODO :) nicer ui
-                                    when (state.request) {
+                                    when (request) {
                                         is InfallibleApiRequest.TopUp -> {
                                             Text(
-                                                state.request.msg(),
+                                                request.msg(),
                                                 fontSize = 25.sp,
                                                 modifier = Modifier.fillMaxWidth(),
                                                 textAlign = TextAlign.Left
@@ -85,7 +92,7 @@ fun InfalliblePopup(
 
                                         is InfallibleApiRequest.TicketSale -> {
                                             Text(
-                                                state.request.msg(),
+                                                request.msg(),
                                                 fontSize = 25.sp,
                                                 modifier = Modifier.fillMaxWidth(),
                                                 textAlign = TextAlign.Left
@@ -95,11 +102,19 @@ fun InfalliblePopup(
                                 }
 
                                 item {
-                                    Button(onClick = {
-                                        viewModel.retry()
-                                    }) {
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Button(
+                                        enabled = true,
+                                        onClick = {
+                                            viewModel.retry()
+                                        }
+                                    ) {
                                         Text(
-                                            text = "Retry request",
+                                            text = when (state) {
+                                                is PopupState.CanRetry -> "Retry request"
+                                                is PopupState.Retrying -> "Retrying..."
+                                                else -> error("unreachable")
+                                            },
                                             style = StartpageItemStyle,
                                         )
                                     }
@@ -139,7 +154,7 @@ fun InfalliblePopup(
                                                     }
 
                                                     is Response.Error.Service.AlreadyProcessed -> {
-                                                        "TopUp successful! %s".format(topUp.msg())
+                                                        "TopUp successful! (was already booked: %s)".format(topUp.msg())
                                                     }
 
                                                     is Response.Error -> {
@@ -162,7 +177,7 @@ fun InfalliblePopup(
                                                     }
 
                                                     is Response.Error.Service.AlreadyProcessed -> {
-                                                        "Ticket sale successful! (was already booked)"
+                                                        "Ticket sale successful! (was already booked: %s)".format(ticketSale.msg())
                                                     }
 
                                                     is Response.Error -> {
@@ -186,7 +201,7 @@ fun InfalliblePopup(
                                     }) {
                                         Text(
                                             // SPARKLING HEART
-                                            text = "Continue \u0001\uf496",
+                                            text = "Continue \uD83D\uDC96",
                                             style = StartpageItemStyle,
                                         )
                                     }

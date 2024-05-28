@@ -23,15 +23,17 @@ fun TopUpView(
                 viewModel = viewModel,
             )
         }
+
         TopUpPage.Done -> {
             TopUpSuccess(
-                onDismiss = { viewModel.navigateTo(TopUpPage.Selection) },
+                onDismiss = { viewModel.dismissSuccess() },
                 viewModel = viewModel,
             )
         }
+
         TopUpPage.Failure -> {
             TopUpError(
-                onDismiss = { viewModel.navigateTo(TopUpPage.Selection) },
+                onDismiss = { viewModel.dismissFailure() },
                 viewModel = viewModel,
             )
         }

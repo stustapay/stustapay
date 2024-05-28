@@ -16,8 +16,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,29 +35,43 @@ class InfallibleRepository @Inject constructor(
         CoroutineScope(Dispatchers.Default + CoroutineName("infallible"))
     private lateinit var runner: Job
 
-    val request = dataSource.request
+    val request = dataSource.request.stateIn(
+        scope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = null,
+    )
 
     // not null when we have a response from successful submission
     private val _response = MutableStateFlow<InfallibleApiResponse?>(null)
     val response = _response.asStateFlow()
 
+    private val _active = MutableStateFlow(false)
+    val active = _active.asStateFlow()
+
+    private suspend fun updateRequest(req: InfallibleApiRequest) {
+        dataSource.update(req)
+    }
+
+    private suspend fun clearRequest() {
+        dataSource.clear()
+    }
+
     fun launch() {
         runner = scope.launch {
 
             // pending requests are tried to be sent here
-            dataSource.request.collect { request ->
+            request.collect { request ->
+
                 if (request == null) {
                     return@collect
                 }
 
-                Log.i("InfallibleRequest", "handling pending request ${request.msg()}")
-
                 // don't retry sending failed requests (unless manually requested)
-                if (request.status is InfallibleApiRequest.Status.Failed) {
+                if (request.status() is InfallibleApiRequest.Status.Failed) {
                     return@collect
                 }
 
-                Log.i("InfallibleRequest", "trying to send request...")
+                _active.update { true }
 
                 _response.update { null }
 
@@ -87,17 +102,17 @@ class InfallibleRepository @Inject constructor(
                     delay(1000)
                 }
 
+                _active.update { false }
+
                 if (success) {
                     // remove successful pending request
-                    dataSource.clear()
-                    _response.update { response!! }
+                    clearRequest()
                 } else {
-                    // let it show up as warning
-                    request.markFailed()
-                    dataSource.update(
-                        request
-                    )
+                    // store that it has failed
+                    updateRequest(request.asFailed())
                 }
+                // response can be ok or error!
+                _response.update { response!! }
             }
         }
     }
@@ -106,38 +121,50 @@ class InfallibleRepository @Inject constructor(
         // make sure no other request is running
         _response.waitFor { it == null }
 
-        dataSource.update(
+        updateRequest(
             InfallibleApiRequest.TopUp(newTopUp)
         )
 
-        val ret = _response.waitFor { it != null }!!
-        return (ret as InfallibleApiResponse.TopUp).topUp
+        val response = _response.waitFor { it != null }!!
+        val ret = (response as InfallibleApiResponse.TopUp).topUp
+
+        // we forget the response here so we can accept new requests
+        _response.update { null }
+        return ret
     }
 
     suspend fun bookTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
         // make sure no other request is running
         _response.waitFor { it == null }
 
-        dataSource.update(
+        updateRequest(
             InfallibleApiRequest.TicketSale(newTicketSale)
         )
 
-        val ret = _response.waitFor { it != null }!!
-        return (ret as InfallibleApiResponse.TicketSale).ticketSale
+        val response = _response.waitFor { it != null }!!
+        val ret = (response as InfallibleApiResponse.TicketSale).ticketSale
+
+        // allow the next booking
+        _response.update { null }
+        return ret
+    }
+
+    /** when the request was delivered, and its result dismissed */
+    suspend fun dismissSuccess() {
+        _response.update { null }
     }
 
     suspend fun clear() {
         // forget the request
-        dataSource.clear()
+        clearRequest()
+        // this will allow the next booking
+        _response.update { null }
     }
 
     suspend fun retry() {
-        val req = dataSource.request.first()
+        val req = request.value
         if (req != null) {
-            req.markNormal()
-            dataSource.update(
-                req
-            )
+            updateRequest(req.asNormal())
         }
     }
 }

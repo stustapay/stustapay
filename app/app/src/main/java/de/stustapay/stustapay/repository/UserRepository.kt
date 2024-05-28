@@ -64,7 +64,7 @@ class UserRepository @Inject constructor(
             is UserState.LoggedIn, is UserState.NoLogin -> {
                 status.update { null }
                 _userState.update { loginResult }
-                terminalConfigRepository.fetchConfig()
+                terminalConfigRepository.fetchConfig(keepTrying = false)
             }
         }
     }

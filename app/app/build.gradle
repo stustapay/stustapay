@@ -114,7 +114,7 @@ dependencies {
     implementation "io.ktor:ktor-serialization-kotlinx-json:$ktor_version"
     implementation "io.ktor:ktor-client-logging:$ktor_version"
     implementation 'androidx.databinding:databinding-runtime:8.0.2'
-    implementation 'androidx.datastore:datastore:1.0.0'
+    implementation "androidx.datastore:datastore:1.0.0"
     implementation 'com.sumup:merchant-api:1.4.0'
     implementation 'com.sumup:merchant-sdk:5.0.0'
     implementation 'net.openid:appauth:0.11.1'
