@@ -160,7 +160,7 @@ fun SaleHistoryView(
                         Text(
                             sale.bookedAt.toZonedDateTime()
                                 .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                .format(DateTimeFormatter.ofPattern("dd-MM-yyyy")), fontSize = 24.sp
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), fontSize = 24.sp
                         )
 
                         Text(

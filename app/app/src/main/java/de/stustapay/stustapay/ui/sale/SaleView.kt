@@ -1,18 +1,23 @@
 package de.stustapay.stustapay.ui.sale
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
+import de.stustapay.stustapay.ui.common.ErrorDialog
 import kotlinx.coroutines.launch
 
 
@@ -30,6 +35,8 @@ fun SaleView(
     val scanState = rememberNfcScanDialogState()
 
     val navTarget by viewModel.navState.collectAsStateWithLifecycle()
+    val error_ by viewModel.error.collectAsStateWithLifecycle()
+    val error = error_
     val enableScan by viewModel.enableScan.collectAsStateWithLifecycle()
 
     LaunchedEffect(navTarget) {
@@ -57,6 +64,14 @@ fun SaleView(
             viewModel.tagScanDismissed()
         }
     )
+
+    if (error != null) {
+        ErrorDialog(onDismiss = { viewModel.errorPopupDismissed() }) {
+            Text(text = stringResource(R.string.error), style = MaterialTheme.typography.h3)
+
+            Text(error, style = MaterialTheme.typography.h4)
+        }
+    }
 
     BackHandler {
         leaveView()
@@ -107,7 +122,7 @@ fun SaleView(
             SaleError(
                 onDismiss = {
                     scope.launch {
-                        viewModel.errorDismissed()
+                        viewModel.errorPageDismissed()
                     }
                 },
                 viewModel = viewModel,

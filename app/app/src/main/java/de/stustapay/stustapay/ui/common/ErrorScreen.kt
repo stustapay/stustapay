@@ -1,29 +1,24 @@
-package de.stustapay.stustapay.ui.common.pay
+package de.stustapay.stustapay.ui.common
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.Button
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.common.FailureIcon
 
 @Composable
 fun ErrorScreen(
+    modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
     topBarTitle: String? = null,
     content: @Composable () -> Unit,
@@ -37,22 +32,10 @@ fun ErrorScreen(
             }
         },
         content = { padding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 10.dp)
-                    .padding(bottom = padding.calculateBottomPadding()),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    FailureIcon(Modifier.size(60.dp))
-
-                    content()
-                }
-            }
+            ErrorBox(
+                modifier = modifier.padding(bottom = padding.calculateBottomPadding()),
+                content = content
+            )
         },
         bottomBar = {
             Button(
@@ -69,4 +52,13 @@ fun ErrorScreen(
             }
         }
     )
+}
+
+
+@Preview
+@Composable
+fun PreviewErrorScreen() {
+    ErrorScreen(onDismiss = { }) {
+        Text("oh wow it went wrong sooo badly")
+    }
 }

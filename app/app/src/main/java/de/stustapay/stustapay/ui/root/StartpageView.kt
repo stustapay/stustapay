@@ -114,8 +114,8 @@ fun StartpageView(
                 val scroll = rememberScrollState()
                 Column(
                     Modifier
-                        .verticalScroll(state = scroll)
                         .weight(1.0f)
+                        .verticalScroll(state = scroll)
                 ) {
                     for (item in startpageItems) {
                         if (loginState.checkAccess(item.canAccess)) {

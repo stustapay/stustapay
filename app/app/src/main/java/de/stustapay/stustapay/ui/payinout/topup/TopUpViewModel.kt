@@ -57,6 +57,9 @@ class TopUpViewModel @Inject constructor(
     private val _status = MutableStateFlow("")
     val status = _status.asStateFlow()
 
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage = _errorMessage.asStateFlow()
+
     private val _topUpState = MutableStateFlow(TopUpState())
     val topUpState = _topUpState.asStateFlow()
 
@@ -118,6 +121,7 @@ class TopUpViewModel @Inject constructor(
             is Response.Error.Service -> {
                 // TODO: if we remember the scanned tag, clear it here.
                 _status.update { response.msg() }
+                _errorMessage.update { response.msg() }
                 false
             }
 
@@ -144,7 +148,7 @@ class TopUpViewModel @Inject constructor(
         _status.update { "Card TopUp in progress..." }
 
         // wake the soon-needed reader :)
-        // TODO: move this before the chip scan
+        // TODO: move this even before the chip scan
         // CashECPay could get a prepareEC callback function for that.
         ecPaymentRepository.wakeup()
 
@@ -239,5 +243,9 @@ class TopUpViewModel @Inject constructor(
 
     fun dismissFailure() {
         navigateTo(TopUpPage.Selection)
+    }
+
+    fun dismissError() {
+        _errorMessage.update { null }
     }
 }
