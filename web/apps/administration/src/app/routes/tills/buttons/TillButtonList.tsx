@@ -81,7 +81,7 @@ export const TillButtonList: React.FC = () => {
                 icon={<EditIcon />}
                 color="primary"
                 label={t("edit")}
-                onClick={() => navigate(TillButtonsRoutes.edit(params.row.id))}
+                onClick={() => navigate(TillButtonsRoutes.edit(params.row.id, params.row.node_id))}
               />,
               <GridActionsCellItem
                 icon={<DeleteIcon />}

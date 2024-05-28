@@ -18,6 +18,7 @@ import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-m
 import {
   Alert,
   Button,
+  Checkbox,
   Grid,
   IconButton,
   List,
@@ -66,6 +67,9 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
             </Alert>
           )}
           <List>
+            <ListItem secondaryAction={<Checkbox edge="end" checked={customer.has_entered_info} disabled={true} />}>
+              <ListItemText primary={t("customer.hasEnteredInfo")} />
+            </ListItem>
             <ListItem>
               <ListItemText
                 primary={t("customer.bankAccountHolder")}
@@ -77,6 +81,9 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
             </ListItem>
             <ListItem>
               <ListItemText primary={t("common.email")} secondary={printMaybeNull(customer.email)} />
+            </ListItem>
+            <ListItem secondaryAction={<Checkbox edge="end" checked={customer.donate_all} disabled={true} />}>
+              <ListItemText primary={t("customer.donateAll")} />
             </ListItem>
             <ListItem>
               <ListItemText primary={t("customer.donation")} secondary={formatCurrency(customer.donation)} />
