@@ -118,13 +118,12 @@ class InfallibleRepository @Inject constructor(
     }
 
     suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp> {
-        // make sure no other request is running
-        _response.waitFor { it == null }
-
+        _response.update { null }
         updateRequest(
             InfallibleApiRequest.TopUp(newTopUp)
         )
 
+        // wait for the result delivery
         val response = _response.waitFor { it != null }!!
         val ret = (response as InfallibleApiResponse.TopUp).topUp
 
@@ -134,13 +133,12 @@ class InfallibleRepository @Inject constructor(
     }
 
     suspend fun bookTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
-        // make sure no other request is running
-        _response.waitFor { it == null }
-
+        _response.update { null }
         updateRequest(
             InfallibleApiRequest.TicketSale(newTicketSale)
         )
 
+        // wait for the result delivery
         val response = _response.waitFor { it != null }!!
         val ret = (response as InfallibleApiResponse.TicketSale).ticketSale
 
