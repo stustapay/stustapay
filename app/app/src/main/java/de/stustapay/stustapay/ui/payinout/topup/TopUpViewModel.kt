@@ -8,15 +8,15 @@ import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.libssp.model.NfcTag
-import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.libssp.net.Response
+import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
+import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TopUpRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
-import de.stustapay.stustapay.repository.InfallibleRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.UUID
 import javax.inject.Inject
@@ -45,7 +46,7 @@ data class TopUpState(
 @HiltViewModel
 class TopUpViewModel @Inject constructor(
     private val topUpRepository: TopUpRepository,
-    terminalConfigRepository: TerminalConfigRepository,
+    private val terminalConfigRepository: TerminalConfigRepository,
     userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
     private val infallibleRepository: InfallibleRepository
@@ -56,12 +57,17 @@ class TopUpViewModel @Inject constructor(
     private val _status = MutableStateFlow("")
     val status = _status.asStateFlow()
 
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage = _errorMessage.asStateFlow()
+
     private val _topUpState = MutableStateFlow(TopUpState())
     val topUpState = _topUpState.asStateFlow()
 
     // when we finished a sale
     private val _topUpCompleted = MutableStateFlow<CompletedTopUp?>(null)
     val topUpCompleted = _topUpCompleted.asStateFlow()
+
+    val requestActive = infallibleRepository.active
 
     // configuration infos from backend
     val terminalLoginState = combine(
@@ -115,6 +121,7 @@ class TopUpViewModel @Inject constructor(
             is Response.Error.Service -> {
                 // TODO: if we remember the scanned tag, clear it here.
                 _status.update { response.msg() }
+                _errorMessage.update { response.msg() }
                 false
             }
 
@@ -141,7 +148,7 @@ class TopUpViewModel @Inject constructor(
         _status.update { "Card TopUp in progress..." }
 
         // wake the soon-needed reader :)
-        // TODO: move this before the chip scan
+        // TODO: move this even before the chip scan
         // CashECPay could get a prepareEC callback function for that.
         ecPaymentRepository.wakeup()
 
@@ -160,23 +167,23 @@ class TopUpViewModel @Inject constructor(
 
         val payment = getECPayment(newTopUp)
 
-        _status.update { "Remove the chip. Starting SumUp..." }
+        _status.update { "Remove the chip. Starting EC transaction..." }
 
         // workaround so the sumup activity is not in foreground too quickly.
         // when it's active, nfc intents are no longer captured by us, apparently,
         // and then the system nfc handler spawns the default handler (e.g. stustapay) again.
         // https://stackoverflow.com/questions/60868912
-        delay(1000)
+        delay(800)
 
         // perform ec transaction
         when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
             is ECPaymentResult.Failure -> {
-                _status.update { paymentResult.msg }
+                _status.update { "EC: ${paymentResult.msg}" }
                 return
             }
 
             is ECPaymentResult.Success -> {
-                _status.update { paymentResult.result.msg }
+                _status.update { "EC: ${paymentResult.result.msg}" }
             }
         }
 
@@ -204,18 +211,17 @@ class TopUpViewModel @Inject constructor(
     }
 
     private suspend fun bookTopUp(topUpType: String, newTopUp: NewTopUp) {
-        // TODO: use infallible repo!
-        // when (val response = infallibleRepository.bookTopUp(newTopUp)) {
-        when (val response = topUpRepository.bookTopUp(newTopUp)) {
+        // when (val response = topUpRepository.bookTopUp(newTopUp)) {
+        when (val response = infallibleRepository.bookTopUp(newTopUp)) {
             is Response.OK -> {
                 clearDraft()
                 _topUpCompleted.update { response.data }
-                _status.update { "${topUpType} TopUp successful!" }
+                _status.update { "$topUpType TopUp successful!" }
                 _navState.update { TopUpPage.Done }
             }
 
             is Response.Error -> {
-                _status.update { "${topUpType} TopUp failed! ${response.msg()}" }
+                _status.update { "$topUpType TopUp failed! ${response.msg()}" }
                 _navState.update { TopUpPage.Failure }
             }
         }
@@ -224,5 +230,22 @@ class TopUpViewModel @Inject constructor(
 
     fun navigateTo(target: TopUpPage) {
         _navState.update { target }
+    }
+
+    /** when a topup was successful and the confirmation was dismissed */
+    fun dismissSuccess() {
+        // todo: some feedback during this refresh?
+        viewModelScope.launch {
+            terminalConfigRepository.tokenRefresh()
+        }
+        navigateTo(TopUpPage.Selection)
+    }
+
+    fun dismissFailure() {
+        navigateTo(TopUpPage.Selection)
+    }
+
+    fun dismissError() {
+        _errorMessage.update { null }
     }
 }

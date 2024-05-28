@@ -7,7 +7,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.NewTicketScan
 import de.stustapay.api.models.PaymentMethod
-import de.stustapay.api.models.PendingTicketSale
 import de.stustapay.api.models.UserTagScan
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
@@ -22,10 +21,9 @@ import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TicketRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -44,10 +42,10 @@ sealed interface TagScanStatus {
 @HiltViewModel
 class TicketViewModel @Inject constructor(
     private val ticketRepository: TicketRepository,
-    terminalConfigRepository: TerminalConfigRepository,
+    private val terminalConfigRepository: TerminalConfigRepository,
     private val ecPaymentRepository: ECPaymentRepository,
     private val resourcesProvider: ResourcesProvider,
-    private val infallibleRepository: InfallibleRepository
+    private val infallibleRepository: InfallibleRepository,
 ) : ViewModel() {
 
     // navigation in views
@@ -56,6 +54,8 @@ class TicketViewModel @Inject constructor(
 
     private val _status = MutableStateFlow("")
     val status = _status.asStateFlow()
+
+    val requestActive = infallibleRepository.active
 
     // tag scanning
     private val _tagScanStatus = MutableStateFlow<TagScanStatus>(TagScanStatus.Scan)
@@ -179,6 +179,10 @@ class TicketViewModel @Inject constructor(
         _saleCompleted.update { null }
 
         if (success) {
+            // todo: some feedback during this refresh?
+            viewModelScope.launch {
+                terminalConfigRepository.tokenRefresh()
+            }
             _status.update { resourcesProvider.getString(R.string.ticket_order_cleared_success) }
         } else {
             _status.update { resourcesProvider.getString(R.string.ticket_order_cleared) }
@@ -267,9 +271,8 @@ class TicketViewModel @Inject constructor(
         _saleCompleted.update { null }
 
         val newSale = _ticketDraft.value.getNewTicketSale(paymentMethod)
-        // TODO: use infallible repository
-        // val response = infallibleRepository.bookTicketSale(newSale)
-        val response = ticketRepository.bookTicketSale(newSale)
+        // val response = ticketRepository.bookTicketSale(newSale)
+        val response = infallibleRepository.bookTicketSale(newSale)
 
         when (response) {
             is Response.OK -> {

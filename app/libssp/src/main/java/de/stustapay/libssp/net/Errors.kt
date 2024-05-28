@@ -121,7 +121,7 @@ suspend fun parseException(response: HttpResponse): String {
                 val message: String,
             )
 
-            val excContent = response.body() as Unauthorized
+            val excContent = response.body<Unauthorized>()
             excContent.message.ifEmpty { excContent.id }
         }
 

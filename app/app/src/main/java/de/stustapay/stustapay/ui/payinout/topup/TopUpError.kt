@@ -1,11 +1,13 @@
 package de.stustapay.stustapay.ui.payinout.topup
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustapay.stustapay.ui.common.pay.ErrorScreen
+import de.stustapay.stustapay.ui.common.ErrorScreen
 
 @Composable
 fun TopUpError(
@@ -15,6 +17,7 @@ fun TopUpError(
     val status by viewModel.status.collectAsStateWithLifecycle()
 
     ErrorScreen(
+        modifier = Modifier.fillMaxSize(),
         onDismiss = onDismiss,
     ) {
         Text(text = "Error:", fontSize = 30.sp)

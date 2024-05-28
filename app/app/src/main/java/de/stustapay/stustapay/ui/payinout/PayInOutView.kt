@@ -21,7 +21,7 @@ import androidx.compose.material.TabRow
 import androidx.compose.ui.unit.sp
 import de.stustapay.stustapay.ui.payinout.payout.PayOutView
 import de.stustapay.stustapay.ui.payinout.topup.TopUpView
-import de.stustapay.stustapay.ui.common.pay.ErrorScreen
+import de.stustapay.stustapay.ui.common.ErrorScreen
 import de.stustapay.stustapay.ui.nav.TopAppBar
 import de.stustapay.stustapay.ui.nav.TopAppBarIcon
 

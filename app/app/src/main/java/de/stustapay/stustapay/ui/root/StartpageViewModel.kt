@@ -58,8 +58,8 @@ class StartpageViewModel @Inject constructor(
     suspend fun fetchAccessData() {
         try {
             _configLoading.update { true }
+            terminalConfigRepository.fetchConfig(keepTrying = true)
             userRepository.fetchLogin()
-            terminalConfigRepository.fetchConfig()
         } finally {
             _configLoading.update { false }
         }

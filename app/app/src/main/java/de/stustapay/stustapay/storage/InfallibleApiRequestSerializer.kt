@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.storage
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
@@ -49,11 +50,11 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequest?> {
                         InfallibleApiRequest.Status.Failed
                     }
 
-                    InfallibleApiRequestStatus.UNRECOGNIZED -> {
-                        InfallibleApiRequest.Status.Normal // default is to retry
-                    }
-
-                    null -> {
+                    null, InfallibleApiRequestStatus.UNRECOGNIZED -> {
+                        Log.e(
+                            "infallible storage",
+                            "unrecognized transaction status: ${req.status}"
+                        )
                         InfallibleApiRequest.Status.Normal // default is to retry
                     }
                 }
@@ -84,12 +85,19 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequest?> {
                         )
                     }
 
-                    InfallibleApiRequestKindProto.UNRECOGNIZED -> null
-
-                    null -> null
+                    null, InfallibleApiRequestKindProto.UNRECOGNIZED -> {
+                        Log.e("infallible storage", "unrecognized transaction kind: ${req.kind}")
+                        null
+                    }
                 }
             }
-        } catch (exception: InvalidProtocolBufferException) {
+        } catch (e: IllegalArgumentException) {
+            Log.e("infallible storage", "invalid storage content: ${e}")
+            e.printStackTrace()
+            defaultValue
+        } catch (e: InvalidProtocolBufferException) {
+            Log.e("infallible storage", "invalid storage content, defaulting.")
+            e.printStackTrace()
             defaultValue
         }
     }
@@ -99,8 +107,10 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequest?> {
         if (t == null) {
             storage.stored = false
         } else {
+            storage.stored = true
+
             val request = InfallibleApiRequestProto.newBuilder()
-            request.status = when (t.status) {
+            request.status = when (t.status()) {
                 is InfallibleApiRequest.Status.Normal -> {
                     InfallibleApiRequestStatus.STATUS_NORMAL
                 }
@@ -135,6 +145,7 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequest?> {
                             .build()
                 }
             }
+            storage.request = request.build()
         }
         storage.build().writeTo(output)
     }

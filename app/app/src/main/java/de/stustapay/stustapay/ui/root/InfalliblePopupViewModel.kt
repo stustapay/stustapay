@@ -1,6 +1,5 @@
 package de.stustapay.stustapay.ui.root
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +23,9 @@ sealed interface PopupState {
     /** show request attempt that can be retried */
     data class CanRetry(val request: InfallibleApiRequest) : PopupState
 
+    /** when the request is currently retrying */
+    data class Retrying(val request: InfallibleApiRequest) : PopupState
+
     /** show request result that must be dismissed */
     data class RetrySuccess(val response: InfallibleApiResponse) : PopupState
 }
@@ -34,27 +36,38 @@ class InfalliblePopupViewModel @Inject constructor(
     private val infallibleRepository: InfallibleRepository
 ) : ViewModel() {
 
-    val keepPopupVisible = MutableStateFlow<Boolean>(false)
+    private val showPopup = MutableStateFlow(false)
 
     val state: StateFlow<PopupState> =
-        combine(infallibleRepository.request, infallibleRepository.response) { request, response ->
+        combine(
+            infallibleRepository.request,
+            infallibleRepository.response,
+            infallibleRepository.active
+        ) { request, response, active ->
             if (request == null) {
                 // request was sent or cleared -> it's null
-                if (response != null && keepPopupVisible.value) {
+                if (response != null && showPopup.value) {
                     PopupState.RetrySuccess(response)
                 } else {
                     PopupState.Hide
                 }
             } else {
                 // request is pending.
-                when (request.status) {
+                when (request.status()) {
                     is InfallibleApiRequest.Status.Failed -> {
-                        keepPopupVisible.update { true }
+                        // when a request failed initially
+                        showPopup.update { true }
                         PopupState.CanRetry(request)
                     }
 
                     is InfallibleApiRequest.Status.Normal -> {
-                        PopupState.Hide
+                        if (showPopup.value && active) {
+                            // when we retried through the popup
+                            PopupState.Retrying(request)
+                        } else {
+                            // for every normal request
+                            PopupState.Hide
+                        }
                     }
                 }
             }
@@ -89,7 +102,8 @@ class InfalliblePopupViewModel @Inject constructor(
     /** after requests were successful */
     fun dismiss() {
         viewModelScope.launch {
-            keepPopupVisible.update { false }
+            infallibleRepository.dismissSuccess()
+            showPopup.update { false }
         }
     }
 }

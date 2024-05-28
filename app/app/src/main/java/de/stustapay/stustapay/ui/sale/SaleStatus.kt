@@ -185,6 +185,9 @@ data class SaleStatus(
             is SaleItemPrice.Returnable -> {
                 if (current is SaleItemAmount.FixedPrice) {
                     current.amount = current.amount - 1
+                    if (current.amount == 0) {
+                        buttonSelection.remove(buttonId)
+                    }
                 } else {
                     buttonSelection += Pair(
                         buttonId,

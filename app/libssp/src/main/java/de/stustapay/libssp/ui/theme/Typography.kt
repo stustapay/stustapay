@@ -1,5 +1,6 @@
 package de.stustapay.libssp.ui.theme
 
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -43,6 +44,7 @@ val Typography = Typography(
         fontSize = 16.sp,
         letterSpacing = 0.1.sp
     ),
+    // status text
     body1 = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,

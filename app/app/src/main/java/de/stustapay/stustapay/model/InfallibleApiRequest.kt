@@ -3,29 +3,27 @@ package de.stustapay.stustapay.model
 import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.NewTopUp
 
-sealed class InfallibleApiRequest(
-    var status: Status = Status.Normal
-) {
-    abstract fun msg(): String
+/**
+ * a not-yet-delivered guaranteed request.
+ * status could be a parent-class attribute but this destroys funny data class guarantees
+ * for correct equality consideration in updates in the datastore.
+ */
+sealed interface InfallibleApiRequest {
+    fun msg(): String
 
-    /** when the request has failed, record it */
-    fun markFailed() {
-        status = Status.Failed
-    }
-
-    fun markNormal() {
-        status = Status.Normal
-    }
+    fun asNormal(): InfallibleApiRequest
+    fun asFailed(): InfallibleApiRequest
+    fun status(): Status
 
     sealed interface Status {
         object Normal : Status
         object Failed : Status
     }
 
-    class TopUp(
+    data class TopUp(
         val topUp: NewTopUp,
-        status: Status = Status.Normal,
-    ) : InfallibleApiRequest(status) {
+        val status: Status = Status.Normal,
+    ) : InfallibleApiRequest {
         override fun msg(): String {
             return "Top-Up %.2f€ with %s for %s".format(
                 topUp.amount,
@@ -33,15 +31,38 @@ sealed class InfallibleApiRequest(
                 topUp.customerTagUid.toString(16).uppercase()
             )
         }
+
+        override fun asNormal(): InfallibleApiRequest {
+            return TopUp(topUp, Status.Normal)
+        }
+
+        override fun asFailed(): InfallibleApiRequest {
+            return TopUp(topUp, Status.Failed)
+        }
+
+        override fun status(): Status {
+            return status
+        }
     }
 
-    class TicketSale(
+    data class TicketSale(
         val ticketSale: NewTicketSale,
-        status: Status = Status.Normal,
-    ) : InfallibleApiRequest(status) {
-
+        val status: Status = Status.Normal,
+    ) : InfallibleApiRequest {
         override fun msg(): String {
             return "Ticket sale for %s".format(ticketSale.customerTags.joinToString { it.tagPin })
+        }
+
+        override fun asNormal(): InfallibleApiRequest {
+            return TicketSale(ticketSale, Status.Normal)
+        }
+
+        override fun asFailed(): InfallibleApiRequest {
+            return TicketSale(ticketSale, Status.Failed)
+        }
+
+        override fun status(): Status {
+            return status
         }
     }
 }

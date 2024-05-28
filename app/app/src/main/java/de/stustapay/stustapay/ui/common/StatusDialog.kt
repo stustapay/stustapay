@@ -29,22 +29,6 @@ import androidx.compose.ui.window.DialogProperties
 import de.stustapay.stustapay.R
 import de.stustapay.libssp.ui.theme.errorButtonColors
 
-@Preview
-@Composable
-fun PreviewStatusDialog() {
-    Box(
-        contentAlignment = Alignment.Center,
-    ) {
-        ConfirmCard(
-            onConfirm = {},
-            onBack = {},
-        ) {
-            Text("Do you want to save the world?", fontSize = 24.sp)
-        }
-    }
-}
-
-
 @Composable
 fun DialogCard(
     modifier: Modifier = Modifier,
@@ -116,6 +100,22 @@ fun ConfirmCard(
                     Text(text = stringResource(R.string.check_ok), fontSize = 24.sp)
                 }
             }
+        }
+    }
+}
+
+
+@Preview
+@Composable
+fun PreviewStatusDialog() {
+    Box(
+        contentAlignment = Alignment.Center,
+    ) {
+        ConfirmCard(
+            onConfirm = {},
+            onBack = {},
+        ) {
+            Text("Do you want to save the world?", fontSize = 24.sp)
         }
     }
 }

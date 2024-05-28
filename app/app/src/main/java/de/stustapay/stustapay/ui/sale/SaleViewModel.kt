@@ -54,6 +54,10 @@ class SaleViewModel @Inject constructor(
     private val _status = MutableStateFlow("loading")
     val status = _status.asStateFlow()
 
+    // error popup
+    private val _error = MutableStateFlow<String?>(null)
+    val error = _error.asStateFlow()
+
     // configuration infos from backend
     val saleConfig: StateFlow<SaleConfig> = mapSaleConfig(
         terminalConfigRepository.terminalConfigState
@@ -156,12 +160,19 @@ class SaleViewModel @Inject constructor(
         _enableScan.update { false }
     }
 
-    fun errorDismissed() {
+    fun errorPopupDismissed() {
+        _error.update { null }
+    }
+
+    fun errorPageDismissed() {
         // we clear the scanned tag in checkSale already
         _navState.update { SalePage.ProductSelect }
     }
 
     suspend fun checkSale() {
+        // important to check for the list entries
+        // and not fold them and check if sum == 0
+        // because one can have negative returnable items!
         if (_saleStatus.value.buttonSelection.isEmpty()) {
             _status.update { "Nothing ordered!" }
             return
@@ -196,8 +207,8 @@ class SaleViewModel @Inject constructor(
             is Response.Error.Service -> {
                 // maybe only clear tag for some errors.
                 clearScannedTag()
+                _error.update { response.msg() }
                 _status.update { response.msg() }
-                _navState.update { SalePage.Error }
             }
 
             is Response.Error -> {
@@ -246,35 +257,35 @@ class SaleViewModel @Inject constructor(
     ): StateFlow<SaleConfig> {
 
         return terminalConfigFlow.mapState(SaleConfig(), viewModelScope) { terminalConfig ->
-                when (terminalConfig) {
-                    is TerminalConfigState.Success -> {
-                        _status.update { "Ready for order." }
-                        SaleConfig(
-                            ready = true,
-                            buttons = terminalConfig.config.till?.buttons?.associate {
-                                Pair(
-                                    it.id.intValue(), SaleItemConfig(
-                                        id = it.id.intValue(),
-                                        caption = it.name,
-                                        price = SaleItemPrice.fromTerminalButton(it),
-                                        returnable = it.isReturnable,
-                                    )
+            when (terminalConfig) {
+                is TerminalConfigState.Success -> {
+                    _status.update { "Ready for order." }
+                    SaleConfig(
+                        ready = true,
+                        buttons = terminalConfig.config.till?.buttons?.associate {
+                            Pair(
+                                it.id.intValue(), SaleItemConfig(
+                                    id = it.id.intValue(),
+                                    caption = it.name,
+                                    price = SaleItemPrice.fromTerminalButton(it),
+                                    returnable = it.isReturnable,
                                 )
-                            } ?: mapOf(),
-                            tillName = terminalConfig.config.name,
-                        )
-                    }
+                            )
+                        } ?: mapOf(),
+                        tillName = terminalConfig.config.name,
+                    )
+                }
 
-                    is TerminalConfigState.Error -> {
-                        _status.update { terminalConfig.message }
-                        SaleConfig()
-                    }
+                is TerminalConfigState.Error -> {
+                    _status.update { terminalConfig.message }
+                    SaleConfig()
+                }
 
-                    is TerminalConfigState.NoConfig -> {
-                        _status.update { "Loading..." }
-                        SaleConfig()
-                    }
+                is TerminalConfigState.NoConfig -> {
+                    _status.update { "Loading..." }
+                    SaleConfig()
                 }
             }
+        }
     }
 }

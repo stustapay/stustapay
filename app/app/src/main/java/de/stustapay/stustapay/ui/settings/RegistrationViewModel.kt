@@ -50,7 +50,7 @@ class RegistrationViewModel @Inject constructor(
     suspend fun register(qrcodeB64: String) {
         val ok = registrationRepo.register(qrcodeB64)
         if (ok) {
-            terminalConfigRepository.fetchConfig()
+            terminalConfigRepository.fetchConfig(keepTrying = false)
         }
     }
 
