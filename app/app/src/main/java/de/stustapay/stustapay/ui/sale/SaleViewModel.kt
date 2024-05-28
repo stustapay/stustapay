@@ -170,6 +170,9 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun checkSale() {
+        // important to check for the list entries
+        // and not fold them and check if sum == 0
+        // because one can have negative returnable items!
         if (_saleStatus.value.buttonSelection.isEmpty()) {
             _status.update { "Nothing ordered!" }
             return
