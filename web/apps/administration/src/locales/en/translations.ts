@@ -624,6 +624,8 @@ export const translations = {
     noPayoutError: "No payout error",
     payoutRunError: "Error during payout",
     iban: "IBAN",
+    hasEnteredInfo: "Has entered payout information",
+    donateAll: "Donates all of their remaining balance",
   },
   terminal: {
     terminals: "Terminals",
