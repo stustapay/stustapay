@@ -50,7 +50,9 @@ fun StartpageView(
     val activity = LocalContext.current as Activity
 
     val navigateToHook = fun(dest: NavDest): Unit {
-        if (!configLoading) {
+        // only allow navigation if we have a config
+        // but always allow entering settings!
+        if (!configLoading || dest == RootNavDests.settings) {
             navigateTo(dest)
         }
     }
