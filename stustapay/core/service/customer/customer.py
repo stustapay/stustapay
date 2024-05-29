@@ -76,8 +76,10 @@ class CustomerService(DBService):
         # Customer has hardware tag and pin
         customer = await conn.fetch_maybe_one(
             Customer,
-            "select c.* from user_tag ut join customer c on ut.id = c.user_tag_id where ut.pin = $1",
-            pin,
+            "select c.* from user_tag ut join customer c on ut.id = c.user_tag_id where ut.pin = $1 or ut.pin = $2",
+            # TODO: restore case sensitivity
+            pin.lower(),  # for simulator
+            pin.upper(),  # for humans
         )
         if customer is None:
             raise AccessDenied("Invalid pin")
