@@ -257,12 +257,8 @@ class SumupService(DBService):
         # validate that the stored checkout matches up with the checkout info given by sumup
         if (
             sumup_checkout.checkout_reference != stored_checkout.checkout_reference
-            or sumup_checkout.amount != stored_checkout.amount
-            or sumup_checkout.currency != stored_checkout.currency
             or sumup_checkout.merchant_code != stored_checkout.merchant_code
-            or sumup_checkout.description != stored_checkout.description
             or sumup_checkout.id != stored_checkout.id
-            or sumup_checkout.date != stored_checkout.date
         ):
             raise SumUpError("Inconsistency! Sumup checkout info does not match stored checkout info!!!")
 
