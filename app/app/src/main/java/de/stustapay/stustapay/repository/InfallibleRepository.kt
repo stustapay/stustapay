@@ -62,9 +62,12 @@ class InfallibleRepository @Inject constructor(
             // pending requests are tried to be sent here
             request.collect { request ->
 
+
                 if (request == null) {
                     return@collect
                 }
+
+                Log.i("infallible", "collecting persistent db request: ${request.status()}")
 
                 // don't retry sending failed requests (unless manually requested)
                 if (request.status() is InfallibleApiRequest.Status.Failed) {
@@ -80,6 +83,7 @@ class InfallibleRepository @Inject constructor(
 
                 val maxAttempts = 3
                 for (attempt in 1..maxAttempts) {
+                    Log.i("infallible", "attempt ${attempt} to send")
                     response = when (request) {
                         is InfallibleApiRequest.TopUp -> {
                             val repoResponse = topUpRepository.bookTopUp(request.topUp)
@@ -99,15 +103,19 @@ class InfallibleRepository @Inject constructor(
                     }
 
                     // retry delay
+                    Log.i("infallible", "fail to send - waiting 1s")
                     delay(1000)
+                    Log.i("infallible", "done waiting")
                 }
 
                 _active.update { false }
 
                 if (success) {
+                    Log.i("infallible", "success - clearing")
                     // remove successful pending request
                     clearRequest()
                 } else {
+                    Log.i("infallible", "fail - marking as failed")
                     // store that it has failed
                     updateRequest(request.asFailed())
                 }
@@ -118,11 +126,13 @@ class InfallibleRepository @Inject constructor(
     }
 
     suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp> {
+        Log.i("infallible entry", "booking top up, setting response=null, current response=${_response.value}")
         _response.update { null }
+        Log.i("infallible entry", "persisting to database")
         updateRequest(
             InfallibleApiRequest.TopUp(newTopUp)
         )
-
+        Log.i("infallible entry", "waiting for response")
         // wait for the result delivery
         val response = _response.waitFor { it != null }!!
         val ret = (response as InfallibleApiResponse.TopUp).topUp
