@@ -69,6 +69,9 @@ class TicketViewModel @Inject constructor(
     private val _saleCompleted = MutableStateFlow<CompletedTicketSale?>(null)
     val saleCompleted = _saleCompleted.asStateFlow()
 
+    private val _actuallyOk = MutableStateFlow(false)
+    val actuallyOk = _actuallyOk.asStateFlow()
+
     // configuration infos from backend
     val terminalLoginState = terminalConfigRepository.terminalConfigState.mapState(
         initialValue = TerminalLoginState(), scope = viewModelScope
@@ -283,12 +286,20 @@ class TicketViewModel @Inject constructor(
                 _navState.update { TicketPage.Done }
             }
 
+            is Response.Error.Service.AlreadyProcessed -> {
+                _status.update { response.msg() }
+                _actuallyOk.update { true }
+                _navState.update { TicketPage.Error }
+            }
+
             is Response.Error.Service -> {
+                _actuallyOk.update { false }
                 _navState.update { TicketPage.Error }
                 _status.update { response.msg() }
             }
 
             is Response.Error -> {
+                _actuallyOk.update { false }
                 _status.update { response.msg() }
             }
         }

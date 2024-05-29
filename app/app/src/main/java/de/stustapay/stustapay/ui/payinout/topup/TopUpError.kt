@@ -5,8 +5,10 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.ErrorScreen
 
 @Composable
@@ -15,12 +17,19 @@ fun TopUpError(
     viewModel: TopUpViewModel
 ) {
     val status by viewModel.status.collectAsStateWithLifecycle()
+    val actuallyOk by viewModel.actuallyOk.collectAsStateWithLifecycle()
 
     ErrorScreen(
         modifier = Modifier.fillMaxSize(),
         onDismiss = onDismiss,
+        actuallyOk = actuallyOk,
     ) {
-        Text(text = "Error:", fontSize = 30.sp)
+        if (actuallyOk) {
+            Text(text = stringResource(R.string.success), fontSize = 30.sp)
+        }
+        else {
+            Text(text = stringResource(R.string.error), fontSize = 30.sp)
+        }
         Text(status, fontSize = 24.sp)
     }
 }

@@ -3,6 +3,7 @@ package de.stustapay.stustapay.ui.payinout.topup
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ionspin.kotlin.bignum.integer.BigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.api.models.NewTopUp
@@ -66,6 +67,11 @@ class TopUpViewModel @Inject constructor(
     // when we finished a sale
     private val _topUpCompleted = MutableStateFlow<CompletedTopUp?>(null)
     val topUpCompleted = _topUpCompleted.asStateFlow()
+
+    // dirty hack to make the error page an ok page for already-booked errors
+    // todo: remove :)
+    private val _actuallyOk = MutableStateFlow(false)
+    val actuallyOk = _actuallyOk.asStateFlow()
 
     val requestActive = infallibleRepository.active
 
@@ -219,8 +225,17 @@ class TopUpViewModel @Inject constructor(
                 _navState.update { TopUpPage.Done }
             }
 
+            is Response.Error.Service.AlreadyProcessed -> {
+                // TODO: get a CompletedTopUp here from response, and navigate to Done-Page
+                clearDraft()
+                _status.update { "$topUpType TopUp successful!" }
+                _actuallyOk.update { true }
+                _navState.update { TopUpPage.Failure }
+            }
+
             is Response.Error -> {
                 _status.update { "$topUpType TopUp failed! ${response.msg()}" }
+                _actuallyOk.update { false }
                 _navState.update { TopUpPage.Failure }
             }
         }
