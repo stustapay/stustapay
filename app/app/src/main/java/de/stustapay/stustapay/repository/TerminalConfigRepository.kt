@@ -85,7 +85,7 @@ class TerminalConfigRepository @Inject constructor(
 
                     if (secondsLeft < 60 * 9) {
                         // get a new config with fresh token
-                        fetchConfig(keepTrying = false)
+                        fetchConfig(keepTrying = true)
                     }
                 }
             }
