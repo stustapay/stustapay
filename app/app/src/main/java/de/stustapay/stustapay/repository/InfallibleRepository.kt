@@ -108,8 +108,6 @@ class InfallibleRepository @Inject constructor(
                     Log.i("infallible", "done waiting")
                 }
 
-                _active.update { false }
-
                 if (success) {
                     Log.i("infallible", "success - clearing")
                     // remove successful pending request
@@ -121,6 +119,7 @@ class InfallibleRepository @Inject constructor(
                 }
                 // response can be ok or error!
                 _response.update { response!! }
+                _active.update { false }
             }
         }
     }
