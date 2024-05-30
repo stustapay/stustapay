@@ -45,7 +45,7 @@ data class APIs(
 
 class TerminalApiAccessorInner(
     registrationRepository: RegistrationRepositoryInner,
-    private val retry: Boolean = false,
+    private val retry: Boolean,
     private val logRequests: Boolean = true
 ) {
     // Unconfined because we need to see updates to the registration state here as soon as they are emitted
@@ -139,7 +139,8 @@ class TerminalApiAccessorInner(
             conf.install(HttpRequestRetry) {
                 retryOnServerErrors(maxRetries = 5)
                 retryOnException(maxRetries = 3, retryOnTimeout = true)
-                exponentialDelay()
+                // tcp's retry timeout is 1000?
+                this.delayMillis { 1200 }
             }
         }
 
