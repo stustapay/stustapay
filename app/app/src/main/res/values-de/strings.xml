@@ -150,4 +150,6 @@
     <string name="infallible_popup_transaction_pending">Buchung nicht fertig:</string>
     <string name="infallible_popup_restart">App-Neustart empfohlen</string>
     <string name="payout_payout">🪙 Auszahlen...</string>
+    <string name="sale_check_your_order">Bestellung prüfen</string>
+    <string name="book_order">Buchen ✓</string>
 </resources>
