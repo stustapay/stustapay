@@ -324,7 +324,7 @@ create view order_tax_rates as
         sum(total_price - total_tax) as total_no_tax
     from
         ordr
-        left join line_item on (ordr.id = order_id)
+        join line_item on (ordr.id = order_id)
     group by
         ordr.id, tax_rate, tax_name;
 

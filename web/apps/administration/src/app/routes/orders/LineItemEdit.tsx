@@ -1,4 +1,5 @@
 import { Order, Product, selectProductAll, useEditOrderMutation, useListProductsQuery } from "@/api";
+import { OrderRoutes } from "@/app/routes";
 import { useCurrencyFormatter, useCurrencySymbol, useCurrentNode } from "@/hooks";
 import { Add as AddIcon, Delete as DeleteIcon, Remove as RemoveIcon } from "@mui/icons-material";
 import {
@@ -137,7 +138,7 @@ export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
       .unwrap()
       .then(({ id }) => {
         toast.success("successfully updated order");
-        navigate(`/orders/${id}`);
+        navigate(OrderRoutes.detail(id));
       })
       .catch(() => undefined);
   };
