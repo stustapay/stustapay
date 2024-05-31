@@ -361,7 +361,8 @@ class OrderService(DBService):
 
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_topup.uuid)
         if uuid_exists:
-            raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
+            # raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
+            raise AlreadyProcessedException("Successfully booked order")
 
         customer_account = await self._fetch_customer_by_user_tag(
             conn=conn, node=node, customer_tag_uid=new_topup.customer_tag_uid
@@ -487,7 +488,8 @@ class OrderService(DBService):
         """
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_sale.uuid)
         if uuid_exists:
-            raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
+            # raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
+            raise AlreadyProcessedException("Successfully booked order")
 
         customer_account = await self._fetch_customer_by_user_tag(
             conn=conn, node=node, customer_tag_uid=new_sale.customer_tag_uid
@@ -939,7 +941,8 @@ class OrderService(DBService):
 
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_pay_out.uuid)
         if uuid_exists:
-            raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
+            # raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
+            raise AlreadyProcessedException("Successfully booked order")
 
         can_pay_out = await conn.fetchval(
             "select allow_cash_out from till_profile where id = $1", current_till.active_profile_id
@@ -1115,7 +1118,8 @@ class OrderService(DBService):
     ) -> PendingTicketSale:
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_ticket_sale.uuid)
         if uuid_exists:
-            raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
+            # raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
+            raise AlreadyProcessedException("Successfully booked order")
 
         if new_ticket_sale.payment_method is not None:
             if new_ticket_sale.payment_method == PaymentMethod.tag:
