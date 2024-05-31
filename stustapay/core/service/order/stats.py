@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 import asyncpg
@@ -255,8 +255,7 @@ async def get_daily_stats(*, hourly_stats: Timeseries, event: PublicEventSetting
             "event start and end dates must be set for this event to accurately compute the daily statistics"
         )
 
-    next_day = hourly_stats.from_time.replace(
-        day=hourly_stats.from_time.day + 1,
+    next_day = (hourly_stats.from_time + timedelta(days=1)).replace(
         hour=event.daily_end_time.hour,
         minute=event.daily_end_time.minute,
         second=event.daily_end_time.second,
@@ -273,11 +272,11 @@ async def get_daily_stats(*, hourly_stats: Timeseries, event: PublicEventSetting
             stats.append(current_interval)
             current_interval = StatInterval(
                 from_time=next_day,
-                to_time=next_day.replace(day=next_day.day + 1),
+                to_time=next_day + timedelta(days=1),
                 count=0,
                 revenue=0,
             )
-            next_day = next_day.replace(day=next_day.day + 1)
+            next_day = next_day + timedelta(days=1)
         current_interval.count += hourly_stat.count  # pylint: disable=no-member
         current_interval.revenue += hourly_stat.revenue  # pylint: disable=no-member
     stats.append(current_interval)
