@@ -6,7 +6,7 @@ buildscript {
     ext {
         compose_ui_version = '1.4.3'
         camerax_version = '1.2.3'
-        ktor_version = '2.3.2'
+        ktor_version = '2.3.11'
         protobuf_version = '3.23.4'
         hilt_version = '2.47'
         hilt_android_version = '1.0.0'
