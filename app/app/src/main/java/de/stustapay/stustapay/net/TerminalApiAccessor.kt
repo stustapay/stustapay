@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.net
 
+import android.util.Log
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,7 +26,7 @@ object TerminalApiAccessorModule {
 open class TerminalApiAccessor(
     registrationRepository: RegistrationRepositoryInner
 ) {
-    private val inner = TerminalApiAccessorInner(registrationRepository)
+    private val inner = TerminalApiAccessorInner(registrationRepository, retry = true)
 
     internal suspend inline fun <reified O : Any> execute(fn: ((acc: TerminalApiAccessorInner) -> HttpResponse<O>?)): Response<O> {
         return try {
@@ -39,6 +40,7 @@ open class TerminalApiAccessor(
         } catch (e: JsonConvertException) {
             Response.Error.BadResponse(e.localizedMessage.orEmpty())
         } catch (e: Exception) {
+            Log.e("StuStaPay req", "request failed: ${e.localizedMessage}")
             Response.Error.Request(null, e)
         }
     }

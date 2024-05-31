@@ -151,4 +151,6 @@
     <string name="infallible_popup_transaction_pending">Transaction pending:</string>
     <string name="infallible_popup_restart">Try restarting the app.</string>
     <string name="payout_payout">🪙 Pay out...</string>
+    <string name="sale_check_your_order">Check your order</string>
+    <string name="book_order">Book ✓</string>
 </resources>

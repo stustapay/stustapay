@@ -1,29 +1,19 @@
 package de.stustapay.stustapay.ui.root
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun LoginProfile(
-    viewModel: StartpageViewModel
+    viewModel: TerminalConfigViewModel
 ) {
     val loginProfileUiState: LoginProfileUIState by viewModel.loginProfileUIState.collectAsStateWithLifecycle()
 
@@ -60,6 +50,7 @@ fun LoginProfile(
                 style = MaterialTheme.typography.body1,
             )
         }
+
         is LoginProfileUIState.NotLoggedIn -> {
             Text(
                 modifier = Modifier.padding(top = 4.dp, bottom = 10.dp),
@@ -68,6 +59,7 @@ fun LoginProfile(
                 style = MaterialTheme.typography.body1,
             )
         }
+
         is LoginProfileUIState.Error -> {
             Text(
                 modifier = Modifier.padding(

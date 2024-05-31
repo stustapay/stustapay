@@ -15,15 +15,33 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
+
+sealed interface InfallibleState {
+    /** no overlay visible */
+    object Hide : InfallibleState
+
+    /** show request attempt that can be retried */
+    data class CanRetry(val request: InfallibleApiRequest, val response: InfallibleApiResponse?) :
+        InfallibleState
+
+    /** when the request is currently retrying */
+    data class Retrying(val request: InfallibleApiRequest) : InfallibleState
+
+    /** show request result that must be dismissed */
+    data class RetrySuccess(val response: InfallibleApiResponse) : InfallibleState
+}
 
 @Singleton
 class InfallibleRepository @Inject constructor(
@@ -48,6 +66,43 @@ class InfallibleRepository @Inject constructor(
     private val _active = MutableStateFlow(false)
     val active = _active.asStateFlow()
 
+    private val informUser = MutableStateFlow(false)
+
+    val state: Flow<InfallibleState> =
+        combine(
+            request,
+            response,
+            active
+        ) { request, response, active ->
+            if (request == null) {
+                // request was sent or manually cleared -> it's null
+                if (response != null && informUser.value) {
+                    InfallibleState.RetrySuccess(response)
+                } else {
+                    InfallibleState.Hide
+                }
+            } else {
+                // request is pending.
+                when (request.status()) {
+                    is InfallibleApiRequest.Status.Failed -> {
+                        // when a request failed initially
+                        informUser.update { true }
+                        InfallibleState.CanRetry(request, response)
+                    }
+
+                    is InfallibleApiRequest.Status.Normal -> {
+                        if (informUser.value && active) {
+                            // when we retried through the popup
+                            InfallibleState.Retrying(request)
+                        } else {
+                            // for every normal request
+                            InfallibleState.Hide
+                        }
+                    }
+                }
+            }
+        }
+
     private suspend fun updateRequest(req: InfallibleApiRequest) {
         dataSource.update(req)
     }
@@ -59,15 +114,16 @@ class InfallibleRepository @Inject constructor(
     fun launch() {
         runner = scope.launch {
 
+            Log.i("infallible", "launching request collector")
             // pending requests are tried to be sent here
             request.collect { request ->
-
+                Log.i("infallible", "collecting persistent db request: ${request}")
 
                 if (request == null) {
                     return@collect
                 }
 
-                Log.i("infallible", "collecting persistent db request: ${request.status()}")
+                Log.i("infallible", "persistent db request has status: ${request.status()}")
 
                 // don't retry sending failed requests (unless manually requested)
                 if (request.status() is InfallibleApiRequest.Status.Failed) {
@@ -81,7 +137,8 @@ class InfallibleRepository @Inject constructor(
                 var response: InfallibleApiResponse? = null
                 var success = false
 
-                val maxAttempts = 3
+                // we do the retries in the lower http layer now for every request!
+                val maxAttempts = 1
                 for (attempt in 1..maxAttempts) {
                     Log.i("infallible", "attempt ${attempt} to send")
                     response = when (request) {
@@ -108,8 +165,6 @@ class InfallibleRepository @Inject constructor(
                     Log.i("infallible", "done waiting")
                 }
 
-                _active.update { false }
-
                 if (success) {
                     Log.i("infallible", "success - clearing")
                     // remove successful pending request
@@ -119,14 +174,19 @@ class InfallibleRepository @Inject constructor(
                     // store that it has failed
                     updateRequest(request.asFailed())
                 }
+
                 // response can be ok or error!
                 _response.update { response!! }
+                _active.update { false }
             }
         }
     }
 
     suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp> {
-        Log.i("infallible entry", "booking top up, setting response=null, current response=${_response.value}")
+        Log.i(
+            "infallible entry",
+            "booking top up, setting response=null, current response=${_response.value}"
+        )
         _response.update { null }
         Log.i("infallible entry", "persisting to database")
         updateRequest(
@@ -160,6 +220,7 @@ class InfallibleRepository @Inject constructor(
     /** when the request was delivered, and its result dismissed */
     suspend fun dismissSuccess() {
         _response.update { null }
+        informUser.update { false }
     }
 
     suspend fun clear() {
@@ -170,6 +231,7 @@ class InfallibleRepository @Inject constructor(
     }
 
     suspend fun retry() {
+        informUser.update { true }
         val req = request.value
         if (req != null) {
             updateRequest(req.asNormal())

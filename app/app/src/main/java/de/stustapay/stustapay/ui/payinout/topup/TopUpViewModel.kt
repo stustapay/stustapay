@@ -152,7 +152,6 @@ class TopUpViewModel @Inject constructor(
     /** called from the card payment button */
     suspend fun topUpWithCard(context: Activity, tag: NfcTag) {
         _status.update { "Card TopUp in progress..." }
-
         // wake the soon-needed reader :)
         // TODO: move this even before the chip scan
         // CashECPay could get a prepareEC callback function for that.
@@ -217,6 +216,7 @@ class TopUpViewModel @Inject constructor(
     }
 
     private suspend fun bookTopUp(topUpType: String, newTopUp: NewTopUp) {
+        _status.update { "Booking $topUpType TopUp..." }
         when (val response = infallibleRepository.bookTopUp(newTopUp)) {
             is Response.OK -> {
                 clearDraft()

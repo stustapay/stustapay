@@ -33,11 +33,24 @@ class TerminalConfigRepository @Inject constructor(
     private val terminalConfigRemoteDataSource: TerminalConfigRemoteDataSource,
     private val nfcRepository: NfcRepository,
 ) {
-    private var _terminalConfigState =
+    private val _terminalConfigState =
         MutableStateFlow<TerminalConfigState>(TerminalConfigState.NoConfig)
     var terminalConfigState = _terminalConfigState.asStateFlow()
 
+    private val _fetching = MutableStateFlow(false)
+    val fetching = _fetching.asStateFlow()
+
     suspend fun fetchConfig(keepTrying: Boolean): Boolean {
+        try {
+            _fetching.update { true }
+            return fetchConfig_(keepTrying)
+        }
+        finally {
+            _fetching.update { false }
+        }
+    }
+
+    private suspend fun fetchConfig_(keepTrying: Boolean): Boolean {
         if (!registrationRepository.isRegistered()) {
             _terminalConfigState.update { TerminalConfigState.NoConfig }
             return true
@@ -85,7 +98,7 @@ class TerminalConfigRepository @Inject constructor(
 
                     if (secondsLeft < 60 * 9) {
                         // get a new config with fresh token
-                        fetchConfig(keepTrying = false)
+                        fetchConfig(keepTrying = true)
                     }
                 }
             }
