@@ -19,7 +19,7 @@ import de.stustapay.stustapay.R
 @Composable
 fun ErrorScreen(
     modifier: Modifier = Modifier,
-    onDismiss: () -> Unit,
+    onDismiss: (() -> Unit)?,
     topBarTitle: String? = null,
     actuallyOk: Boolean = false,
     content: @Composable () -> Unit,
@@ -40,17 +40,19 @@ fun ErrorScreen(
             )
         },
         bottomBar = {
-            Button(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onDismiss()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(70.dp)
-                    .padding(10.dp)
-            ) {
-                Text(text = stringResource(R.string.back))
+            if (onDismiss != null) {
+                Button(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDismiss()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(70.dp)
+                        .padding(10.dp)
+                ) {
+                    Text(text = stringResource(R.string.back))
+                }
             }
         }
     )

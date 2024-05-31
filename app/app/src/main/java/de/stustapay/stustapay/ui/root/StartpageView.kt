@@ -46,7 +46,6 @@ fun StartpageView(
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
-    val scope = rememberCoroutineScope()
     val activity = LocalContext.current as Activity
 
     val navigateToHook = fun(dest: NavDest): Unit {
@@ -57,33 +56,11 @@ fun StartpageView(
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.fetchAccessData()
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(brush = Brush.verticalGradient(colors = gradientColors)),
     ) {
-        IconButton(
-            modifier = Modifier
-                .align(alignment = Alignment.TopEnd)
-                .padding(top = 15.dp, end = 20.dp)
-                .size(30.dp),
-            onClick = {
-                scope.launch {
-                    viewModel.fetchAccessData()
-                }
-            },
-            enabled = !configLoading,
-        ) {
-            if (configLoading) {
-                Spinner()
-            } else {
-                Icon(Icons.Filled.Refresh, "Refresh")
-            }
-        }
 
         Column(
             modifier = Modifier
@@ -91,21 +68,7 @@ fun StartpageView(
                 .padding(top = 5.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val title = loginState.title()
-            Text(
-                text = title.title,
-                fontSize = 30.sp,
-                modifier = Modifier.padding(top = 10.dp)
-            )
-            if (title.subtitle != null) {
-                Text(
-                    text = title.subtitle,
-                    fontSize = 24.sp,
-                    modifier = Modifier.padding(top = 10.dp)
-                )
-            }
-
-            LoginProfile(viewModel)
+            TerminalConfig()
 
             Column(verticalArrangement = Arrangement.Bottom) {
 

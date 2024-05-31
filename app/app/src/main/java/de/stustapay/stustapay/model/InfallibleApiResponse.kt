@@ -6,11 +6,21 @@ import de.stustapay.libssp.net.Response
 
 
 sealed interface InfallibleApiResponse {
+    fun submitSuccess(): Boolean
+
     data class TopUp(
         val topUp: Response<CompletedTopUp>
-    ) : InfallibleApiResponse
+    ) : InfallibleApiResponse {
+        override fun submitSuccess(): Boolean {
+            return topUp.submitSuccess()
+        }
+    }
 
     data class TicketSale(
         val ticketSale: Response<CompletedTicketSale>
-    ) : InfallibleApiResponse
+    ) : InfallibleApiResponse {
+        override fun submitSuccess(): Boolean {
+            return ticketSale.submitSuccess()
+        }
+    }
 }
