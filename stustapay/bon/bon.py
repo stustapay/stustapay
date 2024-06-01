@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+import asyncpg
 from pydantic import BaseModel, computed_field
 
 from stustapay.bon.pdflatex import PdfRenderResult, pdflatex, render_template
@@ -222,24 +223,27 @@ async def generate_dummy_bon(node_id: int, event: RestrictedEventSettings) -> Pd
     return await render_receipt(context=ctx)
 
 
-async def generate_bon(conn: Connection, order_id: int) -> PdfRenderResult:
-    order = await fetch_order(conn=conn, order_id=order_id)
-    if order is None:
-        return PdfRenderResult(success=False, msg="could not fetch order")
+async def generate_bon(db_pool: asyncpg.Pool, order_id: int) -> PdfRenderResult:
+    async with db_pool.acquire() as conn:
+        order = await fetch_order(conn=conn, order_id=order_id)
+        if order is None:
+            return PdfRenderResult(success=False, msg="could not fetch order")
 
-    event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=order.node_id)
-    config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
+        event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=order.node_id)
+        config = BonConfig(
+            ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title
+        )
 
-    aggregations = await conn.fetch_many(
-        TaxRateAggregation,
-        "select tax_name, tax_rate, total_price, total_tax, total_no_tax "
-        "from order_tax_rates "
-        "where id = $1 "
-        "order by tax_rate",
-        order_id,
-    )
-    if len(aggregations) == 0:
-        return PdfRenderResult(success=False, msg="could not fetch aggregated tax rates")
+        aggregations = await conn.fetch_many(
+            TaxRateAggregation,
+            "select tax_name, tax_rate, total_price, total_tax, total_no_tax "
+            "from order_tax_rates "
+            "where id = $1 "
+            "order by tax_rate",
+            order_id,
+        )
+        if len(aggregations) == 0:
+            return PdfRenderResult(success=False, msg="could not fetch aggregated tax rates")
 
     context = BonTemplateContext(
         order=order,
