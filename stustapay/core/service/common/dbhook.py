@@ -6,7 +6,7 @@ import asyncio
 import contextlib
 import inspect
 import logging
-from typing import Awaitable, Callable, Optional
+from typing import Callable, Coroutine, Optional
 
 import asyncpg.exceptions
 
@@ -22,7 +22,7 @@ class DBHook:
         self,
         pool: asyncpg.Pool,
         channel: str,
-        event_handler: Callable[[Optional[str]], Awaitable[Optional[StopIteration]]],
+        event_handler: Callable[[Optional[str]], Coroutine],
         initial_run: bool = False,
         hook_timeout: int = 5,
     ):
@@ -41,6 +41,8 @@ class DBHook:
 
         self.events: asyncio.Queue[str | StopIteration] = asyncio.Queue(maxsize=2048)
         self.logger = logging.getLogger(__name__)
+
+        self.current_tasks: set[asyncio.Task] = set()
 
     @contextlib.asynccontextmanager
     async def acquire_conn(self):
@@ -71,36 +73,39 @@ class DBHook:
             self.events.task_done()
         await self.events.put(StopIteration())
 
-    async def run(self):
-        while True:
-            try:
-                async with self.acquire_conn():
-                    if self.initial_run:
-                        # run the handler once to process pending data
-                        ret = await self.event_handler(None)
-                        if ret is StopIteration:
-                            return
+    async def run(self, num_parallel=1):
+        async with asyncio.TaskGroup() as tg:
+            while True:
+                try:
+                    async with self.acquire_conn():
+                        if self.initial_run:
+                            # run the handler once to process pending data
+                            await self.event_handler(None)
 
-                    # handle events
-                    while True:
-                        event: str | StopIteration = await self.events.get()
-                        if isinstance(event, StopIteration):
-                            return
+                        # handle events
+                        while True:
+                            event: str | StopIteration = await self.events.get()
+                            if isinstance(event, StopIteration):
+                                return
 
-                        ret = await asyncio.wait_for(self.event_handler(event), self.timelimit)
-                        self.events.task_done()
-                        if ret == StopIteration:
-                            return
-            except asyncio.exceptions.TimeoutError:
-                self.logger.error("Timout occurred during DBHook.run")
-            except (KeyboardInterrupt, SystemExit, asyncio.CancelledError):
-                self.logger.debug("Stopping DBHook.run due to cancellation")
-                return
-            except Exception:
-                import traceback
+                            task: asyncio.Task = tg.create_task(self.event_handler(event))
+                            self.current_tasks.add(task)
 
-                self.logger.error(f"Error occurred during DBHook.run: {traceback.format_exc()}")
-                await asyncio.sleep(1)
+                            if len(self.current_tasks) >= num_parallel:
+                                done, _ = await asyncio.wait(self.current_tasks, return_when=asyncio.FIRST_COMPLETED)
+                                self.current_tasks.difference_update(done)
+
+                            self.events.task_done()
+                except asyncio.exceptions.TimeoutError:
+                    self.logger.error("Timout occurred during DBHook.run")
+                except (KeyboardInterrupt, SystemExit, asyncio.CancelledError):
+                    self.logger.debug("Stopping DBHook.run due to cancellation")
+                    return
+                except Exception:
+                    import traceback
+
+                    self.logger.error(f"Error occurred during DBHook.run: {traceback.format_exc()}")
+                    await asyncio.sleep(1)
 
     def notification_callback(self, connection: Connection, pid: int, channel: str, payload: str):
         """
