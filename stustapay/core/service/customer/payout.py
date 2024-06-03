@@ -280,7 +280,7 @@ class PayoutService(DBService):
             payout_run_id,
             current_user.id,
         )
-        money_exit_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_exit)
+        sepa_exit_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sepa_exit)
         await conn.execute(
             "select book_transaction("
             "   order_id => null,"
@@ -292,7 +292,7 @@ class PayoutService(DBService):
             "   description => format('payout run %s cash exit', $1::bigint)) "
             "from payout_view p where payout_run_id = $1",
             payout_run_id,
-            money_exit_acc.id,
+            sepa_exit_acc.id,
             current_user.id,
         )
         donation_exit_acc = await get_system_account_for_node(

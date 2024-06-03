@@ -53,7 +53,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     },
   },
   transaction: {
-    cashExit: "Auszahlung",
+    sepaExit: "Auszahlung",
     donationExit: "Spende",
   },
   payout: {

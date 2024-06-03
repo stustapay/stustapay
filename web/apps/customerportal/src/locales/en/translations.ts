@@ -49,7 +49,7 @@ export const translations = {
     },
   },
   transaction: {
-    cashExit: "Payout",
+    sepaExit: "Payout",
     donationExit: "Donation",
   },
   payout: {

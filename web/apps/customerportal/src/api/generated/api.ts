@@ -110,7 +110,8 @@ export type AccountType =
   | "transport"
   | "cashier"
   | "voucher_create"
-  | "donation_exit";
+  | "donation_exit"
+  | "sepa_exit";
 export type ProductRestriction = "under_16" | "under_18";
 export type UserTagHistoryEntry = {
   user_tag_id: number;
