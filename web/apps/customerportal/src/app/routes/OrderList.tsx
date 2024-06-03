@@ -67,7 +67,7 @@ export const OrderList: React.FC = () => {
   };
 
   const getTransactionName = (transaction: PayoutTransaction) => {
-    if (transaction.target_account_type === "sepa_exit") {
+    if (transaction.target_account_type === "cash_exit" || transaction.target_account_type === "sepa_exit") {
       return t("transaction.sepaExit");
     } else if (transaction.target_account_type === "donation_exit") {
       return t("transaction.donationExit");
