@@ -9,6 +9,7 @@ import logging
 from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate
 
 import aiosmtplib
 
@@ -98,6 +99,7 @@ class MailService(DBService):
         message["Subject"] = mail.subject
         message["From"] = mail.from_email if mail.from_email else res_config.email_default_sender
         message["To"] = mail.to_email
+        message["Date"] = formatdate(localtime=True)
         # message['Reply-To']
 
         msg = MIMEText(mail.message, "plain", "utf-8")
