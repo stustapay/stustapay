@@ -55,7 +55,7 @@ export const translations = {
   },
   payout: {
     iban: "IBAN",
-    bankAccountHolder: "Account Holder",
+    bankAccountHolder: "Bank Account Holder",
     email: "E-Mail",
     info: "Please enter your bank account information so we can transfer your leftover balance. You can also donate parts or your whole remaining balance to support our volunteer work. Kulturleben in der Studentenstadt e. V. is a student-run non-profit organization which annually holds the StuStaCulum festival. The payout will happen within approximately one month.",
     infoPayoutInitiated: "You have already provided your bank information and your remaining balance will be payed out in the next manual triggered payout batch (usually within a month). However, you can still edit your bank information or donation choice. Thank you for your patience.",

@@ -289,8 +289,8 @@ class PayoutService(DBService):
             "   amount => p.amount,"  # this is customers balance minus donation (see payout creation)
             "   vouchers_amount => 0,"
             "   conducting_user_id => $3,"
-            "   description => format('payout run %s cash exit', $1::bigint)) "
-            "from payout_view p where payout_run_id = $1",
+            "   description => format('payout run %s sepa exit', $1::bigint)) "
+            "from payout_view p where payout_run_id = $1 and round(p.amount, 2) > 0",
             payout_run_id,
             sepa_exit_acc.id,
             current_user.id,
@@ -307,7 +307,7 @@ class PayoutService(DBService):
             "   vouchers_amount => 0,"
             "   conducting_user_id => $3,"
             "   description => format('payout run %s donation exit', $1::bigint)) "
-            "from payout_view p where payout_run_id = $1",
+            "from payout_view p where payout_run_id = $1 and round(p.donation, 2) > 0",
             payout_run_id,
             donation_exit_acc.id,
             current_user.id,
@@ -381,7 +381,7 @@ class PayoutService(DBService):
             "   select "
             "       customer_account_id, "
             "       sum(balance - donation) over (order by customer_account_id rows between unbounded preceding and current row) as running_total "
-            "   from customers_without_payout_run p where p.node_id = $2 and p.payout_export and p.balance > 0 "
+            "   from customers_without_payout_run p where p.node_id = $2 and p.payout_export and round(p.balance, 2) > 0 "
             "   order by customer_account_id "
             ") as agr "
             "where running_total <= $1",
@@ -421,7 +421,7 @@ class PayoutService(DBService):
             "               count(*) over (order by customer_account_id rows between unbounded preceding and current row) as index, "
             "               sum(balance - donation) over (order by customer_account_id rows between unbounded preceding and current row) as running_total "
             "           from customers_without_payout_run p "
-            "           where p.node_id = $3 and p.payout_export and p.balance > 0 "
+            "           where p.node_id = $3 and p.payout_export and round(p.balance, 2) > 0 "
             "           order by customer_account_id "
             "        ) as agr where running_total <= $2 and index <= $4 "
             "    )"

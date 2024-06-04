@@ -67,7 +67,7 @@ export const PayoutInfo: React.FC = () => {
       }
     }),
     account_name: z.string().superRefine((val, ctx) => {
-      if (!RegExp("^[a-zA-Z0-9':,\\-()\\/ .]+$").test(val)) {
+      if (!RegExp("^[a-zA-Z':,\\-()\\/ .]+$").test(val)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: t("payout.nameHasSpecialChars"),
