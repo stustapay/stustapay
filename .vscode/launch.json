@@ -50,6 +50,14 @@
       "module": "stustapay",
       "justMyCode": true,
       "args": ["-c", "server.yaml", "-vvv", "simulate", "start"]
+    },
+    {
+      "name": "Python Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "justMyCode": true,
+      "args": ["."]
     }
   ]
 }

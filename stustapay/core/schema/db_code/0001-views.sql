@@ -113,7 +113,7 @@ create view customers_without_payout_run as
         c.*
     from customer c
     left join payout p on c.id = p.customer_account_id
-    where p.id is null and (c.iban is not null or round(c.balance - c.donation, 2) = 0) and c.payout_export != false;
+    where p.id is null and c.has_entered_info and c.payout_export != false and round(c.balance, 2) > 0;
 
 create view payout_run_with_stats as
     select

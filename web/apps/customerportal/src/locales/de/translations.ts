@@ -59,7 +59,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
   },
   payout: {
     iban: "IBAN",
-    bankAccountHolder: "Kontoinhaber",
+    bankAccountHolder: "Bankkontoinhaber",
     email: "E-Mail",
     info: "Damit wir dein Restguthaben überweisen können, trage bitte deine Bankdaten hier ein. Du kannst auch einen Teil oder Dein gesamtes Guthaben an uns spenden, um unser ehrenamtliches Engagement zu unterstützen. Kulturleben in der Studentenstadt e.V. is ein von Studierenden betriebener gemeinnütziger Verein, welcher jährlich das StuStaCulum-Festival organisiert. Deine Auszahlung findet voraussichtlich innerhalb eines Monats statt.",
     infoPayoutInitiated: "Du hast deine Bankinformationen bereits angegeben und dein verbleibendes Guthaben wird in der nächsten manuell ausgelösten Auszahlung (in der Regel innerhalb eines Monats) ausgezahlt. Du kannst jedoch weiterhin deine Bankinformationen oder deine Spendenwahl ändern. Vielen Dank für deine Geduld.",
