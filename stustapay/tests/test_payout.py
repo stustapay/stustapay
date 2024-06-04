@@ -93,6 +93,10 @@ async def customers(
     return customers
 
 
+def filter_zero_payout(customers: list[CustomerTestInfo]) -> list[CustomerTestInfo]:
+    return [c for c in customers if round(c.balance - c.donation, 2) > 0 or c.donation_all]
+
+
 def _xml_text_at_node(tree: ET.Element | ET.ElementTree, path: str) -> str:
     node = tree.find(path)
     assert node is not None
@@ -103,7 +107,7 @@ def _xml_text_at_node(tree: ET.Element | ET.ElementTree, path: str) -> str:
 def check_sepa_xml(xml_file_content: str, customers: list[CustomerTestInfo], sepa_config: SEPAConfig):
     tree: ET.Element = ET.fromstring(xml_file_content)
     p = "{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}"
-    customers_with_non_null_amount = [c for c in customers if round(c.balance - c.donation, 2) > 0]
+    assert all([round(c.balance - c.donation, 2) > 0 for c in customers])
 
     group_sum = float(_xml_text_at_node(tree, f"{p}CstmrCdtTrfInitn/{p}GrpHdr/{p}CtrlSum"))
     total_sum = float(_xml_text_at_node(tree, f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CtrlSum"))
@@ -111,12 +115,12 @@ def check_sepa_xml(xml_file_content: str, customers: list[CustomerTestInfo], sep
     assert group_sum == total_sum
 
     sepa_transfers = tree.findall(f"{p}CstmrCdtTrfInitn/{p}PmtInf/{p}CdtTrfTxInf")
-    assert len(sepa_transfers) == len(customers_with_non_null_amount)
+    assert len(sepa_transfers) == len(customers)
 
     sum_of_individual_payments = 0.0
     for sepa_transfer in sepa_transfers:
         account_name = _xml_text_at_node(sepa_transfer, f"{p}Cdtr/{p}Nm")
-        customers_with_name = [c for c in customers_with_non_null_amount if c.account_name == account_name]
+        customers_with_name = [c for c in customers if c.account_name == account_name]
         assert (
             len(customers_with_name) == 1
         ), f"A customer with the account name {account_name} should not be part of a payout run"
@@ -147,6 +151,7 @@ async def test_create_payout_run(
     event: RestrictedEventSettings,
 ):
     assert event.sepa_config is not None
+    customers = filter_zero_payout(customers)
     customer_ids = [c.id for c in customers]
     ids_not_to_transfer = [customer.id for customer in customers[:2]]
     customers_to_transfer = list(filter(lambda c: c.id not in ids_not_to_transfer, customers))
@@ -217,8 +222,8 @@ async def test_max_payout_sum(
 ):
     assert event.sepa_config is not None
     num = 5
-    s = sum(customer.balance - customer.donation for customer in customers[:num]) + 1
-    customers_to_transfer = customers[:num]
+    customers_to_transfer = filter_zero_payout(customers)[:num]
+    s = sum(customer.balance - customer.donation for customer in customers_to_transfer) + 1
 
     payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
         token=event_admin_token,
@@ -244,7 +249,7 @@ async def test_max_num_payouts(
 ):
     assert event.sepa_config is not None
     num = 5
-    customers_to_transfer = customers[:num]
+    customers_to_transfer = filter_zero_payout(customers)[:num]
 
     payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
         token=event_admin_token,
@@ -322,7 +327,7 @@ async def test_set_payout_to_done(
     )
 
     for customer in customers:
-        balance = await db_connection.fetchval("select balance from account where id = $1", customer.id)
+        balance = await db_connection.fetchval("select round(balance, 2) from account where id = $1", customer.id)
         assert balance == 0
 
     payout_run = await customer_service.payout.get_payout_run(
@@ -348,6 +353,8 @@ async def test_csv_export(
     customer_service: CustomerService,
 ):
     assert event.sepa_config is not None
+    # csv contains zero payouts that have non zero donation!
+    customers = [c for c in customers if round(c.balance, 2) > 0]
     payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
         token=event_admin_token,
         node_id=event_node.id,
@@ -390,6 +397,7 @@ async def test_sepa_export(
     customers: list[CustomerTestInfo],
     event: RestrictedEventSettings,
 ):
+    customers = filter_zero_payout(customers)
     sepa_config = event.sepa_config
     assert sepa_config is not None
     execution_date = datetime.date.today()
