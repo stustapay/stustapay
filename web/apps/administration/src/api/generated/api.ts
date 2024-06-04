@@ -1963,7 +1963,8 @@ export type AccountType =
   | "transport"
   | "cashier"
   | "voucher_create"
-  | "donation_exit";
+  | "donation_exit"
+  | "sepa_exit";
 export type UserTagHistoryEntry = {
   user_tag_id: number;
   user_tag_pin: string;

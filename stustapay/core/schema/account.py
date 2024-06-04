@@ -23,6 +23,7 @@ class AccountType(enum.Enum):
     cashier = "cashier"
     voucher_create = "voucher_create"
     donation_exit = "donation_exit"
+    sepa_exit = "sepa_exit"
 
 
 def get_source_account(order_type: OrderType, customer_account: int):

@@ -49,7 +49,8 @@ export const translations = {
     },
   },
   transaction: {
-    cashExit: "Payout",
+    cashExit: "Cash Payout",
+    sepaExit: "Payout via Bank Transfer",
     donationExit: "Donation",
   },
   payout: {

@@ -148,7 +148,7 @@ class CustomerService(DBService):
             PayoutTransaction,
             "select t.amount, t.booked_at, a.name as target_account_name, a.type as target_account_type, t.id as transaction_id "
             "from transaction t join account a on t.target_account = a.id "
-            "where t.order_id is null and t.source_account = $1 and t.target_account in (select id from account where type = 'cash_exit' or type = 'donation_exit')",
+            "where t.order_id is null and t.source_account = $1 and t.target_account in (select id from account where type = 'cash_exit' or type = 'donation_exit' or type = 'sepa_exit')",
             current_customer.id,
         )
 
