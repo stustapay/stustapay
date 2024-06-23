@@ -41,7 +41,6 @@ jobs:
               dists=$(sftkit list-debian-distros)
           fi
           echo "::set-output name=distros::$dists"
-        working-directory: ./src
     # map the step outputs to job outputs
     outputs:
       distros: ${{ steps.set-distros.outputs.distros }}
