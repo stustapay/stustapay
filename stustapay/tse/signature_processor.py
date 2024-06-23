@@ -3,13 +3,13 @@ import contextlib
 import logging
 
 import asyncpg
+from sftkit.database import Connection, DatabaseHook
 
 from stustapay.core.config import Config
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.schema.tse import Tse
-from stustapay.core.service.common.dbhook import DBHook
-from stustapay.framework.database import Connection, create_db_pool
 
+from ..core.database import get_database
 from .config import get_tse_handler
 from .wrapper import TSEWrapper
 
@@ -24,7 +24,8 @@ class SignatureProcessor:
         # contains event objects for each object that is waiting for new events.
 
     async def run(self) -> None:
-        self.db_pool = await create_db_pool(self.config.database)
+        db = get_database(self.config.database)
+        self.db_pool = await db.create_pool()
 
         async with contextlib.AsyncExitStack() as aes:
             # Clean up pending signatures.
@@ -65,11 +66,11 @@ class SignatureProcessor:
             # TODO Task to assign feral tills to a TSE
             LOGGER.info(f"Configured TSEs: {self.tses}")
 
-            db_hook = DBHook(self.db_pool, "tse_signature", self.handle_hook, initial_run=True)
+            db_hook = DatabaseHook(self.db_pool, "tse_signature", self.handle_hook, initial_run=True)
             await db_hook.run()
             await asyncio.gather(
                 db_hook.run(),
-                run_healthcheck(db_pool=self.db_pool, service_name="tses"),
+                run_healthcheck(db, service_name="tses"),
                 return_exceptions=True,
             )
 

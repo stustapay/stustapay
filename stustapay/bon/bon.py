@@ -5,6 +5,7 @@ from typing import Optional
 
 import asyncpg
 from pydantic import BaseModel, computed_field
+from sftkit.database import Connection
 
 from stustapay.bon.pdflatex import PdfRenderResult, pdflatex, render_template
 from stustapay.core.currency import get_currency_symbol
@@ -12,7 +13,6 @@ from stustapay.core.schema.order import LineItem, Order, OrderType, PaymentMetho
 from stustapay.core.schema.product import Product, ProductType
 from stustapay.core.schema.tree import RestrictedEventSettings
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
-from stustapay.framework.database import Connection
 
 
 class BonConfig(BaseModel):

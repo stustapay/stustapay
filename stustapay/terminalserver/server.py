@@ -6,11 +6,14 @@ import asyncio
 import json
 import logging
 
+from sftkit.http import Server
+
+from stustapay import __version__
 from stustapay.core import database
 from stustapay.core.config import Config
+from stustapay.core.database import get_database
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.http.context import Context
-from stustapay.core.http.server import Server
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.order import OrderService
@@ -32,6 +35,8 @@ def get_server(config: Config):
     server = Server(
         title="StuStaPay Terminal API",
         config=config.terminalserver,
+        license_name="AGPL-3.0",
+        version=__version__,
         cors=True,
     )
 
@@ -64,14 +69,14 @@ class Api:
         self.server = get_server(config)
 
     async def run(self):
-        db_pool = await self.server.db_connect(self.cfg.database)
-        await database.check_revision_version(db_pool)
+        db = get_database(self.cfg.database)
+        db_pool = await db.create_pool()
+        await database.check_revision_version(db)
 
         auth_service = AuthService(db_pool=db_pool, config=self.cfg)
 
         context = Context(
             config=self.cfg,
-            db_pool=db_pool,
             order_service=OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             till_service=TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
@@ -79,7 +84,7 @@ class Api:
             terminal_service=TerminalService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
         try:
-            self.server.add_task(asyncio.create_task(run_healthcheck(db_pool=db_pool, service_name="terminalserver")))
-            await self.server.run(self.cfg, context)
+            self.server.add_task(asyncio.create_task(run_healthcheck(db, service_name="terminalserver")))
+            await self.server.run(context)
         finally:
             await db_pool.close()

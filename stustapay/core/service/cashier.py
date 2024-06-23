@@ -3,23 +3,18 @@ from typing import Optional
 
 import asyncpg
 from pydantic import BaseModel
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
+from stustapay.core.schema.product import Product
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege, User
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import (
-    requires_node,
-    requires_user,
-    with_db_transaction,
-    with_retryable_db_transaction,
-)
-from stustapay.framework.database import Connection
+from stustapay.core.service.common.decorators import requires_node, requires_user
 
-from ..schema.product import Product
 from .account import get_system_account_for_node
 from .common.error import NotFound, ServiceException
 from .order.booking import (
@@ -130,7 +125,7 @@ async def _book_money_transfer_cash_vault_order(
     )
 
 
-class CashierService(DBService):
+class CashierService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
@@ -241,7 +236,7 @@ class CashierService(DBService):
         )
         return CashierShiftStats(booked_products=booked_products, orders=orders)
 
-    @with_retryable_db_transaction()
+    @with_db_transaction
     @requires_node(event_only=True, object_types=[ObjectType.user])
     @requires_user([Privilege.node_administration])
     async def close_out_cashier(

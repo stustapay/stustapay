@@ -2,14 +2,8 @@ import os
 
 import yaml
 from pydantic import BaseModel
-
-from stustapay.framework.database import DatabaseConfig
-
-
-class HTTPServerConfig(BaseModel):
-    base_url: str
-    host: str
-    port: int
+from sftkit.database import DatabaseConfig
+from sftkit.http import HTTPServerConfig
 
 
 class AdministrationApiConfig(HTTPServerConfig):

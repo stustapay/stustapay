@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Awaitable, Protocol
 
 import pytest
+from sftkit.database import Connection
 
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.terminal import NewTerminal, Terminal
@@ -33,7 +34,6 @@ from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.service.user_tag import get_or_assign_user_tag
-from stustapay.framework.database import Connection
 
 from ..conftest import Cashier, CreateRandomUserTag
 from ..conftest import UserTag as TestUserTag

@@ -4,13 +4,13 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
+from sftkit.database import Connection
 
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.product import fetch_money_transfer_product
 from stustapay.core.service.transaction import book_transaction
-from stustapay.framework.database import Connection
 
 
 @dataclass(eq=True, frozen=True)

@@ -17,13 +17,9 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi==0.103.2",
-    "typer==0.9.0",
-    "python-multipart==0.0.6",
-    "uvicorn[standard]==0.22.0",
+    "sftkit==0.2.0",
     "bcrypt==4.0.1",
     "passlib[bcrypt]==1.7.4",
-    "asyncpg==0.29.0",
     "PyYAML==6.0.1",
     "python-jose[cryptography]==3.3.0",
     "Jinja2==3.1.2",
@@ -34,7 +30,6 @@ dependencies = [
     "asn1crypto==1.5.1",
     "ecdsa==0.18.0",
     "dateutils==0.6.12",
-    "pydantic[email]==2.4",
     "aiosmtplib==3.0.1",
 ]
 
@@ -66,6 +61,15 @@ Source = "https://github.com/stustapay/stustapay"
 [tool.setuptools.packages.find]
 namespaces = false
 exclude = ["stustapay.tests*", "tests*"]
+
+[tool.sftkit]
+db_code_dir = "stustapay/core/schema/db_code"
+db_migrations_dir = "stustapay/core/schema/db"
+
+target_debian_distros = [
+    "debian:bookworm",
+    "debian:trixie",
+]
 
 [tool.pylint]
 extension-pkg-whitelist = [

@@ -1,6 +1,8 @@
 from typing import Optional
 
 import asyncpg
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, AccountType
@@ -20,19 +22,15 @@ from stustapay.core.service.account import (
     get_transport_account_by_tag_uid,
 )
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
     requires_user,
-    with_db_transaction,
-    with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.order.booking import BookingIdentifier, book_money_transfer
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_node
-from stustapay.framework.database import Connection
 
 
 async def get_cash_register(conn: Connection, node: Node, register_id: int) -> Optional[CashRegister]:
@@ -91,7 +89,7 @@ async def _list_cash_registers(*, conn: Connection, node: Node, hide_assigned_re
         )
 
 
-class TillRegisterService(DBService):
+class TillRegisterService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
@@ -247,7 +245,7 @@ class TillRegisterService(DBService):
         )
         return result != "DELETE 0"
 
-    @with_retryable_db_transaction(read_only=False)
+    @with_db_transaction(read_only=False)
     @requires_terminal([Privilege.cash_transport])
     async def stock_up_cash_register(
         self,
@@ -299,7 +297,7 @@ class TillRegisterService(DBService):
         )
         return True
 
-    @with_retryable_db_transaction(read_only=False)
+    @with_db_transaction(read_only=False)
     @requires_terminal([Privilege.cash_transport])
     async def modify_cashier_account_balance(
         self,
@@ -356,7 +354,7 @@ class TillRegisterService(DBService):
             amount=amount,
         )
 
-    @with_retryable_db_transaction(read_only=False)
+    @with_db_transaction(read_only=False)
     @requires_terminal([Privilege.cash_transport])
     async def modify_transport_account_balance(
         self,
@@ -450,7 +448,7 @@ class TillRegisterService(DBService):
         assert reg is not None
         return reg
 
-    @with_retryable_db_transaction(read_only=False)
+    @with_db_transaction(read_only=False)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def transfer_cash_register_admin(
@@ -460,7 +458,7 @@ class TillRegisterService(DBService):
             conn=conn, node=node, source_cashier_id=source_cashier_id, target_cashier_id=target_cashier_id
         )
 
-    @with_retryable_db_transaction(read_only=False)
+    @with_db_transaction(read_only=False)
     @requires_terminal()
     async def transfer_cash_register_terminal(
         self,

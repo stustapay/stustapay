@@ -3,6 +3,8 @@ from datetime import timedelta
 from typing import Optional
 
 import asyncpg
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.terminal import (
@@ -20,13 +22,10 @@ from stustapay.core.schema.till import Till, TillProfile
 from stustapay.core.schema.tree import Node, ObjectType, RestrictedEventSettings
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService, TerminalTokenMetadata
-from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
     requires_user,
-    with_db_transaction,
-    with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, NotFound
 from stustapay.core.service.till.till import (
@@ -39,7 +38,6 @@ from stustapay.core.service.tree.common import (
     fetch_restricted_event_settings_for_node,
 )
 from stustapay.core.service.user import list_assignable_roles_for_user_at_node
-from stustapay.framework.database import Connection
 from stustapay.payment.sumup.api import SumUpOAuthToken, fetch_new_oauth_token
 
 logger = logging.getLogger(__name__)
@@ -55,7 +53,7 @@ async def _fetch_terminal(conn: Connection, node: Node, terminal_id: int) -> Ter
     )
 
 
-class TerminalService(DBService):
+class TerminalService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
@@ -119,7 +117,7 @@ class TerminalService(DBService):
         result = await conn.execute("delete from terminal where id = $1 and node_id = $2", terminal_id, node.id)
         return result != "DELETE 0"
 
-    @with_retryable_db_transaction(read_only=False)
+    @with_db_transaction(read_only=False)
     async def register_terminal(self, *, conn: Connection, registration_uuid: str) -> TerminalRegistrationSuccess:
         # TODO: TREE visibility
         terminal = await conn.fetch_maybe_one(
@@ -330,6 +328,6 @@ class TerminalService(DBService):
             name=current_terminal.name,
             description=current_terminal.description,
             till=till_config,
-            test_mode=self.cfg.core.test_mode,
-            test_mode_message=self.cfg.core.test_mode_message,
+            test_mode=self.config.core.test_mode,
+            test_mode_message=self.config.core.test_mode_message,
         )

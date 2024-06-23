@@ -1,20 +1,16 @@
 from typing import Optional
 
 import asyncpg
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import (
-    requires_node,
-    requires_user,
-    with_db_transaction,
-)
+from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import NotFound
-from stustapay.framework.database import Connection
 
 
 async def fetch_tax_rate_none(*, conn: Connection, node: Node) -> TaxRate:
@@ -29,7 +25,7 @@ async def _fetch_tax_rate(*, conn: Connection, node: Node, tax_rate_id: int) -> 
     )
 
 
-class TaxRateService(DBService):
+class TaxRateService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service

@@ -1,4 +1,6 @@
 import asyncpg
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.bon.bon import generate_dummy_bon
 from stustapay.bon.revenue_report import generate_dummy_report, generate_report
@@ -13,19 +15,13 @@ from stustapay.core.schema.tree import (
 )
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import (
-    requires_node,
-    requires_user,
-    with_db_transaction,
-)
+from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
     get_tree_for_current_user,
 )
-from stustapay.framework.database import Connection
 from stustapay.payment.sumup.api import fetch_refresh_token_from_auth_code
 
 
@@ -254,7 +250,7 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
     return node
 
 
-class TreeService(DBService):
+class TreeService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service

@@ -1,6 +1,8 @@
 from typing import Optional
 
 import asyncpg
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account
@@ -15,13 +17,10 @@ from stustapay.core.schema.user import (
     UserTag,
     format_user_tag_uid,
 )
-from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
     requires_user,
-    with_db_transaction,
-    with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.till.common import create_till, fetch_till
@@ -30,7 +29,6 @@ from stustapay.core.service.till.profile import TillProfileService
 from stustapay.core.service.till.register import TillRegisterService
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.user import AuthService
-from stustapay.framework.database import Connection
 
 
 async def logout_user_from_till(conn: Connection, node_id: int, till_id: int):
@@ -64,7 +62,7 @@ async def assign_till_to_terminal(conn: Connection, node: Node, till_id: int, te
     await conn.execute("update till set terminal_id = $1 where id = $2", terminal_id, till_id)
 
 
-class TillService(DBService):
+class TillService(Service[Config]):
     def __init__(
         self,
         db_pool: asyncpg.Pool,
@@ -202,7 +200,7 @@ class TillService(DBService):
 
         return available_roles
 
-    @with_retryable_db_transaction()
+    @with_db_transaction
     @requires_terminal()
     async def login_user(
         self,

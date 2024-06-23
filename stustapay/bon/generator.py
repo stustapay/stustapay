@@ -5,12 +5,12 @@ import logging
 import sys
 
 from asyncpg.exceptions import PostgresError
+from sftkit.database import Connection, DatabaseHook
 
 from stustapay.bon.bon import generate_bon
 from stustapay.core.config import Config
+from stustapay.core.database import get_database
 from stustapay.core.healthcheck import run_healthcheck
-from stustapay.core.service.common.dbhook import DBHook
-from stustapay.framework.database import Connection, create_db_pool
 
 
 class GeneratorWorker:
@@ -21,7 +21,7 @@ class GeneratorWorker:
 
         # set, once run is called
         self.db_conn: Connection | None = None
-        self.db_hook: DBHook | None = None
+        self.db_hook: DatabaseHook | None = None
 
         self.tasks: list[asyncio.Task] = []
 
@@ -34,16 +34,17 @@ class GeneratorWorker:
     async def run(self):
         # start all database connections and start the hook to listen for bon requests
         self.logger.info("Starting Bon Generator")
-        self.pool = await create_db_pool(self.config.database)
+        db = get_database(self.config.database)
+        self.pool = await db.create_pool()
 
         # initial processing of pending bons
         await self.cleanup_pending_bons()
 
-        self.db_hook = DBHook(self.pool, "bon", self.handle_hook, hook_timeout=30)
+        self.db_hook = DatabaseHook(self.pool, "bon", self.handle_hook, hook_timeout=30)
 
         self.tasks = [
             asyncio.create_task(self.db_hook.run(num_parallel=self.n_workers)),
-            asyncio.create_task(run_healthcheck(db_pool=self.pool, service_name="bon")),
+            asyncio.create_task(run_healthcheck(db, service_name="bon")),
         ]
 
         try:

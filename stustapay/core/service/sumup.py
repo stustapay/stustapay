@@ -1,21 +1,17 @@
 import asyncpg
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import (
-    requires_node,
-    requires_user,
-    with_db_transaction,
-)
+from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
-from stustapay.framework.database import Connection
 from stustapay.payment.sumup.api import SumUpApi, SumUpCheckout, SumUpTransaction
 
 
-class SumUpService(DBService):
+class SumUpService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service

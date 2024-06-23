@@ -6,9 +6,10 @@ import secrets
 from typing import Optional
 
 import asyncpg
+from sftkit.database import Connection
 
 from stustapay.core.config import Config
-from stustapay.core.database import apply_revisions, reset_schema
+from stustapay.core.database import get_database, reset_schema
 from stustapay.core.schema.product import NewProduct, ProductRestriction
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 from stustapay.core.schema.terminal import NewTerminal
@@ -44,7 +45,6 @@ from stustapay.core.service.tree.service import create_event, create_node
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import UserService, associate_user_to_role
 from stustapay.core.service.user_tag import create_user_tag_secret, create_user_tags
-from stustapay.framework.database import Connection, create_db_pool
 
 CASHIER_TAG_START = 1000
 CUSTOMER_TAG_START = 100000
@@ -674,9 +674,10 @@ class DatabaseSetup:
         )
 
     async def run(self):
-        self.db_pool = await create_db_pool(self.config.database)
+        db = get_database(self.config.database)
+        self.db_pool = await db.create_pool()
         await reset_schema(db_pool=self.db_pool)
-        await apply_revisions(db_pool=self.db_pool)
+        await db.apply_migrations()
         n_tills = self.n_entry_tills + self.n_topup_tills + self.n_beer_tills + self.n_cocktail_tills
         n_cashiers = max(int(n_tills * 1.5), self.n_cashiers or 0)
 

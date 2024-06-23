@@ -4,11 +4,11 @@ from types import SimpleNamespace
 from typing import Annotated
 
 import typer
+from sftkit.util import log_setup
 
 from stustapay.administration import server as admin_server
 from stustapay.bon.generator import Generator
 from stustapay.core.config import read_config
-from stustapay.core.util import log_setup
 from stustapay.customer_portal import server as customerportal_server
 from stustapay.dsfinvk.generator import Generator as DsfinvkGenerator
 from stustapay.terminalserver import server as terminal_server

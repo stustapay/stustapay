@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from io import StringIO
 
 import pytest
+from sftkit.database import Connection
 
 from stustapay.core.schema.config import SEPAConfig
 from stustapay.core.schema.customer import Customer
@@ -18,7 +19,6 @@ from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.customer.payout import Payout, dump_payout_run_as_sepa_xml
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.user_tag import get_or_assign_user_tag
-from stustapay.framework.database import Connection
 from stustapay.tests.conftest import CreateRandomUserTag
 
 
@@ -64,7 +64,7 @@ async def customers(
         )
 
         await db_connection.execute(
-            "update customer_info set iban = $2, account_name = $3, email = $4, donation = $5, payout_export = $6, donate_all = $7, has_entered_info = $8"
+            "update customer_info set iban = $2, account_name = $3, email = $4, donation = $5, payout_export = $6, donate_all = $7, has_entered_info = $8 "
             "where customer_account_id = $1",
             account_id,
             iban,

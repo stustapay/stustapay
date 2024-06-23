@@ -16,10 +16,9 @@ import aiosmtplib
 # import markdown
 import asyncpg
 from pydantic import BaseModel
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 
 # TODO(jobi):
@@ -39,13 +38,12 @@ class Mail(BaseModel):
     node_id: int
 
 
-class MailService(DBService):
+class MailService(Service[Config]):
     MAIL_SEND_CHECK_INTERVAL = timedelta(seconds=1)
     MAIL_SEND_INTERVAL = timedelta(seconds=0.05)
 
     def __init__(self, db_pool: asyncpg.Pool, config: Config):
         super().__init__(db_pool, config)
-        self.cfg = config
         self.logger = logging.getLogger("mail")
         self.mail_buffer: list[Mail] = []
 

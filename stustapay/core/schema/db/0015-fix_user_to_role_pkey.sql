@@ -1,4 +1,4 @@
--- revision: 70095e33
+-- migration: 70095e33
 -- requires: 45c19bb1
 
 alter table user_to_role drop constraint user_to_role_pkey;

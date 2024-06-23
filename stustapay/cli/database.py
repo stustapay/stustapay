@@ -4,12 +4,9 @@ from typing import Annotated, Optional
 import typer
 
 from stustapay.core.config import Config
-from stustapay.core.database import add_data as add_data_
-from stustapay.core.database import apply_revisions
+from stustapay.core.database import get_database
 from stustapay.core.database import list_revisions as list_revisions_
-from stustapay.core.database import reload_db_code, reset_schema
-from stustapay.core.schema import DATA_PATH, DEFAULT_EXAMPLE_DATA_FILE
-from stustapay.framework.database import create_db_pool, psql_attach
+from stustapay.core.database import reset_schema
 
 database_cli = typer.Typer()
 
@@ -17,15 +14,8 @@ database_cli = typer.Typer()
 @database_cli.command()
 def attach(ctx: typer.Context):
     """Get a psql shell to the currently configured database."""
-    asyncio.run(psql_attach(ctx.obj.config.database))
-
-
-async def _migrate(cfg: Config, until_revision: Optional[str]):
-    db_pool = await create_db_pool(cfg.database)
-    try:
-        await apply_revisions(db_pool=db_pool, until_revision=until_revision)
-    finally:
-        await db_pool.close()
+    db = get_database(config=ctx.obj.config.database)
+    asyncio.run(db.attach())
 
 
 @database_cli.command()
@@ -34,14 +24,16 @@ def migrate(
     until_revision: Annotated[Optional[str], typer.Option(help="Only apply revisions until this version")] = None,
 ):
     """Apply all database migrations."""
-    asyncio.run(_migrate(cfg=ctx.obj.config, until_revision=until_revision))
+    db = get_database(config=ctx.obj.config.database)
+    asyncio.run(db.apply_migrations(until_migration=until_revision))
 
 
 async def _rebuild(cfg: Config):
-    db_pool = await create_db_pool(cfg.database)
+    db = get_database(cfg.database)
+    db_pool = await db.create_pool(n_connections=2)
     try:
         await reset_schema(db_pool=db_pool)
-        await apply_revisions(db_pool=db_pool)
+        await db.apply_migrations()
     finally:
         await db_pool.close()
 
@@ -53,7 +45,8 @@ def rebuild(ctx: typer.Context):
 
 
 async def _reset(cfg: Config):
-    db_pool = await create_db_pool(cfg.database)
+    db = get_database(cfg.database)
+    db_pool = await db.create_pool()
     try:
         await reset_schema(db_pool=db_pool)
     finally:
@@ -68,40 +61,17 @@ def reset(
     asyncio.run(_reset(ctx.obj.config))
 
 
-async def _add_data(cfg: Config, sql_file: str):
-    db_pool = await create_db_pool(cfg.database)
-    try:
-        await add_data_(db_pool=db_pool, sql_file=sql_file)
-    finally:
-        await db_pool.close()
-
-
 @database_cli.command()
-def add_data(
+def list_revisions(
     ctx: typer.Context,
-    sql_file: Annotated[
-        str, typer.Option(help=f"Name of the .sql file in {DATA_PATH} that will get loaded into the DB")
-    ] = DEFAULT_EXAMPLE_DATA_FILE,
 ):
-    """Load data from a sql file into the database."""
-    asyncio.run(_add_data(ctx.obj.config, sql_file))
-
-
-@database_cli.command()
-def list_revisions():
     """List all available database revisions."""
-    list_revisions_()
-
-
-async def _reload_db_code(cfg: Config):
-    db_pool = await create_db_pool(cfg.database)
-    try:
-        await reload_db_code(db_pool=db_pool)
-    finally:
-        await db_pool.close()
+    db = get_database(ctx.obj.config.database)
+    list_revisions_(db)
 
 
 @database_cli.command()
 def reload_code(ctx: typer.Context):
     """List all available database revisions."""
-    asyncio.run(_reload_db_code(ctx.obj.config))
+    db = get_database(ctx.obj.config.database)
+    asyncio.run(db.reload_code())

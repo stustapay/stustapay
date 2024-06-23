@@ -2,11 +2,14 @@ import asyncio
 import json
 import logging
 
+from sftkit.http import Server
+
+from stustapay import __version__
 from stustapay.core import database
 from stustapay.core.config import Config
+from stustapay.core.database import get_database
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.http.context import Context
-from stustapay.core.http.server import Server
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
@@ -53,6 +56,8 @@ def get_server(config: Config):
     server = Server(
         title="StuStaPay Administration API",
         config=config.administration,
+        license_name="AGPL-3.0",
+        version=__version__,
         cors=True,
     )
 
@@ -97,8 +102,9 @@ class Api:
         self.server = get_server(config)
 
     async def run(self):
-        db_pool = await self.server.db_connect(self.cfg.database)
-        await database.check_revision_version(db_pool)
+        db = get_database(config=self.cfg.database)
+        db_pool = await db.create_pool()
+        await database.check_revision_version(db)
 
         auth_service = AuthService(db_pool=db_pool, config=self.cfg)
         product_service = ProductService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
@@ -109,7 +115,6 @@ class Api:
 
         context = Context(
             config=self.cfg,
-            db_pool=db_pool,
             product_service=product_service,
             tax_rate_service=TaxRateService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
@@ -130,8 +135,8 @@ class Api:
             mail_service=mail_service,
         )
         try:
-            self.server.add_task(asyncio.create_task(run_healthcheck(db_pool=db_pool, service_name="administration")))
+            self.server.add_task(asyncio.create_task(run_healthcheck(db, service_name="administration")))
             self.server.add_task(asyncio.create_task(mail_service.run_mail_service()))
-            await self.server.run(self.cfg, context)
+            await self.server.run(context)
         finally:
             await db_pool.close()

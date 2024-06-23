@@ -3,14 +3,14 @@ from typing import Optional
 
 from jose import JWTError, jwt
 from pydantic import BaseModel, ValidationError
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
+from stustapay.core.config import Config
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.terminal import CurrentTerminal, Terminal
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import CurrentUser
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import with_db_transaction
-from stustapay.framework.database import Connection
 
 
 class UserTokenMetadata(BaseModel):
@@ -28,7 +28,7 @@ class TerminalTokenMetadata(BaseModel):
     session_uuid: uuid.UUID
 
 
-class AuthService(DBService):
+class AuthService(Service[Config]):
     """
     Extra service to check login tokens
     It is needed in every service with uses `requires_user_privileges` or `requires_terminal`
@@ -36,7 +36,7 @@ class AuthService(DBService):
 
     def decode_user_jwt_payload(self, token: str) -> Optional[UserTokenMetadata]:
         try:
-            payload = jwt.decode(token, self.cfg.core.secret_key, algorithms=[self.cfg.core.jwt_token_algorithm])
+            payload = jwt.decode(token, self.config.core.secret_key, algorithms=[self.config.core.jwt_token_algorithm])
             try:
                 return UserTokenMetadata.model_validate(payload)
             except ValidationError:
@@ -46,12 +46,12 @@ class AuthService(DBService):
 
     def create_user_access_token(self, token_metadata: UserTokenMetadata) -> str:
         to_encode = {"user_id": token_metadata.user_id, "session_id": token_metadata.session_id}
-        encoded_jwt = jwt.encode(to_encode, self.cfg.core.secret_key, algorithm=self.cfg.core.jwt_token_algorithm)
+        encoded_jwt = jwt.encode(to_encode, self.config.core.secret_key, algorithm=self.config.core.jwt_token_algorithm)
         return encoded_jwt
 
     def decode_customer_jwt_payload(self, token: str) -> Optional[CustomerTokenMetadata]:
         try:
-            payload = jwt.decode(token, self.cfg.core.secret_key, algorithms=[self.cfg.core.jwt_token_algorithm])
+            payload = jwt.decode(token, self.config.core.secret_key, algorithms=[self.config.core.jwt_token_algorithm])
             try:
                 return CustomerTokenMetadata.model_validate(payload)
             except ValidationError:
@@ -61,7 +61,7 @@ class AuthService(DBService):
 
     def create_customer_access_token(self, token_metadata: CustomerTokenMetadata) -> str:
         to_encode = {"customer_id": token_metadata.customer_id, "session_id": token_metadata.session_id}
-        encoded_jwt = jwt.encode(to_encode, self.cfg.core.secret_key, algorithm=self.cfg.core.jwt_token_algorithm)
+        encoded_jwt = jwt.encode(to_encode, self.config.core.secret_key, algorithm=self.config.core.jwt_token_algorithm)
         return encoded_jwt
 
     @with_db_transaction(read_only=True)
@@ -96,7 +96,7 @@ class AuthService(DBService):
 
     def decode_terminal_jwt_payload(self, token: str) -> Optional[TerminalTokenMetadata]:
         try:
-            payload = jwt.decode(token, self.cfg.core.secret_key, algorithms=[self.cfg.core.jwt_token_algorithm])
+            payload = jwt.decode(token, self.config.core.secret_key, algorithms=[self.config.core.jwt_token_algorithm])
             try:
                 return TerminalTokenMetadata.model_validate(payload)
             except ValidationError:
@@ -106,7 +106,7 @@ class AuthService(DBService):
 
     def create_terminal_access_token(self, token_metadata: TerminalTokenMetadata):
         to_encode = {"terminal_id": token_metadata.terminal_id, "session_uuid": str(token_metadata.session_uuid)}
-        encoded_jwt = jwt.encode(to_encode, self.cfg.core.secret_key, algorithm=self.cfg.core.jwt_token_algorithm)
+        encoded_jwt = jwt.encode(to_encode, self.config.core.secret_key, algorithm=self.config.core.jwt_token_algorithm)
         return encoded_jwt
 
     @with_db_transaction(read_only=True)

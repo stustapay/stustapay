@@ -1,8 +1,9 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
+from sftkit.database import Connection
+
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.account import AccountService
-from stustapay.framework.database import Connection
 
 from .conftest import CreateRandomUserTag
 

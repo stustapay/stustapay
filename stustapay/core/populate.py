@@ -1,17 +1,18 @@
 import logging
 
 from stustapay.core.config import Config
+from stustapay.core.database import get_database
 from stustapay.core.schema.till import NewCashRegister, NewTill
 from stustapay.core.service.till.register import create_cash_register
 from stustapay.core.service.till.till import create_till
 from stustapay.core.service.tree.common import fetch_node
-from stustapay.framework.database import create_db_pool
 
 logger = logging.getLogger(__name__)
 
 
 async def create_cash_registers(config: Config, node_id: int, n_registers: int, name_format: str, dry_run: bool):
-    db_pool = await create_db_pool(config.database)
+    db = get_database(config.database)
+    db_pool = await db.create_pool()
     try:
         async with db_pool.acquire() as conn:
             async with conn.transaction(isolation="serializable"):
@@ -30,7 +31,8 @@ async def create_cash_registers(config: Config, node_id: int, n_registers: int, 
 
 
 async def create_tills(config: Config, node_id: int, n_tills: int, name_format: str, profile_id: int, dry_run: bool):
-    db_pool = await create_db_pool(config.database)
+    db = get_database(config.database)
+    db_pool = await db.create_pool()
     try:
         async with db_pool.acquire() as conn:
             async with conn.transaction(isolation="serializable"):

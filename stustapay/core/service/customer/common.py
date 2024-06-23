@@ -1,6 +1,7 @@
+from sftkit.database import Connection
+
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.tree import Node
-from stustapay.framework.database import Connection
 
 
 async def fetch_customer(*, conn: Connection, node: Node, customer_id: int) -> Customer:

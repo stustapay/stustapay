@@ -1,8 +1,9 @@
 from typing import Optional
 
+from sftkit.database import Connection
+
 from stustapay.core.schema.till import NewTill, Till
 from stustapay.core.schema.tree import Node
-from stustapay.framework.database import Connection
 
 
 async def create_till(*, conn: Connection, node_id: int, till: NewTill) -> Till:

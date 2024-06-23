@@ -6,6 +6,8 @@ import re
 import asyncpg
 from schwifty import IBAN
 from sepaxml import SepaTransfer
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
@@ -21,12 +23,7 @@ from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import (
-    requires_node,
-    requires_user,
-    with_db_transaction,
-)
+from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.common import fetch_customer
@@ -35,7 +32,6 @@ from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
     fetch_restricted_event_settings_for_node,
 )
-from stustapay.framework.database import Connection
 
 
 async def fetch_payout_run(conn: Connection, node: Node, payout_run_id: int) -> PayoutRun:
@@ -166,7 +162,7 @@ def dump_payout_run_as_sepa_xml(
     return sepa_xml.decode("utf-8")
 
 
-class PayoutService(DBService):
+class PayoutService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, config_service: ConfigService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service

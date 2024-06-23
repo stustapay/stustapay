@@ -1,4 +1,4 @@
--- revision: 9a962cb1
+-- migration: 9a962cb1
 -- requires: 2b0f2fb3
 
 insert into account_type (name)

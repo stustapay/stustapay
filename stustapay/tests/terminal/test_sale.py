@@ -3,6 +3,7 @@ import uuid
 from dataclasses import dataclass
 
 import pytest
+from sftkit.database import Connection
 
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import Button, NewSale, OrderType, PendingSale
@@ -29,7 +30,6 @@ from stustapay.core.service.order import NotEnoughVouchersException, OrderServic
 from stustapay.core.service.order.order import InvalidSaleException
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
-from stustapay.framework.database import Connection
 
 from ..conftest import Cashier
 from .conftest import (

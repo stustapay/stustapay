@@ -1,4 +1,4 @@
--- revision: 90c7d52c
+-- migration: 90c7d52c
 -- requires: 3af7cc18
 
 alter table customer_sumup_checkout drop column return_url;

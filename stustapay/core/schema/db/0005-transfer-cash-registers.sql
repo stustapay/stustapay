@@ -1,2 +1,2 @@
--- revision: 3af7cc18
+-- migration: 3af7cc18
 -- requires: e2c0985c

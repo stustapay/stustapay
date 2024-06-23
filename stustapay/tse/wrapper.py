@@ -8,9 +8,8 @@ import typing
 from typing import Callable
 
 import asyncpg
-
-from stustapay.core.util import create_task_protected
-from stustapay.framework.database import Connection
+from sftkit.database import Connection
+from sftkit.util import create_task_protected
 
 from .handler import TSEHandler, TSESignature, TSESignatureRequest
 from .kassenbeleg_v1 import Kassenbeleg_V1
