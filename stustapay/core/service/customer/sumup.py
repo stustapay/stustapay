@@ -7,6 +7,8 @@ from functools import wraps
 import aiohttp
 import asyncpg
 from pydantic import BaseModel
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
@@ -15,11 +17,7 @@ from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.tree import RestrictedEventSettings
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import (
-    requires_customer,
-    with_db_transaction,
-)
+from stustapay.core.service.common.decorators import requires_customer
 from stustapay.core.service.common.error import (
     AccessDenied,
     InvalidArgument,
@@ -38,7 +36,6 @@ from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
 )
-from stustapay.framework.database import Connection
 from stustapay.payment.sumup.api import (
     SumUpApi,
     SumUpCheckout,
@@ -75,7 +72,7 @@ def requires_sumup_enabled(func):
             )
         conn = kwargs["conn"]
         event = await fetch_restricted_event_settings_for_node(conn, node_id=kwargs["current_customer"].node_id)
-        is_sumup_enabled = event.is_sumup_topup_enabled(self.cfg.core)
+        is_sumup_enabled = event.is_sumup_topup_enabled(self.config.core)
         if not is_sumup_enabled or not self.sumup_reachable:
             raise InvalidArgument("Online Top Up is currently disabled")
 
@@ -92,7 +89,7 @@ def _get_sumup_auth_headers(event: RestrictedEventSettings) -> dict:
     }
 
 
-class SumupService(DBService):
+class SumupService(Service[Config]):
     SUMUP_API_URL = "https://api.sumup.com/v0.1"
     SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
     SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
@@ -105,7 +102,7 @@ class SumupService(DBService):
         self.sumup_reachable = True
 
     async def check_sumup_auth(self, event: RestrictedEventSettings):
-        sumup_enabled = event.is_sumup_topup_enabled(self.cfg.core)
+        sumup_enabled = event.is_sumup_topup_enabled(self.config.core)
         if not sumup_enabled:
             self.logger.info("Sumup is disabled via the config")
             return
@@ -209,7 +206,7 @@ class SumupService(DBService):
         )
 
     async def run_sumup_checkout_processing(self):
-        sumup_enabled = self.cfg.core.sumup_enabled
+        sumup_enabled = self.config.core.sumup_enabled
         if not sumup_enabled or not self.sumup_reachable:
             self.logger.info("Sumup online topup not enabled, disabling sumup check state")
             return
@@ -267,7 +264,7 @@ class SumupService(DBService):
             check_interval = 0
         else:
             check_interval = min(
-                self.cfg.core.sumup_max_check_interval,
+                self.config.core.sumup_max_check_interval,
                 int(round(2.5 * stored_checkout.check_interval)),
             )
 

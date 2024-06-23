@@ -1,6 +1,7 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
 import pytest
+from sftkit.database import Connection
 
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import (
@@ -15,7 +16,6 @@ from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.service.user_tag import UserTagService
-from stustapay.framework.database import Connection
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 from stustapay.tests.terminal.conftest import Finanzorga
 

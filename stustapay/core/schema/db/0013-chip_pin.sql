@@ -1,4 +1,4 @@
--- revision: 43408ac4
+-- migration: 43408ac4
 -- requires: c66cbafc
 
 -- change primary key of user_tag table to a generated bigint

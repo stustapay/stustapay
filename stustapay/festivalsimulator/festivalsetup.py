@@ -2,11 +2,12 @@
 import logging
 import time
 
+from sftkit.async_thread import AsyncThread
+
 from stustapay.administration.server import Api as AdminApi
 from stustapay.bon.generator import Generator
 from stustapay.core.config import Config
 from stustapay.customer_portal.server import Api as CustomerApi
-from stustapay.framework.async_utils import AsyncThread
 from stustapay.terminalserver.server import Api as TerminalApi
 from stustapay.tse.signature_processor import SignatureProcessor
 from stustapay.tse.simulator import Simulator as TseSimulator

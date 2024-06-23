@@ -1,10 +1,9 @@
 from getpass import getpass
 from pprint import pprint
 
-from stustapay.framework.database import create_db_pool
-
 from . import database
 from .config import Config
+from .database import get_database
 from .schema.user import NewUser, RoleToNode, User
 from .service.auth import AuthService
 from .service.tree.common import fetch_node
@@ -12,9 +11,10 @@ from .service.user import UserService, fetch_user, list_user_roles, update_user
 
 
 async def add_user(config: Config, node_id: int):
-    db_pool = await create_db_pool(config.database)
+    db = get_database(config.database)
+    db_pool = await db.create_pool()
     try:
-        await database.check_revision_version(db_pool)
+        await database.check_revision_version(db)
         auth_service = AuthService(db_pool=db_pool, config=config)
         user_service = UserService(db_pool=db_pool, config=config, auth_service=auth_service)
         async with db_pool.acquire() as conn:
@@ -59,9 +59,10 @@ async def add_user(config: Config, node_id: int):
 
 
 async def register_tag_with_user(config: Config, user_id: int, tag_pin: str, tag_uid: str):
-    db_pool = await create_db_pool(config.database)
+    db = get_database(config.database)
+    db_pool = await db.create_pool()
     try:
-        await database.check_revision_version(db_pool)
+        await database.check_revision_version(db)
         async with db_pool.acquire() as conn:
             user = await conn.fetch_maybe_one(User, "select * from user_with_tag where id = $1", user_id)
             node = await fetch_node(conn=conn, node_id=user.node_id)

@@ -1,25 +1,21 @@
 import asyncpg
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.tse import NewTse, Tse, UpdateTse
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import (
-    requires_node,
-    requires_user,
-    with_db_transaction,
-)
+from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import NotFound
-from stustapay.framework.database import Connection
 
 
 async def list_tses(conn: Connection, node: Node) -> list[Tse]:
     return await conn.fetch_many(Tse, "select * from tse where node_id = any($1) order by name", node.ids_to_event_node)
 
 
-class TseService(DBService):
+class TseService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service

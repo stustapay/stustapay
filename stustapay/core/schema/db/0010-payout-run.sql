@@ -1,4 +1,4 @@
--- revision: c5c4ae30
+-- migration: c5c4ae30
 -- requires: dc0af35b
 
 create table if not exists payout_run (

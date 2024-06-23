@@ -1,6 +1,6 @@
 from typing import Optional
 
-from stustapay.framework.database import Connection
+from sftkit.database import Connection
 
 
 async def book_transaction(

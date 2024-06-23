@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from sftkit.database import Connection
 
 from stustapay.core.schema.tree import (
     Language,
@@ -9,7 +10,6 @@ from stustapay.core.schema.tree import (
 )
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.common.error import NotFound
-from stustapay.framework.database import Connection
 
 
 class TranslationText(BaseModel):

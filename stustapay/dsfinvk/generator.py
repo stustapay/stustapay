@@ -5,6 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from dateutil import parser
+from sftkit.database import Connection
 
 from stustapay.core.config import Config
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
@@ -12,9 +13,9 @@ from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
 )
-from stustapay.framework.database import Connection, create_db_pool
 from stustapay.tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
 
+from ..core.database import get_database
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import (
     Bonkopf,
@@ -70,7 +71,8 @@ class Generator:
 
     async def run(self):
         async with contextlib.AsyncExitStack() as es:
-            db_pool = await create_db_pool(self.config.database)
+            db = get_database(self.config.database)
+            db_pool = await db.create_pool(n_connections=2)
             es.push_async_callback(db_pool.close)
             conn: Connection = await es.enter_async_context(db_pool.acquire())
             node = await fetch_node(conn=conn, node_id=self.node_id)

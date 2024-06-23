@@ -1,6 +1,8 @@
 from typing import Optional
 
 import asyncpg
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, AccountType
@@ -9,17 +11,14 @@ from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
     requires_user,
-    with_db_transaction,
 )
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.transaction import book_transaction
-from stustapay.framework.database import Connection
 
 
 async def get_system_account_for_node(*, conn: Connection, node: Node, account_type: AccountType) -> Account:
@@ -81,7 +80,7 @@ async def get_transport_account_by_tag_uid(*, conn: Connection, node: Node, orga
     )
 
 
-class AccountService(DBService):
+class AccountService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service

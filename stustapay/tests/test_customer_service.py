@@ -2,6 +2,7 @@
 
 import pytest
 from dateutil.parser import parse
+from sftkit.database import Connection
 
 from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
@@ -20,7 +21,6 @@ from stustapay.core.service.mail import MailService
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.core.service.product import ProductService
-from stustapay.framework.database import Connection
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 
 

@@ -11,10 +11,10 @@ import aiohttp
 import asyncpg
 
 from stustapay.core.config import Config
+from stustapay.core.database import get_database
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import Terminal as _Terminal
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
-from stustapay.framework.database import create_db_pool
 
 
 def ith_chunk(lst: list, n_chunks: int, index: int):
@@ -603,8 +603,8 @@ class Simulator:
         return terminals
 
     async def initialize(self):
-        self.db_pool = await create_db_pool(
-            self.config.database,
+        db = get_database(self.config.database)
+        self.db_pool = await db.create_pool(
             n_connections=(self.n_entry_till_workers + self.n_sale_till_workers + self.n_topup_till_workers),
         )
 

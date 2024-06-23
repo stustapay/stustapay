@@ -4,6 +4,8 @@ from typing import Optional
 import asyncpg
 from passlib.context import CryptContext
 from pydantic import BaseModel
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.tree import Node, ObjectType
@@ -21,18 +23,14 @@ from stustapay.core.schema.user import (
     format_user_tag_uid,
 )
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
-from stustapay.core.service.common.dbservice import DBService
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
     requires_user,
-    with_db_transaction,
-    with_retryable_db_transaction,
 )
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.user_tag import get_or_assign_user_tag
-from stustapay.framework.database import Connection
 
 
 class UserLoginSuccess(BaseModel):
@@ -179,7 +177,7 @@ async def associate_user_to_role(
     )
 
 
-class UserService(DBService):
+class UserService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
@@ -591,7 +589,7 @@ class UserService(DBService):
 
         await conn.execute("update usr set password = $2 where id = $1", current_user.id, new_password_hashed)
 
-    @with_retryable_db_transaction()
+    @with_db_transaction
     @requires_user(node_required=False)
     async def logout_user(self, *, conn: Connection, current_user: User, token: str) -> bool:
         # TODO: TREE visibility

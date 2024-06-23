@@ -9,8 +9,8 @@ import typing
 import aiohttp
 import pytz
 from dateutil import parser
+from sftkit.util import create_task_protected
 
-from stustapay.core.util import create_task_protected
 from stustapay.tse.diebold_nixdorf_usb.config import DieboldNixdorfUSBTSEConfig
 from stustapay.tse.handler import (
     TSEHandler,

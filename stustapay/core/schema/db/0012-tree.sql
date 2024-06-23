@@ -1,4 +1,4 @@
--- revision: c66cbafc
+-- migration: c66cbafc
 -- requires: 2a15b453
 
 alter table payout_run drop column execution_date;

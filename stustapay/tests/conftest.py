@@ -8,6 +8,7 @@ from typing import AsyncGenerator, Awaitable, Protocol
 
 import asyncpg
 import pytest
+from sftkit.database import Connection, DatabaseConfig
 
 from stustapay.core import database
 from stustapay.core.config import (
@@ -17,6 +18,7 @@ from stustapay.core.config import (
     CustomerPortalApiConfig,
     TerminalApiConfig,
 )
+from stustapay.core.database import get_database
 from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 from stustapay.core.schema.terminal import NewTerminal, Terminal
@@ -63,7 +65,6 @@ from stustapay.core.service.tree.common import (
 from stustapay.core.service.tree.service import TreeService, create_event
 from stustapay.core.service.user import UserService, associate_user_to_role
 from stustapay.core.service.user_tag import UserTagService
-from stustapay.framework.database import Connection, DatabaseConfig, create_db_pool
 
 
 def get_test_db_config() -> DatabaseConfig:
@@ -108,10 +109,11 @@ def config() -> Config:
 
 @pytest.fixture(scope="session", autouse=True)
 async def setup_test_db_pool(config: Config) -> asyncpg.Pool:
-    pool = await create_db_pool(cfg=config.database, n_connections=10)
+    db = get_database(config.database)
+    pool = await db.create_pool(n_connections=10)
 
     await database.reset_schema(pool)
-    await database.apply_revisions(pool)
+    await db.apply_migrations()
     return pool
 
 

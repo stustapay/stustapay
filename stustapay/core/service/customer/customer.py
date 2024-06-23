@@ -7,6 +7,8 @@ from typing import Optional
 import asyncpg
 from pydantic import BaseModel
 from schwifty import IBAN
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.customer import (
@@ -17,11 +19,7 @@ from stustapay.core.schema.customer import (
 )
 from stustapay.core.schema.tree import Language
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import (
-    requires_customer,
-    with_db_transaction,
-)
+from stustapay.core.service.common.decorators import requires_customer
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.payout import PayoutService
@@ -31,7 +29,6 @@ from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
     fetch_restricted_event_settings_for_node,
 )
-from stustapay.framework.database import Connection
 
 
 class CustomerPortalApiConfig(BaseModel):
@@ -59,7 +56,7 @@ class CustomerBank(BaseModel):
     donation: float = 0.0
 
 
-class CustomerService(DBService):
+class CustomerService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, config_service: ConfigService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
@@ -246,14 +243,14 @@ class CustomerService(DBService):
         assert node is not None
         assert node.event is not None
         return CustomerPortalApiConfig(
-            test_mode=self.cfg.core.test_mode,
-            test_mode_message=self.cfg.core.test_mode_message,
+            test_mode=self.config.core.test_mode,
+            test_mode_message=self.config.core.test_mode_message,
             about_page_url=node.event.customer_portal_about_page_url,
             allowed_country_codes=node.event.sepa_allowed_country_codes,
             contact_email=node.event.customer_portal_contact_email,
             data_privacy_url=node.event.customer_portal_data_privacy_url,
             payout_enabled=node.event.sepa_enabled,
-            sumup_topup_enabled=self.cfg.core.sumup_enabled and node.event.sumup_topup_enabled,
+            sumup_topup_enabled=self.config.core.sumup_enabled and node.event.sumup_topup_enabled,
             translation_texts=node.event.translation_texts,
             currency_identifier=node.event.currency_identifier,
         )

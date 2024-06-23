@@ -1,6 +1,8 @@
 from typing import Optional
 
 import asyncpg
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.till import (
@@ -11,15 +13,9 @@ from stustapay.core.schema.till import (
 )
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import Privilege
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import (
-    requires_node,
-    requires_user,
-    with_db_transaction,
-)
+from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import NotFound
 from stustapay.core.service.user import AuthService
-from stustapay.framework.database import Connection
 
 
 async def _fetch_till_layout(*, conn: Connection, node: Node, layout_id: int) -> TillLayout | None:
@@ -31,7 +27,7 @@ async def _fetch_till_layout(*, conn: Connection, node: Node, layout_id: int) ->
     )
 
 
-class TillLayoutService(DBService):
+class TillLayoutService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service

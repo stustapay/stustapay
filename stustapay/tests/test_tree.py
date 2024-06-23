@@ -1,11 +1,11 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,no-value-for-parameter
 import pytest
 from asyncpg import RaiseError
+from sftkit.database import Connection
 
 from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, NewNode, Node, ObjectType
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.tree.service import TreeService
-from stustapay.framework.database import Connection
 from stustapay.tests.common import list_equals
 
 

@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 
 import asyncpg
+from sftkit.service import Service
 
 from stustapay.core.config import Config
 from stustapay.core.schema.order import PendingLineItem
 from stustapay.core.schema.product import Product
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbservice import DBService
 
 
 @dataclass
@@ -15,7 +15,7 @@ class VoucherUsage:
     additional_line_items: list[PendingLineItem]
 
 
-class VoucherService(DBService):
+class VoucherService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service

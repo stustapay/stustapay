@@ -1,4 +1,4 @@
--- revision: c7733331
+-- migration: c7733331
 -- requires: 66c577ad
 
 insert into config (

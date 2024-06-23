@@ -7,9 +7,10 @@ from datetime import datetime
 from typing import Optional
 
 import asyncpg
+from sftkit.database import Connection
 
 from stustapay.core.config import Config
-from stustapay.framework.database import Connection, create_db_pool
+from stustapay.core.database import get_database
 
 LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +143,8 @@ class TseSwitchover:
         # contains event objects for each object that is waiting for new events.
 
     async def run(self) -> None:
-        pool = await create_db_pool(self.config.database)
+        db = get_database(self.config.database)
+        pool = await db.create_pool()
         self.db_pool = pool
 
         async with contextlib.AsyncExitStack() as aes:

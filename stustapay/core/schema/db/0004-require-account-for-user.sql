@@ -1,4 +1,4 @@
--- revision: e2c0985c
+-- migration: e2c0985c
 -- requires: c7733331
 
 alter table usr add column customer_account_id bigint references account(id) unique;

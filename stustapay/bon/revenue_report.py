@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from pydantic import BaseModel
+from sftkit.database import Connection
 
 from stustapay.bon.bon import BonConfig, gen_dummy_order
 from stustapay.bon.pdflatex import PdfRenderResult, pdflatex, render_template
@@ -15,7 +16,6 @@ from stustapay.core.service.order.stats import (
     get_hourly_sales_stats,
 )
 from stustapay.core.service.tree.common import fetch_event_for_node, fetch_node
-from stustapay.framework.database import Connection
 
 
 class DailyRevenue(BaseModel):

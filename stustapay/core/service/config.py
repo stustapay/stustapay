@@ -1,25 +1,25 @@
 import asyncpg
+from sftkit.database import Connection
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.config import ConfigEntry, PublicConfig
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.dbservice import DBService
-from stustapay.core.service.common.decorators import requires_user, with_db_transaction
+from stustapay.core.service.common.decorators import requires_user
 from stustapay.core.service.common.error import NotFound
-from stustapay.framework.database import Connection
 
 
-class ConfigService(DBService):
+class ConfigService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
 
     async def get_public_config(self) -> PublicConfig:
         return PublicConfig(
-            test_mode=self.cfg.core.test_mode,
-            test_mode_message=self.cfg.core.test_mode_message,
-            sumup_topup_enabled_globally=self.cfg.core.sumup_enabled,
+            test_mode=self.config.core.test_mode,
+            test_mode_message=self.config.core.test_mode_message,
+            sumup_topup_enabled_globally=self.config.core.sumup_enabled,
         )
 
     @with_db_transaction(read_only=True)

@@ -1,4 +1,4 @@
--- revision: 2b0f2fb3
+-- migration: 2b0f2fb3
 -- requires: d1dd53bd
 
 alter table customer_info add column donate_all boolean default false not null;
