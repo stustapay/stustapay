@@ -164,7 +164,7 @@ export const NodeMenu: React.FC<NodeMenuProps> = React.memo(({ node }) => {
     renderedItems.push(
       <NavigationTreeItem
         key={id}
-        nodeId={id}
+        itemId={id}
         to={id}
         labelText={menuDefinition.label}
         labelIcon={menuDefinition.icon}

@@ -128,7 +128,7 @@ export const ProductList: React.FC = () => {
       field: "price",
       headerName: t("product.price") as string,
       type: "number",
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
     },
     {
       field: "price_in_vouchers",
@@ -144,13 +144,13 @@ export const ProductList: React.FC = () => {
     {
       field: "restrictions",
       headerName: t("product.restrictions") as string,
-      valueFormatter: ({ value }) => value.join(", "),
+      valueFormatter: (value) => (value as string[]).join(", "),
       width: 150,
     },
     {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
-      valueFormatter: ({ value }) => renderNode(value),
+      valueFormatter: (value) => renderNode(value),
       minWidth: 100,
     },
   ];

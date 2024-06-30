@@ -51,7 +51,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
       headerName: t("account.balance") as string,
       type: "number",
       minWidth: 80,
-      valueFormatter: ({ value }) => value && formatCurrency(value),
+      valueFormatter: (value) => value && formatCurrency(value),
     },
     {
       field: "vouchers",
@@ -75,7 +75,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
       field: "donation",
       headerName: t("customer.donation") as string,
       type: "number",
-      valueFormatter: ({ value }) => (value != null ? formatCurrency(value) : "-"),
+      valueFormatter: (value) => (value != null ? formatCurrency(value) : "-"),
     },
     {
       field: "payout",
@@ -91,7 +91,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
     {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
-      valueFormatter: ({ value }) => renderNode(value),
+      valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
   ];

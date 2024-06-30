@@ -17,7 +17,7 @@ import {
   Event as EventIcon,
   EditOff as EditOffIcon,
 } from "@mui/icons-material";
-import { TreeView } from "@mui/lab";
+import { SimpleTreeView } from "@mui/x-tree-view";
 import * as React from "react";
 import { useLocation } from "react-router-dom";
 import { NavigationTreeItem } from "./NavigationTreeItem";
@@ -59,18 +59,18 @@ export const NavigationTree: React.FC = () => {
   );
 
   const setSelected = React.useCallback(
-    (v: string[]) => {
+    (v: string | null) => {
       dispatch(setSelectedNodes(v));
     },
     [dispatch]
   );
 
-  const handleToggle = (event: React.SyntheticEvent, nodeIds: string[]) => {
-    setExpanded(nodeIds);
+  const handleToggle = (event: React.SyntheticEvent, itemIds: string[]) => {
+    setExpanded(itemIds);
   };
 
-  const handleSelect = (event: React.SyntheticEvent, nodeIds: string[]) => {
-    setSelected(nodeIds);
+  const handleSelect = (event: React.SyntheticEvent, itemId: string | null) => {
+    setSelected(itemId);
   };
 
   const menuIds = React.useMemo(() => {
@@ -90,9 +90,9 @@ export const NavigationTree: React.FC = () => {
       dispatch(extendExpandedNodes([nodeId, ...node.parent_ids.map((parent) => `/node/${parent}`)]));
       const firstMatchingMenuId = menuIds.find((val) => location.pathname.startsWith(val));
       if (firstMatchingMenuId) {
-        setSelected([firstMatchingMenuId]);
+        setSelected(firstMatchingMenuId);
       } else {
-        setSelected([]);
+        setSelected(null);
       }
     }
   }, [location, tree, setSelected, dispatch, menuIds]);
@@ -100,7 +100,7 @@ export const NavigationTree: React.FC = () => {
   const renderTree = (node: NodeSeenByUser) => (
     <NavigationTreeItem
       key={node.id}
-      nodeId={`/node/${node.id}`}
+      itemId={`/node/${node.id}`}
       to={`/node/${node.id}`}
       labelText={node.name}
       labelIcon={getNavigationTreeItemLabel(node)}
@@ -112,17 +112,17 @@ export const NavigationTree: React.FC = () => {
   );
 
   return (
-    <TreeView
+    <SimpleTreeView
       aria-label="navigation tree"
-      defaultCollapseIcon={<ExpandMoreIcon />}
-      defaultExpandIcon={<ChevronRightIcon />}
-      expanded={expanded}
-      selected={selected}
-      onNodeToggle={handleToggle}
-      onNodeSelect={handleSelect}
+      slots={{ collapseIcon: ExpandMoreIcon, expandIcon: ChevronRightIcon }}
+      multiSelect={false}
+      expandedItems={expanded}
+      selectedItems={selected}
+      onExpandedItemsChange={handleToggle}
+      onSelectedItemsChange={handleSelect}
       sx={{ flexGrow: 1, overflowX: "auto" }}
     >
       {renderTree(tree)}
-    </TreeView>
+    </SimpleTreeView>
   );
 };

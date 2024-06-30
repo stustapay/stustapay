@@ -54,7 +54,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       headerName: t("account.balance") as string,
       type: "number",
       width: 250,
-      valueFormatter: ({ value }) => value && formatCurrency(value),
+      valueFormatter: (value) => value && formatCurrency(value),
     },
     {
       field: "vouchers",
@@ -65,7 +65,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
     {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
-      valueFormatter: ({ value }) => renderNode(value),
+      valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
   ];

@@ -121,13 +121,13 @@ export const TillRegisterList: React.FC = () => {
       field: "current_balance",
       headerName: t("register.currentBalance") as string,
       type: "number",
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       width: 200,
     },
     {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
-      valueFormatter: ({ value }) => renderNode(value),
+      valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
   ];

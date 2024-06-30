@@ -1,6 +1,6 @@
-import { TreeItem, treeItemClasses, TreeItemProps } from "@mui/lab";
+import { TreeItem, TreeItemProps } from "@mui/x-tree-view";
 import * as React from "react";
-import { Box, styled, SvgIconProps, Typography, useTheme } from "@mui/material";
+import { Box, SvgIconProps, Typography, useTheme } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 
 declare module "react" {
@@ -9,37 +9,6 @@ declare module "react" {
     "--tree-view-bg-color"?: string;
   }
 }
-
-export const StyledTreeItem = styled(TreeItem)(({ theme }) => ({
-  color: theme.palette.text.secondary,
-  [`& .${treeItemClasses.content}`]: {
-    color: theme.palette.text.secondary,
-    // borderTopRightRadius: theme.spacing(2),
-    // borderBottomRightRadius: theme.spacing(2),
-    paddingRight: theme.spacing(1),
-    fontWeight: theme.typography.fontWeightMedium,
-    "&.Mui-expanded": {
-      fontWeight: theme.typography.fontWeightRegular,
-    },
-    "&:hover": {
-      backgroundColor: theme.palette.action.hover,
-    },
-    "&.Mui-focused, &.Mui-selected, &.Mui-selected.Mui-focused": {
-      backgroundColor: `var(--tree-view-bg-color, ${theme.palette.action.selected})`,
-      color: "var(--tree-view-color)",
-    },
-    [`& .${treeItemClasses.label}`]: {
-      fontWeight: "inherit",
-      color: "inherit",
-    },
-  },
-  [`& .${treeItemClasses.group}`]: {
-    // marginLeft: 0,
-    [`& .${treeItemClasses.content}`]: {
-      paddingLeft: theme.spacing(2),
-    },
-  },
-}));
 
 export interface NavigationTreeItemProps extends TreeItemProps {
   to?: string;
@@ -74,7 +43,7 @@ export const NavigationTreeItem: React.FC<NavigationTreeItemProps> = React.memo(
   };
 
   return (
-    <StyledTreeItem
+    <TreeItem
       label={
         <Box
           sx={{
@@ -82,6 +51,7 @@ export const NavigationTreeItem: React.FC<NavigationTreeItemProps> = React.memo(
             alignItems: "center",
             p: 0.5,
             pr: 0,
+            height: "1.4em",
             textDecoration: "none",
             color: theme.palette.text.secondary,
           }}

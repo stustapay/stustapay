@@ -71,13 +71,13 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
     {
       field: "product_price",
       headerName: t("item.productPrice") as string,
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       width: 100,
     },
     {
       field: "total_price",
       headerName: t("item.totalPrice") as string,
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       width: 100,
     },
     {
@@ -95,7 +95,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
     {
       field: "total_tax",
       headerName: t("item.totalTax") as string,
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       width: 100,
     },
   ];

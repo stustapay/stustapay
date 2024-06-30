@@ -6,7 +6,7 @@ import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DataGridTitle, Loading } from "@stustapay/components";
 import { UserTagDetail as UserTagDetailType, formatUserTagUid } from "@stustapay/models";
-import { ArrayElement, formatDate } from "@stustapay/utils";
+import { ArrayElement } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
@@ -49,8 +49,8 @@ export const UserTagDetail: React.FC = () => {
     {
       field: "mapping_was_valid_until",
       headerName: t("account.history.validUntil") as string,
-      type: "number",
-      valueGetter: ({ value }) => formatDate(value),
+      type: "dateTime",
+      valueGetter: (value) => new Date(value),
       width: 200,
     },
   ];

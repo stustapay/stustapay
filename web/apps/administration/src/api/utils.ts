@@ -14,15 +14,15 @@ const capitalize = <S extends string>(val: S): Capitalize<S> => {
 export type RemovePrefix<S extends string, Prefix extends string> = S extends `${Prefix}${infer T}` ? T : S;
 
 export type ConvertReturn<T, N extends string> = {
-  [K in keyof EntitySelectors<T, EntityState<T>> as `select${Capitalize<N>}${RemovePrefix<
+  [K in keyof EntitySelectors<T, EntityState<T, number>, number> as `select${Capitalize<N>}${RemovePrefix<
     K,
     "select"
-  >}`]: EntitySelectors<T, EntityState<T>>[K];
+  >}`]: EntitySelectors<T, EntityState<T, number>, number>[K];
 };
 
 export const convertEntityAdaptorSelectors = <T, N extends string>(
   name: N,
-  selectors: EntitySelectors<T, EntityState<T>>
+  selectors: EntitySelectors<T, EntityState<T, number>, number>
 ): ConvertReturn<T, N> => {
   const c = capitalize(name);
   return {

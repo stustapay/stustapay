@@ -29,7 +29,7 @@ export const useNodeTree = (): { root: NodeSeenByUser } => {
 export const useTreeForCurrentUser = (): NodeSeenByUser => {
   const currentUser = useCurrentUser();
   const { data: rootNode } = useGetTreeForCurrentUserQuery();
-  if (!rootNode) {
+  if (!rootNode || !currentUser) {
     throw new Error(
       "tree has not been loaded, please make sure to preload this before rendering a component which uses the useNodeTree hook"
     );

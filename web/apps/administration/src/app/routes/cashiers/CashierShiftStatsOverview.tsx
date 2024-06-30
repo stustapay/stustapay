@@ -30,7 +30,6 @@ export const CashierShiftStatsOverview: React.FC<CashierShiftStatsOverview> = ({
       field: "product.name",
       headerName: t("product.name") as string,
       flex: 1,
-      valueGetter: (params) => params.row.product.name,
     },
     {
       field: "quantity",

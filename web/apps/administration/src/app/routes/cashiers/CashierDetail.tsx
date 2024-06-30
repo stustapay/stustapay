@@ -17,7 +17,6 @@ import { List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Typograph
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
 import { CashierShift, formatUserTagUid, getUserName } from "@stustapay/models";
-import { formatDate } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
@@ -131,31 +130,33 @@ export const CashierDetail: React.FC = () => {
     {
       field: "started_at",
       headerName: t("shift.startedAt") as string,
-      valueGetter: ({ value }) => formatDate(value),
+      type: "dateTime",
+      valueGetter: (value) => new Date(value),
       flex: 1,
     },
     {
       field: "ended_at",
       headerName: t("shift.endedAt") as string,
-      valueGetter: ({ value }) => formatDate(value),
+      type: "dateTime",
+      valueGetter: (value) => new Date(value),
       flex: 1,
     },
     {
       field: "actual_cash_drawer_balance",
       headerName: t("shift.actualCashDrawerBalance") as string,
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       type: "number",
     },
     {
       field: "expected_cash_drawer_balance",
       headerName: t("shift.expectedCashDrawerBalance") as string,
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       type: "number",
     },
     {
       field: "cash_drawer_imbalance",
       headerName: t("shift.cashDrawerImbalance") as string,
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       type: "number",
     },
   ];

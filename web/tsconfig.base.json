@@ -8,35 +8,19 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es2015",
+    "target": "es2018",
     "module": "esnext",
-    "lib": [
-      "es2017",
-      "dom"
-    ],
+    "lib": ["es2018", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@stustapay/components": [
-        "libs/components/src/index.ts"
-      ],
-      "@stustapay/form-components": [
-        "libs/form-components/src/index.ts"
-      ],
-      "@stustapay/modal-provider": [
-        "libs/modal-provider/src/index.ts"
-      ],
-      "@stustapay/models": [
-        "libs/models/src/index.ts"
-      ],
-      "@stustapay/utils": [
-        "libs/utils/src/index.ts"
-      ]
+      "@stustapay/components": ["libs/components/src/index.ts"],
+      "@stustapay/form-components": ["libs/form-components/src/index.ts"],
+      "@stustapay/modal-provider": ["libs/modal-provider/src/index.ts"],
+      "@stustapay/models": ["libs/models/src/index.ts"],
+      "@stustapay/utils": ["libs/utils/src/index.ts"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }

@@ -63,13 +63,13 @@ export const TaxRateList: React.FC = () => {
       headerName: t("taxRateRate") as string,
       align: "right",
       type: "number",
-      valueGetter: (params) => params.row.rate * 100,
-      valueFormatter: ({ value }) => `${value.toFixed(2)} %`,
+      valueGetter: (rate) => rate * 100,
+      valueFormatter: (value: number) => `${value.toFixed(2)} %`,
     },
     {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
-      valueFormatter: ({ value }) => renderNode(value),
+      valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
     {

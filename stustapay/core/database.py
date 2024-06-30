@@ -29,7 +29,7 @@ def list_revisions(db: Database):
 
 
 async def check_revision_version(db: Database):
-    revision = await db.get_current_revision()
+    revision = await db.get_current_migration_version()
     if revision != CURRENT_REVISION:
         raise RuntimeError(
             f"Invalid database revision, expected {CURRENT_REVISION}, database is at revision {revision}"

@@ -96,12 +96,12 @@ export const TerminalList: React.FC = () => {
       field: "session_uuid",
       headerName: t("terminal.loggedIn") as string,
       type: "boolean",
-      valueGetter: (params) => params.row.session_uuid != null,
+      valueGetter: (session_uuid) => session_uuid != null,
     },
     {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
-      valueFormatter: ({ value }) => renderNode(value),
+      valueFormatter: (value) => renderNode(value),
       minWidth: 200,
     },
   ];

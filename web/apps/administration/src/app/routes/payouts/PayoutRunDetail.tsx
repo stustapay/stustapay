@@ -128,14 +128,14 @@ export const PayoutRunDetail: React.FC = () => {
       field: "amount",
       headerName: t("common.amount") as string,
       align: "right",
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       width: 150,
     },
     {
       field: "donation",
       headerName: t("common.donation") as string,
       align: "right",
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       width: 150,
     },
   ];
