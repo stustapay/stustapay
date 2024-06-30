@@ -5,7 +5,6 @@ import {
   CashRegisterStocking,
   CashierRead,
   CashierShift,
-  ConfigEntry,
   Order,
   PayoutRunWithStats,
   Product,
@@ -55,11 +54,6 @@ const cashierAdapter = createEntityAdapter<CashierRead>({
 
 const cashierShiftAdapter = createEntityAdapter<CashierShift>({
   sortComparer: (a, b) => a.ended_at.localeCompare(b.ended_at),
-});
-
-const configAdaptor = createEntityAdapter<ConfigEntry>({
-  selectId: (entry) => entry.key,
-  sortComparer: (a, b) => a.key.localeCompare(b.key),
 });
 
 const orderAdapter = createEntityAdapter<Order>({ sortComparer: (a, b) => b.id - a.id });
@@ -234,14 +228,6 @@ export const {
   selectCashierShiftIds,
   selectCashierShiftTotal,
 } = convertEntityAdaptorSelectors("CashierShift", cashierShiftAdapter.getSelectors());
-
-export const {
-  selectConfigEntryById,
-  selectConfigEntryAll,
-  selectConfigEntryEntities,
-  selectConfigEntryIds,
-  selectConfigEntryTotal,
-} = convertEntityAdaptorSelectors("configEntry", configAdaptor.getSelectors());
 
 export const { selectOrderAll, selectOrderById, selectOrderEntities, selectOrderIds, selectOrderTotal } =
   convertEntityAdaptorSelectors("Order", orderAdapter.getSelectors());

@@ -64,7 +64,7 @@ export const PayoutRunList: React.FC = () => {
       field: "created_at",
       headerName: t("payoutRun.createdAt") as string,
       type: "dateTime",
-      valueGetter: (params) => new Date(params.row.created_at),
+      valueGetter: (value) => new Date(value),
       minWidth: 200,
     },
     {
@@ -94,13 +94,13 @@ export const PayoutRunList: React.FC = () => {
     {
       field: "total_payout_amount",
       headerName: t("payoutRun.totalPayoutAmount") as string,
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       minWidth: 150,
     },
     {
       field: "total_donation_amount",
       headerName: t("payoutRun.totalDonationAmount") as string,
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
       minWidth: 150,
     },
     {

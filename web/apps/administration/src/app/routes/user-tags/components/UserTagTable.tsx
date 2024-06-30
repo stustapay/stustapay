@@ -58,7 +58,7 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
     {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
-      valueFormatter: ({ value }) => renderNode(value),
+      valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
   ];

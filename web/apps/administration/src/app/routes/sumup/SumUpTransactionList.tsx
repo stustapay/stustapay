@@ -30,7 +30,8 @@ export const SumUpTransactionList: React.FC = withPrivilegeGuard(Privilege.node_
     {
       field: "amount",
       headerName: t("sumup.checkout.amount") as string,
-      valueGetter: (params) => `${params.row.amount.toFixed(2)} ${params.row.currency}`,
+      type: "number",
+      valueFormatter: (amount: number, row) => `${amount.toFixed(2)} ${row.currency}`,
     },
     { field: "payment_type", headerName: t("sumup.checkout.payment_type") },
     { field: "timestamp", headerName: t("sumup.checkout.date"), width: 200 },

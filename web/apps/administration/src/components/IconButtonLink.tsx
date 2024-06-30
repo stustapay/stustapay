@@ -9,8 +9,8 @@ type IconButtonLinkProps = {
 export const IconButtonLink: React.FC<IconButtonLinkProps> = ({ to, children, ...props }) => {
   return (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <IconButton component={RouterLink as any} to={to} {...props}>
+    (<IconButton component={RouterLink as any} to={to} {...props}>
       {children}
-    </IconButton>
+    </IconButton>)
   );
 };

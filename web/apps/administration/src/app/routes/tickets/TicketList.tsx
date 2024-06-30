@@ -107,13 +107,13 @@ export const TicketList: React.FC = () => {
       field: "price",
       headerName: t("ticket.price") as string,
       type: "number",
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
     },
     {
       field: "initial_top_up_amount",
       headerName: t("ticket.initialTopUpAmount") as string,
       type: "number",
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
     },
     {
       field: "tax_rate_id",
@@ -125,7 +125,7 @@ export const TicketList: React.FC = () => {
       field: "total_price",
       headerName: t("ticket.totalPrice") as string,
       type: "number",
-      valueFormatter: ({ value }) => formatCurrency(value),
+      valueFormatter: (value) => formatCurrency(value),
     },
     {
       field: "restrictions",
@@ -135,7 +135,7 @@ export const TicketList: React.FC = () => {
     {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
-      valueFormatter: ({ value }) => renderNode(value),
+      valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
   ];

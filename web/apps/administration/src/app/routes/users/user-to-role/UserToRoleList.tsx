@@ -56,14 +56,6 @@ export const UserToRoleList: React.FC = () => {
     });
   };
 
-  const userNameAsString = (id: number) => {
-    if (!users) {
-      return "";
-    }
-    const user = selectUserById(users, id);
-    return getUserName(user);
-  };
-
   const renderUser = (id: number) => {
     if (!users) {
       return "";
@@ -108,7 +100,6 @@ export const UserToRoleList: React.FC = () => {
       field: "user_id",
       headerName: t("userToRole.user") as string,
       flex: 1,
-      valueGetter: (params) => userNameAsString(params.row.user_id),
       renderCell: (params) => renderUser(params.row.user_id),
     },
     {
@@ -120,7 +111,7 @@ export const UserToRoleList: React.FC = () => {
     {
       field: "node_id",
       headerName: t("common.definedAtNode") as string,
-      valueFormatter: ({ value }) => renderNode(value),
+      valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
   ];

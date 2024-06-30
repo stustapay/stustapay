@@ -32,9 +32,6 @@ export const Profile: React.FC = () => {
             <ListItemText primary={t("user.description")} secondary={currentUser.description} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("user.roles")} secondary={currentUser.role_names?.join(", ")} />
-          </ListItem>
-          <ListItem>
             <ListItemText
               primary={t("settings.theme.title")}
               secondary={<ThemeSelect variant="standard" fullWidth />}

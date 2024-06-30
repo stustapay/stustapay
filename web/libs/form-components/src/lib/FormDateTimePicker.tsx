@@ -3,6 +3,12 @@ import { DateTimePicker, DateTimePickerProps } from "@mui/x-date-pickers";
 import { FormikProps } from "formik";
 import { DateTime } from "luxon";
 
+declare module "@mui/x-date-pickers/models" {
+  interface PickerValidDateLookup {
+    luxon: DateTime;
+  }
+}
+
 export type FormDateTimePickerProps<Name extends string, Values> = {
   name: Name;
   formik: FormikProps<Values>;

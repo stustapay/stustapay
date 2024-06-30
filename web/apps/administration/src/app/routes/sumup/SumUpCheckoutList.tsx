@@ -30,7 +30,7 @@ export const SumUpCheckoutList: React.FC = withPrivilegeGuard(Privilege.node_adm
     {
       field: "amount",
       headerName: t("sumup.checkout.amount") as string,
-      valueGetter: (params) => `${params.row.amount} ${params.row.currency}`,
+      valueFormatter: (amount, row) => `${amount} ${row.currency}`,
     },
     { field: "date", headerName: t("sumup.checkout.date") },
     { field: "status", headerName: t("sumup.checkout.status") },

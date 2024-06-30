@@ -5,15 +5,7 @@ import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
 import { Login, Logout, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
-import {
-  EventCreate,
-  NodeOverview,
-  MoneyOverview,
-  NodePageLayout,
-  NodeSettings,
-  SettingsLegacy,
-  NodeCreate,
-} from "./routes/nodes";
+import { EventCreate, NodeOverview, MoneyOverview, NodePageLayout, NodeSettings, NodeCreate } from "./routes/nodes";
 import { NodeStats } from "./routes/nodes/stats";
 import { OrderDetail, SaleEdit } from "./routes/orders";
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
@@ -94,10 +86,6 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <NodeOverview /> },
           { path: "stats", element: <NodeStats /> },
-          {
-            path: "settings-legacy",
-            element: <SettingsLegacy />,
-          },
           {
             path: "settings/sumup-redirect",
             element: <SumupOauthCallback />,

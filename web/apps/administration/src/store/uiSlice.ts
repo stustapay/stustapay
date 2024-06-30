@@ -6,13 +6,13 @@ export type Theme = "light" | "dark" | "browser";
 interface UiState {
   theme: Theme;
   expandedNodes: string[];
-  selectedNodes: string[];
+  selectedNode: string | null;
 }
 
 const initialState: UiState = {
   theme: "browser",
   expandedNodes: [],
-  selectedNodes: [],
+  selectedNode: null,
 };
 
 export const uiSlice = createSlice({
@@ -32,8 +32,8 @@ export const uiSlice = createSlice({
         }
       }
     },
-    setSelectedNodes: (state, action: PayloadAction<string[]>) => {
-      state.selectedNodes = action.payload;
+    setSelectedNodes: (state, action: PayloadAction<string | null>) => {
+      state.selectedNode = action.payload;
     },
   },
 });
@@ -42,4 +42,4 @@ export const { setTheme, setExpandedNodes, setSelectedNodes, extendExpandedNodes
 
 export const selectTheme = (state: RootState) => state.ui.theme;
 export const selectExpandedNodes = (state: RootState) => state.ui.expandedNodes;
-export const selectSelectedNodes = (state: RootState) => state.ui.selectedNodes;
+export const selectSelectedNodes = (state: RootState) => state.ui.selectedNode;

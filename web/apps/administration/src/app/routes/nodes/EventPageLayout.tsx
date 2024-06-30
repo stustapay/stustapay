@@ -20,9 +20,6 @@ const getActiveTab = (nodeId: number, location: string) => {
   if (location.startsWith(`/node/${nodeId}/settings`)) {
     return `/node/${nodeId}/settings`;
   }
-  if (location.startsWith(`/node/${nodeId}/settings-legacy`)) {
-    return `/node/${nodeId}/settings-legacy`;
-  }
   if (location.startsWith(`/node/${nodeId}/system-accounts`)) {
     return `/node/${nodeId}/system-accounts`;
   }
