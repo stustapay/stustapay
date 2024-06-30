@@ -6,7 +6,7 @@ import translationsEn from "./locales/en/translations";
 
 export const defaultNS = "translations";
 
-const resources = {
+export const resources = {
   en: { translations: translationsEn },
   de: { translations: translationsDe },
 } as const;
@@ -17,10 +17,10 @@ i18n
   .init({
     lng: "en",
     fallbackLng: "en",
-    ns: ["translations"],
+    ns: [defaultNS],
     debug: true,
-    defaultNS: defaultNS,
-    resources: resources,
+    defaultNS,
+    resources,
     interpolation: { escapeValue: false },
   });
 

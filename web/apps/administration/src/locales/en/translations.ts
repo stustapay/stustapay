@@ -563,6 +563,7 @@ export const translations = {
     type: "Type",
     status: "Status",
     serial: "Serial",
+    update: "Update TSE",
     create: "Create a new TSE",
     wsUrl: "Websocket URL",
     wsTimeout: "Websocket Timeout in seconds",
