@@ -15,7 +15,7 @@ from stustapay.core.service.common.error import (
     InvalidArgument,
     NodeIsReadOnly,
     ResourceNotAllowed,
-    Unauthorized,
+    Unauthorized, NotFound,
 )
 from stustapay.core.service.tree.common import fetch_node
 
@@ -71,7 +71,7 @@ def requires_node(
             if node is None:
                 node = await fetch_node(conn=conn, node_id=node_id)
                 if node is None:
-                    raise RuntimeError(f"Node with id {node_id} does not exist")
+                    raise NotFound("node", node_id)
 
             func_is_read_only = _is_func_read_only(kwargs, func)
             if not func_is_read_only and node.read_only:

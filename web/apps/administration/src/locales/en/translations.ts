@@ -9,6 +9,8 @@ export const translations = {
   submit: "Submit",
   download: "Download",
   products: "Products",
+  product_one: "Product",
+  product_other: "Products",
   tickets: "Tickets",
   actions: "Actions",
   add: "Add",

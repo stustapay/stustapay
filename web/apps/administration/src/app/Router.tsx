@@ -65,6 +65,8 @@ import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
 import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch } from "./routes/customers";
 import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
+import { createRoutes } from "@/resource-lib/resource";
+import { productResource } from "@/resource-lib/product-test";
 
 const router = createBrowserRouter([
   {
@@ -136,26 +138,30 @@ const router = createBrowserRouter([
         path: "node/:nodeId/create-node",
         element: <NodeCreate />,
       },
+      // {
+      //   path: "node/:nodeId/products",
+      //   children: [
+      //     {
+      //       index: true,
+      //       element: <ProductList />,
+      //     },
+      //     {
+      //       path: "new",
+      //       element: <ProductCreate />,
+      //     },
+      //     {
+      //       path: ":productId/edit",
+      //       element: <ProductUpdate />,
+      //     },
+      //     {
+      //       path: ":productId",
+      //       element: <ProductDetail />,
+      //     },
+      //   ],
+      // },
       {
         path: "node/:nodeId/products",
-        children: [
-          {
-            index: true,
-            element: <ProductList />,
-          },
-          {
-            path: "new",
-            element: <ProductCreate />,
-          },
-          {
-            path: ":productId/edit",
-            element: <ProductUpdate />,
-          },
-          {
-            path: ":productId",
-            element: <ProductDetail />,
-          },
-        ],
+        children: createRoutes(productResource),
       },
       {
         path: "node/:nodeId/customers",
