@@ -21,7 +21,8 @@ import { SimpleTreeView } from "@mui/x-tree-view";
 import * as React from "react";
 import { useLocation } from "react-router-dom";
 import { NavigationTreeItem } from "./NavigationTreeItem";
-import { NodeMenu, isMenuEntryValidAtNode, nodeMenuEntryDefinitions } from "./NodeMenu";
+import { NodeMenu, createMenuRoute, isMenuEntryValidAtNode, nodeMenuEntryDefinitions } from "./NodeMenu";
+import { useCreatePath } from "react-admin";
 
 const getNavigationTreeItemLabel = (node: Node) => {
   if (node.event) {
@@ -30,16 +31,16 @@ const getNavigationTreeItemLabel = (node: Node) => {
   return FolderIcon;
 };
 
-const computeMenuIds = (node: NodeSeenByUser) => {
-  let ids = [`/node/${node.id}`];
+const computeMenuIds = (createPath: ReturnType<typeof useCreatePath>, node: NodeSeenByUser) => {
+  let ids = [`/nodes/${node.id}`];
   for (const menuEntry of nodeMenuEntryDefinitions) {
     if (isMenuEntryValidAtNode(menuEntry, node)) {
-      const id = menuEntry.route(node);
+      const id = createMenuRoute(createPath, node, menuEntry);
       ids.push(id);
     }
   }
   for (const child of node.children) {
-    ids = [...ids, ...computeMenuIds(child)];
+    ids = [...ids, ...computeMenuIds(createPath, child)];
   }
   return ids;
 };
@@ -50,6 +51,7 @@ export const NavigationTree: React.FC = () => {
   const expanded = useAppSelector(selectExpandedNodes);
   const selected = useAppSelector(selectSelectedNodes);
   const dispatch = useAppDispatch();
+  const createPath = useCreatePath();
 
   const setExpanded = React.useCallback(
     (v: string[]) => {
@@ -74,10 +76,10 @@ export const NavigationTree: React.FC = () => {
   };
 
   const menuIds = React.useMemo(() => {
-    const result = computeMenuIds(tree);
+    const result = computeMenuIds(createPath, tree);
     result.sort().reverse();
     return result;
-  }, [tree]);
+  }, [tree, createPath]);
 
   React.useEffect(() => {
     const match = location.pathname.match(nodeUrlBaseRegex);
@@ -87,7 +89,7 @@ export const NavigationTree: React.FC = () => {
       if (!node) {
         return;
       }
-      dispatch(extendExpandedNodes([nodeId, ...node.parent_ids.map((parent) => `/node/${parent}`)]));
+      dispatch(extendExpandedNodes([nodeId, ...node.parent_ids.map((parent) => `/nodes/${parent}`)]));
       const firstMatchingMenuId = menuIds.find((val) => location.pathname.startsWith(val));
       if (firstMatchingMenuId) {
         setSelected(firstMatchingMenuId);
@@ -100,8 +102,8 @@ export const NavigationTree: React.FC = () => {
   const renderTree = (node: NodeSeenByUser) => (
     <NavigationTreeItem
       key={node.id}
-      itemId={`/node/${node.id}`}
-      to={`/node/${node.id}`}
+      itemId={`/nodes/${node.id}`}
+      to={`/nodes/${node.id}`}
       labelText={node.name}
       labelIcon={getNavigationTreeItemLabel(node)}
       suffixIcon={node.read_only ? EditOffIcon : undefined}

@@ -15,6 +15,10 @@ async def list_tses(conn: Connection, node: Node) -> list[Tse]:
     return await conn.fetch_many(Tse, "select * from tse where node_id = any($1) order by name", node.ids_to_event_node)
 
 
+async def fetch_tse(conn: Connection, node: Node, tse_id) -> Tse:
+    return await conn.fetch_one(Tse, "select * from tse where node_id = any($1) and id = $2", node.ids_to_event_node, tse_id)
+
+
 class TseService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -59,3 +63,9 @@ class TseService(Service[Config]):
     @requires_user([Privilege.node_administration])
     async def list_tses(self, *, conn: Connection, node: Node) -> list[Tse]:
         return await list_tses(conn=conn, node=node)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=False)
+    @requires_user([Privilege.node_administration])
+    async def get_tse(self, *, conn: Connection, node: Node, tse_id: int) -> Tse:
+        return await fetch_tse(conn=conn, node=node, tse_id=tse_id)
