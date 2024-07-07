@@ -2,6 +2,7 @@ from typing import Optional
 
 import asyncpg
 from sftkit.database import Connection
+from sftkit.error import NotFound, ServiceException
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -10,7 +11,6 @@ from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
-from stustapay.core.service.common.error import NotFound, ServiceException
 
 
 async def fetch_product(

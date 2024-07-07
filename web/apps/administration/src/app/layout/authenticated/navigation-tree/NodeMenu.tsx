@@ -12,23 +12,11 @@ import {
 } from "@mui/icons-material";
 import * as React from "react";
 import { NavigationTreeItem } from "./NavigationTreeItem";
-import {
-  CashierRoutes,
-  CustomerRoutes,
-  ProductRoutes,
-  SumUpTransactionRoutes,
-  TerminalRoutes,
-  TicketRoutes,
-  TillRoutes,
-  TseRoutes,
-  UserRoutes,
-  UserTagRoutes,
-  UserToRoleRoutes,
-} from "@/app/routes";
 import { i18n } from "@/i18n";
+import { useCreatePath } from "react-admin";
 
 type NodeMenuItem = {
-  route: (node: Node) => string;
+  resource: string;
   icon: React.FC;
   label: string;
   requiresEvent?: boolean;
@@ -37,51 +25,55 @@ type NodeMenuItem = {
   additionalRequirements?: (node: Node) => boolean;
 };
 
+export const createMenuRoute = (createPath: ReturnType<typeof useCreatePath>, node: Node, menu: NodeMenuItem) => {
+  return createPath({ resource: "nodes", type: "edit", id: node.id }) + `/${menu.resource}`;
+};
+
 export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
   {
-    route: (node) => UserRoutes.list(node.id),
-    label: i18n.t("users"),
+    resource: "users",
+    label: i18n.t("resources.users.name", { count: 2 }),
     icon: PersonIcon,
     requiresOneOfObjectType: ["user", "user_role"],
   },
   {
-    route: (node) => CashierRoutes.list(node.id),
+    resource: "cashiers",
     label: i18n.t("cashiers"),
     icon: PersonIcon,
     requiresOneOfObjectType: ["user", "user_role"],
     requiresEvent: true,
   },
   {
-    route: (node) => UserToRoleRoutes.list(node.id),
+    resource: "user_to_roles",
     label: i18n.t("userToRoles"),
     icon: PersonIcon,
   },
   {
-    route: (node) => ProductRoutes.list(node.id),
-    label: i18n.t("products"),
+    resource: "products",
+    label: i18n.t("resources.products.name", { count: 2 }),
     icon: ShoppingCartIcon,
     requiresOneOfObjectType: ["product"],
   },
   {
-    route: (node) => TicketRoutes.list(node.id),
-    label: i18n.t("tickets"),
+    resource: "tickets",
+    label: i18n.t("resources.tickets.name", { count: 2 }),
     icon: ConfirmationNumberIcon,
     requiresOneOfObjectType: ["ticket"],
   },
   {
-    route: (node) => TerminalRoutes.list(node.id),
-    label: i18n.t("terminal.terminals"),
+    resource: "terminals",
+    label: i18n.t("resources.terminals.name", { count: 2 }),
     icon: SmartphoneIcon,
     requiresOneOfObjectType: ["terminal"],
   },
   {
-    route: (node) => TillRoutes.list(node.id),
-    label: i18n.t("tills"),
+    resource: "tills",
+    label: i18n.t("resources.tills.name", { count: 2 }),
     icon: PointOfSaleIcon,
     requiresOneOfObjectType: ["till"],
   },
   {
-    route: (node) => SumUpTransactionRoutes.list(node.id),
+    resource: "sumup_transactions",
     label: i18n.t("sumup.sumup"),
     icon: PaymentIcon,
     requiresEvent: true,
@@ -90,14 +82,14 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
       node.event != null && (node.event.sumup_payment_enabled || node.event.sumup_topup_enabled),
   },
   {
-    route: (node) => CustomerRoutes.list(node.id),
+    resource: "customers",
     label: i18n.t("customer.customers"),
     icon: AccountBalanceIcon,
     requiresEvent: true,
     requiredPrivileges: ["node_administration"],
   },
   {
-    route: (node) => UserTagRoutes.list(node.id),
+    resource: "user_tags",
     label: i18n.t("userTag.userTags"),
     icon: NfcIcon,
     requiresEvent: true,
@@ -105,8 +97,8 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     requiredPrivileges: ["node_administration"],
   },
   {
-    route: (node) => TseRoutes.list(node.id),
-    label: i18n.t("tse.tses"),
+    resource: "tses",
+    label: i18n.t("resources.tses.name", { count: 2 }),
     icon: ShieldIcon,
     requiresEvent: true,
     requiresOneOfObjectType: ["tse"],
@@ -148,6 +140,7 @@ export interface NodeMenuProps {
 }
 
 export const NodeMenu: React.FC<NodeMenuProps> = React.memo(({ node }) => {
+  const createPath = useCreatePath();
   if (node.computed_forbidden_objects_at_node === undefined) {
     return null;
   }
@@ -159,7 +152,7 @@ export const NodeMenu: React.FC<NodeMenuProps> = React.memo(({ node }) => {
       continue;
     }
 
-    const id = menuDefinition.route(node);
+    const id = createMenuRoute(createPath, node, menuDefinition);
 
     renderedItems.push(
       <NavigationTreeItem

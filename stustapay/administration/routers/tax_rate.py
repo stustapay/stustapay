@@ -1,20 +1,21 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTaxRateService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 
 router = APIRouter(
-    prefix="/tax-rates",
-    tags=["tax-rates"],
+    prefix="/tax_rates",
+    tags=["tax_rates"],
     responses={404: {"description": "Not found"}},
 )
 
 
-@router.get("", response_model=NormalizedList[TaxRate, int])
-async def list_tax_rates(token: CurrentAuthToken, tax_service: ContextTaxRateService, node_id: int):
-    return normalize_list(await tax_service.list_tax_rates(token=token, node_id=node_id))
+@router.get("", response_model=list[TaxRate])
+async def list_tax_rates(token: CurrentAuthToken, response: Response, tax_service: ContextTaxRateService, node_id: int):
+    resp = await tax_service.list_tax_rates(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @router.post("", response_model=TaxRate)
@@ -33,7 +34,7 @@ async def get_tax_rate(tax_rate_id: int, token: CurrentAuthToken, tax_service: C
     return tax_rate
 
 
-@router.post("/{tax_rate_id}", response_model=TaxRate)
+@router.put("/{tax_rate_id}", response_model=TaxRate)
 async def update_tax_rate(
     tax_rate_id: int,
     tax_rate: NewTaxRate,

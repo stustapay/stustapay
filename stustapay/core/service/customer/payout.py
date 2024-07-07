@@ -7,6 +7,7 @@ import asyncpg
 from schwifty import IBAN
 from sepaxml import SepaTransfer
 from sftkit.database import Connection
+from sftkit.error import InvalidArgument, NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -24,7 +25,6 @@ from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_u
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
-from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.mail import MailService

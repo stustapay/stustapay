@@ -1,6 +1,7 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
 import pytest
+from sftkit.error import AccessDenied
 
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.tax_rate import TaxRate
@@ -12,7 +13,6 @@ from stustapay.core.schema.till import (
     NewTillProfile,
 )
 from stustapay.core.schema.tree import Node
-from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 

@@ -2,6 +2,7 @@ from typing import Optional
 
 import asyncpg
 from sftkit.database import Connection
+from sftkit.error import AccessDenied, InvalidArgument, NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -22,7 +23,6 @@ from stustapay.core.service.common.decorators import (
     requires_terminal,
     requires_user,
 )
-from stustapay.core.service.common.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.till.common import create_till, fetch_till
 from stustapay.core.service.till.layout import TillLayoutService
 from stustapay.core.service.till.profile import TillProfileService

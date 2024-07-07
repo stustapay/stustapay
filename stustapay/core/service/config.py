@@ -1,5 +1,6 @@
 import asyncpg
 from sftkit.database import Connection
+from sftkit.error import NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -7,7 +8,6 @@ from stustapay.core.schema.config import ConfigEntry, PublicConfig
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_user
-from stustapay.core.service.common.error import NotFound
 
 
 class ConfigService(Service[Config]):

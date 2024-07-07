@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextCashierService
@@ -15,9 +15,13 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=NormalizedList[Cashier, int])
-async def list_cashiers(token: CurrentAuthToken, cashier_service: ContextCashierService, node_id: int):
-    return normalize_list(await cashier_service.list_cashiers(token=token, node_id=node_id))
+@router.get("", response_model=list[Cashier])
+async def list_cashiers(
+    token: CurrentAuthToken, response: Response, cashier_service: ContextCashierService, node_id: int
+):
+    resp = await cashier_service.list_cashiers(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @router.get("/{cashier_id}", response_model=Cashier)

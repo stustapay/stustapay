@@ -1,21 +1,24 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTerminalService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.terminal import NewTerminal, Terminal
 
 router = APIRouter(
-    prefix="/terminal",
+    prefix="/terminals",
     tags=["terminals"],
     responses={404: {"description": "Not found"}},
 )
 
 
-@router.get("", response_model=NormalizedList[Terminal, int])
-async def list_terminals(token: CurrentAuthToken, terminal_service: ContextTerminalService, node_id: int):
-    return normalize_list(await terminal_service.list_terminals(token=token, node_id=node_id))
+@router.get("", response_model=list[Terminal])
+async def list_terminals(
+    token: CurrentAuthToken, response: Response, terminal_service: ContextTerminalService, node_id: int
+):
+    resp = await terminal_service.list_terminals(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @router.post("", response_model=Terminal)
@@ -39,7 +42,7 @@ async def get_terminal(
     return terminal
 
 
-@router.post("/{terminal_id}", response_model=Terminal)
+@router.put("/{terminal_id}", response_model=Terminal)
 async def update_terminal(
     terminal_id: int,
     terminal: NewTerminal,

@@ -1,20 +1,23 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.till import NewTillProfile, TillProfile
 
 router = APIRouter(
-    prefix="/till-profiles",
+    prefix="/till_profiles",
     tags=["till-profiles"],
     responses={404: {"description": "Not found"}},
 )
 
 
-@router.get("", response_model=NormalizedList[TillProfile, int])
-async def list_till_profiles(token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
-    return normalize_list(await till_service.profile.list_profiles(token=token, node_id=node_id))
+@router.get("", response_model=list[TillProfile])
+async def list_till_profiles(
+    token: CurrentAuthToken, response: Response, till_service: ContextTillService, node_id: int
+):
+    resp = await till_service.profile.list_profiles(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @router.post("", response_model=NewTillProfile)
@@ -33,7 +36,7 @@ async def get_till_profile(profile_id: int, token: CurrentAuthToken, till_servic
     return till
 
 
-@router.post("/{profile_id}", response_model=TillProfile)
+@router.put("/{profile_id}", response_model=TillProfile)
 async def update_till_profile(
     profile_id: int,
     profile: NewTillProfile,

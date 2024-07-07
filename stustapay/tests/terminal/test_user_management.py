@@ -2,6 +2,7 @@
 
 import pytest
 from sftkit.database import Connection
+from sftkit.error import AccessDenied, InvalidArgument
 
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import (
@@ -12,7 +13,6 @@ from stustapay.core.schema.user import (
     UserTag,
 )
 from stustapay.core.service.account import AccountService
-from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.service.user_tag import UserTagService

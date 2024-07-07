@@ -2,6 +2,7 @@ from typing import Optional
 
 import asyncpg
 from sftkit.database import Connection
+from sftkit.error import InvalidArgument, NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -27,7 +28,6 @@ from stustapay.core.service.common.decorators import (
     requires_terminal,
     requires_user,
 )
-from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.order.booking import BookingIdentifier, book_money_transfer
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_node

@@ -1,8 +1,7 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextProductService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.product import NewProduct, Product
 
 router = APIRouter(
@@ -12,9 +11,13 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=NormalizedList[Product, int])
-async def list_products(token: CurrentAuthToken, product_service: ContextProductService, node_id: int):
-    return normalize_list(await product_service.list_products(token=token, node_id=node_id))
+@router.get("", response_model=list[Product])
+async def list_products(
+    token: CurrentAuthToken, response: Response, product_service: ContextProductService, node_id: int
+):
+    resp = await product_service.list_products(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @router.post("", response_model=Product)
@@ -33,7 +36,7 @@ async def get_product(product_id: int, token: CurrentAuthToken, product_service:
     return product
 
 
-@router.post("/{product_id}", response_model=Product)
+@router.put("/{product_id}", response_model=Product)
 async def update_product(
     product_id: int,
     product: NewProduct,

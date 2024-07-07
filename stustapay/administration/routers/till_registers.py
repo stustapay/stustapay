@@ -1,21 +1,24 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.till import CashRegister, NewCashRegister
 
 router = APIRouter(
-    prefix="/till-registers",
+    prefix="/till_registers",
     tags=["till-registers"],
     responses={404: {"description": "Not found"}},
 )
 
 
-@router.get("", response_model=NormalizedList[CashRegister, int])
-async def list_cash_registers_admin(token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
-    return normalize_list(await till_service.register.list_cash_registers_admin(token=token, node_id=node_id))
+@router.get("", response_model=list[CashRegister])
+async def list_cash_registers_admin(
+    token: CurrentAuthToken, response: Response, till_service: ContextTillService, node_id: int
+):
+    resp = await till_service.register.list_cash_registers_admin(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @router.post("", response_model=CashRegister)
@@ -45,7 +48,7 @@ async def transfer_register(
     )
 
 
-@router.post("/{register_id}")
+@router.put("/{register_id}")
 async def update_register(
     register_id: int,
     register: NewCashRegister,

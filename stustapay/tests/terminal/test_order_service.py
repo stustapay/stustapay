@@ -2,12 +2,12 @@
 import uuid
 
 import pytest
+from sftkit.error import InvalidArgument
 
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import NewPayOut, NewTopUp, PaymentMethod
 from stustapay.core.schema.till import NewTillProfile, Till, TillLayout
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
-from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.order.order import (
     NotEnoughFundsException,

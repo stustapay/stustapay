@@ -2,14 +2,14 @@
 import pytest
 from asyncpg import RaiseError
 from sftkit.database import Connection
+from sftkit.error import AccessDenied
 
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.tree import NewNode, Node
-from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.tree.service import create_node
 
-from ..core.service.tree.service import create_node
 from .conftest import Cashier
 
 

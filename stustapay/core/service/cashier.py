@@ -4,6 +4,7 @@ from typing import Optional
 import asyncpg
 from pydantic import BaseModel
 from sftkit.database import Connection
+from sftkit.error import NotFound, ServiceException
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -16,7 +17,6 @@ from stustapay.core.schema.user import CurrentUser, Privilege, User
 from stustapay.core.service.common.decorators import requires_node, requires_user
 
 from .account import get_system_account_for_node
-from .common.error import NotFound, ServiceException
 from .order.booking import (
     BookingIdentifier,
     NewLineItem,

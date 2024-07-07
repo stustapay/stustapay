@@ -1,8 +1,7 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTicketService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.ticket import NewTicket, Ticket
 
 router = APIRouter(
@@ -12,9 +11,11 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=NormalizedList[Ticket, int])
-async def list_tickets(token: CurrentAuthToken, ticket_service: ContextTicketService, node_id: int):
-    return normalize_list(await ticket_service.list_tickets(token=token, node_id=node_id))
+@router.get("", response_model=list[Ticket])
+async def list_tickets(token: CurrentAuthToken, response: Response, ticket_service: ContextTicketService, node_id: int):
+    resp = await ticket_service.list_tickets(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @router.post("", response_model=Ticket)
@@ -31,7 +32,7 @@ async def get_ticket(ticket_id: int, token: CurrentAuthToken, ticket_service: Co
     return ticket
 
 
-@router.post("/{ticket_id}", response_model=Ticket)
+@router.put("/{ticket_id}", response_model=Ticket)
 async def update_ticket(
     ticket_id: int,
     ticket: NewTicket,

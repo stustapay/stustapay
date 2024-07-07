@@ -8,6 +8,7 @@ import aiohttp
 import asyncpg
 from pydantic import BaseModel
 from sftkit.database import Connection
+from sftkit.error import AccessDenied, InvalidArgument, NotFound, ServiceException
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -18,12 +19,6 @@ from stustapay.core.schema.tree import RestrictedEventSettings
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_customer
-from stustapay.core.service.common.error import (
-    AccessDenied,
-    InvalidArgument,
-    NotFound,
-    ServiceException,
-)
 from stustapay.core.service.order.booking import (
     BookingIdentifier,
     NewLineItem,

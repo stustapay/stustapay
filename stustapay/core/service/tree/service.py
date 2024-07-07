@@ -1,5 +1,6 @@
 import asyncpg
 from sftkit.database import Connection
+from sftkit.error import InvalidArgument, NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.bon.bon import generate_dummy_bon
@@ -16,7 +17,6 @@ from stustapay.core.schema.tree import (
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
-from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,

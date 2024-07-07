@@ -2,6 +2,7 @@ from typing import Optional
 
 import asyncpg
 from sftkit.database import Connection
+from sftkit.error import InvalidArgument, NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -11,7 +12,6 @@ from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret, UserTagSecret
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
-from stustapay.core.service.common.error import InvalidArgument, NotFound
 
 
 async def fetch_user_tag_secret(conn: Connection, secret_id: int) -> UserTagSecret | None:

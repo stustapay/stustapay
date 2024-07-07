@@ -7,7 +7,7 @@ import { type Config as BackendConfig } from "./api";
 export const siteHost = window.location.host;
 export const siteProtocol = window.location.protocol;
 const adminBaseUrl = `${siteProtocol}//${siteHost}`;
-const adminApiBaseUrl = `${siteProtocol}//${siteHost}/api`;
+export const adminApiBaseUrl = `${siteProtocol}//${siteHost}/api`;
 
 export const prepareAuthHeaders = (
   headers: Headers,

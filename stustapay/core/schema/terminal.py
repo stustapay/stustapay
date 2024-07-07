@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import Privilege, UserRole
@@ -19,6 +19,11 @@ class Terminal(NewTerminal):
     till_id: int | None
     session_uuid: UUID | None
     registration_uuid: UUID | None
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def is_registered(self) -> bool:
+        return self.session_uuid is not None
 
 
 class UserTagSecret(BaseModel):

@@ -3,6 +3,7 @@
 import pytest
 from dateutil.parser import parse
 from sftkit.database import Connection
+from sftkit.error import AccessDenied, InvalidArgument, Unauthorized
 
 from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod
@@ -10,11 +11,6 @@ from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node
-from stustapay.core.service.common.error import (
-    AccessDenied,
-    InvalidArgument,
-    Unauthorized,
-)
 from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.customer.customer import CustomerBank, CustomerService
 from stustapay.core.service.mail import MailService

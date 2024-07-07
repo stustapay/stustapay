@@ -1,9 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.till import NewTill, Till
 
 router = APIRouter(
@@ -13,9 +12,11 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=NormalizedList[Till, int])
-async def list_tills(token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
-    return normalize_list(await till_service.list_tills(token=token, node_id=node_id))
+@router.get("", response_model=list[Till])
+async def list_tills(token: CurrentAuthToken, response: Response, till_service: ContextTillService, node_id: int):
+    resp = await till_service.list_tills(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @router.post("", response_model=Till)
@@ -32,7 +33,7 @@ async def get_till(till_id: int, token: CurrentAuthToken, till_service: ContextT
     return till
 
 
-@router.post("/{till_id}", response_model=Till)
+@router.put("/{till_id}", response_model=Till)
 async def update_till(
     till_id: int,
     till: NewTill,

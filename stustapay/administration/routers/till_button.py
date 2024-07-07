@@ -1,20 +1,23 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.till import NewTillButton, TillButton
 
 router = APIRouter(
-    prefix="/till-buttons",
+    prefix="/till_buttons",
     tags=["till-buttons"],
     responses={404: {"description": "Not found"}},
 )
 
 
-@router.get("", response_model=NormalizedList[TillButton, int])
-async def list_till_buttons(token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
-    return normalize_list(await till_service.layout.list_buttons(token=token, node_id=node_id))
+@router.get("", response_model=list[TillButton])
+async def list_till_buttons(
+    token: CurrentAuthToken, response: Response, till_service: ContextTillService, node_id: int
+):
+    resp = await till_service.layout.list_buttons(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @router.post("", response_model=NewTillButton)
@@ -33,7 +36,7 @@ async def get_till_button(button_id: int, token: CurrentAuthToken, till_service:
     return till
 
 
-@router.post("/{button_id}", response_model=TillButton)
+@router.put("/{button_id}", response_model=TillButton)
 async def update_till_button(
     button_id: int,
     button: NewTillButton,

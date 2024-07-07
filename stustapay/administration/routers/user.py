@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
@@ -22,20 +22,21 @@ router = APIRouter(
 )
 
 user_router = APIRouter(prefix="/users", tags=["users"])
-user_role_router = APIRouter(prefix="/user-roles", tags=["user-roles"])
-user_to_role_router = APIRouter(prefix="/user-to-roles", tags=["user-to-roles"])
+user_role_router = APIRouter(prefix="/user_roles", tags=["user-roles"])
+user_to_role_router = APIRouter(prefix="/user_to_roles", tags=["user-to-roles"])
 
 
-@user_router.get("", response_model=NormalizedList[User, int])
+@user_router.get("", response_model=list[User])
 async def list_users(
     token: CurrentAuthToken,
+    response: Response,
     user_service: ContextUserService,
     node_id: int,
     filter_privilege: Privilege | None = None,
 ):
-    return normalize_list(
-        await user_service.list_users(token=token, node_id=node_id, filter_privilege=filter_privilege)
-    )
+    resp = await user_service.list_users(token=token, node_id=node_id, filter_privilege=filter_privilege)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 class UpdateUserPayload(BaseModel):
@@ -85,7 +86,7 @@ async def get_user(user_id: int, token: CurrentAuthToken, user_service: ContextU
     return user
 
 
-@user_router.post("/{user_id}", response_model=User)
+@user_router.put("/{user_id}", response_model=User)
 async def update_user(
     user_id: int,
     user: UpdateUserPayload,
@@ -141,9 +142,11 @@ async def delete_user(user_id: int, token: CurrentAuthToken, user_service: Conte
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@user_role_router.get("", response_model=NormalizedList[UserRole, int])
-async def list_user_roles(token: CurrentAuthToken, user_service: ContextUserService, node_id: int):
-    return normalize_list(await user_service.list_user_roles(token=token, node_id=node_id))
+@user_role_router.get("", response_model=list[UserRole])
+async def list_user_roles(token: CurrentAuthToken, response: Response, user_service: ContextUserService, node_id: int):
+    resp = await user_service.list_user_roles(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @user_role_router.post("", response_model=UserRole)
@@ -158,7 +161,7 @@ class UpdateUserRolePrivilegesPayload(BaseModel):
     privileges: list[Privilege]
 
 
-@user_role_router.post("/{user_role_id}", response_model=UserRole)
+@user_role_router.put("/{user_role_id}", response_model=UserRole)
 async def update_user_role(
     user_role_id: int,
     updated_role: UpdateUserRolePrivilegesPayload,
@@ -187,8 +190,12 @@ async def delete_user_role(user_role_id: int, token: CurrentAuthToken, user_serv
 
 
 @user_to_role_router.get("", response_model=list[UserToRoles])
-async def list_user_to_role(token: CurrentAuthToken, user_service: ContextUserService, node_id: int):
-    return await user_service.list_user_to_roles(token=token, node_id=node_id)
+async def list_user_to_role(
+    token: CurrentAuthToken, response: Response, user_service: ContextUserService, node_id: int
+):
+    resp = await user_service.list_user_to_roles(token=token, node_id=node_id)
+    response.headers["Content-Range"] = str(len(resp))
+    return resp
 
 
 @user_to_role_router.post("", response_model=UserToRoles)
