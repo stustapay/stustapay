@@ -45,8 +45,9 @@ node_modules/
 TODO.md
 
 # nix
-.direnv
-.envrc
+/.direnv
+/.envrc
+/result
 
 # docs
 /docs/**/*.pdf
