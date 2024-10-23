@@ -108,6 +108,7 @@
           passlib
           pyyaml
           email-validator
+          pkgs.texlive.combined.scheme-full
         ];
         pythonRelaxDeps = [
           "jinja2"
