@@ -45,10 +45,6 @@ export const AuthenticatedRoot: React.FC = () => {
   const navbarLinks = publicConfig.sumup_topup_enabled
     ? [
         {
-          label: t("nav.payout"),
-          link: "/payout-info",
-        },
-        {
           label: t("nav.topup"),
           link: "/topup",
         },
@@ -58,10 +54,6 @@ export const AuthenticatedRoot: React.FC = () => {
         },
       ]
     : [
-        {
-          label: t("nav.payout"),
-          link: "/payout-info",
-        },
         {
           label: t("nav.faq"),
           link: "/faq",

@@ -107,9 +107,6 @@ export const Index: React.FC = () => {
       </Grid>
 
       <Grid item xs={12} sm={8}>
-        <Alert severity="info" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
-          { payout_info }
-        </Alert>
       </Grid>
 
       <Grid item xs={12} sm={8}>

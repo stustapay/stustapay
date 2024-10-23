@@ -1,9 +1,9 @@
 export const translations = {
-  StuStaPay: "StuStaPay",
+  StuStaPay: "Galeriefest / StuStaPay",
   logout: "Logout",
   login: "Login",
-  userTagUid: "Wristband Tag ID",
-  userTagPin: "Wristband Tag Pin",
+  userTagUid: "Card ID",
+  userTagPin: "Card Pin",
   nav: {
     payout: "Pay Out",
     topup: "Top Up",
@@ -16,10 +16,10 @@ export const translations = {
     "To get your payout after the festival, please <1>enter your bank account details here</1>. Your payout will happen approximately within one month.",
   about: "About",
   contact: "Contact",
-  wristbandTagExample: "Wristband Tag Example",
-  wristbandTagExampleTitle: "Wristband Tag Example with PIN",
+  wristbandTagExample: "Card Example",
+  wristbandTagExampleTitle: "Card Example with PIN",
   wristbandTagExampleDescription:
-    "You can find your wristband tag PIN on the back of your wristband tag. It should look like the example given below:",
+    "You can find your PIN on the back of your card. It should look like the example given below:",
   termsAndConditionsHeader:
     "Our Terms and Conditions are only available in German. You can access our privacy policy on <1>here</1>.",
   privacyPolicyHeader:
@@ -29,8 +29,8 @@ export const translations = {
     de: "Deutsch",
   },
   balance: "Balance",
-  tagPin: "Wristband Tag Pin",
-  tagUid: "Wristband Tag Uid",
+  tagPin: "Card Pin",
+  tagUid: "Card Uid",
   vouchers: "Vouchers",
   order: {
     loadingError: "Error loading orders",

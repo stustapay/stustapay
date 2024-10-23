@@ -5,21 +5,21 @@ type NestedPartialAsStrings<T extends object> = {
 };
 
 export const translations: NestedPartialAsStrings<Translations> = {
-  StuStaPay: "StuStaPay",
+  StuStaPay: "Galeriefest / StuStaPay",
   logout: "Logout",
   login: "Login",
-  userTagUid: "Bändchen-Chip ID",
-  userTagPin: "Bändchen-Chip Pin",
+  userTagUid: "Karten ID",
+  userTagPin: "Karten Pin",
   loginFailed: "Login fehlgeschlagen: {{reason}}.",
   errorLoadingCustomer: "Fehler beim Laden der Kundendaten",
   payoutInfo:
     "Um dein Restguthaben nach dem Festival zu erhalten, <1>trage bitte deine Bankdaten hier ein</1>. Deine Auszahlung findet voraussichtlich innerhalb eines Monats statt.",
   about: "Impressum",
   contact: "Kontakt",
-  wristbandTagExample: "Beispiel eines Bändchen-Chips",
-  wristbandTagExampleTitle: "Bändchen-Chip Beispiel mit PIN",
+  wristbandTagExample: "Beispiel einer Karte",
+  wristbandTagExampleTitle: "Karten Beispiel mit PIN",
   wristbandTagExampleDescription:
-    "Die Bändchen-Chip PIN findest Du auf der Rückseite deines Bändchen-Chips. Sie sollte aussehen wie im unteren Beispiel:",
+    "Die PIN findest Du auf der Rückseite deiner Karte. Sie sollte aussehen wie im unteren Beispiel:",
   termsAndConditionsHeader: "Die Datenschutzbestimmungen können <1>hier</1> eingesehen werden.",
   privacyPolicyHeader: "Unsere AGBs können <1>hier</1> eingesehen werden.",
   languages: {
@@ -33,8 +33,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     faq: "FAQ",
   },
   balance: "Guthaben",
-  tagPin: "Bändchen-Chip Pin",
-  tagUid: "Bändchen-Chip Uid",
+  tagPin: "Karten Pin",
+  tagUid: "Karten Uid",
   vouchers: "Getränkemarken",
   order: {
     loadingError: "Fehler beim laden der Bestellungen",
