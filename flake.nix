@@ -88,7 +88,6 @@
           setuptools
         ];
         dependencies = [
-          sftkit
           fastapi
           typer
           uvicorn
@@ -108,6 +107,7 @@
           passlib
           pyyaml
           email-validator
+          python-multipart
           pkgs.texlive.combined.scheme-full
         ];
         pythonRelaxDeps = [
@@ -118,6 +118,11 @@
           "aiosmtplib"
           "bcrypt"
           "pyyaml"
+          "fastapi"
+          "typer"
+          "uvicorn"
+          "pydantic"
+          "python-multipart"
         ];
       };
 
