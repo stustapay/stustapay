@@ -22,7 +22,7 @@
         pname = "stustapay-admin-ui";
         version = "0.1.0";
         src = ./web;
-        npmDepsHash = "sha256-WnPTXBddX3dvMN3l/6TRUlELjHFwndz7D31VLUeFv9I=";
+        npmDepsHash = "sha256-63i0RQYYwghVzGmrc8+9UAyrYII5eWlUCA3gsH92ZMo=";
         npmInstallFlags = "--verbose";
         dontNpmBuild = true;
         buildPhase = ''
@@ -33,13 +33,15 @@
           mkdir -p $out
           mv dist/apps/administration/* $out/.
         '';
+        CYPRESS_INSTALL_BINARY = 0;
+        CYPRESS_RUN_BINARY = "${pkgs.cypress}/bin/Cypress";
       };
 
       packages.stustapay-customer-ui = pkgs.buildNpmPackage {
         pname = "stustapay-customer-ui";
         version = "0.1.0";
         src = ./web;
-        npmDepsHash = "sha256-WnPTXBddX3dvMN3l/6TRUlELjHFwndz7D31VLUeFv9I=";
+        npmDepsHash = "sha256-63i0RQYYwghVzGmrc8+9UAyrYII5eWlUCA3gsH92ZMo=";
         npmInstallFlags = "--verbose";
         dontNpmBuild = true;
         buildPhase = ''
@@ -50,6 +52,8 @@
           mkdir -p $out
           mv dist/apps/customerportal/* $out/.
         '';
+        CYPRESS_INSTALL_BINARY = 0;
+        CYPRESS_RUN_BINARY = "${pkgs.cypress}/bin/Cypress";
       };
 
       packages.stustapay = let
