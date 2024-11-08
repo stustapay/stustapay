@@ -1,7 +1,14 @@
 import { useDeleteProductMutation, useGetProductQuery, useUpdateProductMutation } from "@/api";
 import { ProductRoutes } from "@/app/routes";
-import { DetailBoolField, DetailField, DetailLayout, DetailListField, DetailView } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import {
+  DetailBoolField,
+  DetailField,
+  DetailLayout,
+  DetailListField,
+  DetailNumberField,
+  DetailView,
+} from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -14,7 +21,6 @@ export const ProductDetail: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const { productId } = useParams();
   const navigate = useNavigate();
-  const formatCurrency = useCurrencyFormatter();
   const [deleteProduct] = useDeleteProductMutation();
   const { data: product, error } = useGetProductQuery({ nodeId: currentNode.id, productId: Number(productId) });
   const [updateProduct] = useUpdateProductMutation();
@@ -80,7 +86,7 @@ export const ProductDetail: React.FC = () => {
         <DetailBoolField label={t("product.isReturnable")} value={product.is_returnable} />
         <DetailBoolField label={t("product.isFixedPrice")} value={product.fixed_price} />
         <DetailListField label={t("product.restrictions")} value={product?.restrictions} />
-        <DetailField label={t("product.price")} value={formatCurrency(product.price)} />
+        <DetailNumberField label={t("product.price")} type="currency" value={product.price} />
         <DetailField label={t("product.priceInVouchers")} value={product.price_in_vouchers} />
         <DetailField
           label={t("product.taxRate")}

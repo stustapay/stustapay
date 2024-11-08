@@ -11,7 +11,7 @@ import {
   selectUserById,
 } from "@/api";
 import { CustomerRoutes, PayoutRunRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailField, DetailLayout, DetailView } from "@/components";
+import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { FileDownload as FileDownloadIcon, Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { Link, Alert } from "@mui/material";
@@ -236,11 +236,16 @@ export const PayoutRunDetail: React.FC = () => {
             <DetailField label={t("payoutRun.setDoneAt")} value={payoutRun.set_done_at} />
           </>
         )}
-        <DetailField
+        <DetailNumberField
           label={t("payoutRun.totalDonationAmount")}
-          value={formatCurrency(payoutRun.total_donation_amount)}
+          type="currency"
+          value={payoutRun.total_donation_amount}
         />
-        <DetailField label={t("payoutRun.totalPayoutAmount")} value={formatCurrency(payoutRun.total_payout_amount)} />
+        <DetailNumberField
+          label={t("payoutRun.totalPayoutAmount")}
+          type="currency"
+          value={payoutRun.total_payout_amount}
+        />
         <DetailField label={t("payoutRun.nPayouts")} value={payoutRun.n_payouts} />
       </DetailView>
       <DataGrid

@@ -11,9 +11,16 @@ import {
   useUpdateAccountCommentMutation,
 } from "@/api";
 import { AccountRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailBoolField, DetailField, DetailLayout, DetailView, EditableListItem } from "@/components";
+import {
+  DetailBoolField,
+  DetailField,
+  DetailLayout,
+  DetailNumberField,
+  DetailView,
+  EditableListItem,
+} from "@/components";
 import { OrderTable } from "@/components/features";
-import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilegeAtNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilegeAtNode } from "@/hooks";
 import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
 import { Alert, Button, Grid, IconButton, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -29,7 +36,6 @@ import { LayoutAction } from "@/components/layouts/types";
 const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const formatCurrency = useCurrencyFormatter();
   const [allowPayout] = useAllowCustomerPayoutMutation();
 
   const printMaybeNull = (value?: string | null) => {
@@ -59,7 +65,7 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
           <DetailField label={t("customer.iban")} value={printMaybeNull(customer.iban)} />
           <DetailField label={t("common.email")} value={printMaybeNull(customer.email)} />
           <DetailBoolField label={t("customer.donateAll")} value={customer.donate_all} />
-          <DetailField label={t("customer.donation")} value={formatCurrency(customer.donation)} />
+          <DetailNumberField label={t("customer.donation")} type="currency" value={customer.donation} />
         </DetailView>
         <DetailView>
           {customer.payout ? (
@@ -72,8 +78,8 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
               />
               <DetailField label={t("customer.iban")} value={printMaybeNull(customer.payout.iban)} />
               <DetailField label={t("common.email")} value={printMaybeNull(customer.payout.email)} />
-              <DetailField label={t("customer.donation")} value={formatCurrency(customer.payout.donation)} />
-              <DetailField label={t("customer.payoutAmount")} value={formatCurrency(customer.payout.amount)} />
+              <DetailNumberField label={t("customer.donation")} type="currency" value={customer.payout.donation} />
+              <DetailNumberField label={t("customer.payoutAmount")} type="currency" value={customer.payout.amount} />
             </>
           ) : (
             <Alert severity="info">{t("customer.noPayoutRunAssigned")}</Alert>
@@ -95,7 +101,6 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
     isLoading: isAccountLoading,
   } = useGetCustomerQuery({ nodeId: currentNode.id, customerId: Number(customerId) });
 
-  const formatCurrency = useCurrencyFormatter();
   const [disableAccount] = useDisableAccountMutation();
   const [updateComment] = useUpdateAccountCommentMutation();
   const canManagePayoutsAtNode = useCurrentUserHasPrivilegeAtNode(PayoutRunRoutes.privilege);
@@ -210,7 +215,7 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
               value={customer.comment ?? ""}
               onChange={handleUpdateComment}
             />
-            <DetailField label={t("account.balance")} value={formatCurrency(customer.balance)} />
+            <DetailNumberField label={t("account.balance")} type="currency" value={customer.balance} />
             <DetailField
               label={t("account.vouchers")}
               value={customer.vouchers}

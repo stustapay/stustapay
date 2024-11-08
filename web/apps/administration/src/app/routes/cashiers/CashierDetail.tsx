@@ -10,7 +10,7 @@ import {
   useListUsersQuery,
 } from "@/api";
 import { CashierRoutes, TillRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { ButtonLink, DetailField, DetailLayout, DetailView } from "@/components";
+import { ButtonLink, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
 import { Paper, Typography } from "@mui/material";
@@ -201,9 +201,10 @@ export const CashierDetail: React.FC = () => {
         ) : (
           <DetailField label={t("cashier.till")} value={t("cashier.notLoggedInAtTill")} />
         )}
-        <DetailField
+        <DetailNumberField
           label={t("cashier.cashDrawerBalance")}
-          value={formatCurrency(cashier.cash_drawer_balance)}
+          type="currency"
+          value={cashier.cash_drawer_balance}
           secondaryAction={
             cashier.cash_drawer_balance !== 0 && (
               <ButtonLink to={CashierRoutes.detailAction(cashierId, "close-out")}>{t("cashier.closeOut")}</ButtonLink>

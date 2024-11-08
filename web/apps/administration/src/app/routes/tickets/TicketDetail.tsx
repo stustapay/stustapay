@@ -1,7 +1,7 @@
 import { useDeleteTicketMutation, useGetTicketQuery, useUpdateTicketMutation } from "@/api";
 import { TicketRoutes } from "@/app/routes";
-import { DetailField, DetailLayout, DetailView } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -14,7 +14,6 @@ export const TicketDetail: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const { ticketId } = useParams();
   const navigate = useNavigate();
-  const formatCurrency = useCurrencyFormatter();
   const [deleteTicket] = useDeleteTicketMutation();
   const { data: ticket, error } = useGetTicketQuery({ nodeId: currentNode.id, ticketId: Number(ticketId) });
   const [updateTicket] = useUpdateTicketMutation();
@@ -72,13 +71,17 @@ export const TicketDetail: React.FC = () => {
           label={t("ticket.restriction")}
           value={ticket.restrictions.length > 0 ? ticket.restrictions[0] : ""}
         />
-        <DetailField label={t("ticket.initialTopUpAmount")} value={formatCurrency(ticket.initial_top_up_amount)} />
-        <DetailField label={t("ticket.price")} value={formatCurrency(ticket.price)} />
+        <DetailNumberField
+          label={t("ticket.initialTopUpAmount")}
+          type="currency"
+          value={ticket.initial_top_up_amount}
+        />
+        <DetailNumberField label={t("ticket.price")} type="currency" value={ticket.price} />
         <DetailField
           label={t("ticket.taxRate")}
           value={`${ticket.tax_name} (${(ticket.tax_rate * 100).toFixed(0)}%)`}
         />
-        <DetailField label={t("ticket.totalPrice")} value={formatCurrency(ticket.total_price)} />
+        <DetailNumberField label={t("ticket.totalPrice")} type="currency" value={ticket.total_price} />
       </DetailView>
     </DetailLayout>
   );
