@@ -11,27 +11,15 @@ import {
   useUpdateAccountCommentMutation,
 } from "@/api";
 import { AccountRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailLayout, EditableListItem, ListItemLink } from "@/components";
+import { DetailBoolField, DetailField, DetailLayout, DetailView, EditableListItem } from "@/components";
 import { OrderTable } from "@/components/features";
 import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilegeAtNode } from "@/hooks";
 import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
-import {
-  Alert,
-  Button,
-  Checkbox,
-  Grid,
-  IconButton,
-  List,
-  ListItem,
-  ListItemSecondaryAction,
-  ListItemText,
-  Paper,
-  Stack,
-} from "@mui/material";
+import { Alert, Button, Grid, IconButton, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { AccountTagHistoryTable } from "../accounts/components/AccountTagHistoryTable";
 import { EditAccountBalanceModal } from "../accounts/components/EditAccountBalanceModal";
@@ -60,62 +48,37 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
   return (
     <Grid item>
       <Stack spacing={2}>
-        <Paper sx={{ height: "100%" }}>
+        <DetailView sx={{ height: "100%" }}>
           {customer.payout_export === false && (
             <Alert severity="info" action={<Button onClick={onClickAllowPayout}>{t("customer.allowPayout")}</Button>}>
               {t("customer.payoutExportPrevented")}
             </Alert>
           )}
-          <List>
-            <ListItem secondaryAction={<Checkbox edge="end" checked={customer.has_entered_info} disabled={true} />}>
-              <ListItemText primary={t("customer.hasEnteredInfo")} />
-            </ListItem>
-            <ListItem>
-              <ListItemText
-                primary={t("customer.bankAccountHolder")}
-                secondary={printMaybeNull(customer.account_name)}
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary={t("customer.iban")} secondary={printMaybeNull(customer.iban)} />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary={t("common.email")} secondary={printMaybeNull(customer.email)} />
-            </ListItem>
-            <ListItem secondaryAction={<Checkbox edge="end" checked={customer.donate_all} disabled={true} />}>
-              <ListItemText primary={t("customer.donateAll")} />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary={t("customer.donation")} secondary={formatCurrency(customer.donation)} />
-            </ListItem>
-          </List>
-        </Paper>
-        <Paper>
+          <DetailBoolField label={t("customer.hasEnteredInfo")} value={customer.has_entered_info} />
+          <DetailField label={t("customer.bankAccountHolder")} value={printMaybeNull(customer.account_name)} />
+          <DetailField label={t("customer.iban")} value={printMaybeNull(customer.iban)} />
+          <DetailField label={t("common.email")} value={printMaybeNull(customer.email)} />
+          <DetailBoolField label={t("customer.donateAll")} value={customer.donate_all} />
+          <DetailField label={t("customer.donation")} value={formatCurrency(customer.donation)} />
+        </DetailView>
+        <DetailView>
           {customer.payout ? (
-            <List>
-              <ListItem>
-                <ListItemText primary={t("customer.detailsInPayoutRun")} />
-              </ListItem>
-              <ListItemLink to={PayoutRunRoutes.detail(customer.payout.payout_run_id)}>
-                <ListItemText primary={t("customer.payoutRun")} secondary={customer.payout.payout_run_id} />
-              </ListItemLink>
-              <ListItem>
-                <ListItemText primary={t("customer.iban")} secondary={printMaybeNull(customer.payout.iban)} />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary={t("common.email")} secondary={printMaybeNull(customer.payout.email)} />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary={t("customer.donation")} secondary={formatCurrency(customer.payout.donation)} />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary={t("customer.payoutAmount")} secondary={formatCurrency(customer.payout.amount)} />
-              </ListItem>
-            </List>
+            <>
+              <DetailField label={t("customer.detailsInPayoutRun")} />
+              <DetailField
+                label={t("customer.payoutRun")}
+                value={customer.payout.payout_run_id}
+                linkTo={PayoutRunRoutes.detail(customer.payout.payout_run_id)}
+              />
+              <DetailField label={t("customer.iban")} value={printMaybeNull(customer.payout.iban)} />
+              <DetailField label={t("common.email")} value={printMaybeNull(customer.payout.email)} />
+              <DetailField label={t("customer.donation")} value={formatCurrency(customer.payout.donation)} />
+              <DetailField label={t("customer.payoutAmount")} value={formatCurrency(customer.payout.amount)} />
+            </>
           ) : (
             <Alert severity="info">{t("customer.noPayoutRunAssigned")}</Alert>
           )}
-        </Paper>
+        </DetailView>
       </Stack>
     </Grid>
   );
@@ -233,48 +196,31 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
     <DetailLayout title={`Customer Account ${customer.id}`} routes={AccountRoutes} actions={actions}>
       <Grid container spacing={1} display="grid" alignItems="stretch" gridTemplateColumns="1fr 1fr">
         <Grid item>
-          <Paper sx={{ height: "100%" }}>
-            <List>
-              <ListItem>
-                <ListItemText primary={t("account.id")} secondary={customer.id} />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary={t("account.type")} secondary={customer.type} />
-              </ListItem>
-              <ListItemLink to={UserTagRoutes.detail(customer.user_tag_id)}>
-                <ListItemText
-                  primary={t("account.user_tag_uid")}
-                  secondary={formatUserTagUid(customer.user_tag_uid_hex)}
-                />
-              </ListItemLink>
-              <ListItem>
-                <ListItemText primary={t("account.name")} secondary={customer.name} />
-              </ListItem>
-              <EditableListItem
-                label={t("account.comment")}
-                value={customer.comment ?? ""}
-                onChange={handleUpdateComment}
-              />
-              <ListItem>
-                <ListItemText primary={t("account.balance")} secondary={formatCurrency(customer.balance)} />
-                {/* {isAdmin && (
-              <ListItemSecondaryAction>
-                <IconButton color="primary" onClick={() => setBalanceModalOpen(true)}>
+          <DetailView sx={{ height: "100%" }}>
+            <DetailField label={t("account.id")} value={customer.id} />
+            <DetailField label={t("account.type")} value={customer.type} />
+            <DetailField
+              label={t("account.user_tag_uid")}
+              value={formatUserTagUid(customer.user_tag_uid_hex)}
+              linkTo={UserTagRoutes.detail(customer.user_tag_id)}
+            />
+            <DetailField label={t("account.name")} value={customer.name} />
+            <EditableListItem
+              label={t("account.comment")}
+              value={customer.comment ?? ""}
+              onChange={handleUpdateComment}
+            />
+            <DetailField label={t("account.balance")} value={formatCurrency(customer.balance)} />
+            <DetailField
+              label={t("account.vouchers")}
+              value={customer.vouchers}
+              secondaryAction={
+                <IconButton color="secondary" onClick={() => setVoucherModalOpen(true)}>
                   <EditIcon />
                 </IconButton>
-              </ListItemSecondaryAction>
-            )} */}
-              </ListItem>
-              <ListItem>
-                <ListItemText primary={t("account.vouchers")} secondary={customer.vouchers} />
-                <ListItemSecondaryAction>
-                  <IconButton color="primary" onClick={() => setVoucherModalOpen(true)}>
-                    <EditIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-            </List>
-          </Paper>
+              }
+            />
+          </DetailView>
         </Grid>
         <PayoutDetails customer={customer} />
       </Grid>

@@ -117,7 +117,7 @@ class TillService(Service[Config]):
             node.id,
         )
         if row is None:
-            raise NotFound(element_typ="till", element_id=till_id)
+            raise NotFound(element_type="till", element_id=till_id)
 
         updated_till = await fetch_till(conn=conn, node=node, till_id=till_id)
         assert updated_till is not None

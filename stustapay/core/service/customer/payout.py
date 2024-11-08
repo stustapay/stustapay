@@ -199,7 +199,7 @@ class PayoutService(Service[Config]):
             "select csv from payout_run where id = $1 and node_id = $2", payout_run_id, node.id
         )
         if csv_data is None:
-            raise NotFound(element_typ="payout_run", element_id=payout_run_id)
+            raise NotFound(element_type="payout_run", element_id=payout_run_id)
         return csv_data
 
     @with_db_transaction
@@ -252,7 +252,7 @@ class PayoutService(Service[Config]):
             "select id, sepa_xml from payout_run where id = $1 and node_id = $2", payout_run_id, node.id
         )
         if row is None:
-            raise NotFound(element_id=payout_run_id, element_typ="payout_run")
+            raise NotFound(element_id=payout_run_id, element_type="payout_run")
         if row["sepa_xml"] is None:
             raise InvalidArgument("SEPA xml has not been generated for this payout run yet")
 

@@ -74,7 +74,7 @@ async def get_or_assign_user_tag(conn: Connection, node: Node, pin: Optional[str
         "select id from user_tag where pin = $1 and node_id = any($2)", pin, node.ids_to_root
     )
     if user_tag_id is None:
-        raise NotFound(element_typ="user_tag", element_id=pin)
+        raise NotFound(element_type="user_tag", element_id=pin)
 
     await conn.fetchval("update user_tag set uid = $1 where id = $2", uid, user_tag_id)
 

@@ -67,7 +67,7 @@ async def get_tree_for_current_user(conn: Connection, current_user: CurrentUser)
         current_user.node_id,
     )
     if user_node is None:
-        raise NotFound(element_typ="node", element_id=current_user.node_id)
+        raise NotFound(element_type="node", element_id=current_user.node_id)
 
     trace_to_root = await conn.fetch_many(
         NodeSeenByUser,
@@ -115,14 +115,14 @@ async def fetch_event_for_node(conn: Connection, node: Node) -> PublicEventSetti
 async def fetch_event_node_for_node(conn: Connection, node_id: int) -> Node | None:
     event_node_id = await conn.fetchval("select event_node_id from node where id = $1", node_id)
     if event_node_id is None:
-        raise NotFound(element_typ="node", element_id=node_id)
+        raise NotFound(element_type="node", element_id=node_id)
     return await fetch_node(conn=conn, node_id=event_node_id)
 
 
 async def fetch_restricted_event_settings_for_node(conn: Connection, node_id: int) -> RestrictedEventSettings:
     event_node_id = await conn.fetchval("select event_node_id from node where id = $1", node_id)
     if event_node_id is None:
-        raise NotFound(element_typ="node", element_id=node_id)
+        raise NotFound(element_type="node", element_id=node_id)
     settings = await conn.fetch_one(
         RestrictedEventSettings,
         "select e.* from event_with_translations e join node n on n.event_id = e.id where n.id = $1",

@@ -7,11 +7,10 @@ import {
   useListUsersQuery,
 } from "@/api";
 import { CashierRoutes, CustomerRoutes, OrderRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailLayout, ListItemLink } from "@/components";
+import { DetailField, DetailLayout, DetailView } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
 import { useCurrentNode } from "@/hooks";
 import { Cancel as CancelIcon, Edit as EditIcon } from "@mui/icons-material";
-import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { formatUserTagUid, getUserName } from "@stustapay/models";
@@ -85,53 +84,40 @@ export const OrderDetail: React.FC = () => {
         },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("order.id")} secondary={order.id} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("order.paymentMethod")} secondary={order.payment_method} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("order.type")} secondary={order.order_type} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("order.bookedAt")} secondary={order.booked_at} />
-          </ListItem>
-          {cashier ? (
-            <ListItemLink to={CashierRoutes.detail(cashier.id, cashier.node_id)}>
-              <ListItemText primary={t("common.cashier")} secondary={getUserName(cashier)} />
-            </ListItemLink>
-          ) : (
-            <ListItem>
-              <ListItemText primary={t("common.cashier")} secondary={t("order.noCashier")} />
-            </ListItem>
-          )}
-          {till ? (
-            <ListItemLink to={TillRoutes.detail(till.id, till.node_id)}>
-              <ListItemText primary={t("common.till")} secondary={till.name} />
-            </ListItemLink>
-          ) : (
-            <ListItem>
-              <ListItemText primary={t("common.till")} secondary={t("order.noTill")} />
-            </ListItem>
-          )}
-          {order.customer_account_id != null && (
-            <ListItemLink to={CustomerRoutes.detail(order.customer_account_id, currentNode.event_node_id)}>
-              <ListItemText primary={t("order.customerAccountId")} secondary={order.customer_account_id} />
-            </ListItemLink>
-          )}
-          {order.customer_tag_uid_hex != null && (
-            <ListItemLink to={UserTagRoutes.detail(order.customer_tag_id, currentNode.event_node_id)}>
-              <ListItemText
-                primary={t("order.customerTagUid")}
-                secondary={formatUserTagUid(order.customer_tag_uid_hex)}
-              />
-            </ListItemLink>
-          )}
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("order.id")} value={order.id} />
+        <DetailField label={t("order.paymentMethod")} value={order.payment_method} />
+        <DetailField label={t("order.type")} value={order.order_type} />
+        <DetailField label={t("order.bookedAt")} value={order.booked_at} />
+        {cashier ? (
+          <DetailField
+            label={t("common.cashier")}
+            value={getUserName(cashier)}
+            linkTo={CashierRoutes.detail(cashier.id, cashier.node_id)}
+          />
+        ) : (
+          <DetailField label={t("common.cashier")} value={t("order.noCashier")} />
+        )}
+        {till ? (
+          <DetailField label={t("common.till")} value={till.name} linkTo={TillRoutes.detail(till.id, till.node_id)} />
+        ) : (
+          <DetailField label={t("common.till")} value={t("order.noTill")} />
+        )}
+        {order.customer_account_id != null && (
+          <DetailField
+            label={t("order.customerAccountId")}
+            value={order.customer_account_id}
+            linkTo={CustomerRoutes.detail(order.customer_account_id, currentNode.event_node_id)}
+          />
+        )}
+        {order.customer_tag_uid_hex != null && (
+          <DetailField
+            label={t("order.customerTagUid")}
+            value={formatUserTagUid(order.customer_tag_uid_hex)}
+            linkTo={UserTagRoutes.detail(order.customer_tag_id, currentNode.event_node_id)}
+          />
+        )}
+      </DetailView>
       <LineItemTable lineItems={order.line_items} />
     </DetailLayout>
   );

@@ -125,7 +125,7 @@ class ProductService(Service[Config]):
     async def update_product(self, *, conn: Connection, node: Node, product_id: int, product: NewProduct) -> Product:
         current_product = await fetch_product(conn=conn, node=node, product_id=product_id)
         if current_product is None:
-            raise NotFound(element_typ="product", element_id=product_id)
+            raise NotFound(element_type="product", element_id=product_id)
 
         if current_product.is_locked:
             if any(

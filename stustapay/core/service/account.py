@@ -127,7 +127,7 @@ class AccountService(Service[Config]):
     async def get_account(self, *, conn: Connection, node: Node, account_id: int) -> Account:
         account = await get_account_by_id(conn=conn, node=node, account_id=account_id)
         if account is None:
-            raise NotFound(element_typ="account", element_id=str(account_id))
+            raise NotFound(element_type="account", element_id=str(account_id))
         return account
 
     @with_db_transaction(read_only=True)
@@ -162,7 +162,7 @@ class AccountService(Service[Config]):
             node.ids_to_event_node,
         )
         if row is None:
-            raise NotFound(element_typ="account", element_id=str(account_id))
+            raise NotFound(element_type="account", element_id=str(account_id))
 
     @with_db_transaction
     @requires_node(event_only=True)
@@ -298,7 +298,7 @@ class AccountService(Service[Config]):
             node.ids_to_root,
         )
         if ret is None:
-            raise NotFound(element_typ="account", element_id=account_id)
+            raise NotFound(element_type="account", element_id=account_id)
 
         acc = await get_account_by_id(conn=conn, node=node, account_id=account_id)
         assert acc is not None
@@ -322,14 +322,14 @@ class AccountService(Service[Config]):
             node.ids_to_event_node,
         )
         if not row:
-            raise NotFound(element_typ="user_tag", element_id=old_user_tag_pin)
+            raise NotFound(element_type="user_tag", element_id=old_user_tag_pin)
         account_id, old_user_tag_id = row
 
         new_user_tag_id = await conn.fetchval(
             "select id from user_tag where pin = $1 and node_id = any($2)", new_user_tag_pin, node.ids_to_root
         )
         if new_user_tag_id is None:
-            raise NotFound(element_typ="user_tag", element_id=new_user_tag_pin)
+            raise NotFound(element_type="user_tag", element_id=new_user_tag_pin)
 
         new_tag_is_registered = await conn.fetchval(
             "select exists(select from account where user_tag_id = $1)", new_user_tag_id

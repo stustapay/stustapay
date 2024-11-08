@@ -5,15 +5,14 @@ import {
   useListTillLayoutsQuery,
 } from "@/api";
 import { TillLayoutRoutes, TillProfileRoutes } from "@/app/routes";
-import { DetailLayout } from "@/components/layouts";
+import { DetailBoolField, DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Checkbox, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const TillProfileDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -64,36 +63,16 @@ export const TillProfileDetail: React.FC = () => {
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("profile.name")} secondary={profile.name} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("profile.description")} secondary={profile.description} />
-          </ListItem>
-          <ListItem>
-            <Checkbox edge="end" checked={profile.allow_top_up} disabled={true} sx={{ mr: 1 }} />
-            <ListItemText primary={t("profile.allowTopUp")} />
-          </ListItem>
-          <ListItem>
-            <Checkbox edge="end" checked={profile.allow_cash_out} disabled={true} sx={{ mr: 1 }} />
-            <ListItemText primary={t("profile.allowCashOut")} />
-          </ListItem>
-          <ListItem>
-            <Checkbox edge="end" checked={profile.allow_ticket_sale} disabled={true} sx={{ mr: 1 }} />
-            <ListItemText primary={t("profile.allowTicketSale")} />
-          </ListItem>
-          {layout && (
-            <ListItem>
-              <ListItemText
-                primary={t("profile.layout")}
-                secondary={<RouterLink to={TillLayoutRoutes.detail(layout.id)}>{layout.name}</RouterLink>}
-              />
-            </ListItem>
-          )}
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("profile.name")} value={profile.name} />
+        <DetailField label={t("profile.description")} value={profile.description} />
+        <DetailBoolField label={t("profile.allowTopUp")} value={profile.allow_top_up} />
+        <DetailBoolField label={t("profile.allowCashOut")} value={profile.allow_cash_out} />
+        <DetailBoolField label={t("profile.allowTicketSale")} value={profile.allow_ticket_sale} />
+        {layout && (
+          <DetailField label={t("profile.layout")} linkTo={TillLayoutRoutes.detail(layout.id)} value={layout.name} />
+        )}
+      </DetailView>
     </DetailLayout>
   );
 };

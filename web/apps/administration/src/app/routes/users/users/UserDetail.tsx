@@ -1,10 +1,8 @@
 import { useDeleteUserMutation, useGetUserQuery } from "@/api";
 import { CashierRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { ListItemLink } from "@/components";
-import { DetailLayout } from "@/components/layouts";
+import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -55,30 +53,22 @@ export const UserDetail: React.FC = () => {
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("userLogin")} secondary={user.login} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("userDescription")} secondary={user.description} />
-          </ListItem>
-          {user.user_tag_id ? (
-            <ListItemLink to={UserTagRoutes.detail(user.user_tag_id)}>
-              <ListItemText primary={t("user.tagId")} secondary={user.user_tag_id} />
-            </ListItemLink>
-          ) : (
-            <ListItem>
-              <ListItemText primary={t("user.tagId")} secondary={t("user.noTagAssigned")} />
-            </ListItem>
-          )}
-          {user.cashier_account_id != null && (
-            <ListItemLink to={CashierRoutes.detail(user.id, user.node_id)}>
-              <ListItemText primary={t("user.cashierDetails")} />
-            </ListItemLink>
-          )}
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("userLogin")} value={user.login} />
+        <DetailField label={t("userDescription")} value={user.description} />
+        {user.user_tag_id ? (
+          <DetailField
+            label={t("user.tagId")}
+            linkTo={UserTagRoutes.detail(user.user_tag_id)}
+            value={user.user_tag_id}
+          />
+        ) : (
+          <DetailField label={t("user.tagId")} value={t("user.noTagAssigned")} />
+        )}
+        {user.cashier_account_id != null && (
+          <DetailField label={t("user.cashierDetails")} linkTo={CashierRoutes.detail(user.id, user.node_id)} />
+        )}
+      </DetailView>
     </DetailLayout>
   );
 };

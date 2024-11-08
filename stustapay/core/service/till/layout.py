@@ -85,7 +85,7 @@ class TillLayoutService(Service[Config]):
             button.name,
         )
         if row is None:
-            raise NotFound(element_typ="button", element_id=button_id)
+            raise NotFound(element_type="button", element_id=button_id)
         await conn.execute("delete from till_button_product where button_id = $1", button_id)
         for product_id in button.product_ids:
             await conn.execute(

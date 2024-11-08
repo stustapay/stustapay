@@ -4,7 +4,7 @@ import { ProductRoutes, SumUpTransactionRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Link } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@stustapay/components";
 import { Privilege } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

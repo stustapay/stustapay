@@ -8,7 +8,7 @@ import {
   useListTillButtonsQuery,
 } from "@/api";
 import { TillLayoutRoutes } from "@/app/routes";
-import { DetailLayout } from "@/components";
+import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
@@ -32,7 +32,7 @@ export const TillLayoutDetail: React.FC = () => {
   const { data: buttons, error: buttonsError } = useListTillButtonsQuery({ nodeId: currentNode.id });
   const { data: tickets, error: ticketsError } = useListTicketsQuery({ nodeId: currentNode.id });
 
-  const [selectedTab, setSelectedTab] = React.useState<"buttons" | "tickets">("buttons");
+  const [selectedTab, setSelectedTab] = React.useState("buttons");
 
   if (error || buttonsError || ticketsError) {
     return <Navigate to={TillLayoutRoutes.list()} />;
@@ -75,21 +75,15 @@ export const TillLayoutDetail: React.FC = () => {
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("layout.name")} secondary={layout.name} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("layout.description")} secondary={layout.description} />
-          </ListItem>
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("layout.name")} value={layout.name} />
+        <DetailField label={t("layout.description")} value={layout.description} />
+      </DetailView>
       {(sortedButtons.length > 0 || sortedTickets.length > 0) && (
         <Paper>
           <TabContext value={selectedTab}>
             <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-              <TabList onChange={(evt, val) => setSelectedTab(val as any)}>
+              <TabList onChange={(_, val) => setSelectedTab(val)}>
                 <Tab value="buttons" label={t("layout.buttons")} />
                 <Tab value="tickets" label={t("layout.tickets")} />
               </TabList>

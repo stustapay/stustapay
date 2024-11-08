@@ -10,11 +10,11 @@ import {
   useListUsersQuery,
 } from "@/api";
 import { CashierRoutes, TillRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { ButtonLink, DetailLayout, ListItemLink } from "@/components";
+import { ButtonLink, DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
-import { List, ListItem, ListItemSecondaryAction, ListItemText, Paper, Typography } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Paper, Typography } from "@mui/material";
+import { DataGrid, GridColDef } from "@stustapay/components";
 import { Loading } from "@stustapay/components";
 import { CashierShift, formatUserTagUid, getUserName } from "@stustapay/models";
 import * as React from "react";
@@ -180,49 +180,40 @@ export const CashierDetail: React.FC = () => {
         },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("cashier.login")} secondary={cashier.login} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("cashier.name")} secondary={cashier.display_name} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("cashier.description")} secondary={cashier.description} />
-          </ListItem>
-          <ListItemLink to={UserTagRoutes.detail(cashier.user_tag_id)}>
-            <ListItemText primary={t("cashier.tagId")} secondary={formatUserTagUid(cashier.user_tag_uid_hex)} />
-          </ListItemLink>
-          {cashier.till_ids.length !== 0 ? (
-            cashier.till_ids.map((till_id) => (
-              <ListItemLink key={till_id} to={TillRoutes.detail(getTill(till_id)?.id)}>
-                <ListItemText primary={t("cashier.till")} secondary={getTill(till_id)?.name} />
-              </ListItemLink>
-            ))
-          ) : (
-            <ListItem>
-              <ListItemText primary={t("cashier.till")} secondary={t("cashier.notLoggedInAtTill")} />
-            </ListItem>
-          )}
-          <ListItem>
-            <ListItemText
-              primary={t("cashier.cashDrawerBalance")}
-              secondary={formatCurrency(cashier.cash_drawer_balance)}
+      <DetailView>
+        <DetailField label={t("cashier.login")} value={cashier.login} />
+        <DetailField label={t("cashier.name")} value={cashier.display_name} />
+        <DetailField label={t("cashier.description")} value={cashier.description} />
+        <DetailField
+          label={t("cashier.tagId")}
+          value={formatUserTagUid(cashier.user_tag_uid_hex)}
+          linkTo={UserTagRoutes.detail(cashier.user_tag_id)}
+        />
+        {cashier.till_ids.length !== 0 ? (
+          cashier.till_ids.map((till_id) => (
+            <DetailField
+              key={till_id}
+              label={t("cashier.till")}
+              value={getTill(till_id)?.name}
+              linkTo={TillRoutes.detail(getTill(till_id)?.id)}
             />
-            {cashier.cash_drawer_balance !== 0 && (
-              <ListItemSecondaryAction>
-                <ButtonLink to={CashierRoutes.detailAction(cashierId, "close-out")}>{t("cashier.closeOut")}</ButtonLink>
-              </ListItemSecondaryAction>
-            )}
-          </ListItem>
-          {cashier.cash_register_id != null && (
-            <ListItem>
-              <ListItemText primary={t("cashier.cashRegister")} secondary={renderRegister(cashier.cash_register_id)} />
-            </ListItem>
-          )}
-        </List>
-      </Paper>
+          ))
+        ) : (
+          <DetailField label={t("cashier.till")} value={t("cashier.notLoggedInAtTill")} />
+        )}
+        <DetailField
+          label={t("cashier.cashDrawerBalance")}
+          value={formatCurrency(cashier.cash_drawer_balance)}
+          secondaryAction={
+            cashier.cash_drawer_balance !== 0 && (
+              <ButtonLink to={CashierRoutes.detailAction(cashierId, "close-out")}>{t("cashier.closeOut")}</ButtonLink>
+            )
+          }
+        />
+        {cashier.cash_register_id != null && (
+          <DetailField label={t("cashier.cashRegister")} value={renderRegister(cashier.cash_register_id)} />
+        )}
+      </DetailView>
       <Paper sx={{ p: 1 }}>
         <Typography variant="body1" sx={{ p: 1 }}>
           {t("cashier.shifts")}

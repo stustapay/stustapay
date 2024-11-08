@@ -1,9 +1,8 @@
 import { selectUserRoleById, useListUserRolesQuery } from "@/api";
 import { UserRoleRoutes } from "@/app/routes";
-import { DetailLayout } from "@/components";
+import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Edit as EditIcon } from "@mui/icons-material";
-import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -45,22 +44,11 @@ export const UserRoleDetail: React.FC = () => {
         },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("userRole.name")} secondary={role.name} />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("userRole.isPrivileged")}
-              secondary={role.is_privileged ? t("common.yes") : t("common.no")}
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("userRole.privileges")} secondary={role.privileges.join(", ")} />
-          </ListItem>
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("userRole.name")} value={role.name} />
+        <DetailField label={t("userRole.isPrivileged")} value={role.is_privileged ? t("common.yes") : t("common.no")} />
+        <DetailField label={t("userRole.privileges")} value={role.privileges.join(", ")} />
+      </DetailView>
     </DetailLayout>
   );
 };

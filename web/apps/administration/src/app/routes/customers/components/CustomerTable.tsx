@@ -2,7 +2,7 @@ import { CustomerRead } from "@/api";
 import { CustomerRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
 import { useCurrencyFormatter, useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@stustapay/components";
 import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

@@ -105,7 +105,7 @@ class TerminalService(Service[Config]):
             node.id,
         )
         if term_id is None:
-            raise NotFound(element_typ="terminal", element_id=terminal_id)
+            raise NotFound(element_type="terminal", element_id=terminal_id)
         updated_terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
         assert updated_terminal is not None
         return updated_terminal
@@ -152,7 +152,7 @@ class TerminalService(Service[Config]):
             node.id,
         )
         if row is None:
-            raise NotFound(element_typ="terminal", element_id=terminal_id)
+            raise NotFound(element_type="terminal", element_id=terminal_id)
 
         till_id = await conn.fetchval("select id from till where terminal_id = $1", terminal_id)
         if till_id is not None:
@@ -167,7 +167,7 @@ class TerminalService(Service[Config]):
     async def switch_till(self, *, conn: Connection, node: Node, terminal_id: int, new_till_id: int):
         terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
         if terminal is None:
-            raise NotFound(element_typ="terminal", element_id=terminal_id)
+            raise NotFound(element_type="terminal", element_id=terminal_id)
         if terminal.till_id is not None:
             till_node_id = await conn.fetchval("select node_id from till where id = $1", terminal.till_id)
             await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=terminal.till_id)

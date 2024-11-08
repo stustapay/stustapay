@@ -1,9 +1,8 @@
 import { useDeleteTicketMutation, useGetTicketQuery, useUpdateTicketMutation } from "@/api";
 import { TicketRoutes } from "@/app/routes";
-import { DetailLayout } from "@/components";
+import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
-import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -67,41 +66,20 @@ export const TicketDetail: React.FC = () => {
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("ticket.name")} secondary={ticket.name} />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("ticket.restriction")}
-              secondary={ticket.restrictions.length > 0 ? ticket.restrictions[0] : ""}
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("ticket.initialTopUpAmount")}
-              secondary={formatCurrency(ticket.initial_top_up_amount)}
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("ticket.price")} secondary={formatCurrency(ticket.price)} />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("ticket.taxRate")}
-              secondary={
-                <span>
-                  {ticket.tax_name} ({(ticket.tax_rate * 100).toFixed(0)}%)
-                </span>
-              }
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("ticket.totalPrice")} secondary={formatCurrency(ticket.total_price)} />
-          </ListItem>
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("ticket.name")} value={ticket.name} />
+        <DetailField
+          label={t("ticket.restriction")}
+          value={ticket.restrictions.length > 0 ? ticket.restrictions[0] : ""}
+        />
+        <DetailField label={t("ticket.initialTopUpAmount")} value={formatCurrency(ticket.initial_top_up_amount)} />
+        <DetailField label={t("ticket.price")} value={formatCurrency(ticket.price)} />
+        <DetailField
+          label={t("ticket.taxRate")}
+          value={`${ticket.tax_name} (${(ticket.tax_rate * 100).toFixed(0)}%)`}
+        />
+        <DetailField label={t("ticket.totalPrice")} value={formatCurrency(ticket.total_price)} />
+      </DetailView>
     </DetailLayout>
   );
 };

@@ -1,8 +1,7 @@
 import { Account } from "@/api";
 import { AccountRoutes } from "@/app/routes";
-import { DetailLayout } from "@/components";
+import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrencyFormatter } from "@/hooks";
-import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -13,28 +12,14 @@ export const SystemAccountDetail: React.FC<{ account: Account }> = ({ account })
 
   return (
     <DetailLayout title={account.name ?? ""} routes={AccountRoutes}>
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("account.id")} secondary={account.id} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("account.type")} secondary={account.type} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("account.name")} secondary={account.name} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("account.comment")} secondary={account.comment} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("account.balance")} secondary={formatCurrency(account.balance)} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("account.vouchers")} secondary={account.vouchers} />
-          </ListItem>
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("account.id")} value={account.id} />
+        <DetailField label={t("account.type")} value={account.type} />
+        <DetailField label={t("account.name")} value={account.name} />
+        <DetailField label={t("account.comment")} value={account.comment} />
+        <DetailField label={t("account.balance")} value={formatCurrency(account.balance)} />
+        <DetailField label={t("account.vouchers")} value={account.vouchers} />
+      </DetailView>
     </DetailLayout>
   );
 };

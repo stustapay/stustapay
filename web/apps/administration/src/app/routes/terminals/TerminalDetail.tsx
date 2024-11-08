@@ -8,9 +8,8 @@ import {
 } from "@/api";
 import { config } from "@/api/common";
 import { TerminalRoutes, TillRoutes } from "@/app/routes";
-import { ListItemLink } from "@/components";
 import { TerminalSwitchTill } from "@/components/features";
-import { DetailLayout } from "@/components/layouts";
+import { DetailBoolField, DetailField, DetailLayout, DetailView } from "@/components/layouts";
 import { encodeTerminalRegistrationQrCode } from "@/core";
 import { useCurrentNode } from "@/hooks";
 import {
@@ -19,7 +18,7 @@ import {
   Logout as LogoutIcon,
   PointOfSale as PointOfSaleIcon,
 } from "@mui/icons-material";
-import { Box, Checkbox, List, ListItem, ListItemText, Paper } from "@mui/material";
+import { Box, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -134,32 +133,18 @@ export const TerminalDetail: React.FC = () => {
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("terminal.id")} secondary={terminal.id} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("common.name")} secondary={terminal.name} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("common.description")} secondary={terminal.description} />
-          </ListItem>
-          {till != null && (
-            <ListItemLink to={TillRoutes.detail(till.id, till.node_id)}>
-              <ListItemText primary={t("terminal.till")} secondary={till.name} />
-            </ListItemLink>
-          )}
-          {terminal.registration_uuid != null && (
-            <ListItem>
-              <ListItemText primary={t("terminal.registrationUUID")} secondary={terminal.registration_uuid} />
-            </ListItem>
-          )}
-          <ListItem secondaryAction={<Checkbox edge="end" checked={terminal.session_uuid != null} disabled={true} />}>
-            <ListItemText primary={t("terminal.loggedIn")} />
-          </ListItem>
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("terminal.id")} value={terminal.id} />
+        <DetailField label={t("common.name")} value={terminal.name} />
+        <DetailField label={t("common.description")} value={terminal.description} />
+        {till != null && (
+          <DetailField linkTo={TillRoutes.detail(till.id, till.node_id)} label={t("terminal.till")} value={till.name} />
+        )}
+        {terminal.registration_uuid != null && (
+          <DetailField label={t("terminal.registrationUUID")} value={terminal.registration_uuid} />
+        )}
+        <DetailBoolField label={t("terminal.loggedIn")} value={terminal.session_uuid != null} />
+      </DetailView>
       {terminal.registration_uuid != null && (
         <Paper>
           <Box

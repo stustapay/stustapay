@@ -175,7 +175,7 @@ class TillRegisterService(Service[Config]):
             stocking_id,
         )
         if stocking_id is None:
-            raise NotFound(element_typ="cash_register_stocking", element_id=str(stocking_id))
+            raise NotFound(element_type="cash_register_stocking", element_id=str(stocking_id))
         updated = await _get_cash_register_stocking(conn=conn, node=node, stocking_id=stocking_id)
         assert updated is not None
         return updated
@@ -229,7 +229,7 @@ class TillRegisterService(Service[Config]):
             "update cash_register set name = $2 where id = $1 returning id, name", register_id, register.name
         )
         if row is None:
-            raise NotFound(element_typ="cash_register", element_id=str(register_id))
+            raise NotFound(element_type="cash_register", element_id=str(register_id))
         r = await get_cash_register(conn=conn, node=node, register_id=register_id)
         assert r is not None
         return r

@@ -9,7 +9,7 @@ import { PayoutRunRoutes, UserRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Link } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@stustapay/components";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
