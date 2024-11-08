@@ -73,7 +73,7 @@ class TaxRateService(Service[Config]):
             node.ids_to_event_node,
         )
         if tax_id is None:
-            raise NotFound(element_typ="tax_rate", element_id=tax_rate_id)
+            raise NotFound(element_type="tax_rate", element_id=tax_rate_id)
         updated_tax = await _fetch_tax_rate(conn=conn, node=node, tax_rate_id=tax_rate_id)
         assert updated_tax is not None
         return updated_tax

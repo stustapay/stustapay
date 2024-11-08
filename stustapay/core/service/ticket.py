@@ -84,7 +84,7 @@ class TicketService(Service[Config]):
             node.ids_to_event_node,
         )
         if ticket_metadata_id is None:
-            raise NotFound(element_typ="ticket", element_id=ticket_id)
+            raise NotFound(element_type="ticket", element_id=ticket_id)
 
         await conn.execute(
             "update product_ticket_metadata set initial_top_up_amount = $1 where id = $2",
@@ -119,7 +119,7 @@ class TicketService(Service[Config]):
             node.ids_to_event_node,
         )
         if ticket_metadata_id is None:
-            raise NotFound(element_typ="ticket", element_id=ticket_id)
+            raise NotFound(element_type="ticket", element_id=ticket_id)
 
         result = await conn.execute(
             "delete from product where id = $1",

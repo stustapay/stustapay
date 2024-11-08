@@ -62,7 +62,7 @@ async def fetch_user(*, conn: Connection, node: Node, user_id: int) -> User:
         User, "select * from user_with_tag where id = $1 and node_id = any($2)", user_id, node.ids_to_root
     )
     if user is None:
-        raise NotFound(element_typ="user", element_id=user_id)
+        raise NotFound(element_type="user", element_id=user_id)
 
     return user
 
@@ -84,7 +84,7 @@ async def update_user(*, conn: Connection, node: Node, user_id: int, user: NewUs
         node.id,
     )
     if row is None:
-        raise NotFound(element_typ="user", element_id=str(user_id))
+        raise NotFound(element_type="user", element_id=str(user_id))
 
     return await fetch_user(conn=conn, node=node, user_id=user_id)
 
@@ -134,7 +134,7 @@ async def associate_user_to_role(
         user_id,
     )
     if user_node_id is None:
-        raise NotFound(element_typ="user", element_id=user_id)
+        raise NotFound(element_type="user", element_id=user_id)
 
     user_node = await fetch_node(conn=conn, node_id=user_node_id)
     assert user_node is not None
@@ -146,7 +146,7 @@ async def associate_user_to_role(
         user_node.ids_to_root,
     )
     if role is None:
-        raise NotFound(element_typ="user_role", element_id=role_id)
+        raise NotFound(element_type="user_role", element_id=role_id)
 
     if current_user_id is not None:  # we actually do permission checks
         privileges = await get_user_privileges_at_node(conn=conn, node_id=node.id, user_id=current_user_id)
@@ -224,7 +224,7 @@ class UserService(Service[Config]):
     ) -> UserRole:
         role = await _get_user_role(conn=conn, role_id=role_id)
         if role is None or role.node_id not in node.ids_to_root:
-            raise NotFound(element_typ="user_role", element_id=role_id)
+            raise NotFound(element_type="user_role", element_id=role_id)
 
         await conn.execute("update user_role set is_privileged = $2 where id = $1", role_id, is_privileged)
 

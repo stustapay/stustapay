@@ -11,11 +11,11 @@ import {
   selectUserById,
 } from "@/api";
 import { CustomerRoutes, PayoutRunRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailLayout, ListItemLink } from "@/components";
+import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { FileDownload as FileDownloadIcon, Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import { List, ListItem, ListItemText, Paper, Link, Alert } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Link, Alert } from "@mui/material";
+import { DataGrid, GridColDef } from "@stustapay/components";
 import { DataGridTitle, Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -217,51 +217,32 @@ export const PayoutRunDetail: React.FC = () => {
 
   return (
     <DetailLayout title={String(payoutRun.id)} routes={PayoutRunRoutes} actions={actions}>
-      <Paper>
+      <DetailView>
         {payoutRun.done && <Alert severity="success">{t("payoutRun.done")}</Alert>}
         {payoutRun.revoked && <Alert severity="warning">{t("payoutRun.revoked")}</Alert>}
-        <List>
-          <ListItemLink to={UserRoutes.detail(payoutRun.created_by)}>
-            <ListItemText
-              primary={t("payoutRun.createdBy")}
-              secondary={
-                users && payoutRun.created_by != null && getUserName(selectUserById(users, payoutRun.created_by))
-              }
+        <DetailField
+          label={t("payoutRun.createdBy")}
+          value={users && payoutRun.created_by != null && getUserName(selectUserById(users, payoutRun.created_by))}
+          linkTo={UserRoutes.detail(payoutRun.created_by)}
+        />
+        <DetailField label={t("payoutRun.createdAt")} value={payoutRun.created_at} />
+        {payoutRun.set_done_by != null && payoutRun.set_done_at && (
+          <>
+            <DetailField
+              label={t("payoutRun.setDoneBy")}
+              value={users && getUserName(selectUserById(users, payoutRun.set_done_by))}
+              linkTo={UserRoutes.detail(payoutRun.created_by)}
             />
-          </ListItemLink>
-          <ListItem>
-            <ListItemText primary={t("payoutRun.createdAt")} secondary={payoutRun.created_at} />
-          </ListItem>
-          {payoutRun.set_done_by != null && payoutRun.set_done_at && (
-            <>
-              <ListItemLink to={UserRoutes.detail(payoutRun.created_by)}>
-                <ListItemText
-                  primary={t("payoutRun.setDoneBy")}
-                  secondary={users && getUserName(selectUserById(users, payoutRun.set_done_by))}
-                />
-              </ListItemLink>
-              <ListItem>
-                <ListItemText primary={t("payoutRun.setDoneAt")} secondary={payoutRun.set_done_at} />
-              </ListItem>
-            </>
-          )}
-          <ListItem>
-            <ListItemText
-              primary={t("payoutRun.totalDonationAmount")}
-              secondary={formatCurrency(payoutRun.total_donation_amount)}
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("payoutRun.totalPayoutAmount")}
-              secondary={formatCurrency(payoutRun.total_payout_amount)}
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("payoutRun.nPayouts")} secondary={payoutRun.n_payouts} />
-          </ListItem>
-        </List>
-      </Paper>
+            <DetailField label={t("payoutRun.setDoneAt")} value={payoutRun.set_done_at} />
+          </>
+        )}
+        <DetailField
+          label={t("payoutRun.totalDonationAmount")}
+          value={formatCurrency(payoutRun.total_donation_amount)}
+        />
+        <DetailField label={t("payoutRun.totalPayoutAmount")} value={formatCurrency(payoutRun.total_payout_amount)} />
+        <DetailField label={t("payoutRun.nPayouts")} value={payoutRun.n_payouts} />
+      </DetailView>
       <DataGrid
         autoHeight
         rows={payouts ?? []}

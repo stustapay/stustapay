@@ -1,6 +1,6 @@
 import * as React from "react";
-import { CommonActionLayout } from "./CommonActionLayout";
-import { LayoutAction } from "./types";
+import { CommonActionLayout } from "../CommonActionLayout";
+import { LayoutAction } from "../types";
 import { IRouteBuilder } from "@/app/routes";
 import { useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode } from "@/hooks";
 

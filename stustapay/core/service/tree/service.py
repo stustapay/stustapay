@@ -293,7 +293,7 @@ class TreeService(Service[Config]):
     async def update_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
         event_id = await conn.fetchval("select event_id from node where id = $1", node.id)
         if event_id is None:
-            raise NotFound(element_typ="event", element_id=node.id)
+            raise NotFound(element_type="event", element_id=node.id)
 
         await conn.fetchval(
             "update event set currency_identifier = $2, sumup_topup_enabled = $3, max_account_balance = $4, "

@@ -140,7 +140,7 @@ class SumupService(Service[Config]):
             CustomerCheckout, "select * from customer_sumup_checkout where id = $1", checkout_id
         )
         if checkout is None:
-            raise NotFound(element_typ="checkout", element_id=checkout_id)
+            raise NotFound(element_type="checkout", element_id=checkout_id)
         return checkout
 
     @staticmethod

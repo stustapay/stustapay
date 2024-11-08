@@ -51,7 +51,7 @@ class TseService(Service[Config]):
             node.ids_to_event_node,
         )
         if tse_id is None:
-            raise NotFound(element_typ="tse", element_id=str(tse_id))
+            raise NotFound(element_type="tse", element_id=str(tse_id))
         return await conn.fetch_one(Tse, "select * from tse where id = $1", tse_id)
 
     @with_db_transaction(read_only=True)

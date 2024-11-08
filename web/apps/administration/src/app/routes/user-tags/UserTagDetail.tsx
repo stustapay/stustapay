@@ -1,9 +1,8 @@
 import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@/api";
 import { CustomerRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailLayout, EditableListItem, ListItemLink } from "@/components";
+import { DetailField, DetailLayout, DetailView, EditableListItem } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { List, ListItem, ListItemText, Paper } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@stustapay/components";
 import { DataGridTitle, Loading } from "@stustapay/components";
 import { UserTagDetail as UserTagDetailType, formatUserTagUid } from "@stustapay/models";
 import { ArrayElement } from "@stustapay/utils";
@@ -65,35 +64,25 @@ export const UserTagDetail: React.FC = () => {
 
   return (
     <DetailLayout title={t("userTag.userTag")} routes={UserTagRoutes}>
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("userTag.pin")} secondary={data.pin} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("userTag.uid")} secondary={formatUserTagUid(data.uid_hex)} />
-          </ListItem>
-          <EditableListItem label={t("userTag.comment")} value={data.comment ?? ""} onChange={handleUpdateComment} />
-          {data.account_id != null ? (
-            <ListItemLink to={CustomerRoutes.detail(data.account_id)}>
-              <ListItemText primary={t("userTag.account")} secondary={data.account_id} />
-            </ListItemLink>
-          ) : (
-            <ListItem>
-              <ListItemText primary={t("userTag.noAccount")} />
-            </ListItem>
-          )}
-          {data.user_id != null ? (
-            <ListItemLink to={UserRoutes.detail(data.user_id)}>
-              <ListItemText primary={t("userTag.user")} secondary={data.user_id} />
-            </ListItemLink>
-          ) : (
-            <ListItem>
-              <ListItemText primary={t("userTag.noUser")} />
-            </ListItem>
-          )}
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("userTag.pin")} value={data.pin} />
+        <DetailField label={t("userTag.uid")} value={formatUserTagUid(data.uid_hex)} />
+        <EditableListItem label={t("userTag.comment")} value={data.comment ?? ""} onChange={handleUpdateComment} />
+        {data.account_id != null ? (
+          <DetailField
+            label={t("userTag.account")}
+            value={data.account_id}
+            linkTo={CustomerRoutes.detail(data.account_id)}
+          />
+        ) : (
+          <DetailField label={t("userTag.noAccount")} />
+        )}
+        {data.user_id != null ? (
+          <DetailField label={t("userTag.user")} value={data.user_id} linkTo={UserRoutes.detail(data.user_id)} />
+        ) : (
+          <DetailField label={t("userTag.noUser")} />
+        )}
+      </DetailView>
       <DataGrid
         autoHeight
         slots={{ toolbar: () => <DataGridTitle title={t("userTag.accountHistory")} /> }}

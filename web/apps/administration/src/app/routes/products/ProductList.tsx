@@ -17,7 +17,7 @@ import {
   Lock as LockIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

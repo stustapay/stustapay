@@ -1,9 +1,8 @@
 import { useDeleteProductMutation, useGetProductQuery, useUpdateProductMutation } from "@/api";
 import { ProductRoutes } from "@/app/routes";
-import { DetailLayout } from "@/components";
+import { DetailBoolField, DetailField, DetailLayout, DetailListField, DetailView } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
-import { Checkbox, Chip, List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -75,49 +74,23 @@ export const ProductDetail: React.FC = () => {
         },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("product.name")} secondary={product.name} />
-          </ListItem>
-          <ListItem>
-            <Checkbox edge="end" checked={product.is_locked} disabled={true} sx={{ mr: 1 }} />
-            <ListItemText primary={t("product.isLocked")} />
-          </ListItem>
-          <ListItem>
-            <Checkbox edge="end" checked={product.is_returnable} disabled={true} sx={{ mr: 1 }} />
-            <ListItemText primary={t("product.isReturnable")} />
-          </ListItem>
-          <ListItem>
-            <Checkbox edge="end" checked={product.fixed_price} disabled={true} sx={{ mr: 1 }} />
-            <ListItemText primary={t("product.isFixedPrice")} />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("product.restrictions")}
-              secondary={product?.restrictions.map((restriction) => (
-                <Chip key={restriction} variant="outlined" label={restriction} sx={{ mr: 1 }} />
-              ))}
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("product.price")} secondary={formatCurrency(product.price)} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("product.priceInVouchers")} secondary={product.price_in_vouchers} />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("product.taxRate")}
-              secondary={
-                <span>
-                  {product.tax_name} ({(product.tax_rate * 100).toFixed(0)}%)
-                </span>
-              }
-            />
-          </ListItem>
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("product.name")} value={product.name} />
+        <DetailBoolField label={t("product.isLocked")} value={product.is_locked} />
+        <DetailBoolField label={t("product.isReturnable")} value={product.is_returnable} />
+        <DetailBoolField label={t("product.isFixedPrice")} value={product.fixed_price} />
+        <DetailListField label={t("product.restrictions")} value={product?.restrictions} />
+        <DetailField label={t("product.price")} value={formatCurrency(product.price)} />
+        <DetailField label={t("product.priceInVouchers")} value={product.price_in_vouchers} />
+        <DetailField
+          label={t("product.taxRate")}
+          value={
+            <span>
+              {product.tax_name} ({(product.tax_rate * 100).toFixed(0)}%)
+            </span>
+          }
+        />
+      </DetailView>
     </DetailLayout>
   );
 };

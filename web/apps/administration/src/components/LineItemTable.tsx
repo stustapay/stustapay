@@ -2,7 +2,7 @@ import { LineItem, selectProductById, selectTaxRateById, useListProductsQuery, u
 import { ProductRoutes } from "@/app/routes";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Tooltip } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@stustapay/components";
 import { DataGridTitle, Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";

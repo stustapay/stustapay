@@ -7,7 +7,7 @@ import {
   ConfirmationNumber as TicketIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@stustapay/components";
 import { DataGridTitle } from "@stustapay/components";
 import { formatDate } from "@stustapay/utils";
 import * as React from "react";

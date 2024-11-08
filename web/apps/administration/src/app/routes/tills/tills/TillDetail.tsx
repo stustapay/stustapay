@@ -13,12 +13,16 @@ import {
   useRemoveFromTerminalMutation,
 } from "@/api";
 import { CashierRoutes, TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
-import { ListItemLink } from "@/components";
 import { OrderTable, TillSwitchTerminal } from "@/components/features";
-import { DetailLayout } from "@/components/layouts";
+import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon, Smartphone as SmartphoneIcon } from "@mui/icons-material";
-import { Button, List, ListItem, ListItemText, Paper } from "@mui/material";
+import {
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Logout as LogoutIcon,
+  Smartphone as SmartphoneIcon,
+} from "@mui/icons-material";
+import { Button, ListItem } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { getUserName } from "@stustapay/models";
@@ -152,61 +156,51 @@ export const TillDetail: React.FC = () => {
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("till.id")} secondary={till.id} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("till.name")} secondary={till.name} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("till.description")} secondary={till.description} />
-          </ListItem>
-          {till.tse_id != null ? (
-            <ListItemLink to={TseRoutes.detail(till.tse_id)}>
-              <ListItemText primary={t("till.tseId")} secondary={till.tse_id} />
-            </ListItemLink>
-          ) : (
+      <DetailView>
+        <DetailField label={t("till.id")} value={till.id} />
+        <DetailField label={t("till.name")} value={till.name} />
+        <DetailField label={t("till.description")} value={till.description} />
+        {till.tse_id != null ? (
+          <DetailField label={t("till.tseId")} linkTo={TseRoutes.detail(till.tse_id)} value={till.tse_id} />
+        ) : (
+          <DetailField label={t("till.tseId")} value="No tse" />
+        )}
+        <DetailField
+          label={t("till.profile")}
+          linkTo={TillProfileRoutes.detail(till.active_profile_id)}
+          value={renderProfile(till.active_profile_id)}
+        />
+        {terminal && (
+          <DetailField
+            label={t("till.terminal")}
+            linkTo={TerminalRoutes.detail(till.terminal_id)}
+            value={terminal.name}
+          />
+        )}
+        {till.active_user_id != null && (
+          <>
+            <DetailField
+              label={t("till.activeUser")}
+              linkTo={CashierRoutes.detail(till.active_user_id)}
+              value={renderUser(till.active_user_id)}
+            />
             <ListItem>
-              <ListItemText primary={t("till.tseId")} secondary="No tse" />
+              <Button color="error" variant="contained" onClick={openConfirmLogoutDialog} startIcon={<LogoutIcon />}>
+                {t("till.forceLogoutUser")}
+              </Button>
             </ListItem>
-          )}
-          <ListItemLink to={TillProfileRoutes.detail(till.active_profile_id)}>
-            <ListItemText primary={t("till.profile")} secondary={renderProfile(till.active_profile_id)} />
-          </ListItemLink>
-          {terminal && (
-            <ListItemLink to={TerminalRoutes.detail(till.terminal_id)}>
-              <ListItemText primary={t("till.terminal")} secondary={terminal.name} />
-            </ListItemLink>
-          )}
-          {till.active_user_id != null && (
-            <>
-              <ListItemLink to={CashierRoutes.detail(till.active_user_id)}>
-                <ListItemText primary={t("till.activeUser")} secondary={renderUser(till.active_user_id)} />
-              </ListItemLink>
-              <ListItem>
-                <Button color="error" variant="contained" onClick={openConfirmLogoutDialog}>
-                  {t("till.forceLogoutUser")}
-                </Button>
-              </ListItem>
-            </>
-          )}
-          {till.current_cash_register_name != null && (
-            <ListItem>
-              <ListItemText primary={t("till.cashRegisterName")} secondary={till.current_cash_register_name} />
-            </ListItem>
-          )}
-          {till.current_cash_register_balance != null && (
-            <ListItem>
-              <ListItemText
-                primary={t("till.cashRegisterBalance")}
-                secondary={formatCurrency(till.current_cash_register_balance)}
-              />
-            </ListItem>
-          )}
-        </List>
-      </Paper>
+          </>
+        )}
+        {till.current_cash_register_name != null && (
+          <DetailField label={t("till.cashRegisterName")} value={till.current_cash_register_name} />
+        )}
+        {till.current_cash_register_balance != null && (
+          <DetailField
+            label={t("till.cashRegisterBalance")}
+            value={formatCurrency(till.current_cash_register_balance)}
+          />
+        )}
+      </DetailView>
       <OrderTable orders={orders ?? []} />
       <TillSwitchTerminal open={switchTerminalOpen} tillId={till.id} onClose={() => setSwitchTerminalOpen(false)} />
     </DetailLayout>

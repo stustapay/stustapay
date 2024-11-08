@@ -163,7 +163,7 @@ class CashierService(Service[Config]):
             conn=conn, current_user=current_user, node=node, cashier_id=cashier_id
         )
         if not cashier:
-            raise NotFound(element_typ="cashier", element_id=cashier_id)
+            raise NotFound(element_type="cashier", element_id=cashier_id)
         return await conn.fetch_many(CashierShift, "select * from cashier_shift where cashier_id = $1", cashier_id)
 
     @staticmethod
@@ -193,14 +193,14 @@ class CashierService(Service[Config]):
             "select exists(select from cashier where id = $1 and node_id = $2)", cashier_id, node.id
         )
         if not cashier_exists:
-            raise NotFound(element_typ="cashier", element_id=cashier_id)
+            raise NotFound(element_type="cashier", element_id=cashier_id)
         shift_end = None
         if shift_id is None:
             shift_start = await self._get_current_cashier_shift_start(conn=conn, cashier_id=cashier_id)
         else:
             shift = await self._get_cashier_shift(conn=conn, cashier_id=cashier_id, shift_id=shift_id)
             if shift is None:
-                raise NotFound(element_typ="cashier_shift", element_id=shift_id)
+                raise NotFound(element_type="cashier_shift", element_id=shift_id)
             shift_start = shift.started_at
             shift_end = shift.ended_at
 
