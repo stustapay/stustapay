@@ -1,6 +1,5 @@
 import { useCheckCheckoutMutation, useCreateCheckoutMutation, useGetCustomerQuery } from "@/api";
-import { useCurrencySymbol } from "@/hooks/useCurrencySymbol";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { useCurrencySymbol, usePublicConfig } from "@/hooks";
 import i18n from "@/i18n";
 import { Cancel as CancelIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
 import { Alert, AlertTitle, Box, Button, Grid, InputAdornment, LinearProgress, Link, Stack } from "@mui/material";

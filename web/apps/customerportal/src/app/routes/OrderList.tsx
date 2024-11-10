@@ -1,6 +1,12 @@
-import { OrderWithBon, OrderWithBonRead, PayoutTransaction, useGetOrdersQuery, useGetPayoutTransactionsQuery } from "@/api";
+import {
+  OrderWithBon,
+  OrderWithBonRead,
+  PayoutTransaction,
+  useGetOrdersQuery,
+  useGetPayoutTransactionsQuery,
+} from "@/api";
 import { useDownloadBon } from "@/api/useDownloadBon";
-import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
+import { useCurrencyFormatter } from "@/hooks";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import {
   Accordion,
@@ -31,10 +37,19 @@ export const OrderList: React.FC = () => {
   const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
   const { data: orders, error: orderError, isLoading: isOrdersLoading } = useGetOrdersQuery();
-  const { data: payoutTransactions, error: payoutTransactionsError, isLoading: isPayoutTransactionsLoading } = useGetPayoutTransactionsQuery();
+  const {
+    data: payoutTransactions,
+    error: payoutTransactionsError,
+    isLoading: isPayoutTransactionsLoading,
+  } = useGetPayoutTransactionsQuery();
   const downloadBon = useDownloadBon();
 
-  if (isOrdersLoading || (!orders && !orderError) || isPayoutTransactionsLoading || (!payoutTransactions && !payoutTransactionsError)) {
+  if (
+    isOrdersLoading ||
+    (!orders && !orderError) ||
+    isPayoutTransactionsLoading ||
+    (!payoutTransactions && !payoutTransactionsError)
+  ) {
     return <Loading />;
   }
 
@@ -76,17 +91,13 @@ export const OrderList: React.FC = () => {
     } else {
       return "Payout";
     }
+  };
 
-  }
-
-  const payout_transactions = (
-    payoutTransactions.filter((payoutTransaction) => payoutTransaction.amount > 0).map((payoutTransaction) => (
-    <Accordion key={`transaction-${payoutTransaction.transaction_id}`}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel1-content"
-          id="panel1-header"
-        >
+  const payout_transactions = payoutTransactions
+    .filter((payoutTransaction) => payoutTransaction.amount > 0)
+    .map((payoutTransaction) => (
+      <Accordion key={`transaction-${payoutTransaction.transaction_id}`}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1-content" id="panel1-header">
           <Typography>{getTransactionName(payoutTransaction)}</Typography>
           <Typography
             style={{
@@ -105,9 +116,7 @@ export const OrderList: React.FC = () => {
           </Typography>
         </AccordionDetails>
       </Accordion>
-      ))
-  );
-
+    ));
 
   return (
     <>
