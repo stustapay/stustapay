@@ -1,6 +1,6 @@
 import { ChevronLeft } from "@mui/icons-material";
 import { Button, Grid, IconButton, LinearProgress, Paper, Stack, Typography } from "@mui/material";
-import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
+import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/react/index";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import { useNavigate } from "react-router-dom";
