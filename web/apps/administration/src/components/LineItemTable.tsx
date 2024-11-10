@@ -1,9 +1,9 @@
 import { LineItem, selectProductById, selectTaxRateById, useListProductsQuery, useListTaxRatesQuery } from "@/api";
 import { ProductRoutes } from "@/app/routes";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrentNode } from "@/hooks";
 import { Tooltip } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
-import { DataGridTitle, Loading } from "@stustapay/components";
+import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
@@ -15,8 +15,6 @@ export interface LineItemTableProps {
 export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-
-  const formatCurrency = useCurrencyFormatter();
 
   const { data: products, isLoading: isProductsLoading } = useListProductsQuery({ nodeId: currentNode.id });
   const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery({ nodeId: currentNode.id });
@@ -71,13 +69,13 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
     {
       field: "product_price",
       headerName: t("item.productPrice") as string,
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       width: 100,
     },
     {
       field: "total_price",
       headerName: t("item.totalPrice") as string,
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       width: 100,
     },
     {
@@ -95,7 +93,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
     {
       field: "total_tax",
       headerName: t("item.totalTax") as string,
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       width: 100,
     },
   ];

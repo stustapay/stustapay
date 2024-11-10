@@ -11,10 +11,10 @@ import {
 } from "@/api";
 import { CashierRoutes, TillRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ButtonLink, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrentNode } from "@/hooks";
 import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
 import { Paper, Typography } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { CashierShift, formatUserTagUid, getUserName } from "@stustapay/models";
 import * as React from "react";
@@ -27,7 +27,6 @@ export const CashierDetail: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const { cashierId } = useParams();
   const navigate = useNavigate();
-  const formatCurrency = useCurrencyFormatter();
 
   const {
     data: cashier,
@@ -144,20 +143,17 @@ export const CashierDetail: React.FC = () => {
     {
       field: "actual_cash_drawer_balance",
       headerName: t("shift.actualCashDrawerBalance") as string,
-      valueFormatter: (value) => formatCurrency(value),
-      type: "number",
+      type: "currency",
     },
     {
       field: "expected_cash_drawer_balance",
       headerName: t("shift.expectedCashDrawerBalance") as string,
-      valueFormatter: (value) => formatCurrency(value),
-      type: "number",
+      type: "currency",
     },
     {
       field: "cash_drawer_imbalance",
       headerName: t("shift.cashDrawerImbalance") as string,
-      valueFormatter: (value) => formatCurrency(value),
-      type: "number",
+      type: "currency",
     },
   ];
 

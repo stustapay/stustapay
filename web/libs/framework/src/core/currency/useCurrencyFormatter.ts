@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useCurrencyIdentifier } from "./useCurrencyIdentifier";
+import { useCurrencyIdentifier } from "./CurrencyProvider";
 
 export type CurrencyFormatter = (value?: number | null) => string;
 

@@ -1,8 +1,8 @@
 import { CustomerRead } from "@/api";
 import { CustomerRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
-import { useCurrencyFormatter, useRenderNode } from "@/hooks";
+import { useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
 import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -14,7 +14,6 @@ export interface CustomerTableProps {
 
 export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
   const { t } = useTranslation();
-  const formatCurrency = useCurrencyFormatter();
   const renderNode = useRenderNode();
 
   const columns: GridColDef<CustomerRead>[] = [
@@ -49,9 +48,8 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
     {
       field: "balance",
       headerName: t("account.balance") as string,
-      type: "number",
+      type: "currency",
       minWidth: 80,
-      valueFormatter: (value) => value && formatCurrency(value),
     },
     {
       field: "vouchers",
@@ -74,8 +72,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
     {
       field: "donation",
       headerName: t("customer.donation") as string,
-      type: "number",
-      valueFormatter: (value) => (value != null ? formatCurrency(value) : "-"),
+      type: "currency",
     },
     {
       field: "payout",

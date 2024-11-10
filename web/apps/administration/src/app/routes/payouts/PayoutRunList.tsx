@@ -7,9 +7,9 @@ import {
 } from "@/api";
 import { PayoutRunRoutes, UserRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrentNode } from "@/hooks";
 import { Link } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
@@ -21,7 +21,6 @@ import { getUserName } from "@stustapay/models";
 export const PayoutRunList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const formatCurrency = useCurrencyFormatter();
 
   const { payoutRuns, isLoading: isPayoutRunsLoading } = useListPayoutRunsQuery(
     { nodeId: currentNode.id },
@@ -94,13 +93,13 @@ export const PayoutRunList: React.FC = () => {
     {
       field: "total_payout_amount",
       headerName: t("payoutRun.totalPayoutAmount") as string,
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       minWidth: 150,
     },
     {
       field: "total_donation_amount",
       headerName: t("payoutRun.totalDonationAmount") as string,
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       minWidth: 150,
     },
     {

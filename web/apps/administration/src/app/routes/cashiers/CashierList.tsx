@@ -1,9 +1,10 @@
 import { CashierRead, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@/api";
 import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode, useRenderNode } from "@/hooks";
+import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
-import { DataGrid, Loading, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
+import { Loading } from "@stustapay/components";
 import { formatUserTagUid } from "@stustapay/models";
 import { StringyBoolean, useQueryState } from "@stustapay/utils";
 import * as React from "react";
@@ -19,7 +20,6 @@ const FilterOptionsSchema = z.object({
 export const CashierList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const formatCurrency = useCurrencyFormatter();
 
   const [filterOptions, setFilterOptions] = useQueryState(
     { showZeroBalance: true, showWithoutTill: true },
@@ -112,8 +112,7 @@ export const CashierList: React.FC = () => {
     {
       field: "cash_drawer_balance",
       headerName: t("cashier.cashDrawerBalance") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       width: 150,
     },
     {

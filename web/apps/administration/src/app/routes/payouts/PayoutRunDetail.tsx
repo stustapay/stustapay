@@ -12,11 +12,11 @@ import {
 } from "@/api";
 import { CustomerRoutes, PayoutRunRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrentNode } from "@/hooks";
 import { FileDownload as FileDownloadIcon, Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { Link, Alert } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
-import { DataGridTitle, Loading } from "@stustapay/components";
+import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams, Link as RouterLink } from "react-router-dom";
@@ -30,7 +30,6 @@ export const PayoutRunDetail: React.FC = () => {
   const { t } = useTranslation();
   const { payoutRunId } = useParams();
   const { currentNode } = useCurrentNode();
-  const formatCurrency = useCurrencyFormatter();
   const [showSepaModal, setShowSepaModal] = React.useState(false);
 
   const openModal = useOpenModal();
@@ -127,15 +126,13 @@ export const PayoutRunDetail: React.FC = () => {
     {
       field: "amount",
       headerName: t("common.amount") as string,
-      align: "right",
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       width: 150,
     },
     {
       field: "donation",
       headerName: t("common.donation") as string,
-      align: "right",
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       width: 150,
     },
   ];

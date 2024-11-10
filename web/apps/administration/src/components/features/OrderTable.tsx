@@ -1,15 +1,12 @@
 import { Order } from "@/api";
 import { OrderRoutes } from "@/app/routes";
-import { useCurrencyFormatter } from "@/hooks";
 import {
   AddCard as AddCardIcon,
   ShoppingCart as ShoppingCartIcon,
   ConfirmationNumber as TicketIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
-import { DataGridTitle } from "@stustapay/components";
-import { formatDate } from "@stustapay/utils";
+import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
@@ -30,7 +27,6 @@ const orderTypeToIcon: Record<string, React.ReactElement> = {
 
 export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
   const { t } = useTranslation();
-  const formatCurrency = useCurrencyFormatter();
 
   const columns: GridColDef<Order>[] = [
     {
@@ -63,22 +59,19 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
     {
       field: "total_no_tax",
       headerName: t("order.totalNoTax") as string,
-      align: "right",
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       width: 150,
     },
     {
       field: "total_tax",
       headerName: t("order.totalTax") as string,
-      align: "right",
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       width: 100,
     },
     {
       field: "total_price",
       headerName: t("order.totalPrice") as string,
-      align: "right",
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
       width: 100,
     },
     {

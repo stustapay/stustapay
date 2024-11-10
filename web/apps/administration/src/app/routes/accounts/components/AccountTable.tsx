@@ -1,12 +1,12 @@
 import { AccountRead } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
-import { useCurrencyFormatter, useRenderNode } from "@/hooks";
+import { useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { formatUserTagUid } from "@stustapay/models";
-import { DataGrid, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
 
 export interface AccountTableProps {
   accounts: AccountRead[];
@@ -14,7 +14,6 @@ export interface AccountTableProps {
 
 export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
   const { t } = useTranslation();
-  const formatCurrency = useCurrencyFormatter();
   const renderNode = useRenderNode();
 
   const columns: GridColDef<AccountRead>[] = [
@@ -52,9 +51,8 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
     {
       field: "balance",
       headerName: t("account.balance") as string,
-      type: "number",
+      type: "currency",
       width: 250,
-      valueFormatter: (value) => value && formatCurrency(value),
     },
     {
       field: "vouchers",

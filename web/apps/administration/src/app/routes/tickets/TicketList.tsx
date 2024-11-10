@@ -9,16 +9,10 @@ import {
 } from "@/api";
 import { TicketRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import {
-  useCurrencyFormatter,
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -31,7 +25,6 @@ export const TicketList: React.FC = () => {
   const canManageTickets = useCurrentUserHasPrivilege(TicketRoutes.privilege);
   const canManageTicketsAtNode = useCurrentUserHasPrivilegeAtNode(TicketRoutes.privilege);
   const navigate = useNavigate();
-  const formatCurrency = useCurrencyFormatter();
   const openModal = useOpenModal();
 
   const { tickets, isLoading: isTicketsLoading } = useListTicketsQuery(
@@ -106,14 +99,12 @@ export const TicketList: React.FC = () => {
     {
       field: "price",
       headerName: t("ticket.price") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
     },
     {
       field: "initial_top_up_amount",
       headerName: t("ticket.initialTopUpAmount") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
     },
     {
       field: "tax_rate_id",
@@ -124,8 +115,7 @@ export const TicketList: React.FC = () => {
     {
       field: "total_price",
       headerName: t("ticket.totalPrice") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
     },
     {
       field: "restrictions",

@@ -1,7 +1,7 @@
 import { AccountRead } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { Link } from "@mui/material";
-import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/components";
+import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/framework";
 import { formatUserTagUid } from "@stustapay/models";
 import { ArrayElement } from "@stustapay/utils";
 import * as React from "react";

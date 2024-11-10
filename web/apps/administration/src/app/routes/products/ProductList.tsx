@@ -17,18 +17,12 @@ import {
   Lock as LockIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import {
-  useCurrencyFormatter,
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { useOpenModal } from "@stustapay/modal-provider";
 
 export const ProductList: React.FC = () => {
@@ -37,7 +31,6 @@ export const ProductList: React.FC = () => {
   const canManageProducts = useCurrentUserHasPrivilege(ProductRoutes.privilege);
   const canManageProductsAtNode = useCurrentUserHasPrivilegeAtNode(ProductRoutes.privilege);
   const navigate = useNavigate();
-  const formatCurrency = useCurrencyFormatter();
   const openModal = useOpenModal();
 
   const { products, isLoading: isProductsLoading } = useListProductsQuery(
@@ -127,8 +120,7 @@ export const ProductList: React.FC = () => {
     {
       field: "price",
       headerName: t("product.price") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      type: "currency",
     },
     {
       field: "price_in_vouchers",

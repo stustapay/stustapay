@@ -2,8 +2,8 @@ import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@/api
 import { CustomerRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView, EditableListItem } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { DataGrid, GridColDef } from "@stustapay/components";
-import { DataGridTitle, Loading } from "@stustapay/components";
+import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
+import { Loading } from "@stustapay/components";
 import { UserTagDetail as UserTagDetailType, formatUserTagUid } from "@stustapay/models";
 import { ArrayElement } from "@stustapay/utils";
 import * as React from "react";

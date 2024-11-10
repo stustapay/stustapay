@@ -4,7 +4,8 @@ import { Router } from "./Router";
 import { toast, ToastContainer } from "react-toastify";
 import { useAppSelector, selectTheme } from "@/store";
 import { Loading } from "@stustapay/components";
-import { fetchConfig } from "@/api/common";
+import { config, fetchConfig } from "@/api/common";
+import { CurrencyProvider } from "@stustapay/framework";
 
 export function App() {
   const [loading, setLoading] = React.useState(true);
@@ -40,7 +41,13 @@ export function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ToastContainer position="top-right" autoClose={4000} pauseOnFocusLoss={false} theme={themeMode} />
-      {loading ? <Loading /> : <Router />}
+      {loading ? (
+        <Loading />
+      ) : (
+        <CurrencyProvider currencyIdentifier={config.apiConfig.currency_identifier}>
+          <Router />
+        </CurrencyProvider>
+      )}
     </ThemeProvider>
   );
 }
