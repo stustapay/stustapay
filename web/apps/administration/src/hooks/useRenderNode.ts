@@ -21,7 +21,7 @@ export const useRenderNode = () => {
       field: "node_id",
       headerName: t("common.definedAtNode"),
       valueFormatter: (value: number) => renderNode(value),
-      minWidth: 100,
+      minWidth: 150,
     };
   }, [root, t]);
 
