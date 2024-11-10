@@ -1,18 +1,10 @@
 import * as React from "react";
 import { useCurrencyIdentifier } from "./CurrencyProvider";
-
-export type CurrencyFormatter = (value?: number | null) => string;
+import { createCurrencyFormatter, CurrencyFormatter } from "./createCurrencyFormatter";
 
 export const useCurrencyFormatter = (): CurrencyFormatter => {
   const currency = useCurrencyIdentifier();
 
-  return React.useCallback(
-    (value?: number | null) => {
-      if (value == null) {
-        return "";
-      }
-      return Intl.NumberFormat("de-DE", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
-    },
-    [currency]
-  );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return React.useCallback(createCurrencyFormatter(currency), [currency]);
 };

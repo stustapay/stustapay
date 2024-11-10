@@ -23,6 +23,12 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ currencyIden
   return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
 };
 
+export const useOptionalCurrencyIdentifier = () => {
+  const ctx = React.useContext(CurrencyContext);
+
+  return ctx?.currencyIdentifier;
+};
+
 export const useCurrencyIdentifier = () => {
   const ctx = React.useContext(CurrencyContext);
 

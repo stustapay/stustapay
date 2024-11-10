@@ -9,8 +9,9 @@ import {
   GridToolbarQuickFilter,
   GridColTypeDef,
 } from "@mui/x-data-grid";
-import { useCurrencyFormatter } from "../../core";
 import { GridBaseColDef } from "@mui/x-data-grid/internals";
+import { useOptionalCurrencyIdentifier } from "../../core/currency/CurrencyProvider";
+import { createCurrencyFormatter } from "../../core/currency/createCurrencyFormatter";
 
 export { GridActionsCellItem } from "@mui/x-data-grid";
 
@@ -34,23 +35,25 @@ const Toolbar = () => {
 };
 
 export const DataGrid = <R extends GridValidRowModel = any>({ columns, ...props }: DataGridProps<R>) => {
-  const formatCurrency = useCurrencyFormatter();
+  const currencyIdentifier = useOptionalCurrencyIdentifier();
 
   const modifiedColumns = React.useMemo<MuiGridColDef<R>[]>(() => {
-    const currencyColumn: GridColTypeDef = {
-      type: "number",
-      align: "right",
-      valueFormatter: formatCurrency,
-      cellClassName: "font-tabular-nums",
-    };
-
     return columns.map((column): MuiGridColDef<R> => {
       if (column.type === "currency") {
+        if (!currencyIdentifier) {
+          throw new Error("using a column of type 'currency' requires wrapping the component in a 'CurrencyProvider'");
+        }
+        const currencyColumn: GridColTypeDef = {
+          type: "number",
+          align: "right",
+          valueFormatter: createCurrencyFormatter(currencyIdentifier),
+          cellClassName: "font-tabular-nums",
+        };
         return { ...column, ...currencyColumn } as MuiGridColDef<R>;
       }
       return column;
     });
-  }, [formatCurrency, columns]);
+  }, [currencyIdentifier, columns]);
 
   return (
     <MuiDataGrid
