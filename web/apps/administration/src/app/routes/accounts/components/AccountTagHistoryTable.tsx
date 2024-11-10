@@ -32,7 +32,7 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
     },
     {
       field: "account_id",
-      headerName: t("account.history.account") as string,
+      headerName: t("account.history.account"),
       renderCell: (params) => (
         <Link component={RouterLink} to={AccountRoutes.detail(params.row.account_id)}>
           {params.row.account_id}
@@ -42,12 +42,12 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
     },
     {
       field: "comment",
-      headerName: t("account.history.comment") as string,
+      headerName: t("account.history.comment"),
       flex: 1,
     },
     {
       field: "mapping_was_valid_until",
-      headerName: t("account.history.validUntil") as string,
+      headerName: t("account.history.validUntil"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       width: 200,

@@ -95,7 +95,7 @@ export const PayoutRunDetail: React.FC = () => {
   const columns: GridColDef<PayoutRead>[] = [
     {
       field: "customer_account_id",
-      headerName: t("common.id") as string,
+      headerName: t("common.id"),
       renderCell: (params) => (
         <Link component={RouterLink} to={CustomerRoutes.detail(params.row.customer_account_id)}>
           {params.row.customer_account_id}
@@ -105,12 +105,12 @@ export const PayoutRunDetail: React.FC = () => {
     },
     {
       field: "account_name",
-      headerName: t("customer.bankAccountHolder") as string,
+      headerName: t("customer.bankAccountHolder"),
       flex: 1,
     },
     {
       field: "email",
-      headerName: t("email") as string,
+      headerName: t("email"),
       flex: 1,
     },
     {
@@ -125,13 +125,13 @@ export const PayoutRunDetail: React.FC = () => {
     },
     {
       field: "amount",
-      headerName: t("common.amount") as string,
+      headerName: t("common.amount"),
       type: "currency",
       width: 150,
     },
     {
       field: "donation",
-      headerName: t("common.donation") as string,
+      headerName: t("common.donation"),
       type: "currency",
       width: 150,
     },

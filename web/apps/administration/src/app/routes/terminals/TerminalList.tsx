@@ -76,7 +76,7 @@ export const TerminalList: React.FC = () => {
   const columns: GridColDef<Terminal>[] = [
     {
       field: "name",
-      headerName: t("common.name") as string,
+      headerName: t("common.name"),
       flex: 1,
       renderCell: (params) => (
         <Tooltip title={params.row.description}>
@@ -88,19 +88,19 @@ export const TerminalList: React.FC = () => {
     },
     {
       field: "till_id",
-      headerName: t("terminal.till") as string,
+      headerName: t("terminal.till"),
       flex: 0.5,
       renderCell: (params) => renderTill(params.row.till_id),
     },
     {
       field: "session_uuid",
-      headerName: t("terminal.loggedIn") as string,
+      headerName: t("terminal.loggedIn"),
       type: "boolean",
       valueGetter: (session_uuid) => session_uuid != null,
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       minWidth: 200,
     },
@@ -110,7 +110,7 @@ export const TerminalList: React.FC = () => {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageTerminalsAtNode(params.row.node_id)

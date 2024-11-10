@@ -19,7 +19,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
   const columns: GridColDef<CustomerRead>[] = [
     {
       field: "id",
-      headerName: t("account.id") as string,
+      headerName: t("account.id"),
       renderCell: (params) => (
         <Link component={RouterLink} to={CustomerRoutes.detail(params.row.id)}>
           {params.row.id}
@@ -28,7 +28,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
     },
     {
       field: "name",
-      headerName: t("account.name") as string,
+      headerName: t("account.name"),
     },
     {
       field: "user_tag_id",
@@ -43,40 +43,40 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
     },
     {
       field: "comment",
-      headerName: t("account.comment") as string,
+      headerName: t("account.comment"),
     },
     {
       field: "balance",
-      headerName: t("account.balance") as string,
+      headerName: t("account.balance"),
       type: "currency",
       minWidth: 80,
     },
     {
       field: "vouchers",
-      headerName: t("account.vouchers") as string,
+      headerName: t("account.vouchers"),
       type: "number",
       minWidth: 80,
     },
     {
       field: "email",
-      headerName: t("common.email") as string,
+      headerName: t("common.email"),
     },
     {
       field: "account_name",
-      headerName: t("customer.bankAccountHolder") as string,
+      headerName: t("customer.bankAccountHolder"),
     },
     {
       field: "iban",
-      headerName: t("customer.iban") as string,
+      headerName: t("customer.iban"),
     },
     {
       field: "donation",
-      headerName: t("customer.donation") as string,
+      headerName: t("customer.donation"),
       type: "currency",
     },
     {
       field: "payout",
-      headerName: t("customer.payoutRun") as string,
+      headerName: t("customer.payoutRun"),
       renderCell: (params) =>
         params.row.payout && (
           <Link component={RouterLink} to={PayoutRunRoutes.detail(params.row.payout.payout_run_id)}>
@@ -87,7 +87,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       flex: 1,
     },

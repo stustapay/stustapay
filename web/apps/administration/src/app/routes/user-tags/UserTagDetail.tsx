@@ -39,7 +39,7 @@ export const UserTagDetail: React.FC = () => {
   const columns: GridColDef<HistoryEntry>[] = [
     {
       field: "account_id",
-      headerName: t("account.history.account") as string,
+      headerName: t("account.history.account"),
       renderCell: (params) => (
         <RouterLink to={CustomerRoutes.detail(params.row.account_id)}>{params.row.account_id}</RouterLink>
       ),
@@ -47,7 +47,7 @@ export const UserTagDetail: React.FC = () => {
     },
     {
       field: "mapping_was_valid_until",
-      headerName: t("account.history.validUntil") as string,
+      headerName: t("account.history.validUntil"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       width: 200,

@@ -51,7 +51,7 @@ export const UserList: React.FC = () => {
   const columns: GridColDef<User>[] = [
     {
       field: "login",
-      headerName: t("userLogin") as string,
+      headerName: t("userLogin"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={UserRoutes.detail(params.row.id, params.row.node_id)}>
@@ -61,17 +61,17 @@ export const UserList: React.FC = () => {
     },
     {
       field: "display_name",
-      headerName: t("userDisplayName") as string,
+      headerName: t("userDisplayName"),
       flex: 1,
     },
     {
       field: "description",
-      headerName: t("userDescription") as string,
+      headerName: t("userDescription"),
       flex: 2,
     },
     {
       field: "user_tag_id",
-      headerName: t("user.tagId") as string,
+      headerName: t("user.tagId"),
       width: 100,
       renderCell: (params) =>
         params.row.user_tag_id && (
@@ -82,7 +82,7 @@ export const UserList: React.FC = () => {
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
@@ -92,7 +92,7 @@ export const UserList: React.FC = () => {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageUsersAtNode(params.row.node_id)

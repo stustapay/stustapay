@@ -51,18 +51,18 @@ export const TillButtonList: React.FC = () => {
   const columns: GridColDef<TillButton>[] = [
     {
       field: "name",
-      headerName: t("button.name") as string,
+      headerName: t("button.name"),
       flex: 1,
     },
     {
       field: "price",
-      headerName: t("button.price") as string,
+      headerName: t("button.price"),
       type: "number",
       valueFormatter: (value) => `${value} €`,
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
@@ -72,7 +72,7 @@ export const TillButtonList: React.FC = () => {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageButtonsAtNode(params.row.node_id)

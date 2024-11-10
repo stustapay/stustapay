@@ -98,19 +98,19 @@ export const UserToRoleList: React.FC = () => {
   const columns: GridColDef<UserToRoles>[] = [
     {
       field: "user_id",
-      headerName: t("userToRole.user") as string,
+      headerName: t("userToRole.user"),
       flex: 1,
       renderCell: (params) => renderUser(params.row.user_id),
     },
     {
       field: "role_ids",
-      headerName: t("userToRole.role") as string,
+      headerName: t("userToRole.role"),
       flex: 1,
       renderCell: (params) => renderRoles(params.row.role_ids),
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
@@ -120,7 +120,7 @@ export const UserToRoleList: React.FC = () => {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         currentNode.id === params.row.node_id

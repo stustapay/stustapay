@@ -19,7 +19,7 @@ export const SumUpCheckoutList: React.FC = withPrivilegeGuard(Privilege.node_adm
   const columns: GridColDef<SumUpCheckout>[] = [
     {
       field: "checkout_reference",
-      headerName: t("sumup.checkout.reference") as string,
+      headerName: t("sumup.checkout.reference"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={SumUpTransactionRoutes.detail(params.row.checkout_reference)}>
@@ -29,7 +29,7 @@ export const SumUpCheckoutList: React.FC = withPrivilegeGuard(Privilege.node_adm
     },
     {
       field: "amount",
-      headerName: t("sumup.checkout.amount") as string,
+      headerName: t("sumup.checkout.amount"),
       valueFormatter: (amount, row) => `${amount} ${row.currency}`,
     },
     { field: "date", headerName: t("sumup.checkout.date") },

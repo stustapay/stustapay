@@ -19,7 +19,7 @@ export const SumUpTransactionList: React.FC = withPrivilegeGuard(Privilege.node_
   const columns: GridColDef<SumUpTransaction>[] = [
     {
       field: "id",
-      headerName: t("common.id") as string,
+      headerName: t("common.id"),
       width: 300,
       renderCell: (params) => (
         <Link component={RouterLink} to={SumUpTransactionRoutes.detail(params.row.id)}>
@@ -29,7 +29,7 @@ export const SumUpTransactionList: React.FC = withPrivilegeGuard(Privilege.node_
     },
     {
       field: "amount",
-      headerName: t("sumup.checkout.amount") as string,
+      headerName: t("sumup.checkout.amount"),
       type: "number",
       valueFormatter: (amount: number, row) => `${amount.toFixed(2)} ${row.currency}`,
     },

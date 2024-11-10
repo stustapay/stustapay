@@ -55,17 +55,17 @@ export const TillRegisterStockingList: React.FC = () => {
   const columns: GridColDef<CashRegisterStocking>[] = [
     {
       field: "name",
-      headerName: t("register.name") as string,
+      headerName: t("register.name"),
       flex: 1,
     },
     {
       field: "total",
-      headerName: t("register.stockingTotal") as string,
+      headerName: t("register.stockingTotal"),
       type: "currency",
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
@@ -75,7 +75,7 @@ export const TillRegisterStockingList: React.FC = () => {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageStockingsAtNode(params.row.node_id)

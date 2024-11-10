@@ -83,7 +83,7 @@ export const TicketList: React.FC = () => {
   const columns: GridColDef<Ticket>[] = [
     {
       field: "name",
-      headerName: t("ticket.name") as string,
+      headerName: t("ticket.name"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={TicketRoutes.detail(params.row.id)}>
@@ -93,38 +93,38 @@ export const TicketList: React.FC = () => {
     },
     {
       field: "is_locked",
-      headerName: t("ticket.isLocked") as string,
+      headerName: t("ticket.isLocked"),
       type: "boolean",
     },
     {
       field: "price",
-      headerName: t("ticket.price") as string,
+      headerName: t("ticket.price"),
       type: "currency",
     },
     {
       field: "initial_top_up_amount",
-      headerName: t("ticket.initialTopUpAmount") as string,
+      headerName: t("ticket.initialTopUpAmount"),
       type: "currency",
     },
     {
       field: "tax_rate_id",
-      headerName: t("ticket.taxRate") as string,
+      headerName: t("ticket.taxRate"),
       align: "right",
       renderCell: (params) => renderTaxRate(params.row.tax_rate_id),
     },
     {
       field: "total_price",
-      headerName: t("ticket.totalPrice") as string,
+      headerName: t("ticket.totalPrice"),
       type: "currency",
     },
     {
       field: "restrictions",
-      headerName: t("ticket.restriction") as string,
+      headerName: t("ticket.restriction"),
       width: 150,
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
@@ -134,7 +134,7 @@ export const TicketList: React.FC = () => {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageTicketsAtNode(params.row.node_id)

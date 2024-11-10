@@ -51,7 +51,7 @@ export const UserRoleList: React.FC = () => {
   const columns: GridColDef<UserRole>[] = [
     {
       field: "name",
-      headerName: t("userRole.name") as string,
+      headerName: t("userRole.name"),
       renderCell: (params) => (
         <Link component={RouterLink} to={UserRoleRoutes.detail(params.row.id)}>
           {params.row.name}
@@ -61,17 +61,17 @@ export const UserRoleList: React.FC = () => {
     },
     {
       field: "is_privileged",
-      headerName: t("userRole.isPrivileged") as string,
+      headerName: t("userRole.isPrivileged"),
       type: "boolean",
     },
     {
       field: "privileges",
-      headerName: t("userPrivileges") as string,
+      headerName: t("userPrivileges"),
       flex: 1,
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       minWidth: 200,
     },
@@ -81,7 +81,7 @@ export const UserRoleList: React.FC = () => {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageUsersAtNode(params.row.node_id)

@@ -31,7 +31,7 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
   const columns: GridColDef<Order>[] = [
     {
       field: "id",
-      headerName: t("order.id") as string,
+      headerName: t("order.id"),
       renderCell: (params) => (
         <Link component={RouterLink} to={OrderRoutes.detail(params.row.id)}>
           {params.row.id}
@@ -41,7 +41,7 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
     },
     {
       field: "order_type",
-      headerName: t("order.type") as string,
+      headerName: t("order.type"),
       width: 140,
       renderCell: ({ row }) => {
         const icon = orderTypeToIcon[row.order_type];
@@ -53,30 +53,30 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
     },
     {
       field: "payment_method",
-      headerName: t("order.paymentMethod") as string,
+      headerName: t("order.paymentMethod"),
       width: 150,
     },
     {
       field: "total_no_tax",
-      headerName: t("order.totalNoTax") as string,
+      headerName: t("order.totalNoTax"),
       type: "currency",
       width: 150,
     },
     {
       field: "total_tax",
-      headerName: t("order.totalTax") as string,
+      headerName: t("order.totalTax"),
       type: "currency",
       width: 100,
     },
     {
       field: "total_price",
-      headerName: t("order.totalPrice") as string,
+      headerName: t("order.totalPrice"),
       type: "currency",
       width: 100,
     },
     {
       field: "booked_at",
-      headerName: t("order.bookedAt") as string,
+      headerName: t("order.bookedAt"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       flex: 1,

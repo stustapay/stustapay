@@ -51,7 +51,7 @@ export const TillLayoutList: React.FC = () => {
   const columns: GridColDef<TillLayout>[] = [
     {
       field: "name",
-      headerName: t("layout.name") as string,
+      headerName: t("layout.name"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={TillLayoutRoutes.detail(params.row.id)}>
@@ -61,12 +61,12 @@ export const TillLayoutList: React.FC = () => {
     },
     {
       field: "description",
-      headerName: t("layout.description") as string,
+      headerName: t("layout.description"),
       flex: 2,
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
@@ -76,7 +76,7 @@ export const TillLayoutList: React.FC = () => {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) => [
         <GridActionsCellItem

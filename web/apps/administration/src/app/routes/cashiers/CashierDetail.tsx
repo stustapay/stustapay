@@ -109,50 +109,50 @@ export const CashierDetail: React.FC = () => {
   const columns: GridColDef<CashierShift>[] = [
     {
       field: "id",
-      headerName: t("shift.id") as string,
+      headerName: t("shift.id"),
       renderCell: (params) => (
         <RouterLink to={CashierRoutes.detail(cashierId) + `/shifts/${params.row.id}`}>{params.row.id}</RouterLink>
       ),
     },
     {
       field: "comment",
-      headerName: t("shift.comment") as string,
+      headerName: t("shift.comment"),
       flex: 2,
     },
     {
       field: "closing_out_user_id",
-      headerName: t("closeOut.closingOutUser") as string,
+      headerName: t("closeOut.closingOutUser"),
       type: "string",
       renderCell: (params) => renderUser(params.row.closing_out_user_id),
       width: 200,
     },
     {
       field: "started_at",
-      headerName: t("shift.startedAt") as string,
+      headerName: t("shift.startedAt"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       flex: 1,
     },
     {
       field: "ended_at",
-      headerName: t("shift.endedAt") as string,
+      headerName: t("shift.endedAt"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       flex: 1,
     },
     {
       field: "actual_cash_drawer_balance",
-      headerName: t("shift.actualCashDrawerBalance") as string,
+      headerName: t("shift.actualCashDrawerBalance"),
       type: "currency",
     },
     {
       field: "expected_cash_drawer_balance",
-      headerName: t("shift.expectedCashDrawerBalance") as string,
+      headerName: t("shift.expectedCashDrawerBalance"),
       type: "currency",
     },
     {
       field: "cash_drawer_imbalance",
-      headerName: t("shift.cashDrawerImbalance") as string,
+      headerName: t("shift.cashDrawerImbalance"),
       type: "currency",
     },
   ];

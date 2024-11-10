@@ -50,17 +50,17 @@ export const TaxRateList: React.FC = () => {
   const columns: GridColDef<TaxRate>[] = [
     {
       field: "name",
-      headerName: t("taxRateName") as string,
+      headerName: t("taxRateName"),
       width: 100,
     },
     {
       field: "description",
-      headerName: t("taxRateDescription") as string,
+      headerName: t("taxRateDescription"),
       flex: 1,
     },
     {
       field: "rate",
-      headerName: t("taxRateRate") as string,
+      headerName: t("taxRateRate"),
       align: "right",
       type: "number",
       valueGetter: (rate) => rate * 100,
@@ -68,14 +68,14 @@ export const TaxRateList: React.FC = () => {
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
     {
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageTaxRatesAtNode(params.row.node_id)

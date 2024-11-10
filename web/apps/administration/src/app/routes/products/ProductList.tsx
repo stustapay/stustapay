@@ -94,7 +94,7 @@ export const ProductList: React.FC = () => {
   const columns: GridColDef<Product>[] = [
     {
       field: "name",
-      headerName: t("product.name") as string,
+      headerName: t("product.name"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={ProductRoutes.detail(params.row.id)}>
@@ -104,44 +104,44 @@ export const ProductList: React.FC = () => {
     },
     {
       field: "is_locked",
-      headerName: t("product.isLocked") as string,
+      headerName: t("product.isLocked"),
       type: "boolean",
     },
     {
       field: "is_returnable",
-      headerName: t("product.isReturnable") as string,
+      headerName: t("product.isReturnable"),
       type: "boolean",
     },
     {
       field: "fixed_price",
-      headerName: t("product.isFixedPrice") as string,
+      headerName: t("product.isFixedPrice"),
       type: "boolean",
     },
     {
       field: "price",
-      headerName: t("product.price") as string,
+      headerName: t("product.price"),
       type: "currency",
     },
     {
       field: "price_in_vouchers",
-      headerName: t("product.priceInVouchers") as string,
+      headerName: t("product.priceInVouchers"),
       type: "number",
     },
     {
       field: "tax_rate_id",
-      headerName: t("product.taxRate") as string,
+      headerName: t("product.taxRate"),
       align: "right",
       renderCell: (params) => renderTaxRate(params.row.tax_rate_id),
     },
     {
       field: "restrictions",
-      headerName: t("product.restrictions") as string,
+      headerName: t("product.restrictions"),
       valueFormatter: (value) => (value as string[]).join(", "),
       width: 150,
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       minWidth: 100,
     },
@@ -151,7 +151,7 @@ export const ProductList: React.FC = () => {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageProductsAtNode(params.row.node_id)

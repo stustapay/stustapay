@@ -40,7 +40,7 @@ export const PayoutRunList: React.FC = () => {
   const columns: GridColDef<PayoutRunWithStats>[] = [
     {
       field: "id",
-      headerName: t("payoutRun.id") as string,
+      headerName: t("payoutRun.id"),
       minWidth: 50,
       renderCell: (params) => (
         <Link component={RouterLink} to={PayoutRunRoutes.detail(params.row.id)}>
@@ -50,7 +50,7 @@ export const PayoutRunList: React.FC = () => {
     },
     {
       field: "created_by",
-      headerName: t("payoutRun.createdBy") as string,
+      headerName: t("payoutRun.createdBy"),
       flex: 1,
       renderCell: (params) =>
         params.row.created_by && (
@@ -61,14 +61,14 @@ export const PayoutRunList: React.FC = () => {
     },
     {
       field: "created_at",
-      headerName: t("payoutRun.createdAt") as string,
+      headerName: t("payoutRun.createdAt"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       minWidth: 200,
     },
     {
       field: "done",
-      headerName: t("common.status") as string,
+      headerName: t("common.status"),
       minWidth: 100,
       renderCell: (params) => {
         if (params.row.done) {
@@ -92,19 +92,19 @@ export const PayoutRunList: React.FC = () => {
     },
     {
       field: "total_payout_amount",
-      headerName: t("payoutRun.totalPayoutAmount") as string,
+      headerName: t("payoutRun.totalPayoutAmount"),
       type: "currency",
       minWidth: 150,
     },
     {
       field: "total_donation_amount",
-      headerName: t("payoutRun.totalDonationAmount") as string,
+      headerName: t("payoutRun.totalDonationAmount"),
       type: "currency",
       minWidth: 150,
     },
     {
       field: "n_payouts",
-      headerName: t("payoutRun.nPayouts") as string,
+      headerName: t("payoutRun.nPayouts"),
       type: "number",
       minWidth: 150,
     },

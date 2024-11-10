@@ -19,7 +19,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
   const columns: GridColDef<AccountRead>[] = [
     {
       field: "name",
-      headerName: t("account.name") as string,
+      headerName: t("account.name"),
       renderCell: (params) => (
         <Link component={RouterLink} to={AccountRoutes.detail(params.row.id)}>
           {params.row.name}
@@ -29,7 +29,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
     },
     {
       field: "type",
-      headerName: t("account.type") as string,
+      headerName: t("account.type"),
       width: 100,
     },
     {
@@ -45,24 +45,24 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
     },
     {
       field: "comment",
-      headerName: t("account.comment") as string,
+      headerName: t("account.comment"),
       flex: 1,
     },
     {
       field: "balance",
-      headerName: t("account.balance") as string,
+      headerName: t("account.balance"),
       type: "currency",
       width: 250,
     },
     {
       field: "vouchers",
-      headerName: t("account.vouchers") as string,
+      headerName: t("account.vouchers"),
       type: "number",
       width: 200,
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       flex: 1,
     },

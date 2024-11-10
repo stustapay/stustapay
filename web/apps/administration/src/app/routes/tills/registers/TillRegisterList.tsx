@@ -95,30 +95,30 @@ export const TillRegisterList: React.FC = () => {
   const columns: GridColDef<CashRegister>[] = [
     {
       field: "name",
-      headerName: t("register.name") as string,
+      headerName: t("register.name"),
       flex: 1,
     },
     {
       field: "current_cashier_id",
-      headerName: t("register.currentCashier") as string,
+      headerName: t("register.currentCashier"),
       width: 200,
       renderCell: (params) => renderCashier(params.row.current_cashier_id),
     },
     {
       field: "current_till_id",
-      headerName: t("register.currentTill") as string,
+      headerName: t("register.currentTill"),
       width: 200,
       renderCell: (params) => renderTill(params.row.current_till_id),
     },
     {
       field: "current_balance",
-      headerName: t("register.currentBalance") as string,
+      headerName: t("register.currentBalance"),
       type: "currency",
       width: 200,
     },
     {
       field: "node_id",
-      headerName: t("common.definedAtNode") as string,
+      headerName: t("common.definedAtNode"),
       valueFormatter: (value) => renderNode(value),
       flex: 1,
     },
@@ -128,7 +128,7 @@ export const TillRegisterList: React.FC = () => {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageRegistersAtNode(params.row.node_id)
