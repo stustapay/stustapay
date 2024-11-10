@@ -11,7 +11,7 @@ import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -38,7 +38,7 @@ export const TillProfileList: React.FC = () => {
   );
   const { data: layouts, isLoading: isLayoutsLoading } = useListTillLayoutsQuery({ nodeId: currentNode.id });
   const [deleteTillProfile] = useDeleteTillProfileMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTillsLoading || isLayoutsLoading) {
     return <Loading />;
@@ -77,7 +77,7 @@ export const TillProfileList: React.FC = () => {
   const columns: GridColDef<TillProfile>[] = [
     {
       field: "name",
-      headerName: t("profile.name") as string,
+      headerName: t("profile.name"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={`/node/${nodeId}/tills/profiles/${params.row.id}`}>
@@ -87,40 +87,35 @@ export const TillProfileList: React.FC = () => {
     },
     {
       field: "description",
-      headerName: t("profile.description") as string,
+      headerName: t("profile.description"),
       flex: 2,
     },
     {
       field: "allow_top_up",
-      headerName: t("profile.allowTopUp") as string,
+      headerName: t("profile.allowTopUp"),
       type: "boolean",
       width: 120,
     },
     {
       field: "allow_cash_out",
-      headerName: t("profile.allowCashOut") as string,
+      headerName: t("profile.allowCashOut"),
       type: "boolean",
       width: 120,
     },
     {
       field: "layout",
-      headerName: t("profile.layout") as string,
+      headerName: t("profile.layout"),
       flex: 0.5,
       renderCell: (params) => renderLayout(params.row.layout_id),
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageProfiles) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageProfilesAtNode(params.row.node_id)

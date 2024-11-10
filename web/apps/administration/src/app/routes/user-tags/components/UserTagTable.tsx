@@ -2,7 +2,7 @@ import { UserTagDetailRead } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
@@ -13,12 +13,12 @@ export interface UserTagTableProps {
 
 export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
   const { t } = useTranslation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   const columns: GridColDef<UserTagDetailRead>[] = [
     {
       field: "user_tag_id",
-      headerName: t("common.id") as string,
+      headerName: t("common.id"),
       renderCell: (params) => (
         <Link component={RouterLink} to={UserTagRoutes.detail(params.row.id)}>
           {params.row.id}
@@ -28,17 +28,17 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
     },
     {
       field: "pin",
-      headerName: t("userTag.pin") as string,
+      headerName: t("userTag.pin"),
       minWidth: 300,
     },
     {
       field: "uid_hex",
-      headerName: t("userTag.uid") as string,
+      headerName: t("userTag.uid"),
       minWidth: 300,
     },
     {
       field: "account",
-      headerName: t("userTag.account") as string,
+      headerName: t("userTag.account"),
       align: "right",
       renderCell: (params) =>
         params.row.account_id ? (
@@ -52,15 +52,10 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
     },
     {
       field: "comment",
-      headerName: t("userTag.comment") as string,
+      headerName: t("userTag.comment"),
       flex: 1,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   return (

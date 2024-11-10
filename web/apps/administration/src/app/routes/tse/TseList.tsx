@@ -4,7 +4,7 @@ import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { Edit as EditIcon } from "@mui/icons-material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -26,7 +26,7 @@ export const TseList: React.FC = () => {
       }),
     }
   );
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTsesLoading) {
     return <Loading />;
@@ -35,7 +35,7 @@ export const TseList: React.FC = () => {
   const columns: GridColDef<Tse>[] = [
     {
       field: "name",
-      headerName: t("tse.name") as string,
+      headerName: t("tse.name"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={TseRoutes.detail(params.row.id)}>
@@ -45,39 +45,34 @@ export const TseList: React.FC = () => {
     },
     {
       field: "status",
-      headerName: t("tse.status") as string,
+      headerName: t("tse.status"),
     },
     {
       field: "type",
-      headerName: t("tse.type") as string,
+      headerName: t("tse.type"),
       minWidth: 120,
     },
     {
       field: "hashalgo",
-      headerName: t("tse.hashalgo") as string,
+      headerName: t("tse.hashalgo"),
       minWidth: 200,
     },
     {
       field: "time_format",
-      headerName: t("tse.timeFormat") as string,
+      headerName: t("tse.timeFormat"),
     },
     {
       field: "process_data_encoding",
-      headerName: t("tse.processDataEncoding") as string,
+      headerName: t("tse.processDataEncoding"),
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageTses) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageTsesAtNode(params.row.node_id)

@@ -3,7 +3,8 @@ import { OrderTable } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Tab } from "@mui/material";
-import { DataGrid, Loading, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -27,12 +28,12 @@ export const CashierShiftStatsOverview: React.FC<CashierShiftStatsOverview> = ({
   const columns: GridColDef<ArrElement<CashierShiftStats["booked_products"]>>[] = [
     {
       field: "product.name",
-      headerName: t("product.name") as string,
+      headerName: t("product.name"),
       flex: 1,
     },
     {
       field: "quantity",
-      headerName: t("shift.soldProductQuantity") as string,
+      headerName: t("shift.soldProductQuantity"),
       type: "number",
       width: 150,
     },

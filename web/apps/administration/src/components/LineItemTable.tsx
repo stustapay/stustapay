@@ -1,9 +1,9 @@
 import { LineItem, selectProductById, selectTaxRateById, useListProductsQuery, useListTaxRatesQuery } from "@/api";
 import { ProductRoutes } from "@/app/routes";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrentNode } from "@/hooks";
 import { Tooltip } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
-import { DataGridTitle, Loading } from "@stustapay/components";
+import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
@@ -15,8 +15,6 @@ export interface LineItemTableProps {
 export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-
-  const formatCurrency = useCurrencyFormatter();
 
   const { data: products, isLoading: isProductsLoading } = useListProductsQuery({ nodeId: currentNode.id });
   const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery({ nodeId: currentNode.id });
@@ -57,45 +55,45 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
   const itemColumns: GridColDef<LineItem>[] = [
     {
       field: "product_id",
-      headerName: t("item.product") as string,
+      headerName: t("item.product"),
       type: "number",
       width: 200,
       renderCell: (params) => renderProduct(params.row.product.id),
     },
     {
       field: "quantity",
-      headerName: t("item.quantity") as string,
+      headerName: t("item.quantity"),
       type: "number",
       width: 100,
     },
     {
       field: "product_price",
-      headerName: t("item.productPrice") as string,
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("item.productPrice"),
+      type: "currency",
       width: 100,
     },
     {
       field: "total_price",
-      headerName: t("item.totalPrice") as string,
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("item.totalPrice"),
+      type: "currency",
       width: 100,
     },
     {
       field: "tax_name",
-      headerName: t("item.taxName") as string,
+      headerName: t("item.taxName"),
       width: 100,
     },
     {
       field: "tax_rate",
-      headerName: t("item.taxRate") as string,
+      headerName: t("item.taxRate"),
       renderCell: (params) => renderTaxRate(params.row.tax_rate_id, params.row.tax_rate),
       align: "right",
       width: 100,
     },
     {
       field: "total_tax",
-      headerName: t("item.totalTax") as string,
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("item.totalTax"),
+      type: "currency",
       width: 100,
     },
   ];

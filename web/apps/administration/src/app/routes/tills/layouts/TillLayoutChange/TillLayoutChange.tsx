@@ -9,7 +9,7 @@ import { TillLayoutRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, LinearProgress, Paper, Tab, Typography } from "@mui/material";
-import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/core/buildInitiate";
+import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/react/index";
 import { Loading } from "@stustapay/components";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";

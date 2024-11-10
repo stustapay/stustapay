@@ -1,7 +1,11 @@
 import * as React from "react";
-import { useGetCustomerQuery, usePayoutInfoQuery, useUpdateCustomerInfoDonateAllMutation, useUpdateCustomerInfoMutation } from "@/api";
-import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
-import { useCurrencySymbol } from "@/hooks/useCurrencySymbol";
+import {
+  useGetCustomerQuery,
+  usePayoutInfoQuery,
+  useUpdateCustomerInfoDonateAllMutation,
+  useUpdateCustomerInfoMutation,
+} from "@/api";
+import { useCurrencySymbol, useCurrencyFormatter } from "@/hooks";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import {
   Alert,
@@ -156,9 +160,9 @@ export const PayoutInfo: React.FC = () => {
   };
 
   let info_text: string;
-  if (payoutInfo.in_payout_run && !payoutInfo.payout_date){
+  if (payoutInfo.in_payout_run && !payoutInfo.payout_date) {
     info_text = t("payout.infoPayoutScheduled");
-  }else if (payoutInfo.in_payout_run && payoutInfo.payout_date){
+  } else if (payoutInfo.in_payout_run && payoutInfo.payout_date) {
     info_text = t("payout.infoPayoutCompleted", { payout_date: new Date(payoutInfo.payout_date).toLocaleString() });
   } else if (customer.has_entered_info) {
     info_text = t("payout.infoPayoutInitiated");
@@ -167,7 +171,7 @@ export const PayoutInfo: React.FC = () => {
   }
 
   let submit_text: string;
-  if (!customer.has_entered_info){
+  if (!customer.has_entered_info) {
     submit_text = t("payout.submitPayoutData");
   } else {
     submit_text = t("payout.submitPayoutDataEdit");
@@ -181,7 +185,13 @@ export const PayoutInfo: React.FC = () => {
             {info_text}
           </Alert>
           <Typography variant="h5">{t("payout.donationTitle")}</Typography>
-          <Button variant="contained" color="primary" sx={{ width: "100%" }} disabled={payoutInfo.in_payout_run} onClick={onAllTipClick}>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ width: "100%" }}
+            disabled={payoutInfo.in_payout_run}
+            onClick={onAllTipClick}
+          >
             {t("payout.donateRemainingBalanceOf", { remainingBalance: formatCurrency(customer.balance) })}
           </Button>
 
@@ -194,7 +204,13 @@ export const PayoutInfo: React.FC = () => {
             {(formik) => (
               <form onSubmit={formik.handleSubmit}>
                 <Stack spacing={2}>
-                  <FormTextField name="iban" label={t("payout.iban")} variant="outlined" formik={formik} disabled={payoutInfo.in_payout_run} />
+                  <FormTextField
+                    name="iban"
+                    label={t("payout.iban")}
+                    variant="outlined"
+                    formik={formik}
+                    disabled={payoutInfo.in_payout_run}
+                  />
                   <FormTextField
                     name="account_name"
                     label={t("payout.bankAccountHolder")}
@@ -202,7 +218,13 @@ export const PayoutInfo: React.FC = () => {
                     formik={formik}
                     disabled={payoutInfo.in_payout_run}
                   />
-                  <FormTextField name="email" label={t("payout.email")} variant="outlined" formik={formik} disabled={payoutInfo.in_payout_run}/>
+                  <FormTextField
+                    name="email"
+                    label={t("payout.email")}
+                    variant="outlined"
+                    formik={formik}
+                    disabled={payoutInfo.in_payout_run}
+                  />
                   <FormControl error={Boolean(formik.errors.privacy_policy)}>
                     <FormControlLabel
                       control={
@@ -238,7 +260,12 @@ export const PayoutInfo: React.FC = () => {
                     }}
                     disabled={payoutInfo.in_payout_run}
                   />
-                  <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting || payoutInfo.in_payout_run}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    disabled={formik.isSubmitting || payoutInfo.in_payout_run}
+                  >
                     {formik.isSubmitting ? "Submitting" : submit_text}
                   </Button>
                 </Stack>

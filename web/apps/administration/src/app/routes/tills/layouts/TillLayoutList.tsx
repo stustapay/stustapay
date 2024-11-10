@@ -4,7 +4,7 @@ import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { TillLayout } from "@stustapay/models";
@@ -29,7 +29,7 @@ export const TillLayoutList: React.FC = () => {
     }
   );
   const [deleteTill] = useDeleteTillLayoutMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTillsLoading) {
     return <Loading />;
@@ -51,7 +51,7 @@ export const TillLayoutList: React.FC = () => {
   const columns: GridColDef<TillLayout>[] = [
     {
       field: "name",
-      headerName: t("layout.name") as string,
+      headerName: t("layout.name"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={TillLayoutRoutes.detail(params.row.id)}>
@@ -61,22 +61,17 @@ export const TillLayoutList: React.FC = () => {
     },
     {
       field: "description",
-      headerName: t("layout.description") as string,
+      headerName: t("layout.description"),
       flex: 2,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageNode) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) => [
         <GridActionsCellItem

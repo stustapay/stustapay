@@ -1,15 +1,12 @@
 import { Order } from "@/api";
 import { OrderRoutes } from "@/app/routes";
-import { useCurrencyFormatter } from "@/hooks";
 import {
   AddCard as AddCardIcon,
   ShoppingCart as ShoppingCartIcon,
   ConfirmationNumber as TicketIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
-import { DataGridTitle } from "@stustapay/components";
-import { formatDate } from "@stustapay/utils";
+import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
@@ -30,12 +27,11 @@ const orderTypeToIcon: Record<string, React.ReactElement> = {
 
 export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
   const { t } = useTranslation();
-  const formatCurrency = useCurrencyFormatter();
 
   const columns: GridColDef<Order>[] = [
     {
       field: "id",
-      headerName: t("order.id") as string,
+      headerName: t("order.id"),
       renderCell: (params) => (
         <Link component={RouterLink} to={OrderRoutes.detail(params.row.id)}>
           {params.row.id}
@@ -45,7 +41,7 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
     },
     {
       field: "order_type",
-      headerName: t("order.type") as string,
+      headerName: t("order.type"),
       width: 140,
       renderCell: ({ row }) => {
         const icon = orderTypeToIcon[row.order_type];
@@ -57,33 +53,30 @@ export const OrderTable: React.FC<OrderListProps> = ({ orders }) => {
     },
     {
       field: "payment_method",
-      headerName: t("order.paymentMethod") as string,
+      headerName: t("order.paymentMethod"),
       width: 150,
     },
     {
       field: "total_no_tax",
-      headerName: t("order.totalNoTax") as string,
-      align: "right",
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("order.totalNoTax"),
+      type: "currency",
       width: 150,
     },
     {
       field: "total_tax",
-      headerName: t("order.totalTax") as string,
-      align: "right",
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("order.totalTax"),
+      type: "currency",
       width: 100,
     },
     {
       field: "total_price",
-      headerName: t("order.totalPrice") as string,
-      align: "right",
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("order.totalPrice"),
+      type: "currency",
       width: 100,
     },
     {
       field: "booked_at",
-      headerName: t("order.bookedAt") as string,
+      headerName: t("order.bookedAt"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       flex: 1,

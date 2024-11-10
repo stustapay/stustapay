@@ -17,18 +17,12 @@ import {
   Lock as LockIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import {
-  useCurrencyFormatter,
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { useOpenModal } from "@stustapay/modal-provider";
 
 export const ProductList: React.FC = () => {
@@ -37,7 +31,6 @@ export const ProductList: React.FC = () => {
   const canManageProducts = useCurrentUserHasPrivilege(ProductRoutes.privilege);
   const canManageProductsAtNode = useCurrentUserHasPrivilegeAtNode(ProductRoutes.privilege);
   const navigate = useNavigate();
-  const formatCurrency = useCurrencyFormatter();
   const openModal = useOpenModal();
 
   const { products, isLoading: isProductsLoading } = useListProductsQuery(
@@ -53,7 +46,7 @@ export const ProductList: React.FC = () => {
   const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
   const [updateProduct] = useUpdateProductMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isProductsLoading || isTaxRatesLoading) {
     return <Loading />;
@@ -101,7 +94,7 @@ export const ProductList: React.FC = () => {
   const columns: GridColDef<Product>[] = [
     {
       field: "name",
-      headerName: t("product.name") as string,
+      headerName: t("product.name"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={ProductRoutes.detail(params.row.id)}>
@@ -111,55 +104,49 @@ export const ProductList: React.FC = () => {
     },
     {
       field: "is_locked",
-      headerName: t("product.isLocked") as string,
+      headerName: t("product.isLocked"),
       type: "boolean",
     },
     {
       field: "is_returnable",
-      headerName: t("product.isReturnable") as string,
+      headerName: t("product.isReturnable"),
       type: "boolean",
     },
     {
       field: "fixed_price",
-      headerName: t("product.isFixedPrice") as string,
+      headerName: t("product.isFixedPrice"),
       type: "boolean",
     },
     {
       field: "price",
-      headerName: t("product.price") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("product.price"),
+      type: "currency",
     },
     {
       field: "price_in_vouchers",
-      headerName: t("product.priceInVouchers") as string,
+      headerName: t("product.priceInVouchers"),
       type: "number",
     },
     {
       field: "tax_rate_id",
-      headerName: t("product.taxRate") as string,
+      headerName: t("product.taxRate"),
       align: "right",
       renderCell: (params) => renderTaxRate(params.row.tax_rate_id),
     },
     {
       field: "restrictions",
-      headerName: t("product.restrictions") as string,
+      headerName: t("product.restrictions"),
       valueFormatter: (value) => (value as string[]).join(", "),
       width: 150,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      minWidth: 100,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageProducts) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageProductsAtNode(params.row.node_id)

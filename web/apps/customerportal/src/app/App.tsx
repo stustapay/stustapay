@@ -1,13 +1,15 @@
 import * as React from "react";
 import { useMediaQuery, PaletteMode, createTheme, ThemeProvider, CssBaseline } from "@mui/material";
 import { Router } from "./Router";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import { useAppSelector, selectTheme } from "@/store";
 import { Loading } from "@stustapay/components";
-import { fetchConfig } from "@/api/common";
+import { config, fetchConfig } from "@/api/common";
+import { CurrencyProvider } from "@stustapay/framework";
+import { ConfigLoadErrorPage } from "./ConfigLoadErrorPage";
 
 export function App() {
-  const [loading, setLoading] = React.useState(true);
+  const [state, setState] = React.useState<"loading" | "loaded" | "error">("loading");
   const darkModeSystem = useMediaQuery("(prefers-color-scheme: dark)");
   const themeModeStore = useAppSelector(selectTheme);
 
@@ -29,10 +31,10 @@ export function App() {
     };
     init()
       .then(() => {
-        setLoading(false);
+        setState("loaded");
       })
-      .catch((e) => {
-        toast.error(`Error while fetching config: ${e}`);
+      .catch(() => {
+        setState("error");
       });
   }, []);
 
@@ -40,7 +42,15 @@ export function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ToastContainer position="top-right" autoClose={4000} pauseOnFocusLoss={false} theme={themeMode} />
-      {loading ? <Loading /> : <Router />}
+      {state === "loading" ? (
+        <Loading />
+      ) : state === "error" ? (
+        <ConfigLoadErrorPage />
+      ) : (
+        <CurrencyProvider currencyIdentifier={config.apiConfig.currency_identifier}>
+          <Router />
+        </CurrencyProvider>
+      )}
     </ThemeProvider>
   );
 }

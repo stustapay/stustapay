@@ -10,11 +10,11 @@ import {
   useListUsersQuery,
 } from "@/api";
 import { CashierRoutes, TillRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { ButtonLink, DetailField, DetailLayout, DetailView } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { ButtonLink, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
 import { Paper, Typography } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { CashierShift, formatUserTagUid, getUserName } from "@stustapay/models";
 import * as React from "react";
@@ -27,7 +27,6 @@ export const CashierDetail: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const { cashierId } = useParams();
   const navigate = useNavigate();
-  const formatCurrency = useCurrencyFormatter();
 
   const {
     data: cashier,
@@ -110,54 +109,51 @@ export const CashierDetail: React.FC = () => {
   const columns: GridColDef<CashierShift>[] = [
     {
       field: "id",
-      headerName: t("shift.id") as string,
+      headerName: t("shift.id"),
       renderCell: (params) => (
         <RouterLink to={CashierRoutes.detail(cashierId) + `/shifts/${params.row.id}`}>{params.row.id}</RouterLink>
       ),
     },
     {
       field: "comment",
-      headerName: t("shift.comment") as string,
+      headerName: t("shift.comment"),
       flex: 2,
     },
     {
       field: "closing_out_user_id",
-      headerName: t("closeOut.closingOutUser") as string,
+      headerName: t("closeOut.closingOutUser"),
       type: "string",
       renderCell: (params) => renderUser(params.row.closing_out_user_id),
       width: 200,
     },
     {
       field: "started_at",
-      headerName: t("shift.startedAt") as string,
+      headerName: t("shift.startedAt"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       flex: 1,
     },
     {
       field: "ended_at",
-      headerName: t("shift.endedAt") as string,
+      headerName: t("shift.endedAt"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       flex: 1,
     },
     {
       field: "actual_cash_drawer_balance",
-      headerName: t("shift.actualCashDrawerBalance") as string,
-      valueFormatter: (value) => formatCurrency(value),
-      type: "number",
+      headerName: t("shift.actualCashDrawerBalance"),
+      type: "currency",
     },
     {
       field: "expected_cash_drawer_balance",
-      headerName: t("shift.expectedCashDrawerBalance") as string,
-      valueFormatter: (value) => formatCurrency(value),
-      type: "number",
+      headerName: t("shift.expectedCashDrawerBalance"),
+      type: "currency",
     },
     {
       field: "cash_drawer_imbalance",
-      headerName: t("shift.cashDrawerImbalance") as string,
-      valueFormatter: (value) => formatCurrency(value),
-      type: "number",
+      headerName: t("shift.cashDrawerImbalance"),
+      type: "currency",
     },
   ];
 
@@ -201,9 +197,10 @@ export const CashierDetail: React.FC = () => {
         ) : (
           <DetailField label={t("cashier.till")} value={t("cashier.notLoggedInAtTill")} />
         )}
-        <DetailField
+        <DetailNumberField
           label={t("cashier.cashDrawerBalance")}
-          value={formatCurrency(cashier.cash_drawer_balance)}
+          type="currency"
+          value={cashier.cash_drawer_balance}
           secondaryAction={
             cashier.cash_drawer_balance !== 0 && (
               <ButtonLink to={CashierRoutes.detailAction(cashierId, "close-out")}>{t("cashier.closeOut")}</ButtonLink>

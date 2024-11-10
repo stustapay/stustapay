@@ -9,16 +9,10 @@ import {
 } from "@/api";
 import { TicketRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import {
-  useCurrencyFormatter,
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -31,7 +25,6 @@ export const TicketList: React.FC = () => {
   const canManageTickets = useCurrentUserHasPrivilege(TicketRoutes.privilege);
   const canManageTicketsAtNode = useCurrentUserHasPrivilegeAtNode(TicketRoutes.privilege);
   const navigate = useNavigate();
-  const formatCurrency = useCurrencyFormatter();
   const openModal = useOpenModal();
 
   const { tickets, isLoading: isTicketsLoading } = useListTicketsQuery(
@@ -46,7 +39,7 @@ export const TicketList: React.FC = () => {
   const { data: taxRates } = useListTaxRatesQuery({ nodeId: currentNode.id });
   const [updateTicket] = useUpdateTicketMutation();
   const [deleteTicket] = useDeleteTicketMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTicketsLoading) {
     return <Loading />;
@@ -90,7 +83,7 @@ export const TicketList: React.FC = () => {
   const columns: GridColDef<Ticket>[] = [
     {
       field: "name",
-      headerName: t("ticket.name") as string,
+      headerName: t("ticket.name"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={TicketRoutes.detail(params.row.id)}>
@@ -100,51 +93,43 @@ export const TicketList: React.FC = () => {
     },
     {
       field: "is_locked",
-      headerName: t("ticket.isLocked") as string,
+      headerName: t("ticket.isLocked"),
       type: "boolean",
     },
     {
       field: "price",
-      headerName: t("ticket.price") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("ticket.price"),
+      type: "currency",
     },
     {
       field: "initial_top_up_amount",
-      headerName: t("ticket.initialTopUpAmount") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("ticket.initialTopUpAmount"),
+      type: "currency",
     },
     {
       field: "tax_rate_id",
-      headerName: t("ticket.taxRate") as string,
+      headerName: t("ticket.taxRate"),
       align: "right",
       renderCell: (params) => renderTaxRate(params.row.tax_rate_id),
     },
     {
       field: "total_price",
-      headerName: t("ticket.totalPrice") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("ticket.totalPrice"),
+      type: "currency",
     },
     {
       field: "restrictions",
-      headerName: t("ticket.restriction") as string,
+      headerName: t("ticket.restriction"),
       width: 150,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageTickets) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageTicketsAtNode(params.row.node_id)

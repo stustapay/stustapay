@@ -7,9 +7,9 @@ import {
 } from "@/api";
 import { PayoutRunRoutes, UserRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrentNode } from "@/hooks";
 import { Link } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
@@ -21,7 +21,6 @@ import { getUserName } from "@stustapay/models";
 export const PayoutRunList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const formatCurrency = useCurrencyFormatter();
 
   const { payoutRuns, isLoading: isPayoutRunsLoading } = useListPayoutRunsQuery(
     { nodeId: currentNode.id },
@@ -41,7 +40,7 @@ export const PayoutRunList: React.FC = () => {
   const columns: GridColDef<PayoutRunWithStats>[] = [
     {
       field: "id",
-      headerName: t("payoutRun.id") as string,
+      headerName: t("payoutRun.id"),
       minWidth: 50,
       renderCell: (params) => (
         <Link component={RouterLink} to={PayoutRunRoutes.detail(params.row.id)}>
@@ -51,7 +50,7 @@ export const PayoutRunList: React.FC = () => {
     },
     {
       field: "created_by",
-      headerName: t("payoutRun.createdBy") as string,
+      headerName: t("payoutRun.createdBy"),
       flex: 1,
       renderCell: (params) =>
         params.row.created_by && (
@@ -62,14 +61,14 @@ export const PayoutRunList: React.FC = () => {
     },
     {
       field: "created_at",
-      headerName: t("payoutRun.createdAt") as string,
+      headerName: t("payoutRun.createdAt"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       minWidth: 200,
     },
     {
       field: "done",
-      headerName: t("common.status") as string,
+      headerName: t("common.status"),
       minWidth: 100,
       renderCell: (params) => {
         if (params.row.done) {
@@ -93,19 +92,19 @@ export const PayoutRunList: React.FC = () => {
     },
     {
       field: "total_payout_amount",
-      headerName: t("payoutRun.totalPayoutAmount") as string,
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("payoutRun.totalPayoutAmount"),
+      type: "currency",
       minWidth: 150,
     },
     {
       field: "total_donation_amount",
-      headerName: t("payoutRun.totalDonationAmount") as string,
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("payoutRun.totalDonationAmount"),
+      type: "currency",
       minWidth: 150,
     },
     {
       field: "n_payouts",
-      headerName: t("payoutRun.nPayouts") as string,
+      headerName: t("payoutRun.nPayouts"),
       type: "number",
       minWidth: 150,
     },

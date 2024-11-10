@@ -1,5 +1,4 @@
-export * from "./useCurrencyFormatter";
-export * from "./useCurrencySymbol";
+export { useCurrencyIdentifier, useCurrencyFormatter, useCurrencySymbol } from "@stustapay/framework";
 export * from "./useCurrentEventSettings";
 export * from "./useCurrentNode";
 export * from "./useCurrentUser";

@@ -5,9 +5,8 @@ import {
   useGetCashierShiftsQuery,
   useListUsersQuery,
 } from "@/api";
-import { DetailLayout, ListItemLink } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { List, ListItem, ListItemText, Paper } from "@mui/material";
+import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { getUserName } from "@stustapay/models";
 import * as React from "react";
@@ -19,7 +18,6 @@ import { CashierRoutes, UserRoutes } from "@/app/routes";
 export const CashierShiftDetail: React.FC = () => {
   const { t } = useTranslation();
   const { cashierId, shiftId } = useParams();
-  const formatCurrency = useCurrencyFormatter();
   const { currentNode } = useCurrentNode();
 
   const { data: cashier } = useGetCashierQuery({ nodeId: currentNode.id, cashierId: Number(cashierId) });
@@ -42,40 +40,31 @@ export const CashierShiftDetail: React.FC = () => {
 
   return (
     <DetailLayout title={getUserName(cashier)} routes={CashierRoutes}>
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("shift.comment")} secondary={cashierShift.comment} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("shift.startedAt")} secondary={cashierShift.started_at} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("shift.endedAt")} secondary={cashierShift.ended_at} />
-          </ListItem>
-          <ListItemLink to={UserRoutes.detail(cashierShift.closing_out_user_id)}>
-            <ListItemText primary={t("closeOut.closingOutUser")} secondary={getUserName(closingOutUser)} />
-          </ListItemLink>
-          <ListItem>
-            <ListItemText
-              primary={t("shift.actualCashDrawerBalance")}
-              secondary={formatCurrency(cashierShift.actual_cash_drawer_balance)}
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("shift.expectedCashDrawerBalance")}
-              secondary={formatCurrency(cashierShift.expected_cash_drawer_balance)}
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("shift.cashDrawerImbalance")}
-              secondary={formatCurrency(cashierShift.cash_drawer_imbalance)}
-            />
-          </ListItem>
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("shift.comment")} value={cashierShift.comment} />
+        <DetailField label={t("shift.startedAt")} value={cashierShift.started_at} />
+        <DetailField label={t("shift.endedAt")} value={cashierShift.ended_at} />
+        <DetailField
+          label={t("closeOut.closingOutUser")}
+          value={getUserName(closingOutUser)}
+          linkTo={UserRoutes.detail(cashierShift.closing_out_user_id)}
+        />
+        <DetailNumberField
+          label={t("shift.actualCashDrawerBalance")}
+          type="currency"
+          value={cashierShift.actual_cash_drawer_balance}
+        />
+        <DetailNumberField
+          label={t("shift.expectedCashDrawerBalance")}
+          type="currency"
+          value={cashierShift.expected_cash_drawer_balance}
+        />
+        <DetailNumberField
+          label={t("shift.cashDrawerImbalance")}
+          type="currency"
+          value={cashierShift.cash_drawer_imbalance}
+        />
+      </DetailView>
       <CashierShiftStatsOverview cashierId={Number(cashierId)} shiftId={Number(shiftId)} />
     </DetailLayout>
   );

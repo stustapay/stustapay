@@ -12,7 +12,7 @@ import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Box, Link } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { getUserName } from "@stustapay/models";
@@ -29,7 +29,7 @@ export const UserToRoleList: React.FC = () => {
   const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
   const { data: userRoles, isLoading: isUserRolesLoading } = useListUserRolesQuery({ nodeId: currentNode.id });
   const [updateUserToRoles] = useUpdateUserToRolesMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
   const openModal = useOpenModal();
   const navigate = useNavigate();
 
@@ -98,29 +98,24 @@ export const UserToRoleList: React.FC = () => {
   const columns: GridColDef<UserToRoles>[] = [
     {
       field: "user_id",
-      headerName: t("userToRole.user") as string,
+      headerName: t("userToRole.user"),
       flex: 1,
       renderCell: (params) => renderUser(params.row.user_id),
     },
     {
       field: "role_ids",
-      headerName: t("userToRole.role") as string,
+      headerName: t("userToRole.role"),
       flex: 1,
       renderCell: (params) => renderRoles(params.row.role_ids),
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageNode) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         currentNode.id === params.row.node_id

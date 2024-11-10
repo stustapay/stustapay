@@ -4,7 +4,7 @@ import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -29,7 +29,7 @@ export const UserList: React.FC = () => {
     }
   );
   const [deleteUser] = useDeleteUserMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isLoading) {
     return <Loading />;
@@ -51,7 +51,7 @@ export const UserList: React.FC = () => {
   const columns: GridColDef<User>[] = [
     {
       field: "login",
-      headerName: t("userLogin") as string,
+      headerName: t("userLogin"),
       flex: 1,
       renderCell: (params) => (
         <Link component={RouterLink} to={UserRoutes.detail(params.row.id, params.row.node_id)}>
@@ -61,17 +61,17 @@ export const UserList: React.FC = () => {
     },
     {
       field: "display_name",
-      headerName: t("userDisplayName") as string,
+      headerName: t("userDisplayName"),
       flex: 1,
     },
     {
       field: "description",
-      headerName: t("userDescription") as string,
+      headerName: t("userDescription"),
       flex: 2,
     },
     {
       field: "user_tag_id",
-      headerName: t("user.tagId") as string,
+      headerName: t("user.tagId"),
       width: 100,
       renderCell: (params) =>
         params.row.user_tag_id && (
@@ -80,19 +80,14 @@ export const UserList: React.FC = () => {
           </Link>
         ),
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageUsers) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageUsersAtNode(params.row.node_id)

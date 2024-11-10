@@ -26,6 +26,10 @@ export const translations: NestedPartialAsStrings<Translations> = {
     en: "English",
     de: "Deutsch",
   },
+  errorPage: {
+    error: "Fehler",
+    currentlyUnavailable: "Das StuStaPay Kundenportal ist aktuell nicht verfügbar",
+  },
   nav: {
     payout: "Auszahlung",
     topup: "Aufladung",
@@ -62,9 +66,12 @@ export const translations: NestedPartialAsStrings<Translations> = {
     bankAccountHolder: "Bankkontoinhaber",
     email: "E-Mail",
     info: "Damit wir dein Restguthaben überweisen können, trage bitte deine Bankdaten hier ein. Du kannst auch einen Teil oder Dein gesamtes Guthaben an uns spenden, um unser ehrenamtliches Engagement zu unterstützen. Kulturleben in der Studentenstadt e.V. is ein von Studierenden betriebener gemeinnütziger Verein, welcher jährlich das StuStaCulum-Festival organisiert. Deine Auszahlung findet voraussichtlich innerhalb eines Monats statt.",
-    infoPayoutInitiated: "Du hast deine Bankinformationen bereits angegeben und dein verbleibendes Guthaben wird in der nächsten manuell ausgelösten Auszahlung (in der Regel innerhalb eines Monats) ausgezahlt. Du kannst jedoch weiterhin deine Bankinformationen oder deine Spendenwahl ändern. Vielen Dank für deine Geduld.",
-    infoPayoutScheduled: "Du bist für unsere nächste manuell ausgelöste Auszahlung eingeplant, daher kannst du deine Bankinformationen nicht mehr ändern. Halte durch, wir werden dich benachrichtigen, sobald wir die Banküberweisung von unserer Seite aus initiiert haben.",
-    infoPayoutCompleted: "Vielen Dank für deine Geduld, wir haben die Banküberweisung von unserer Seite aus am {{payout_date}} initiiert. Möglicherweise hast du die Gelder bereits erhalten, andernfalls sollten sie innerhalb der nächsten Tage eintreffen. Du kannst die Überweisungsdetails in der Transaktionsliste auf der Hauptseite einsehen.",
+    infoPayoutInitiated:
+      "Du hast deine Bankinformationen bereits angegeben und dein verbleibendes Guthaben wird in der nächsten manuell ausgelösten Auszahlung (in der Regel innerhalb eines Monats) ausgezahlt. Du kannst jedoch weiterhin deine Bankinformationen oder deine Spendenwahl ändern. Vielen Dank für deine Geduld.",
+    infoPayoutScheduled:
+      "Du bist für unsere nächste manuell ausgelöste Auszahlung eingeplant, daher kannst du deine Bankinformationen nicht mehr ändern. Halte durch, wir werden dich benachrichtigen, sobald wir die Banküberweisung von unserer Seite aus initiiert haben.",
+    infoPayoutCompleted:
+      "Vielen Dank für deine Geduld, wir haben die Banküberweisung von unserer Seite aus am {{payout_date}} initiiert. Möglicherweise hast du die Gelder bereits erhalten, andernfalls sollten sie innerhalb der nächsten Tage eintreffen. Du kannst die Überweisungsdetails in der Transaktionsliste auf der Hauptseite einsehen.",
     ibanNotValid: "ungültige IBAN",
     countryCodeNotSupported: "IBAN Ländercode wird nicht unterstützt",
     nameHasSpecialChars: "Der Accountname enthält nicht valide Sonderzeichen",

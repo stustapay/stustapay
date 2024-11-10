@@ -1,12 +1,12 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useCurrentEventSettings } from "./useCurrentEventSettings";
+import { useCurrencyIdentifier } from "./CurrencyProvider";
 
 export const useCurrencySymbol = (): string => {
   const { i18n } = useTranslation();
-  const { eventSettings } = useCurrentEventSettings();
+  const currency = useCurrencyIdentifier();
   return React.useMemo(() => {
-    const res = new Intl.NumberFormat(i18n.language, { style: "currency", currency: eventSettings.currency_identifier })
+    const res = new Intl.NumberFormat(i18n.language, { style: "currency", currency })
       .formatToParts(1)
       .find((x) => x.type === "currency")?.value;
 
@@ -14,5 +14,5 @@ export const useCurrencySymbol = (): string => {
       return "";
     }
     return res;
-  }, [eventSettings, i18n]);
+  }, [currency, i18n]);
 };

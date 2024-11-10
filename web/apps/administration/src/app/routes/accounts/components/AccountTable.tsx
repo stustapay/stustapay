@@ -1,12 +1,12 @@
 import { AccountRead } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
-import { useCurrencyFormatter, useRenderNode } from "@/hooks";
+import { useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { formatUserTagUid } from "@stustapay/models";
-import { DataGrid, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
 
 export interface AccountTableProps {
   accounts: AccountRead[];
@@ -14,23 +14,22 @@ export interface AccountTableProps {
 
 export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
   const { t } = useTranslation();
-  const formatCurrency = useCurrencyFormatter();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   const columns: GridColDef<AccountRead>[] = [
     {
       field: "name",
-      headerName: t("account.name") as string,
+      headerName: t("account.name"),
       renderCell: (params) => (
         <Link component={RouterLink} to={AccountRoutes.detail(params.row.id)}>
           {params.row.name}
         </Link>
       ),
-      minWidth: 250,
+      flex: 1,
     },
     {
       field: "type",
-      headerName: t("account.type") as string,
+      headerName: t("account.type"),
       width: 100,
     },
     {
@@ -46,28 +45,22 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
     },
     {
       field: "comment",
-      headerName: t("account.comment") as string,
+      headerName: t("account.comment"),
       flex: 1,
     },
     {
       field: "balance",
-      headerName: t("account.balance") as string,
-      type: "number",
+      headerName: t("account.balance"),
+      type: "currency",
       width: 250,
-      valueFormatter: (value) => value && formatCurrency(value),
     },
     {
       field: "vouchers",
-      headerName: t("account.vouchers") as string,
+      headerName: t("account.vouchers"),
       type: "number",
       width: 200,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   return (

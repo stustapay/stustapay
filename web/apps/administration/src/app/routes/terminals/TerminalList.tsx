@@ -11,7 +11,7 @@ import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -37,7 +37,7 @@ export const TerminalList: React.FC = () => {
   );
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
   const [deleteTerminal] = useDeleteTerminalMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTerminalsLoading || isTillsLoading) {
     return <Loading />;
@@ -76,7 +76,7 @@ export const TerminalList: React.FC = () => {
   const columns: GridColDef<Terminal>[] = [
     {
       field: "name",
-      headerName: t("common.name") as string,
+      headerName: t("common.name"),
       flex: 1,
       renderCell: (params) => (
         <Tooltip title={params.row.description}>
@@ -88,29 +88,24 @@ export const TerminalList: React.FC = () => {
     },
     {
       field: "till_id",
-      headerName: t("terminal.till") as string,
+      headerName: t("terminal.till"),
       flex: 0.5,
       renderCell: (params) => renderTill(params.row.till_id),
     },
     {
       field: "session_uuid",
-      headerName: t("terminal.loggedIn") as string,
+      headerName: t("terminal.loggedIn"),
       type: "boolean",
       valueGetter: (session_uuid) => session_uuid != null,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      minWidth: 200,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageTerminals) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageTerminalsAtNode(params.row.node_id)

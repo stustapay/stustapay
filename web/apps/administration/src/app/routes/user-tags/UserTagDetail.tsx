@@ -2,8 +2,8 @@ import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@/api
 import { CustomerRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView, EditableListItem } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { DataGrid, GridColDef } from "@stustapay/components";
-import { DataGridTitle, Loading } from "@stustapay/components";
+import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
+import { Loading } from "@stustapay/components";
 import { UserTagDetail as UserTagDetailType, formatUserTagUid } from "@stustapay/models";
 import { ArrayElement } from "@stustapay/utils";
 import * as React from "react";
@@ -39,7 +39,7 @@ export const UserTagDetail: React.FC = () => {
   const columns: GridColDef<HistoryEntry>[] = [
     {
       field: "account_id",
-      headerName: t("account.history.account") as string,
+      headerName: t("account.history.account"),
       renderCell: (params) => (
         <RouterLink to={CustomerRoutes.detail(params.row.account_id)}>{params.row.account_id}</RouterLink>
       ),
@@ -47,7 +47,7 @@ export const UserTagDetail: React.FC = () => {
     },
     {
       field: "mapping_was_valid_until",
-      headerName: t("account.history.validUntil") as string,
+      headerName: t("account.history.validUntil"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       width: 200,

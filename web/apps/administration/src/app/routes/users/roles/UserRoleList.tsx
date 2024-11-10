@@ -4,7 +4,7 @@ import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -29,7 +29,7 @@ export const UserRoleList: React.FC = () => {
     }
   );
   const [deleteUserRole] = useDeleteUserRoleMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isLoading) {
     return <Loading />;
@@ -51,7 +51,7 @@ export const UserRoleList: React.FC = () => {
   const columns: GridColDef<UserRole>[] = [
     {
       field: "name",
-      headerName: t("userRole.name") as string,
+      headerName: t("userRole.name"),
       renderCell: (params) => (
         <Link component={RouterLink} to={UserRoleRoutes.detail(params.row.id)}>
           {params.row.name}
@@ -61,27 +61,22 @@ export const UserRoleList: React.FC = () => {
     },
     {
       field: "is_privileged",
-      headerName: t("userRole.isPrivileged") as string,
+      headerName: t("userRole.isPrivileged"),
       type: "boolean",
     },
     {
       field: "privileges",
-      headerName: t("userPrivileges") as string,
+      headerName: t("userPrivileges"),
       flex: 1,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      minWidth: 200,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageUsers) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageUsersAtNode(params.row.node_id)

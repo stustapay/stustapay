@@ -10,16 +10,10 @@ import {
 } from "@/api";
 import { CashierRoutes, TillRegistersRoutes, TillRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import {
-  useCurrencyFormatter,
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { getUserName } from "@stustapay/models";
@@ -33,9 +27,8 @@ export const TillRegisterList: React.FC = () => {
   const canManageRegisters = useCurrentUserHasPrivilege(TillRegistersRoutes.privilege);
   const canManageRegistersAtNode = useCurrentUserHasPrivilegeAtNode(TillRegistersRoutes.privilege);
   const navigate = useNavigate();
-  const formatCurrency = useCurrencyFormatter();
   const openModal = useOpenModal();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
   const { data: cashiers } = useListCashiersQuery({ nodeId: currentNode.id });
@@ -102,41 +95,35 @@ export const TillRegisterList: React.FC = () => {
   const columns: GridColDef<CashRegister>[] = [
     {
       field: "name",
-      headerName: t("register.name") as string,
+      headerName: t("register.name"),
       flex: 1,
     },
     {
       field: "current_cashier_id",
-      headerName: t("register.currentCashier") as string,
+      headerName: t("register.currentCashier"),
       width: 200,
       renderCell: (params) => renderCashier(params.row.current_cashier_id),
     },
     {
       field: "current_till_id",
-      headerName: t("register.currentTill") as string,
+      headerName: t("register.currentTill"),
       width: 200,
       renderCell: (params) => renderTill(params.row.current_till_id),
     },
     {
       field: "current_balance",
-      headerName: t("register.currentBalance") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("register.currentBalance"),
+      type: "currency",
       width: 200,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageRegisters) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageRegistersAtNode(params.row.node_id)

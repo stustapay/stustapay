@@ -6,15 +6,9 @@ import {
 } from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import {
-  useCurrencyFormatter,
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -27,9 +21,8 @@ export const TillRegisterStockingList: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const canManageStockings = useCurrentUserHasPrivilege(TillStockingsRoutes.privilege);
   const canManageStockingsAtNode = useCurrentUserHasPrivilegeAtNode(TillStockingsRoutes.privilege);
-  const formatCurrency = useCurrencyFormatter();
   const openModal = useOpenModal();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   const { stockings, isLoading } = useListRegisterStockingsQuery(
     { nodeId: currentNode.id },
@@ -62,28 +55,22 @@ export const TillRegisterStockingList: React.FC = () => {
   const columns: GridColDef<CashRegisterStocking>[] = [
     {
       field: "name",
-      headerName: t("register.name") as string,
+      headerName: t("register.name"),
       flex: 1,
     },
     {
       field: "total",
-      headerName: t("register.stockingTotal") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("register.stockingTotal"),
+      type: "currency",
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageStockings) {
     columns.push({
       field: "actions",
       type: "actions",
-      headerName: t("actions") as string,
+      headerName: t("actions"),
       width: 150,
       getActions: (params) =>
         canManageStockingsAtNode(params.row.node_id)

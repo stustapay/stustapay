@@ -14,8 +14,8 @@ import {
 } from "@/api";
 import { CashierRoutes, TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
 import { OrderTable, TillSwitchTerminal } from "@/components/features";
-import { DetailField, DetailLayout, DetailView } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+import { useCurrentNode } from "@/hooks";
 import {
   Delete as DeleteIcon,
   Edit as EditIcon,
@@ -36,7 +36,6 @@ export const TillDetail: React.FC = () => {
   const { tillId } = useParams();
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
-  const formatCurrency = useCurrencyFormatter();
   const openModal = useOpenModal();
 
   const [forceLogoutUser] = useForceLogoutUserMutation();
@@ -195,9 +194,10 @@ export const TillDetail: React.FC = () => {
           <DetailField label={t("till.cashRegisterName")} value={till.current_cash_register_name} />
         )}
         {till.current_cash_register_balance != null && (
-          <DetailField
+          <DetailNumberField
             label={t("till.cashRegisterBalance")}
-            value={formatCurrency(till.current_cash_register_balance)}
+            type="currency"
+            value={till.current_cash_register_balance}
           />
         )}
       </DetailView>

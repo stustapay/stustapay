@@ -1,9 +1,10 @@
 import { CashierRead, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@/api";
 import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrencyFormatter, useCurrentNode, useRenderNode } from "@/hooks";
+import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
-import { DataGrid, Loading, GridColDef } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
+import { Loading } from "@stustapay/components";
 import { formatUserTagUid } from "@stustapay/models";
 import { StringyBoolean, useQueryState } from "@stustapay/utils";
 import * as React from "react";
@@ -19,7 +20,6 @@ const FilterOptionsSchema = z.object({
 export const CashierList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const formatCurrency = useCurrencyFormatter();
 
   const [filterOptions, setFilterOptions] = useQueryState(
     { showZeroBalance: true, showWithoutTill: true },
@@ -46,7 +46,7 @@ export const CashierList: React.FC = () => {
     }
   );
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isCashiersLoading || isTillsLoading) {
     return <Loading />;
@@ -72,7 +72,7 @@ export const CashierList: React.FC = () => {
   const columns: GridColDef<CashierRead>[] = [
     {
       field: "login",
-      headerName: t("cashier.login") as string,
+      headerName: t("cashier.login"),
       renderCell: (params) => (
         <Link component={RouterLink} to={CashierRoutes.detail(params.row.id)}>
           {params.row.login}
@@ -82,25 +82,25 @@ export const CashierList: React.FC = () => {
     },
     {
       field: "display_name",
-      headerName: t("cashier.name") as string,
+      headerName: t("cashier.name"),
       flex: 1,
     },
     {
       field: "description",
-      headerName: t("cashier.description") as string,
+      headerName: t("cashier.description"),
       type: "string",
       flex: 2,
     },
     {
       field: "till_id",
-      headerName: t("cashier.till") as string,
+      headerName: t("cashier.till"),
       flex: 0.5,
       minWidth: 150,
       renderCell: (params) => params.row.till_ids.map((till_id) => renderTill(till_id)),
     },
     {
       field: "user_tag_id",
-      headerName: t("cashier.tagId") as string,
+      headerName: t("cashier.tagId"),
       type: "number",
       renderCell: (params) => (
         <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
@@ -111,17 +111,11 @@ export const CashierList: React.FC = () => {
     },
     {
       field: "cash_drawer_balance",
-      headerName: t("cashier.cashDrawerBalance") as string,
-      type: "number",
-      valueFormatter: (value) => formatCurrency(value),
+      headerName: t("cashier.cashDrawerBalance"),
+      type: "currency",
       width: 150,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode") as string,
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   return (
