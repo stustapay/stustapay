@@ -29,7 +29,7 @@ export const UserRoleList: React.FC = () => {
     }
   );
   const [deleteUserRole] = useDeleteUserRoleMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isLoading) {
     return <Loading />;
@@ -69,12 +69,7 @@ export const UserRoleList: React.FC = () => {
       headerName: t("userPrivileges"),
       flex: 1,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      minWidth: 200,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageUsers) {

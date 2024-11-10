@@ -29,7 +29,7 @@ export const UserList: React.FC = () => {
     }
   );
   const [deleteUser] = useDeleteUserMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isLoading) {
     return <Loading />;
@@ -80,12 +80,7 @@ export const UserList: React.FC = () => {
           </Link>
         ),
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageUsers) {

@@ -46,7 +46,7 @@ export const CashierList: React.FC = () => {
     }
   );
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isCashiersLoading || isTillsLoading) {
     return <Loading />;
@@ -115,12 +115,7 @@ export const CashierList: React.FC = () => {
       type: "currency",
       width: 150,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   return (

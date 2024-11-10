@@ -38,7 +38,7 @@ export const TillProfileList: React.FC = () => {
   );
   const { data: layouts, isLoading: isLayoutsLoading } = useListTillLayoutsQuery({ nodeId: currentNode.id });
   const [deleteTillProfile] = useDeleteTillProfileMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTillsLoading || isLayoutsLoading) {
     return <Loading />;
@@ -108,12 +108,7 @@ export const TillProfileList: React.FC = () => {
       flex: 0.5,
       renderCell: (params) => renderLayout(params.row.layout_id),
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageProfiles) {

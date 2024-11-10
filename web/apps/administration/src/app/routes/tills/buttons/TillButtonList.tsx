@@ -28,7 +28,7 @@ export const TillButtonList: React.FC = () => {
     }
   );
   const [deleteButton] = useDeleteTillButtonMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isLoading) {
     return <Loading />;
@@ -60,12 +60,7 @@ export const TillButtonList: React.FC = () => {
       type: "number",
       valueFormatter: (value) => `${value} €`,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageButtons) {

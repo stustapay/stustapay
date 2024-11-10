@@ -46,7 +46,7 @@ export const ProductList: React.FC = () => {
   const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
   const [updateProduct] = useUpdateProductMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isProductsLoading || isTaxRatesLoading) {
     return <Loading />;
@@ -139,12 +139,7 @@ export const ProductList: React.FC = () => {
       valueFormatter: (value) => (value as string[]).join(", "),
       width: 150,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      minWidth: 100,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageProducts) {

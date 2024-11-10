@@ -27,7 +27,7 @@ export const TaxRateList: React.FC = () => {
     }
   );
   const [deleteTaxRate] = useDeleteTaxRateMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isLoading) {
     return <Loading />;
@@ -66,12 +66,7 @@ export const TaxRateList: React.FC = () => {
       valueGetter: (rate) => rate * 100,
       valueFormatter: (value: number) => `${value.toFixed(2)} %`,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
     {
       field: "actions",
       type: "actions",

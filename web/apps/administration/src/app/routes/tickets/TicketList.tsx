@@ -39,7 +39,7 @@ export const TicketList: React.FC = () => {
   const { data: taxRates } = useListTaxRatesQuery({ nodeId: currentNode.id });
   const [updateTicket] = useUpdateTicketMutation();
   const [deleteTicket] = useDeleteTicketMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTicketsLoading) {
     return <Loading />;
@@ -122,12 +122,7 @@ export const TicketList: React.FC = () => {
       headerName: t("ticket.restriction"),
       width: 150,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageTickets) {

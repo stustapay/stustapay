@@ -40,7 +40,7 @@ export const TillList: React.FC = () => {
   const { data: profiles, isLoading: isProfilesLoading } = useListTillProfilesQuery({ nodeId: currentNode.id });
   const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
   const [deleteTill] = useDeleteTillMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTillsLoading || isProfilesLoading || isTerminalsLoading) {
     return <Loading />;
@@ -127,12 +127,7 @@ export const TillList: React.FC = () => {
       flex: 0.5,
       renderCell: (params) => renderTerminal(params.row.terminal_id),
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      minWidth: 200,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageTills) {

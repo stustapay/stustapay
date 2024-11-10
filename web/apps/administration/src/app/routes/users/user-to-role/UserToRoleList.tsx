@@ -29,7 +29,7 @@ export const UserToRoleList: React.FC = () => {
   const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
   const { data: userRoles, isLoading: isUserRolesLoading } = useListUserRolesQuery({ nodeId: currentNode.id });
   const [updateUserToRoles] = useUpdateUserToRolesMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
   const openModal = useOpenModal();
   const navigate = useNavigate();
 
@@ -108,12 +108,7 @@ export const UserToRoleList: React.FC = () => {
       flex: 1,
       renderCell: (params) => renderRoles(params.row.role_ids),
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageNode) {

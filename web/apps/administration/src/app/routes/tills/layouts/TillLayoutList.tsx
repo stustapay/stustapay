@@ -29,7 +29,7 @@ export const TillLayoutList: React.FC = () => {
     }
   );
   const [deleteTill] = useDeleteTillLayoutMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTillsLoading) {
     return <Loading />;
@@ -64,12 +64,7 @@ export const TillLayoutList: React.FC = () => {
       headerName: t("layout.description"),
       flex: 2,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageNode) {

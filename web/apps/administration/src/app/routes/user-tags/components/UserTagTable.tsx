@@ -13,7 +13,7 @@ export interface UserTagTableProps {
 
 export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
   const { t } = useTranslation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   const columns: GridColDef<UserTagDetailRead>[] = [
     {
@@ -55,12 +55,7 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
       headerName: t("userTag.comment"),
       flex: 1,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   return (

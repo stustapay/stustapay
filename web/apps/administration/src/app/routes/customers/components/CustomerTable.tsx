@@ -14,7 +14,7 @@ export interface CustomerTableProps {
 
 export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
   const { t } = useTranslation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   const columns: GridColDef<CustomerRead>[] = [
     {
@@ -85,12 +85,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
         ),
       minWidth: 80,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   return (

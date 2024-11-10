@@ -22,7 +22,7 @@ export const TillRegisterStockingList: React.FC = () => {
   const canManageStockings = useCurrentUserHasPrivilege(TillStockingsRoutes.privilege);
   const canManageStockingsAtNode = useCurrentUserHasPrivilegeAtNode(TillStockingsRoutes.privilege);
   const openModal = useOpenModal();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   const { stockings, isLoading } = useListRegisterStockingsQuery(
     { nodeId: currentNode.id },
@@ -63,12 +63,7 @@ export const TillRegisterStockingList: React.FC = () => {
       headerName: t("register.stockingTotal"),
       type: "currency",
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageStockings) {

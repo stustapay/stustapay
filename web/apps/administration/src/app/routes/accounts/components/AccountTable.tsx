@@ -14,7 +14,7 @@ export interface AccountTableProps {
 
 export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
   const { t } = useTranslation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   const columns: GridColDef<AccountRead>[] = [
     {
@@ -25,7 +25,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
           {params.row.name}
         </Link>
       ),
-      minWidth: 250,
+      flex: 1,
     },
     {
       field: "type",
@@ -60,12 +60,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       type: "number",
       width: 200,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   return (

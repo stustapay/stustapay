@@ -37,7 +37,7 @@ export const TerminalList: React.FC = () => {
   );
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
   const [deleteTerminal] = useDeleteTerminalMutation();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTerminalsLoading || isTillsLoading) {
     return <Loading />;
@@ -98,12 +98,7 @@ export const TerminalList: React.FC = () => {
       type: "boolean",
       valueGetter: (session_uuid) => session_uuid != null,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      minWidth: 200,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageTerminals) {

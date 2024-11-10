@@ -26,7 +26,7 @@ export const TseList: React.FC = () => {
       }),
     }
   );
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   if (isTsesLoading) {
     return <Loading />;
@@ -65,12 +65,7 @@ export const TseList: React.FC = () => {
       field: "process_data_encoding",
       headerName: t("tse.processDataEncoding"),
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageTses) {

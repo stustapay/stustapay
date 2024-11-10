@@ -28,7 +28,7 @@ export const TillRegisterList: React.FC = () => {
   const canManageRegistersAtNode = useCurrentUserHasPrivilegeAtNode(TillRegistersRoutes.privilege);
   const navigate = useNavigate();
   const openModal = useOpenModal();
-  const renderNode = useRenderNode();
+  const { dataGridNodeColumn } = useRenderNode();
 
   const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
   const { data: cashiers } = useListCashiersQuery({ nodeId: currentNode.id });
@@ -116,12 +116,7 @@ export const TillRegisterList: React.FC = () => {
       type: "currency",
       width: 200,
     },
-    {
-      field: "node_id",
-      headerName: t("common.definedAtNode"),
-      valueFormatter: (value) => renderNode(value),
-      flex: 1,
-    },
+    dataGridNodeColumn,
   ];
 
   if (canManageRegisters) {
