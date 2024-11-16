@@ -144,6 +144,7 @@ data class SaleStatus(
 
     fun incrementButton(buttonId: Int, saleConfig: SaleConfig) {
         val current = buttonSelection[buttonId]
+        if (saleConfig !is SaleConfig.Ready) return
         val button = saleConfig.buttons[buttonId] ?: return
         when (button.price) {
             is SaleItemPrice.FixedPrice,
@@ -167,6 +168,7 @@ data class SaleStatus(
 
     fun decrementButton(buttonId: Int, saleConfig: SaleConfig) {
         val current = buttonSelection[buttonId]
+        if (saleConfig !is SaleConfig.Ready) return
         val button = saleConfig.buttons[buttonId] ?: return
         when (button.price) {
             is SaleItemPrice.FixedPrice -> {
@@ -205,6 +207,7 @@ data class SaleStatus(
 
     fun adjustPrice(buttonId: Int, setPrice: FreePrice, saleConfig: SaleConfig) {
         val current = buttonSelection[buttonId]
+        if (saleConfig !is SaleConfig.Ready) return
         val button = saleConfig.buttons[buttonId] ?: return
         when (button.price) {
             is SaleItemPrice.FreePrice -> {

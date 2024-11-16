@@ -2164,6 +2164,9 @@ export type TillProfile = {
   allow_top_up: boolean;
   allow_cash_out: boolean;
   allow_ticket_sale: boolean;
+  enable_ssp_payment: boolean;
+  enable_cash_payment: boolean;
+  enable_card_payment: boolean;
   node_id: number;
   id: number;
 };
@@ -2180,6 +2183,9 @@ export type NewTillProfile = {
   allow_top_up: boolean;
   allow_cash_out: boolean;
   allow_ticket_sale: boolean;
+  enable_ssp_payment: boolean;
+  enable_cash_payment: boolean;
+  enable_card_payment: boolean;
 };
 export type TillButton = {
   name: string;

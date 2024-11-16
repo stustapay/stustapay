@@ -33,10 +33,17 @@ fun SaleError(
     val status by viewModel.status.collectAsStateWithLifecycle()
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
+    val config = saleConfig
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(saleConfig.tillName) })
+            TopAppBar(title = {
+                if (config is SaleConfig.Ready) {
+                    Text(config.tillName)
+                } else {
+                    Text("No Till")
+                }
+            })
         },
         content = { padding ->
             Box(

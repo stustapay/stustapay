@@ -25,6 +25,7 @@ import de.stustapay.stustapay.ui.common.pay.ProductSelectionBottomBar
 import de.stustapay.stustapay.ui.nav.TopAppBar
 import de.stustapay.stustapay.ui.nav.TopAppBarIcon
 import de.stustapay.libssp.ui.theme.NfcScanStyle
+import de.stustapay.stustapay.ui.common.pay.ProductConfirmBottomBar
 import kotlinx.coroutines.launch
 
 @Composable
@@ -115,7 +116,7 @@ fun TicketScan(
             }
         },
         bottomBar = {
-            ProductSelectionBottomBar(
+            ProductConfirmBottomBar(
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
                     .padding(bottom = 5.dp),

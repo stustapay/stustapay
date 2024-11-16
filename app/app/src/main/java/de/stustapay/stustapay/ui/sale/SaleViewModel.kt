@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.sale
 
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -7,6 +8,7 @@ import de.stustapay.api.models.CompletedSale
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.util.mapState
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.repository.SaleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
@@ -256,34 +258,40 @@ class SaleViewModel @Inject constructor(
         terminalConfigFlow: StateFlow<TerminalConfigState>,
     ): StateFlow<SaleConfig> {
 
-        return terminalConfigFlow.mapState(SaleConfig(), viewModelScope) { terminalConfig ->
+        return terminalConfigFlow.mapState(SaleConfig.NotReady, viewModelScope) { terminalConfig ->
             when (terminalConfig) {
                 is TerminalConfigState.Success -> {
-                    _status.update { "Ready for order." }
-                    SaleConfig(
-                        ready = true,
-                        buttons = terminalConfig.config.till?.buttons?.associate {
-                            Pair(
-                                it.id.intValue(), SaleItemConfig(
-                                    id = it.id.intValue(),
-                                    caption = it.name,
-                                    price = SaleItemPrice.fromTerminalButton(it),
-                                    returnable = it.isReturnable,
+                    val till = terminalConfig.config.till
+                    if (till != null) {
+                        _status.update { "Ready for order." }
+                        SaleConfig.Ready(
+                            buttons = terminalConfig.config.till?.buttons?.associate {
+                                Pair(
+                                    it.id.intValue(), SaleItemConfig(
+                                        id = it.id.intValue(),
+                                        caption = it.name,
+                                        price = SaleItemPrice.fromTerminalButton(it),
+                                        returnable = it.isReturnable,
+                                    )
                                 )
-                            )
-                        } ?: mapOf(),
-                        tillName = terminalConfig.config.name,
-                    )
+                            } ?: mapOf(),
+                            tillName = terminalConfig.config.name,
+                            till = till,
+                        )
+                    } else {
+                        _status.update { "No till assigned to terminal" }
+                        SaleConfig.NotReady
+                    }
                 }
 
                 is TerminalConfigState.Error -> {
                     _status.update { terminalConfig.message }
-                    SaleConfig()
+                    SaleConfig.NotReady
                 }
 
                 is TerminalConfigState.NoConfig -> {
                     _status.update { "Loading..." }
-                    SaleConfig()
+                    SaleConfig.NotReady
                 }
             }
         }

@@ -1,5 +1,7 @@
 package de.stustapay.stustapay.ui.sale
 
+import de.stustapay.api.models.TerminalTillConfig
+
 
 /**
  * button available for purchase.
@@ -15,19 +17,23 @@ data class SaleItemConfig(
 /**
  * What can be ordered?
  */
-data class SaleConfig(
+sealed interface SaleConfig {
     /**
      * Can we create a new order?
      */
-    var ready: Boolean = false,
+    object NotReady : SaleConfig
 
-    /**
-     * How the till configuration is named.
-     */
-    var tillName: String = "",
+    data class Ready(
+        /**
+         * How the till configuration is named.
+         */
+        var tillName: String = "",
 
-    /**
-     * available product buttons, in order from top to bottom.
-     */
-    var buttons: Map<Int, SaleItemConfig> = mapOf(),
-)
+        /**
+         * available product buttons, in order from top to bottom.
+         */
+        var buttons: Map<Int, SaleItemConfig> = mapOf(),
+
+        var till: TerminalTillConfig,
+    ) : SaleConfig
+}

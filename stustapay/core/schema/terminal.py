@@ -56,6 +56,9 @@ class TerminalTillConfig(BaseModel):
     allow_top_up: bool
     allow_cash_out: bool
     allow_ticket_sale: bool
+    enable_ssp_payment: bool
+    enable_cash_payment: bool
+    enable_card_payment: bool
     buttons: Optional[list[TerminalButton]]
     secrets: Optional[TerminalSecrets]
     active_user_id: Optional[int]

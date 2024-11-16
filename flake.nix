@@ -15,6 +15,32 @@
         inherit system;
         overlays = [];
       };
+      python = pkgs-unstable.python3.override {
+        self = python;
+        packageOverrides = final: prev: {
+          sftkit = final.buildPythonPackage rec {
+            pname = "sftkit";
+            version = "0.2.0";
+            src = prev.fetchPypi {
+              inherit pname version;
+              hash = "sha256-7Mx634ZiQyiC6bJ/Yiks671XiDS+++4YYqjz9QigdY4=";
+            };
+            pyproject = true;
+            doCheck = false;
+            build-system = with final; [
+              pdm-backend
+            ];
+            dependencies = with final; [
+              fastapi
+              typer
+              uvicorn
+              asyncpg
+              pydantic
+            ];
+            pythonRelaxDeps = [ "pydantic" ];
+          };
+        };
+      };
     in with pkgs; {
       packages.default = self.packages.${system}.stustapay;
 
@@ -56,34 +82,7 @@
         CYPRESS_RUN_BINARY = "${pkgs.cypress}/bin/Cypress";
       };
 
-      packages.stustapay = let
-        python = pkgs-unstable.python3.override {
-          self = python;
-          packageOverrides = final: prev: {
-            sftkit = final.buildPythonPackage rec {
-              pname = "sftkit";
-              version = "0.2.0";
-              src = fetchPypi {
-                inherit pname version;
-                hash = "sha256-7Mx634ZiQyiC6bJ/Yiks671XiDS+++4YYqjz9QigdY4=";
-              };
-              pyproject = true;
-              doCheck = false;
-              build-system = with final; [
-                pdm-backend
-              ];
-              dependencies = with final; [
-                fastapi
-                typer
-                uvicorn
-                asyncpg
-                pydantic
-              ];
-              pythonRelaxDeps = [ "pydantic" ];
-            };
-          };
-        };
-      in with python.pkgs; buildPythonPackage {
+      packages.stustapay = with python.pkgs; buildPythonPackage {
         pname = "stustapay";
         version = "0.1.0";
         src = ./.;
@@ -92,6 +91,7 @@
           setuptools
         ];
         dependencies = [
+          sftkit
           fastapi
           typer
           uvicorn
@@ -129,6 +129,8 @@
           "python-multipart"
         ];
       };
+
+      packages.sftkit = python.pkgs.sftkit;
 
       devShell = mkShell rec {
         buildInputs = [
