@@ -136,11 +136,11 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
 
             var confCheckSuccessful = true
 
-            if (conf.gbe(0uL) == 0x03u.toUByte()) {
-                log.add(Pair("cfg: pages 0x10, 0x11, 0x12 and 0x13 locked", true))
+            if (conf.gbe(0uL) == 0x00u.toUByte()) {
+                log.add(Pair("cfg: pages 0x10, 0x11, 0x12 and 0x13 not locked", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("cfg: pages 0x10, 0x11, 0x12 and 0x13 not locked", false))
+                log.add(Pair("cfg: pages 0x10, 0x11, 0x12 and 0x13 locked", false))
             }
 
             if (conf.gbe(4uL) == 0x03u.toUByte()) {
@@ -157,18 +157,18 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
                 log.add(Pair("cfg: pages after 0x10 not protected", false))
             }
 
-            if (keyLock.gbe(0uL) == 0xe0u.toUByte()) {
-                log.add(Pair("cfg: keys locked", true))
+            if (keyLock.gbe(0uL) == 0x00u.toUByte()) {
+                log.add(Pair("cfg: keys not locked", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("cfg: keys not locked", false))
+                log.add(Pair("cfg: keys locked", false))
             }
 
-            if (conf.gbe(8uL) == 0xc0u.toUByte()) {
-                log.add(Pair("cfg: config locked", true))
+            if (conf.gbe(8uL) == 0x80u.toUByte()) {
+                log.add(Pair("cfg: config not locked", true))
             } else {
                 confCheckSuccessful = false
-                log.add(Pair("cfg: config not locked", false))
+                log.add(Pair("cfg: config locked", false))
             }
 
             if (!confCheckSuccessful) {
@@ -187,7 +187,7 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
 
         try {
             authenticate(key0, MifareUltralightAES.KeyType.DATA_PROT_KEY, cmacCheckSucceeded)
-            val expectedStr = "StuStaPay at StuStaCulum 2024\n"
+            val expectedStr = "StuStaPay - built by SSN & friends!\nglhf ;)\n"
             val expected = expectedStr.toByteArray(Charset.forName("UTF-8")).asBitVector()
             val mem = readUserMemory()
             val sig = mem.slice(mem.len - expectedStr.length.toULong() * 8uL, mem.len)
@@ -199,7 +199,7 @@ fun MifareUltralightAES.test(constKey0: BitVector, constKey1: BitVector): Mutabl
                 log.add(Pair("sig: decoded signature is \"" + sig.asByteArray().decodeToString() + "\"", false))
             }
 
-            val secret = mem.slice(mem.len - 60uL * 8uL, mem.len - 48uL * 8uL)
+            val secret = mem.slice(mem.len - 56uL * 8uL, mem.len - 48uL * 8uL)
             val check = secret.gle(0uL) or secret.gle(1uL) or secret.gle(2uL) or secret.gle(3uL) or secret.gle(4uL) or secret.gle(5uL) or secret.gle(6uL) or secret.gle(7uL)
             if (check != 0x00u.toUByte()) {
                 log.add(Pair("secret: secret pin found", true))

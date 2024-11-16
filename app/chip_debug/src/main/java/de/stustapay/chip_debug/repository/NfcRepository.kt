@@ -21,7 +21,10 @@ class NfcRepository @Inject constructor(
         MutableStateFlow<BitVector?>("000102030405060708090a0b0c0d0e0f".decodeHex())
     // "key1"
     private val uidRetrKey =
-        MutableStateFlow<BitVector?>("00102030405060708090a0b0c0d0e0f0".decodeHex())
+        MutableStateFlow<BitVector?>("000102030405060708090a0b0c0d0e0f".decodeHex())
+    // "key0"
+    private val oldDataProtKey =
+        MutableStateFlow<BitVector?>("000102030405060708090a0b0c0d0e0f".decodeHex())
 
     suspend fun read(): NfcScanResult {
         return nfcDataSource.scan(
@@ -38,6 +41,16 @@ class NfcRepository @Inject constructor(
             NfcScanRequest.Write(
                 uidRetrKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey),
                 dataProtKey.value
+            )
+        )
+    }
+
+    suspend fun rewrite(): NfcScanResult {
+        return nfcDataSource.scan(
+            NfcScanRequest.Rewrite(
+                uidRetrKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey),
+                dataProtKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey),
+                oldDataProtKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
             )
         )
     }

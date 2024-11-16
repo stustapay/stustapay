@@ -16,6 +16,7 @@ pyvenv.cfg
 # building
 MANIFEST
 dist/
+app/chip_debug/release/
 
 # testing
 /*.conf
