@@ -42,7 +42,7 @@ export const AuthenticatedRoot: React.FC = () => {
     return <Navigate to={`/login${next}`} />;
   }
 
-  var navbarLinks = []
+  const navbarLinks = []
   if (publicConfig.payout_enabled) {
     navbarLinks.push({
       label: t("nav.payout"),
