@@ -73,16 +73,16 @@ export const Index: React.FC = () => {
           >
             <Stack spacing={1}>
               <Typography component="div" variant="h4">
-                {formatCurrency(customer.balance)}
+                {formatCurrency(0.0)}
               </Typography>
 
-              {customer.vouchers > 0 && (
+              {false && (
                 <div>
                   <Typography component="div" variant="body1">
                     {t("vouchers")}
                   </Typography>
                   <Typography component="div" variant="subtitle2">
-                    {customer.vouchers}
+                    {0}
                   </Typography>
                 </div>
               )}
@@ -107,6 +107,9 @@ export const Index: React.FC = () => {
       </Grid>
 
       <Grid item xs={12} sm={8}>
+        <Alert severity="warning" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
+          <b>{t("payout.onlyDuringEvent")}</b>
+        </Alert>
       </Grid>
 
       <Grid item xs={12} sm={8}>

@@ -5,7 +5,7 @@ type NestedPartialAsStrings<T extends object> = {
 };
 
 export const translations: NestedPartialAsStrings<Translations> = {
-  StuStaPay: "Galeriefest / StuStaPay",
+  StuStaPay: "Galeriefest",
   logout: "Logout",
   login: "Login",
   userTagUid: "Karten ID",
@@ -88,6 +88,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     confirmDonateAllContent: "Wills Du dein gesamtes Restguthaben von {{remainingBalance}} spenden?",
     confirmDonateAmountTitle: "Spenden?",
     confirmDonateAmountContent: "Willst Du {{donation}} spenden?",
+    onlyDuringEvent: "Eine Auszahlung des Restguthabens ist nur während der Veranstaltung möglich!",
   },
   topup: {
     onlineTopUp: "Online-Aufladung",
