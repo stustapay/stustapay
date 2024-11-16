@@ -44,10 +44,15 @@ class MailService(Service[Config]):
         attachments: dict[str, bytes] | None = None,
     ):
         res_config = await fetch_restricted_event_settings_for_node(conn, node_id)
-        mail_id = conn.fetchval(
+        if not res_config.email_enabled:
+            self.logger.warning(
+                f"Mail to {to_addr} was not scheduled for sending because event with node id {node_id} has mail sending deactivated"
+            )
+            return
+        mail_id = await conn.fetchval(
             """
             INSERT INTO mails (node_id, subject, message, html_message, to_addr, from_addr, scheduled_send_date)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING id
             """,
             node_id,
@@ -60,7 +65,7 @@ class MailService(Service[Config]):
         )
         attachments = attachments or {}
         for file_name, content in attachments.items():
-            conn.execute(
+            await conn.execute(
                 """
                 INSERT INTO mail_attachments (mail_id, file_name, content)
                 VALUES ($1, $2, $3)
@@ -69,15 +74,18 @@ class MailService(Service[Config]):
                 file_name,
                 content,
             )
-        self.logger.debug(f"Added mail to data base buffer for {to_addr}")
+        self.logger.debug(f"Added mail to database buffer for {to_addr}")
 
     @with_db_transaction(read_only=True)
     async def _fetch_mail(self, *, conn: Connection) -> list[Mail]:
+        # fetch all unsent mails from nodes with email enabled
+
         return await conn.fetch_many(
             Mail,
             """
-            select * from mail_with_attachments
-            where scheduled_send_date <= $1
+            select *
+            from mail_with_attachments
+            where scheduled_send_date <= $1 and send_date is null
             """,
             datetime.now(),
         )
@@ -105,7 +113,9 @@ class MailService(Service[Config]):
         res_config = await fetch_restricted_event_settings_for_node(conn, mail.node_id)
         smtp_config = res_config.smtp_config
         if not smtp_config:
-            self.logger.info(f"No mail sent because event with node id {mail.node_id} has mail sending deactivated")
+            self.logger.info(
+                f"The mail was not send because event with node id {mail.node_id} has mail sending deactivated"
+            )
             return
 
         message = MIMEMultipart()
@@ -139,6 +149,7 @@ class MailService(Service[Config]):
                 password=smtp_config.smtp_password,
                 start_tls=True,
             )
+            self.logger.debug(f"Mail sent to {mail.to_addr}")
         except Exception as e:
             self.logger.exception(f"Failed to send mail to {mail.to_addr} with error {e}")
             return
