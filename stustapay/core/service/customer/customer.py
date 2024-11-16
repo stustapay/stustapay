@@ -206,8 +206,8 @@ class CustomerService(Service[Config]):
             mail_service.send_mail(
                 subject=res_config.payout_registered_subject,
                 message=res_config.payout_registered_message.format(**current_customer.model_dump()),
-                from_email=res_config.payout_sender,
-                to_email=current_customer.email,
+                from_addr=res_config.payout_sender,
+                to_addr=current_customer.email,
                 node_id=current_customer.node_id,
             )
 

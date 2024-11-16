@@ -322,8 +322,8 @@ class PayoutService(Service[Config]):
             mail_service.send_mail(
                 subject=res_config.payout_done_subject,
                 message=res_config.payout_done_message.format(**payout.model_dump()),
-                from_email=res_config.payout_sender,
-                to_email=payout.email,
+                from_addr=res_config.payout_sender,
+                to_addr=payout.email,
                 node_id=node.id,
             )
 
