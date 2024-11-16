@@ -3,3 +3,4 @@ export * from "./lib/Loading";
 export * from "./lib/NumericInput";
 export * from "./lib/Select";
 export * from "./lib/TestModeDisclaimer";
+export * from "./lib/bon";

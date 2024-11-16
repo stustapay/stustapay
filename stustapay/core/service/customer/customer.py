@@ -5,11 +5,13 @@ import re
 from typing import Optional
 
 import asyncpg
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from schwifty import IBAN
 from sftkit.database import Connection
+from sftkit.error import NotFound
 from sftkit.service import Service, with_db_transaction
 
+from stustapay.bon.bon import BonJson
 from stustapay.core.config import Config
 from stustapay.core.schema.customer import (
     Customer,
@@ -35,7 +37,7 @@ class CustomerPortalApiConfig(BaseModel):
     test_mode: bool
     test_mode_message: str
     data_privacy_url: str
-    contact_email: str
+    contact_email: EmailStr
     about_page_url: str
     payout_enabled: bool
     currency_identifier: str
@@ -132,7 +134,7 @@ class CustomerService(Service[Config]):
     async def get_orders_with_bon(self, *, conn: Connection, current_customer: Customer) -> list[OrderWithBon]:
         return await conn.fetch_many(
             OrderWithBon,
-            "select o.*, b.generated as bon_generated from order_value_prefiltered("
+            "select o.*, case when b.bon_json is null then false else true end as bon_generated from order_value_prefiltered("
             "   (select array_agg(o.id) from ordr o where customer_account_id = $1)"
             ") o left join bon b ON o.id = b.id order by o.booked_at desc",
             current_customer.id,
@@ -257,14 +259,14 @@ class CustomerService(Service[Config]):
 
     @with_db_transaction
     @requires_customer
-    async def get_bon(self, *, conn: Connection, current_customer: Customer, bon_id: int) -> tuple[str, bytes]:
-        blob = await conn.fetchrow(
-            "select content, mime_type from bon b join ordr o on b.id = o.id "
-            "where b.id = $1 and o.customer_account_id = $2",
-            bon_id,
+    async def get_bon(self, *, conn: Connection, current_customer: Customer, order_uuid: str) -> BonJson:
+        row = await conn.fetchrow(
+            "select b.bon_json from bon b join ordr o on b.id = o.id "
+            "where o.uuid = $1 and o.customer_account_id = $2",
+            order_uuid,
             current_customer.id,
         )
-        if not blob:
-            raise InvalidArgument("Bon not found")
+        if not row or row["bon_json"] is None:
+            raise NotFound(element_type="bon", element_id=order_uuid)
 
-        return blob["mime_type"], blob["content"]
+        return BonJson.model_validate_json(row["bon_json"])

@@ -111,13 +111,10 @@ async def order_with_bon(
     assert order is not None
 
     await db_connection.execute(
-        "insert into bon (id, generated, generated_at, mime_type, content) overriding system value "
-        "values ($1, $2, $3, $4, $5)",
+        "insert into bon (id, bon_json, generated_at) overriding system value values ($1, $2, $3)",
         order.id,
-        True,
+        {},
         parse("2023-01-01 15:35:02 UTC+1"),
-        "application/pdf",
-        b"asdf1234",  # this is obviously not a valid pdf but that's fine for a test
     )
     return order
 

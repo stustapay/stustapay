@@ -7,8 +7,6 @@ import asyncpg
 from pydantic import BaseModel, computed_field
 from sftkit.database import Connection
 
-from stustapay.bon.pdflatex import PdfRenderResult, pdflatex, render_template
-from stustapay.core.currency import get_currency_symbol
 from stustapay.core.schema.order import LineItem, Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import Product, ProductType
 from stustapay.core.schema.tree import RestrictedEventSettings
@@ -54,18 +52,13 @@ class OrderWithTse(Order):
         )
 
 
-class BonTemplateContext(BaseModel):
+class BonJson(BaseModel):
     order: OrderWithTse
 
     tax_rate_aggregations: list[TaxRateAggregation]
 
     config: BonConfig
-    currency_symbol: str
-
-
-async def render_receipt(context: BonTemplateContext):
-    rendered = await render_template("bon.tex", context, context.currency_symbol)
-    return await pdflatex(file_content=rendered)
+    currency_identifier: str
 
 
 async def fetch_order(*, conn: Connection, order_id: int) -> Optional[OrderWithTse]:
@@ -185,9 +178,9 @@ def gen_dummy_order(node_id: int):
     )
 
 
-async def generate_dummy_bon(node_id: int, event: RestrictedEventSettings) -> PdfRenderResult:
+async def generate_dummy_bon_json(node_id: int, event: RestrictedEventSettings) -> BonJson:
     """Generate a dummy bon for the given event and return the pdf as bytes"""
-    ctx = BonTemplateContext(
+    return BonJson(
         order=gen_dummy_order(node_id),
         tax_rate_aggregations=[
             TaxRateAggregation(
@@ -218,16 +211,15 @@ async def generate_dummy_bon(node_id: int, event: RestrictedEventSettings) -> Pd
             address=event.bon_address,
             ust_id=event.ust_id,
         ),
-        currency_symbol=get_currency_symbol(event.currency_identifier),
+        currency_identifier=event.currency_identifier,
     )
-    return await render_receipt(context=ctx)
 
 
-async def generate_bon(db_pool: asyncpg.Pool, order_id: int) -> PdfRenderResult:
+async def generate_bon_json(db_pool: asyncpg.Pool, order_id: int) -> BonJson | None:
     async with db_pool.acquire() as conn:
         order = await fetch_order(conn=conn, order_id=order_id)
         if order is None:
-            return PdfRenderResult(success=False, msg="could not fetch order")
+            return None
 
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=order.node_id)
         config = BonConfig(
@@ -243,12 +235,11 @@ async def generate_bon(db_pool: asyncpg.Pool, order_id: int) -> PdfRenderResult:
             order_id,
         )
         if len(aggregations) == 0:
-            return PdfRenderResult(success=False, msg="could not fetch aggregated tax rates")
+            return None
 
-    context = BonTemplateContext(
+    return BonJson(
         order=order,
         config=config,
         tax_rate_aggregations=aggregations,
-        currency_symbol=get_currency_symbol(event.currency_identifier),
+        currency_identifier=event.currency_identifier,
     )
-    return await render_receipt(context=context)

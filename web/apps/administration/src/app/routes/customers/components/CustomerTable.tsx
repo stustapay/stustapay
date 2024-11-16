@@ -27,10 +27,6 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
       ),
     },
     {
-      field: "name",
-      headerName: t("account.name"),
-    },
-    {
       field: "user_tag_id",
       headerName: t("account.user_tag_uid") as string,
       align: "right",
@@ -40,10 +36,6 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
         </Link>
       ),
       width: 100,
-    },
-    {
-      field: "comment",
-      headerName: t("account.comment"),
     },
     {
       field: "balance",
@@ -60,14 +52,17 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
     {
       field: "email",
       headerName: t("common.email"),
+      flex: 1,
     },
     {
       field: "account_name",
       headerName: t("customer.bankAccountHolder"),
+      flex: 1,
     },
     {
       field: "iban",
       headerName: t("customer.iban"),
+      flex: 1,
     },
     {
       field: "donation",

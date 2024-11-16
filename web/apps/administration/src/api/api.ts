@@ -173,17 +173,6 @@ export const api = generatedApi.enhanceEndpoints({
     listPayoutRuns: {
       providesTags: (result) => generateCacheKeys("payouts", result),
     },
-    generateTestBon: {
-      query: (queryArg: GenerateTestBonApiArg) => ({
-        url: `/tree/events/${queryArg.nodeId}/generate-test-bon`,
-        method: "POST",
-        responseHandler: async (resp: Response) => {
-          const blob = await resp.blob();
-          return window.URL.createObjectURL(blob);
-        },
-      }),
-      invalidatesTags: [],
-    },
     generateTestReport: {
       query: (queryArg: GenerateTestReportApiArg) => ({
         url: `/tree/events/${queryArg.nodeId}/generate-test-report`,

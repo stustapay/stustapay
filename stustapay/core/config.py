@@ -34,17 +34,12 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     port: int = 8082
 
 
-class BonConfig(BaseModel):
-    n_workers: int = 1
-
-
 class Config(BaseModel):
     database: DatabaseConfig
     core: CoreConfig
     administration: AdministrationApiConfig
     terminalserver: TerminalApiConfig
     customerportal: CustomerPortalApiConfig
-    bon: BonConfig = BonConfig()
 
 
 def read_config(config_path: os.PathLike) -> Config:

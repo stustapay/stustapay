@@ -32,7 +32,12 @@ const injectedRtkApi = api
   .injectEndpoints({
     endpoints: (build) => ({
       listProducts: build.query<ListProductsApiResponse, ListProductsApiArg>({
-        query: (queryArg) => ({ url: `/products`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/products`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["products"],
       }),
       createProduct: build.mutation<CreateProductApiResponse, CreateProductApiArg>({
@@ -40,12 +45,19 @@ const injectedRtkApi = api
           url: `/products`,
           method: "POST",
           body: queryArg.newProduct,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["products"],
       }),
       getProduct: build.query<GetProductApiResponse, GetProductApiArg>({
-        query: (queryArg) => ({ url: `/products/${queryArg.productId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/products/${queryArg.productId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["products"],
       }),
       updateProduct: build.mutation<UpdateProductApiResponse, UpdateProductApiArg>({
@@ -53,7 +65,9 @@ const injectedRtkApi = api
           url: `/products/${queryArg.productId}`,
           method: "POST",
           body: queryArg.newProduct,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["products"],
       }),
@@ -61,14 +75,19 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/products/${queryArg.productId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["products"],
       }),
       listUsers: build.query<ListUsersApiResponse, ListUsersApiArg>({
         query: (queryArg) => ({
           url: `/users`,
-          params: { node_id: queryArg.nodeId, filter_privilege: queryArg.filterPrivilege },
+          params: {
+            node_id: queryArg.nodeId,
+            filter_privilege: queryArg.filterPrivilege,
+          },
         }),
         providesTags: ["users"],
       }),
@@ -77,12 +96,19 @@ const injectedRtkApi = api
           url: `/users`,
           method: "POST",
           body: queryArg.createUserPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["users"],
       }),
       getUser: build.query<GetUserApiResponse, GetUserApiArg>({
-        query: (queryArg) => ({ url: `/users/${queryArg.userId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/users/${queryArg.userId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["users"],
       }),
       updateUser: build.mutation<UpdateUserApiResponse, UpdateUserApiArg>({
@@ -90,7 +116,9 @@ const injectedRtkApi = api
           url: `/users/${queryArg.userId}`,
           method: "POST",
           body: queryArg.updateUserPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["users"],
       }),
@@ -98,7 +126,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/users/${queryArg.userId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["users"],
       }),
@@ -107,12 +137,19 @@ const injectedRtkApi = api
           url: `/users/${queryArg.userId}/change-password`,
           method: "POST",
           body: queryArg.changeUserPasswordPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["users"],
       }),
       listUserRoles: build.query<ListUserRolesApiResponse, ListUserRolesApiArg>({
-        query: (queryArg) => ({ url: `/user-roles`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/user-roles`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["user-roles"],
       }),
       createUserRole: build.mutation<CreateUserRoleApiResponse, CreateUserRoleApiArg>({
@@ -120,7 +157,9 @@ const injectedRtkApi = api
           url: `/user-roles`,
           method: "POST",
           body: queryArg.newUserRole,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["user-roles"],
       }),
@@ -129,7 +168,9 @@ const injectedRtkApi = api
           url: `/user-roles/${queryArg.userRoleId}`,
           method: "POST",
           body: queryArg.updateUserRolePrivilegesPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["user-roles"],
       }),
@@ -137,12 +178,19 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/user-roles/${queryArg.userRoleId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["user-roles"],
       }),
       listUserToRole: build.query<ListUserToRoleApiResponse, ListUserToRoleApiArg>({
-        query: (queryArg) => ({ url: `/user-to-roles`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/user-to-roles`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["user-to-roles"],
       }),
       updateUserToRoles: build.mutation<UpdateUserToRolesApiResponse, UpdateUserToRolesApiArg>({
@@ -150,12 +198,19 @@ const injectedRtkApi = api
           url: `/user-to-roles`,
           method: "POST",
           body: queryArg.newUserToRoles,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["user-to-roles"],
       }),
       listTaxRates: build.query<ListTaxRatesApiResponse, ListTaxRatesApiArg>({
-        query: (queryArg) => ({ url: `/tax-rates`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/tax-rates`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["tax-rates"],
       }),
       createTaxRate: build.mutation<CreateTaxRateApiResponse, CreateTaxRateApiArg>({
@@ -163,12 +218,19 @@ const injectedRtkApi = api
           url: `/tax-rates`,
           method: "POST",
           body: queryArg.newTaxRate,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tax-rates"],
       }),
       getTaxRate: build.query<GetTaxRateApiResponse, GetTaxRateApiArg>({
-        query: (queryArg) => ({ url: `/tax-rates/${queryArg.taxRateId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/tax-rates/${queryArg.taxRateId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["tax-rates"],
       }),
       updateTaxRate: build.mutation<UpdateTaxRateApiResponse, UpdateTaxRateApiArg>({
@@ -176,7 +238,9 @@ const injectedRtkApi = api
           url: `/tax-rates/${queryArg.taxRateId}`,
           method: "POST",
           body: queryArg.newTaxRate,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tax-rates"],
       }),
@@ -184,7 +248,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/tax-rates/${queryArg.taxRateId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tax-rates"],
       }),
@@ -201,7 +267,12 @@ const injectedRtkApi = api
         invalidatesTags: ["auth"],
       }),
       listTills: build.query<ListTillsApiResponse, ListTillsApiArg>({
-        query: (queryArg) => ({ url: `/tills`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/tills`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["tills"],
       }),
       createTill: build.mutation<CreateTillApiResponse, CreateTillApiArg>({
@@ -209,12 +280,19 @@ const injectedRtkApi = api
           url: `/tills`,
           method: "POST",
           body: queryArg.newTill,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tills"],
       }),
       getTill: build.query<GetTillApiResponse, GetTillApiArg>({
-        query: (queryArg) => ({ url: `/tills/${queryArg.tillId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/tills/${queryArg.tillId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["tills"],
       }),
       updateTill: build.mutation<UpdateTillApiResponse, UpdateTillApiArg>({
@@ -222,7 +300,9 @@ const injectedRtkApi = api
           url: `/tills/${queryArg.tillId}`,
           method: "POST",
           body: queryArg.newTill,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tills"],
       }),
@@ -230,7 +310,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/tills/${queryArg.tillId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tills"],
       }),
@@ -238,7 +320,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/tills/${queryArg.tillId}/force-logout-user`,
           method: "POST",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tills"],
       }),
@@ -246,7 +330,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/tills/${queryArg.tillId}/remove-from-terminal`,
           method: "POST",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tills", "tills", "terminals"],
       }),
@@ -255,12 +341,19 @@ const injectedRtkApi = api
           url: `/tills/${queryArg.tillId}/switch-terminal`,
           method: "POST",
           body: queryArg.switchTerminalPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tills", "tills", "terminals"],
       }),
       listTillLayouts: build.query<ListTillLayoutsApiResponse, ListTillLayoutsApiArg>({
-        query: (queryArg) => ({ url: `/till-layouts`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/till-layouts`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["till-layouts"],
       }),
       createTillLayout: build.mutation<CreateTillLayoutApiResponse, CreateTillLayoutApiArg>({
@@ -268,12 +361,19 @@ const injectedRtkApi = api
           url: `/till-layouts`,
           method: "POST",
           body: queryArg.newTillLayout,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-layouts"],
       }),
       getTillLayout: build.query<GetTillLayoutApiResponse, GetTillLayoutApiArg>({
-        query: (queryArg) => ({ url: `/till-layouts/${queryArg.layoutId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/till-layouts/${queryArg.layoutId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["till-layouts"],
       }),
       updateTillLayout: build.mutation<UpdateTillLayoutApiResponse, UpdateTillLayoutApiArg>({
@@ -281,7 +381,9 @@ const injectedRtkApi = api
           url: `/till-layouts/${queryArg.layoutId}`,
           method: "POST",
           body: queryArg.newTillLayout,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-layouts"],
       }),
@@ -289,12 +391,19 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/till-layouts/${queryArg.layoutId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-layouts"],
       }),
       listTillProfiles: build.query<ListTillProfilesApiResponse, ListTillProfilesApiArg>({
-        query: (queryArg) => ({ url: `/till-profiles`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/till-profiles`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["till-profiles"],
       }),
       createTillProfile: build.mutation<CreateTillProfileApiResponse, CreateTillProfileApiArg>({
@@ -302,12 +411,19 @@ const injectedRtkApi = api
           url: `/till-profiles`,
           method: "POST",
           body: queryArg.newTillProfile,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-profiles"],
       }),
       getTillProfile: build.query<GetTillProfileApiResponse, GetTillProfileApiArg>({
-        query: (queryArg) => ({ url: `/till-profiles/${queryArg.profileId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/till-profiles/${queryArg.profileId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["till-profiles"],
       }),
       updateTillProfile: build.mutation<UpdateTillProfileApiResponse, UpdateTillProfileApiArg>({
@@ -315,7 +431,9 @@ const injectedRtkApi = api
           url: `/till-profiles/${queryArg.profileId}`,
           method: "POST",
           body: queryArg.newTillProfile,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-profiles"],
       }),
@@ -323,12 +441,19 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/till-profiles/${queryArg.profileId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-profiles"],
       }),
       listTillButtons: build.query<ListTillButtonsApiResponse, ListTillButtonsApiArg>({
-        query: (queryArg) => ({ url: `/till-buttons`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/till-buttons`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["till-buttons"],
       }),
       createTillButton: build.mutation<CreateTillButtonApiResponse, CreateTillButtonApiArg>({
@@ -336,12 +461,19 @@ const injectedRtkApi = api
           url: `/till-buttons`,
           method: "POST",
           body: queryArg.newTillButton,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-buttons"],
       }),
       getTillButton: build.query<GetTillButtonApiResponse, GetTillButtonApiArg>({
-        query: (queryArg) => ({ url: `/till-buttons/${queryArg.buttonId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/till-buttons/${queryArg.buttonId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["till-buttons"],
       }),
       updateTillButton: build.mutation<UpdateTillButtonApiResponse, UpdateTillButtonApiArg>({
@@ -349,7 +481,9 @@ const injectedRtkApi = api
           url: `/till-buttons/${queryArg.buttonId}`,
           method: "POST",
           body: queryArg.newTillButton,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-buttons"],
       }),
@@ -357,12 +491,19 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/till-buttons/${queryArg.buttonId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-buttons"],
       }),
       listRegisterStockings: build.query<ListRegisterStockingsApiResponse, ListRegisterStockingsApiArg>({
-        query: (queryArg) => ({ url: `/till-register-stockings`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/till-register-stockings`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["till-register-stockings"],
       }),
       createRegisterStocking: build.mutation<CreateRegisterStockingApiResponse, CreateRegisterStockingApiArg>({
@@ -370,7 +511,9 @@ const injectedRtkApi = api
           url: `/till-register-stockings`,
           method: "POST",
           body: queryArg.newCashRegisterStocking,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-register-stockings"],
       }),
@@ -379,7 +522,9 @@ const injectedRtkApi = api
           url: `/till-register-stockings/${queryArg.stockingId}`,
           method: "POST",
           body: queryArg.newCashRegisterStocking,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-register-stockings"],
       }),
@@ -387,12 +532,19 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/till-register-stockings/${queryArg.stockingId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-register-stockings"],
       }),
       listCashRegistersAdmin: build.query<ListCashRegistersAdminApiResponse, ListCashRegistersAdminApiArg>({
-        query: (queryArg) => ({ url: `/till-registers`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/till-registers`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["till-registers"],
       }),
       createRegister: build.mutation<CreateRegisterApiResponse, CreateRegisterApiArg>({
@@ -400,7 +552,9 @@ const injectedRtkApi = api
           url: `/till-registers`,
           method: "POST",
           body: queryArg.newCashRegister,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-registers"],
       }),
@@ -409,7 +563,9 @@ const injectedRtkApi = api
           url: `/till-registers/transfer-register`,
           method: "POST",
           body: queryArg.transferRegisterPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-registers"],
       }),
@@ -418,7 +574,9 @@ const injectedRtkApi = api
           url: `/till-registers/${queryArg.registerId}`,
           method: "POST",
           body: queryArg.newCashRegister,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-registers"],
       }),
@@ -426,7 +584,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/till-registers/${queryArg.registerId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["till-registers"],
       }),
@@ -443,7 +603,12 @@ const injectedRtkApi = api
         invalidatesTags: ["config"],
       }),
       listSystemAccounts: build.query<ListSystemAccountsApiResponse, ListSystemAccountsApiArg>({
-        query: (queryArg) => ({ url: `/system-accounts`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/system-accounts`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["accounts"],
       }),
       findAccounts: build.mutation<FindAccountsApiResponse, FindAccountsApiArg>({
@@ -451,19 +616,28 @@ const injectedRtkApi = api
           url: `/accounts/find-accounts`,
           method: "POST",
           body: queryArg.findAccountPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["accounts"],
       }),
       getAccount: build.query<GetAccountApiResponse, GetAccountApiArg>({
-        query: (queryArg) => ({ url: `/accounts/${queryArg.accountId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/accounts/${queryArg.accountId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["accounts"],
       }),
       disableAccount: build.mutation<DisableAccountApiResponse, DisableAccountApiArg>({
         query: (queryArg) => ({
           url: `/accounts/${queryArg.accountId}/disable`,
           method: "POST",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["accounts"],
       }),
@@ -472,7 +646,9 @@ const injectedRtkApi = api
           url: `/accounts/${queryArg.accountId}/update-balance`,
           method: "POST",
           body: queryArg.updateBalancePayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["accounts"],
       }),
@@ -481,7 +657,9 @@ const injectedRtkApi = api
           url: `/accounts/${queryArg.accountId}/update-voucher-amount`,
           method: "POST",
           body: queryArg.updateVoucherAmountPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["accounts"],
       }),
@@ -490,30 +668,47 @@ const injectedRtkApi = api
           url: `/accounts/${queryArg.accountId}/update-comment`,
           method: "POST",
           body: queryArg.updateAccountCommentPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["accounts"],
       }),
       listOrdersByTill: build.query<ListOrdersByTillApiResponse, ListOrdersByTillApiArg>({
-        query: (queryArg) => ({ url: `/orders/by-till/${queryArg.tillId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/orders/by-till/${queryArg.tillId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["orders"],
       }),
       listOrders: build.query<ListOrdersApiResponse, ListOrdersApiArg>({
         query: (queryArg) => ({
           url: `/orders`,
-          params: { node_id: queryArg.nodeId, customer_account_id: queryArg.customerAccountId },
+          params: {
+            node_id: queryArg.nodeId,
+            customer_account_id: queryArg.customerAccountId,
+          },
         }),
         providesTags: ["orders"],
       }),
       getOrder: build.query<GetOrderApiResponse, GetOrderApiArg>({
-        query: (queryArg) => ({ url: `/orders/${queryArg.orderId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/orders/${queryArg.orderId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["orders"],
       }),
       cancelOrder: build.mutation<CancelOrderApiResponse, CancelOrderApiArg>({
         query: (queryArg) => ({
           url: `/orders/${queryArg.orderId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["orders"],
       }),
@@ -522,26 +717,46 @@ const injectedRtkApi = api
           url: `/orders/${queryArg.orderId}/edit`,
           method: "POST",
           body: queryArg.editSaleProducts,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["orders"],
       }),
       listCashiers: build.query<ListCashiersApiResponse, ListCashiersApiArg>({
-        query: (queryArg) => ({ url: `/cashiers`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/cashiers`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["cashiers"],
       }),
       getCashier: build.query<GetCashierApiResponse, GetCashierApiArg>({
-        query: (queryArg) => ({ url: `/cashiers/${queryArg.cashierId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/cashiers/${queryArg.cashierId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["cashiers"],
       }),
       getCashierShifts: build.query<GetCashierShiftsApiResponse, GetCashierShiftsApiArg>({
-        query: (queryArg) => ({ url: `/cashiers/${queryArg.cashierId}/shifts`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/cashiers/${queryArg.cashierId}/shifts`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["cashiers"],
       }),
       getCashierShiftStats: build.query<GetCashierShiftStatsApiResponse, GetCashierShiftStatsApiArg>({
         query: (queryArg) => ({
           url: `/cashiers/${queryArg.cashierId}/shift-stats`,
-          params: { node_id: queryArg.nodeId, shift_id: queryArg.shiftId },
+          params: {
+            node_id: queryArg.nodeId,
+            shift_id: queryArg.shiftId,
+          },
         }),
         providesTags: ["cashiers"],
       }),
@@ -550,7 +765,9 @@ const injectedRtkApi = api
           url: `/cashiers/${queryArg.cashierId}/close-out`,
           method: "POST",
           body: queryArg.closeOut,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["cashiers"],
       }),
@@ -610,7 +827,12 @@ const injectedRtkApi = api
         providesTags: ["stats"],
       }),
       listTickets: build.query<ListTicketsApiResponse, ListTicketsApiArg>({
-        query: (queryArg) => ({ url: `/tickets`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/tickets`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["tickets"],
       }),
       createTicket: build.mutation<CreateTicketApiResponse, CreateTicketApiArg>({
@@ -618,12 +840,19 @@ const injectedRtkApi = api
           url: `/tickets`,
           method: "POST",
           body: queryArg.newTicket,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tickets"],
       }),
       getTicket: build.query<GetTicketApiResponse, GetTicketApiArg>({
-        query: (queryArg) => ({ url: `/tickets/${queryArg.ticketId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/tickets/${queryArg.ticketId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["tickets"],
       }),
       updateTicket: build.mutation<UpdateTicketApiResponse, UpdateTicketApiArg>({
@@ -631,7 +860,9 @@ const injectedRtkApi = api
           url: `/tickets/${queryArg.ticketId}`,
           method: "POST",
           body: queryArg.newTicket,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tickets"],
       }),
@@ -639,7 +870,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/tickets/${queryArg.ticketId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tickets"],
       }),
@@ -648,12 +881,19 @@ const injectedRtkApi = api
           url: `/user-tag-secrets`,
           method: "POST",
           body: queryArg.newUserTagSecret,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["user_tags"],
       }),
       listUserTagSecrets: build.query<ListUserTagSecretsApiResponse, ListUserTagSecretsApiArg>({
-        query: (queryArg) => ({ url: `/user-tag-secrets`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/user-tag-secrets`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["user_tags"],
       }),
       createUserTags: build.mutation<CreateUserTagsApiResponse, CreateUserTagsApiArg>({
@@ -661,7 +901,9 @@ const injectedRtkApi = api
           url: `/user-tags`,
           method: "POST",
           body: queryArg.newUserTags,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["user_tags"],
       }),
@@ -670,12 +912,19 @@ const injectedRtkApi = api
           url: `/user-tags/find-user-tags`,
           method: "POST",
           body: queryArg.findUserTagPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["user_tags"],
       }),
       getUserTagDetail: build.query<GetUserTagDetailApiResponse, GetUserTagDetailApiArg>({
-        query: (queryArg) => ({ url: `/user-tags/${queryArg.userTagId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/user-tags/${queryArg.userTagId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["user_tags"],
       }),
       updateUserTagComment: build.mutation<UpdateUserTagCommentApiResponse, UpdateUserTagCommentApiArg>({
@@ -683,12 +932,19 @@ const injectedRtkApi = api
           url: `/user-tags/${queryArg.userTagId}/update-comment`,
           method: "POST",
           body: queryArg.updateCommentPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["user_tags"],
       }),
       listTses: build.query<ListTsesApiResponse, ListTsesApiArg>({
-        query: (queryArg) => ({ url: `/tses/`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/tses/`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["tses"],
       }),
       createTse: build.mutation<CreateTseApiResponse, CreateTseApiArg>({
@@ -696,7 +952,9 @@ const injectedRtkApi = api
           url: `/tses/`,
           method: "POST",
           body: queryArg.newTse,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tses"],
       }),
@@ -705,12 +963,19 @@ const injectedRtkApi = api
           url: `/tses/${queryArg.tseId}`,
           method: "POST",
           body: queryArg.updateTse,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["tses"],
       }),
       listPayoutRuns: build.query<ListPayoutRunsApiResponse, ListPayoutRunsApiArg>({
-        query: (queryArg) => ({ url: `/payouts/`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/payouts/`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["payouts"],
       }),
       createPayoutRun: build.mutation<CreatePayoutRunApiResponse, CreatePayoutRunApiArg>({
@@ -718,18 +983,27 @@ const injectedRtkApi = api
           url: `/payouts/`,
           method: "POST",
           body: queryArg.newPayoutRun,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["payouts"],
       }),
       pendingPayoutDetail: build.query<PendingPayoutDetailApiResponse, PendingPayoutDetailApiArg>({
-        query: (queryArg) => ({ url: `/payouts/pending-payout-detail`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/payouts/pending-payout-detail`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["payouts"],
       }),
       payoutRunPayouts: build.query<PayoutRunPayoutsApiResponse, PayoutRunPayoutsApiArg>({
         query: (queryArg) => ({
           url: `/payouts/${queryArg.payoutRunId}/payouts`,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         providesTags: ["payouts"],
       }),
@@ -737,7 +1011,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/payouts/${queryArg.payoutRunId}/csv`,
           method: "POST",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["payouts"],
       }),
@@ -746,7 +1022,9 @@ const injectedRtkApi = api
           url: `/payouts/${queryArg.payoutRunId}/sepa_xml`,
           method: "POST",
           body: queryArg.createSepaXmlPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["payouts"],
       }),
@@ -754,7 +1032,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/payouts/${queryArg.payoutRunId}/previous_sepa_xml`,
           method: "POST",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["payouts"],
       }),
@@ -762,7 +1042,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/payouts/${queryArg.payoutRunId}/set-as-done`,
           method: "POST",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["payouts"],
       }),
@@ -770,7 +1052,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/payouts/${queryArg.payoutRunId}/revoke`,
           method: "POST",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["payouts"],
       }),
@@ -843,15 +1127,30 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       listSumupCheckouts: build.query<ListSumupCheckoutsApiResponse, ListSumupCheckoutsApiArg>({
-        query: (queryArg) => ({ url: `/sumup/checkouts`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/sumup/checkouts`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["sumup"],
       }),
       listSumupTransactions: build.query<ListSumupTransactionsApiResponse, ListSumupTransactionsApiArg>({
-        query: (queryArg) => ({ url: `/sumup/transactions`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/sumup/transactions`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["sumup"],
       }),
       getSumupCheckout: build.query<GetSumupCheckoutApiResponse, GetSumupCheckoutApiArg>({
-        query: (queryArg) => ({ url: `/sumup/checkouts/${queryArg.checkoutId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/sumup/checkouts/${queryArg.checkoutId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["sumup"],
       }),
       findCustomers: build.mutation<FindCustomersApiResponse, FindCustomersApiArg>({
@@ -859,19 +1158,28 @@ const injectedRtkApi = api
           url: `/customers/find-customers`,
           method: "POST",
           body: queryArg.findCustomerPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["accounts"],
       }),
       getCustomer: build.query<GetCustomerApiResponse, GetCustomerApiArg>({
-        query: (queryArg) => ({ url: `/customers/${queryArg.customerId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/customers/${queryArg.customerId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["accounts"],
       }),
       preventCustomerPayout: build.mutation<PreventCustomerPayoutApiResponse, PreventCustomerPayoutApiArg>({
         query: (queryArg) => ({
           url: `/customers/${queryArg.customerId}/prevent-payout`,
           method: "POST",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["accounts"],
       }),
@@ -879,12 +1187,19 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/customers/${queryArg.customerId}/allow-payout`,
           method: "POST",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["accounts"],
       }),
       listTerminals: build.query<ListTerminalsApiResponse, ListTerminalsApiArg>({
-        query: (queryArg) => ({ url: `/terminal`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/terminal`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["terminals"],
       }),
       createTerminal: build.mutation<CreateTerminalApiResponse, CreateTerminalApiArg>({
@@ -892,12 +1207,19 @@ const injectedRtkApi = api
           url: `/terminal`,
           method: "POST",
           body: queryArg.newTerminal,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["terminals"],
       }),
       getTerminal: build.query<GetTerminalApiResponse, GetTerminalApiArg>({
-        query: (queryArg) => ({ url: `/terminal/${queryArg.terminalId}`, params: { node_id: queryArg.nodeId } }),
+        query: (queryArg) => ({
+          url: `/terminal/${queryArg.terminalId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
         providesTags: ["terminals"],
       }),
       updateTerminal: build.mutation<UpdateTerminalApiResponse, UpdateTerminalApiArg>({
@@ -905,7 +1227,9 @@ const injectedRtkApi = api
           url: `/terminal/${queryArg.terminalId}`,
           method: "POST",
           body: queryArg.newTerminal,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["terminals"],
       }),
@@ -913,7 +1237,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/terminal/${queryArg.terminalId}`,
           method: "DELETE",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["terminals"],
       }),
@@ -921,7 +1247,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/terminal/${queryArg.terminalId}/logout`,
           method: "POST",
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["terminals"],
       }),
@@ -930,7 +1258,9 @@ const injectedRtkApi = api
           url: `/terminal/${queryArg.terminalId}/switch-till`,
           method: "POST",
           body: queryArg.switchTillPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
         invalidatesTags: ["terminals", "tills", "terminals"],
       }),
@@ -1496,7 +1826,7 @@ export type DeleteNodeApiResponse = /** status 200 Successful Response */ any;
 export type DeleteNodeApiArg = {
   nodeId: number;
 };
-export type GenerateTestBonApiResponse = /** status 200 Successful Response */ any;
+export type GenerateTestBonApiResponse = /** status 200 Successful Response */ BonJsonRead;
 export type GenerateTestBonApiArg = {
   nodeId: number;
 };
@@ -2674,6 +3004,91 @@ export type RestrictedEventSettings = {
   id: number;
   languages: Language[];
   sumup_oauth_refresh_token: string;
+};
+export type OrderWithTse = {
+  id: number;
+  uuid: string;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+  cancels_order: number | null;
+  booked_at: string;
+  payment_method: PaymentMethod;
+  order_type: OrderType;
+  cashier_id: number | null;
+  till_id: number | null;
+  customer_account_id: number | null;
+  customer_tag_uid: number | null;
+  customer_tag_id: number | null;
+  line_items: LineItem[];
+  signature_status: string;
+  transaction_process_type?: string | null;
+  transaction_process_data?: string | null;
+  tse_transaction?: string | null;
+  tse_signaturenr?: string | null;
+  tse_start?: string | null;
+  tse_end?: string | null;
+  tse_hashalgo?: string | null;
+  tse_time_format?: string | null;
+  tse_signature?: string | null;
+  tse_public_key?: string | null;
+  node_id: number;
+};
+export type OrderWithTseRead = {
+  id: number;
+  uuid: string;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+  cancels_order: number | null;
+  booked_at: string;
+  payment_method: PaymentMethod;
+  order_type: OrderType;
+  cashier_id: number | null;
+  till_id: number | null;
+  customer_account_id: number | null;
+  customer_tag_uid: number | null;
+  customer_tag_id: number | null;
+  line_items: LineItemRead[];
+  signature_status: string;
+  transaction_process_type?: string | null;
+  transaction_process_data?: string | null;
+  tse_transaction?: string | null;
+  tse_signaturenr?: string | null;
+  tse_start?: string | null;
+  tse_end?: string | null;
+  tse_hashalgo?: string | null;
+  tse_time_format?: string | null;
+  tse_signature?: string | null;
+  tse_public_key?: string | null;
+  node_id: number;
+  customer_tag_uid_hex: string | null;
+  tse_qr_code_text: string;
+};
+export type TaxRateAggregation = {
+  tax_name: string;
+  tax_rate: number;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+};
+export type BonConfig = {
+  title: string;
+  issuer: string;
+  address: string;
+  ust_id: string;
+};
+export type BonJson = {
+  order: OrderWithTse;
+  tax_rate_aggregations: TaxRateAggregation[];
+  config: BonConfig;
+  currency_identifier: string;
+};
+export type BonJsonRead = {
+  order: OrderWithTseRead;
+  tax_rate_aggregations: TaxRateAggregation[];
+  config: BonConfig;
+  currency_identifier: string;
 };
 export type SumUpTokenPayload = {
   authorization_code: string;

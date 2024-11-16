@@ -5,7 +5,6 @@ import {
   useGetOrdersQuery,
   useGetPayoutTransactionsQuery,
 } from "@/api";
-import { useDownloadBon } from "@/api/useDownloadBon";
 import { useCurrencyFormatter } from "@/hooks";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import {
@@ -25,6 +24,7 @@ import {
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { Link as RouterLink } from "react-router-dom";
 
 const normalizeOrderPrice = (order: OrderWithBon) => {
   if (order.order_type !== "top_up") {
@@ -42,7 +42,6 @@ export const OrderList: React.FC = () => {
     error: payoutTransactionsError,
     isLoading: isPayoutTransactionsLoading,
   } = useGetPayoutTransactionsQuery();
-  const downloadBon = useDownloadBon();
 
   if (
     isOrdersLoading ||
@@ -138,7 +137,7 @@ export const OrderList: React.FC = () => {
                   {t("order.bookedAt", { date: new Date(order.booked_at).toLocaleString() })}
                 </Typography>
                 {order.bon_generated && (
-                  <Link component="button" onClick={() => downloadBon(order.id)}>
+                  <Link component={RouterLink} target="_blank" to={`/bon/${order.uuid}`}>
                     {t("order.viewReceipt")}
                   </Link>
                 )}

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Response
 from pydantic import BaseModel
 
+from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTreeService
 from stustapay.core.schema.tree import (
@@ -69,19 +70,9 @@ async def delete_node(token: CurrentAuthToken, tree_service: ContextTreeService,
     return await tree_service.delete_node(token=token, node_id=node_id)
 
 
-@router.post(
-    "/events/{node_id}/generate-test-bon",
-    responses={
-        "200": {
-            "description": "Successful Response",
-            "content": {"application/pdf": {}},
-        }
-    },
-)
+@router.post("/events/{node_id}/generate-test-bon", response_model=BonJson)
 async def generate_test_bon(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
-    mime_type, content = await tree_service.generate_test_bon(token=token, node_id=node_id)
-    headers = {"Content-Disposition": 'inline; filename="test_bon.pdf"'}
-    return Response(content, headers=headers, media_type=mime_type)
+    return await tree_service.generate_test_bon(token=token, node_id=node_id)
 
 
 @router.post(
